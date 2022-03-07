@@ -4,7 +4,7 @@
 export APP_DIR := $(CURDIR)
 
 # SMARTNIC_DIR must be set to the pathname of smartnic root directory.
-export SMARTNIC_DIR := $(APP_DIR)/smartnic
+export SMARTNIC_DIR := $(APP_DIR)/../../..
 
 
 #------- Optional variables -------

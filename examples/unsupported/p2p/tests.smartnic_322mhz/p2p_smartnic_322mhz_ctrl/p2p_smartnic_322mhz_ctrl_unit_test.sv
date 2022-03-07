@@ -33,7 +33,7 @@ module p2p_smartnic_322mhz_ctrl_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../smartnic/src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
 
     //===================================
     // Build

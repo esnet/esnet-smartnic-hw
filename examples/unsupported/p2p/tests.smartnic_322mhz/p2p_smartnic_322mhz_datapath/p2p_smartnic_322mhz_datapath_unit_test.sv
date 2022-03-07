@@ -30,7 +30,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //=================================== 
-    `include "../../../smartnic/src/smartnic_322mhz/tests/common/tasks.svh"       
+    `include "../../../../../../src/smartnic_322mhz/tests/common/tasks.svh"       
 
     //===================================
     // Connect AXI-S sample interface
