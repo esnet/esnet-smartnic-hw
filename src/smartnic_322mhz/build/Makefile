@@ -9,8 +9,7 @@ IP_ROOT := ..
 include $(IP_ROOT)/config.mk
 
 # Export path variables for use in build (Tcl) scripts
-#export APP_ROOT ?= $(PROJ_ROOT)/src/p4_app
-export APP_ROOT ?= $(PROJ_ROOT)/examples/ht
+export APP_ROOT ?= $(PROJ_ROOT)/src/p4_app
 export IP_ROOT
 
 # -----------------------------------------------

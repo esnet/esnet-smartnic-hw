@@ -12,9 +12,9 @@ open_nic_build = $(open_nic_root)/build/au280_$(BUILD_NAME)
 plugin_dir = ../../src/open-nic-plugin/esnet_smartnic
 
 export PROJ_ROOT   ?= $(CURDIR)
-export APP_ROOT    ?= $(PROJ_ROOT)/examples/p4_simple
+export APP_ROOT    ?= $(PROJ_ROOT)/src/p4_app
 export LIB_ROOT    ?= $(PROJ_ROOT)/esnet-fpga-library
-export P4_FILE     ?= $(APP_ROOT)/p4/p4_simple.p4
+export P4_FILE     ?= $(APP_ROOT)/p4/p4_app.p4
 export HW_API_FILE  = $(PROJ_ROOT)/$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip
 export SRC_DIR      = $(PROJ_ROOT)/src/smartnic_322mhz/build/src
 
