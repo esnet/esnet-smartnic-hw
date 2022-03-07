@@ -1,0 +1,222 @@
+include:
+  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+
+stages:
+  - p4_sim
+  - rtl_sim
+  - app_core
+  - smartnic_core
+  - pull_esnet_open_nic
+  - bitfile
+  - package
+#  - trigger_downstream
+
+variables:
+  OPEN_NIC_REPO_BRANCH: v1.2-dev-2021.2
+  GIT_STRATEGY: clone
+
+.common:
+  image: hub.es.net:5000/xilinx-tools-docker:19249-ge72cfca3
+  tags:
+    - ht-docker
+  before_script:
+    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+  variables:
+    XILINXD_LICENSE_FILE: "2100@dmv.es.net"
+    # Required to keep click python module happy
+    LC_ALL: C.UTF-8
+    LANG: C.UTF-8
+    GIT_SUBMODULE_STRATEGY: recursive
+
+p4bm:
+  stage: p4_sim
+  extends: .common
+  script:
+    - make -C src/p4_app/p4/sim build extern sim-all test-all
+    - make -C examples/p4_simple/p4/sim build extern sim-all test-all
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src/p4_app/p4/sim
+      - examples/p4_simple/p4/sim
+  needs: []
+
+sim_p4_app:
+  stage: rtl_sim
+  extends: .common
+  script:
+    - make -C src/p4_app/tests/regression
+    - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    reports:
+      junit:
+        - src/p4_app/tests/regression/run_0/tests.xml
+    when: always
+  timeout: 2h
+  needs:
+    - p4bm
+
+sim_platform:
+  stage: rtl_sim
+  extends: .common
+  script:
+    - make -C src/smartnic_322mhz/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_0/sim.log
+    - make -C examples/unsupported/p2p/tests.smartnic_322mhz/regression
+    - grep 'PASSED.*suites passing' examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_0/sim.log
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    reports:
+      junit:
+        - src/smartnic_322mhz/tests/regression/run_0/tests.xml
+        - examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_0/tests.xml
+    paths:
+      - src/**/hs_err_pid*.log
+    when: always
+  timeout: 2h
+  needs:
+    - p4bm
+
+build_p4_app:
+  stage: app_core
+  extends: .common
+  script:
+    - make -C src/p4_app/app_if
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src/p4_app/app_if
+      - src/p4_app/build/out
+    when: always
+    expire_in: 1 week
+  timeout: 2h
+  needs: []
+
+build_smartnic_core:
+  stage: smartnic_core
+  extends: .common
+  script:
+    - make -C src/smartnic_322mhz/build
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src
+      - esnet-fpga-library
+      - examples
+    when: always
+    expire_in: 1 week
+  timeout: 2h
+  needs:
+    - build_p4_app
+
+pull_esnet_open_nic:
+  stage: pull_esnet_open_nic
+  image: ubuntu:focal
+  variables:
+    ESNET_OPEN_NIC_SOURCE_URL:    "$CI_API_V4_URL/projects/ht%2Fesnet-open-nic/jobs/artifacts/$OPEN_NIC_REPO_BRANCH/download?job_token=$CI_JOB_TOKEN&job=build_src_artifact"
+    ESNET_OPEN_NIC_VIVADO_IP_URL: "$CI_API_V4_URL/projects/ht%2Fesnet-open-nic/jobs/artifacts/$OPEN_NIC_REPO_BRANCH/download?job_token=$CI_JOB_TOKEN&job=build_vivado_ip"
+  before_script:
+    - apt update -y
+    - ln -fs /usr/share/zoneinfo/America/Toronto /etc/localtime
+    - apt install -y --no-install-recommends wget ca-certificates unzip
+  script:
+    # Download the Open NIC source artifact
+    - echo "Downloading esnet-open-nic source"
+    - mkdir ./esnet-open-nic-src/
+    - |
+      wget \
+        --no-verbose \
+        --trust-server-names \
+        --content-disposition \
+        --directory-prefix=./esnet-open-nic-src \
+        $ESNET_OPEN_NIC_SOURCE_URL
+    # Download the Vivado IP artifact
+    - echo "Downloading esnet-open-nic vivado ip"
+    - mkdir ./esnet-open-nic-vivado/
+    - |
+      wget \
+        --no-verbose \
+        --trust-server-names \
+        --content-disposition \
+        --directory-prefix=./esnet-open-nic-vivado \
+        $ESNET_OPEN_NIC_VIVADO_IP_URL
+    # Expand the downloaded zip files into their final location
+    - unzip -d esnet-open-nic-unzip -q esnet-open-nic-src/*.zip
+    - unzip -d esnet-open-nic-unzip -q esnet-open-nic-vivado/*.zip
+    # Capture the pipeline version that we just pulled
+    - ls ./esnet-open-nic-vivado/*.zip | head -n 1 | sed -re 's/^.*\-([0-9]+)\.zip$/ESNET_OPEN_NIC_VER=\1/' >> opennic.env
+    - cat opennic.env
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-open-nic-unzip
+    expire_in: 1 week
+    reports:
+      dotenv:
+        opennic.env
+  needs: []
+
+build_bitfile:
+  stage: bitfile
+  extends: .common
+  before_script:
+    - mv esnet-open-nic esnet-open-nic-orig
+    - mv esnet-open-nic-unzip esnet-open-nic
+  script:
+    - make -f makefile.esnet bitfile BUILD_NAME=open-nic-ci jobs=16
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src
+      - esnet-fpga-library
+      - examples
+      - esnet-open-nic
+    exclude:
+      - .git/**
+      - .git
+      - .gitignore
+      - .gitlab-ci.yml
+      - .gitmodules
+    when: always
+    expire_in: 2 weeks
+  timeout: 6h
+  needs:
+    - build_smartnic_core
+    - pull_esnet_open_nic
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: true
+
+export_hwapi:
+  stage: package
+  extends: .common
+  before_script: []
+  script:
+    - make -f makefile.esnet package BUILD_NAME=open-nic-ci
+    - mkdir esnet-smartnic-hwapi
+    - tar -C esnet-smartnic-hwapi -xaf esnet-open-nic/build/au280_open-nic-ci/open-nic-ci-artifact.tar.gz
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-smartnic-hwapi
+    when: always
+    expire_in: 3 month
+  timeout: 30m
+  needs:
+    - build_bitfile
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: true
+
+#trigger_downstream_job:
+#  stage: trigger_downstream
+#  trigger:
+#    project: ht/esnet-smartnic-fw
+#    branch: main
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

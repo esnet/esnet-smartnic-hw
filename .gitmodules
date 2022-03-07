@@ -1,0 +1,6 @@
+[submodule "esnet-fpga-library"]
+	path = esnet-fpga-library
+	url = ../esnet-fpga-library
+[submodule "esnet-open-nic"]
+	path = esnet-open-nic
+	url = ../esnet-open-nic

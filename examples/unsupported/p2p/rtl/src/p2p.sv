@@ -1,0 +1,119 @@
+// =============================================================================
+//  NOTICE: This computer software was prepared by The Regents of the
+//  University of California through Lawrence Berkeley National Laboratory
+//  and Peter Bengough hereinafter the Contractor, under Contract No.
+//  DE-AC02-05CH11231 with the Department of Energy (DOE). All rights in the
+//  computer software are reserved by DOE on behalf of the United States
+//  Government and the Contractor as provided in the Contract. You are
+//  authorized to use this computer software for Governmental purposes but it
+//  is not to be released or distributed to the public.
+//
+//  NEITHER THE GOVERNMENT NOR THE CONTRACTOR MAKES ANY WARRANTY, EXPRESS OR
+//  IMPLIED, OR ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.
+//
+//  This notice including this sentence must appear on any copies of this
+//  computer software.
+// =============================================================================
+
+`timescale 1ns/1ps
+
+module p2p #(
+) (
+   input logic        core_clk,
+   input logic        core_rstn,
+   input logic [63:0] timestamp,
+
+   axi4l_intf.peripheral axil_if,
+   axi4l_intf.peripheral axil_to_sdnet,
+
+   axi4s_intf.tx axis_core_to_switch,
+   axi4s_intf.rx axis_switch_to_core,
+   axi4s_intf.tx axis_to_host_0,
+   axi4s_intf.rx axis_from_host_0   
+);
+
+   // ----------------------------------------------------------------
+   //  Register map block and decoder instantiations
+   // ----------------------------------------------------------------
+
+   axi4l_intf  axil_to_p2p_regs ();
+   axi4l_intf  axil_to_sdnet_regs ();
+   axi4l_intf  axil_to_sdnet_regs__core_clk ();
+   
+   p2p_reg_intf  p2p_regs();
+   p2p_reg_intf  sdnet_regs();
+
+   // p2p register decoder
+   p2p_decoder p2p_decoder (
+      .axil_if       (axil_if),
+      .p2p_axil_if   (axil_to_p2p_regs)
+   );
+
+   // sdnet register decoder
+   p2p_decoder sdnet_decoder (
+      .axil_if       (axil_to_sdnet),
+      .p2p_axil_if   (axil_to_sdnet_regs)
+   );
+   
+   // p2p register block
+   p2p_reg_blk p2p_reg_blk
+   (
+    .axil_if    (axil_to_p2p_regs),
+    .reg_blk_if (p2p_regs)
+   );
+
+   // sdnet register block
+   axi4l_intf_cdc axil_to_sdnet_cdc (
+      .axi4l_if_from_controller  ( axil_to_sdnet_regs ),
+      .clk_to_peripheral         ( core_clk ),
+      .axi4l_if_to_peripheral    ( axil_to_sdnet_regs__core_clk )
+   );
+
+   p2p_reg_blk sdnet_reg_blk 
+   (
+    .axil_if    (axil_to_sdnet_regs__core_clk),
+    .reg_blk_if (sdnet_regs)
+   );
+
+   // ----------------------------------------------------------------
+   //  Timestamp to regmap connections (for test purposes)
+   // ----------------------------------------------------------------
+
+   logic [63:0] timestamp_latch;
+   logic        timestamp_rd_latch_wr_evt_d1;
+
+   always @(posedge core_clk) if (sdnet_regs.timestamp_rd_latch_wr_evt) timestamp_latch <= timestamp;
+
+   assign sdnet_regs.status_upper_nxt = timestamp_latch[63:32];
+   assign sdnet_regs.status_lower_nxt = timestamp_latch[31:0];
+
+   always @(posedge core_clk) timestamp_rd_latch_wr_evt_d1  <= sdnet_regs.timestamp_rd_latch_wr_evt;
+
+   assign sdnet_regs.status_upper_nxt_v = timestamp_rd_latch_wr_evt_d1;
+   assign sdnet_regs.status_lower_nxt_v = timestamp_rd_latch_wr_evt_d1;
+
+   // ----------------------------------------------------------------
+   //  Datpath pass-through connections (hard-wired bypass)
+   // ----------------------------------------------------------------
+   
+   assign axis_core_to_switch.tvalid = axis_switch_to_core.tvalid && !p2p_regs.tpause;
+   assign axis_core_to_switch.tdata  = axis_switch_to_core.tdata;
+   assign axis_core_to_switch.tkeep  = axis_switch_to_core.tkeep;
+   assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
+   assign axis_core_to_switch.tid    = axis_switch_to_core.tid;
+   assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
+
+   assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p2p_regs.tpause;
+
+
+   assign axis_to_host_0.tvalid = axis_from_host_0.tvalid;
+   assign axis_to_host_0.tdata  = axis_from_host_0.tdata;
+   assign axis_to_host_0.tkeep  = axis_from_host_0.tkeep;
+   assign axis_to_host_0.tlast  = axis_from_host_0.tlast;
+   assign axis_to_host_0.tid    = axis_from_host_0.tid;
+   assign axis_to_host_0.tdest  = axis_from_host_0.tdest;
+
+   assign axis_from_host_0.tready = axis_to_host_0.tready;
+
+
+endmodule: p2p

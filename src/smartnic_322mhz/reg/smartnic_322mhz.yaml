@@ -1,0 +1,82 @@
+name: smartnic_322mhz
+info: |
+  smartnic_322mhz is the top level module for the 322+ MHz
+  packet processing platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xC0BEBEEF
+
+  - name: port_config
+    access: rw
+    fields:
+      - name: input_enable
+        width: 2
+        init : 3        
+        enum_hex:
+          0 : NONE
+          1 : PORT0
+          2 : PORT1
+          3 : BOTH
+      - name: output_enable
+        width: 2
+        init : 3 
+        enum_hex:
+          0 : PORT0
+          1 : PORT1
+          2 : C2H
+          3 : USE_META
+      - name: app_bypass
+        desc: App bypass enable register.  Set to 1 for traffic to bypass smartnic_app core.  Set to 0 to disable bypass.
+        width: 1
+        init : 0
+      - name: app_tpause
+        desc: App tpause test register.  Set to 1 to assert axi4s backpressure from smartnic_app to ingress switch.
+        width: 1
+        init : 0
+
+  - name: timestamp_incr
+    desc   : Timestamp increment register.  Added to timestamp counter on each 343.75MHz core_clk tick. 32-bit value with a 4-bit integer component and a 28-bit fractional component. 0x2_E8BA2E9 represents 2.90909091 ns.
+    width  : 32
+    access : rw
+    init   : 0x2_E8BA2E9
+     
+  - name: timestamp_wr_upper
+    desc   : Timestamp write data (upper word).
+    access : rw
+
+  - name: timestamp_wr_lower
+    desc   : Timestamp write data (lower word).  Full 64-bit write value is loaded atomically into timestamp counter when the lower word write event occurs.
+    access : wr_evt
+
+  - name: timestamp_rd_upper
+    desc   : Timestamp read latch data (upper word).
+    access : ro
+
+  - name: timestamp_rd_lower
+    desc   : Timestamp read latch data (lower word).
+    access : ro
+     
+  - name: freerun_rd_upper
+    desc   : Timestamp read latch data (upper word).
+    access : ro
+
+  - name: freerun_rd_lower
+    desc   : Timestamp read latch data (lower word).
+    access : ro
+
+  - name: timestamp_rd_latch
+    desc   : Timestamp read latch trigger.  Full 64-bit timestamp value is loaded atomically into timestamp latch when the rd_latch write event occurs.
+    width  : 8
+    access : wr_evt
+
+
+
+
+
+        
