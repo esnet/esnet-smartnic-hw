@@ -32,8 +32,8 @@ p4bm:
   stage: p4_sim
   extends: .common
   script:
-    - make -C src/p4_app/p4/sim build extern sim-all test-all
-    - make -C examples/p4_simple/p4/sim build extern sim-all test-all
+    - make -C src/p4_app/p4/sim build sim-all
+    - make -C examples/p4_simple/p4/sim build sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
