@@ -9,7 +9,7 @@ stages:
   - pull_esnet_open_nic
   - bitfile
   - package
-#  - trigger_downstream
+  - trigger_downstream
 
 variables:
   OPEN_NIC_REPO_BRANCH: v1.2-dev-2021.2
@@ -213,10 +213,10 @@ export_hwapi:
       when: manual
       allow_failure: true
 
-#trigger_downstream_job:
-#  stage: trigger_downstream
-#  trigger:
-#    project: ht/esnet-smartnic-fw
-#    branch: main
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+trigger_downstream_job:
+  stage: trigger_downstream
+  trigger:
+    project: ht/esnet-smartnic-ht
+    branch: main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
