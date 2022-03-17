@@ -1,53 +1,186 @@
-# ESnet SmartNIC hardware design repository (esnet-smartnic-hw)
+# ESnet SmartNIC Hardware Design Repository
 
-This repository contains the hardware design directory for the ESnet Smartnic platform.
+This repository contains the hardware design directory for the ESnet SmartNIC platform.
 
-It includes the RTL source files, verification test suites and build scripts for
-compiling a user P4 file into downloadable bitfile.
+The ESnet SmartNIC Platform is based on the Xilinx (AMD) OpenNIC Shell, which provides
+an FPGA-based NIC shell with 100Gbps Ethernet ports, and runs on the Xilinx Alveo family
+of hardware boards.  More information about the OpenNIC shell can be found at:
+https://github.com/Xilinx/open-nic-shell
+
+The ESnet SmartNIC platform implements a P4-programmable packet processing core within the
+OpenNIC shell.  The platform provides the necessary hardware datapath and control features
+for the custom processing core.
+
+The esnet-smartnic-hw repository includes the RTL source files, verification test suites
+and build scripts for compiling a user P4 file into a downloadable bitfile, as well as the
+software artifacts necessary for seamless integration with the smartnic runtime firmware,
+which is located in a companion github repository at:
+https://github.com/esnet/esnet-smartnic-fw.
+
+The OpenNIC shell and SmartNIC designs are built with the Xilinx Vivado software tool suite.
+The current release supports development with Vivado version 2021.2.
 
 
-## Getting Started
 
-The directory structure for the ESnet Smartnic FPGA repository is captured and described in a section below.
+## Repository Structure and Dependencies
 
-It includes an example for a simple p4 application in the examples/p4_simple/ directory.
+The ESnet SmartNIC platform is comprised of a collection of separate modular components,
+each maintained in their own git repository.
 
-1. Clone `esnet-smartnic-hw` respository into the local application directory (or add as a sub-module).
-2. Intialize all submodules within the esnet-smartnic-hw design directory.
-3. Copy the smartnic application Makefile into the local application design directory.
-4. Update environment variable assignements in Makefile, as required.
-5. Run make to compile a bitfile.
+The platform includes the following repositories:
+
+   - `OpenNIC shell` (https://github.com/Xilinx/open-nic-shell.git)  
+     An FPGA-based NIC shell that runs on the Xilinx Alveo family of hardware boards.  
+
+   - `ESnet SmartNIC Hardware` (https://github.com/esnet/esnet-smartnic-hw.git)  
+     Hardware design directory for the ESnet SmartNIC platform.
+
+   - `ESnet SmartNIC Firmware` (https://github.com/esnet/esnet-smartnic-fw.git)  
+     Firmware design directory for the ESnet SmartNIC platform.
+
+   - `ESnet FPGA library` (https://github.com/esnet/esnet-fpga-library.git)  
+     General-purpose components and infrastructure for a structured FPGA design methodology.     
+
+   - `SVunit` (https://github.com/svunit/svunit.git)  
+     An open-source framework for FPGA System Verilog verification.
+
+   - `ESnet Regio` (https://github.com/esnet/regio.git)  
+     Automation tools for the implementation of FPGA register map logic and software code.
+
+
+All dependent repositories are instantiated in the parent repository as a submodule, as
+depicted below:
+
+```
+esnet-smartnic-hw/ (parent repository)
+├── esnet-fpga-library/ (submodule)
+│   └── tools/
+│       ├── regio/ (submodule)
+│       └── svunit/ (submodule)
+└── open-nic-shell/ (submodule)
+
+esnet-smartnic-fw/ (parent repository)
+```
+
 
 
 ## Directory Structure
 
+The directory structure for the ESnet SmartNIC hardware design repository is captured and described below.
+
 ```
-esnet-smartnic-hw
-├── cfg
-├── docs
-├── esnet-fpga-library -> esnet-fpga-library
-├── esnet-open-nic -> esnet-open-nic
-├── examples
-│   ├── p4_simple
-│   └── unsupported
-│       ├── p2p
-│       └── p4_example
-│           ├── app_if
-│           ├── artifacts
-│           ├── build
-│           ├── library
-│           ├── Makefile
-│           ├── p4
-│           ├── reg
-│           ├── rtl
-│           ├── tb
-│           ├── tests
-│           ├── verif
-│           └── xilinx_ip
+esnet-smartnic-hw/
+├── cfg/
+├── docs/
+├── esnet-fpga-library/
+├── esnet-open-nic/
+├── examples/
+├── src/
 ├── Makefile
 ├── makefile.esnet
-└── src
-    ├── open-nic-plugin
-    ├── p4_app
-    └── smartnic_322mhz
+├── paths.mk
+└── README.md
+
+cfg/
+  Contains global configuration files for the SmartNIC project.
+
+docs/
+  Contains documentation files for the SmartNIC platform.
+
+esnet-fpga-library/
+  Contains the ESnet FPGA Design Library (imported as a git submodule).  This library contains general-purpose
+  FPGA design content.
+
+esnet-open-nic/
+  Contains the Xilinx OpenNIC Shell repository (imported as a git submodule).  OpenNIC shell delivers an
+  FPGA-based NIC shell with 100Gbps Ethernet ports, for use on the Xilinx Alveo platform.
+
+examples/
+  Contains SmartNIC application design exaples.  A new application directory can be started by
+  copying one of the provided example directories, or by modeling portions of the example directory structure.
+
+src/
+  Contains RTL source and verification code for SmartNIC platform FPGA design components,
+  captured in System Verilog.
+
+Makefile
+  SmartNIC platform Makefile.  Used to build the FPGA bitfile for the target application, as well as
+  generate all artifacts necessary for firmware integration on the hardware platform.
+
+makefile.esnet
+  OpenNIC shell Makefile.  Used to build the Xilinx open-nic-shell for the target application.
+
+paths.mk
+  Sets environment variables for standard pathnames.
+
+README.md - This README file.
+
 ```
+
+
+
+## Getting Started 
+
+The following steps will enable a new user to setup their local application design directory for building
+the bitfile and firmware artifacts for a custom P4-based smartnic application.
+
+1. Install the esnet-smartnic-hw respository by creating a clone from github into the local application
+   directory:
+
+       > git clone https://github.com/esnet/esnet-smartnic-hw.git
+
+   Or, alternatively, add to an existing git repository as a sub-module:
+
+       > git submodule add https://github.com/esnet/esnet-smartnic-hw.git
+
+
+2. Intialize all submodules within the esnet-smartnic-hw/ design directory:
+
+       > cd esnet-smartnic-hw
+       > git submodule update --init --recursive
+
+
+3. Copy the example smartnic application Makefile into the local application design directory.
+
+       > cp examples/p4_simple/Makefile ../
+       > cd ../
+
+
+4. Update the environment variable assignments in the above Makefile as required (using a preferred editor):
+
+       export APP_DIR := $(CURDIR)
+       export SMARTNIC_DIR := $(APP_DIR)/esnet-smartnic-hw
+
+
+5. Install the Xilinx Vivado tool suite and configure the runtime environment by executing the
+   settings64.sh script located in the Vivado installation directory:
+   
+       > source /opt/Xilinx/Vivado/2021.2/settings64.sh
+
+   where the Vivado installation directory is located at /opt/Xilinx/Vivado/2021.2/ in this example.
+
+
+6. To compile a bitfile, execute the Makefile from the local application directory:
+
+       > make
+
+   This step creates an artifact zipfile with the default pathname:
+   `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
+
+   This artifact zipfule contains all of the necessary h/w artifacts to integrate with the firmware.
+   In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
+   and any wireshark .lua files.
+
+
+7. If P4 behavioural simulation is desired, refer to the README.md files provided in the
+   esnet-smartnic-hw/examples/p4_simple/ directory
+   (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple/p4/sim#readme).
+
+
+**NOTE: See lower level README files for more details.**
+
+
+
+# Known Issues
+
+- None to date.
