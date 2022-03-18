@@ -58,6 +58,8 @@ clean_build :
 	$(MAKE) -C $(APP_ROOT)/app_if clean
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build clean
 	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build build_name=$(BUILD_NAME)
+
+clean_artifacts :
 	@rm -rf $(ARTIFACTS_BUILD_DIR)
 
 .PHONY : echo_vars clean_build

@@ -121,38 +121,21 @@ README.md - This README file.
 
 ## Getting Started 
 
-The following steps will enable a new user to setup their local application design directory for building
-the bitfile and firmware artifacts for a custom P4-based smartnic application.
+The following steps guide a new user through the installation of the SmartNIC Hardware Design Repository,
+as well as simulating and building a simple P4-based example design.
 
-1. Install the esnet-smartnic-hw respository by creating a clone from github into the local application
-   directory:
+1. Install the esnet-smartnic-hw respository by creating a clone from github into a local directory:
 
        > git clone https://github.com/esnet/esnet-smartnic-hw.git
 
-   Or, alternatively, add to an existing git repository as a sub-module:
 
-       > git submodule add https://github.com/esnet/esnet-smartnic-hw.git
-
-
-2. Intialize all submodules within the esnet-smartnic-hw/ design directory:
+2. Initialize all submodules within the esnet-smartnic-hw/ design directory:
 
        > cd esnet-smartnic-hw
        > git submodule update --init --recursive
 
 
-3. Copy the example smartnic application Makefile into the local application design directory.
-
-       > cp examples/p4_simple/Makefile ../
-       > cd ../
-
-
-4. Update the environment variable assignments in the above Makefile as required (using a preferred editor):
-
-       export APP_DIR := $(CURDIR)
-       export SMARTNIC_DIR := $(APP_DIR)/esnet-smartnic-hw
-
-
-5. Install the Xilinx Vivado tool suite and configure the runtime environment by executing the
+3. Install the Xilinx Vivado tool suite and configure the runtime environment by executing the
    settings64.sh script located in the Vivado installation directory:
    
        > source /opt/Xilinx/Vivado/2021.2/settings64.sh
@@ -160,21 +143,63 @@ the bitfile and firmware artifacts for a custom P4-based smartnic application.
    where the Vivado installation directory is located at /opt/Xilinx/Vivado/2021.2/ in this example.
 
 
-6. To compile a bitfile, execute the Makefile from the local application directory:
+4. Simulate and build the p4_simple example design:
 
-       > make
+       > cd examples/p4_simple
+
+   Refer to examples/p4_simple/README.md (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple#readme).
+
+
+
+
+## Building a New Application
+
+The following steps can be taken by a new user to setup a local application design directory for building
+the bitfile and artifacts for a custom P4-based SmartNIC application.
+
+1. Install the esnet-smartnic-hw respository as in Step 1 of 'Getting Started' above.
+
+   Or, alternatively, add to an existing git repository as a sub-module:
+
+       > git submodule add https://github.com/esnet/esnet-smartnic-hw.git
+
+
+2. Initialize all submodules within esnet-smartnic-hw/ as in Step 2 of 'Getting Started' above.
+
+
+3. Install Vivado and configure runtime environment as in Step 3 of 'Getting Started' above.
+
+
+4. Copy the example smartnic application Makefile into the local application design directory (and return
+   to the local application design directory):
+
+       > cp examples/p4_simple/Makefile ../
+       > cd ../
+
+
+5. Using a preferred editor, update the environment variable assignments in the application Makefile above,
+   as required:
+
+       export APP_DIR := $(CURDIR)
+       export SMARTNIC_DIR := $(APP_DIR)/esnet-smartnic-hw
+       export APP_NAME := $(shell basename $(APP_DIR) )
+       export P4_FILE := $(APP_DIR)/p4/$(APP_NAME).p4
+
+
+6. To build a bitfile, execute the Makefile from the local application directory:
+
+       > make build
 
    This step creates an artifact zipfile with the default pathname:
    `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
 
-   This artifact zipfule contains all of the necessary h/w artifacts to integrate with the firmware.
+   This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
    In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
    and any wireshark .lua files.
 
 
-7. If P4 behavioural simulation is desired, refer to the README.md files provided in the
-   esnet-smartnic-hw/examples/p4_simple/ directory
-   (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple/p4/sim#readme).
+7. To simulate the P4 program, refer to the README.md file provided in the esnet-smartnic-hw/examples/p4_simple/
+   directory (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple/p4/sim#readme).
 
 
 **NOTE: See lower level README files for more details.**
