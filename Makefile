@@ -9,27 +9,31 @@ export LIB_ROOT  := $(PROJ_ROOT)/esnet-fpga-library
 
 # APP_ROOT is conditionally set below.
 # if APP_DIR contains app_if/ subdir i.e. APP contains P4 + verilog, set APP_ROOT to APP_DIR,
-# else APP is P4 file only, set APP_ROOT to p4_app (to get common P4 core verilog).
+# else APP is P4 file only, set APP_ROOT to p4_app (to get common P4 core verilog) and P4_FILE.
+
 ifneq ($(wildcard $(APP_DIR)/app_if/.),)
   export APP_ROOT := $(APP_DIR)
 else
   export APP_ROOT := $(PROJ_ROOT)/src/p4_app
+  export P4_FILE  ?= $(APP_DIR)/p4/$(APP_NAME).p4
 endif
 
+
 # Other variable assignments (optionally configured in the parent Makefile).
+
 APP_NAME ?= $(shell basename $(APP_DIR) )
 
-export P4_FILE      ?= $(APP_DIR)/p4/$(APP_NAME).p4
 export BUILD_NAME   ?= esnet-smartnic-$(APP_NAME)
 
 ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
 ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
+jobs ?= 32
 
 
 #------- Targets -------
 
-build: bitfile export_hwapi cp_artifacts
+all: build artifacts
 
 echo_vars:
 	@echo "           APP_NAME: $(APP_NAME)"
@@ -39,19 +43,22 @@ echo_vars:
 	@echo "         BUILD_NAME: $(BUILD_NAME)"
 	@echo "ARTIFACTS_BUILD_DIR: $(ARTIFACTS_BUILD_DIR)"
 
+build: bitfile package
+
 bitfile : echo_vars
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
 	$(MAKE) -C $(APP_ROOT)/app_if
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build
 	@echo "Generating smartnic bitfile..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile build_name=$(BUILD_NAME)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile BUILD_NAME=$(BUILD_NAME) jobs=$(jobs)
 
-export_hwapi : echo_vars
+package : echo_vars
 	@echo "Packaging build $(BUILD_NAME)..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet export_hwapi build_name=$(BUILD_NAME)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package BUILD_NAME=$(BUILD_NAME)
 
-cp_artifacts : echo_vars | $(ARTIFACTS_BUILD_DIR)
+artifacts : echo_vars | $(ARTIFACTS_BUILD_DIR)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet export_hwapi BUILD_NAME=$(BUILD_NAME)
 	@cp -r $(PROJ_ROOT)/esnet-open-nic/build/au280_$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip $(ARTIFACTS_BUILD_DIR)
 
 clean_build :

@@ -17,7 +17,6 @@ export SMARTNIC_DIR := $(APP_DIR)/../../..
 
 # P4_FILE - Full pathname of application p4 file.
 #export P4_FILE := $(APP_DIR)/p4/$(APP_NAME).p4
-export P4_FILE := 
 
 # ARTIFACTS_DIR - Full pathname of root artifacts directory.
 #export ARTIFACTS_DIR := $(APP_DIR)/artifacts
@@ -28,13 +27,21 @@ export P4_FILE :=
 
 #------- Targets -------
 
+all: build artifacts
+
 build:
 	$(MAKE) -C $(SMARTNIC_DIR) build
 
-clean:
+artifacts:
+	$(MAKE) -C $(SMARTNIC_DIR) artifacts
+
+clean_build:
 	$(MAKE) -C $(SMARTNIC_DIR) clean_build
+
+clean_artifacts:
+	$(MAKE) -C $(SMARTNIC_DIR) clean_artifacts
 
 echo_vars:
 	$(MAKE) -C $(SMARTNIC_DIR) echo_vars
 
-.PHONY: build echo_vars clean
+.PHONY: build artifacts clean_build clean_artifacts echo_vars

@@ -27,10 +27,18 @@ export SMARTNIC_DIR := $(APP_DIR)/../../..
 
 #------- Targets -------
 
+all: build artifacts
+
 build:
 	$(MAKE) -C $(SMARTNIC_DIR) build
 
-clean:
+artifacts:
+	$(MAKE) -C $(SMARTNIC_DIR) artifacts
+
+clean_build:
 	$(MAKE) -C $(SMARTNIC_DIR) clean_build
 
-.PHONY: build clean
+clean_artifacts:
+	$(MAKE) -C $(SMARTNIC_DIR) clean_artifacts
+
+.PHONY: build artifacts clean_build clean_artifacts
