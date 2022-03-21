@@ -31,29 +31,33 @@ p4bm:
   extends: .common
   script:
     - make -C src/p4_app/p4/sim build sim-all
-    - make -C examples/p4_simple/p4/sim build sim-all
+    - make -C examples/p4_simple/p4/sim sim-all
+    - make -C examples/unsupported/p4_example/p4/sim build sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
       - src/p4_app/p4/sim
       - examples/p4_simple/p4/sim
+      - examples/unsupported/p4_example/p4/sim
   needs: []
 
-sim_p4_app:
+sim_p4_apps:
   stage: rtl_sim
   extends: .common
   script:
     - make -C src/p4_app/tests/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
+    - make -C examples/unsupported/p4_example/tests/regression
+    - grep 'PASSED.*suites passing' examples/unsupported/p4_example/tests/regression/run_0/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
         - src/p4_app/tests/regression/run_0/tests.xml
+        - examples/unsupported/p4_example/tests/regression/run_0/tests.xml
     when: always
   timeout: 2h
-  needs:
-    - p4bm
+  needs: []
 
 sim_platform:
   stage: rtl_sim
@@ -69,12 +73,10 @@ sim_platform:
       junit:
         - src/smartnic_322mhz/tests/regression/run_0/tests.xml
         - examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_0/tests.xml
-    paths:
-      - src/**/hs_err_pid*.log
     when: always
   timeout: 2h
-  needs:
-    - p4bm
+  needs: []
+
 
 pull_esnet_open_nic:
   stage: pull_esnet_open_nic
@@ -123,7 +125,7 @@ pull_esnet_open_nic:
         opennic.env
   needs: []
 
-build_bitfile:
+build_p4_example:
   stage: bitfile
   extends: .common
   before_script:
@@ -132,6 +134,62 @@ build_bitfile:
     - mv esnet-open-nic-unzip esnet-open-nic
   script:
     - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci jobs=16
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src
+      - esnet-fpga-library
+      - examples
+      - esnet-open-nic
+    exclude:
+      - .git/**
+      - .git
+      - .gitignore
+      - .gitlab-ci.yml
+      - .gitmodules
+    when: always
+    expire_in: 2 weeks
+  timeout: 8h
+  needs:
+    - pull_esnet_open_nic
+
+build_p2p_example:
+  stage: bitfile
+  extends: .common
+  before_script:
+    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+    - mv esnet-open-nic esnet-open-nic-orig
+    - mv esnet-open-nic-unzip esnet-open-nic
+  script:
+    - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci jobs=16
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src
+      - esnet-fpga-library
+      - examples
+      - esnet-open-nic
+    exclude:
+      - .git/**
+      - .git
+      - .gitignore
+      - .gitlab-ci.yml
+      - .gitmodules
+    when: always
+    expire_in: 2 weeks
+  timeout: 8h
+  needs:
+    - pull_esnet_open_nic
+
+build_p4_simple:
+  stage: bitfile
+  extends: .common
+  before_script:
+    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+    - mv esnet-open-nic esnet-open-nic-orig
+    - mv esnet-open-nic-unzip esnet-open-nic
+  script:
+    - make -C examples/p4_simple build BUILD_NAME=open-nic-ci jobs=16
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -166,7 +224,7 @@ export_hwapi:
     expire_in: 3 month
   timeout: 30m
   needs:
-    - build_bitfile
+    - build_p4_simple
 
 trigger_downstream_job:
   stage: trigger_downstream
