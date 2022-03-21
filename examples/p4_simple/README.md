@@ -47,7 +47,7 @@ Refer to instructions in the esnet-smartnic-hw/examples/p4_simple/p4/sim/README.
 
 ### Building the SmartNIC hardware design
 
-Refer to step 6 in the `Building a New Application` section of the esnet-smartnic-hw/README.md file
+Refer to step 4 in the `Getting Started` section of the esnet-smartnic-hw/README.md file
 (https://github.com/esnet/esnet-smartnic-hw#readme).
 
 

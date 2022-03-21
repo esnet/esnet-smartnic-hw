@@ -143,11 +143,20 @@ as well as simulating and building a simple P4-based example design.
    where the Vivado installation directory is located at /opt/Xilinx/Vivado/2021.2/ in this example.
 
 
-4. Simulate and build the p4_simple example design:
+4. Build the `p4_simple` example design by executing the p4_simple application Makefile:
 
        > cd examples/p4_simple
+       > make all
 
-   Refer to examples/p4_simple/README.md (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple#readme).
+   This step creates an artifact zipfile with the default pathname:
+   `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
+
+   This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
+   In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
+   and any wireshark .lua files.
+
+   For more details about the `p4_simple` design, as well as simulating the P4 program,  refer to
+   examples/p4_simple/README.md (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple#readme).
 
 
 
@@ -180,22 +189,13 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 5. Using a preferred editor, update the environment variable assignments in the application Makefile above,
    as required:
 
-       export APP_DIR := $(CURDIR)
+       export APP_DIR      := $(CURDIR)
        export SMARTNIC_DIR := $(APP_DIR)/esnet-smartnic-hw
-       export APP_NAME := $(shell basename $(APP_DIR) )
-       export P4_FILE := $(APP_DIR)/p4/$(APP_NAME).p4
+       export APP_NAME     := $(shell basename $(APP_DIR) )
+       export P4_FILE      := $(APP_DIR)/p4/$(APP_NAME).p4
 
 
-6. To build a bitfile, execute the Makefile from the local application directory:
-
-       > make build
-
-   This step creates an artifact zipfile with the default pathname:
-   `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
-
-   This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
-   In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
-   and any wireshark .lua files.
+6. Build the design by executing the application Makefile as in Step 4 of 'Getting Started' above.
 
 
 7. To simulate the P4 program, refer to the README.md file provided in the esnet-smartnic-hw/examples/p4_simple/
