@@ -80,6 +80,7 @@ ip_proj/ip_proj.xpr : config.tcl ip_list.tcl create_sdnet_ip.tcl $(P4_FILE)
 	rm -f .proj_created
 	rm -f .*_generated
 	rm -rf sdnet_0/src
+	rm -rf sdnet_0/sdnet_0.dcp
 	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_create.tcl -source create_sdnet_ip.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_import.tcl
 	touch .proj_created
 
