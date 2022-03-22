@@ -133,7 +133,7 @@ build_p4_example:
     - mv esnet-open-nic esnet-open-nic-orig
     - mv esnet-open-nic-unzip esnet-open-nic
   script:
-    - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci jobs=16
+    - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -161,7 +161,7 @@ build_p2p_example:
     - mv esnet-open-nic esnet-open-nic-orig
     - mv esnet-open-nic-unzip esnet-open-nic
   script:
-    - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci jobs=16
+    - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -189,7 +189,7 @@ build_p4_simple:
     - mv esnet-open-nic esnet-open-nic-orig
     - mv esnet-open-nic-unzip esnet-open-nic
   script:
-    - make -C examples/p4_simple build BUILD_NAME=open-nic-ci jobs=16
+    - make -C examples/p4_simple build BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:

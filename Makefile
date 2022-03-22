@@ -28,7 +28,7 @@ export BUILD_NAME   ?= esnet-smartnic-$(APP_NAME)
 ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
 ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
-jobs ?= 32
+jobs ?= 16
 
 
 #------- Targets -------
