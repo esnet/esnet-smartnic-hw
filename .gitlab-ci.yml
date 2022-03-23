@@ -130,8 +130,8 @@ build_p4_example:
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv esnet-open-nic esnet-open-nic-orig
-    - mv esnet-open-nic-unzip esnet-open-nic
+    - mv open-nic-shell open-nic-shell-orig
+    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci
   artifacts:
@@ -140,7 +140,7 @@ build_p4_example:
       - src
       - esnet-fpga-library
       - examples
-      - esnet-open-nic
+      - open-nic-shell
     exclude:
       - .git/**
       - .git
@@ -158,8 +158,8 @@ build_p2p_example:
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv esnet-open-nic esnet-open-nic-orig
-    - mv esnet-open-nic-unzip esnet-open-nic
+    - mv open-nic-shell open-nic-shell-orig
+    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci
   artifacts:
@@ -168,7 +168,7 @@ build_p2p_example:
       - src
       - esnet-fpga-library
       - examples
-      - esnet-open-nic
+      - open-nic-shell
     exclude:
       - .git/**
       - .git
@@ -186,8 +186,8 @@ build_p4_simple:
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv esnet-open-nic esnet-open-nic-orig
-    - mv esnet-open-nic-unzip esnet-open-nic
+    - mv open-nic-shell open-nic-shell-orig
+    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/p4_simple build BUILD_NAME=open-nic-ci
   artifacts:
@@ -196,7 +196,7 @@ build_p4_simple:
       - src
       - esnet-fpga-library
       - examples
-      - esnet-open-nic
+      - open-nic-shell
     exclude:
       - .git/**
       - .git
@@ -215,7 +215,7 @@ export_hwapi:
   before_script: []
   script:
     - mkdir esnet-smartnic-hwapi
-    - tar -C esnet-smartnic-hwapi -xaf esnet-open-nic/build/au280_open-nic-ci/open-nic-ci-artifact.tar.gz
+    - tar -C esnet-smartnic-hwapi -xaf open-nic-shell/build/au280_open-nic-ci/open-nic-ci-artifact.tar.gz
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:

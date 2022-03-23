@@ -73,7 +73,7 @@ esnet-smartnic-hw/
 ├── cfg/
 ├── docs/
 ├── esnet-fpga-library/
-├── esnet-open-nic/
+├── open-nic_shell/
 ├── examples/
 ├── src/
 ├── Makefile
@@ -91,7 +91,7 @@ esnet-fpga-library/
   Contains the ESnet FPGA Design Library (imported as a git submodule).  This library contains general-purpose
   FPGA design content.
 
-esnet-open-nic/
+open-nic_shell/
   Contains the Xilinx OpenNIC Shell repository (imported as a git submodule).  OpenNIC shell delivers an
   FPGA-based NIC shell with 100Gbps Ethernet ports, for use on the Xilinx Alveo platform.
 
@@ -161,7 +161,7 @@ as well as simulating and building a simple P4-based example design.
 
 
 
-## Building a New Application
+## Building a New P4 Application
 
 The following steps can be taken by a new user to setup a local application design directory for building
 the bitfile and artifacts for a custom P4-based SmartNIC application.
@@ -202,9 +202,26 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
    directory (https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple/p4/sim#readme).
 
 
+
+## P4 Program Requirements
+
+### User Metadata
+
+       struct short_metadata {
+            bit<64> ingress_global_timestamp;  // 64b high-precision timestamp (in nanoseconds) for packet arrival time.
+            bit<2>  dest_port;                 // 2b destination port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+            bit<1>  truncate_enable;           // reserved (set to 0).
+            bit<16> packet_length;             // reserved (set to 0).
+            bit<1>  rss_override_enable;       // reserved (set to 0).
+            bit<8>  rss_override;              // reserved (set to 0).
+        }
+
+
+
+
+
+
 **NOTE: See lower level README files for more details.**
-
-
 
 # Known Issues
 

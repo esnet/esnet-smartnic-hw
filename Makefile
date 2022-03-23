@@ -59,7 +59,7 @@ package : echo_vars
 
 artifacts : echo_vars | $(ARTIFACTS_BUILD_DIR)
 	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet export_hwapi BUILD_NAME=$(BUILD_NAME)
-	@cp -r $(PROJ_ROOT)/esnet-open-nic/build/au280_$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip $(ARTIFACTS_BUILD_DIR)
+	@cp -r $(PROJ_ROOT)/open-nic-shell/build/au280_$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip $(ARTIFACTS_BUILD_DIR)
 
 clean_build :
 	$(MAKE) -C $(APP_ROOT)/app_if clean

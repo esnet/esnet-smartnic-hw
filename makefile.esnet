@@ -7,7 +7,7 @@
 BUILD_NAME ?= open-nic-ci
 
 vanilla_build_name = vanilla
-open_nic_root = esnet-open-nic
+open_nic_root = open-nic-shell
 open_nic_build = $(open_nic_root)/build/au280_$(BUILD_NAME)
 plugin_dir = ../../src/open-nic-plugin/esnet_smartnic
 
