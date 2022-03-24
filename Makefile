@@ -21,19 +21,19 @@ endif
 
 # Other variable assignments (optionally configured in the parent Makefile).
 
-APP_NAME ?= $(shell basename $(APP_DIR) )
+export APP_NAME ?= $(shell basename $(APP_DIR) )
 
 export BUILD_NAME   ?= esnet-smartnic-$(APP_NAME)
 
-ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
-ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
+export ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
+export ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
-jobs ?= 32
+jobs ?= 16
 
 
 #------- Targets -------
 
-all: build artifacts
+build: bitfile package
 
 echo_vars:
 	@echo "           APP_NAME: $(APP_NAME)"
@@ -43,8 +43,6 @@ echo_vars:
 	@echo "         BUILD_NAME: $(BUILD_NAME)"
 	@echo "ARTIFACTS_BUILD_DIR: $(ARTIFACTS_BUILD_DIR)"
 
-build: bitfile package
-
 bitfile : echo_vars
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
@@ -53,13 +51,9 @@ bitfile : echo_vars
 	@echo "Generating smartnic bitfile..."
 	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile BUILD_NAME=$(BUILD_NAME) jobs=$(jobs)
 
-package : echo_vars
+package : echo_vars | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME)..."
 	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package BUILD_NAME=$(BUILD_NAME)
-
-artifacts : echo_vars | $(ARTIFACTS_BUILD_DIR)
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet export_hwapi BUILD_NAME=$(BUILD_NAME)
-	@cp -r $(PROJ_ROOT)/esnet-open-nic/build/au280_$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip $(ARTIFACTS_BUILD_DIR)
 
 clean_build :
 	$(MAKE) -C $(APP_ROOT)/app_if clean
@@ -69,7 +63,7 @@ clean_build :
 clean_artifacts :
 	@rm -rf $(ARTIFACTS_BUILD_DIR)
 
-.PHONY : echo_vars clean_build
+.PHONY : echo_vars clean_build clean_artifacts
 
 
 
