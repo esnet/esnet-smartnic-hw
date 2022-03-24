@@ -11,12 +11,14 @@ open_nic_root = open-nic-shell
 open_nic_build = $(open_nic_root)/build/au280_$(BUILD_NAME)
 plugin_dir = ../../src/open-nic-plugin/esnet_smartnic
 
-export PROJ_ROOT   ?= $(CURDIR)
-export APP_ROOT    ?= $(PROJ_ROOT)/src/p4_app
-export LIB_ROOT    ?= $(PROJ_ROOT)/esnet-fpga-library
-export P4_FILE     ?= $(APP_ROOT)/p4/p4_app.p4
-export HW_API_FILE  = $(PROJ_ROOT)/$(BUILD_NAME)/artifacts.esnet-smartnic-hw.export_hwapi.manual.zip
-export SRC_DIR      = $(PROJ_ROOT)/src/smartnic_322mhz/build/src
+export PROJ_ROOT           ?= $(CURDIR)
+export LIB_ROOT            ?= $(PROJ_ROOT)/esnet-fpga-library
+export APP_ROOT            ?= $(PROJ_ROOT)/src/p4_app
+export P4_FILE             ?= $(APP_ROOT)/p4/p4_app.p4
+export ARTIFACTS_DIR       ?= $(APP_ROOT)/artifacts
+export ARTIFACTS_BUILD_DIR ?= $(ARTIFACTS_DIR)/$(BUILD_NAME)
+
+export SRC_DIR              = $(PROJ_ROOT)/src/smartnic_322mhz/build/src
 
 vanilla_build_dir = $(open_nic_root)/build/au280_$(vanilla_build_name)
 artifact_dir = $(open_nic_build)/$(BUILD_NAME)/esnet-smartnic-hwapi
@@ -91,15 +93,10 @@ package :
 	   $(artifact_dir)/regmap/spec/esnet-smartnic-top.yaml
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit $(artifact_dir)/firmware/esnet-smartnic.bit
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs	
+	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@( cd $(artifact_dir) && \
 	   echo "packing artifact zip file $(BUILD_NAME)-artifact.tar.gz" && \
-	   tar czf ../../$(BUILD_NAME)-artifact.tar.gz  . \
-	)
-
-export_hwapi : package
-	@( cd $(artifact_dir)/.. && \
-	   echo "packing artifact zip file artifacts.esnet-smartnic-hw.export_hwapi.manual.zip" && \
-	   zip -r ../artifacts.esnet-smartnic-hw.export_hwapi.manual.zip esnet-smartnic-hwapi  \
+	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.export_hwapi.0.zip ./ \
 	)
 
 project :

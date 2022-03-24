@@ -14,7 +14,7 @@ variables:
   GIT_STRATEGY: clone
 
 .common:
-  image: hub.es.net:5000/xilinx-tools-docker:19249-ge72cfca3
+  image: hub.es.net:5000/xilinx-tools-docker:20904-g4c4c1a59
   tags:
     - ht-docker
   before_script:
@@ -215,7 +215,7 @@ export_hwapi:
   before_script: []
   script:
     - mkdir esnet-smartnic-hwapi
-    - tar -C esnet-smartnic-hwapi -xaf open-nic-shell/build/au280_open-nic-ci/open-nic-ci-artifact.tar.gz
+    - unzip -d esnet-smartnic-hwapi examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
