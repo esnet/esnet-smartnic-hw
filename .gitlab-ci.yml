@@ -14,7 +14,7 @@ variables:
   GIT_STRATEGY: clone
 
 .common:
-  image: hub.es.net:5000/xilinx-tools-docker:20904-g4c4c1a59
+  image: wharf.es.net/ht/xilinx-tools-docker:21087-g4c4c1a59
   tags:
     - ht-docker
   before_script:
