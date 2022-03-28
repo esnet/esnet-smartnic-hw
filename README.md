@@ -146,7 +146,7 @@ as well as simulating and building a simple P4-based example design.
 4. Build the `p4_simple` example design by executing the p4_simple application Makefile:
 
        > cd examples/p4_simple
-       > make all
+       > make
 
    This step creates an artifact zipfile with the default pathname:
    `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
