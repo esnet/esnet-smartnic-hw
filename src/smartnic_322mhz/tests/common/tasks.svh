@@ -17,9 +17,10 @@ endtask
 task send_pcap (
     input string  pcap_filename,
     input int     num_pkts=0, start_idx=0, twait=0,
-    input port_t  id=0, dest=0 );
+    input port_t  id=0, dest=0,
+    input bit     user );
 
-    env.axis_driver[id].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+    env.axis_driver[id].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
 endtask
 
 
@@ -56,7 +57,8 @@ task automatic run_pkt_stream (
        output logic [63:0]    tx_pkt_cnt, tx_byte_cnt,
        output logic [63:0]    rx_pkt_cnt, rx_byte_cnt,
        input int              exp_pkt_cnt = 0,
-       input int              tpause = 0, twait = 0
+       input int              tpause = 0, twait = 0,
+       input bit              tuser = 0
     );
    
     // variabes for reading pcap data$
@@ -86,7 +88,7 @@ task automatic run_pkt_stream (
     fork
        begin
           // Send packets	    
-          send_pcap(in_pcap, num_pkts, start_idx, twait, in_port, out_port);
+          send_pcap(in_pcap, num_pkts, start_idx, twait, in_port, out_port, tuser);
        end
        begin
           // Monitor output packets
