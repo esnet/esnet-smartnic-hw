@@ -2,6 +2,10 @@
 
 Top-level module for box_322mhz of the esnet smartnic platform. Includes P4 pipeline and associated logic.
 
+## Block Diagram
+
+![smartnic_322mhz block diagram](../../docs/Shell_Block_Diagram-Box_322.png)
+
 ## Unit Tests
 
 This library contains unit tests implemented using the open-source SVUnit test

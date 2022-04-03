@@ -42,7 +42,6 @@ Refer to steps 1-3 in the `Getting Started` section of the esnet-smartnic-hw/REA
 ### Simulating the P4 program
 
 Refer to instructions in the esnet-smartnic-hw/examples/p4_simple/p4/sim/README.md file
-(https://github.com/esnet/esnet-smartnic-hw/examples/p4_simple/p4/sim#readme).
 
 
 ### Building the SmartNIC hardware design
