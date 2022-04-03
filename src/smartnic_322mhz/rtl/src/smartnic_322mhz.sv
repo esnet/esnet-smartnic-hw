@@ -121,14 +121,15 @@ module smartnic_322mhz #(
    axi4l_intf   axil_to_sdnet               ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
-   axi4l_intf   axil_to_drops_from_cmac [NUM_CMAC] ();
+   axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
+   axi4l_intf   axil_to_err_from_cmac   [NUM_CMAC] ();
    axi4l_intf   axil_to_probe_from_host [NUM_CMAC] ();
-   axi4l_intf   axil_to_drops_from_host [NUM_CMAC] ();
+   axi4l_intf   axil_to_ovfl_from_host  [NUM_CMAC] ();
 
    axi4l_intf   axil_to_probe_to_cmac   [NUM_CMAC] ();
-   axi4l_intf   axil_to_drops_to_cmac   [NUM_CMAC] ();
+   axi4l_intf   axil_to_ovfl_to_cmac    [NUM_CMAC] ();
    axi4l_intf   axil_to_probe_to_host   [NUM_CMAC] ();
-   axi4l_intf   axil_to_drops_to_host   [NUM_CMAC] ();
+   axi4l_intf   axil_to_ovfl_to_host    [NUM_CMAC] ();
 
    axi4l_intf   axil_to_fifo_to_cmac    [NUM_CMAC] ();
    axi4l_intf   axil_to_fifo_from_cmac  [NUM_CMAC] ();
@@ -172,27 +173,29 @@ module smartnic_322mhz #(
     
    // smartnic_322mhz top-level decoder
    smartnic_322mhz_decoder smartnic_322mhz_axil_decoder_0 (
-      .axil_if                       (s_axil_if),
-      .regif_axil_if                 (axil_to_regif),
-      .endian_check_axil_if          (axil_to_endian_check),
-      .probe_from_cmac_0_axil_if     (axil_to_probe_from_cmac[0]),
-      .drops_from_cmac_0_axil_if     (axil_to_drops_from_cmac[0]),
-      .probe_from_cmac_1_axil_if     (axil_to_probe_from_cmac[1]),
-      .drops_from_cmac_1_axil_if     (axil_to_drops_from_cmac[1]),
-      .probe_from_host_0_axil_if     (axil_to_probe_from_host[0]),
-      .probe_from_host_1_axil_if     (axil_to_probe_from_host[1]),
-      .probe_core_to_app_axil_if     (axil_to_core_to_app),
-      .probe_app_to_core_axil_if     (axil_to_app_to_core),
-      .probe_to_cmac_0_axil_if       (axil_to_probe_to_cmac[0]),
-      .drops_to_cmac_0_axil_if       (axil_to_drops_to_cmac[0]),
-      .probe_to_cmac_1_axil_if       (axil_to_probe_to_cmac[1]),
-      .drops_to_cmac_1_axil_if       (axil_to_drops_to_cmac[1]),
-      .probe_to_host_0_axil_if       (axil_to_probe_to_host[0]),
-      .drops_to_host_0_axil_if       (axil_to_drops_to_host[0]),
-      .probe_to_host_1_axil_if       (axil_to_probe_to_host[1]),
-      .drops_to_host_1_axil_if       (axil_to_drops_to_host[1]),
-      .fifo_to_host_0_axil_if        (axil_to_fifo_to_host[0]),
-      .smartnic_322mhz_app_axil_if   (axil_to_app_decoder__demarc)
+      .axil_if                         (s_axil_if),
+      .regif_axil_if                   (axil_to_regif),
+      .endian_check_axil_if            (axil_to_endian_check),
+      .probe_from_cmac_0_axil_if       (axil_to_probe_from_cmac[0]),
+      .drops_ovfl_from_cmac_0_axil_if  (axil_to_ovfl_from_cmac[0]),
+      .drops_err_from_cmac_0_axil_if   (axil_to_err_from_cmac[0]),
+      .probe_from_cmac_1_axil_if       (axil_to_probe_from_cmac[1]),
+      .drops_ovfl_from_cmac_1_axil_if  (axil_to_ovfl_from_cmac[1]),
+      .drops_err_from_cmac_1_axil_if   (axil_to_err_from_cmac[1]),
+      .probe_from_host_0_axil_if       (axil_to_probe_from_host[0]),
+      .probe_from_host_1_axil_if       (axil_to_probe_from_host[1]),
+      .probe_core_to_app_axil_if       (axil_to_core_to_app),
+      .probe_app_to_core_axil_if       (axil_to_app_to_core),
+      .probe_to_cmac_0_axil_if         (axil_to_probe_to_cmac[0]),
+      .drops_ovfl_to_cmac_0_axil_if    (axil_to_ovfl_to_cmac[0]),
+      .probe_to_cmac_1_axil_if         (axil_to_probe_to_cmac[1]),
+      .drops_ovfl_to_cmac_1_axil_if    (axil_to_ovfl_to_cmac[1]),
+      .probe_to_host_0_axil_if         (axil_to_probe_to_host[0]),
+      .drops_ovfl_to_host_0_axil_if    (axil_to_ovfl_to_host[0]),
+      .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
+      .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
+      .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
+      .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
    // AXI-L interface synchronizer
@@ -231,15 +234,23 @@ module smartnic_322mhz #(
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(ERRORED), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
+               __axis_from_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(ERRORED), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
+               axis_from_cmac [NUM_CMAC] ();
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_host    [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_cmac      [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_host      [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_to_core [NUM_CMAC] ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
+               axis_core_to_cmac [NUM_CMAC] ();
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_host_0 ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_host [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
+               axis_core_to_host [NUM_CMAC] ();
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_app ();
@@ -280,7 +291,13 @@ module smartnic_322mhz #(
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
-        .axi4s_if (axis_from_cmac[i])
+        .axi4s_if (__axis_from_cmac[i])
+      );
+
+      axi4s_pkt_discard_err discard_err_from_cmac (
+        .axi4s_in_if  (__axis_from_cmac[i]),
+        .axi4s_out_if (axis_from_cmac[i]),
+        .axi4l_if     (axil_to_err_from_cmac[i])
       );
 
       axi4s_pkt_fifo_async #(
@@ -294,7 +311,7 @@ module smartnic_322mhz #(
         .clk_out        (core_clk),
         .axi4s_out_if   (axis_cmac_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_cmac[i]),
-        .axil_to_drops  (axil_to_drops_from_cmac[i]),
+        .axil_to_ovfl   (axil_to_ovfl_from_cmac[i]),
         .axil_if        (axil_to_fifo_from_cmac[i])
       );
 
@@ -315,7 +332,7 @@ module smartnic_322mhz #(
         .clk_out        (cmac_clk[i]),
         .axi4s_out_if   (axis_to_cmac[i]),
         .axil_to_probe  (axil_to_probe_to_cmac[i]),
-        .axil_to_drops  (axil_to_drops_to_cmac[i]),
+        .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
         .axil_if        (axil_to_fifo_to_cmac[i])
       );
 
@@ -353,7 +370,7 @@ module smartnic_322mhz #(
            .clk_out        (cmac_clk[i]),
            .axi4s_out_if   (axis_to_host[i]),
            .axil_to_probe  (axil_to_probe_to_host[i]),
-           .axil_to_drops  (axil_to_drops_to_host[i]),
+           .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
            .axil_if        (axil_to_fifo_to_host[i])
          );
       end : g__fifo_host_0
@@ -369,7 +386,7 @@ module smartnic_322mhz #(
            .clk_out        (cmac_clk[i]),
            .axi4s_out_if   (axis_to_host[i]),
            .axil_to_probe  (axil_to_probe_to_host[i]),
-           .axil_to_drops  (axil_to_drops_to_host[i]),
+           .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
            .axil_if        (axil_to_fifo_to_host[i])
          );
 
@@ -429,12 +446,12 @@ module smartnic_322mhz #(
         .clk_out        (core_clk),
         .axi4s_out_if   (axis_host_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_host[i]),
-        .axil_to_drops  (axil_to_drops_from_host[i]),
+        .axil_to_ovfl   (axil_to_ovfl_from_host[i]),
         .axil_if        (axil_to_fifo_from_host[i])
       );
 
-      axi4l_intf_controller_term axi4l_drops_from_host_term (.axi4l_if (axil_to_drops_from_host[i]));
-      axi4l_intf_controller_term axi4l_fifo_from_host_term  (.axi4l_if (axil_to_fifo_from_host[i]));
+      axi4l_intf_controller_term axi4l_ovfl_from_host_term (.axi4l_if (axil_to_ovfl_from_host[i]));
+      axi4l_intf_controller_term axi4l_fifo_from_host_term (.axi4l_if (axil_to_fifo_from_host[i]));
 
    end : g__fifo
 
