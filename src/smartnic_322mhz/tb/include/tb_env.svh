@@ -104,9 +104,9 @@ class tb_env #(parameter int NUM_CMAC = 2);
         reg_endian_check_reg_blk_agent = new("reg_endian_check_reg_blk", 'h0400);
 
         probe_from_cmac_0_reg_blk_agent = new("probe_from_cmac_0_reg_blk",    'h8000);
-        probe_from_cmac_1_reg_blk_agent = new("probe_from_cmac_1_reg_blk",    'h8800);
-        probe_from_host_0_reg_blk_agent = new("probe_from_host_0_reg_blk",    'h9000);
-        probe_from_host_1_reg_blk_agent = new("probe_from_host_1_reg_blk",    'h9800);
+        probe_from_cmac_1_reg_blk_agent = new("probe_from_cmac_1_reg_blk",    'h8c00);
+        probe_from_host_0_reg_blk_agent = new("probe_from_host_0_reg_blk",    'h9800);
+        probe_from_host_1_reg_blk_agent = new("probe_from_host_1_reg_blk",    'h9c00);
         probe_core_to_app_reg_blk_agent = new("probe_core_to_app_reg_blk",    'ha000);
         probe_app_to_core_reg_blk_agent = new("probe_app_to_core_reg_blk",    'ha800);
         probe_to_cmac_0_reg_blk_agent   = new("probe_core_to_cmac_0_reg_blk", 'hb000);
