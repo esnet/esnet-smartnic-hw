@@ -21,13 +21,15 @@ struct headers {
 }
 
 struct short_metadata {
-    bit<64> ingress_global_timestamp;
-    bit<2>  dest_port;
-    bit<1>  truncate_enable;
-    bit<16> packet_length;
-    bit<1>  rss_override_enable;
-    bit<8>  rss_override;
+    bit<64> ingress_global_timestamp;  // 64b timestamp (in nanoseconds). Set at packet arrival time.
+    bit<2>  dest_port;                 // 2b destination port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+                                       // dest_port set to src_port by default.
+    bit<1>  truncate_enable;           // reserved (tied to 0).
+    bit<16> packet_length;             // reserved (tied to 0).
+    bit<1>  rss_override_enable;       // reserved (tied to 0).
+    bit<8>  rss_override;              // reserved (tied to 0).
 }
+ 
 
 // ****************************************************************************** //
 // *************************** P A R S E R  ************************************* //
