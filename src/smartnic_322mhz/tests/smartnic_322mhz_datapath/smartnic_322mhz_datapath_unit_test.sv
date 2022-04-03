@@ -65,7 +65,7 @@ module smartnic_322mhz_datapath_unit_test;
     // Global test variables
     //===================================
     localparam NUM_PORTS = 4;
-    localparam FIFO_DEPTH = 410.0; // 124 (fifo_async) + 2 x 143 (axi4s_pkt_discard)
+    localparam FIFO_DEPTH = 410.0; // 124 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
     smartnic_322mhz_reg_pkg::reg_port_config_t set_config;
 
@@ -329,21 +329,51 @@ module smartnic_322mhz_datapath_unit_test;
            end
 	join
 
-        check_stream_test_probes (.ingress_drops(1));
+        check_stream_test_probes (.ingress_ovfl_mode(1));
+    `SVTEST_END
+
+
+    `SVTEST(errored_packets)
+         for (int i=0; i<2; i++) begin // 2 iterations
+
+            for (int cmac_port=0; cmac_port<2; cmac_port++) begin // foreach cmac port
+
+               env.axis_driver[cmac_port].set_min_gap(i); // set gap to i cycles.
+
+               // send 10 errored packets i.e. with tuser=1
+               send_pcap(.pcap_filename ("../../../tests/common/pcap/64B_multiples_10pkts.pcap"),
+                         .id(cmac_port), .dest(cmac_port), .user(1));
+               // check error counts
+               check_err_probes (.in_port(cmac_port), .exp_err_pkts(10), .exp_err_bytes(3520));
+
+               // send and check unerrored packet stream i.e. with tuser=0 (default)
+               run_pkt_stream (.in_port(cmac_port), .out_port(cmac_port),
+                               .in_pcap  ("../../../tests/common/pcap/64x1518B_pkts.pcap"),
+                               .out_pcap ("../../../tests/common/pcap/64x1518B_pkts.pcap"),
+                               .tx_pkt_cnt(tx_pkt_cnt[cmac_port]), .tx_byte_cnt(tx_byte_cnt[cmac_port]),
+                               .rx_pkt_cnt(rx_pkt_cnt[cmac_port]), .rx_byte_cnt(rx_byte_cnt[cmac_port]) );
+
+               // check stream probe counts
+               check_stream_probes (.in_port(cmac_port), .out_port(cmac_port),
+                                    .exp_good_pkts(rx_pkt_cnt[cmac_port]), .exp_good_bytes(rx_byte_cnt[cmac_port]),
+                                    .exp_ovfl_pkts(0), .exp_ovfl_bytes(0) );
+             end
+
+          end
     `SVTEST_END
 
 
     `SVTEST(single_packets)
-         env.axis_driver[2].set_min_gap(1000); // set gap to 1000 cycles.
+         env.axis_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
 
-         run_pkt_stream ( .in_port(2), .out_port(2), 
+         run_pkt_stream ( .in_port(1), .out_port(1), 
                          .in_pcap  ("../../../tests/common/pcap/64B_multiples_10pkts.pcap"),
                          .out_pcap ("../../../tests/common/pcap/64B_multiples_10pkts.pcap"),
-                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
+                         .tx_pkt_cnt(tx_pkt_cnt[1]), .tx_byte_cnt(tx_byte_cnt[1]),
+                         .rx_pkt_cnt(rx_pkt_cnt[1]), .rx_byte_cnt(rx_byte_cnt[1]) );
     `SVTEST_END
 
-      
+
     `SVTEST(port_config_0)
         force tb.axis_in_if[0].tdest = 2'h2; // force axis_in_if[0] to direct all traffic to port 2 (HOST_PORT0). 
 
@@ -508,39 +538,39 @@ module smartnic_322mhz_datapath_unit_test;
     endtask
    
 
-    task check_stream_test_probes (input logic ingress_drops = 0);
+    task check_stream_test_probes (input logic ingress_ovfl_mode = 0);
         for (int i=0; i<NUM_PORTS; i++) begin
            check_stream_probes (
               .in_port         (i), 
               .out_port        (out_port_map[i]),
               .exp_good_pkts   (rx_pkt_cnt[i]), 
               .exp_good_bytes  (rx_byte_cnt[i]), 
-              .exp_drop_pkts   (tx_pkt_cnt[i]  - rx_pkt_cnt[i]), 
-              .exp_drop_bytes  (tx_byte_cnt[i] - rx_byte_cnt[i]),
-              .ingress_drops   (ingress_drops)
+              .exp_ovfl_pkts   (tx_pkt_cnt[i]  - rx_pkt_cnt[i]), 
+              .exp_ovfl_bytes  (tx_byte_cnt[i] - rx_byte_cnt[i]),
+              .ingress_ovfl_mode   (ingress_ovfl_mode)
            );
 	end
     endtask;
 
 
     typedef enum logic [31:0] {
-        PROBE_FROM_CMAC_PORT0 = 'h8000,
-        DROPS_FROM_CMAC_PORT0 = 'h8400,
-        PROBE_FROM_CMAC_PORT1 = 'h8800,
-        DROPS_FROM_CMAC_PORT1 = 'h8c00,
-        PROBE_FROM_HOST_PORT0 = 'h9000,
-        DROPS_FROM_HOST_PORT0 = 'h9400,
-        PROBE_FROM_HOST_PORT1 = 'h9800,
-        DROPS_FROM_HOST_PORT1 = 'h9c00,
+        PROBE_FROM_CMAC_PORT0      = 'h8000,
+        DROPS_OVFL_FROM_CMAC_PORT0 = 'h8400,
+        DROPS_ERR_FROM_CMAC_PORT0  = 'h8800,
+        PROBE_FROM_CMAC_PORT1      = 'h8c00,
+        DROPS_OVFL_FROM_CMAC_PORT1 = 'h9000,
+        DROPS_ERR_FROM_CMAC_PORT1  = 'h9400,
+        PROBE_FROM_HOST_PORT0      = 'h9800,
+        PROBE_FROM_HOST_PORT1      = 'h9c00,
 
-        PROBE_TO_CMAC_PORT0 = 'hb000,
-        DROPS_TO_CMAC_PORT0 = 'hb400,
-        PROBE_TO_CMAC_PORT1 = 'hb800,
-        DROPS_TO_CMAC_PORT1 = 'hbc00,
-        PROBE_TO_HOST_PORT0 = 'hc000,
-        DROPS_TO_HOST_PORT0 = 'hc400,
-        PROBE_TO_HOST_PORT1 = 'hc800,
-        DROPS_TO_HOST_PORT1 = 'hcc00
+        PROBE_TO_CMAC_PORT0        = 'hb000,
+        DROPS_OVFL_TO_CMAC_PORT0   = 'hb400,
+        PROBE_TO_CMAC_PORT1        = 'hb800,
+        DROPS_OVFL_TO_CMAC_PORT1   = 'hbc00,
+        PROBE_TO_HOST_PORT0        = 'hc000,
+        DROPS_OVFL_TO_HOST_PORT0   = 'hc400,
+        PROBE_TO_HOST_PORT1        = 'hc800,
+        DROPS_OVFL_TO_HOST_PORT1   = 'hcc00
     } cntr_addr_encoding_t;
 
     typedef union packed {
@@ -550,8 +580,8 @@ module smartnic_322mhz_datapath_unit_test;
 
    
     task check_stream_probes ( input port_t       in_port, out_port,
-                               input logic [63:0] exp_good_pkts, exp_good_bytes, exp_drop_pkts=0, exp_drop_bytes=0,
-                               input logic        ingress_drops = 0 );
+                               input logic [63:0] exp_good_pkts, exp_good_bytes, exp_ovfl_pkts=0, exp_ovfl_bytes=0,
+                               input logic        ingress_ovfl_mode = 0 );
 
         cntr_addr_t in_port_base_addr, out_port_base_addr;
         logic [63:0] exp_tot_pkts, exp_tot_bytes;
@@ -559,9 +589,9 @@ module smartnic_322mhz_datapath_unit_test;
         // establish base addr for ingress probe
         case (in_port)
                CMAC_PORT0 : in_port_base_addr = 'h8000;
-               CMAC_PORT1 : in_port_base_addr = 'h8800;
-               HOST_PORT0 : in_port_base_addr = 'h9000;
-               HOST_PORT1 : in_port_base_addr = 'h9800;
+               CMAC_PORT1 : in_port_base_addr = 'h8c00;
+               HOST_PORT0 : in_port_base_addr = 'h9800;
+               HOST_PORT1 : in_port_base_addr = 'h9c00;
 	    default : in_port_base_addr = 'hxxxx;
         endcase
 
@@ -575,12 +605,12 @@ module smartnic_322mhz_datapath_unit_test;
         endcase
 
         // establish pkt and byte totals       
-        exp_tot_pkts  = exp_good_pkts  + exp_drop_pkts;
-        exp_tot_bytes = exp_good_bytes + exp_drop_bytes;
+        exp_tot_pkts  = exp_good_pkts  + exp_ovfl_pkts;
+        exp_tot_bytes = exp_good_bytes + exp_ovfl_bytes;
 
 
         // check ingress and egress probe counts
-        if (ingress_drops) 
+        if (ingress_ovfl_mode)
            check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_good_pkts), .exp_byte_cnt(exp_good_bytes));
         else
            check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_tot_pkts),  .exp_byte_cnt(exp_tot_bytes));
@@ -588,23 +618,39 @@ module smartnic_322mhz_datapath_unit_test;
         check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_good_pkts), .exp_byte_cnt(exp_good_bytes));
 
 
-        // check ingress and egress drop counts
-        if ( (in_port != HOST_PORT0) && (in_port != HOST_PORT1) ) begin  // no drop counters for these ingress ports.
+        // check ingress and egress ovfl counts
+        if ( (in_port != HOST_PORT0) && (in_port != HOST_PORT1) ) begin  // no ovfl counters for these ingress ports.
            in_port_base_addr = in_port_base_addr + 'h400;
-           if (ingress_drops) 
-              check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_drop_pkts), .exp_byte_cnt(exp_drop_bytes));
+           if (ingress_ovfl_mode)
+              check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
            else	   
               check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
         end
 
-        if ( (out_port != HOST_PORT0) ) begin  // no drop counters for these egress ports.
+        if ( (out_port != HOST_PORT0) ) begin  // no ovfl counters for these egress ports.
            out_port_base_addr = out_port_base_addr + 'h400;
-           if (ingress_drops)
+           if (ingress_ovfl_mode)
               check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
            else
-              check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_drop_pkts), .exp_byte_cnt(exp_drop_bytes));
+              check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
         end
        
+    endtask;
+
+
+    task check_err_probes ( input port_t in_port, 
+                            input logic [63:0] exp_err_pkts, exp_err_bytes );
+
+        cntr_addr_t in_port_err_addr;
+        // establish addr for ingress err counts
+        case (in_port)
+               CMAC_PORT0 : in_port_err_addr = 'h8800;
+               CMAC_PORT1 : in_port_err_addr = 'h9400;
+	    default : in_port_err_addr = 'hxxxx;
+        endcase
+
+        check_probe (.base_addr(in_port_err_addr), .exp_pkt_cnt(exp_err_pkts), .exp_byte_cnt(exp_err_bytes));
+
     endtask;
 
 
