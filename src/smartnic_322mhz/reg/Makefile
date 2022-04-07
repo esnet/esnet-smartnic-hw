@@ -72,7 +72,7 @@ compile: reg
 clean: _clean_reg _clean_compile
 	@rm -f smartnic_322mhz_app_decoder.yaml
 
-.PHONY: all cp_app_reg reg compile clean
+.PHONY: all cp_app_dec reg compile clean
 
 # -----------------------------------------------
 # Include regio targets
