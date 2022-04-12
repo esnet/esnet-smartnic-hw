@@ -77,6 +77,8 @@ class tb_env #(parameter int NUM_CMAC = 2);
     axi4s_probe_reg_blk_agent #() probe_to_host_0_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_host_1_reg_blk_agent;
 
+    xilinx_hbm_reg_agent hbm_0_reg_agent;
+
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
 
@@ -113,6 +115,8 @@ class tb_env #(parameter int NUM_CMAC = 2);
         probe_to_cmac_1_reg_blk_agent   = new("probe_core_to_cmac_1_reg_blk", 'hb800);
         probe_to_host_0_reg_blk_agent   = new("probe_core_to_host_0_reg_blk", 'hc000);
         probe_to_host_1_reg_blk_agent   = new("probe_core_to_host_1_reg_blk", 'hc800);
+
+        hbm_0_reg_agent = new("hbm_0_agent", reg_agent, 'h40000);
     endfunction
 
     function void set_debug(input bit debug);
