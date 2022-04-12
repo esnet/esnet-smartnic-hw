@@ -27,8 +27,8 @@ class tb_env #(parameter int NUM_CMAC = 2);
     localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
 
     // -- AXI-L
-    localparam int AXIL_APP_OFFSET = 'h40000;
-    localparam int AXIL_SDNET_OFFSET = 'h80000;
+    localparam int AXIL_APP_OFFSET = 'h80000;
+    localparam int AXIL_SDNET_OFFSET = 'hC0000;
 
     //===================================
     // Properties
