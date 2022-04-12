@@ -39,7 +39,7 @@ read_verilog -sv [glob src/*.sv ]
 read_verilog -sv [glob ../rtl/src/*.sv ]
 
 # Application wrapper
-read_checkpoint $app_root/app_if/smartnic_322mhz_app.dcp
+read_checkpoint -cell smartnic_322mhz_app $app_root/app_if/smartnic_322mhz_app.dcp
 
 # Constraints
 read_xdc -mode out_of_context constraints/timing_ooc.xdc
