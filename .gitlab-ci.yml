@@ -4,7 +4,6 @@ include:
 stages:
   - p4_sim
   - rtl_sim
-  - pull_esnet_open_nic
   - bitfile
   - package
   - trigger_downstream
@@ -77,61 +76,11 @@ sim_platform:
   timeout: 2h
   needs: []
 
-
-pull_esnet_open_nic:
-  stage: pull_esnet_open_nic
-  image: ubuntu:focal
-  variables:
-    ESNET_OPEN_NIC_SOURCE_URL:    "$CI_API_V4_URL/projects/ht%2Fesnet-open-nic/jobs/artifacts/$OPEN_NIC_REPO_BRANCH/download?job_token=$CI_JOB_TOKEN&job=build_src_artifact"
-    ESNET_OPEN_NIC_VIVADO_IP_URL: "$CI_API_V4_URL/projects/ht%2Fesnet-open-nic/jobs/artifacts/$OPEN_NIC_REPO_BRANCH/download?job_token=$CI_JOB_TOKEN&job=build_vivado_ip"
-  before_script:
-    - apt update -y
-    - ln -fs /usr/share/zoneinfo/America/Toronto /etc/localtime
-    - apt install -y --no-install-recommends wget ca-certificates unzip
-  script:
-    # Download the Open NIC source artifact
-    - echo "Downloading esnet-open-nic source"
-    - mkdir ./esnet-open-nic-src/
-    - |
-      wget \
-        --no-verbose \
-        --trust-server-names \
-        --content-disposition \
-        --directory-prefix=./esnet-open-nic-src \
-        $ESNET_OPEN_NIC_SOURCE_URL
-    # Download the Vivado IP artifact
-    - echo "Downloading esnet-open-nic vivado ip"
-    - mkdir ./esnet-open-nic-vivado/
-    - |
-      wget \
-        --no-verbose \
-        --trust-server-names \
-        --content-disposition \
-        --directory-prefix=./esnet-open-nic-vivado \
-        $ESNET_OPEN_NIC_VIVADO_IP_URL
-    # Expand the downloaded zip files into their final location
-    - unzip -d esnet-open-nic-unzip -q esnet-open-nic-src/*.zip
-    - unzip -d esnet-open-nic-unzip -q esnet-open-nic-vivado/*.zip
-    # Capture the pipeline version that we just pulled
-    - ls ./esnet-open-nic-vivado/*.zip | head -n 1 | sed -re 's/^.*\-([0-9]+)\.zip$/ESNET_OPEN_NIC_VER=\1/' >> opennic.env
-    - cat opennic.env
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - esnet-open-nic-unzip
-    expire_in: 1 week
-    reports:
-      dotenv:
-        opennic.env
-  needs: []
-
 build_p4_example:
   stage: bitfile
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv open-nic-shell open-nic-shell-orig
-    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci
   artifacts:
@@ -150,16 +99,13 @@ build_p4_example:
     when: always
     expire_in: 2 weeks
   timeout: 8h
-  needs:
-    - pull_esnet_open_nic
+  needs: []
 
 build_p2p_example:
   stage: bitfile
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv open-nic-shell open-nic-shell-orig
-    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci
   artifacts:
@@ -178,16 +124,13 @@ build_p2p_example:
     when: always
     expire_in: 2 weeks
   timeout: 8h
-  needs:
-    - pull_esnet_open_nic
+  needs: []
 
 build_p4_simple:
   stage: bitfile
   extends: .common
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv open-nic-shell open-nic-shell-orig
-    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -C examples/p4_simple build BUILD_NAME=open-nic-ci
   artifacts:
@@ -206,8 +149,7 @@ build_p4_simple:
     when: always
     expire_in: 2 weeks
   timeout: 8h
-  needs:
-    - pull_esnet_open_nic
+  needs: []
 
 export_hwapi:
   stage: package
