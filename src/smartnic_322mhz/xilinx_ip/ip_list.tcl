@@ -5,4 +5,5 @@ set ip_list { \
     axis_switch_ingress \
     clk_wiz_0 \
     clk_wiz_1 \
+    hbm_4g_left \
 }

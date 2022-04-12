@@ -120,6 +120,7 @@ module smartnic_322mhz #(
    axi4l_intf   s_axil_if                   ();
    axi4l_intf   axil_to_regif               ();
    axi4l_intf   axil_to_endian_check        ();
+   axi4l_intf   axil_to_hbm_0               ();
    axi4l_intf   axil_to_app_decoder__demarc ();
    axi4l_intf   axil_to_app_decoder         ();
    axi4l_intf   axil_to_app                 ();
@@ -200,6 +201,7 @@ module smartnic_322mhz #(
       .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
       .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
+      .hbm_left_axil_if                (axil_to_hbm_0),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
@@ -234,6 +236,17 @@ module smartnic_322mhz #(
      .smartnic_322mhz_regs (smartnic_322mhz_regs)                 
    );
 
+   // ----------------------------------------------------------------
+   //  HBM
+   // ----------------------------------------------------------------
+   // 'Left' stack (4GB)
+   smartnic_322mhz_hbm_left smartnic_322mhz_hbm_0 (
+     .clk         (core_clk),
+     .rstn        (core_rstn),
+     .hbm_ref_clk (hbm_ref_clk),
+     .clk_100mhz  (clk_100mhz),
+     .axil_if     (axil_to_hbm_0)
+   );
 
    // ----------------------------------------------------------------
    //  axi4s interface instantiations

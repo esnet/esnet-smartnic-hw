@@ -26,6 +26,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS = xilinx_ip reg \
+             xilinx_hbm_rtl=$(LIB_ROOT)/src/xilinx/hbm/rtl \
              axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
              axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl
 
