@@ -90,6 +90,8 @@ module smartnic_322mhz #(
    wire                       core_rstn;
    wire                       core_clk;
 
+   wire                       clk_100mhz;
+   wire                       hbm_ref_clk;
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -105,7 +107,10 @@ module smartnic_322mhz #(
     .cmac_clk     (cmac_clk),
 
     .core_rstn    (core_rstn),
-    .core_clk     (core_clk)
+    .core_clk     (core_clk),
+
+    .clk_100mhz   (clk_100mhz),
+    .hbm_ref_clk  (hbm_ref_clk)
   );
 
    // ----------------------------------------------------------------

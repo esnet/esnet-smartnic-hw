@@ -29,7 +29,10 @@ module smartnic_322mhz_reset #(
   input [NUM_CMAC-1:0] 	cmac_clk,
 
   output 		core_rstn,
-  output 		core_clk        // we synthesize this clock in this block
+  output 		core_clk,        // we synthesize this clock in this block
+
+  output        clk_100mhz,
+  output        hbm_ref_clk
    
 );
 
@@ -106,5 +109,12 @@ module smartnic_322mhz_reset #(
 			      .clk_in1     ( axil_aclk ),
 			      .clk_out1    ( core_clk )
 			      );
+
+  // Synthesize 100MHz clock
+  clk_wiz_1 axi_to_clk_100mhz (
+    .clk_in1    ( axil_aclk ),
+    .clk_100mhz ( clk_100mhz ),
+    .hbm_ref_clk( hbm_ref_clk )
+  );
 
 endmodule: smartnic_322mhz_reset

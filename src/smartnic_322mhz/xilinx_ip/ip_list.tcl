@@ -4,4 +4,5 @@ set ip_list { \
     axis_switch_egress \
     axis_switch_ingress \
     clk_wiz_0 \
+    clk_wiz_1 \
 }
