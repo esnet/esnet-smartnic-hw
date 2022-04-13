@@ -128,6 +128,9 @@ vanilla_bitfile :
 	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 $(vivado_tclargs) -rebuild 1 \
         )                  
 	@ test -e $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit || (echo ERROR: bitfile not produced. && false)
+	mkdir vanilla_artifact
+	cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs vanilla_artifact
+	cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit vanilla_artifact
 
 clean_build:
 	@rm -rf $(open_nic_build)
