@@ -212,10 +212,6 @@ build_p4_simple:
 build_vanilla_ons:
   stage: bitfile
   extends: .common
-  before_script:
-    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
-    - mv open-nic-shell open-nic-shell-orig
-    - mv esnet-open-nic-unzip open-nic-shell
   script:
     - make -f makefile.esnet vanilla_bitfile
   artifacts:
@@ -234,7 +230,7 @@ build_vanilla_ons:
   needs:
     - pull_esnet_open_nic
   rules:
-    when: manual
+    - when: manual
 
 
 export_hwapi:
