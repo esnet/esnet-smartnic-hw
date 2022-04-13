@@ -94,9 +94,9 @@ package :
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit $(artifact_dir)/firmware/esnet-smartnic.bit
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs	
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
-	@( cd $(artifact_dir) && \
+	@( cd $(artifact_dir)/.. && \
 	   echo "packing artifact zip file $(BUILD_NAME)-artifact.tar.gz" && \
-	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.export_hwapi.0.zip ./ \
+	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.export_hwapi.0.zip esnet-smartnic-hwapi \
 	)
 
 project :

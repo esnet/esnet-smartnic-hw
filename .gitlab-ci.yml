@@ -214,8 +214,7 @@ export_hwapi:
   extends: .common
   before_script: []
   script:
-    - mkdir esnet-smartnic-hwapi
-    - unzip -d esnet-smartnic-hwapi examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
+    - unzip examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
