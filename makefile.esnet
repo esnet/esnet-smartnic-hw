@@ -125,8 +125,9 @@ vanilla_bitfile :
 	@echo "Creating vanilla bitfile"
 	( cd $(open_nic_root)/script && \
 	  source /opt/Xilinx/Vivado/$(vivado_version)/settings64.sh && \
-	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 $(vivado_tclargs) -rebuild 1 \
-        )                  
+	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 -rebuild 1 -board au280 -num_phys_func 2 -num_cmac_port 2 -num_queue 512  \
+	  -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -tag $(BUILD_NAME) \
+        )
 	@ test -e $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit || (echo ERROR: bitfile not produced. && false)
 	mkdir vanilla_artifact
 	cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs vanilla_artifact
