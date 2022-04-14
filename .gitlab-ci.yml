@@ -9,7 +9,6 @@ stages:
   - trigger_downstream
 
 variables:
-  OPEN_NIC_REPO_BRANCH: v1.2-dev-2021.2
   GIT_STRATEGY: clone
 
 .common:
