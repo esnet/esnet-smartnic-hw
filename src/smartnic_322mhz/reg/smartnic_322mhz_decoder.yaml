@@ -34,25 +34,35 @@ interfaces:
   - block: *axi4s_probe
     address: 0x08400
     width: 10
-    name: drops_from_cmac_0
+    name: drops_ovfl_from_cmac_0
 
   - block: *axi4s_probe
     address: 0x08800
     width: 10
-    name: probe_from_cmac_1
+    name: drops_err_from_cmac_0
 
   - block: *axi4s_probe
     address: 0x08c00
     width: 10
-    name: drops_from_cmac_1
+    name: probe_from_cmac_1
 
   - block: *axi4s_probe
     address: 0x09000
     width: 10
-    name: probe_from_host_0
+    name: drops_ovfl_from_cmac_1
+
+  - block: *axi4s_probe
+    address: 0x09400
+    width: 10
+    name: drops_err_from_cmac_1
 
   - block: *axi4s_probe
     address: 0x09800
+    width: 10
+    name: probe_from_host_0
+
+  - block: *axi4s_probe
+    address: 0x09c00
     width: 10
     name: probe_from_host_1
 
@@ -74,7 +84,7 @@ interfaces:
   - block: *axi4s_probe
     address: 0x0b400
     width: 10
-    name: drops_to_cmac_0
+    name: drops_ovfl_to_cmac_0
 
   - block: *axi4s_probe
     address: 0x0b800
@@ -84,7 +94,7 @@ interfaces:
   - block: *axi4s_probe
     address: 0x0bc00
     width: 10
-    name: drops_to_cmac_1
+    name: drops_ovfl_to_cmac_1
 
   - block: *axi4s_probe
     address: 0x0c000
@@ -94,7 +104,7 @@ interfaces:
   - block: *axi4s_probe
     address: 0x0c400
     width: 10
-    name: drops_to_host_0
+    name: drops_ovfl_to_host_0
 
   - block: *axi4s_probe
     address: 0x0c800
@@ -104,7 +114,7 @@ interfaces:
   - block: *axi4s_probe
     address: 0x0cc00
     width: 10
-    name: drops_to_host_1
+    name: drops_ovfl_to_host_1
 
   - decoder: *fifo
     address: 0x0d000

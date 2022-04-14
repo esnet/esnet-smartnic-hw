@@ -1,6 +1,10 @@
 # smartnic_322mhz
 
-Top-level module for box_322mhz of the esnet smartnic platform. Includes P4 pipeline and associated logic.
+Top-level module for box_322mhz of the ESnet SmartNIC platform. Includes P4 pipeline and associated logic.
+
+## Block Diagram
+
+![smartnic_322mhz block diagram](../../docs/SmartNIC_Block_Diagram.png)
 
 ## Unit Tests
 
