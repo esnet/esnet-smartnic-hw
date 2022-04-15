@@ -169,8 +169,7 @@ build_vanilla_ons:
     when: always
     expire_in: 2 weeks
   timeout: 8h
-  needs:
-    - pull_esnet_open_nic
+  needs: []
   rules:
     - when: manual
 
