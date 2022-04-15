@@ -9,11 +9,10 @@ stages:
   - trigger_downstream
 
 variables:
-  OPEN_NIC_REPO_BRANCH: v1.2-dev-2021.2
   GIT_STRATEGY: clone
 
 .common:
-  image: wharf.es.net/ht/xilinx-tools-docker:21087-g4c4c1a59
+  image: $CI_REGISTRY/ht/xilinx-tools-docker:21975-g8bb7b6c3
   tags:
     - ht-docker
   before_script:
