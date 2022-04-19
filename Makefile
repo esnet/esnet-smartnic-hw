@@ -28,7 +28,8 @@ export BUILD_NAME   ?= esnet-smartnic-$(APP_NAME)
 export ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
 export ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
-jobs ?= 16
+export max_pkt_len ?= 1518
+export jobs ?= 16
 
 
 #------- Targets -------
@@ -49,7 +50,7 @@ bitfile : echo_vars
 	$(MAKE) -C $(APP_ROOT)/app_if
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build
 	@echo "Generating smartnic bitfile..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile BUILD_NAME=$(BUILD_NAME) jobs=$(jobs)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile
 
 package : echo_vars | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME)..."
