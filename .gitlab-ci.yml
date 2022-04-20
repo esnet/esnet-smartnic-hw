@@ -13,8 +13,6 @@ variables:
 
 .common:
   image: $CI_REGISTRY/ht/xilinx-tools-docker:21975-g8bb7b6c3
-  tags:
-    - ht-docker
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
   variables:
@@ -27,6 +25,8 @@ variables:
 p4bm:
   stage: p4_sim
   extends: .common
+  tags:
+    - ht-sim
   script:
     - make -C src/p4_app/p4/sim build sim-all
     - make -C examples/p4_simple/p4/sim sim-all
@@ -42,6 +42,8 @@ p4bm:
 sim_p4_apps:
   stage: rtl_sim
   extends: .common
+  tags:
+    - ht-sim
   script:
     - make -C src/p4_app/tests/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
@@ -60,6 +62,8 @@ sim_p4_apps:
 sim_platform:
   stage: rtl_sim
   extends: .common
+  tags:
+    - ht-sim
   script:
     - make -C src/smartnic_322mhz/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_0/sim.log
@@ -78,6 +82,8 @@ sim_platform:
 build_p4_example:
   stage: bitfile
   extends: .common
+  tags:
+    - ht-synth
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
   script:
@@ -103,6 +109,8 @@ build_p4_example:
 build_p2p_example:
   stage: bitfile
   extends: .common
+  tags:
+    - ht-synth
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
   script:
@@ -128,6 +136,8 @@ build_p2p_example:
 build_p4_simple:
   stage: bitfile
   extends: .common
+  tags:
+    - ht-synth
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
   script:
@@ -153,6 +163,8 @@ build_p4_simple:
 build_vanilla_ons:
   stage: bitfile
   extends: .common
+  tags:
+    - ht-synth
   script:
     - make -f makefile.esnet vanilla_bitfile
   artifacts:
@@ -176,6 +188,8 @@ build_vanilla_ons:
 export_hwapi:
   stage: package
   extends: .common
+  tags:
+    - ht-misc
   before_script: []
   script:
     - unzip examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
