@@ -6,7 +6,7 @@ stages:
   - rtl_sim
   - bitfile
   - package
-  - trigger_downstream
+#  - trigger_downstream
 
 variables:
   GIT_STRATEGY: clone
@@ -189,10 +189,10 @@ export_hwapi:
   needs:
     - build_p4_simple
 
-trigger_downstream_job:
-  stage: trigger_downstream
-  trigger:
-    project: ht/esnet-smartnic-ht
-    branch: main
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+#trigger_downstream_job:
+#  stage: trigger_downstream
+#  trigger:
+#    project: ht/esnet-smartnic-ht
+#    branch: main
+#  rules:
+#    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
