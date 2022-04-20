@@ -6,7 +6,7 @@ stages:
   - rtl_sim
   - bitfile
   - package
-#  - trigger_downstream
+  - trigger_downstream
 
 variables:
   GIT_STRATEGY: clone
@@ -79,86 +79,45 @@ sim_platform:
   timeout: 2h
   needs: []
 
-build_p4_example:
+.build:
   stage: bitfile
   extends: .common
   tags:
     - ht-synth
   before_script:
     - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src
+      - esnet-fpga-library
+      - examples
+      - open-nic-shell
+    exclude:
+      - .git/**
+      - .git
+      - .gitignore
+      - .gitlab-ci.yml
+      - .gitmodules
+    when: always
+    expire_in: 2 weeks
+  timeout: 8h
+  needs: []
+
+build_p4_example:
+  extends: .build
   script:
     - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - src
-      - esnet-fpga-library
-      - examples
-      - open-nic-shell
-    exclude:
-      - .git/**
-      - .git
-      - .gitignore
-      - .gitlab-ci.yml
-      - .gitmodules
-    when: always
-    expire_in: 2 weeks
-  timeout: 8h
-  needs: []
 
 build_p2p_example:
-  stage: bitfile
-  extends: .common
-  tags:
-    - ht-synth
-  before_script:
-    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+  extends: .build
   script:
     - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - src
-      - esnet-fpga-library
-      - examples
-      - open-nic-shell
-    exclude:
-      - .git/**
-      - .git
-      - .gitignore
-      - .gitlab-ci.yml
-      - .gitmodules
-    when: always
-    expire_in: 2 weeks
-  timeout: 8h
-  needs: []
 
 build_p4_simple:
-  stage: bitfile
-  extends: .common
-  tags:
-    - ht-synth
-  before_script:
-    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+  extends: .build
   script:
     - make -C examples/p4_simple build BUILD_NAME=open-nic-ci
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - src
-      - esnet-fpga-library
-      - examples
-      - open-nic-shell
-    exclude:
-      - .git/**
-      - .git
-      - .gitignore
-      - .gitlab-ci.yml
-      - .gitmodules
-    when: always
-    expire_in: 2 weeks
-  timeout: 8h
-  needs: []
 
 build_vanilla_ons:
   stage: bitfile
@@ -185,14 +144,12 @@ build_vanilla_ons:
     - when: manual
       allow_failure: true
 
-export_hwapi:
+.export_hwapi:
   stage: package
   extends: .common
   tags:
     - ht-misc
   before_script: []
-  script:
-    - unzip examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -200,8 +157,36 @@ export_hwapi:
     when: always
     expire_in: 3 month
   timeout: 30m
+
+export_hwapi_p4_simple:
+  extends: .export_hwapi
+  script:
+    - unzip examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
   needs:
     - build_p4_simple
+
+.trigger_fw:
+  stage: trigger_downstream
+  variables:
+    SN_HW_GROUP: ht
+    SN_HW_REPO: esnet-smartnic-hw
+    SN_HW_BRANCH: '$CI_COMMIT_BRANCH'
+  trigger:
+    project: ht/esnet-smartnic-fw
+    branch: main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: true
+
+trigger_fw_p4_simple:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: export_hwapi_p4_simple
+    SN_HW_APP_NAME: p4_simple
+  needs:
+    - export_hwapi_p4_simple
 
 #trigger_downstream_job:
 #  stage: trigger_downstream
