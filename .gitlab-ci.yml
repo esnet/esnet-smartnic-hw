@@ -79,13 +79,13 @@ sim_platform:
   timeout: 2h
   needs: []
 
-.build:
+.bitfile:
   stage: bitfile
   extends: .common
   tags:
     - ht-synth
-  before_script:
-    - source /opt/Xilinx/Vivado/2021.2/settings64.sh
+  script:
+    - make -C $EXAMPLES_DIR/$SN_HW_APP_NAME build BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -105,19 +105,22 @@ sim_platform:
   needs: []
 
 build_p4_example:
-  extends: .build
-  script:
-    - make -C examples/unsupported/p4_example build BUILD_NAME=open-nic-ci
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples/unsupported
+    SN_HW_APP_NAME: p4_example
 
-build_p2p_example:
-  extends: .build
-  script:
-    - make -C examples/unsupported/p2p build BUILD_NAME=open-nic-ci
+build_p2p:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples/unsupported
+    SN_HW_APP_NAME: p2p
 
 build_p4_simple:
-  extends: .build
-  script:
-    - make -C examples/p4_simple build BUILD_NAME=open-nic-ci
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_simple
 
 build_vanilla_ons:
   stage: bitfile
@@ -144,33 +147,52 @@ build_vanilla_ons:
     - when: manual
       allow_failure: true
 
-.export_hwapi:
+.hwapi:
   stage: package
   extends: .common
   tags:
     - ht-misc
   before_script: []
+  script:
+    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
   artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    name: "artifacts.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
     paths:
       - esnet-smartnic-hwapi
     when: always
     expire_in: 3 month
   timeout: 30m
 
-export_hwapi_p4_simple:
-  extends: .export_hwapi
-  script:
-    - unzip examples/p4_simple/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
+hwapi_p4_example:
+  extends: .hwapi
+  variables:
+    EXAMPLES_DIR: examples/unsupported
+    SN_HW_APP_NAME: p4_example
+  needs:
+    - build_p4_example
+
+hwapi_p2p:
+  extends: .hwapi
+  variables:
+    EXAMPLES_DIR: examples/unsupported
+    SN_HW_APP_NAME: p2p
+  needs:
+    - build_p2p
+
+hwapi_p4_simple:
+  extends: .hwapi
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_simple
   needs:
     - build_p4_simple
 
 .trigger_fw:
   stage: trigger_downstream
   variables:
-    SN_HW_GROUP: ht
-    SN_HW_REPO: esnet-smartnic-hw
-    SN_HW_BRANCH: '$CI_COMMIT_BRANCH'
+    SN_HW_GROUP: $CI_PROJECT_NAMESPACE
+    SN_HW_REPO: $CI_PROJECT_NAME
+    SN_HW_BRANCH: $CI_COMMIT_BRANCH
   trigger:
     project: ht/esnet-smartnic-fw
     branch: main
@@ -180,18 +202,19 @@ export_hwapi_p4_simple:
       when: manual
       allow_failure: true
 
-trigger_fw_p4_simple:
+fw_p4_example:
   extends: .trigger_fw
   variables:
-    SN_HW_API_JOB: export_hwapi_p4_simple
-    SN_HW_APP_NAME: p4_simple
+    SN_HW_APP_NAME: p4_example
+    SN_HW_API_JOB: hwapi_p4_example
   needs:
-    - export_hwapi_p4_simple
+    - hwapi_p4_example
 
-#trigger_downstream_job:
-#  stage: trigger_downstream
-#  trigger:
-#    project: ht/esnet-smartnic-ht
-#    branch: main
-#  rules:
-#    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+fw_p4_simple:
+  extends: .trigger_fw
+  variables:
+    SN_HW_APP_NAME: p4_simple
+    SN_HW_API_JOB: hwapi_p4_simple
+  needs:
+    - hwapi_p4_simple
+
