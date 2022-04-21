@@ -210,14 +210,6 @@ fw_p4_example:
   needs:
     - hwapi_p4_example
 
-fw_p2p:
-  extends: .trigger_fw
-  variables:
-    SN_HW_APP_NAME: p2p
-    SN_HW_API_JOB: hwapi_p2p
-  needs:
-    - hwapi_p2p
-
 fw_p4_simple:
   extends: .trigger_fw
   variables:
