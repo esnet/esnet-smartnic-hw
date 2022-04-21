@@ -21,7 +21,8 @@ INC_DIRS =
 SRC_LIST_FILES = \
     axis_switch_egress/sources.f \
     axis_switch_ingress/sources.f \
-    clk_wiz_0/sources.f 
+    clk_wiz_0/sources.f \
+    clk_wiz_1/sources.f
 
 # ----------------------------------------------------
 # Dependencies

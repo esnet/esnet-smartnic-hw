@@ -13,6 +13,8 @@ decoders:
     !include ../src/smartnic_322mhz/reg/smartnic_322mhz_app_sdnet_decoder.yaml
   fifo: &fifo
     !include src/fifo/reg/fifo_core_decoder.yaml
+  xilinx_hbm: &xilinx_hbm
+    !include src/xilinx/hbm/reg/xilinx_hbm_decoder.yaml
 
 interfaces:
   - block: *smartnic_322mhz
@@ -121,7 +123,12 @@ interfaces:
     width: 10
     name: fifo_to_host_0
 
-  - decoder: *smartnic_322mhz_app_decoder
+  - decoder: *xilinx_hbm
     address: 0x40000
+    width: 18
+    name: hbm_left
+
+  - decoder: *smartnic_322mhz_app_decoder
+    address: 0x80000
     width: 19
     name: smartnic_322mhz_app

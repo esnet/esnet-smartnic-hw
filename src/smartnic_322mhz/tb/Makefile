@@ -31,7 +31,8 @@ COMPONENTS = xilinx_ip reg.verif rtl \
              reg.reg.verif=$(LIB_ROOT)/src/reg/reg/verif \
              axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
              axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
-             axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif 
+             axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif \
+             xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif
 
 EXT_LIBS =
 
