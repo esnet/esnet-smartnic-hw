@@ -201,6 +201,8 @@ hwapi_p4_simple:
     SN_HW_GROUP: $CI_PROJECT_NAMESPACE
     SN_HW_REPO: $CI_PROJECT_NAME
     SN_HW_BRANCH: $CI_COMMIT_BRANCH
+    # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
+    ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
     project: ht/esnet-smartnic-fw
     branch: main
