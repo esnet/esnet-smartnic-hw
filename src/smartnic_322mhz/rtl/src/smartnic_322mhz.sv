@@ -289,11 +289,32 @@ module smartnic_322mhz #(
    // core clock domain
    // ----------------------------------------------------------------
 
+   (* mark_debug="true" *)  logic [511:0]  tdata  [NUM_CMAC];
+   (* mark_debug="true" *)  logic          tvalid [NUM_CMAC];
+   (* mark_debug="true" *)  logic          tlast  [NUM_CMAC];
+   (* mark_debug="true" *)  logic [63:0]   tkeep  [NUM_CMAC];
+   (* mark_debug="true" *)  logic          tready [NUM_CMAC];
+
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
 
       //------------------------ from cmac to core --------------
       port_t s_axis_cmac_rx_322mhz_tid [NUM_CMAC];
       assign s_axis_cmac_rx_322mhz_tid[i] = i;
+
+      assign tdata[i]  = s_axis_cmac_rx_322mhz_tdata[`getvec(512, i)];
+      assign tvalid[i] = s_axis_cmac_rx_322mhz_tvalid[i];
+      assign tlast[i]  = s_axis_cmac_rx_322mhz_tlast[i];
+      assign tkeep[i]  = {'0, s_axis_cmac_rx_322mhz_tuser_err[i]};
+      assign tready[i] = s_axis_cmac_rx_322mhz_tready[i];
+
+      ila_axi4s ila_axi4s (
+         .clk    (cmac_clk[i]),
+         .probe0 (tdata[i]),
+         .probe1 (tvalid[i]),
+         .probe2 (tlast[i]),
+         .probe3 (tkeep[i]),
+         .probe4 (tready[i])
+      );
 
       axi4s_intf_from_signals #(
         .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
