@@ -31,6 +31,7 @@ REG_BLOCK_YAML = $(IP_ROOT)/reg/smartnic_322mhz.yaml \
                  $(LIB_ROOT)/src/fifo/reg/fifo_ctrl_rd_mon.yaml \
                  $(LIB_ROOT)/src/fifo/reg/fifo_core.yaml \
                  $(LIB_ROOT)/src/reg/reg/reg_endian_check.yaml \
+                 $(LIB_ROOT)/src/reg/reg/reg_proxy.yaml \
                  $(LIB_ROOT)/src/xilinx/hbm/reg/xilinx_hbm.yaml
                  
 

@@ -15,8 +15,9 @@
 //  computer software.
 // =============================================================================
 
-module smartnic_322mhz_hbm_left
-(
+module smartnic_322mhz_hbm #(
+    parameter bit HBM_STACK = 1'b0// 0: Left stack (4GB); 1: Right stack (4GB)
+) (
     // Clock/reset
     input logic            clk,
     input logic            rstn,
@@ -647,7 +648,14 @@ module smartnic_322mhz_hbm_left
     );
     
     // Xilinx HBM controller instantiation
-    hbm_4g_left i_hbm_4g_left (.*);
+    generate
+        if (HBM_STACK == 1'b0) begin : g__hbm_left
+            hbm_4g_left i_hbm_4g_left (.*);
+        end : g__hbm_left
+        else begin : g__hbm_right
+            hbm_4g_right i_hbm_4g_right (.*);
+        end : g__hbm_right
+    endgenerate
 `endif
 
-endmodule : smartnic_322mhz_hbm_left
+endmodule : smartnic_322mhz_hbm

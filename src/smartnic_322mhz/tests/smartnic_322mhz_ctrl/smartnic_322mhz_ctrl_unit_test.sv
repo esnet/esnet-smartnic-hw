@@ -150,8 +150,8 @@ module smartnic_322mhz_ctrl_unit_test;
 
         `FAIL_UNLESS(got_data == exp_data);
     `SVTEST_END
-    
-    // Read HBM DRAM temp
+
+    // Read HBM0 DRAM temp
     // Read temperature value from HBM DRAM (set to static value of 30 for simulation)
     `SVTEST(read_hbm_0_dram_temp)
         int got_temp;
@@ -159,12 +159,29 @@ module smartnic_322mhz_ctrl_unit_test;
         env.hbm_0_reg_agent.get_dram_temp(got_temp);
         `FAIL_UNLESS(got_temp === exp_temp);
     `SVTEST_END
- 
-    // Read HBM DRAM CATTRIP (catastrophic temperature exceeded flag)
+
+    // Read HBM0 DRAM CATTRIP (catastrophic temperature exceeded flag)
     `SVTEST(read_hbm_0_dram_cattrip)
         bit got_cattrip;
         bit exp_cattrip = 1'b0;
         env.hbm_0_reg_agent.get_dram_cattrip(got_cattrip);
+        `FAIL_UNLESS(got_cattrip === exp_cattrip);
+    `SVTEST_END
+
+    // Read HBM1 DRAM temp
+    // Read temperature value from HBM DRAM (set to static value of 30 for simulation)
+    `SVTEST(read_hbm_1_dram_temp)
+        int got_temp;
+        int exp_temp = 30;
+        env.hbm_1_reg_agent.get_dram_temp(got_temp);
+        `FAIL_UNLESS(got_temp === exp_temp);
+    `SVTEST_END
+
+    // Read HBM1 DRAM CATTRIP (catastrophic temperature exceeded flag)
+    `SVTEST(read_hbm_1_dram_cattrip)
+        bit got_cattrip;
+        bit exp_cattrip = 1'b0;
+        env.hbm_1_reg_agent.get_dram_cattrip(got_cattrip);
         `FAIL_UNLESS(got_cattrip === exp_cattrip);
     `SVTEST_END
 

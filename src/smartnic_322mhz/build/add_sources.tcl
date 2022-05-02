@@ -11,6 +11,7 @@ read_ip ../xilinx_ip/axis_switch_ingress/axis_switch_ingress.xci
 read_ip ../xilinx_ip/clk_wiz_0/clk_wiz_0.xci
 read_ip ../xilinx_ip/clk_wiz_1/clk_wiz_1.xci
 read_ip ../xilinx_ip/hbm_4g_left/hbm_4g_left.xci
+read_ip ../xilinx_ip/hbm_4g_right/hbm_4g_right.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
 read_verilog $lib_root/src/axi4s/xilinx_ip/axis_register_slice/hdl/axis_infrastructure_v1_1_0.vh
