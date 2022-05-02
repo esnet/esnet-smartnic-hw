@@ -252,22 +252,19 @@ module smartnic_322mhz #(
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(ERRORED), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
-               __axis_from_cmac [NUM_CMAC] ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(ERRORED), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
-               axis_from_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), 
+                 .TUSER_T(bit), .TUSER_MODE(PKT_ERROR))                axis_from_cmac    [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_host    [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_cmac      [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_host      [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_to_core [NUM_CMAC] ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
-               axis_core_to_cmac [NUM_CMAC] ();
-
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64),
+                 .TID_T(port_t), .TDEST_T(port_t))                     axis_core_to_cmac [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_host_0 ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) 
-               axis_core_to_host [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64),
+                 .TID_T(port_t), .TDEST_T(port_t))                     axis_core_to_host [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core [NUM_CMAC] ();
 
@@ -330,25 +327,21 @@ module smartnic_322mhz #(
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
-        .axi4s_if (__axis_from_cmac[i])
+        .axi4s_if (axis_from_cmac[i])
       );
 
-      axi4s_pkt_discard_err discard_err_from_cmac (
-        .axi4s_in_if  (__axis_from_cmac[i]),
-        .axi4s_out_if (axis_from_cmac[i]),
-        .axi4l_if     (axil_to_err_from_cmac[i])
-      );
+      axi4s_probe #( .MODE(ERRORS) ) axi4s_err_from_cmac (
+            .axi4l_if  (axil_to_err_from_cmac[i]),
+            .axi4s_if  (axis_from_cmac[i])
+         );
 
       axi4s_pkt_fifo_async #(
-        .DATA_BYTE_WID  (64),
-        .TID_T          (port_t), 
-        .TDEST_T        (port_t), 
         .FIFO_DEPTH     (128),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_from_cmac (
-        .axi4s_in_if    (axis_from_cmac[i]),
+        .axi4s_in       (axis_from_cmac[i]),
         .clk_out        (core_clk),
-        .axi4s_out_if   (axis_cmac_to_core[i]),
+        .axi4s_out      (axis_cmac_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_cmac[i]),
         .axil_if        (axil_to_fifo_from_cmac[i])
@@ -361,15 +354,12 @@ module smartnic_322mhz #(
 
       //------------------------ from core to cmac --------------
       axi4s_pkt_fifo_async #(
-        .DATA_BYTE_WID  (64),
-        .TID_T          (port_t), 
-        .TDEST_T        (port_t), 
         .FIFO_DEPTH     (128),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_to_cmac (
-        .axi4s_in_if    (axis_core_to_cmac[i]),
+        .axi4s_in       (axis_core_to_cmac[i]),
         .clk_out        (cmac_clk[i]),
-        .axi4s_out_if   (axis_to_cmac[i]),
+        .axi4s_out      (axis_to_cmac[i]),
         .axil_to_probe  (axil_to_probe_to_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
         .axil_if        (axil_to_fifo_to_cmac[i])
@@ -399,15 +389,12 @@ module smartnic_322mhz #(
       //------------------------ from core to host --------------
       if (i==0) begin : g__fifo_host_0
          axi4s_pkt_fifo_async #(
-           .DATA_BYTE_WID  (64),
-           .TID_T          (port_t),
-           .TDEST_T        (port_t),
            .FIFO_DEPTH     (128),
            .MAX_PKT_LEN    (MAX_PKT_LEN)
          ) fifo_to_host (
-           .axi4s_in_if    (axis_core_to_host_0),
+           .axi4s_in       (axis_core_to_host_0),
            .clk_out        (cmac_clk[i]),
-           .axi4s_out_if   (axis_to_host[i]),
+           .axi4s_out      (axis_to_host[i]),
            .axil_to_probe  (axil_to_probe_to_host[i]),
            .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
            .axil_if        (axil_to_fifo_to_host[i])
@@ -415,15 +402,12 @@ module smartnic_322mhz #(
       end : g__fifo_host_0
       else begin : g__fifo_host
          axi4s_pkt_fifo_async #(
-           .DATA_BYTE_WID  (64),
-           .TID_T          (port_t),
-           .TDEST_T        (port_t),
            .FIFO_DEPTH     (128),
            .MAX_PKT_LEN    (MAX_PKT_LEN)
          ) fifo_to_host (
-           .axi4s_in_if    (axis_core_to_host[i]),
+           .axi4s_in       (axis_core_to_host[i]),
            .clk_out        (cmac_clk[i]),
-           .axi4s_out_if   (axis_to_host[i]),
+           .axi4s_out      (axis_to_host[i]),
            .axil_to_probe  (axil_to_probe_to_host[i]),
            .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
            .axil_if        (axil_to_fifo_to_host[i])
@@ -475,15 +459,12 @@ module smartnic_322mhz #(
 
 
       axi4s_pkt_fifo_async #(
-        .DATA_BYTE_WID  (64),
-        .TID_T          (port_t), 
-        .TDEST_T        (port_t), 
         .FIFO_DEPTH     (128),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_from_host (
-        .axi4s_in_if    (axis_from_host[i]),
+        .axi4s_in       (axis_from_host[i]),
         .clk_out        (core_clk),
-        .axi4s_out_if   (axis_host_to_core[i]),
+        .axi4s_out      (axis_host_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_host[i]),
         .axil_if        (axil_to_fifo_from_host[i])
