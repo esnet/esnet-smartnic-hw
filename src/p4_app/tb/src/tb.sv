@@ -28,6 +28,8 @@ module tb;
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_if ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_to_adpt ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_from_adpt ();
+
+    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
    
     // DUT instance
     p4_app DUT(
@@ -39,7 +41,8 @@ module tb;
         .axis_switch_to_core ( axis_in_if ),
         .axis_core_to_switch ( axis_out_if ),
         .axis_to_host_0      ( axis_to_adpt ),
-        .axis_from_host_0    ( axis_from_adpt )
+        .axis_from_host_0    ( axis_from_adpt ),
+        .axi_to_hbm          ( axi_to_hbm )
     );
 
     //===================================
