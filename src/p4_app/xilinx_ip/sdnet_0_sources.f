@@ -15,3 +15,5 @@ sdnet_0/src/verilog/sdnet_0_match_action_engine.sv
 sdnet_0/src/verilog/sdnet_0_top.sv
 sdnet_0/src/verilog/sdnet_0.sv
 
+sdnet_0/sdnet_0_wrapper.sv
+
