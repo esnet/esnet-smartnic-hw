@@ -6,4 +6,5 @@ set ip_list { \
     clk_wiz_0 \
     clk_wiz_1 \
     hbm_4g_left \
+    hbm_4g_right \
 }

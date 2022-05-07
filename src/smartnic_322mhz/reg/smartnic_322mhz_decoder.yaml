@@ -124,9 +124,14 @@ interfaces:
     name: fifo_to_host_0
 
   - decoder: *xilinx_hbm
-    address: 0x40000
-    width: 18
-    name: hbm_left
+    address: 0x0e000
+    width: 12
+    name: hbm_0
+
+  - decoder: *xilinx_hbm
+    address: 0x0f000
+    width: 12
+    name: hbm_1
 
   - decoder: *smartnic_322mhz_app_decoder
     address: 0x80000
