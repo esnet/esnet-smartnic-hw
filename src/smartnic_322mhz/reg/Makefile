@@ -16,6 +16,8 @@ include $(IP_ROOT)/config.mk
 REG_BLOCK_YAML = smartnic_322mhz.yaml
 REG_DECODER_YAML = smartnic_322mhz_app_decoder.yaml \
                    smartnic_322mhz_app_sdnet_decoder.yaml \
+                   xilinx_hbm_0_decoder.yaml \
+                   xilinx_hbm_1_decoder.yaml \
                    smartnic_322mhz_decoder.yaml
 
 # ----------------------------------------------------
