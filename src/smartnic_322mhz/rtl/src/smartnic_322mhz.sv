@@ -148,7 +148,7 @@ module smartnic_322mhz #(
 
    smartnic_322mhz_reg_intf   smartnic_322mhz_regs();
 
-   
+
    // Convert Xilinx AXI-L signals to interface format
    axi4l_intf_from_signals s_axil_from_signals_0 (
       // Signals (from controller)
@@ -177,7 +177,7 @@ module smartnic_322mhz #(
       // Interface (to peripheral)
       .axi4l_if (s_axil_if)
    );
-    
+
    // smartnic_322mhz top-level decoder
    smartnic_322mhz_decoder smartnic_322mhz_axil_decoder_0 (
       .axil_if                         (s_axil_if),
@@ -220,7 +220,7 @@ module smartnic_322mhz #(
    smartnic_322mhz_reg_blk     smartnic_322mhz_reg_blk_0
    (
     .axil_if    (axil_to_regif__core_clk),
-    .reg_blk_if (smartnic_322mhz_regs)                 
+    .reg_blk_if (smartnic_322mhz_regs)
    );
 
    // Endian check reg block
@@ -230,17 +230,69 @@ module smartnic_322mhz #(
 
    // Timestamp counter and access logic
    logic [63:0] timestamp;
-   
+
    smartnic_322mhz_timestamp  smartnic_322mhz_timestamp_0 (
      .clk               (core_clk),
      .rstn              (core_rstn),
      .timestamp         (timestamp),
-     .smartnic_322mhz_regs (smartnic_322mhz_regs)                 
+     .smartnic_322mhz_regs (smartnic_322mhz_regs)
    );
 
    // ----------------------------------------------------------------
    //  HBM
    // ----------------------------------------------------------------
+   // Signals
+   logic [15:0]        axi_to_hbm_0_aclk;
+   logic [15:0]        axi_to_hbm_0_aresetn;
+   logic [15:0][5:0]   axi_to_hbm_0_awid;
+   logic [15:0][32:0]  axi_to_hbm_0_awaddr;
+   logic [15:0][3:0]   axi_to_hbm_0_awlen;
+   logic [15:0][2:0]   axi_to_hbm_0_awsize;
+   logic [15:0][1:0]   axi_to_hbm_0_awburst;
+   logic [15:0][1:0]   axi_to_hbm_0_awlock;
+   logic [15:0][3:0]   axi_to_hbm_0_awcache;
+   logic [15:0][2:0]   axi_to_hbm_0_awprot;
+   logic [15:0][3:0]   axi_to_hbm_0_awqos;
+   logic [15:0][3:0]   axi_to_hbm_0_awregion;
+   logic [15:0]        axi_to_hbm_0_awuser;
+   logic [15:0]        axi_to_hbm_0_awvalid;
+   logic [15:0]        axi_to_hbm_0_awready;
+   logic [15:0][5:0]   axi_to_hbm_0_wid;
+   logic [15:0][255:0] axi_to_hbm_0_wdata;
+   logic [15:0][31:0]  axi_to_hbm_0_wstrb;
+   logic [15:0]        axi_to_hbm_0_wlast;
+   logic [15:0]        axi_to_hbm_0_wuser;
+   logic [15:0]        axi_to_hbm_0_wvalid;
+   logic [15:0]        axi_to_hbm_0_wready;
+   logic [15:0][5:0]   axi_to_hbm_0_bid;
+   logic [15:0][1:0]   axi_to_hbm_0_bresp;
+   logic [15:0]        axi_to_hbm_0_buser;
+   logic [15:0]        axi_to_hbm_0_bvalid;
+   logic [15:0]        axi_to_hbm_0_bready;
+   logic [15:0][5:0]   axi_to_hbm_0_arid;
+   logic [15:0][32:0]  axi_to_hbm_0_araddr;
+   logic [15:0][3:0]   axi_to_hbm_0_arlen;
+   logic [15:0][2:0]   axi_to_hbm_0_arsize;
+   logic [15:0][1:0]   axi_to_hbm_0_arburst;
+   logic [15:0][1:0]   axi_to_hbm_0_arlock;
+   logic [15:0][3:0]   axi_to_hbm_0_arcache;
+   logic [15:0][2:0]   axi_to_hbm_0_arprot;
+   logic [15:0][3:0]   axi_to_hbm_0_arqos;
+   logic [15:0][3:0]   axi_to_hbm_0_arregion;
+   logic [15:0]        axi_to_hbm_0_aruser;
+   logic [15:0]        axi_to_hbm_0_arvalid;
+   logic [15:0]        axi_to_hbm_0_arready;
+   logic [15:0][5:0]   axi_to_hbm_0_rid;
+   logic [15:0][255:0] axi_to_hbm_0_rdata;
+   logic [15:0][1:0]   axi_to_hbm_0_rresp;
+   logic [15:0]        axi_to_hbm_0_rlast;
+   logic [15:0]        axi_to_hbm_0_ruser;
+   logic [15:0]        axi_to_hbm_0_rvalid;
+   logic [15:0]        axi_to_hbm_0_rready;
+
+   // Memory interfaces
+   axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [2][16] ();
+
    // 'Left' stack (4GB)
    smartnic_322mhz_hbm #(
      .HBM_STACK   (0)
@@ -249,7 +301,8 @@ module smartnic_322mhz #(
      .rstn        (core_rstn),
      .hbm_ref_clk (hbm_ref_clk),
      .clk_100mhz  (clk_100mhz),
-     .axil_if     (axil_to_hbm_0)
+     .axil_if     (axil_to_hbm_0),
+     .axi_if      (axi_to_hbm[0])
    );
 
    // 'Right' stack (4GB)
@@ -260,14 +313,83 @@ module smartnic_322mhz #(
      .rstn        (core_rstn),
      .hbm_ref_clk (hbm_ref_clk),
      .clk_100mhz  (clk_100mhz),
-     .axil_if     (axil_to_hbm_1)
+     .axil_if     (axil_to_hbm_1),
+     .axi_if      (axi_to_hbm[1])
    );
+
+   // Convert between AXI3 interface and signal representations
+   generate
+       for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+           //  Map HBM0 memory interface signals into interface representation
+           axi3_intf_from_signals #(
+               .DATA_BYTE_WID(32),
+               .ADDR_WID     (33),
+               .ID_T         (logic[5:0])
+           ) axi3_intf_from_signals__hbm (
+               .aclk     ( axi_to_hbm_0_aclk    [g_hbm_if] ),
+               .aresetn  ( axi_to_hbm_0_aresetn [g_hbm_if] ),
+               .awid     ( axi_to_hbm_0_awid    [g_hbm_if] ),
+               .awaddr   ( axi_to_hbm_0_awaddr  [g_hbm_if] ),
+               .awlen    ( axi_to_hbm_0_awlen   [g_hbm_if] ),
+               .awsize   ( axi_to_hbm_0_awsize  [g_hbm_if] ),
+               .awburst  ( axi_to_hbm_0_awburst [g_hbm_if] ),
+               .awlock   ( axi_to_hbm_0_awlock  [g_hbm_if] ),
+               .awcache  ( axi_to_hbm_0_awcache [g_hbm_if] ),
+               .awprot   ( axi_to_hbm_0_awprot  [g_hbm_if] ),
+               .awqos    ( axi_to_hbm_0_awqos   [g_hbm_if] ),
+               .awregion ( axi_to_hbm_0_awregion[g_hbm_if] ),
+               .awuser   ( axi_to_hbm_0_awuser  [g_hbm_if] ),
+               .awvalid  ( axi_to_hbm_0_awvalid [g_hbm_if] ),
+               .awready  ( axi_to_hbm_0_awready [g_hbm_if] ),
+               .wid      ( axi_to_hbm_0_wid     [g_hbm_if] ),
+               .wdata    ( axi_to_hbm_0_wdata   [g_hbm_if] ),
+               .wstrb    ( axi_to_hbm_0_wstrb   [g_hbm_if] ),
+               .wlast    ( axi_to_hbm_0_wlast   [g_hbm_if] ),
+               .wuser    ( axi_to_hbm_0_wuser   [g_hbm_if] ),
+               .wvalid   ( axi_to_hbm_0_wvalid  [g_hbm_if] ),
+               .wready   ( axi_to_hbm_0_wready  [g_hbm_if] ),
+               .bid      ( axi_to_hbm_0_bid     [g_hbm_if] ),
+               .bresp    ( axi_to_hbm_0_bresp   [g_hbm_if] ),
+               .buser    ( axi_to_hbm_0_buser   [g_hbm_if] ),
+               .bvalid   ( axi_to_hbm_0_bvalid  [g_hbm_if] ),
+               .bready   ( axi_to_hbm_0_bready  [g_hbm_if] ),
+               .arid     ( axi_to_hbm_0_arid    [g_hbm_if] ),
+               .araddr   ( axi_to_hbm_0_araddr  [g_hbm_if] ),
+               .arlen    ( axi_to_hbm_0_arlen   [g_hbm_if] ),
+               .arsize   ( axi_to_hbm_0_arsize  [g_hbm_if] ),
+               .arburst  ( axi_to_hbm_0_arburst [g_hbm_if] ),
+               .arlock   ( axi_to_hbm_0_arlock  [g_hbm_if] ),
+               .arcache  ( axi_to_hbm_0_arcache [g_hbm_if] ),
+               .arprot   ( axi_to_hbm_0_arprot  [g_hbm_if] ),
+               .arqos    ( axi_to_hbm_0_arqos   [g_hbm_if] ),
+               .arregion ( axi_to_hbm_0_arregion[g_hbm_if] ),
+               .aruser   ( axi_to_hbm_0_aruser  [g_hbm_if] ),
+               .arvalid  ( axi_to_hbm_0_arvalid [g_hbm_if] ),
+               .arready  ( axi_to_hbm_0_arready [g_hbm_if] ),
+               .rid      ( axi_to_hbm_0_rid     [g_hbm_if] ),
+               .rdata    ( axi_to_hbm_0_rdata   [g_hbm_if] ),
+               .rresp    ( axi_to_hbm_0_rresp   [g_hbm_if] ),
+               .rlast    ( axi_to_hbm_0_rlast   [g_hbm_if] ),
+               .ruser    ( axi_to_hbm_0_ruser   [g_hbm_if] ),
+               .rvalid   ( axi_to_hbm_0_rvalid  [g_hbm_if] ),
+               .rready   ( axi_to_hbm_0_rready  [g_hbm_if] ),
+               .axi3_if  ( axi_to_hbm [0][g_hbm_if] )
+           );
+
+           assign axi_to_hbm_0_buser[g_hbm_if] = '0;
+           assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
+
+           // For now, terminate HBM1 memory interfaces (unused)
+           axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm[1][g_hbm_if]));
+
+       end : g__hbm_if
+   endgenerate
 
    // ----------------------------------------------------------------
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), 
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t),
                  .TUSER_T(bit), .TUSER_MODE(PKT_ERROR))                axis_from_cmac    [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_host    [NUM_CMAC] ();
@@ -295,6 +417,10 @@ module smartnic_322mhz #(
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app__demarc ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app_host_0__demarc ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app_host_0__demarc ();
+
+   // ----------------------------------------------------------------
+   //  HBM AXI-3 signals/interfaces
+   // ----------------------------------------------------------------
 
    // ----------------------------------------------------------------
    // fifos to go from independent CMAC clock domains to a single
@@ -365,7 +491,7 @@ module smartnic_322mhz #(
       // Terminate unused AXI-L interface
       axi4l_intf_controller_term axi4l_fifo_from_cmac_term (.axi4l_if (axil_to_fifo_from_cmac[i]));
 
-      
+
 
       //------------------------ from core to cmac --------------
       axi4s_pkt_fifo_async #(
@@ -492,7 +618,7 @@ module smartnic_322mhz #(
 
    endgenerate
 
-   
+
    logic axis_core_to_app_tvalid;
 
    axis_switch_ingress axis_switch_ingress
@@ -500,7 +626,7 @@ module smartnic_322mhz #(
     .aclk    ( core_clk ),
     .aresetn ( core_rstn ),
     .s_req_suppress ( 3'h0 ),
-      
+
     .m_axis_tdata  ( axis_core_to_app.tdata ),
     .m_axis_tkeep  ( axis_core_to_app.tkeep ),
     .m_axis_tlast  ( axis_core_to_app.tlast ),
@@ -548,7 +674,7 @@ module smartnic_322mhz #(
 
    // output port configuration logic
    logic [1:0] egress_dest;
-   
+
    always_comb begin
       egress_dest = 0;
 
@@ -558,7 +684,7 @@ module smartnic_322mhz #(
       if (smartnic_322mhz_regs.port_config.output_enable == PORT_CONFIG_OUTPUT_ENABLE_USE_META)
           egress_dest = axis_app_to_core.tdest;
    end
-   
+
 
    axis_switch_egress axis_switch_egress
    (
@@ -574,13 +700,13 @@ module smartnic_322mhz #(
     .m_axis_tvalid ({ axis_core_to_host[1].tvalid , axis_core_to_cmac[1].tvalid , axis_core_to_cmac[0].tvalid }),
 
     .s_axis_tdata  ( axis_app_to_core.tdata ),
-    .s_axis_tdest  ( egress_dest ),                          
+    .s_axis_tdest  ( egress_dest ),
     .s_axis_tkeep  ( axis_app_to_core.tkeep ),
     .s_axis_tlast  ( axis_app_to_core.tlast ),
     .s_axis_tid    ( axis_app_to_core.tid ),
     .s_axis_tready ( axis_app_to_core.tready ),
     .s_axis_tvalid ( axis_app_to_core.tvalid ),
-      
+
     .s_decode_err ()
    );
 
@@ -727,7 +853,49 @@ module smartnic_322mhz #(
     .axis_to_host_tlast  ( axis_from_app_host_0.tlast ),
     .axis_to_host_tid    ( axis_from_app_host_0.tid ),
     .axis_to_host_tdest  ( axis_from_app_host_0.tdest ),
-    .axis_to_host_tuser  ( axis_from_app_host_0.tuser )
+    .axis_to_host_tuser  ( axis_from_app_host_0.tuser ),
+    // AXI3 interfaces to HBM
+    // (synchronous to core clock domain)
+    .axi_to_hbm_awid     ( axi_to_hbm_0_awid    ),
+    .axi_to_hbm_awaddr   ( axi_to_hbm_0_awaddr  ),
+    .axi_to_hbm_awlen    ( axi_to_hbm_0_awlen   ),
+    .axi_to_hbm_awsize   ( axi_to_hbm_0_awsize  ),
+    .axi_to_hbm_awburst  ( axi_to_hbm_0_awburst ),
+    .axi_to_hbm_awlock   ( axi_to_hbm_0_awlock  ),
+    .axi_to_hbm_awcache  ( axi_to_hbm_0_awcache ),
+    .axi_to_hbm_awprot   ( axi_to_hbm_0_awprot  ),
+    .axi_to_hbm_awqos    ( axi_to_hbm_0_awqos   ),
+    .axi_to_hbm_awregion ( axi_to_hbm_0_awregion),
+    .axi_to_hbm_awvalid  ( axi_to_hbm_0_awvalid ),
+    .axi_to_hbm_awready  ( axi_to_hbm_0_awready ),
+    .axi_to_hbm_wid      ( axi_to_hbm_0_wid     ),
+    .axi_to_hbm_wdata    ( axi_to_hbm_0_wdata   ),
+    .axi_to_hbm_wstrb    ( axi_to_hbm_0_wstrb   ),
+    .axi_to_hbm_wlast    ( axi_to_hbm_0_wlast   ),
+    .axi_to_hbm_wvalid   ( axi_to_hbm_0_wvalid  ),
+    .axi_to_hbm_wready   ( axi_to_hbm_0_wready  ),
+    .axi_to_hbm_bid      ( axi_to_hbm_0_bid     ),
+    .axi_to_hbm_bresp    ( axi_to_hbm_0_bresp   ),
+    .axi_to_hbm_bvalid   ( axi_to_hbm_0_bvalid  ),
+    .axi_to_hbm_bready   ( axi_to_hbm_0_bready  ),
+    .axi_to_hbm_arid     ( axi_to_hbm_0_arid    ),
+    .axi_to_hbm_araddr   ( axi_to_hbm_0_araddr  ),
+    .axi_to_hbm_arlen    ( axi_to_hbm_0_arlen   ),
+    .axi_to_hbm_arsize   ( axi_to_hbm_0_arsize  ),
+    .axi_to_hbm_arburst  ( axi_to_hbm_0_arburst ),
+    .axi_to_hbm_arlock   ( axi_to_hbm_0_arlock  ),
+    .axi_to_hbm_arcache  ( axi_to_hbm_0_arcache ),
+    .axi_to_hbm_arprot   ( axi_to_hbm_0_arprot  ),
+    .axi_to_hbm_arqos    ( axi_to_hbm_0_arqos   ),
+    .axi_to_hbm_arregion ( axi_to_hbm_0_arregion),
+    .axi_to_hbm_arvalid  ( axi_to_hbm_0_arvalid ),
+    .axi_to_hbm_arready  ( axi_to_hbm_0_arready ),
+    .axi_to_hbm_rid      ( axi_to_hbm_0_rid     ),
+    .axi_to_hbm_rdata    ( axi_to_hbm_0_rdata   ),
+    .axi_to_hbm_rresp    ( axi_to_hbm_0_rresp   ),
+    .axi_to_hbm_rlast    ( axi_to_hbm_0_rlast   ),
+    .axi_to_hbm_rvalid   ( axi_to_hbm_0_rvalid  ),
+    .axi_to_hbm_rready   ( axi_to_hbm_0_rready  )
    );
 
    // Drive AXI-S clock/reset
@@ -747,5 +915,4 @@ module smartnic_322mhz #(
       .axi4s_if  (axis_core_to_app)
    );
 
-   
 endmodule: smartnic_322mhz
