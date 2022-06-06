@@ -20,12 +20,21 @@
 
 `timescale 1ns/1ps
 
-import smartnic_322mhz_reg_pkg::*;
-import smartnic_322mhz_pkg::*;
-
-module smartnic_322mhz #(
+module smartnic_322mhz
+  import smartnic_322mhz_pkg::*;
+#(
   parameter int NUM_CMAC = 2,
-  parameter int MAX_PKT_LEN = 9100
+  parameter int MAX_PKT_LEN = 9100,
+`ifdef SIMULATION
+  parameter bit INCLUDE_HBM0 = 1'b1,
+  parameter bit INCLUDE_HBM1 = 1'b1
+`else
+  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
+                                     // HBM0 controller is connected to application logic
+                                     // (can be excluded for non-HBM applications to optimize resources/complexity)
+  parameter bit INCLUDE_HBM1 = 1'b0  // HBM1 is connected to platform logic
+                                     // (it is excluded by default because HBM is not currently used to implement any platform functions)
+`endif
 ) (
   input                       s_axil_awvalid,
   input [31:0]                s_axil_awaddr,
@@ -82,8 +91,12 @@ module smartnic_322mhz #(
   input                       axil_aclk,
   input [NUM_CMAC-1:0]        cmac_clk
 );
-   import axi4s_pkg::*;
 
+   // Imports
+   import axi4s_pkg::*;
+   import smartnic_322mhz_reg_pkg::*;
+
+   // Signals
    wire                       axil_aresetn;
    wire [NUM_CMAC-1:0]        cmac_rstn;
 
@@ -239,7 +252,9 @@ module smartnic_322mhz #(
    );
 
    // ----------------------------------------------------------------
-   //  HBM
+   //  HBM0 (Left stack, 4GB)
+   //
+   //  (Optionally) used by application
    // ----------------------------------------------------------------
    // Signals
    logic [15:0]        axi_to_hbm_0_aclk;
@@ -290,99 +305,146 @@ module smartnic_322mhz #(
    logic [15:0]        axi_to_hbm_0_rvalid;
    logic [15:0]        axi_to_hbm_0_rready;
 
-   // Memory interfaces
-   axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [2][16] ();
-
-   // 'Left' stack (4GB)
-   smartnic_322mhz_hbm #(
-     .HBM_STACK   (0)
-   ) smartnic_322mhz_hbm_0 (
-     .clk         (core_clk),
-     .rstn        (core_rstn),
-     .hbm_ref_clk (hbm_ref_clk),
-     .clk_100mhz  (clk_100mhz),
-     .axil_if     (axil_to_hbm_0),
-     .axi_if      (axi_to_hbm[0])
-   );
-
-   // 'Right' stack (4GB)
-   smartnic_322mhz_hbm #(
-     .HBM_STACK   (1)
-   ) smartnic_322mhz_hbm_1 (
-     .clk         (core_clk),
-     .rstn        (core_rstn),
-     .hbm_ref_clk (hbm_ref_clk),
-     .clk_100mhz  (clk_100mhz),
-     .axil_if     (axil_to_hbm_1),
-     .axi_if      (axi_to_hbm[1])
-   );
-
-   // Convert between AXI3 interface and signal representations
    generate
-       for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-           //  Map HBM0 memory interface signals into interface representation
-           axi3_intf_from_signals #(
-               .DATA_BYTE_WID(32),
-               .ADDR_WID     (33),
-               .ID_T         (logic[5:0])
-           ) axi3_intf_from_signals__hbm (
-               .aclk     ( axi_to_hbm_0_aclk    [g_hbm_if] ),
-               .aresetn  ( axi_to_hbm_0_aresetn [g_hbm_if] ),
-               .awid     ( axi_to_hbm_0_awid    [g_hbm_if] ),
-               .awaddr   ( axi_to_hbm_0_awaddr  [g_hbm_if] ),
-               .awlen    ( axi_to_hbm_0_awlen   [g_hbm_if] ),
-               .awsize   ( axi_to_hbm_0_awsize  [g_hbm_if] ),
-               .awburst  ( axi_to_hbm_0_awburst [g_hbm_if] ),
-               .awlock   ( axi_to_hbm_0_awlock  [g_hbm_if] ),
-               .awcache  ( axi_to_hbm_0_awcache [g_hbm_if] ),
-               .awprot   ( axi_to_hbm_0_awprot  [g_hbm_if] ),
-               .awqos    ( axi_to_hbm_0_awqos   [g_hbm_if] ),
-               .awregion ( axi_to_hbm_0_awregion[g_hbm_if] ),
-               .awuser   ( axi_to_hbm_0_awuser  [g_hbm_if] ),
-               .awvalid  ( axi_to_hbm_0_awvalid [g_hbm_if] ),
-               .awready  ( axi_to_hbm_0_awready [g_hbm_if] ),
-               .wid      ( axi_to_hbm_0_wid     [g_hbm_if] ),
-               .wdata    ( axi_to_hbm_0_wdata   [g_hbm_if] ),
-               .wstrb    ( axi_to_hbm_0_wstrb   [g_hbm_if] ),
-               .wlast    ( axi_to_hbm_0_wlast   [g_hbm_if] ),
-               .wuser    ( axi_to_hbm_0_wuser   [g_hbm_if] ),
-               .wvalid   ( axi_to_hbm_0_wvalid  [g_hbm_if] ),
-               .wready   ( axi_to_hbm_0_wready  [g_hbm_if] ),
-               .bid      ( axi_to_hbm_0_bid     [g_hbm_if] ),
-               .bresp    ( axi_to_hbm_0_bresp   [g_hbm_if] ),
-               .buser    ( axi_to_hbm_0_buser   [g_hbm_if] ),
-               .bvalid   ( axi_to_hbm_0_bvalid  [g_hbm_if] ),
-               .bready   ( axi_to_hbm_0_bready  [g_hbm_if] ),
-               .arid     ( axi_to_hbm_0_arid    [g_hbm_if] ),
-               .araddr   ( axi_to_hbm_0_araddr  [g_hbm_if] ),
-               .arlen    ( axi_to_hbm_0_arlen   [g_hbm_if] ),
-               .arsize   ( axi_to_hbm_0_arsize  [g_hbm_if] ),
-               .arburst  ( axi_to_hbm_0_arburst [g_hbm_if] ),
-               .arlock   ( axi_to_hbm_0_arlock  [g_hbm_if] ),
-               .arcache  ( axi_to_hbm_0_arcache [g_hbm_if] ),
-               .arprot   ( axi_to_hbm_0_arprot  [g_hbm_if] ),
-               .arqos    ( axi_to_hbm_0_arqos   [g_hbm_if] ),
-               .arregion ( axi_to_hbm_0_arregion[g_hbm_if] ),
-               .aruser   ( axi_to_hbm_0_aruser  [g_hbm_if] ),
-               .arvalid  ( axi_to_hbm_0_arvalid [g_hbm_if] ),
-               .arready  ( axi_to_hbm_0_arready [g_hbm_if] ),
-               .rid      ( axi_to_hbm_0_rid     [g_hbm_if] ),
-               .rdata    ( axi_to_hbm_0_rdata   [g_hbm_if] ),
-               .rresp    ( axi_to_hbm_0_rresp   [g_hbm_if] ),
-               .rlast    ( axi_to_hbm_0_rlast   [g_hbm_if] ),
-               .ruser    ( axi_to_hbm_0_ruser   [g_hbm_if] ),
-               .rvalid   ( axi_to_hbm_0_rvalid  [g_hbm_if] ),
-               .rready   ( axi_to_hbm_0_rready  [g_hbm_if] ),
-               .axi3_if  ( axi_to_hbm [0][g_hbm_if] )
+       if (INCLUDE_HBM0) begin : g__hbm_0
+           // Include memory controller for 'Left' HBM stack (4GB)
+
+           // (Local) interfaces
+           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
+
+           // HBM controller
+           smartnic_322mhz_hbm #(
+             .HBM_STACK   (0)
+           ) smartnic_322mhz_hbm_0 (
+             .clk         (core_clk),
+             .rstn        (core_rstn),
+             .hbm_ref_clk (hbm_ref_clk),
+             .clk_100mhz  (clk_100mhz),
+             .axil_if     (axil_to_hbm_0),
+             .axi_if      (axi_if)
            );
 
-           assign axi_to_hbm_0_buser[g_hbm_if] = '0;
-           assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
+           //  Map HBM0 memory interface signals into interface representation
+           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               axi3_intf_from_signals #(
+                   .DATA_BYTE_WID(32),
+                   .ADDR_WID     (33),
+                   .ID_T         (logic[5:0])
+               ) axi3_intf_from_signals__hbm (
+                   .aclk     ( axi_to_hbm_0_aclk    [g_hbm_if] ),
+                   .aresetn  ( axi_to_hbm_0_aresetn [g_hbm_if] ),
+                   .awid     ( axi_to_hbm_0_awid    [g_hbm_if] ),
+                   .awaddr   ( axi_to_hbm_0_awaddr  [g_hbm_if] ),
+                   .awlen    ( axi_to_hbm_0_awlen   [g_hbm_if] ),
+                   .awsize   ( axi_to_hbm_0_awsize  [g_hbm_if] ),
+                   .awburst  ( axi_to_hbm_0_awburst [g_hbm_if] ),
+                   .awlock   ( axi_to_hbm_0_awlock  [g_hbm_if] ),
+                   .awcache  ( axi_to_hbm_0_awcache [g_hbm_if] ),
+                   .awprot   ( axi_to_hbm_0_awprot  [g_hbm_if] ),
+                   .awqos    ( axi_to_hbm_0_awqos   [g_hbm_if] ),
+                   .awregion ( axi_to_hbm_0_awregion[g_hbm_if] ),
+                   .awuser   ( axi_to_hbm_0_awuser  [g_hbm_if] ),
+                   .awvalid  ( axi_to_hbm_0_awvalid [g_hbm_if] ),
+                   .awready  ( axi_to_hbm_0_awready [g_hbm_if] ),
+                   .wid      ( axi_to_hbm_0_wid     [g_hbm_if] ),
+                   .wdata    ( axi_to_hbm_0_wdata   [g_hbm_if] ),
+                   .wstrb    ( axi_to_hbm_0_wstrb   [g_hbm_if] ),
+                   .wlast    ( axi_to_hbm_0_wlast   [g_hbm_if] ),
+                   .wuser    ( axi_to_hbm_0_wuser   [g_hbm_if] ),
+                   .wvalid   ( axi_to_hbm_0_wvalid  [g_hbm_if] ),
+                   .wready   ( axi_to_hbm_0_wready  [g_hbm_if] ),
+                   .bid      ( axi_to_hbm_0_bid     [g_hbm_if] ),
+                   .bresp    ( axi_to_hbm_0_bresp   [g_hbm_if] ),
+                   .buser    ( axi_to_hbm_0_buser   [g_hbm_if] ),
+                   .bvalid   ( axi_to_hbm_0_bvalid  [g_hbm_if] ),
+                   .bready   ( axi_to_hbm_0_bready  [g_hbm_if] ),
+                   .arid     ( axi_to_hbm_0_arid    [g_hbm_if] ),
+                   .araddr   ( axi_to_hbm_0_araddr  [g_hbm_if] ),
+                   .arlen    ( axi_to_hbm_0_arlen   [g_hbm_if] ),
+                   .arsize   ( axi_to_hbm_0_arsize  [g_hbm_if] ),
+                   .arburst  ( axi_to_hbm_0_arburst [g_hbm_if] ),
+                   .arlock   ( axi_to_hbm_0_arlock  [g_hbm_if] ),
+                   .arcache  ( axi_to_hbm_0_arcache [g_hbm_if] ),
+                   .arprot   ( axi_to_hbm_0_arprot  [g_hbm_if] ),
+                   .arqos    ( axi_to_hbm_0_arqos   [g_hbm_if] ),
+                   .arregion ( axi_to_hbm_0_arregion[g_hbm_if] ),
+                   .aruser   ( axi_to_hbm_0_aruser  [g_hbm_if] ),
+                   .arvalid  ( axi_to_hbm_0_arvalid [g_hbm_if] ),
+                   .arready  ( axi_to_hbm_0_arready [g_hbm_if] ),
+                   .rid      ( axi_to_hbm_0_rid     [g_hbm_if] ),
+                   .rdata    ( axi_to_hbm_0_rdata   [g_hbm_if] ),
+                   .rresp    ( axi_to_hbm_0_rresp   [g_hbm_if] ),
+                   .rlast    ( axi_to_hbm_0_rlast   [g_hbm_if] ),
+                   .ruser    ( axi_to_hbm_0_ruser   [g_hbm_if] ),
+                   .rvalid   ( axi_to_hbm_0_rvalid  [g_hbm_if] ),
+                   .rready   ( axi_to_hbm_0_rready  [g_hbm_if] ),
+                   .axi3_if  ( axi_if[g_hbm_if] )
+               );
 
-           // For now, terminate HBM1 memory interfaces (unused)
-           axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm[1][g_hbm_if]));
+               assign axi_to_hbm_0_buser[g_hbm_if] = '0;
+               assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
+            end : g__hbm_if
+       end : g__hbm_0
+       else begin : g__no_hbm_0
+           // No HBM 0 controller
 
-       end : g__hbm_if
+           // Terminate AXI memory interfaces
+           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               assign axi_to_hbm_0_awready[g_hbm_if] = 1'b0;
+               assign axi_to_hbm_0_wready[g_hbm_if] = 1'b0;
+               assign axi_to_hbm_0_bid[g_hbm_if] = '0;
+               assign axi_to_hbm_0_bresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
+               assign axi_to_hbm_0_buser[g_hbm_if] = '0;
+               assign axi_to_hbm_0_bvalid[g_hbm_if] = 1'b0;
+               assign axi_to_hbm_0_arready[g_hbm_if] = 1'b0;
+               assign axi_to_hbm_0_rid[g_hbm_if] = '0;
+               assign axi_to_hbm_0_rdata[g_hbm_if] = '0;
+               assign axi_to_hbm_0_rresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
+               assign axi_to_hbm_0_rlast[g_hbm_if] = 1'b0;
+               assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
+               assign axi_to_hbm_0_rvalid[g_hbm_if] = 1'b0;
+           end : g__hbm_if
+
+           // Terminate AXI-L interface
+           axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_0));
+       end : g__no_hbm_0
+   endgenerate
+
+   // ----------------------------------------------------------------
+   //  HBM1 (Right stack, 4GB)
+   //
+   //  (Optionally) used by platform
+   // ----------------------------------------------------------------
+   generate
+       if (INCLUDE_HBM1) begin : g__hbm_1
+           // Include memory controller for 'Right' HBM stack (4GB)
+
+           // (Local) interfaces
+           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
+
+           // HBM controller
+           smartnic_322mhz_hbm #(
+             .HBM_STACK   (1)
+           ) smartnic_322mhz_hbm_1 (
+             .clk         (core_clk),
+             .rstn        (core_rstn),
+             .hbm_ref_clk (hbm_ref_clk),
+             .clk_100mhz  (clk_100mhz),
+             .axil_if     (axil_to_hbm_1),
+             .axi_if      (axi_if)
+           );
+
+           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               // For now, terminate HBM1 memory interfaces (unused)
+               axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_if[g_hbm_if]));
+           end : g__hbm_if
+       end : g__hbm_1
+       else begin : g__no_hbm_1
+           // No HBM 1 controller
+
+           // Terminate AXI-L interface
+           axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_1));
+       end : g__no_hbm_1
    endgenerate
 
    // ----------------------------------------------------------------
