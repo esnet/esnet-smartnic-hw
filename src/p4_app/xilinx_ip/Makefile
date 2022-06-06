@@ -82,7 +82,7 @@ ip_proj/ip_proj.xpr : config.tcl ip_list.tcl create_sdnet_ip.tcl $(P4_FILE)
 	rm -rf sdnet_0/src
 	rm -rf sdnet_0/sdnet_0.dcp
 	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_create.tcl -source create_sdnet_ip.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_import.tcl
-	./gen_vitisnet_p4_wrapper.py sdnet_0/sdnet_0.xci --out_file sdnet_0/sdnet_0_wrapper.sv
+	./gen_vitisnet_p4_wrapper.py sdnet_0/sdnet_0.xci --out_dir sdnet_0
 	touch .proj_created
 
 sim_targets: sdnet_ex_design .sim_targets_generated

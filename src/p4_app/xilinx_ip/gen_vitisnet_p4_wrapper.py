@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+import os
 import argparse
 import xml.etree.ElementTree as ET
 from jinja2 import Template, Environment, FileSystemLoader
 
 # Handle command-line arguments
-parser = argparse.ArgumentParser(description='Generate vitisnet component wrapper compatible with p4 specification.')
+parser = argparse.ArgumentParser(description='Generate vitisnet component helper files for integration into SmartNIC p4_app')
 parser.add_argument ('xml_file', help='vitisnet xml specification')
-parser.add_argument ('--out_file', '-o', default='vitisnet_wrapper.svh', help='output file (SystemVerilog)')
+parser.add_argument ('--out_dir', '-o', default='.', help='output directory for generated files')
 
 args = parser.parse_args()
 
@@ -87,6 +88,13 @@ props['cam_mem_clk_freq_mhz'] = float(get_param_value('PARAM_VALUE.CAM_MEM_CLK_F
 # Write SV file according to Jinja2 template
 env = Environment(loader=FileSystemLoader('.'))
 env.add_extension('jinja2.ext.loopcontrols')
+
 t = env.get_template('vitisnet_p4_wrapper.j2')
-with open(args.out_file, 'w') as f:
+wrapper_filename = props['name'] + '_wrapper.sv'
+with open(os.path.join(args.out_dir, wrapper_filename), 'w') as f:
+    t.stream(props = props).dump(f)
+
+t = env.get_template('vitisnet_p4_app_pkg.j2')
+app_pkg_filename = props['name'] + '_app_pkg.sv'
+with open(os.path.join(args.out_dir, app_pkg_filename), 'w') as f:
     t.stream(props = props).dump(f)
