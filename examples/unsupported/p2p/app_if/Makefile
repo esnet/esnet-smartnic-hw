@@ -21,6 +21,7 @@ package: build_package reg_package p4_package driver_package
 
 build_package:
 	cp ../build/out/smartnic_322mhz_app.opt.dcp smartnic_322mhz_app.dcp
+	cp src/smartnic_322mhz_app_pkg.sv smartnic_322mhz_app_pkg.sv
 
 reg_package:
 	$(REGIO_ROOT)/regio-flatten -i $(REGIO_YAML_INC_DIR) -o smartnic_322mhz_app_decoder.yaml src/smartnic_322mhz_app_decoder.yaml
