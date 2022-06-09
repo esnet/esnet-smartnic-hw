@@ -29,11 +29,11 @@ module smartnic_322mhz
   parameter bit INCLUDE_HBM0 = 1'b1,
   parameter bit INCLUDE_HBM1 = 1'b1
 `else
-  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
-                                     // HBM0 controller is connected to application logic
-                                     // (can be excluded for non-HBM applications to optimize resources/complexity)
-  parameter bit INCLUDE_HBM1 = 1'b0  // HBM1 is connected to platform logic
+  parameter bit INCLUDE_HBM0 = 1'b0, // HBM0 is connected to platform logic
                                      // (it is excluded by default because HBM is not currently used to implement any platform functions)
+  parameter bit INCLUDE_HBM1 = smartnic_322mhz_app_pkg::INCLUDE_HBM // Application-specific HBM controller include/exclude
+                                     // HBM1 controller is connected to application logic
+                                     // (can be excluded for non-HBM applications to optimize resources/complexity)
 `endif
 ) (
   input                       s_axil_awvalid,
@@ -254,57 +254,8 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
    //  HBM0 (Left stack, 4GB)
    //
-   //  (Optionally) used by application
+   //  (Optionally) used by platform
    // ----------------------------------------------------------------
-   // Signals
-   logic [15:0]        axi_to_hbm_0_aclk;
-   logic [15:0]        axi_to_hbm_0_aresetn;
-   logic [15:0][5:0]   axi_to_hbm_0_awid;
-   logic [15:0][32:0]  axi_to_hbm_0_awaddr;
-   logic [15:0][3:0]   axi_to_hbm_0_awlen;
-   logic [15:0][2:0]   axi_to_hbm_0_awsize;
-   logic [15:0][1:0]   axi_to_hbm_0_awburst;
-   logic [15:0][1:0]   axi_to_hbm_0_awlock;
-   logic [15:0][3:0]   axi_to_hbm_0_awcache;
-   logic [15:0][2:0]   axi_to_hbm_0_awprot;
-   logic [15:0][3:0]   axi_to_hbm_0_awqos;
-   logic [15:0][3:0]   axi_to_hbm_0_awregion;
-   logic [15:0]        axi_to_hbm_0_awuser;
-   logic [15:0]        axi_to_hbm_0_awvalid;
-   logic [15:0]        axi_to_hbm_0_awready;
-   logic [15:0][5:0]   axi_to_hbm_0_wid;
-   logic [15:0][255:0] axi_to_hbm_0_wdata;
-   logic [15:0][31:0]  axi_to_hbm_0_wstrb;
-   logic [15:0]        axi_to_hbm_0_wlast;
-   logic [15:0]        axi_to_hbm_0_wuser;
-   logic [15:0]        axi_to_hbm_0_wvalid;
-   logic [15:0]        axi_to_hbm_0_wready;
-   logic [15:0][5:0]   axi_to_hbm_0_bid;
-   logic [15:0][1:0]   axi_to_hbm_0_bresp;
-   logic [15:0]        axi_to_hbm_0_buser;
-   logic [15:0]        axi_to_hbm_0_bvalid;
-   logic [15:0]        axi_to_hbm_0_bready;
-   logic [15:0][5:0]   axi_to_hbm_0_arid;
-   logic [15:0][32:0]  axi_to_hbm_0_araddr;
-   logic [15:0][3:0]   axi_to_hbm_0_arlen;
-   logic [15:0][2:0]   axi_to_hbm_0_arsize;
-   logic [15:0][1:0]   axi_to_hbm_0_arburst;
-   logic [15:0][1:0]   axi_to_hbm_0_arlock;
-   logic [15:0][3:0]   axi_to_hbm_0_arcache;
-   logic [15:0][2:0]   axi_to_hbm_0_arprot;
-   logic [15:0][3:0]   axi_to_hbm_0_arqos;
-   logic [15:0][3:0]   axi_to_hbm_0_arregion;
-   logic [15:0]        axi_to_hbm_0_aruser;
-   logic [15:0]        axi_to_hbm_0_arvalid;
-   logic [15:0]        axi_to_hbm_0_arready;
-   logic [15:0][5:0]   axi_to_hbm_0_rid;
-   logic [15:0][255:0] axi_to_hbm_0_rdata;
-   logic [15:0][1:0]   axi_to_hbm_0_rresp;
-   logic [15:0]        axi_to_hbm_0_rlast;
-   logic [15:0]        axi_to_hbm_0_ruser;
-   logic [15:0]        axi_to_hbm_0_rvalid;
-   logic [15:0]        axi_to_hbm_0_rready;
-
    generate
        if (INCLUDE_HBM0) begin : g__hbm_0
            // Include memory controller for 'Left' HBM stack (4GB)
@@ -324,86 +275,13 @@ module smartnic_322mhz
              .axi_if      (axi_if)
            );
 
-           //  Map HBM0 memory interface signals into interface representation
            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-               axi3_intf_from_signals #(
-                   .DATA_BYTE_WID(32),
-                   .ADDR_WID     (33),
-                   .ID_T         (logic[5:0])
-               ) axi3_intf_from_signals__hbm (
-                   .aclk     ( axi_to_hbm_0_aclk    [g_hbm_if] ),
-                   .aresetn  ( axi_to_hbm_0_aresetn [g_hbm_if] ),
-                   .awid     ( axi_to_hbm_0_awid    [g_hbm_if] ),
-                   .awaddr   ( axi_to_hbm_0_awaddr  [g_hbm_if] ),
-                   .awlen    ( axi_to_hbm_0_awlen   [g_hbm_if] ),
-                   .awsize   ( axi_to_hbm_0_awsize  [g_hbm_if] ),
-                   .awburst  ( axi_to_hbm_0_awburst [g_hbm_if] ),
-                   .awlock   ( axi_to_hbm_0_awlock  [g_hbm_if] ),
-                   .awcache  ( axi_to_hbm_0_awcache [g_hbm_if] ),
-                   .awprot   ( axi_to_hbm_0_awprot  [g_hbm_if] ),
-                   .awqos    ( axi_to_hbm_0_awqos   [g_hbm_if] ),
-                   .awregion ( axi_to_hbm_0_awregion[g_hbm_if] ),
-                   .awuser   ( axi_to_hbm_0_awuser  [g_hbm_if] ),
-                   .awvalid  ( axi_to_hbm_0_awvalid [g_hbm_if] ),
-                   .awready  ( axi_to_hbm_0_awready [g_hbm_if] ),
-                   .wid      ( axi_to_hbm_0_wid     [g_hbm_if] ),
-                   .wdata    ( axi_to_hbm_0_wdata   [g_hbm_if] ),
-                   .wstrb    ( axi_to_hbm_0_wstrb   [g_hbm_if] ),
-                   .wlast    ( axi_to_hbm_0_wlast   [g_hbm_if] ),
-                   .wuser    ( axi_to_hbm_0_wuser   [g_hbm_if] ),
-                   .wvalid   ( axi_to_hbm_0_wvalid  [g_hbm_if] ),
-                   .wready   ( axi_to_hbm_0_wready  [g_hbm_if] ),
-                   .bid      ( axi_to_hbm_0_bid     [g_hbm_if] ),
-                   .bresp    ( axi_to_hbm_0_bresp   [g_hbm_if] ),
-                   .buser    ( axi_to_hbm_0_buser   [g_hbm_if] ),
-                   .bvalid   ( axi_to_hbm_0_bvalid  [g_hbm_if] ),
-                   .bready   ( axi_to_hbm_0_bready  [g_hbm_if] ),
-                   .arid     ( axi_to_hbm_0_arid    [g_hbm_if] ),
-                   .araddr   ( axi_to_hbm_0_araddr  [g_hbm_if] ),
-                   .arlen    ( axi_to_hbm_0_arlen   [g_hbm_if] ),
-                   .arsize   ( axi_to_hbm_0_arsize  [g_hbm_if] ),
-                   .arburst  ( axi_to_hbm_0_arburst [g_hbm_if] ),
-                   .arlock   ( axi_to_hbm_0_arlock  [g_hbm_if] ),
-                   .arcache  ( axi_to_hbm_0_arcache [g_hbm_if] ),
-                   .arprot   ( axi_to_hbm_0_arprot  [g_hbm_if] ),
-                   .arqos    ( axi_to_hbm_0_arqos   [g_hbm_if] ),
-                   .arregion ( axi_to_hbm_0_arregion[g_hbm_if] ),
-                   .aruser   ( axi_to_hbm_0_aruser  [g_hbm_if] ),
-                   .arvalid  ( axi_to_hbm_0_arvalid [g_hbm_if] ),
-                   .arready  ( axi_to_hbm_0_arready [g_hbm_if] ),
-                   .rid      ( axi_to_hbm_0_rid     [g_hbm_if] ),
-                   .rdata    ( axi_to_hbm_0_rdata   [g_hbm_if] ),
-                   .rresp    ( axi_to_hbm_0_rresp   [g_hbm_if] ),
-                   .rlast    ( axi_to_hbm_0_rlast   [g_hbm_if] ),
-                   .ruser    ( axi_to_hbm_0_ruser   [g_hbm_if] ),
-                   .rvalid   ( axi_to_hbm_0_rvalid  [g_hbm_if] ),
-                   .rready   ( axi_to_hbm_0_rready  [g_hbm_if] ),
-                   .axi3_if  ( axi_if[g_hbm_if] )
-               );
-
-               assign axi_to_hbm_0_buser[g_hbm_if] = '0;
-               assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
-            end : g__hbm_if
+               // For now, terminate HBM1 memory interfaces (unused)
+               axi3_intf_controller_term axi_to_hbm_0_term (.axi3_if(axi_if[g_hbm_if]));
+           end : g__hbm_if
        end : g__hbm_0
        else begin : g__no_hbm_0
            // No HBM 0 controller
-
-           // Terminate AXI memory interfaces
-           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-               assign axi_to_hbm_0_awready[g_hbm_if] = 1'b0;
-               assign axi_to_hbm_0_wready[g_hbm_if] = 1'b0;
-               assign axi_to_hbm_0_bid[g_hbm_if] = '0;
-               assign axi_to_hbm_0_bresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
-               assign axi_to_hbm_0_buser[g_hbm_if] = '0;
-               assign axi_to_hbm_0_bvalid[g_hbm_if] = 1'b0;
-               assign axi_to_hbm_0_arready[g_hbm_if] = 1'b0;
-               assign axi_to_hbm_0_rid[g_hbm_if] = '0;
-               assign axi_to_hbm_0_rdata[g_hbm_if] = '0;
-               assign axi_to_hbm_0_rresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
-               assign axi_to_hbm_0_rlast[g_hbm_if] = 1'b0;
-               assign axi_to_hbm_0_ruser[g_hbm_if] = '0;
-               assign axi_to_hbm_0_rvalid[g_hbm_if] = 1'b0;
-           end : g__hbm_if
 
            // Terminate AXI-L interface
            axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_0));
@@ -413,8 +291,57 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
    //  HBM1 (Right stack, 4GB)
    //
-   //  (Optionally) used by platform
+   //  (Optionally) used by application
    // ----------------------------------------------------------------
+   // Signals
+   logic [15:0]        axi_app_to_hbm_aclk;
+   logic [15:0]        axi_app_to_hbm_aresetn;
+   logic [15:0][5:0]   axi_app_to_hbm_awid;
+   logic [15:0][32:0]  axi_app_to_hbm_awaddr;
+   logic [15:0][3:0]   axi_app_to_hbm_awlen;
+   logic [15:0][2:0]   axi_app_to_hbm_awsize;
+   logic [15:0][1:0]   axi_app_to_hbm_awburst;
+   logic [15:0][1:0]   axi_app_to_hbm_awlock;
+   logic [15:0][3:0]   axi_app_to_hbm_awcache;
+   logic [15:0][2:0]   axi_app_to_hbm_awprot;
+   logic [15:0][3:0]   axi_app_to_hbm_awqos;
+   logic [15:0][3:0]   axi_app_to_hbm_awregion;
+   logic [15:0]        axi_app_to_hbm_awuser;
+   logic [15:0]        axi_app_to_hbm_awvalid;
+   logic [15:0]        axi_app_to_hbm_awready;
+   logic [15:0][5:0]   axi_app_to_hbm_wid;
+   logic [15:0][255:0] axi_app_to_hbm_wdata;
+   logic [15:0][31:0]  axi_app_to_hbm_wstrb;
+   logic [15:0]        axi_app_to_hbm_wlast;
+   logic [15:0]        axi_app_to_hbm_wuser;
+   logic [15:0]        axi_app_to_hbm_wvalid;
+   logic [15:0]        axi_app_to_hbm_wready;
+   logic [15:0][5:0]   axi_app_to_hbm_bid;
+   logic [15:0][1:0]   axi_app_to_hbm_bresp;
+   logic [15:0]        axi_app_to_hbm_buser;
+   logic [15:0]        axi_app_to_hbm_bvalid;
+   logic [15:0]        axi_app_to_hbm_bready;
+   logic [15:0][5:0]   axi_app_to_hbm_arid;
+   logic [15:0][32:0]  axi_app_to_hbm_araddr;
+   logic [15:0][3:0]   axi_app_to_hbm_arlen;
+   logic [15:0][2:0]   axi_app_to_hbm_arsize;
+   logic [15:0][1:0]   axi_app_to_hbm_arburst;
+   logic [15:0][1:0]   axi_app_to_hbm_arlock;
+   logic [15:0][3:0]   axi_app_to_hbm_arcache;
+   logic [15:0][2:0]   axi_app_to_hbm_arprot;
+   logic [15:0][3:0]   axi_app_to_hbm_arqos;
+   logic [15:0][3:0]   axi_app_to_hbm_arregion;
+   logic [15:0]        axi_app_to_hbm_aruser;
+   logic [15:0]        axi_app_to_hbm_arvalid;
+   logic [15:0]        axi_app_to_hbm_arready;
+   logic [15:0][5:0]   axi_app_to_hbm_rid;
+   logic [15:0][255:0] axi_app_to_hbm_rdata;
+   logic [15:0][1:0]   axi_app_to_hbm_rresp;
+   logic [15:0]        axi_app_to_hbm_rlast;
+   logic [15:0]        axi_app_to_hbm_ruser;
+   logic [15:0]        axi_app_to_hbm_rvalid;
+   logic [15:0]        axi_app_to_hbm_rready;
+
    generate
        if (INCLUDE_HBM1) begin : g__hbm_1
            // Include memory controller for 'Right' HBM stack (4GB)
@@ -434,13 +361,86 @@ module smartnic_322mhz
              .axi_if      (axi_if)
            );
 
+           //  Map HBM1 memory interface signals into interface representation
            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-               // For now, terminate HBM1 memory interfaces (unused)
-               axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_if[g_hbm_if]));
-           end : g__hbm_if
+               axi3_intf_from_signals #(
+                   .DATA_BYTE_WID(32),
+                   .ADDR_WID     (33),
+                   .ID_T         (logic[5:0])
+               ) axi3_intf_from_signals__hbm (
+                   .aclk     ( axi_app_to_hbm_aclk    [g_hbm_if] ),
+                   .aresetn  ( axi_app_to_hbm_aresetn [g_hbm_if] ),
+                   .awid     ( axi_app_to_hbm_awid    [g_hbm_if] ),
+                   .awaddr   ( axi_app_to_hbm_awaddr  [g_hbm_if] ),
+                   .awlen    ( axi_app_to_hbm_awlen   [g_hbm_if] ),
+                   .awsize   ( axi_app_to_hbm_awsize  [g_hbm_if] ),
+                   .awburst  ( axi_app_to_hbm_awburst [g_hbm_if] ),
+                   .awlock   ( axi_app_to_hbm_awlock  [g_hbm_if] ),
+                   .awcache  ( axi_app_to_hbm_awcache [g_hbm_if] ),
+                   .awprot   ( axi_app_to_hbm_awprot  [g_hbm_if] ),
+                   .awqos    ( axi_app_to_hbm_awqos   [g_hbm_if] ),
+                   .awregion ( axi_app_to_hbm_awregion[g_hbm_if] ),
+                   .awuser   ( axi_app_to_hbm_awuser  [g_hbm_if] ),
+                   .awvalid  ( axi_app_to_hbm_awvalid [g_hbm_if] ),
+                   .awready  ( axi_app_to_hbm_awready [g_hbm_if] ),
+                   .wid      ( axi_app_to_hbm_wid     [g_hbm_if] ),
+                   .wdata    ( axi_app_to_hbm_wdata   [g_hbm_if] ),
+                   .wstrb    ( axi_app_to_hbm_wstrb   [g_hbm_if] ),
+                   .wlast    ( axi_app_to_hbm_wlast   [g_hbm_if] ),
+                   .wuser    ( axi_app_to_hbm_wuser   [g_hbm_if] ),
+                   .wvalid   ( axi_app_to_hbm_wvalid  [g_hbm_if] ),
+                   .wready   ( axi_app_to_hbm_wready  [g_hbm_if] ),
+                   .bid      ( axi_app_to_hbm_bid     [g_hbm_if] ),
+                   .bresp    ( axi_app_to_hbm_bresp   [g_hbm_if] ),
+                   .buser    ( axi_app_to_hbm_buser   [g_hbm_if] ),
+                   .bvalid   ( axi_app_to_hbm_bvalid  [g_hbm_if] ),
+                   .bready   ( axi_app_to_hbm_bready  [g_hbm_if] ),
+                   .arid     ( axi_app_to_hbm_arid    [g_hbm_if] ),
+                   .araddr   ( axi_app_to_hbm_araddr  [g_hbm_if] ),
+                   .arlen    ( axi_app_to_hbm_arlen   [g_hbm_if] ),
+                   .arsize   ( axi_app_to_hbm_arsize  [g_hbm_if] ),
+                   .arburst  ( axi_app_to_hbm_arburst [g_hbm_if] ),
+                   .arlock   ( axi_app_to_hbm_arlock  [g_hbm_if] ),
+                   .arcache  ( axi_app_to_hbm_arcache [g_hbm_if] ),
+                   .arprot   ( axi_app_to_hbm_arprot  [g_hbm_if] ),
+                   .arqos    ( axi_app_to_hbm_arqos   [g_hbm_if] ),
+                   .arregion ( axi_app_to_hbm_arregion[g_hbm_if] ),
+                   .aruser   ( axi_app_to_hbm_aruser  [g_hbm_if] ),
+                   .arvalid  ( axi_app_to_hbm_arvalid [g_hbm_if] ),
+                   .arready  ( axi_app_to_hbm_arready [g_hbm_if] ),
+                   .rid      ( axi_app_to_hbm_rid     [g_hbm_if] ),
+                   .rdata    ( axi_app_to_hbm_rdata   [g_hbm_if] ),
+                   .rresp    ( axi_app_to_hbm_rresp   [g_hbm_if] ),
+                   .rlast    ( axi_app_to_hbm_rlast   [g_hbm_if] ),
+                   .ruser    ( axi_app_to_hbm_ruser   [g_hbm_if] ),
+                   .rvalid   ( axi_app_to_hbm_rvalid  [g_hbm_if] ),
+                   .rready   ( axi_app_to_hbm_rready  [g_hbm_if] ),
+                   .axi3_if  ( axi_if[g_hbm_if] )
+               );
+
+               assign axi_app_to_hbm_buser[g_hbm_if] = '0;
+               assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
+            end : g__hbm_if
        end : g__hbm_1
        else begin : g__no_hbm_1
            // No HBM 1 controller
+
+           // Terminate AXI memory interfaces
+           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               assign axi_app_to_hbm_awready[g_hbm_if] = 1'b0;
+               assign axi_app_to_hbm_wready[g_hbm_if] = 1'b0;
+               assign axi_app_to_hbm_bid[g_hbm_if] = '0;
+               assign axi_app_to_hbm_bresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
+               assign axi_app_to_hbm_buser[g_hbm_if] = '0;
+               assign axi_app_to_hbm_bvalid[g_hbm_if] = 1'b0;
+               assign axi_app_to_hbm_arready[g_hbm_if] = 1'b0;
+               assign axi_app_to_hbm_rid[g_hbm_if] = '0;
+               assign axi_app_to_hbm_rdata[g_hbm_if] = '0;
+               assign axi_app_to_hbm_rresp[g_hbm_if] = axi3_pkg::RESP_SLVERR;
+               assign axi_app_to_hbm_rlast[g_hbm_if] = 1'b0;
+               assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
+               assign axi_app_to_hbm_rvalid[g_hbm_if] = 1'b0;
+           end : g__hbm_if
 
            // Terminate AXI-L interface
            axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_1));
@@ -918,46 +918,46 @@ module smartnic_322mhz
     .axis_to_host_tuser  ( axis_from_app_host_0.tuser ),
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
-    .axi_to_hbm_awid     ( axi_to_hbm_0_awid    ),
-    .axi_to_hbm_awaddr   ( axi_to_hbm_0_awaddr  ),
-    .axi_to_hbm_awlen    ( axi_to_hbm_0_awlen   ),
-    .axi_to_hbm_awsize   ( axi_to_hbm_0_awsize  ),
-    .axi_to_hbm_awburst  ( axi_to_hbm_0_awburst ),
-    .axi_to_hbm_awlock   ( axi_to_hbm_0_awlock  ),
-    .axi_to_hbm_awcache  ( axi_to_hbm_0_awcache ),
-    .axi_to_hbm_awprot   ( axi_to_hbm_0_awprot  ),
-    .axi_to_hbm_awqos    ( axi_to_hbm_0_awqos   ),
-    .axi_to_hbm_awregion ( axi_to_hbm_0_awregion),
-    .axi_to_hbm_awvalid  ( axi_to_hbm_0_awvalid ),
-    .axi_to_hbm_awready  ( axi_to_hbm_0_awready ),
-    .axi_to_hbm_wid      ( axi_to_hbm_0_wid     ),
-    .axi_to_hbm_wdata    ( axi_to_hbm_0_wdata   ),
-    .axi_to_hbm_wstrb    ( axi_to_hbm_0_wstrb   ),
-    .axi_to_hbm_wlast    ( axi_to_hbm_0_wlast   ),
-    .axi_to_hbm_wvalid   ( axi_to_hbm_0_wvalid  ),
-    .axi_to_hbm_wready   ( axi_to_hbm_0_wready  ),
-    .axi_to_hbm_bid      ( axi_to_hbm_0_bid     ),
-    .axi_to_hbm_bresp    ( axi_to_hbm_0_bresp   ),
-    .axi_to_hbm_bvalid   ( axi_to_hbm_0_bvalid  ),
-    .axi_to_hbm_bready   ( axi_to_hbm_0_bready  ),
-    .axi_to_hbm_arid     ( axi_to_hbm_0_arid    ),
-    .axi_to_hbm_araddr   ( axi_to_hbm_0_araddr  ),
-    .axi_to_hbm_arlen    ( axi_to_hbm_0_arlen   ),
-    .axi_to_hbm_arsize   ( axi_to_hbm_0_arsize  ),
-    .axi_to_hbm_arburst  ( axi_to_hbm_0_arburst ),
-    .axi_to_hbm_arlock   ( axi_to_hbm_0_arlock  ),
-    .axi_to_hbm_arcache  ( axi_to_hbm_0_arcache ),
-    .axi_to_hbm_arprot   ( axi_to_hbm_0_arprot  ),
-    .axi_to_hbm_arqos    ( axi_to_hbm_0_arqos   ),
-    .axi_to_hbm_arregion ( axi_to_hbm_0_arregion),
-    .axi_to_hbm_arvalid  ( axi_to_hbm_0_arvalid ),
-    .axi_to_hbm_arready  ( axi_to_hbm_0_arready ),
-    .axi_to_hbm_rid      ( axi_to_hbm_0_rid     ),
-    .axi_to_hbm_rdata    ( axi_to_hbm_0_rdata   ),
-    .axi_to_hbm_rresp    ( axi_to_hbm_0_rresp   ),
-    .axi_to_hbm_rlast    ( axi_to_hbm_0_rlast   ),
-    .axi_to_hbm_rvalid   ( axi_to_hbm_0_rvalid  ),
-    .axi_to_hbm_rready   ( axi_to_hbm_0_rready  )
+    .axi_to_hbm_awid     ( axi_app_to_hbm_awid    ),
+    .axi_to_hbm_awaddr   ( axi_app_to_hbm_awaddr  ),
+    .axi_to_hbm_awlen    ( axi_app_to_hbm_awlen   ),
+    .axi_to_hbm_awsize   ( axi_app_to_hbm_awsize  ),
+    .axi_to_hbm_awburst  ( axi_app_to_hbm_awburst ),
+    .axi_to_hbm_awlock   ( axi_app_to_hbm_awlock  ),
+    .axi_to_hbm_awcache  ( axi_app_to_hbm_awcache ),
+    .axi_to_hbm_awprot   ( axi_app_to_hbm_awprot  ),
+    .axi_to_hbm_awqos    ( axi_app_to_hbm_awqos   ),
+    .axi_to_hbm_awregion ( axi_app_to_hbm_awregion),
+    .axi_to_hbm_awvalid  ( axi_app_to_hbm_awvalid ),
+    .axi_to_hbm_awready  ( axi_app_to_hbm_awready ),
+    .axi_to_hbm_wid      ( axi_app_to_hbm_wid     ),
+    .axi_to_hbm_wdata    ( axi_app_to_hbm_wdata   ),
+    .axi_to_hbm_wstrb    ( axi_app_to_hbm_wstrb   ),
+    .axi_to_hbm_wlast    ( axi_app_to_hbm_wlast   ),
+    .axi_to_hbm_wvalid   ( axi_app_to_hbm_wvalid  ),
+    .axi_to_hbm_wready   ( axi_app_to_hbm_wready  ),
+    .axi_to_hbm_bid      ( axi_app_to_hbm_bid     ),
+    .axi_to_hbm_bresp    ( axi_app_to_hbm_bresp   ),
+    .axi_to_hbm_bvalid   ( axi_app_to_hbm_bvalid  ),
+    .axi_to_hbm_bready   ( axi_app_to_hbm_bready  ),
+    .axi_to_hbm_arid     ( axi_app_to_hbm_arid    ),
+    .axi_to_hbm_araddr   ( axi_app_to_hbm_araddr  ),
+    .axi_to_hbm_arlen    ( axi_app_to_hbm_arlen   ),
+    .axi_to_hbm_arsize   ( axi_app_to_hbm_arsize  ),
+    .axi_to_hbm_arburst  ( axi_app_to_hbm_arburst ),
+    .axi_to_hbm_arlock   ( axi_app_to_hbm_arlock  ),
+    .axi_to_hbm_arcache  ( axi_app_to_hbm_arcache ),
+    .axi_to_hbm_arprot   ( axi_app_to_hbm_arprot  ),
+    .axi_to_hbm_arqos    ( axi_app_to_hbm_arqos   ),
+    .axi_to_hbm_arregion ( axi_app_to_hbm_arregion),
+    .axi_to_hbm_arvalid  ( axi_app_to_hbm_arvalid ),
+    .axi_to_hbm_arready  ( axi_app_to_hbm_arready ),
+    .axi_to_hbm_rid      ( axi_app_to_hbm_rid     ),
+    .axi_to_hbm_rdata    ( axi_app_to_hbm_rdata   ),
+    .axi_to_hbm_rresp    ( axi_app_to_hbm_rresp   ),
+    .axi_to_hbm_rlast    ( axi_app_to_hbm_rlast   ),
+    .axi_to_hbm_rvalid   ( axi_app_to_hbm_rvalid  ),
+    .axi_to_hbm_rready   ( axi_app_to_hbm_rready  )
    );
 
    // Drive AXI-S clock/reset
