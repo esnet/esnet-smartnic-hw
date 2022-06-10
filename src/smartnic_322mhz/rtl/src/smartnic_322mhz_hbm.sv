@@ -29,11 +29,11 @@ module smartnic_322mhz_hbm #(
     input logic            clk_100mhz,
 
     // AXI-L control interface
-    axi4l_intf.peripheral  axil_if
-);
+    axi4l_intf.peripheral  axil_if,
 
-    // Parameters
-    localparam int PSEUDO_CHANNELS = 16;
+    // AXI3 memory interfaces
+    axi3_intf.peripheral   axi_if [16]
+);
 
     // Signals
     logic       srst;
@@ -45,7 +45,7 @@ module smartnic_322mhz_hbm #(
     // Interfaces
     // -------------------------------------------
     apb_intf   apb_if ();
-    axi3_intf  axi_if [PSEUDO_CHANNELS] ();
+    axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if__ctrl [16] ();
 
     // ----------------------------------------------------------------
     // Reset synchronization
@@ -60,14 +60,22 @@ module smartnic_322mhz_hbm #(
     // -------------------------------------------
     xilinx_hbm_ctrl i_xilinx_hbm_ctrl (
         .apb_clk ( clk_100mhz ),
+        .axi_if  ( axi_if__ctrl ),
         .*
     );
+
+    // Terminate control interfaces
+    generate
+        for (genvar i = 0; i < 16; i++) begin : g__mc_ctrl
+            axi3_intf_peripheral_term i_axi3_intf_peripheral_term__ctrl (.axi3_if(axi_if__ctrl[i]));
+        end : g__mc_ctrl
+    endgenerate
 
     // HBM simulations not supported in Vivado Simulator
 `ifdef SIMULATION
     apb_intf_peripheral_term i_apb_intf_peripheral_term__sim (.apb_if(apb_if));
     generate
-        for (genvar i = 0; i < PSEUDO_CHANNELS; i++) begin : g__mc
+        for (genvar i = 0; i < 16; i++) begin : g__mc
             axi3_intf_peripheral_term i_axi3_intf_peripheral_term__sim (.axi3_if(axi_if[i]));
         end : g__mc
     endgenerate

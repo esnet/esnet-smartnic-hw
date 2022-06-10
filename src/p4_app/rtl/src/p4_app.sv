@@ -31,7 +31,9 @@ module p4_app #(
    axi4s_intf.tx axis_core_to_switch,
    axi4s_intf.rx axis_switch_to_core,
    axi4s_intf.tx axis_to_host_0,
-   axi4s_intf.rx axis_from_host_0   
+   axi4s_intf.rx axis_from_host_0,
+
+   axi3_intf.controller  axi_to_hbm[16]
 );
 
    // ----------------------------------------------------------------
@@ -44,7 +46,7 @@ module p4_app #(
 
    // p4_app register decoder
    p4_app_decoder p4_app_decoder (
-      .axil_if           (axil_if),					  
+      .axil_if           (axil_if),
       .p4_app_axil_if   (axil_to_p4_app)
    );
    
@@ -57,7 +59,7 @@ module p4_app #(
 
 
    // ----------------------------------------------------------------
-   //  Datpath pass-through connections (hard-wired bypass)
+   //  Datapath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
 /*   
    assign axis_core_to_switch.aclk   = axis_switch_to_core.aclk;
@@ -104,7 +106,6 @@ module p4_app #(
       user_metadata_in_valid = axis_switch_to_core.tvalid;
    end
 
-   
    // --- metadata_out ---
    user_metadata_t user_metadata_out, user_metadata_out_latch;
    logic           user_metadata_out_valid;
@@ -115,59 +116,26 @@ module p4_app #(
    
    assign axis_core_to_switch.tdest = user_metadata_out_valid ? user_metadata_out.dest_port[1:0] : user_metadata_out_latch.dest_port[1:0];   
 
-
    // --- sdnet_0 instance (p4_app) ---
-   sdnet_0 sdnet_0_p4_app
+
+   sdnet_0_wrapper sdnet_0_p4_app
    (
-    // Clocks & Resets
-    .s_axis_aclk             (core_clk),
-    .s_axis_aresetn          (core_rstn),
-    .s_axi_aclk              (axil_to_sdnet.aclk),
-    .s_axi_aresetn           (axil_to_sdnet.aresetn),
-    .cam_mem_aclk            (core_clk),
-    .cam_mem_aresetn         (core_rstn),
+      .core_clk                (core_clk),
+      .core_rstn               (core_rstn),
+      .axil_if                 (axil_to_sdnet),
+      .axis_rx                 (axis_switch_to_core),
+      .axis_tx                 (axis_core_to_switch),
+      .user_metadata_in_valid  (user_metadata_in_valid),
+      .user_metadata_in        (user_metadata_in),
+      .user_metadata_out_valid (user_metadata_out_valid),
+      .user_metadata_out       (user_metadata_out),
+      .axi_to_hbm              (axi_to_hbm)
+   );
 
-    // Metadata
-    .user_metadata_in        (user_metadata_in),         
-    .user_metadata_in_valid  (user_metadata_in_valid),   
-    .user_metadata_out       (user_metadata_out),
-    .user_metadata_out_valid (user_metadata_out_valid),  
-    
-    // Slave AXI-lite interface
-    .s_axi_awaddr  (axil_to_sdnet.awaddr),
-    .s_axi_awvalid (axil_to_sdnet.awvalid),
-    .s_axi_awready (axil_to_sdnet.awready),
-    .s_axi_wdata   (axil_to_sdnet.wdata),
-    .s_axi_wstrb   (axil_to_sdnet.wstrb),
-    .s_axi_wvalid  (axil_to_sdnet.wvalid),
-    .s_axi_wready  (axil_to_sdnet.wready),
-    .s_axi_bresp   (axil_to_sdnet.bresp),
-    .s_axi_bvalid  (axil_to_sdnet.bvalid),
-    .s_axi_bready  (axil_to_sdnet.bready),
-    .s_axi_araddr  (axil_to_sdnet.araddr),
-    .s_axi_arvalid (axil_to_sdnet.arvalid),
-    .s_axi_arready (axil_to_sdnet.arready),
-    .s_axi_rdata   (axil_to_sdnet.rdata),
-    .s_axi_rvalid  (axil_to_sdnet.rvalid),
-    .s_axi_rready  (axil_to_sdnet.rready),
-    .s_axi_rresp   (axil_to_sdnet.rresp),
-    
-    // AXI Master port
-    .m_axis_tdata  (axis_core_to_switch.tdata),
-    .m_axis_tkeep  (axis_core_to_switch.tkeep),
-    .m_axis_tvalid (axis_core_to_switch.tvalid),
-    .m_axis_tlast  (axis_core_to_switch.tlast),
-    .m_axis_tready (axis_core_to_switch.tready),
-
-    // AXI Slave port
-    .s_axis_tdata  (axis_switch_to_core.tdata),
-    .s_axis_tkeep  (axis_switch_to_core.tkeep),
-    .s_axis_tvalid (axis_switch_to_core.tvalid),
-    .s_axis_tlast  (axis_switch_to_core.tlast),
-    .s_axis_tready (axis_switch_to_core.tready)
-    );
-
-    assign axis_core_to_switch.aclk = core_clk;
-    assign axis_core_to_switch.aresetn = core_rstn;
+   // Drive AXI-S outputs
+   assign axis_core_to_switch.aclk = core_clk;
+   assign axis_core_to_switch.aresetn = core_rstn;
+   assign axis_core_to_switch.tid = '0;
+   assign axis_core_to_switch.tuser = '0;
 
 endmodule: p4_app

@@ -21,6 +21,9 @@ read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_infra
 read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_infrastructure_v1_1_vl_rfs.v
 read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
 
+# Application package
+read_verilog -sv [glob $app_root/app_if/smartnic_322mhz_app_pkg.sv]
+
 # Packages
 read_verilog -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]
 read_verilog -sv [glob $lib_root/src/mem/rtl/src/*_pkg.sv ]
