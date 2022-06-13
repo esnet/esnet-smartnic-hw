@@ -40,15 +40,14 @@ SRC_LIST_FILES = \
 COMPONENTS = 
 
 EXT_LIBS = \
-           axis_infrastructure_v1_1_0 \
            axi_infrastructure_v1_1_0 \
-           axi_register_slice_v2_1_25 \
-           axis_register_slice_v1_1_25 \
+           axi_clock_converter_v2_1_25 \
+           axi_register_slice_v2_1_26 \
+           axi_crossbar_v2_1_27 \
+           axis_register_slice_v1_1_26 \
            axis_infrastructure_v1_1_0 \
-           axi_clock_converter_v2_1_24 \
+           axis_switch_v1_1_26 \
            generic_baseblocks_v2_1_0 \
-           axi_crossbar_v2_1_23 \
-           axis_switch_v1_1_25 \
            unisims_ver \
            unimacro_ver \
            secureip \
