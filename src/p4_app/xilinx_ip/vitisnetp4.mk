@@ -59,8 +59,8 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS =
-EXT_LIBS = cam_v2_2_2 \
-           vitis_net_p4_v1_0_2
+EXT_LIBS = cam_v2_3_0 \
+           vitis_net_p4_v1_1_0
 
 # ----------------------------------------------------
 # Defines
