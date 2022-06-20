@@ -9,6 +9,7 @@ IP_ROOT := ..
 include $(IP_ROOT)/config.mk
 
 # Export path variables for use in build (Tcl) scripts
+export LIB_ROOT
 export APP_ROOT ?= $(PROJ_ROOT)/src/p4_app
 
 # -----------------------------------------------
@@ -63,12 +64,12 @@ $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml:
 
 .PHONY: reg_src 
 
-
 ip:
 	$(MAKE) -C $(LIB_ROOT)/src/axi4s/xilinx_ip synth
 	$(MAKE) -C $(LIB_ROOT)/src/axi4l/xilinx_ip synth
 	$(MAKE) -C $(LIB_ROOT)/src/fifo/xilinx_ip synth
 	$(MAKE) -C $(IP_ROOT)/xilinx_ip synth
+.PHONY: ip
 
 
 pre_synth: reg_src ip $(APP_ROOT)/app_if/smartnic_322mhz_app.dcp

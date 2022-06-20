@@ -16,6 +16,14 @@ include $(IP_ROOT)/config.mk
 #   source files from ./src are added automatically,
 #   with include directory ./include
 # ----------------------------------------------------
+IP_LIST = \
+    axis_switch_egress \
+    axis_switch_ingress \
+    clk_wiz_0 \
+    clk_wiz_1 \
+    hbm_4g_left \
+    hbm_4g_right
+
 SRC_FILES =
 INC_DIRS =
 SRC_LIST_FILES = \
@@ -64,11 +72,13 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: sim_targets _compile
+compile: _ip _compile
 
-clean: _clean_compile clean_proj
+synth: _ip_synth
 
-.PHONY: all compile clean
+clean: _clean_compile _ip_proj_clean
+
+.PHONY: all compile synth clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets
@@ -76,51 +86,6 @@ clean: _clean_compile clean_proj
 include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 
 # ----------------------------------------------------
-# Managed IP Project targets
+# Import Vivado IP management targets
 # ----------------------------------------------------
-VIVADO_SCRIPTS_ROOT = $(SCRIPTS_ROOT)/vivado
-
-proj:
-ifeq (,$(wildcard ./.proj_created))
-	@rm -rf ip_proj
-endif
-	$(MAKE) _create_proj
-
-synth: synth_targets
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_synth.tcl
-
-_create_proj: ip_proj/ip_proj.xpr
-.PHONY: _create_proj
-
-ip_proj/ip_proj.xpr : config.tcl ip_list.tcl 
-	rm -f .proj_created
-	rm -f .*_generated
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_create.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_import.tcl
-	touch .proj_created
-
-sim_targets: .sim_targets_generated
-.PHONY: sim_targets
-
-.sim_targets_generated: | proj
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_gen_sim_targets.tcl
-	touch .sim_targets_generated
-
-synth_targets: .synth_targets_generated
-.PHONY: synth_targets
-
-.synth_targets_generated: | proj
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_gen_synth_targets.tcl
-	touch .synth_targets_generated
-
-clean_proj:
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_clean.tcl
-	@rm -f .proj_created
-	@rm -f .*targets_generated
-	@rm -f *.jou
-	@rm -f *.log
-	@rm -f *.str
-	@rm -rf .Xil
-	@rm -rf hbs
-	@rm -rf ip_user_files
-	@rm -rf ip_proj
-
+include $(SCRIPTS_ROOT)/Makefiles/vivado_manage_ip.mk
