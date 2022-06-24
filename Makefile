@@ -1,36 +1,24 @@
 #------- Variables -------
 # Notes:
-#  APP_DIR and SMARTNIC_DIR are configured in the parent Makefile.
-#  ALL other variables are derived from APP_DIR and SMARTNIC_DIR.
+#  In typical usage, this Makefile will be invoked within the context
+#  of a particular SmartNIC application. Direct invocation is also
+#  supported.
 
-export PROJ_ROOT := $(abspath $(SMARTNIC_DIR))
-export LIB_ROOT  := $(PROJ_ROOT)/esnet-fpga-library
+# Configure project paths
+PROJ_ROOT := $(CURDIR)
+include $(PROJ_ROOT)/paths.mk
 
+# Configure default application if none is specified
+APP_DIR ?= $(CURDIR)/src/p4_app
 
-# APP_ROOT is conditionally set below.
-# if APP_DIR contains app_if/ subdir i.e. APP contains P4 + verilog, set APP_ROOT to APP_DIR,
-# else APP is P4 file only, set APP_ROOT to p4_app (to get common P4 core verilog) and P4_FILE.
+# Include standard application configuration
+include $(PROJ_ROOT)/scripts/app_config.mk
 
-ifneq ($(wildcard $(APP_DIR)/app_if/.),)
-  export APP_ROOT := $(APP_DIR)
-else
-  export APP_ROOT := $(PROJ_ROOT)/src/p4_app
-  export P4_FILE  ?= $(APP_DIR)/p4/$(APP_NAME).p4
-endif
+ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
-
-# Other variable assignments (optionally configured in the parent Makefile).
-
-export APP_NAME ?= $(shell basename $(APP_DIR) )
-
-export BUILD_NAME   ?= esnet-smartnic-$(APP_NAME)
-
-export ARTIFACTS_DIR       ?= $(APP_DIR)/artifacts
-export ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
-
-export max_pkt_len ?= 1518
-export jobs ?= 16
-
+# Build options
+max_pkt_len ?= 1518
+jobs ?= 16
 
 #------- Targets -------
 
@@ -44,28 +32,33 @@ echo_vars:
 	@echo "         BUILD_NAME: $(BUILD_NAME)"
 	@echo "ARTIFACTS_BUILD_DIR: $(ARTIFACTS_BUILD_DIR)"
 
+config :
+	$(_print_app_config)
+	$(_write_app_config)
+
 bitfile : echo_vars
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
-	$(MAKE) -C $(APP_ROOT)/app_if
-	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build
+	$(MAKE) -C $(APP_ROOT)/app_if APP_DIR=$(APP_DIR)
+	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT)
 	@echo "Generating smartnic bitfile..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
+		BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
 
 package : echo_vars | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME)..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package BUILD_NAME=$(BUILD_NAME)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
+		BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
 
 clean_build :
 	$(MAKE) -C $(APP_ROOT)/app_if clean
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build clean
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build build_name=$(BUILD_NAME)
+	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build BUILD_NAME=$(BUILD_NAME)
 
 clean_artifacts :
 	@rm -rf $(ARTIFACTS_BUILD_DIR)
 
-.PHONY : echo_vars clean_build clean_artifacts
-
+.PHONY : echo_vars config bitfile package clean_build clean_artifacts
 
 
 $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
@@ -77,15 +70,3 @@ $(ARTIFACTS_DIR) :
 build_smartnic_322mhz : echo_vars
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build all
 
-
-
-compile: compile_rtl regression
-
-compile_%:
-	$(MAKE) -C $* compile
-
-regression:
-	cd tests/regression && make
-
-clean:
-	$(MAKE) -C rtl clean
