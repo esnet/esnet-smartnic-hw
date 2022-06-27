@@ -8,6 +8,15 @@ IP_ROOT := ..
 # -----------------------------------------------
 include $(IP_ROOT)/config.mk
 
+# -----------------------------------------------
+# VitisNetP4 IP config
+# -----------------------------------------------
+VITISNETP4_IP_NAME = sdnet_0
+VITISNETP4_IP_DIR = .
+
+P4_FILE = $(abspath $(IP_ROOT)/p4/p4_example.p4)
+P4_OPTS = {CONFIG.PKT_RATE 150}
+
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
@@ -16,10 +25,28 @@ include $(IP_ROOT)/config.mk
 #   source files from ./src are added automatically,
 #   with include directory ./include
 # ----------------------------------------------------
-SRC_FILES =
-INC_DIRS =
-SRC_LIST_FILES = \
-    sdnet_0_sources.f
+IP_LIST = $(VITISNETP4_IP_NAME)
+SRC_FILES = \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_top_pkg.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_pkg.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_sync_fifos.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_header_sequence_identifier.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_header_field_extractor.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_error_check_module.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_parser_engine.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_deparser_engine.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_action_engine.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_lookup_engine.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_axi4lite_interconnect.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_statistics_registers.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_match_action_engine.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_top.sv \
+    $(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME).sv 
+
+INC_DIRS = \
+    $(VITISNETP4_IP_NAME)/src/hw/include
+
+SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
@@ -48,11 +75,16 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: sim_targets _compile
+compile: _ip _vitisnetp4_drv_dpi _compile
 
-clean: _clean_compile clean_proj
+synth: _ip_synth
 
-.PHONY: all compile clean
+clean: _clean_compile vitisnetp4_clean
+
+.PHONY: all compile synth clean
+
+vitisnetp4_clean: _ip_proj_clean
+	@rm -rf $(VITISNETP4_IP_NAME)
 
 # ----------------------------------------------------
 # Import Vivado compile targets
@@ -60,59 +92,9 @@ clean: _clean_compile clean_proj
 include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 
 # ----------------------------------------------------
-# Managed IP Project targets
+# Import Vivado IP management targets
 # ----------------------------------------------------
-VIVADO_SCRIPTS_ROOT = $(SCRIPTS_ROOT)/vivado
+include $(SCRIPTS_ROOT)/Makefiles/vivado_vitisnetp4.mk
 
-proj:
-ifeq (,$(wildcard ./.proj_created))
-	@rm -rf ip_proj
-endif
-	$(MAKE) _create_proj
 
-synth: synth_targets
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_synth.tcl
 
-_create_proj: ip_proj/ip_proj.xpr
-.PHONY: _create_proj
-
-ip_proj/ip_proj.xpr : config.tcl ip_list.tcl create_sdnet_ip.tcl $(P4_FILE)
-	rm -f .proj_created
-	rm -f .*_generated
-	rm -rf sdnet_0/src
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_create.tcl -source create_sdnet_ip.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_import.tcl
-	touch .proj_created
-
-sim_targets: sdnet_ex_design .sim_targets_generated
-.PHONY: sim_targets
-
-.sim_targets_generated: | proj
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_gen_sim_targets.tcl
-	touch .sim_targets_generated
-
-synth_targets: .synth_targets_generated
-.PHONY: synth_targets
-
-.synth_targets_generated: | proj
-	vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_gen_synth_targets.tcl
-	touch .synth_targets_generated
-
-.sdnet_ex_design_generated: | proj
-	vivado -mode batch -source config.tcl create_sdnet_ex_design.tcl
-	touch .sdnet_ex_design_generated
-
-sdnet_ex_design: .sdnet_ex_design_generated
-.PHONY: sdnet_ex_design
-
-clean_proj:
-	-vivado -mode batch -source config.tcl -source $(VIVADO_SCRIPTS_ROOT)/ip_proj_clean.tcl
-	@rm -f .proj_created
-	@rm -f .*_generated
-	@rm -f *.jou
-	@rm -f *.log
-	@rm -f *.str
-	@rm -rf .Xil
-	@rm -rf hbs
-	@rm -rf ip_user_files
-	@rm -rf ip_proj
-	@rm -rf sdnet_0
