@@ -17,7 +17,6 @@ build:
 	$(MAKE) -C ../build
 
 package: build_package reg_package p4_package driver_package
-.PHONY: package
 
 build_package:
 	cp ../build/out/smartnic_322mhz_app.opt.dcp smartnic_322mhz_app.dcp
@@ -36,6 +35,8 @@ clean:
 	$(MAKE) -C ../build clean
 	@rm -rf smartnic_322mhz_app*
 	@rm -rf *.lua
+
+.PHONY: all build package build_package reg_package p4_package driver_package clean
 
 # -----------------------------------------------
 # Include regio targets

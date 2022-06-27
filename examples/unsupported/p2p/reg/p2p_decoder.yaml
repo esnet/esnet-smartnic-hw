@@ -2,7 +2,7 @@ name: p2p
 
 blocks:
   p2p: &p2p
-    !include reg/p2p.yaml
+    !include ../examples/unsupported/p2p/reg/p2p.yaml
 
 interfaces:
   - block: *p2p
