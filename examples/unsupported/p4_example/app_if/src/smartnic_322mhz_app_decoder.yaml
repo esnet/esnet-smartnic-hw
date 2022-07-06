@@ -2,7 +2,7 @@ name: smartnic_322mhz_app
 
 decoders:
   p4_example_decoder: &p4_example_decoder
-    !include reg/p4_example_decoder.yaml
+    !include ../examples/unsupported/p4_example/reg/p4_example_decoder.yaml
 
 interfaces:
   - decoder: *p4_example_decoder

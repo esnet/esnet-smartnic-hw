@@ -4162,7 +4162,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4172,7 +4172,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC0_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4222,7 +4222,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4232,7 +4232,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC10_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4282,7 +4282,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4292,7 +4292,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC11_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4342,7 +4342,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4352,7 +4352,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC12_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4402,7 +4402,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4412,7 +4412,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC13_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4462,7 +4462,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4472,7 +4472,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC14_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4522,7 +4522,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4532,7 +4532,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC15_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4582,7 +4582,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4592,7 +4592,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC1_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4642,7 +4642,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4652,7 +4652,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC2_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4702,7 +4702,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4712,7 +4712,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC3_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4762,7 +4762,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4772,7 +4772,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC4_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4822,7 +4822,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4832,7 +4832,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC5_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4882,7 +4882,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4892,7 +4892,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC6_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -4942,7 +4942,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -4952,7 +4952,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC7_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -5002,7 +5002,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -5012,7 +5012,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC8_USER_PARITY_EN">false</spirit:configurableElementValue>
@@ -5062,7 +5062,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_MANUAL_REFRESH_SEL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_POP_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_PRE_DEF_ADDR_MAP_SEL">ROW_BANK_COLUMN</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_Q_AGE_LIMIT">0x7f</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_Q_AGE_LIMIT">0x7F</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_RA0_RA13_MAPPING">0x61759551349140f38d30b</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_RD_DQ_PARITY_EN">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_READ_DBI_EN">true</spirit:configurableElementValue>
@@ -5072,7 +5072,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_REORDER_QUEUE_EN">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_REORDER_RW_ONLY">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_RMW_EN">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_SBREF_ISSUE_PER">0x01e</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_SBREF_ISSUE_PER">0x01E</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_TEMP_CTRL_SELF_REF_INTVL">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_TRAFFIC_OPTION">Random</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.USER_MC9_USER_PARITY_EN">false</spirit:configurableElementValue>

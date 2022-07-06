@@ -9,6 +9,11 @@ IP_ROOT := ..
 include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
+# Export parameters used in add_sources.tcl
+# -----------------------------------------------
+export LIB_ROOT
+
+# -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
 TOP = smartnic_322mhz_app
@@ -38,6 +43,7 @@ all: opt
 ip:
 	$(MAKE) -C $(LIB_ROOT)/src/axi4l/xilinx_ip synth
 	$(MAKE) -C $(LIB_ROOT)/src/axi4s/xilinx_ip synth
+.PHONY: ip
 
 pre_synth: _reg_src ip
 synth:     _synth

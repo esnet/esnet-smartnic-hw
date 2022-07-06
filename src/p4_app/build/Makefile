@@ -1,12 +1,20 @@
-# -----------------------------------------------
-# (Global) Path setup
-# -----------------------------------------------
-IP_ROOT := ..
+# ----------------------------------------------------
+# Application config
+# ----------------------------------------------------
+APP_DIR ?= ..
+include $(APP_DIR)/.app_config.mk
 
 # -----------------------------------------------
-# IP config
+# IP config (for compilation library setup)
 # -----------------------------------------------
+IP_ROOT = ..
 include $(IP_ROOT)/config.mk
+
+# -----------------------------------------------
+# Export parameters (used in add_sources.tcl)
+# -----------------------------------------------
+export APP_NAME
+export LIB_ROOT
 
 # -----------------------------------------------
 # Specify top-level module
@@ -36,7 +44,8 @@ REGIO_GENERATE_OPTS := --recursive
 all: opt
 
 ip:
-	$(MAKE) -C $(IP_ROOT)/xilinx_ip synth
+	$(MAKE) -C $(IP_ROOT)/xilinx_ip synth APP_DIR=$(abspath $(APP_DIR))
+.PHONY: ip
 
 pre_synth: _reg_src ip
 synth:     _synth
@@ -48,6 +57,9 @@ route:     _route
 
 clean: _clean_reg _clean_build
 .PHONY: clean
+
+$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
+	$(MAKE) -C $(APP_DIR) config
 
 # -----------------------------------------------
 # Include Vivado definitions/targets
