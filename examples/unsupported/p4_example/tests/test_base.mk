@@ -59,7 +59,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/$(APP_NAME)/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 
