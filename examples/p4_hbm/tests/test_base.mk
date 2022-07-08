@@ -5,10 +5,17 @@ APP_DIR ?= ../..
 include $(APP_DIR)/.app_config.mk
 
 # -----------------------------------------------
+# Path config
+# -----------------------------------------------
+PROJ_ROOT = ../../../..
+include $(PROJ_ROOT)/paths.mk
+
+# -----------------------------------------------
 # IP config (for compilation library setup)
 # -----------------------------------------------
 IP_ROOT = $(APP_ROOT)
-include $(IP_ROOT)/config.mk
+
+include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
 
 # -----------------------------------------------
 # Configuration
