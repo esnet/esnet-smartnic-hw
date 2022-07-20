@@ -1,12 +1,14 @@
 # -----------------------------------------------
-# Path setup
+# IP config (for compilation library setup)
 # -----------------------------------------------
-IP_ROOT := ..
-
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
+IP_ROOT = ..
 include $(IP_ROOT)/config.mk
+
+# ----------------------------------------------------
+# Application config
+# ----------------------------------------------------
+APP_DIR ?= $(IP_ROOT)/../p4_app
+include $(APP_DIR)/.app_config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -32,7 +34,8 @@ COMPONENTS = xilinx_ip reg.verif rtl \
              axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
              axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
              axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif \
-             xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif
+             xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif \
+             p4_app_xilinx_ip=$(IP_ROOT)/../p4_app/xilinx_ip/$(APP_NAME) \
 
 EXT_LIBS =
 
