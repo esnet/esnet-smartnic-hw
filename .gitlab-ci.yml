@@ -49,6 +49,8 @@ sim_p4_apps:
   script:
     - make -C src/p4_app/tests/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
+    - make -C src/p4_app/tests.smartnic_322mhz/regression
+    - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_0/sim.log
     - make -C examples/p4_hbm/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_0/sim.log
     - make -C examples/p4_hbm/tests.smartnic_322mhz/regression
