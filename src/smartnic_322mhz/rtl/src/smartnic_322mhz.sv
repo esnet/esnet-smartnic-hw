@@ -22,6 +22,7 @@
 
 module smartnic_322mhz
   import smartnic_322mhz_pkg::*;
+  import axi4s_pkg::*;
 #(
   parameter int NUM_CMAC = 2,
   parameter int MAX_PKT_LEN = 9100,
@@ -502,15 +503,35 @@ module smartnic_322mhz
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_app ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_app_to_core ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_to_app ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_from_app ();
+
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app ();
+
+   tuser_buffer_context_mode_t  axis_to_app_tuser;
+   assign axis_to_app_tuser =   axis_to_app.tuser;
+
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app ();
+
+   tuser_buffer_context_mode_t  axis_from_app_tuser;
+   assign axis_from_app.tuser = axis_from_app_tuser;
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app_host_0 ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app_host_0 ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app__demarc ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app__demarc ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app__demarc ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app__demarc ();
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app_host_0__demarc ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app_host_0__demarc ();
+
+
 
    // ----------------------------------------------------------------
    //  HBM AXI-3 signals/interfaces
@@ -729,14 +750,25 @@ module smartnic_322mhz
    assign axis_core_to_app.aresetn = core_rstn;
    assign axis_core_to_app.tvalid = axis_core_to_app_tvalid && !smartnic_322mhz_regs.port_config.app_tpause;
 
+   // axi4s_split_join instantiation (separates and recombines packet headers).
+   axi4s_split_join #(
+     .BIGENDIAN(0)
+   ) axi4s_split_join_0 (
+     .axi4s_in      (axis_core_to_app),
+     .axi4s_out     (axis_app_to_core),
+     .axi4s_hdr_out (axis_hdr_to_app),
+     .axi4s_hdr_in  (axis_hdr_from_app),
+     .hdr_length    (64)
+   );
+
    // smartnic_322mhz_app core bypass logic
    axi4s_intf_bypass_mux #(
-     .PIPE_STAGES(1), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+     .PIPE_STAGES(1), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
    ) bypass_mux_to_switch (
-     .axi4s_in         (axis_core_to_app),
+     .axi4s_in         (axis_hdr_to_app),
      .axi4s_to_block   (axis_to_app__demarc),
      .axi4s_from_block (axis_from_app__demarc),
-     .axi4s_out        (axis_app_to_core),
+     .axi4s_out        (axis_hdr_from_app),
      .bypass           (smartnic_322mhz_regs.port_config.app_bypass)
    );
 
@@ -812,7 +844,8 @@ module smartnic_322mhz
 
    // AXI-S interfaces
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app (
        .axi4s_from_tx (axis_to_app__demarc),
        .axi4s_to_rx   (axis_to_app)
@@ -820,13 +853,14 @@ module smartnic_322mhz
 
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
-   ) i_axi4s_reg_slice__host_to_core (
+   ) i_axi4s_reg_slice__host_to_app (
        .axi4s_from_tx (axis_to_app_host_0__demarc),
        .axi4s_to_rx   (axis_to_app_host_0)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core (
        .axi4s_from_tx (axis_from_app),
        .axi4s_to_rx   (axis_from_app__demarc)
@@ -905,7 +939,8 @@ module smartnic_322mhz
     .axis_from_switch_tlast  ( axis_to_app.tlast ),
     .axis_from_switch_tid    ( axis_to_app.tid ),
     .axis_from_switch_tdest  ( axis_to_app.tdest ),
-    .axis_from_switch_tuser  ( axis_to_app.tuser ),
+    .axis_from_switch_tuser_wr_ptr    ( axis_to_app_tuser.wr_ptr ),
+    .axis_from_switch_tuser_hdr_tlast ( axis_to_app_tuser.hdr_tlast ),
     // AXI-S data interface (from app, to switch)
     .axis_to_switch_tvalid ( axis_from_app.tvalid ),
     .axis_to_switch_tready ( axis_from_app.tready ),
@@ -914,7 +949,8 @@ module smartnic_322mhz
     .axis_to_switch_tlast  ( axis_from_app.tlast ),
     .axis_to_switch_tid    ( axis_from_app.tid ),
     .axis_to_switch_tdest  ( axis_from_app.tdest ),
-    .axis_to_switch_tuser  ( axis_from_app.tuser ),
+    .axis_to_switch_tuser_wr_ptr    ( axis_from_app_tuser.wr_ptr ),
+    .axis_to_switch_tuser_hdr_tlast ( axis_from_app_tuser.hdr_tlast ),
     // AXI-S data interface (from host, to app)
     .axis_from_host_tvalid ( axis_to_app_host_0.tvalid ),
     .axis_from_host_tready ( axis_to_app_host_0.tready ),
