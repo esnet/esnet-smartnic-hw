@@ -102,6 +102,7 @@ module p2p #(
    assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
    assign axis_core_to_switch.tid    = axis_switch_to_core.tid;
    assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
+   assign axis_core_to_switch.tuser  = axis_switch_to_core.tuser;
 
    assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p2p_regs.tpause;
 
@@ -112,6 +113,7 @@ module p2p #(
    assign axis_to_host_0.tlast  = axis_from_host_0.tlast;
    assign axis_to_host_0.tid    = axis_from_host_0.tid;
    assign axis_to_host_0.tdest  = axis_from_host_0.tdest;
+   assign axis_to_host_0.tuser  = axis_from_host_0.tuser;
 
    assign axis_from_host_0.tready = axis_to_host_0.tready;
 

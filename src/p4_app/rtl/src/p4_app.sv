@@ -18,6 +18,7 @@
 `timescale 1ns/1ps
 
 import p4_app_pkg::*;
+import axi4s_pkg::*;
 
 module p4_app #(
 ) (
@@ -70,6 +71,7 @@ module p4_app #(
    assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
    assign axis_core_to_switch.tid    = axis_switch_to_core.tid;
    assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
+   assign axis_core_to_switch.tuser  = axis_switch_to_core.tuser;
 
    assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p4_app_regs.tpause;
 */
@@ -82,6 +84,7 @@ module p4_app #(
    assign axis_to_host_0.tlast  = axis_from_host_0.tlast;
    assign axis_to_host_0.tid    = axis_from_host_0.tid;
    assign axis_to_host_0.tdest  = axis_from_host_0.tdest;
+   assign axis_to_host_0.tuser  = axis_from_host_0.tuser;
 
    assign axis_from_host_0.tready = axis_to_host_0.tready;
 
@@ -91,6 +94,14 @@ module p4_app #(
    // ----------------------------------------------------------------
    // Metadata - type definitions are maintained in `ht_app_pkg`
 
+   // tuser mapping
+   tuser_buffer_context_mode_t   axis_switch_to_core_tuser;
+   assign axis_switch_to_core_tuser = axis_switch_to_core.tuser;
+
+   tuser_buffer_context_mode_t   axis_core_to_switch_tuser;
+   assign axis_core_to_switch.tuser = axis_core_to_switch_tuser;
+
+
    // --- metadata_in ---
    user_metadata_t user_metadata_in;
    logic           user_metadata_in_valid;
@@ -99,7 +110,7 @@ module p4_app #(
       user_metadata_in.ingress_global_timestamp = timestamp;
       user_metadata_in.dest_port                = axis_switch_to_core.tid;
       user_metadata_in.truncate_enable          = 0;
-      user_metadata_in.packet_length            = 0;
+      user_metadata_in.packet_length            = axis_switch_to_core_tuser.wr_ptr; // temporary repurpose of pkt_len field.
       user_metadata_in.rss_override_enable      = 0;
       user_metadata_in.rss_override             = 0;
 
@@ -114,7 +125,15 @@ module p4_app #(
       if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
    end
    
-   assign axis_core_to_switch.tdest = user_metadata_out_valid ? user_metadata_out.dest_port[1:0] : user_metadata_out_latch.dest_port[1:0];   
+   assign axis_core_to_switch.tdest = user_metadata_out_valid ?
+                                      user_metadata_out.dest_port[1:0] : user_metadata_out_latch.dest_port[1:0];
+
+   assign axis_core_to_switch_tuser.wr_ptr = user_metadata_out_valid ?
+                                             user_metadata_out.packet_length[15:0] : user_metadata_out_latch.packet_length[15:0];
+
+   assign axis_core_to_switch_tuser.hdr_tlast = '0;
+
+
 
    // --- sdnet_0 instance (p4_app) ---
 
@@ -136,6 +155,5 @@ module p4_app #(
    assign axis_core_to_switch.aclk = core_clk;
    assign axis_core_to_switch.aresetn = core_rstn;
    assign axis_core_to_switch.tid = '0;
-   assign axis_core_to_switch.tuser = '0;
 
 endmodule: p4_app
