@@ -18,6 +18,7 @@
 `timescale 1ns/1ps
 
 import p4_example_pkg::*;
+import axi4s_pkg::*;
 
 module p4_example #(
 ) (
