@@ -5,10 +5,10 @@ IP_ROOT = ..
 include $(IP_ROOT)/config.mk
 
 # ----------------------------------------------------
-# Application config
+# Application config (p4_app by default)
 # ----------------------------------------------------
-APP_DIR ?= $(IP_ROOT)/../p4_app
-include $(APP_DIR)/.app_config.mk
+APP_DIR ?= $(abspath $(PROJ_ROOT)/src/p4_app)
+include $(PROJ_ROOT)/scripts/app_config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -35,7 +35,7 @@ COMPONENTS = xilinx_ip reg.verif rtl \
              axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
              axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif \
              xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif \
-             p4_app_xilinx_ip=$(IP_ROOT)/../p4_app/xilinx_ip/$(APP_NAME) \
+             p4_app_xilinx_ip=$(APP_DIR)/xilinx_ip/$(APP_NAME)
 
 EXT_LIBS =
 
@@ -57,11 +57,20 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+config:
+	$(_print_app_config)
+	$(_write_app_config)
+
+ip: config
+	$(MAKE) -C $(APP_ROOT)/xilinx_ip APP_NAME=$(APP_NAME)
+
+compile:
+	$(MAKE) ip
+	$(MAKE) _compile
 
 clean: _clean_compile
 
-.PHONY: all compile clean
+.PHONY: all config compile clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets
