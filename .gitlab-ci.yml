@@ -132,6 +132,8 @@ build_p4_hbm:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_hbm
+  rules:
+    - allow_failure: true
 
 build_vanilla_ons:
   stage: bitfile
