@@ -134,9 +134,9 @@ module p4_app_datapath_unit_test;
 
     `include "../../../p4/sim/run_pkt_test_incl.svh"
 
-    `SVTEST(test_default_w_drops)
-        run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0), .dest_port(0) );
-    `SVTEST_END
+//    `SVTEST(test_default_w_drops)
+//        run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0), .dest_port(0) );
+//    `SVTEST_END
 
     `SVUNIT_TESTS_END
 
