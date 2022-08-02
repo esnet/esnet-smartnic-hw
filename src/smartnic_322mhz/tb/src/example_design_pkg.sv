@@ -27,9 +27,7 @@
 // --------------------------------------------------------------------------
 
 package example_design_pkg;
-
    import sdnet_0_pkg::*;
-   
    // --------------------------------------------------------------------------
    // test bench's configuration
    
@@ -64,34 +62,45 @@ package example_design_pkg;
 `endif
 
    // --------------------------------------------------------------------------
-   // parameters
-   
-   export sdnet_0_pkg::TDATA_NUM_BYTES;
-   export sdnet_0_pkg::USER_META_DATA_WIDTH;
-   export sdnet_0_pkg::S_AXI_DATA_WIDTH;
-   export sdnet_0_pkg::S_AXI_ADDR_WIDTH;
-   export sdnet_0_pkg::NUM_USER_EXTERNS;
-   export sdnet_0_pkg::AXIS_CLK_FREQ_MHZ;
-   export sdnet_0_pkg::CAM_MEM_CLK_FREQ_MHZ;
-   
-   localparam CTL_CLK_FREQ_MHZ = 100;
-   localparam HBM_CLK_FREQ_MHZ = 325;
-   
-   // --------------------------------------------------------------------------
-   // Custom data types
+   // local data types 
+
+   typedef string strArray[$];
+   typedef bit [1023:0] bitArray;
   
    typedef struct {
       logic [TDATA_NUM_BYTES*8-1:0] tdata;
       logic [TDATA_NUM_BYTES-1:0]   tkeep;
       logic                         tlast;
    } AXIS_T;
+
+   typedef struct {
+      string Name;
+      int    Value;
+   } NameValuePair;
+
+   typedef enum {
+      TBL_ADD,
+      TBL_MODIFY,
+      TBL_DELETE,
+      TBL_CLEAR,
+      RST_STATE,
+      RUN_TRAFFIC,
+      NOP
+   } CliCmdOp;
    
-   typedef string strArray[$];
-   typedef bit [1023:0] bitArray;
+   typedef struct {
+      CliCmdOp cmd_op;
+      int      entry_id;
+      string   traffic_filename;
+      string   table_name;
+      string   action_name;
+      strArray match_fields;
+      strArray action_params;
+   } CliCmdStruct;
 
    // --------------------------------------------------------------------------
    // Functions 
-   
+
    // split string using delimiter
    function automatic strArray split (
       input string str_in,      // input string 
@@ -141,8 +150,8 @@ package example_design_pkg;
        bit [3:0] nibble;
        bitArray hex = '0;
        
-       if (str.substr(0, 2) == "0x")
-           str = str.substr(3, str.len()-1);  
+       if (str.substr(0, 1) == "0x")
+           str = str.substr(2, str.len()-1);  
            
        for (int i = 0; i < str.len(); i++) begin
           char   = str.substr(i, i);
@@ -152,11 +161,12 @@ package example_design_pkg;
       
        return hex;
    endfunction
-   
+
    // return packet bytes from TEXT file
    function automatic string read_text_file (
-      input string filename,     // path to file
-      input bit    required = 1  // error if required and file not found
+      input string filename,       // path to file
+      input bit    required  = 1,  // error if required and file not found
+      input byte   delimiter = " " // delimiter between lines
    );
    
       string line, lines;
@@ -175,9 +185,9 @@ package example_design_pkg;
       // read lines
       while(!$feof(fd)) begin
         if($fgets(line, fd)) begin
-            if (line.getc(0) == "%")
+            if (line[0] == "%" || line[0] == "#" || line[0] == "\n" || line.len() == 0)
                 continue; // Comments allowed, but ignored
-            lines = {lines, " ", line.substr(0, line.len()-2)};
+            lines = {lines, delimiter, line.substr(0, line.len()-2)};
         end
       end
    
@@ -299,16 +309,26 @@ package example_design_pkg;
    
    // parse metadata file and reformat to AXI Stream words
    function automatic void parse_metadata_file (
-      input string filename,                                // path to *.meta file
-      output logic [USER_META_DATA_WIDTH-1:0] axis_words[$] // metadata words array
+      input  string filename,                                // path to *.meta file
+      input  string metadata_formatStr,                      // metadata format used to parse the file
+      output logic [USER_META_DATA_WIDTH-1:0] axis_words[$]  // metadata words array
    );
 
+      NameValuePair metadata_format[$];
       string lines, fname, fvalue;
       bitArray metadata[string];
       strArray name_value_pairs;
       strArray name_value_pair;
+      strArray line_array;
       strArray lines_array;
-      int fd, cnt, width;
+      int cnt, width;
+
+      // read metadata
+      lines_array = split(metadata_formatStr, ",");
+      for (cnt = 0; cnt < lines_array.size(); cnt++) begin
+        line_array = split(lines_array[cnt], "=");
+        metadata_format[0] = '{Name: line_array[0], Value: str2hex(line_array[1])};
+      end
 
       // open file
       lines = read_text_file($sformatf("%s.meta", filename), 0);
@@ -328,8 +348,9 @@ package example_design_pkg;
             fname  = name_value_pair[0];
             fvalue = name_value_pair[1];
 
-            for (int j = 0; j < XilVitisNetP4UserMetadataFields.size(); j++) begin
-                if (XilVitisNetP4UserMetadataFields[j].NameStringPtr == fname) begin
+            for (int j = 0; j < metadata_format.size(); j++) begin
+                if ($sformatf("%s", metadata_format[j].Name) == $sformatf("%s", fname)) begin
+                   fname = metadata_format[j].Name;
                    metadata[fname] = str2hex(fvalue);
                    break;
                 end
@@ -337,9 +358,9 @@ package example_design_pkg;
         end
         
         // build AXIS word            
-        for (int i = 0; i < XilVitisNetP4UserMetadataFields.size(); i++) begin            
-            fname = XilVitisNetP4UserMetadataFields[i].NameStringPtr;
-            width = XilVitisNetP4UserMetadataFields[i].Value;
+        for (int i = 0; i < metadata_format.size(); i++) begin            
+            fname = metadata_format[i].Name;
+            width = metadata_format[i].Value;
             
             if (metadata.exists(fname)) begin
                 axis_words[cnt] = (axis_words[cnt] << width) | metadata[fname];
@@ -349,13 +370,12 @@ package example_design_pkg;
         end
       end
       
-      $fclose(fd);
       $display("** Info: Finished reading metadata file %s", filename);
    endfunction
 
    // parse table math fields string and convert it to bit array
    function automatic void parse_match_fields (
-      input  string   table_name,          // table name string
+      input  string   FormatStringPtr,     // table format string
       input  strArray match_fields_array,  // match fields string (space separated)
       output bitArray entry_key,           // entry key
       output bitArray entry_mask           // entry mask
@@ -363,27 +383,19 @@ package example_design_pkg;
    
       strArray key_format_array;
       strArray match_fields;
-      bitArray keys [$];
-      bitArray masks [$];
+      bitArray keys[$];
+      bitArray masks[$];
       int key_len, mask_len, ret;
       string key, mask, key_type;
-      int tbl_id;
             
       // initialize variables
       entry_key = '0;
       entry_mask = '0;
-      tbl_id = get_table_id(table_name);
-      key_format_array = split(XilVitisNetP4TableList[tbl_id].Config.CamConfig.FormatStringPtr, ":");
-      
-      // table_name check
-      if (tbl_id < 0) begin
-          $fatal(1, "** Error: table name '%0s' not found", table_name);
-      end
-    
+      key_format_array = split(FormatStringPtr, ":");
+
       // match fields size check
       if (match_fields_array.size() != key_format_array.size()) begin
-          $fatal(1, "** Error: invalid match fields for table '%0s'. \
-          Expected %0d, specified %0d", table_name, key_format_array.size(), match_fields_array.size());
+          $fatal(1, "** Error: invalid match fields. Expected %0d, specified %0d", key_format_array.size(), match_fields_array.size());
       end
       
       // parse match fields
@@ -423,65 +435,39 @@ package example_design_pkg;
    
    // parse action parameters string and convert it to bit array
    function automatic void parse_action_parameters (
-      input  string   table_name,      // table name string 
-      input  string   action_name,     // action name string
-      input  strArray action_params,   // action parameters string (space separated)
-      output bitArray entry_resp       // entry response
+      input  int      action_arg_widths[$], // action args width list
+      input  int      action_id,            // action ID
+      input  int      action_id_width,      // action ID width
+      input  strArray action_params,        // action parameters string (space separated)
+      output bitArray entry_resp            // entry response
    );
    
-      int act_id, tbl_id;
       int field_width;
-      
-      // initialize variables
-      tbl_id = get_table_id(table_name);
-      act_id = get_action_id(table_name, action_name);
-      entry_resp = 0;
-      
-      // table name check
-      if (tbl_id < 0) begin
-          $fatal(1, "** Error: table name '%0s' not found", table_name);
-      end
-      
-      // action name check
-      if (act_id < 0) begin
-          $fatal(1, "** Error: action name '%0s' not found", action_name);
-      end
 
       // action parameters size check
-      if (action_params.size() != XilVitisNetP4TableList[tbl_id].Config.ActionListPtr[act_id].ParamListPtr.size()) begin
-          $fatal(1, "** Error: invalid parameters for action '%0s'. \
-          Expected %0d, specified %0d", action_name, action_params.size(), 
-          XilVitisNetP4TableList[tbl_id].Config.ActionListPtr[act_id].ParamListPtr.size());
+      if (action_params.size() != action_arg_widths.size()) begin
+          $fatal(1, "** Error: invalid parameters size. Expected %0d, specified %0d", action_params.size(), action_arg_widths.size());
       end
 
       // parse action parameters and build table response 
+      entry_resp = 0;
       for (int i = 0; i < action_params.size(); i++) begin
-          field_width = XilVitisNetP4TableList[tbl_id].Config.ActionListPtr[act_id].ParamListPtr[i].Value;
+          field_width = action_arg_widths[i];
           entry_resp = (entry_resp << field_width) | str2hex(action_params[i]);
       end
-      entry_resp = (entry_resp << XilVitisNetP4TableList[tbl_id].Config.ActionIdWidthBits) | act_id;
+      entry_resp = (entry_resp << action_id_width) | action_id;
       
    endfunction
    
    // split action parameters and priority fields based on table mode
    function automatic void split_action_params_and_prio (
-      input  string   table_name,
+      input  int      table_is_ternary,
       input  strArray action_params_and_prio,
       output strArray action_params,
       output int      entry_priority
    );
 
-      int tbl_id;
-      tbl_id = get_table_id(table_name);
-      
-      // table name check
-      if (tbl_id < 0) begin
-          $fatal(1, "** Error: table name '%0s' not found", table_name);
-      end
-      
-      if (XilVitisNetP4TableList[tbl_id].Config.Mode == XIL_VITIS_NET_P4_TABLE_MODE_BCAM || 
-          XilVitisNetP4TableList[tbl_id].Config.Mode == XIL_VITIS_NET_P4_TABLE_MODE_TINY_BCAM || 
-          XilVitisNetP4TableList[tbl_id].Config.Mode == XIL_VITIS_NET_P4_TABLE_MODE_DCAM) begin
+      if (!table_is_ternary) begin
           action_params  = action_params_and_prio[0:action_params_and_prio.size()-1];
           entry_priority = 0;
       end else begin
@@ -491,5 +477,128 @@ package example_design_pkg;
    
    endfunction
 
-endpackage
+   function automatic void parse_cli_commands (
+      input string        filename,    // path to *.txt file
+      output CliCmdStruct cli_cmds[$]  // list of pre-parsed cli commands
+   );
 
+      int delim_idx;
+      int entry_id;
+      int cmd_idx;
+      CliCmdStruct cli_cmd;
+      string lines, line;
+      string cmd_name;
+      string table_name;
+      strArray lines_array;
+      strArray cmd_line;
+      strArray table_entry_handles[string][$];
+      strArray empty_strArray_list[$];
+      strArray empty_strArray;    
+
+      // open file
+      lines = read_text_file(filename, 1, "\n");
+      lines_array = split(lines, "\n");
+
+      // read lines
+      cmd_idx = 0;
+      for (int cnt = 0; cnt < lines_array.size(); cnt++) begin
+          cli_cmd = '{NOP, -1, "", "", "", empty_strArray, empty_strArray};
+          line = lines_array[cnt];
+
+          // split line and parse command
+          cmd_line = split(line, " ");
+          cmd_name = cmd_line[0];
+          case (cmd_name)
+
+            // table_add <table name> <action name> <match fields> => [action parameters] [priority]
+            "table_add" : begin
+                table_name = cmd_line[1];
+                for (delim_idx = 1; delim_idx < cmd_line.size(); delim_idx++) begin
+                    if (cmd_line[delim_idx] == "=>")
+                        break;
+                end
+                cli_cmd.cmd_op        = TBL_ADD;
+                cli_cmd.table_name    = table_name;
+                cli_cmd.action_name   = cmd_line[2];
+                cli_cmd.match_fields  = cmd_line[3:delim_idx-1];
+                cli_cmd.action_params = cmd_line[delim_idx+1:cmd_line.size()-1];
+                if (!table_entry_handles.exists(table_name))
+                    table_entry_handles[table_name] = empty_strArray_list;
+                for (int i = 0; i <= table_entry_handles[table_name].size(); i++) begin
+                    if (i == table_entry_handles[table_name].size())
+                       table_entry_handles[table_name][i] = empty_strArray;
+                    if (table_entry_handles[table_name][i].size() == 0) begin
+                        table_entry_handles[table_name][i] = cli_cmd.match_fields;
+                        cli_cmd.entry_id = i;
+                        break;
+                    end
+                end
+            end
+
+            // table_modify <table name> <action name> <entry handle> => [action parameters]
+            "table_modify" : begin
+                table_name = cmd_line[1];
+                entry_id   = cmd_line[3].atoi();
+                cli_cmd.cmd_op         = TBL_MODIFY; 
+                cli_cmd.table_name     = table_name;
+                cli_cmd.action_name    = cmd_line[2];
+                cli_cmd.entry_id       = entry_id;
+                cli_cmd.action_params  = cmd_line[5:cmd_line.size()-1];
+                cli_cmd.match_fields   = table_entry_handles[table_name][entry_id];
+            end
+
+            // table_delete <table name> <entry handle>
+            "table_delete" : begin
+                table_name = cmd_line[1];
+                entry_id   = cmd_line[2].atoi();
+                cli_cmd.cmd_op       = TBL_DELETE;
+                cli_cmd.table_name   = table_name;
+                cli_cmd.entry_id     = entry_id;
+                cli_cmd.match_fields = table_entry_handles[table_name][entry_id];
+                table_entry_handles[table_name][entry_id] = empty_strArray;
+            end
+
+            // table_clear <table name>
+            "table_clear" : begin
+                table_name = cmd_line[1];
+                cli_cmd.cmd_op     = TBL_CLEAR;
+                cli_cmd.table_name = table_name;
+                for (int i = 0; i <= table_entry_handles[table_name].size(); i++) begin
+                    if (table_entry_handles[table_name][i].size() > 0) begin
+                        table_entry_handles[table_name][i] = empty_strArray;
+                    end
+                end
+            end
+
+            // reset_state 
+            "reset_state" : begin
+                cli_cmd.cmd_op = RST_STATE;                      
+            end
+            
+            // run_traffic <file name>
+            "run_traffic" : begin
+                cli_cmd.cmd_op = RUN_TRAFFIC;
+                cli_cmd.traffic_filename = cmd_line[1];
+            end
+            
+            // exit
+            "exit" : begin
+                break;
+            end
+    
+            // ignore invalid commands
+            default : begin
+                $display("** Info: Ignoring invalid command '%0s'", cmd_name);
+                continue;
+            end
+
+          endcase
+
+          cli_cmds[cmd_idx] = cli_cmd;
+          cmd_idx = cmd_idx + 1;
+      end
+   
+      $display("** Info: Finished reading CLI commands file %s", filename);
+   endfunction
+
+endpackage
