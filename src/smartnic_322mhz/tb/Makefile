@@ -8,7 +8,7 @@ include $(IP_ROOT)/config.mk
 # Application config (p4_app by default)
 # ----------------------------------------------------
 APP_DIR ?= $(abspath $(PROJ_ROOT)/src/p4_app)
-include $(PROJ_ROOT)/scripts/app_config.mk
+include $(APP_DIR)/.app_config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -35,7 +35,7 @@ COMPONENTS = xilinx_ip reg.verif rtl \
              axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
              axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif \
              xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif \
-             p4_app_xilinx_ip=$(APP_DIR)/xilinx_ip/$(APP_NAME)
+             p4_app_xilinx_ip=$(APP_ROOT)/xilinx_ip/$(APP_NAME)
 
 EXT_LIBS =
 
