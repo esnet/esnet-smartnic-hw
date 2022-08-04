@@ -57,20 +57,17 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-config:
-	$(_print_app_config)
-	$(_write_app_config)
-
-ip: config
-	$(MAKE) -C $(APP_ROOT)/xilinx_ip APP_NAME=$(APP_NAME)
-
-compile:
-	$(MAKE) ip
-	$(MAKE) _compile
+compile: ip _compile
 
 clean: _clean_compile
 
-.PHONY: all config compile clean
+ip:
+	@$(MAKE) -s -C $(APP_ROOT)/xilinx_ip ip APP_DIR=$(abspath $(APP_DIR))
+
+.PHONY: all compile clean ip
+
+$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
+	$(MAKE) -s -C $(APP_DIR) config
 
 # ----------------------------------------------------
 # Import Vivado compile targets
