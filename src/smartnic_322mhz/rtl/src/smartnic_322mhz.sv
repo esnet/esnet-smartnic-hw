@@ -418,6 +418,9 @@ module smartnic_322mhz
                    .axi3_if  ( axi_if[g_hbm_if] )
                );
 
+               assign axi_app_to_hbm_aclk[g_hbm_if] = core_clk;
+               assign axi_app_to_hbm_aresetn[g_hbm_if] = core_rstn;
+
                assign axi_app_to_hbm_buser[g_hbm_if] = '0;
                assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
             end : g__hbm_if

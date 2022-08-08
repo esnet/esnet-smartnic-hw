@@ -62,13 +62,13 @@ compile: ip _compile
 
 clean: _clean_compile
 
-.PHONY: all compile clean
-
 ip:
-	@$(MAKE) -s -C $(IP_ROOT)/xilinx_ip ip APP_DIR=$(APP_DIR)
+	@$(MAKE) -s -C $(IP_ROOT)/xilinx_ip ip APP_DIR=$(abspath $(APP_DIR))
+
+.PHONY: all compile clean ip
 
 $(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -C $(APP_DIR) config
+	$(MAKE) -s -C $(APP_DIR) config
 
 # ----------------------------------------------------
 # Import Vivado compile targets

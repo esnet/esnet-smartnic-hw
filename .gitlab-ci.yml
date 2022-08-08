@@ -51,6 +51,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
     - make -C examples/p4_hbm/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_0/sim.log
+    - make -C examples/p4_hbm/tests.smartnic_322mhz/regression
+    - grep 'PASSED.*suites passing' examples/p4_hbm/tests.smartnic_322mhz/regression/run_0/sim.log
     - make -C examples/unsupported/p4_example/tests/regression
     - grep 'PASSED.*suites passing' examples/unsupported/p4_example/tests/regression/run_0/sim.log
   artifacts:
@@ -59,6 +61,7 @@ sim_p4_apps:
       junit:
         - src/p4_app/tests/regression/run_0/tests.xml
         - examples/p4_hbm/tests/regression/run_0/tests.xml
+        - examples/p4_hbm/tests.smartnic_322mhz/regression/run_0/tests.xml
         - examples/unsupported/p4_example/tests/regression/run_0/tests.xml
     when: always
   timeout: 2h

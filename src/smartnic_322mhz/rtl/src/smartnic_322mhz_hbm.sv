@@ -71,20 +71,6 @@ module smartnic_322mhz_hbm #(
         end : g__mc_ctrl
     endgenerate
 
-    // HBM simulations not supported in Vivado Simulator
-`ifdef SIMULATION
-    apb_intf_peripheral_term i_apb_intf_peripheral_term__sim (.apb_if(apb_if));
-    generate
-        for (genvar i = 0; i < 16; i++) begin : g__mc
-            axi3_intf_peripheral_term i_axi3_intf_peripheral_term__sim (.axi3_if(axi_if[i]));
-        end : g__mc
-    endgenerate
-
-    assign init_done = 1'b1;
-    assign dram_status_temp = 7'd30;
-    assign dram_status_cattrip = 1'b0;
-`else // SYNTHESIS
-
     // Xilinx HBM IP (single stack) ports
     // -----------------------------------------
     // Reference clock
@@ -654,7 +640,15 @@ module smartnic_322mhz_hbm #(
     xilinx_hbm_4g_if i_xilinx_hbm_4g_if (
         .*
     );
+ 
+`ifdef SIMULATION
     
+    // HBM simulations not supported in Vivado Simulator
+    // (instantiate functional model instead)
+    xilinx_hbm_4g_bfm i_hbm_4g_bfm (.*);
+
+`else // SYNTHESIS
+   
     // Xilinx HBM controller instantiation
     generate
         if (HBM_STACK == 1'b0) begin : g__hbm_left

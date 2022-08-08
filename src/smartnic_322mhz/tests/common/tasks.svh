@@ -78,7 +78,7 @@ task send_pcap (
     input string  pcap_filename,
     input int     num_pkts=0, start_idx=0, twait=0,
     input port_t  id=0, dest=0,
-    input bit     user );
+    input bit     user=0 );
 
     env.axis_driver[id].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
 endtask
