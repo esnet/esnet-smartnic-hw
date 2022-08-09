@@ -12,6 +12,10 @@ regs:
   - name: status
     init: 0xC0BEBEEF
 
+  - name: hdr_length
+    desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
+    access: rw
+
   - name: port_config
     access: rw
     fields:

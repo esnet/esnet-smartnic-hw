@@ -758,7 +758,7 @@ module smartnic_322mhz
      .axi4s_out     (axis_app_to_core),
      .axi4s_hdr_out (axis_hdr_to_app),
      .axi4s_hdr_in  (axis_hdr_from_app),
-     .hdr_length    (64)
+     .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
    );
 
    // smartnic_322mhz_app core bypass logic
