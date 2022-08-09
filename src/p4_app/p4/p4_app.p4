@@ -20,13 +20,17 @@ struct headers {
     ethernet_t ethernet;
 }
 
-struct short_metadata {
-    bit<64> ingress_global_timestamp;
-    bit<2>  dest_port;
-    bit<1>  truncate_enable;
-    bit<16> packet_length;
-    bit<1>  rss_override_enable;
-    bit<8>  rss_override;
+struct smartnic_metadata {
+    bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
+    bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
+    bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+    bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+    bit<1>  truncate_enable; // reserved (tied to 0).
+    bit<16> truncate_length; // reserved (tied to 0).
+    bit<1>  rss_enable;      // reserved (tied to 0).
+    bit<12> rss_entropy;     // reserved (tied to 0).
+    bit<4>  drop_reason;     // reserved (tied to 0).
+    bit<32> scratch;         // reserved (tied to 0).
 }
 
 // ****************************************************************************** //
@@ -35,7 +39,7 @@ struct short_metadata {
 
 parser ParserImpl( packet_in packet,
                    out headers hdr,
-                   inout short_metadata short_meta,
+                   inout smartnic_metadata sn_meta,
                    inout standard_metadata_t smeta) {
     state start {
         transition parse_ethernet;
@@ -52,11 +56,11 @@ parser ParserImpl( packet_in packet,
 // ****************************************************************************** //
 
 control MatchActionImpl( inout headers hdr,
-                         inout short_metadata short_meta,
+                         inout smartnic_metadata sn_meta,
                          inout standard_metadata_t smeta) {
 
-    action forwardPacket(bit<2> dest_port) {
-        short_meta.dest_port = dest_port;
+    action forwardPacket(bit<3> dest_port) {
+        sn_meta.egress_port = dest_port;
     }
     
     action dropPacket() {
@@ -92,7 +96,7 @@ control MatchActionImpl( inout headers hdr,
 
 control DeparserImpl( packet_out packet,
                       in headers hdr,
-                      inout short_metadata short_meta,
+                      inout smartnic_metadata sn_meta,
                       inout standard_metadata_t smeta) {
     apply {
         packet.emit(hdr.ethernet);
