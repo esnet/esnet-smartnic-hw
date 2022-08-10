@@ -851,7 +851,7 @@ module smartnic_322mhz
 
    // AXI-L interface
    axi4l_reg_slice #(
-       .CONFIG (axi4l_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
    ) i_axi4l_reg_slice__core_to_app (
        .axi4l_if_from_controller ( axil_to_app_decoder__demarc ),
        .axi4l_if_to_peripheral   ( axil_to_app_decoder )
@@ -860,14 +860,14 @@ module smartnic_322mhz
    // AXI-S interfaces
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
-       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app (
        .axi4s_from_tx (axis_to_app__demarc),
        .axi4s_to_rx   (axis_to_app)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__host_to_app (
        .axi4s_from_tx (axis_to_app_host_0__demarc),
        .axi4s_to_rx   (axis_to_app_host_0)
@@ -875,14 +875,14 @@ module smartnic_322mhz
 
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
-       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core (
        .axi4s_from_tx (axis_from_app),
        .axi4s_to_rx   (axis_from_app__demarc)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_host (
        .axi4s_from_tx (axis_from_app_host_0),
        .axi4s_to_rx   (axis_from_app_host_0__demarc)

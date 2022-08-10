@@ -27,6 +27,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 COMPONENTS = xilinx_ip reg \
              xilinx_hbm_rtl=$(LIB_ROOT)/src/xilinx/hbm/rtl \
+             xilinx_axi_rtl=$(LIB_ROOT)/src/xilinx/axi/rtl \
+             xilinx_axis_rtl=$(LIB_ROOT)/src/xilinx/axis/rtl \
              axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
              axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl \
              xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif
