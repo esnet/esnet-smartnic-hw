@@ -19,7 +19,7 @@ wrpcap("512x64B_pkts.pcap", pkts)
 
 #----------------------------------------------------------------
 l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
-l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
+l3 = IP(dst='lbl.gov/28',src='es.net/28') # 256 pkts
 l4 = TCP(sport=1024,dport=2048)
 
 payload = ''
@@ -27,12 +27,12 @@ for i in range(512): payload += random.choice(string.ascii_lowercase) # 566B pkt
 
 pkts = []
 pkts += l2/l3/l4/Raw(load=payload)
-wrpcap("128x566B_pkts.pcap", pkts)
+wrpcap("256x566B_pkts.pcap", pkts)
 
 
 #----------------------------------------------------------------
 l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
-l3 = IP(dst='lbl.gov/29',src='es.net/29') # 64 pkts
+l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
 l4 = TCP(sport=1024,dport=2048)
 
 payload = ''
@@ -41,12 +41,12 @@ for i in range(1464): payload += random.choice(string.ascii_lowercase) # 1508B p
 pkts = []
 pkts += l2/l3/l4/Raw(load=payload)
 
-wrpcap("64x1518B_pkts.pcap", pkts)
+wrpcap("128x1518B_pkts.pcap", pkts)
 
 
 #----------------------------------------------------------------
 l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
-l3 = IP(dst='lbl.gov/30',src='es.net/30') # 16 pkts
+l3 = IP(dst='lbl.gov/30',src='es.net/29') # 32 pkts
 l4 = TCP(sport=1024,dport=2048)
 
 payload = ''
@@ -55,7 +55,7 @@ for i in range(9046): payload += random.choice(string.ascii_lowercase) # 9000B p
 pkts = []
 pkts += l2/l3/l4/Raw(load=payload)
 
-wrpcap("16x9100B_pkts.pcap", pkts)
+wrpcap("32x9100B_pkts.pcap", pkts)
 
 
 #----------------------------------------------------------------
@@ -101,6 +101,21 @@ for i in range(10):
     pkts += l2/l3/l4/Raw(load=payload)
 
 wrpcap("64B_multiples_10pkts.pcap", pkts)
+
+
+#----------------------------------------------------------------
+l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
+l3 = IP(dst='lbl.gov',src='es.net')
+l4 = TCP(sport=1024,dport=2048)
+
+pkts = []
+for i in range(10):
+    payload_size = random.randrange(10,1464)
+    payload = ''
+    for j in range(payload_size): payload += random.choice(string.ascii_lowercase)
+    pkts += l2/l3/l4/Raw(load=payload)
+
+wrpcap("10xrandom_pkts.pcap", pkts)
 
 
 #----------------------------------------------------------------
