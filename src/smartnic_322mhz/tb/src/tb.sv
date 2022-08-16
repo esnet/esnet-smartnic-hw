@@ -71,7 +71,11 @@ module tb;
     logic                       mod_rstn;
     logic                       mod_rst_done;
 
+    logic                [15:0] div_count;
+    logic                [15:0] burst_count;
+
     logic                       axil_aclk;
+    logic                       axis_aclk;
     logic        [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
@@ -103,6 +107,10 @@ module tb;
     // Generate datapath clock (340MHz)
     initial clk = 1'b0;
     always #1455ps clk = ~clk; // 343.75MHz
+
+    // Generate axis_aclk (250MHz)
+    initial axis_aclk = 1'b0;
+    always #2000ps axis_aclk = ~axis_aclk; // 250 MHz
 
     // Assign reset interfaces
     assign rst = reset_if.reset;
