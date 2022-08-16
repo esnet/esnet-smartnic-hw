@@ -77,6 +77,10 @@ smartnic_322mhz #(
   .mod_rstn                        (mod_rstn[0]),
   .mod_rst_done                    (mod_rst_done[0]),
 
+  .div_count                       (div_count),
+  .burst_count                     (burst_count),
+
   .axil_aclk                       (axil_aclk),
+  .axis_aclk                       (axis_aclk),
   .cmac_clk                        (cmac_clk)
 );
