@@ -40,6 +40,14 @@ regs:
         width: 1
         init : 0
 
+  - name: div_count
+    access : rw
+    init   : 0x0000_007F
+
+  - name: burst_count
+    access : rw
+    init   : 0x0000_0061
+
   - name: timestamp_incr
     desc   : Timestamp increment register.  Added to timestamp counter on each 343.75MHz core_clk tick. 32-bit value with a 4-bit integer component and a 28-bit fractional component. 0x2_E8BA2E9 represents 2.90909091 ns.
     width  : 32

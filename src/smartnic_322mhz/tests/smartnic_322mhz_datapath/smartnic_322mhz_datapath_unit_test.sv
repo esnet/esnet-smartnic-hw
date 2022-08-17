@@ -3,7 +3,7 @@
 //===================================
 // (Failsafe) timeout
 //===================================
-`define SVUNIT_TIMEOUT 200us
+`define SVUNIT_TIMEOUT 500us
 
 module smartnic_322mhz_datapath_unit_test;
 
@@ -64,7 +64,7 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
     // Local test variables
     //===================================
-    localparam FIFO_DEPTH = 410.0; // 124 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
+    real FIFO_DEPTH = 1306.0; // 1024 - 4 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
     smartnic_322mhz_reg_pkg::reg_port_config_t set_config;
 
@@ -77,14 +77,14 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
     task setup();
         // default variable configuration
-         in_pcap[0] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
-        out_pcap[0] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
-         in_pcap[1] = "../../../tests/common/pcap/30xrandom_pkts.pcap";
-        out_pcap[1] = "../../../tests/common/pcap/30xrandom_pkts.pcap";
-         in_pcap[2] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
-        out_pcap[2] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
-         in_pcap[3] = "../../../tests/common/pcap/50xrandom_pkts.pcap";
-        out_pcap[3] = "../../../tests/common/pcap/50xrandom_pkts.pcap";
+         in_pcap[0] = "../../../tests/common/pcap/10xrandom_pkts.pcap";
+        out_pcap[0] = "../../../tests/common/pcap/10xrandom_pkts.pcap";
+         in_pcap[1] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
+        out_pcap[1] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
+         in_pcap[2] = "../../../tests/common/pcap/30xrandom_pkts.pcap";
+        out_pcap[2] = "../../../tests/common/pcap/30xrandom_pkts.pcap";
+         in_pcap[3] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
+        out_pcap[3] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
 
         out_port_map = {2'h0, 2'h2, 2'h3, 2'h1};
         pkt_len      = {0, 0, 0, 0};  
@@ -144,15 +144,15 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
 
     `SVUNIT_TESTS_BEGIN
-
+/*
     `SVTEST(switch_basic_sanity)
         out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
 
         run_stream_test(); check_stream_test_probes;
     `SVTEST_END
+*/
 
-
-    `SVTEST(switch_with_halt_probe_counters)
+    `SVTEST(basic_switch_with_halt_probe_counters)
         out_port_map = {2'h1, 2'h2, 2'h0, 2'h3};
 
         halt_probe_counters;
@@ -170,17 +170,19 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(switch_with_discards)
-         in_pcap[0] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
-        out_pcap[0] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
+        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
+
+         in_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+        out_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
          pkt_len[0] = 1518;
-         in_pcap[1] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
-        out_pcap[1] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
+         in_pcap[1] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+        out_pcap[1] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
          pkt_len[1] = 9100;
-         in_pcap[2] = "../../../tests/common/pcap/50xrandom_pkts.pcap";
-        out_pcap[2] = "../../../tests/common/pcap/50xrandom_pkts.pcap";
+         in_pcap[2] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
+        out_pcap[2] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
          pkt_len[2] = 0;
-         in_pcap[3] = "../../../tests/common/pcap/128x566B_pkts.pcap";
-        out_pcap[3] = "../../../tests/common/pcap/128x566B_pkts.pcap";
+         in_pcap[3] = "../../../tests/common/pcap/256x566B_pkts.pcap";
+        out_pcap[3] = "../../../tests/common/pcap/256x566B_pkts.pcap";
          pkt_len[3] = 566;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -212,11 +214,11 @@ module smartnic_322mhz_datapath_unit_test;
          check_stream_test_probes;
     `SVTEST_END
 
-
+/*
     `SVTEST(max_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
+            in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
         end
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -247,12 +249,12 @@ module smartnic_322mhz_datapath_unit_test;
 
         check_stream_test_probes;
     `SVTEST_END
-
+*/
       
     `SVTEST(jumbo_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
+            in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
         end
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -286,11 +288,11 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(discards_from_cmac)
-         in_pcap[0] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
-        out_pcap[0] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
+         in_pcap[0] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+        out_pcap[0] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
          pkt_len[0] = 9100;
-         in_pcap[1] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
-        out_pcap[1] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
+         in_pcap[1] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+        out_pcap[1] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
          pkt_len[1] = 1518;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -329,8 +331,8 @@ module smartnic_322mhz_datapath_unit_test;
 
                // send and check unerrored packet stream i.e. with tuser=0 (default)
                run_pkt_stream (.in_port(cmac_port), .out_port(cmac_port),
-                               .in_pcap  ("../../../tests/common/pcap/64x1518B_pkts.pcap"),
-                               .out_pcap ("../../../tests/common/pcap/64x1518B_pkts.pcap"),
+                               .in_pcap  ("../../../tests/common/pcap/256x566B_pkts.pcap"),
+                               .out_pcap ("../../../tests/common/pcap/256x566B_pkts.pcap"),
                                .tx_pkt_cnt(tx_pkt_cnt[cmac_port]), .tx_byte_cnt(tx_byte_cnt[cmac_port]),
                                .rx_pkt_cnt(rx_pkt_cnt[cmac_port]), .rx_byte_cnt(rx_byte_cnt[cmac_port]) );
 
@@ -366,8 +368,8 @@ module smartnic_322mhz_datapath_unit_test;
 
         // Run pkt traffic. Expect rx pkts at CMAC_PORT0, as per port_config setting.
         run_pkt_stream ( .in_port(0), .out_port(0), 
-                         .in_pcap ("../../../tests/common/pcap/20xrandom_pkts.pcap"),
-                         .out_pcap("../../../tests/common/pcap/20xrandom_pkts.pcap"),
+                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
+                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                          .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
 
@@ -386,8 +388,8 @@ module smartnic_322mhz_datapath_unit_test;
 
         // Run pkt traffic. Expect rx pkts at CMAC_PORT1, as per port_config setting.
         run_pkt_stream ( .in_port(0), .out_port(1), 
-                         .in_pcap ("../../../tests/common/pcap/20xrandom_pkts.pcap"),
-                         .out_pcap("../../../tests/common/pcap/20xrandom_pkts.pcap"),
+                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
+                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                          .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
 
@@ -406,8 +408,8 @@ module smartnic_322mhz_datapath_unit_test;
 
         // Run pkt traffic. Expect rx pkts at HOST_PORT1, as per port_config setting.
         run_pkt_stream ( .in_port(0), .out_port(3), 
-                         .in_pcap ("../../../tests/common/pcap/20xrandom_pkts.pcap"), 
-                         .out_pcap("../../../tests/common/pcap/20xrandom_pkts.pcap"), 
+                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
+                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                          .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
 
@@ -427,8 +429,8 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVTEST(max_size_stress)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/64x1518B_pkts.pcap";
+            in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
         end
 
         for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
@@ -450,8 +452,8 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVTEST(long_pkt)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/16x9100B_pkts.pcap";
+            in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
         end
 
         for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.

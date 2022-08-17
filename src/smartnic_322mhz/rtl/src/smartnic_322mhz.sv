@@ -88,7 +88,11 @@ module smartnic_322mhz
   input                       mod_rstn,
   output                      mod_rst_done,
 
+  output               [15:0] div_count,
+  output               [15:0] burst_count,
+
   input                       axil_aclk,
+  input                       axis_aclk,
   input [NUM_CMAC-1:0]        cmac_clk
 );
 
@@ -105,6 +109,7 @@ module smartnic_322mhz
 
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
+
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -250,6 +255,30 @@ module smartnic_322mhz
      .timestamp         (timestamp),
      .smartnic_322mhz_regs (smartnic_322mhz_regs)
    );
+
+   // Sample and sync outgoing div_count and burst_count register signals.
+   sync_bus_sampled #(
+      .DATA_T   ( logic [15:0] )
+   ) i_sync_bus_sampled__div_count (
+      .clk_in   ( core_clk ),
+      .rst_in   ( ~core_rstn ),
+      .data_in  ( smartnic_322mhz_regs.div_count[15:0] ),
+      .clk_out  ( axis_aclk ),
+      .rst_out  ( 1'b0 ),
+      .data_out ( div_count )
+   );
+
+   sync_bus_sampled #(
+      .DATA_T   ( logic [15:0] )
+   ) i_sync_bus_sampled__burst_count (
+      .clk_in   ( core_clk ),
+      .rst_in   ( ~core_rstn ),
+      .data_in  ( smartnic_322mhz_regs.burst_count[15:0] ),
+      .clk_out  ( axis_aclk ),
+      .rst_out  ( 1'b0 ),
+      .data_out ( burst_count )
+   );
+
 
    // ----------------------------------------------------------------
    //  HBM0 (Left stack, 4GB)
@@ -492,32 +521,11 @@ module smartnic_322mhz
    // core clock domain
    // ----------------------------------------------------------------
 
-   (* mark_debug="true" *)  logic [511:0]  tdata  [NUM_CMAC];
-   (* mark_debug="true" *)  logic          tvalid [NUM_CMAC];
-   (* mark_debug="true" *)  logic          tlast  [NUM_CMAC];
-   (* mark_debug="true" *)  logic [63:0]   tkeep  [NUM_CMAC];
-   (* mark_debug="true" *)  logic          tready [NUM_CMAC];
-
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
 
       //------------------------ from cmac to core --------------
       port_t s_axis_cmac_rx_322mhz_tid [NUM_CMAC];
       assign s_axis_cmac_rx_322mhz_tid[i] = i;
-
-      assign tdata[i]  = s_axis_cmac_rx_322mhz_tdata[`getvec(512, i)];
-      assign tvalid[i] = s_axis_cmac_rx_322mhz_tvalid[i];
-      assign tlast[i]  = s_axis_cmac_rx_322mhz_tlast[i];
-      assign tkeep[i]  = {'0, s_axis_cmac_rx_322mhz_tuser_err[i]};
-      assign tready[i] = s_axis_cmac_rx_322mhz_tready[i];
-
-      ila_axi4s ila_axi4s (
-         .clk    (cmac_clk[i]),
-         .probe0 (tdata[i]),
-         .probe1 (tvalid[i]),
-         .probe2 (tlast[i]),
-         .probe3 (tkeep[i]),
-         .probe4 (tready[i])
-      );
 
       axi4s_intf_from_signals #(
         .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
@@ -536,13 +544,15 @@ module smartnic_322mhz
         .axi4s_if (axis_from_cmac[i])
       );
 
+      // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
+
       axi4s_probe #( .MODE(ERRORS) ) axi4s_err_from_cmac (
             .axi4l_if  (axil_to_err_from_cmac[i]),
             .axi4s_if  (axis_from_cmac[i])
          );
 
       axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH     (128),
+        .FIFO_DEPTH     (1024),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_from_cmac (
         .axi4s_in       (axis_from_cmac[i]),
@@ -560,7 +570,7 @@ module smartnic_322mhz
 
       //------------------------ from core to cmac --------------
       axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH     (128),
+        .FIFO_DEPTH     (1024),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_to_cmac (
         .axi4s_in       (axis_core_to_cmac[i]),
@@ -570,6 +580,10 @@ module smartnic_322mhz
         .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
         .axil_if        (axil_to_fifo_to_cmac[i])
       );
+
+      // axi4s_ila axi4s_ila_1 (.axis_in(axis_core_to_cmac[i]));
+
+      // axi4s_ila axi4s_ila_2 (.axis_in(axis_to_cmac[i]));
 
       // Terminate unused AXI-L interface
       axi4l_intf_controller_term axi4l_fifo_to_cmac_term (.axi4l_if (axil_to_fifo_to_cmac[i]));
@@ -595,7 +609,7 @@ module smartnic_322mhz
       //------------------------ from core to host --------------
       if (i==0) begin : g__fifo_host_0
          axi4s_pkt_fifo_async #(
-           .FIFO_DEPTH     (128),
+           .FIFO_DEPTH     (1024),
            .MAX_PKT_LEN    (MAX_PKT_LEN)
          ) fifo_to_host (
            .axi4s_in       (axis_core_to_host_0),
@@ -608,7 +622,7 @@ module smartnic_322mhz
       end : g__fifo_host_0
       else begin : g__fifo_host
          axi4s_pkt_fifo_async #(
-           .FIFO_DEPTH     (128),
+           .FIFO_DEPTH     (1024),
            .MAX_PKT_LEN    (MAX_PKT_LEN)
          ) fifo_to_host (
            .axi4s_in       (axis_core_to_host[i]),
