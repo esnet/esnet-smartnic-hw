@@ -761,6 +761,11 @@ module smartnic_322mhz
      .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
    );
 
+   axi4s_ila axi4s_ila_0 (.axis_in(axis_core_to_app));
+   axi4s_ila axi4s_ila_1 (.axis_in(axis_app_to_core));
+   axi4s_ila axi4s_ila_2 (.axis_in(axis_hdr_to_app));
+   axi4s_ila axi4s_ila_3 (.axis_in(axis_hdr_from_app));
+
    // smartnic_322mhz_app core bypass logic
    axi4s_intf_bypass_mux #(
      .PIPE_STAGES(1), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
