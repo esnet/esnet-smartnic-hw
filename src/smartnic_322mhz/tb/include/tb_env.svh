@@ -279,14 +279,42 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         debug_msg("---------------- SDnet: Init tables done.. -------------");
     endtask
 
-    // Clean up SDNet tables
-    // - destroys tables (created in sdnet_init)
+    // Reset SDNet tables
+    // - reset SDNet IP to default state
+    task sdnet_reset();
+        import sdnet_0_pkg::*;
+
+        debug_msg("---------------- SDnet: Reset table state. -------------");
+        reset_state(this._ctxPtr);
+        debug_msg("---------------- SDnet: Reset table state done.. -------------");
+    endtask
+
+    // Terminate SDNet driver
+    // - terminate and destroy instantiated drivers
     task sdnet_cleanup();
         import sdnet_0_pkg::*;
 
-        debug_msg("---------------- SDnet: Destroy Tables. -------------");
+        debug_msg("---------------- SDnet: Destroy. -------------");
         terminate(this._ctxPtr);
     endtask
+
+    // TEMP: local 'automatic' copy of sdnet_0_pkg::get_action_arg_widths function
+    // (required to enable multiple invocations of sdnet_table_init_from_file task)
+    function automatic void get_action_arg_widths;
+        input string table_name;
+        input string action_name;
+        output int   widths[$];
+
+        int tbl_idx, act_idx;
+
+        tbl_idx = sdnet_0_pkg::get_table_id(table_name);
+        act_idx = sdnet_0_pkg::get_action_id(table_name, action_name);
+
+        for (int i = 0; i < sdnet_0_pkg::XilVitisNetP4TableList[tbl_idx].Config.ActionListPtr[act_idx].ParamListPtr.size(); i++) begin
+            widths[i] = sdnet_0_pkg::XilVitisNetP4TableList[tbl_idx].Config.ActionListPtr[act_idx].ParamListPtr[i].Value;
+        end
+
+    endfunction
 
     // sdnet_table_init is based on the procedure described in the example_control.sv file of xilinx sdnet_0 example design
     task sdnet_table_init_from_file(input string filename);
@@ -308,7 +336,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
 
         chandle CtxPtr[$] = this._ctxPtr;
 
-        sdnet_init();
+        sdnet_reset();
 
         // Parse CLI command file (e.g. config.txt)
         parse_cli_commands(filename, cli_cmds);
@@ -322,13 +350,15 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
                    table_is_ternary = sdnet_0_pkg::table_is_ternary(cli_cmd.table_name);
                    action_id        = sdnet_0_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
                    action_id_width  = sdnet_0_pkg::get_table_action_id_width(cli_cmd.table_name);
-                   sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   // TEMP: use local 'automatic' version of get_action_arg_widths function.
+                   //sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    split_action_params_and_prio(table_is_ternary, cli_cmd.action_params, action_params, entry_priority);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, action_params, response);
                    if (VERBOSE) begin
                      $display("** Info: Adding entry to table %0s", cli_cmd.table_name);
-                     $display("  - acion:\t%0s", cli_cmd.action_name);
+                     $display("  - action:\t%0s", cli_cmd.action_name);
                      $display("  - match key:\t0x%0x", key);
                      $display("  - key mask:\t0x%0x", mask);
                      $display("  - response:\t0x%0x", response);
@@ -342,7 +372,9 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
                    action_id        = sdnet_0_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
                    action_id_width  = sdnet_0_pkg::get_table_action_id_width(cli_cmd.table_name);
                    table_format_str = sdnet_0_pkg::get_table_format_string(cli_cmd.table_name);
-                   sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   // TEMP: use local 'automatic' version of get_action_arg_widths function.
+                   //sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, cli_cmd.action_params, response);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    if (VERBOSE) begin
@@ -378,7 +410,6 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
 
            endcase
        end
-
     endtask
     // =======================================================================
     // SDnet Tasks - end
