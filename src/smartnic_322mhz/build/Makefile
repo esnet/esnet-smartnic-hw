@@ -34,12 +34,12 @@ REG_BLOCK_YAML = $(IP_ROOT)/reg/smartnic_322mhz.yaml \
                  $(LIB_ROOT)/src/reg/reg/reg_endian_check.yaml \
                  $(LIB_ROOT)/src/reg/reg/reg_proxy.yaml \
                  $(LIB_ROOT)/src/xilinx/hbm/reg/xilinx_hbm.yaml
-                 
 
 REG_DECODER_YAML := $(IP_ROOT)/reg/smartnic_322mhz_decoder.yaml \
                     $(IP_ROOT)/reg/smartnic_322mhz_app_sdnet_decoder.yaml \
                     $(LIB_ROOT)/src/fifo/reg/fifo_ctrl_decoder.yaml \
                     $(LIB_ROOT)/src/fifo/reg/fifo_core_decoder.yaml \
+                    $(LIB_ROOT)/src/axi4s/reg/axi4s_split_join_decoder.yaml \
                     $(LIB_ROOT)/src/xilinx/hbm/reg/xilinx_hbm_decoder.yaml
 
 # -----------------------------------------------
