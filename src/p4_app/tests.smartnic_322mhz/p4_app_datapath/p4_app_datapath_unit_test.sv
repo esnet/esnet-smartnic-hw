@@ -84,6 +84,9 @@ module p4_app_datapath_unit_test;
         // Issue reset (both datapath and management domains)                                                                                                                                                   
         reset();
 
+        // Write hdr_length register to enable split-join logic.
+        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configure hdr slice to 64B.
+
         // Initialize SDNet tables
         env.sdnet_init();
 
@@ -134,10 +137,6 @@ module p4_app_datapath_unit_test;
 
     `include "../../../p4/sim/run_pkt_test_incl.svh"
 
-//    `SVTEST(test_default_w_drops)
-//        run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0), .dest_port(0) );
-//    `SVTEST_END
-
     `SVUNIT_TESTS_END
 
      task run_pkt_test (
@@ -172,7 +171,7 @@ module p4_app_datapath_unit_test;
         debug_msg("Done writing sdnet_0 tables...", VERBOSE);
 
         debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/expected/packets_out.pcap"};
+        filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
         pcap_pkg::read_pcap(filename, exp_pcap_hdr, exp_pcap_record_hdr, exp_data);
 
         debug_msg("Starting simulation...", VERBOSE);
