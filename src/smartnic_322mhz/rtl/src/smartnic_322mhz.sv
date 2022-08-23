@@ -347,23 +347,25 @@ module smartnic_322mhz
            // Include memory controller for 'Left' HBM stack (4GB)
 
            // (Local) interfaces
-           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
+           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if_from_app [16] ();
 
            // HBM controller
            smartnic_322mhz_hbm #(
-             .HBM_STACK   (0)
+             .HBM_STACK   ( 0 )
            ) smartnic_322mhz_hbm_0 (
-             .clk         (core_clk),
-             .rstn        (core_rstn),
-             .hbm_ref_clk (hbm_ref_clk),
-             .clk_100mhz  (clk_100mhz),
-             .axil_if     (axil_to_hbm_0),
-             .axi_if      (axi_if)
-           );
+             .clk         ( core_clk ),
+             .rstn        ( core_rstn ),
+             .hbm_ref_clk ( hbm_ref_clk ),
+             .clk_100mhz  ( clk_100mhz ),
+             .axil_if     ( axil_to_hbm_0 ),
+             .axi_if      ( axi_if_from_app )
            );
 
            //  Map HBM0 memory interface signals into interface representation
            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               // (Local) interfaces
+               axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if_from_app__demarc ();
+
                axi3_intf_from_signals #(
                    .DATA_BYTE_WID(32),
                    .ADDR_WID     (33),
@@ -416,7 +418,7 @@ module smartnic_322mhz
                    .ruser    ( axi_app_to_hbm_ruser   [g_hbm_if] ),
                    .rvalid   ( axi_app_to_hbm_rvalid  [g_hbm_if] ),
                    .rready   ( axi_app_to_hbm_rready  [g_hbm_if] ),
-                   .axi3_if  ( axi_if[g_hbm_if] )
+                   .axi3_if  ( axi_if_from_app__demarc )
                );
 
                assign axi_app_to_hbm_aclk[g_hbm_if] = core_clk;
@@ -424,7 +426,19 @@ module smartnic_322mhz
 
                assign axi_app_to_hbm_buser[g_hbm_if] = '0;
                assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
-            end : g__hbm_if
+
+               // Inter-SLR pipelining
+               axi3_reg_slice #(
+                   .ADDR_WID      ( 33 ),
+                   .DATA_BYTE_WID ( 32 ),
+                   .ID_T          ( logic[5:0] ),
+                   .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_MULTI_SLR_CROSSING )
+               ) axi3_reg_slice_inst (
+                   .axi3_if_from_controller ( axi_if_from_app__demarc ),
+                   .axi3_if_to_peripheral   ( axi_if_from_app[g_hbm_if] )
+               );
+
+           end : g__hbm_if
        end : g__hbm_0
        else begin : g__no_hbm_0
            // No HBM0 controller
