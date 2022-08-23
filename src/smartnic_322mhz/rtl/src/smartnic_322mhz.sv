@@ -145,6 +145,7 @@ module smartnic_322mhz
    axi4l_intf   axil_to_app_decoder         ();
    axi4l_intf   axil_to_app                 ();
    axi4l_intf   axil_to_sdnet               ();
+   axi4l_intf   axil_to_split_join          ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
    axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
@@ -223,6 +224,7 @@ module smartnic_322mhz
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
+      .split_join_axil_if              (axil_to_split_join),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
@@ -256,6 +258,11 @@ module smartnic_322mhz
      .timestamp         (timestamp),
      .smartnic_322mhz_regs (smartnic_322mhz_regs)
    );
+
+   // Xilinx usr_access register instantiation.
+   USR_ACCESSE2 USR_ACCESS2_0 (.CFGCLK(), .DATA (smartnic_322mhz_regs.usr_access_nxt), .DATAVALID());
+
+   assign smartnic_322mhz_regs.usr_access_nxt_v = '1;
 
    // Sample and sync outgoing div_count and burst_count register signals.
    sync_bus_sampled #(
@@ -758,13 +765,14 @@ module smartnic_322mhz
      .axi4s_out     (axis_app_to_core),
      .axi4s_hdr_out (axis_hdr_to_app),
      .axi4s_hdr_in  (axis_hdr_from_app),
+     .axil_if       (axil_to_split_join),
      .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
    );
 
-   axi4s_ila axi4s_ila_0 (.axis_in(axis_core_to_app));
-   axi4s_ila axi4s_ila_1 (.axis_in(axis_app_to_core));
-   axi4s_ila axi4s_ila_2 (.axis_in(axis_hdr_to_app));
-   axi4s_ila axi4s_ila_3 (.axis_in(axis_hdr_from_app));
+   axi4s_ila axi4s_ila_core_to_app  (.axis_in(axis_core_to_app));
+   axi4s_ila axi4s_ila_app_to_core  (.axis_in(axis_app_to_core));
+   axi4s_ila axi4s_ila_hdr_to_app   (.axis_in(axis_hdr_to_app));
+   axi4s_ila axi4s_ila_hdr_from_app (.axis_in(axis_hdr_from_app));
 
    // smartnic_322mhz_app core bypass logic
    axi4s_intf_bypass_mux #(
