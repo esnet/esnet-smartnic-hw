@@ -11,8 +11,6 @@ blocks:
 decoders:
   smartnic_322mhz_app_decoder: &smartnic_322mhz_app_decoder
     !include ../src/smartnic_322mhz/reg/smartnic_322mhz_app_sdnet_decoder.yaml
-  axi4s_split_join_decoder: &axi4s_split_join_decoder
-    !include src/axi4s/reg/axi4s_split_join_decoder.yaml
   fifo: &fifo
     !include src/fifo/reg/fifo_core_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
@@ -136,11 +134,6 @@ interfaces:
     address: 0x0f000
     width: 12
     name: hbm_1
-
-  - decoder: *axi4s_split_join_decoder
-    address: 0x10000
-    width: 10
-    name: split_join
 
   - decoder: *smartnic_322mhz_app_decoder
     address: 0x80000
