@@ -33,7 +33,9 @@ P4_FILE ?= $(P4_FILE_DEFAULT)
 # P4 options
 # ----------------------------------------------------
 # Options to pass to p4 compiler
-P4_OPTS_DEFAULT := CONFIG.PKT_RATE {150}
+P4_OPTS_DEFAULT := CONFIG.PKT_RATE {150} \
+                   CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
+
 P4_OPTS ?= $(P4_OPTS_DEFAULT)
 
 # Build name

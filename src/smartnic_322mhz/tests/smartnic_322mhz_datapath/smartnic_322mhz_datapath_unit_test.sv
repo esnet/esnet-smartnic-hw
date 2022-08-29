@@ -145,10 +145,21 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 /*
+    `SVTEST(single_pkt_stream)
+        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
+
+        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                        .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                        .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                        .exp_pkt_cnt(exp_pkt_cnt[0]),
+                        .tpause(0), .twait(0) );
+    `SVTEST_END
+
+
     `SVTEST(switch_basic_sanity)
         out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
 
-        run_stream_test(); check_stream_test_probes;
+        run_stream_test(.tpause(0)); check_stream_test_probes;
     `SVTEST_END
 */
 

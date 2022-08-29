@@ -22,6 +22,7 @@
 
 module smartnic_322mhz
   import smartnic_322mhz_pkg::*;
+  import axi4s_pkg::*;
 #(
   parameter int NUM_CMAC = 2,
   parameter int MAX_PKT_LEN = 9100,
@@ -144,6 +145,7 @@ module smartnic_322mhz
    axi4l_intf   axil_to_app_decoder         ();
    axi4l_intf   axil_to_app                 ();
    axi4l_intf   axil_to_sdnet               ();
+   axi4l_intf   axil_to_split_join          ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
    axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
@@ -222,6 +224,7 @@ module smartnic_322mhz
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
+//      .split_join_axil_if              (axil_to_split_join),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
@@ -255,6 +258,11 @@ module smartnic_322mhz
      .timestamp         (timestamp),
      .smartnic_322mhz_regs (smartnic_322mhz_regs)
    );
+
+   // Xilinx usr_access register instantiation.
+   USR_ACCESSE2 USR_ACCESS2_0 (.CFGCLK(), .DATA (smartnic_322mhz_regs.usr_access_nxt), .DATAVALID());
+
+   assign smartnic_322mhz_regs.usr_access_nxt_v = '1;
 
    // Sample and sync outgoing div_count and burst_count register signals.
    sync_bus_sampled #(
@@ -502,15 +510,35 @@ module smartnic_322mhz
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_app ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_app_to_core ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_to_app ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_from_app ();
+
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app ();
+
+   tuser_buffer_context_mode_t  axis_to_app_tuser;
+   assign axis_to_app_tuser =   axis_to_app.tuser;
+
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app ();
+
+   tuser_buffer_context_mode_t  axis_from_app_tuser;
+   assign axis_from_app.tuser = axis_from_app_tuser;
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app_host_0 ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app_host_0 ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app__demarc ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app__demarc ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app__demarc ();
+   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
+                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app__demarc ();
+
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_app_host_0__demarc ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_app_host_0__demarc ();
+
+
 
    // ----------------------------------------------------------------
    //  HBM AXI-3 signals/interfaces
@@ -729,14 +757,33 @@ module smartnic_322mhz
    assign axis_core_to_app.aresetn = core_rstn;
    assign axis_core_to_app.tvalid = axis_core_to_app_tvalid && !smartnic_322mhz_regs.port_config.app_tpause;
 
+   // axi4s_split_join instantiation (separates and recombines packet headers).
+   axi4s_split_join #(
+     .BIGENDIAN(0)
+   ) axi4s_split_join_0 (
+     .axi4s_in      (axis_core_to_app),
+     .axi4s_out     (axis_app_to_core),
+     .axi4s_hdr_out (axis_hdr_to_app),
+     .axi4s_hdr_in  (axis_hdr_from_app),
+     .axil_if       (axil_to_split_join),
+     .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
+   );
+
+   axi4l_intf_controller_term axi4l_to_split_join_term (.axi4l_if (axil_to_split_join));
+
+   axi4s_ila axi4s_ila_core_to_app  (.axis_in(axis_core_to_app));
+   axi4s_ila axi4s_ila_app_to_core  (.axis_in(axis_app_to_core));
+   axi4s_ila axi4s_ila_hdr_to_app   (.axis_in(axis_hdr_to_app));
+   axi4s_ila axi4s_ila_hdr_from_app (.axis_in(axis_hdr_from_app));
+
    // smartnic_322mhz_app core bypass logic
    axi4s_intf_bypass_mux #(
-     .PIPE_STAGES(1), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+     .PIPE_STAGES(1), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
    ) bypass_mux_to_switch (
-     .axi4s_in         (axis_core_to_app),
+     .axi4s_in         (axis_hdr_to_app),
      .axi4s_to_block   (axis_to_app__demarc),
      .axi4s_from_block (axis_from_app__demarc),
-     .axi4s_out        (axis_app_to_core),
+     .axi4s_out        (axis_hdr_from_app),
      .bypass           (smartnic_322mhz_regs.port_config.app_bypass)
    );
 
@@ -812,7 +859,8 @@ module smartnic_322mhz
 
    // AXI-S interfaces
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app (
        .axi4s_from_tx (axis_to_app__demarc),
        .axi4s_to_rx   (axis_to_app)
@@ -820,13 +868,14 @@ module smartnic_322mhz
 
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
-   ) i_axi4s_reg_slice__host_to_core (
+   ) i_axi4s_reg_slice__host_to_app (
        .axi4s_from_tx (axis_to_app_host_0__demarc),
        .axi4s_to_rx   (axis_to_app_host_0)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core (
        .axi4s_from_tx (axis_from_app),
        .axi4s_to_rx   (axis_from_app__demarc)
@@ -905,7 +954,8 @@ module smartnic_322mhz
     .axis_from_switch_tlast  ( axis_to_app.tlast ),
     .axis_from_switch_tid    ( axis_to_app.tid ),
     .axis_from_switch_tdest  ( axis_to_app.tdest ),
-    .axis_from_switch_tuser  ( axis_to_app.tuser ),
+    .axis_from_switch_tuser_wr_ptr    ( axis_to_app_tuser.wr_ptr ),
+    .axis_from_switch_tuser_hdr_tlast ( axis_to_app_tuser.hdr_tlast ),
     // AXI-S data interface (from app, to switch)
     .axis_to_switch_tvalid ( axis_from_app.tvalid ),
     .axis_to_switch_tready ( axis_from_app.tready ),
@@ -914,7 +964,8 @@ module smartnic_322mhz
     .axis_to_switch_tlast  ( axis_from_app.tlast ),
     .axis_to_switch_tid    ( axis_from_app.tid ),
     .axis_to_switch_tdest  ( axis_from_app.tdest ),
-    .axis_to_switch_tuser  ( axis_from_app.tuser ),
+    .axis_to_switch_tuser_wr_ptr    ( axis_from_app_tuser.wr_ptr ),
+    .axis_to_switch_tuser_hdr_tlast ( axis_from_app_tuser.hdr_tlast ),
     // AXI-S data interface (from host, to app)
     .axis_from_host_tvalid ( axis_to_app_host_0.tvalid ),
     .axis_from_host_tready ( axis_to_app_host_0.tready ),
