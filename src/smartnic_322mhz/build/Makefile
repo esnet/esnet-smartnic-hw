@@ -68,6 +68,8 @@ ip:
 	$(MAKE) -C $(LIB_ROOT)/src/axi4s/xilinx_ip synth
 	$(MAKE) -C $(LIB_ROOT)/src/axi4l/xilinx_ip synth
 	$(MAKE) -C $(LIB_ROOT)/src/fifo/xilinx_ip synth
+	$(MAKE) -C $(LIB_ROOT)/src/xilinx/axi/ip synth
+	$(MAKE) -C $(LIB_ROOT)/src/xilinx/axis/ip synth
 	$(MAKE) -C $(IP_ROOT)/xilinx_ip synth
 .PHONY: ip
 

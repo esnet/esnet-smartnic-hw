@@ -220,6 +220,8 @@ hwapi_p4_hbm:
     SN_HW_APP_NAME: p4_hbm
   needs:
     - build_p4_hbm
+  rules:
+    - allow_failure: true
 
 .trigger_fw:
   stage: trigger_downstream
@@ -261,3 +263,9 @@ fw_p4_hbm:
     SN_HW_API_JOB: hwapi_p4_hbm
   needs:
     - hwapi_p4_hbm
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      allow_failure: true
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: true

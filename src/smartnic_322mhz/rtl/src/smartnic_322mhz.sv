@@ -30,11 +30,11 @@ module smartnic_322mhz
   parameter bit INCLUDE_HBM0 = 1'b1,
   parameter bit INCLUDE_HBM1 = 1'b1
 `else
-  parameter bit INCLUDE_HBM0 = 1'b0, // HBM0 is connected to platform logic
-                                     // (it is excluded by default because HBM is not currently used to implement any platform functions)
-  parameter bit INCLUDE_HBM1 = smartnic_322mhz_app_pkg::INCLUDE_HBM // Application-specific HBM controller include/exclude
-                                     // HBM1 controller is connected to application logic
+  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
+                                     // HBM0 controller is connected to application logic
                                      // (can be excluded for non-HBM applications to optimize resources/complexity)
+  parameter bit INCLUDE_HBM1 = 1'b0  // HBM1 is connected to platform logic
+                                     // (it is excluded by default because HBM is not currently used to implement any platform functions)
 `endif
 ) (
   input                       s_axil_awvalid,
@@ -291,43 +291,6 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
    //  HBM0 (Left stack, 4GB)
    //
-   //  (Optionally) used by platform
-   // ----------------------------------------------------------------
-   generate
-       if (INCLUDE_HBM0) begin : g__hbm_0
-           // Include memory controller for 'Left' HBM stack (4GB)
-
-           // (Local) interfaces
-           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
-
-           // HBM controller
-           smartnic_322mhz_hbm #(
-             .HBM_STACK   (0)
-           ) smartnic_322mhz_hbm_0 (
-             .clk         (core_clk),
-             .rstn        (core_rstn),
-             .hbm_ref_clk (hbm_ref_clk),
-             .clk_100mhz  (clk_100mhz),
-             .axil_if     (axil_to_hbm_0),
-             .axi_if      (axi_if)
-           );
-
-           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-               // For now, terminate HBM1 memory interfaces (unused)
-               axi3_intf_controller_term axi_to_hbm_0_term (.axi3_if(axi_if[g_hbm_if]));
-           end : g__hbm_if
-       end : g__hbm_0
-       else begin : g__no_hbm_0
-           // No HBM 0 controller
-
-           // Terminate AXI-L interface
-           axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_0));
-       end : g__no_hbm_0
-   endgenerate
-
-   // ----------------------------------------------------------------
-   //  HBM1 (Right stack, 4GB)
-   //
    //  (Optionally) used by application
    // ----------------------------------------------------------------
    // Signals
@@ -380,26 +343,29 @@ module smartnic_322mhz
    logic [15:0]        axi_app_to_hbm_rready;
 
    generate
-       if (INCLUDE_HBM1) begin : g__hbm_1
-           // Include memory controller for 'Right' HBM stack (4GB)
+       if (INCLUDE_HBM0) begin : g__hbm_0
+           // Include memory controller for 'Left' HBM stack (4GB)
 
            // (Local) interfaces
-           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
+           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if_from_app [16] ();
 
            // HBM controller
            smartnic_322mhz_hbm #(
-             .HBM_STACK   (1)
-           ) smartnic_322mhz_hbm_1 (
-             .clk         (core_clk),
-             .rstn        (core_rstn),
-             .hbm_ref_clk (hbm_ref_clk),
-             .clk_100mhz  (clk_100mhz),
-             .axil_if     (axil_to_hbm_1),
-             .axi_if      (axi_if)
+             .HBM_STACK   ( 0 )
+           ) smartnic_322mhz_hbm_0 (
+             .clk         ( core_clk ),
+             .rstn        ( core_rstn ),
+             .hbm_ref_clk ( hbm_ref_clk ),
+             .clk_100mhz  ( clk_100mhz ),
+             .axil_if     ( axil_to_hbm_0 ),
+             .axi_if      ( axi_if_from_app )
            );
 
-           //  Map HBM1 memory interface signals into interface representation
+           //  Map HBM0 memory interface signals into interface representation
            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               // (Local) interfaces
+               axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if_from_app__demarc ();
+
                axi3_intf_from_signals #(
                    .DATA_BYTE_WID(32),
                    .ADDR_WID     (33),
@@ -452,7 +418,7 @@ module smartnic_322mhz
                    .ruser    ( axi_app_to_hbm_ruser   [g_hbm_if] ),
                    .rvalid   ( axi_app_to_hbm_rvalid  [g_hbm_if] ),
                    .rready   ( axi_app_to_hbm_rready  [g_hbm_if] ),
-                   .axi3_if  ( axi_if[g_hbm_if] )
+                   .axi3_if  ( axi_if_from_app__demarc )
                );
 
                assign axi_app_to_hbm_aclk[g_hbm_if] = core_clk;
@@ -460,10 +426,22 @@ module smartnic_322mhz
 
                assign axi_app_to_hbm_buser[g_hbm_if] = '0;
                assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
-            end : g__hbm_if
-       end : g__hbm_1
-       else begin : g__no_hbm_1
-           // No HBM 1 controller
+
+               // Inter-SLR pipelining
+               axi3_reg_slice #(
+                   .ADDR_WID      ( 33 ),
+                   .DATA_BYTE_WID ( 32 ),
+                   .ID_T          ( logic[5:0] ),
+                   .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_MULTI_SLR_CROSSING )
+               ) axi3_reg_slice_inst (
+                   .axi3_if_from_controller ( axi_if_from_app__demarc ),
+                   .axi3_if_to_peripheral   ( axi_if_from_app[g_hbm_if] )
+               );
+
+           end : g__hbm_if
+       end : g__hbm_0
+       else begin : g__no_hbm_0
+           // No HBM0 controller
 
            // Terminate AXI memory interfaces
            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
@@ -481,6 +459,43 @@ module smartnic_322mhz
                assign axi_app_to_hbm_ruser[g_hbm_if] = '0;
                assign axi_app_to_hbm_rvalid[g_hbm_if] = 1'b0;
            end : g__hbm_if
+
+           // Terminate AXI-L interface
+           axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_0));
+       end : g__no_hbm_0
+   endgenerate
+
+   // ----------------------------------------------------------------
+   //  HBM1 (Right stack, 4GB)
+   //
+   //  (Optionally) used by platform
+   // ----------------------------------------------------------------
+   generate
+       if (INCLUDE_HBM1) begin : g__hbm_1
+           // Include memory controller for 'Left' HBM stack (4GB)
+
+           // (Local) interfaces
+           axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
+
+           // HBM controller
+           smartnic_322mhz_hbm #(
+             .HBM_STACK   (1)
+           ) smartnic_322mhz_hbm_1 (
+             .clk         (core_clk),
+             .rstn        (core_rstn),
+             .hbm_ref_clk (hbm_ref_clk),
+             .clk_100mhz  (clk_100mhz),
+             .axil_if     (axil_to_hbm_1),
+             .axi_if      (axi_if)
+           );
+
+           for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+               // For now, terminate HBM1 memory interfaces (unused)
+               axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_if[g_hbm_if]));
+           end : g__hbm_if
+       end : g__hbm_1
+       else begin : g__no_hbm_1
+           // No HBM 1 controller
 
            // Terminate AXI-L interface
            axi4l_intf_peripheral_term i_axi4l_peripheral_term (.axi4l_if (axil_to_hbm_1));
@@ -851,7 +866,7 @@ module smartnic_322mhz
 
    // AXI-L interface
    axi4l_reg_slice #(
-       .CONFIG (axi4l_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
    ) i_axi4l_reg_slice__core_to_app (
        .axi4l_if_from_controller ( axil_to_app_decoder__demarc ),
        .axi4l_if_to_peripheral   ( axil_to_app_decoder )
@@ -860,14 +875,14 @@ module smartnic_322mhz
    // AXI-S interfaces
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
-       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app (
        .axi4s_from_tx (axis_to_app__demarc),
        .axi4s_to_rx   (axis_to_app)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__host_to_app (
        .axi4s_from_tx (axis_to_app_host_0__demarc),
        .axi4s_to_rx   (axis_to_app_host_0)
@@ -875,14 +890,14 @@ module smartnic_322mhz
 
    axi4s_reg_slice #(
        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
-       .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core (
        .axi4s_from_tx (axis_from_app),
        .axi4s_to_rx   (axis_from_app__demarc)
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(axi4s_pkg::REG_SLICE_SLR_CROSSING)
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_host (
        .axi4s_from_tx (axis_from_app_host_0),
        .axi4s_to_rx   (axis_from_app_host_0__demarc)

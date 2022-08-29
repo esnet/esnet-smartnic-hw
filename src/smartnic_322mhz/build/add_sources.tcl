@@ -14,12 +14,12 @@ read_ip ../xilinx_ip/hbm_4g_left/hbm_4g_left.xci
 read_ip ../xilinx_ip/hbm_4g_right/hbm_4g_right.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
-read_verilog $lib_root/src/axi4s/xilinx_ip/axis_register_slice/hdl/axis_infrastructure_v1_1_0.vh
-read_verilog $lib_root/src/axi4s/xilinx_ip/axis_register_slice/hdl/axis_infrastructure_v1_1_vl_rfs.v
-read_verilog $lib_root/src/axi4s/xilinx_ip/axis_register_slice/hdl/axis_register_slice_v1_1_vl_rfs.v
-read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_infrastructure_v1_1_0.vh
-read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_infrastructure_v1_1_vl_rfs.v
-read_verilog $lib_root/src/axi4l/xilinx_ip/axi_lite_register_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
+read_verilog $lib_root/src/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_0.vh
+read_verilog $lib_root/src/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_vl_rfs.v
+read_verilog $lib_root/src/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_register_slice_v1_1_vl_rfs.v
+read_verilog $lib_root/src/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_0.vh
+read_verilog $lib_root/src/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_vl_rfs.v
+read_verilog $lib_root/src/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
 
 # Application package
 read_verilog -sv [glob $app_root/app_if/smartnic_322mhz_app_pkg.sv]
@@ -34,6 +34,8 @@ read_verilog -sv [glob $lib_root/src/axi4l/rtl/src/*_pkg.sv ]
 read_verilog -sv [glob $lib_root/src/axi4s/rtl/src/*_pkg.sv ]
 read_verilog -sv [glob $lib_root/src/axi3/rtl/src/*_pkg.sv ]
 read_verilog -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*_pkg.sv ]
+read_verilog -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
+read_verilog -sv [glob $lib_root/src/xilinx/axis/rtl/src/*_pkg.sv ]
 read_verilog -sv [glob ../rtl/src/*_pkg.sv ]
 
 # RTL
