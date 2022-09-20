@@ -224,7 +224,7 @@ module smartnic_322mhz
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
-//      .split_join_axil_if              (axil_to_split_join),
+      .axi4s_split_join_axil_if        (axil_to_split_join),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
@@ -783,8 +783,6 @@ module smartnic_322mhz
      .axil_if       (axil_to_split_join),
      .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
    );
-
-   axi4l_intf_controller_term axi4l_to_split_join_term (.axi4l_if (axil_to_split_join));
 
    axi4s_ila axi4s_ila_core_to_app  (.axis_in(axis_core_to_app));
    axi4s_ila axi4s_ila_app_to_core  (.axis_in(axis_app_to_core));

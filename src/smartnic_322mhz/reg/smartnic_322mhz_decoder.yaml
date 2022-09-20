@@ -13,6 +13,8 @@ decoders:
     !include ../src/smartnic_322mhz/reg/smartnic_322mhz_app_sdnet_decoder.yaml
   fifo: &fifo
     !include src/fifo/reg/fifo_core_decoder.yaml
+  axi4s_split_join_decoder: &axi4s_split_join_decoder
+    !include src/axi4s/reg/axi4s_split_join_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
     !include ../src/smartnic_322mhz/reg/xilinx_hbm_0_decoder.yaml
   xilinx_hbm_1: &xilinx_hbm_1
@@ -124,6 +126,11 @@ interfaces:
     address: 0x0d000
     width: 10
     name: fifo_to_host_0
+
+  - decoder: *axi4s_split_join_decoder
+    address: 0x0d400
+    width: 10
+    name: axi4s_split_join
 
   - decoder: *xilinx_hbm_0
     address: 0x0e000

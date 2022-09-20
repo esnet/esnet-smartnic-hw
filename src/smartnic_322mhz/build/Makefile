@@ -27,6 +27,7 @@ OUT_DIR=out
 # -----------------------------------------------
 REG_BLOCK_YAML = $(IP_ROOT)/reg/smartnic_322mhz.yaml \
                  $(LIB_ROOT)/src/axi4s/reg/axi4s_probe.yaml \
+                 $(LIB_ROOT)/src/axi4s/reg/axi4s_split_join.yaml \
                  $(LIB_ROOT)/src/fifo/reg/fifo_ctrl_info.yaml \
                  $(LIB_ROOT)/src/fifo/reg/fifo_ctrl_wr_mon.yaml \
                  $(LIB_ROOT)/src/fifo/reg/fifo_ctrl_rd_mon.yaml \
