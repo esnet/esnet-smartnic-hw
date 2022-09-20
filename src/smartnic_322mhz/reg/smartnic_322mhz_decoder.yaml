@@ -24,7 +24,7 @@ interfaces:
   - block: *smartnic_322mhz
     address: 0x00000
     width: 10
-    name: regif
+    name: smartnic_322mhz_regs
 
   - block: *reg_endian_check
     address: 0x00400
