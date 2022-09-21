@@ -218,7 +218,6 @@ module smartnic_322mhz
       .probe_to_cmac_1_axil_if         (axil_to_probe_to_cmac[1]),
       .drops_ovfl_to_cmac_1_axil_if    (axil_to_ovfl_to_cmac[1]),
       .probe_to_host_0_axil_if         (axil_to_probe_to_host[0]),
-      .drops_ovfl_to_host_0_axil_if    (axil_to_ovfl_to_host[0]),
       .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
       .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
@@ -227,6 +226,9 @@ module smartnic_322mhz
       .axi4s_split_join_axil_if        (axil_to_split_join),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
+
+   // Terminate unused AXI-L interface
+   axi4l_intf_controller_term axi4l_to_ovfl_to_host_0_term (.axi4l_if (axil_to_ovfl_to_host[0]));
 
    // AXI-L interface synchronizer
    axi4l_intf axil_to_regs__core_clk ();
