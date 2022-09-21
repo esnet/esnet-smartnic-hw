@@ -97,12 +97,15 @@ module smartnic_322mhz_datapath_unit_test;
         // Issue reset (both datapath and management domains)
         reset();
 
-       // Write port_config register to enable app bypass mode.
+        // Write port_config register to enable app bypass mode.
         set_config.input_enable  = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_BOTH;
         set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_USE_META;
         set_config.app_bypass = 1'b1;
         set_config.app_tpause = 1'b0;
         env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
+
+        // Write hdr_length register to enable split-join logic.
+        //env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -144,24 +147,6 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
 
     `SVUNIT_TESTS_BEGIN
-/*
-    `SVTEST(single_pkt_stream)
-        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
-
-        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
-                        .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                        .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                        .exp_pkt_cnt(exp_pkt_cnt[0]),
-                        .tpause(0), .twait(0) );
-    `SVTEST_END
-
-
-    `SVTEST(switch_basic_sanity)
-        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
-
-        run_stream_test(.tpause(0)); check_stream_test_probes;
-    `SVTEST_END
-*/
 
     `SVTEST(basic_switch_with_halt_probe_counters)
         out_port_map = {2'h1, 2'h2, 2'h0, 2'h3};
@@ -225,43 +210,7 @@ module smartnic_322mhz_datapath_unit_test;
          check_stream_test_probes;
     `SVTEST_END
 
-/*
-    `SVTEST(max_size_discards)
-        for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-        end
 
-        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
-        for (int i=0; i<NUM_PORTS; i++) begin
-            pkt_len[i] = 1518;
-            exp_pkt_cnt[i] = $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
-        end
-        exp_pkt_cnt[2] = 0;  // configures exp_pkt_cnt from pcap file.
-
-        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
-        force tb.axis_out_if[1].tready = 0;
-        force tb.axis_out_if[2].tready = 0;
-        force tb.axis_out_if[3].tready = 0;
-
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
-
-        fork
-           run_stream_test();
-
-           begin
-              #(50us);
-              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
-              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
-           end
-	join
-
-        check_stream_test_probes;
-    `SVTEST_END
-*/
-      
     `SVTEST(jumbo_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
             in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
@@ -497,6 +446,63 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVTEST_END
 
+// The following tests are commented out of the regression run for resource and runtime efficiency, but retained
+// for the option of manual execution.
+
+/*
+    `SVTEST(single_pkt_stream)
+        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
+
+        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                        .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                        .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                        .exp_pkt_cnt(exp_pkt_cnt[0]),
+                        .tpause(0), .twait(0) );
+    `SVTEST_END
+
+
+    `SVTEST(switch_basic_sanity)
+        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
+
+        run_stream_test(.tpause(0)); check_stream_test_probes;
+    `SVTEST_END
+
+
+     `SVTEST(max_size_discards)
+        for (int i=0; i<NUM_PORTS; i++) begin
+            in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+        end
+
+        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
+        for (int i=0; i<NUM_PORTS; i++) begin
+            pkt_len[i] = 1518;
+            exp_pkt_cnt[i] = $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
+        end
+        exp_pkt_cnt[2] = 0;  // configures exp_pkt_cnt from pcap file.
+
+        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
+        force tb.axis_out_if[1].tready = 0;
+        force tb.axis_out_if[2].tready = 0;
+        force tb.axis_out_if[3].tready = 0;
+
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+
+        fork
+           run_stream_test();
+
+           begin
+              #(50us);
+              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
+              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
+              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[1].tready;
+              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
+           end
+	join
+
+        check_stream_test_probes;
+    `SVTEST_END
+*/
     `SVUNIT_TESTS_END
 
 

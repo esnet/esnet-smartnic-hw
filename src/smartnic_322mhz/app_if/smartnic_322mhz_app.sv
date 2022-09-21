@@ -17,7 +17,6 @@
 
 // smartnic_322mhz_app (empty) stub module. Used for platform level tests.
 module smartnic_322mhz_app
-    import axi4s_pkg::*;
 #(
     parameter int AXI_HBM_NUM_IFS = 16
 ) (
@@ -175,6 +174,8 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
+    import axi4s_pkg::*;
+
     // Parameters
     localparam int  AXIS_DATA_BYTE_WID = 64;
 

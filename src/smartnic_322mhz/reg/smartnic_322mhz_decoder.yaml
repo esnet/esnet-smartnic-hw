@@ -13,6 +13,8 @@ decoders:
     !include ../src/smartnic_322mhz/reg/smartnic_322mhz_app_sdnet_decoder.yaml
   fifo: &fifo
     !include src/fifo/reg/fifo_core_decoder.yaml
+  axi4s_split_join_decoder: &axi4s_split_join_decoder
+    !include src/axi4s/reg/axi4s_split_join_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
     !include ../src/smartnic_322mhz/reg/xilinx_hbm_0_decoder.yaml
   xilinx_hbm_1: &xilinx_hbm_1
@@ -22,7 +24,7 @@ interfaces:
   - block: *smartnic_322mhz
     address: 0x00000
     width: 10
-    name: regif
+    name: smartnic_322mhz_regs
 
   - block: *reg_endian_check
     address: 0x00400
@@ -106,11 +108,6 @@ interfaces:
     name: probe_to_host_0
 
   - block: *axi4s_probe
-    address: 0x0c400
-    width: 10
-    name: drops_ovfl_to_host_0
-
-  - block: *axi4s_probe
     address: 0x0c800
     width: 10
     name: probe_to_host_1
@@ -124,6 +121,11 @@ interfaces:
     address: 0x0d000
     width: 10
     name: fifo_to_host_0
+
+  - decoder: *axi4s_split_join_decoder
+    address: 0x0d400
+    width: 10
+    name: axi4s_split_join
 
   - decoder: *xilinx_hbm_0
     address: 0x0e000

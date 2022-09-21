@@ -17,11 +17,9 @@
 
 `timescale 1ns/1ps
 
-import p4_app_pkg::*;
-import axi4s_pkg::*;
-
-module p4_app #(
-) (
+module p4_app
+   import p4_app_pkg::*;
+(
    input logic        core_clk,
    input logic        core_rstn,
    input timestamp_t  timestamp,
@@ -36,6 +34,8 @@ module p4_app #(
 
    axi3_intf.controller  axi_to_hbm[16]
 );
+   import axi4s_pkg::*;
+
 
    // ----------------------------------------------------------------
    //  Register map block and decoder instantiations

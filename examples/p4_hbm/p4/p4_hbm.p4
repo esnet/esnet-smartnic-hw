@@ -197,7 +197,7 @@ control MatchActionImpl( inout headers hdr,
 
 control DeparserImpl( packet_out packet,
                       in headers hdr,
-                      inout smartnic_metadata   sn__meta,
+                      inout smartnic_metadata   sn_meta,
                       inout standard_metadata_t smeta) {
     apply {
         packet.emit(hdr);
