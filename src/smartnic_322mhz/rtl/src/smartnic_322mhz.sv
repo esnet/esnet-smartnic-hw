@@ -21,8 +21,6 @@
 `timescale 1ns/1ps
 
 module smartnic_322mhz
-  import smartnic_322mhz_pkg::*;
-  import axi4s_pkg::*;
 #(
   parameter int NUM_CMAC = 2,
   parameter int MAX_PKT_LEN = 9100,
@@ -98,8 +96,9 @@ module smartnic_322mhz
 );
 
    // Imports
-   import axi4s_pkg::*;
-   import smartnic_322mhz_reg_pkg::*;
+  import smartnic_322mhz_pkg::*;
+  import smartnic_322mhz_reg_pkg::*;
+  import axi4s_pkg::*;
 
    // Signals
    wire                       axil_aresetn;
