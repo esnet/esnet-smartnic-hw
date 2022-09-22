@@ -148,20 +148,30 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
-    `SVTEST(basic_switch_with_halt_probe_counters)
+    `SVTEST(switch_basic_sanity)
+        check_probe_control_defaults;
+        latch_probe_counters;
+
+        run_stream_test(.tpause(0));
+
+        latch_probe_counters;
+        check_stream_test_probes;
+
+        clear_and_check_probe_counters;
+    `SVTEST_END
+
+
+    `SVTEST(switch_and_clear_probe_counts)
         out_port_map = {2'h1, 2'h2, 2'h0, 2'h3};
 
-        halt_probe_counters;
+        latch_probe_counters;
 
         run_stream_test();
 
-        check_stream_probes ( .in_port(0), .out_port(out_port_map[0]), .exp_good_pkts(0), .exp_good_bytes(0) );
-        check_stream_probes ( .in_port(1), .out_port(out_port_map[1]), .exp_good_pkts(0), .exp_good_bytes(0) );
-        check_stream_probes ( .in_port(3), .out_port(out_port_map[3]), .exp_good_pkts(0), .exp_good_bytes(0) );
-        check_stream_probes ( .in_port(2), .out_port(out_port_map[2]), .exp_good_pkts(0), .exp_good_bytes(0) );
-   
-        check_probe ( .base_addr('ha000), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-        check_probe ( .base_addr('ha800), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+        latch_and_clear_probe_counters;
+        latch_probe_counters;
+        check_cleared_probe_counters;
+
     `SVTEST_END
 
 
@@ -287,12 +297,12 @@ module smartnic_322mhz_datapath_unit_test;
                send_pcap(.pcap_filename ("../../../tests/common/pcap/64B_multiples_10pkts.pcap"),
                          .id(cmac_port), .dest(cmac_port), .user(1));
                // check error counts
-               check_err_probes (.in_port(cmac_port), .exp_err_pkts(10), .exp_err_bytes(3520));
+               check_and_clear_err_probes (.in_port(cmac_port), .exp_err_pkts(10), .exp_err_bytes(3520));
 
                // send and check unerrored packet stream i.e. with tuser=0 (default)
                run_pkt_stream (.in_port(cmac_port), .out_port(cmac_port),
-                               .in_pcap  ("../../../tests/common/pcap/256x566B_pkts.pcap"),
-                               .out_pcap ("../../../tests/common/pcap/256x566B_pkts.pcap"),
+                               .in_pcap  ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
+                               .out_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
                                .tx_pkt_cnt(tx_pkt_cnt[cmac_port]), .tx_byte_cnt(tx_byte_cnt[cmac_port]),
                                .rx_pkt_cnt(rx_pkt_cnt[cmac_port]), .rx_byte_cnt(rx_byte_cnt[cmac_port]) );
 
@@ -300,6 +310,8 @@ module smartnic_322mhz_datapath_unit_test;
                check_stream_probes (.in_port(cmac_port), .out_port(cmac_port),
                                     .exp_good_pkts(rx_pkt_cnt[cmac_port]), .exp_good_bytes(rx_byte_cnt[cmac_port]),
                                     .exp_ovfl_pkts(0), .exp_ovfl_bytes(0) );
+
+               clear_and_check_probe_counters;
              end
 
           end
@@ -461,13 +473,6 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
-    `SVTEST(switch_basic_sanity)
-        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
-
-        run_stream_test(.tpause(0)); check_stream_test_probes;
-    `SVTEST_END
-
-
      `SVTEST(max_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
             in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
@@ -507,10 +512,9 @@ module smartnic_322mhz_datapath_unit_test;
 
 
 
-    task check_err_probes ( input port_t in_port, 
-                            input logic [63:0] exp_err_pkts, exp_err_bytes );
-
+    task check_and_clear_err_probes ( input port_t in_port, input logic [63:0] exp_err_pkts, exp_err_bytes );
         cntr_addr_t in_port_err_addr;
+
         // establish addr for ingress err counts
         case (in_port)
                CMAC_PORT0 : in_port_err_addr = 'h8800;
@@ -520,57 +524,113 @@ module smartnic_322mhz_datapath_unit_test;
 
         check_probe (.base_addr(in_port_err_addr), .exp_pkt_cnt(exp_err_pkts), .exp_byte_cnt(exp_err_bytes));
 
+        env.reg_agent.write_reg( in_port_err_addr + 'h10, 'h2 ); // CLR_ON_WR_EVT
+
     endtask;
 
 
-    task halt_probe_counters;
+    task latch_probe_counters;
         logic [31:0] rd_data;
         bit 	     rd_fail = 0;
 
-        // check initial values.       
-        env.probe_from_cmac_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_cmac_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_host_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_host_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        // set probe_control.
+        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h1 );
+        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h1 );
+        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h1 );
+        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h1 );
 
-        env.probe_core_to_app_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_app_to_core_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h1 );
+        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h1 );
 
-        env.probe_to_cmac_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_cmac_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_host_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_host_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-       `FAIL_UNLESS( rd_fail == 0 );
-       
-        // set halt_counters.
-        env.probe_from_cmac_0_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_from_cmac_1_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_from_host_0_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_from_host_1_reg_blk_agent.write_halt_counters( 8'd1 );
+        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h1 );
+        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h1 );
+        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h1 );
+        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h1 );
 
-        env.probe_core_to_app_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_app_to_core_reg_blk_agent.write_halt_counters( 8'd1 );
-
-        env.probe_to_cmac_0_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_to_cmac_1_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_to_host_0_reg_blk_agent.write_halt_counters( 8'd1 );
-        env.probe_to_host_1_reg_blk_agent.write_halt_counters( 8'd1 );
-
-        // check halt_counters values.
-        env.probe_from_cmac_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_from_cmac_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_from_host_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_from_host_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-
-        env.probe_core_to_app_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_app_to_core_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-
-        env.probe_to_cmac_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_to_cmac_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_to_host_0_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-        env.probe_to_host_1_reg_blk_agent.read_halt_counters( rd_data ); rd_fail = rd_fail || (rd_data != 1);
-       `FAIL_UNLESS( rd_fail == 0 );
-       
     endtask;
-   
+
+
+    task latch_and_clear_probe_counters;
+        logic [31:0] rd_data;
+        bit 	     rd_fail = 0;
+
+        // set probe_control.
+        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h3 );
+        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h3 );
+        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h3 );
+        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h3 );
+
+        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h3 );
+        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h3 );
+
+        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h3 );
+        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h3 );
+        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h3 );
+        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h3 );
+
+    endtask;
+
+
+    task clear_and_check_probe_counters;
+        logic [31:0] rd_data;
+        bit 	     rd_fail = 0;
+
+        // set probe_control.
+        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h2 );
+        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h2 );
+        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h2 );
+        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h2 );
+
+        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h2 );
+        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h2 );
+
+        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h2 );
+        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h2 );
+        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h2 );
+        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h2 );
+
+        check_cleared_probe_counters;
+
+    endtask;
+
+
+    task check_cleared_probe_counters;
+
+       check_probe ( .base_addr(PROBE_FROM_CMAC_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_FROM_CMAC_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_FROM_HOST_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_FROM_HOST_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+       check_probe ( .base_addr(PROBE_CORE_TO_APP),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_APP_TO_CORE),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+       check_probe ( .base_addr(PROBE_TO_CMAC_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_TO_CMAC_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_TO_HOST_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+       check_probe ( .base_addr(PROBE_TO_HOST_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+    endtask;
+
+
+    task check_probe_control_defaults;
+        logic [31:0] rd_data;
+        bit 	     rd_fail = 0;
+
+        env.probe_from_cmac_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_from_cmac_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_from_host_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_from_host_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+        env.probe_core_to_app_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_app_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+        env.probe_to_cmac_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_to_cmac_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_to_host_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+        env.probe_to_host_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+       `FAIL_UNLESS( rd_fail == 0 );
+
+    endtask;
+
+
 endmodule
