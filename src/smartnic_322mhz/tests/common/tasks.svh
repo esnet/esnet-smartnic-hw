@@ -28,6 +28,9 @@ typedef enum logic [31:0] {
     PROBE_FROM_HOST_PORT0      = 'h9800,
     PROBE_FROM_HOST_PORT1      = 'h9c00,
 
+    PROBE_CORE_TO_APP          = 'ha000,
+    PROBE_APP_TO_CORE          = 'ha800,
+
     PROBE_TO_CMAC_PORT0        = 'hb000,
     DROPS_OVFL_TO_CMAC_PORT0   = 'hb400,
     PROBE_TO_CMAC_PORT1        = 'hb800,
