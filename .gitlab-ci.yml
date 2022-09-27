@@ -10,11 +10,15 @@ stages:
 
 variables:
   GIT_STRATEGY: clone
+  SEED: 0
+  RANDOMIZE_SEED: 0
 
 .common:
   image: $CI_REGISTRY/ht/xilinx-tools-docker:26009-g26ccc4b6
   before_script:
     - source /opt/Xilinx/Vivado/2022.1/settings64.sh
+    - if [ $RANDOMIZE_SEED -gt 0 ]; then export SEED=$RANDOM; fi
+    - echo "Running pipeline with SEED $SEED..."
   variables:
     XILINXD_LICENSE_FILE: "2100@dmv.es.net"
     # Required to keep click python module happy
@@ -48,23 +52,24 @@ sim_p4_apps:
     - ht-sim
   script:
     - make -C src/p4_app/tests/regression
-    - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_$SEED/sim.log
     - make -C src/p4_app/tests.smartnic_322mhz/regression
-    - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_$SEED/sim.log
     - make -C examples/p4_hbm/tests/regression
-    - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_$SEED/sim.log
     - make -C examples/p4_hbm/tests.smartnic_322mhz/regression
-    - grep 'PASSED.*suites passing' examples/p4_hbm/tests.smartnic_322mhz/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' examples/p4_hbm/tests.smartnic_322mhz/regression/run_$SEED/sim.log
     - make -C examples/unsupported/p4_example/tests/regression
-    - grep 'PASSED.*suites passing' examples/unsupported/p4_example/tests/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' examples/unsupported/p4_example/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
-        - src/p4_app/tests/regression/run_0/tests.xml
-        - examples/p4_hbm/tests/regression/run_0/tests.xml
-        - examples/p4_hbm/tests.smartnic_322mhz/regression/run_0/tests.xml
-        - examples/unsupported/p4_example/tests/regression/run_0/tests.xml
+        - src/p4_app/tests/regression/run_*/tests.xml
+        - src/p4_app/tests.smartnic_322mhz/regression/run_*/tests.xml
+        - examples/p4_hbm/tests/regression/run_*/tests.xml
+        - examples/p4_hbm/tests.smartnic_322mhz/regression/run_*/tests.xml
+        - examples/unsupported/p4_example/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []
@@ -76,15 +81,15 @@ sim_platform:
     - ht-sim
   script:
     - make -C src/smartnic_322mhz/tests/regression
-    - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_$SEED/sim.log
     - make -C examples/unsupported/p2p/tests.smartnic_322mhz/regression
-    - grep 'PASSED.*suites passing' examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_0/sim.log
+    - grep 'PASSED.*suites passing' examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
-        - src/smartnic_322mhz/tests/regression/run_0/tests.xml
-        - examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_0/tests.xml
+        - src/smartnic_322mhz/tests/regression/run_*/tests.xml
+        - examples/unsupported/p2p/tests.smartnic_322mhz/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []
@@ -113,6 +118,8 @@ sim_platform:
     expire_in: 2 weeks
   timeout: 8h
   needs: []
+  except:
+      - schedules
 
 build_p4_example:
   extends: .bitfile
@@ -137,8 +144,7 @@ build_p4_hbm:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_hbm
-  rules:
-    - allow_failure: true
+  allow_failure: true
 
 build_vanilla_ons:
   stage: bitfile
@@ -220,8 +226,7 @@ hwapi_p4_hbm:
     SN_HW_APP_NAME: p4_hbm
   needs:
     - build_p4_hbm
-  rules:
-    - allow_failure: true
+  allow_failure: true
 
 .trigger_fw:
   stage: trigger_downstream
