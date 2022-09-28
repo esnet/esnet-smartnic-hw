@@ -34,7 +34,7 @@ p4bm:
   script:
     - make -C src/p4_app/p4/sim build sim-all
     - make -C examples/p4_only/p4/sim sim-all
-    - make -C examples/p4_example/p4/sim build sim-all
+    - make -C examples/p4_and_verilog/p4/sim build sim-all
     - make -C examples/p4_hbm/p4/sim sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
@@ -42,7 +42,7 @@ p4bm:
       - src/p4_app/p4/sim
       - examples/p4_only/p4/sim
       - examples/p4_hbm/p4/sim
-      - examples/p4_example/p4/sim
+      - examples/p4_and_verilog/p4/sim
   needs: []
 
 sim_p4_apps:
@@ -59,8 +59,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_$SEED/sim.log
     - make -C examples/p4_hbm/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' examples/p4_hbm/tests.smartnic_322mhz/regression/run_$SEED/sim.log
-    - make -C examples/p4_example/tests/regression
-    - grep 'PASSED.*suites passing' examples/p4_example/tests/regression/run_$SEED/sim.log
+    - make -C examples/p4_and_verilog/tests/regression
+    - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
@@ -69,7 +69,7 @@ sim_p4_apps:
         - src/p4_app/tests.smartnic_322mhz/regression/run_*/tests.xml
         - examples/p4_hbm/tests/regression/run_*/tests.xml
         - examples/p4_hbm/tests.smartnic_322mhz/regression/run_*/tests.xml
-        - examples/p4_example/tests/regression/run_*/tests.xml
+        - examples/p4_and_verilog/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []
@@ -121,11 +121,11 @@ sim_platform:
   except:
       - schedules
 
-build_p4_example:
+build_p4_and_verilog:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_example
+    SN_HW_APP_NAME: p4_and_verilog
 
 build_p2p:
   extends: .bitfile
@@ -195,13 +195,13 @@ build_vanilla_ons:
         hwapi.env
   timeout: 30m
 
-hwapi_p4_example:
+hwapi_p4_and_verilog:
   extends: .hwapi
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_example
+    SN_HW_APP_NAME: p4_and_verilog
   needs:
-    - build_p4_example
+    - build_p4_and_verilog
 
 hwapi_p2p:
   extends: .hwapi
@@ -245,13 +245,13 @@ hwapi_p4_hbm:
       when: manual
       allow_failure: true
 
-fw_p4_example:
+fw_p4_and_verilog:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_example
-    SN_HW_API_JOB: hwapi_p4_example
+    SN_HW_APP_NAME: p4_and_verilog
+    SN_HW_API_JOB: hwapi_p4_and_verilog
   needs:
-    - hwapi_p4_example
+    - hwapi_p4_and_verilog
 
 fw_p4_only:
   extends: .trigger_fw
