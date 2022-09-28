@@ -391,7 +391,7 @@ module smartnic_322mhz_app
     // -------------------------------------------------------------------------------------------------------
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
-    p4_example p4_example_0
+    p4_and_verilog p4_and_verilog_0
     (
         .core_clk      ( core_clk ),
         .core_rstn     ( core_rstn ),

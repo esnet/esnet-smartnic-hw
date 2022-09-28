@@ -17,10 +17,10 @@
 
 `timescale 1ns/1ps
 
-import p4_example_pkg::*;
+import p4_and_verilog_pkg::*;
 import axi4s_pkg::*;
 
-module p4_example #(
+module p4_and_verilog #(
 ) (
    input logic        core_clk,
    input logic        core_rstn,
@@ -39,21 +39,21 @@ module p4_example #(
    //  Register map block and decoder instantiations
    // ----------------------------------------------------------------
 
-   axi4l_intf  axil_to_p4_example ();
+   axi4l_intf  axil_to_p4_and_verilog ();
    
-   p4_example_reg_intf  p4_example_regs();
+   p4_and_verilog_reg_intf  p4_and_verilog_regs();
 
-   // p4_example register decoder
-   p4_example_decoder p4_example_decoder (
+   // p4_and_verilog register decoder
+   p4_and_verilog_decoder p4_and_verilog_decoder (
       .axil_if           (axil_if),					  
-      .p4_example_axil_if   (axil_to_p4_example)
+      .p4_and_verilog_axil_if   (axil_to_p4_and_verilog)
    );
    
-   // p4_example register block
-   p4_example_reg_blk p4_example_reg_blk 
+   // p4_and_verilog register block
+   p4_and_verilog_reg_blk p4_and_verilog_reg_blk 
    (
-    .axil_if    (axil_to_p4_example),
-    .reg_blk_if (p4_example_regs)                 
+    .axil_if    (axil_to_p4_and_verilog),
+    .reg_blk_if (p4_and_verilog_regs)                 
    );
 
 
@@ -63,7 +63,7 @@ module p4_example #(
 /*   
    assign axis_core_to_switch.aclk   = axis_switch_to_core.aclk;
    assign axis_core_to_switch.aresetn= axis_switch_to_core.aresetn;
-   assign axis_core_to_switch.tvalid = axis_switch_to_core.tvalid && !p4_example_regs.tpause;
+   assign axis_core_to_switch.tvalid = axis_switch_to_core.tvalid && !p4_and_verilog_regs.tpause;
    assign axis_core_to_switch.tdata  = axis_switch_to_core.tdata;
    assign axis_core_to_switch.tkeep  = axis_switch_to_core.tkeep;
    assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
@@ -71,7 +71,7 @@ module p4_example #(
    assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
    assign axis_core_to_switch.tuser  = axis_switch_to_core.tuser;
 
-   assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p4_example_regs.tpause;
+   assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p4_and_verilog_regs.tpause;
 */
 
    assign axis_to_host_0.aclk   = axis_from_host_0.aclk;
@@ -137,8 +137,8 @@ module p4_example #(
 
 
 
-   // --- sdnet_0 instance (p4_example) ---
-   sdnet_0 sdnet_0_p4_example
+   // --- sdnet_0 instance (p4_and_verilog) ---
+   sdnet_0 sdnet_0_p4_and_verilog
    (
     // Clocks & Resets
     .s_axis_aclk             (core_clk),
@@ -191,4 +191,4 @@ module p4_example #(
     assign axis_core_to_switch.aclk = core_clk;
     assign axis_core_to_switch.aresetn = core_rstn;
 
-endmodule: p4_example
+endmodule: p4_and_verilog

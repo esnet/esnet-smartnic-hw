@@ -14,7 +14,7 @@ include $(IP_ROOT)/config.mk
 VITISNETP4_IP_NAME = sdnet_0
 VITISNETP4_IP_DIR = .
 
-P4_FILE = $(abspath $(IP_ROOT)/p4/p4_example.p4)
+P4_FILE = $(abspath $(IP_ROOT)/p4/p4_and_verilog.p4)
 P4_OPTS = {CONFIG.PKT_RATE 150}
 
 # ----------------------------------------------------

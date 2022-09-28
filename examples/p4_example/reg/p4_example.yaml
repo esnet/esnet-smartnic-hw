@@ -1,6 +1,6 @@
-name: p4_example
+name: p4_and_verilog
 info: |
-  p4_example is the top level module for the p4 application core used on the esnet smart nic platform.
+  p4_and_verilog is the top level module for the p4 application core used on the esnet smart nic platform.
 
 regs:
   - default:

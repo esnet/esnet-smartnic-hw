@@ -30,7 +30,7 @@ module tb;
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_from_adpt ();
    
     // DUT instance
-    p4_example DUT(
+    p4_and_verilog DUT(
         .core_clk            ( clk ),
         .core_rstn           ( rstn ),
         .timestamp           ( timestamp ),

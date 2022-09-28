@@ -66,7 +66,7 @@ class tb_env extends std_verif_pkg::base;
     axi4l_reg_agent #() sdnet_reg_agent;
 
     // Register agents
-    p4_example_reg_agent p4_example_reg_agent;
+    p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
 
     // Pointer to SDNet driver
     protected chandle _drv;
@@ -91,7 +91,7 @@ class tb_env extends std_verif_pkg::base;
         axis_to_adpt_monitor = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
         sdnet_reg_agent      = new("axi4l_reg_agent");
-        p4_example_reg_agent     = new("p4_example_reg_agent", reg_agent, 'h0000);
+        p4_and_verilog_reg_agent     = new("p4_and_verilog_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
 

@@ -14,7 +14,7 @@
 //  This notice including this sentence must appear on any copies of this
 //  computer software.
 // =============================================================================
-package p4_example_pkg;
+package p4_and_verilog_pkg;
     // --------------------------------------------------------------
     // Imports
     // --------------------------------------------------------------
@@ -32,4 +32,4 @@ package p4_example_pkg;
     // User metadata
     typedef USER_META_DATA_T user_metadata_t;
 
-endpackage : p4_example_pkg
+endpackage : p4_and_verilog_pkg

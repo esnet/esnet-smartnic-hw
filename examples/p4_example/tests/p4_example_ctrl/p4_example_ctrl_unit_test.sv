@@ -5,15 +5,15 @@
 //===================================
 `define SVUNIT_TIMEOUT 100us
 
-module p4_example_ctrl_unit_test;
+module p4_and_verilog_ctrl_unit_test;
 
-    string name = "p4_example_ctrl_ut";
+    string name = "p4_and_verilog_ctrl_ut";
     svunit_pkg::svunit_testcase svunit_ut;
 
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common p4_example
+    // This test suite references the common p4_and_verilog
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -84,26 +84,26 @@ module p4_example_ctrl_unit_test;
     //===================================
     `SVUNIT_TESTS_BEGIN
 
-    // Verify expected p4_example status register value
+    // Verify expected p4_and_verilog status register value
     `SVTEST(check_status)
         bit error;
         string msg;
 
-        // Check p4_example status register
-        env.p4_example_reg_agent.check_status(error, msg);
+        // Check p4_and_verilog status register
+        env.p4_and_verilog_reg_agent.check_status(error, msg);
         `FAIL_IF_LOG(
             error == 1,
             msg
         );
     `SVTEST_END
 
-    // Test read access to p4_example.status register
-    `SVTEST(read_p4_example_status)
+    // Test read access to p4_and_verilog.status register
+    `SVTEST(read_p4_and_verilog_status)
         logic [31:0] got_data;
 
-        // Read p4_example status register
-        env.p4_example_reg_agent.read_status(got_data);
-        `FAIL_UNLESS(got_data == p4_example_reg_pkg::INIT_STATUS);
+        // Read p4_and_verilog status register
+        env.p4_and_verilog_reg_agent.read_status(got_data);
+        `FAIL_UNLESS(got_data == p4_and_verilog_reg_pkg::INIT_STATUS);
     `SVTEST_END
       
     `SVUNIT_TESTS_END

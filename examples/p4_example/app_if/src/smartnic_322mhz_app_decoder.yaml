@@ -1,11 +1,11 @@
 name: smartnic_322mhz_app
 
 decoders:
-  p4_example_decoder: &p4_example_decoder
-    !include ../examples/p4_example/reg/p4_example_decoder.yaml
+  p4_and_verilog_decoder: &p4_and_verilog_decoder
+    !include ../examples/p4_and_verilog/reg/p4_and_verilog_decoder.yaml
 
 interfaces:
-  - decoder: *p4_example_decoder
+  - decoder: *p4_and_verilog_decoder
     address: 0x00000
     width: 18
-    name: p4_example
+    name: p4_and_verilog

@@ -24,7 +24,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) p4_example_tb.glbl p4_example_tb.tb
+TOP = $(SVUNIT_TOP) p4_and_verilog_tb.glbl p4_and_verilog_tb.tb
 
 # ----------------------------------------------------
 # Sources
