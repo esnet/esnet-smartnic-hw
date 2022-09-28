@@ -2,7 +2,7 @@ name: p4_example
 
 blocks:
   p4_example: &p4_example
-    !include ../examples/unsupported/p4_example/reg/p4_example.yaml
+    !include ../examples/p4_example/reg/p4_example.yaml
 
 interfaces:
   - block: *p4_example
