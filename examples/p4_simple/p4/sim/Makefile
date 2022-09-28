@@ -9,7 +9,7 @@
 # Note that the build target creates a .json file (used by the P4 behavioral simulator)
 # in the same directory as the P4 source file, which may be different from the Makefile
 # directory.
-P4_SOURCE = ../p4_simple.p4
+P4_SOURCE = ../p4_only.p4
 P4_OBJECT = $(P4_SOURCE:.p4=.json)
 
 # JSON object file as seen from $(P4BM_DIR)

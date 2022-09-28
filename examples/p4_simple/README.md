@@ -1,6 +1,6 @@
-# Example Design: p4_simple
+# Example Design: p4_only
 
-The p4_simple example design provides the P4 source code and a behavioural simulation testcase for a simple
+The p4_only example design provides the P4 source code and a behavioural simulation testcase for a simple
 P4 application core.
 
 This example follows a pure P4 design flow and does NOT include any custom verilog hardware.  As such,
@@ -10,7 +10,7 @@ the user only provides the working P4 program file to build the custom smartnic 
 
 ## Functional Specification
 
-The p4_simple design implements a simple table-based Layer-2 packet switch.  It uses a single LPM lookup
+The p4_only design implements a simple table-based Layer-2 packet switch.  It uses a single LPM lookup
 table that takes the Ethernet Destination MAC Address field as the key.
 
 When the lookup matches, the table returns the programmed destination port for the specified packet flow.
@@ -41,7 +41,7 @@ Refer to steps 1-3 in the `Getting Started` section of the esnet-smartnic-hw/REA
 
 ### Simulating the P4 program
 
-Refer to instructions in the esnet-smartnic-hw/examples/p4_simple/p4/sim/README.md file
+Refer to instructions in the esnet-smartnic-hw/examples/p4_only/p4/sim/README.md file
 
 
 ### Building the SmartNIC hardware design

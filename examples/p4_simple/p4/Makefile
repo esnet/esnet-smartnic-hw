@@ -1,2 +1,2 @@
 compile :
-	p4c-vitisnet p4_simple.p4 -o p4_simple.json
+	p4c-vitisnet p4_only.p4 -o p4_only.json

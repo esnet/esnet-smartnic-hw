@@ -59,9 +59,9 @@ output results of a testcase.  This expected output can be used for
 automated regression testing.
 
 
-## Testcases: p4_simple
+## Testcases: p4_only
 
-`test-fwd-p0` - The p4_simple design includes a single example testcase called
+`test-fwd-p0` - The p4_only design includes a single example testcase called
 test-fwd-p0.  This testcase programs a small number of table entries that
 forward the specified packet flows to destination port 0.  The input
 stimulus includes a single packet on each flow to validate that all packets
