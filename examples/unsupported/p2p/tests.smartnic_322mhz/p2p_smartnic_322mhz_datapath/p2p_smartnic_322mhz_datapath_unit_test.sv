@@ -30,7 +30,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //=================================== 
-    `include "../../../../../../src/smartnic_322mhz/tests/common/tasks.svh"       
+    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"       
 
     //===================================
     // Connect AXI-S sample interface
@@ -77,14 +77,14 @@ module p2p_smartnic_322mhz_datapath_unit_test;
     //===================================
     task setup();
         // default variable configuration
-         in_pcap[0] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
-        out_pcap[0] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
-         in_pcap[1] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
-        out_pcap[1] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
-         in_pcap[2] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
-        out_pcap[2] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
-         in_pcap[3] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
-        out_pcap[3] = "../../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
+         in_pcap[0] = "../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
+        out_pcap[0] = "../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
+         in_pcap[1] = "../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
+        out_pcap[1] = "../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
+         in_pcap[2] = "../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
+        out_pcap[2] = "../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
+         in_pcap[3] = "../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
+        out_pcap[3] = "../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
 
         out_port_map = {2'h0, 2'h2, 2'h3, 2'h1};
         pkt_len      = {0, 0, 0, 0};  

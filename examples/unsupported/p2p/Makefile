@@ -1,7 +1,7 @@
 #------- Mandatory variables -------
 
 # SMARTNIC_DIR must be set to the pathname of smartnic root directory.
-SMARTNIC_DIR := ../../..
+SMARTNIC_DIR := ../..
 
 #------- Optional variables -------
 
