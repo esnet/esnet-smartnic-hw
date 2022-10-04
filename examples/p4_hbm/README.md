@@ -21,6 +21,8 @@ and the packet will be forwarded as specified by its input metadata.
 
 Packets with invalid and errored Ethernet headers are dropped.
 
+
+
 ## Development Flow
 
 The sections below direct the user to:
@@ -32,20 +34,20 @@ The sections below direct the user to:
 
 ### Installing the SmartNIC Repositories
 
-Refer to steps 1-3 in the `Getting Started` section of the esnet-smartnic-hw/README.md file
-(https://github.com/esnet/esnet-smartnic-hw#readme).
+Refer to the `Getting Started` section of the esnet-smartnic-hw/README.md file:
+https://github.com/esnet/esnet-smartnic-hw#readme
 
 
 ### Simulating the P4 program
 
-Refer to instructions in the esnet-smartnic-hw/examples/p4_hbm/p4/sim/README.md file
-(https://github.com/esnet/esnet-smartnic-hw/examples/p4_hbm/p4/sim#readme).
+Refer to instructions in the `esnet-smartnic-hw/examples/p4_only/p4/sim/README.md` file.
 
 
 ### Building the SmartNIC hardware design
 
-Refer to step 4 in the `Getting Started` section of the esnet-smartnic-hw/README.md file
-(https://github.com/esnet/esnet-smartnic-hw#readme).
+Refer to the `Getting Started` section of the esnet-smartnic-hw/README.md file:
+https://github.com/esnet/esnet-smartnic-hw#readme
+
 
 
 
