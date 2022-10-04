@@ -1,8 +1,7 @@
-# Example Design: p4_hbm
+# Example Design: p4_only
 
-The p4_hbm example design provides the P4 source code and a behavioural simulation testcase for a
-P4 application core that leverages the integrated HBM (high-bandwidth memory) to implement a large (1M)
-IPv4/IPv6 filter.
+The p4_only example design provides the P4 source code and a behavioural simulation testcase for a simple
+P4 application core.
 
 This example follows a pure P4 design flow and does NOT include any custom verilog hardware.  As such,
 the user only provides the working P4 program file to build the custom smartnic hardware.
@@ -11,13 +10,15 @@ the user only provides the working P4 program file to build the custom smartnic 
 
 ## Functional Specification
 
-The p4_hbm design implements a simple table-based IPv4/IPv6 dest address filter.  It uses a single exact-match
-table that takes the IP dest address (both v4 and v6 supported) as a key. The filter table is implemented in
-HBM and can store up to 1M entries.
+The p4_only design implements a simple table-based Layer-2 packet switch.  It uses a single LPM lookup
+table that takes the Ethernet Destination MAC Address field as the key.
 
-The table can be configured to either DROP packets that match in the filter table, or specify a FORWARD rule (selecting
-a destination port). The default action (for packets that don't have an entry in the table, or non-IP packets) is to take no action,
-and the packet will be forwarded as specified by its input metadata.
+When the lookup matches, the table returns the programmed destination port for the specified packet flow.
+The returned destination port is then written into the output metadata (dest_port field), which is used
+by the smartnic hardware for packet forwarding.
+
+When the lookup misses, the output metadata remains unchanged and the packet is forwarded to the destination
+port that was specified in the packet's input metadata (dest_port field).
 
 Packets with invalid and errored Ethernet headers are dropped.
 
