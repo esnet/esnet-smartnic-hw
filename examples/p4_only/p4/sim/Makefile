@@ -19,6 +19,7 @@ P4_OBJECT_TEST = ../$(P4_OBJECT)
 P4BM_DIR = test-fwd-p0
 
 # Testcase directory list to use for p4bm simulation
+# P4BM_DIRS = test-case1 test-case2 test-case3
 P4BM_DIRS = test-fwd-p0
 
 # Files within each testcase directory, as seen from within $(P4BM_DIR)

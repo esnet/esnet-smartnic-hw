@@ -1,15 +1,24 @@
 # P4 Behavioural Simulation
 
+## Makefile
+
 The execution of P4 behavioural simulations is driven by the Makefile
 in the p4/sim/ directory.
 
 This Makefile includes the variable assignments that specify how to run
-a p4 behavioural simulation, as well as the list of testcases that should
-be included in a full simulation run.
+a p4 behavioural simulation, as well as the name of the p4 file and list
+of testcases that should be included in a full simulation run.
 
 Each testcase is captured in a separate subdirectory, which contains the
 input and output files for the specified test.  The testcase subdirectories
 follow the naming pattern of `test-<NAME>`.
+
+Prior to running a simulation, the user should update the Makefile with the
+following variable assignments (all other variable assignments can remain
+unchanged):
+
+     P4_SOURCE = <pathname of p4 source	file>
+     P4BM_DIRS = <testcase subdirectory	list>
 
 The Makefile includes execution targets to run (or clean) a single testcase
 simulation, or simulation of the full testcase suite.
@@ -36,13 +45,13 @@ To clean all simulation output products from the p4 directory, type:
 The input stimulus file set for each testcase includes three files:
 
 `runsim.txt` - Command script to set table entries and initiate input
-stimulus. Commands and syntax follow the Xilinx p4bm-sdnet-cli.
+stimulus. Commands and syntax follow the Xilinx p4bm-vitisnet-cli.
 
 `packets_in.pcap` - PCAP file containing the input packet stream.
 
 `packets_in.meta` - Input packet metadata.  Each line corresponds
 to a packet in the input PCAP file (in sequence).  The syntax of the metadata
-is described in the Xilinx SDnet documentation.  Note: Each metadata record
+is described in the Xilinx VitisnetP4 documentation.  Note: Each metadata record
 must be terminated by a semicolon (;).
 
 

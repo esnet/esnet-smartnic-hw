@@ -129,7 +129,6 @@ src/
 ```
 
 
-
 ## Getting Started 
 
 ### Installing the SmartNIC Hardware Design Repository
@@ -161,20 +160,20 @@ The following steps guide a new user through the installation of the SmartNIC Ha
 Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option, and configure the runtime
    environment by executing the settings64.sh script located in the Vivado installation directory:
    
-       > source /opt/Xilinx/Vivado/2021.2/settings64.sh
+       > source /opt/Xilinx/Vivado/2022.1/settings64.sh
 
-   where the Vivado installation directory is located at /opt/Xilinx/Vivado/2021.2/ in this example.
+   where the Vivado installation directory is located at /opt/Xilinx/Vivado/2022.1/ in this example.
 
 
 ### Building the SmartNIC p4_only Example Design
 
-Build the `p4_only` example design by executing the p4_only application Makefile.  From the
-esnet-smartnic-hw directory:
+Build the `p4_only` example design by executing the p4_only application Makefile.
+From the esnet-smartnic-hw directory:
 
        > cd examples/p4_only
        > make
 
-   This step creates an artifact zipfile with the default pathname:
+   Upon completion, the above step creates an artifact zipfile with the default pathname:
    `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
 
    This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
@@ -182,7 +181,7 @@ esnet-smartnic-hw directory:
    and any wireshark .lua files.
 
    For more details about the `p4_only` design, as well as simulating the P4 program,  refer to
-   examples/p4_only/README.md.
+   `examples/p4_only/README.md`.
 
 
 ### Building a New P4 Application
@@ -196,35 +195,36 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 
        > git submodule add https://github.com/esnet/esnet-smartnic-hw.git
 
-
 2. Initialize all submodules within the esnet-smartnic-hw/ design directory:
 
        > cd esnet-smartnic-hw
        > git submodule update --init --recursive
 
+3. Install Vivado and configure the runtime environment (as described above).
 
-3. Install Vivado and configure the runtime environment, as described above.
+4. Return  to the local application design directory and then copy the example SmartNIC application Makefile and p4/ sub-directory into the local application design directory:
 
-
-4. Copy the example SmartNIC application Makefile into the local application design directory (and return
-   to the local application design directory):
-
-       > cp examples/p4_only/Makefile ../
        > cd ../
+       > cp esnet-smartnic-hw/examples/p4_only/Makefile ./
+       > cp -r esnet-smartnic-hw/examples/p4_only/p4 ./
 
+5. Using a preferred editor, edit the copied Makefile to update the SMARTNIC_DIR environment variable assignment as follows:
 
-5. Using a preferred editor, edit the copied Makefile to update the SMARTNIC_DIR environment variable assignment accordingly (to locate the SmartNIC design directory within the application design directory):
-
+       #SMARTNIC_DIR := ../..
        SMARTNIC_DIR := $(CURDIR)/esnet-smartnic-hw
 
+6. Copy the application p4 file to the following location and filename:
 
-6. Build the design by executing the copied application Makefile:
+       > cp <p4_filename> p4/`basename $PWD`.p4
+
+     Note: By default, the SmartNIC scripts take the basename of the application design directory to be the name of the application, as well as its associated filenames.
+
+7. Build the design by executing the copied application Makefile:
 
        > make
 
+8. To simulate the P4 program, refer to the readme file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
 
-7. To simulate the P4 program, refer to the README.md file provided in the esnet-smartnic-hw/examples/p4_only/
-   directory.
 
 
 
@@ -232,7 +232,7 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 
 The P4 processing core of the SmartNIC platform is implemented with the AMD (Xilinx) VitisNetP4 IP core.
 In order to meet the requirements of the VitisNetP4 IP core and the SmartNIC platform, a new P4 program should
-consider the following guidelines: 
+consider the following guidelines.
 
 
 ### AMD (Xilinx) P4 Architecture:
@@ -256,7 +256,7 @@ The P4 program **MUST** include the following AMD (Xilinx) VitisNetP4 include fi
 
 These files capture built-in constructs and the standard definitions for the AMD (Xilinx) P4 architecture.
 They are located in the Vivado installation directory at:
-/opt/Xilinx/Vivado/2021.2/data/ip/xilinx/vitis_net_p4_v1_0/include/p4/
+/opt/Xilinx/Vivado/2022.1/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/
 
 
 ### Interfaces:
@@ -322,8 +322,6 @@ The following reference documents can be accessed from the AMD (Xilinx) Vitis Ne
 - *Vitis Networking P4 Getting Started Guide, UG1373 (v2021.2 Early Access) January 4, 2022.*
 
 Users may also be interested in the information at https://p4.org/.
-
-
 
 
 # Known Issues
