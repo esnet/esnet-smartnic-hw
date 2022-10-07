@@ -5,7 +5,7 @@ P4 application core that leverages the integrated HBM (high-bandwidth memory) to
 IPv4/IPv6 filter.
 
 This example follows a pure P4 design flow and does NOT include any custom verilog hardware.  As such,
-the user only provides the working P4 program file to build the custom smartnic hardware.
+the user only provides the working P4 program file to build the custom SmartNIC hardware.
 
 
 
@@ -29,12 +29,12 @@ The sections below direct the user to:
 
 1. Install the SmartNIC platform design repositories
 2. Execute a P4 behavioural simulation (to verify P4 program correctness ahead of building hardware).
-3. Build the P4-based custom smartnic hardware.
+3. Build the P4-based custom SmartNIC hardware.
 
 
 ### Installing the SmartNIC Repositories
 
-Refer to the `Getting Started` section of the esnet-smartnic-hw/README.md file:
+Refer to the `Getting Started` section of the `esnet-smartnic-hw/README.md` file:
 https://github.com/esnet/esnet-smartnic-hw#readme
 
 
@@ -45,10 +45,8 @@ Refer to instructions in the `esnet-smartnic-hw/examples/p4_only/p4/sim/README.m
 
 ### Building the SmartNIC hardware design
 
-Refer to the `Getting Started` section of the esnet-smartnic-hw/README.md file:
+Refer to the `Getting Started` section of the `esnet-smartnic-hw/README.md` file:
 https://github.com/esnet/esnet-smartnic-hw#readme
-
-
 
 
 **NOTE: See lower level README files for more details.**

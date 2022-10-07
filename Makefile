@@ -44,6 +44,7 @@ package : | $(ARTIFACTS_BUILD_DIR)
 
 clean_build :
 	$(MAKE) -C $(APP_ROOT)/app_if clean
+	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/src/p4_app/xilinx_ip clean
 	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build clean
 	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build BUILD_NAME=$(BUILD_NAME)
 
