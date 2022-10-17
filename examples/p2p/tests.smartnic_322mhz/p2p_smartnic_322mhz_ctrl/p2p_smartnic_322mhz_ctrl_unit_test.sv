@@ -50,7 +50,7 @@ module p2p_smartnic_322mhz_ctrl_unit_test;
         p2p_reg_blk_agent = new("p2p_reg_blk", env.AXIL_APP_OFFSET);
         p2p_reg_blk_agent.reg_agent = env.reg_agent;
 
-        sdnet_reg_blk_agent = new("sdnet_reg_blk", env.AXIL_SDNET_OFFSET);
+        sdnet_reg_blk_agent = new("sdnet_reg_blk", env.AXIL_VITISNET_OFFSET);
         sdnet_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 
