@@ -84,8 +84,8 @@ module p4_app_datapath_unit_test;
         // Issue reset (both datapath and management domains)                                                                                                                                                   
         reset();
 
-        // Write hdr_length register to enable split-join logic.
-        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configure hdr slice to 64B.
+        // Write hdr_length register to disable split-join logic.
+        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(0);  // configure hdr slice to 0B.
 
         // Initialize SDNet tables
         env.sdnet_init();
