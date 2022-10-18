@@ -526,6 +526,8 @@ module smartnic_322mhz
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_app ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_app_to_core ();
 
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_drop ();
+
    axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
                  .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_to_app ();
    axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
@@ -778,11 +780,23 @@ module smartnic_322mhz
      .BIGENDIAN(0)
    ) axi4s_split_join_0 (
      .axi4s_in      (axis_core_to_app),
-     .axi4s_out     (axis_app_to_core),
+     .axi4s_out     (axis_to_drop),
      .axi4s_hdr_out (axis_hdr_to_app),
      .axi4s_hdr_in  (axis_hdr_from_app),
      .axil_if       (axil_to_split_join),
      .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
+   );
+
+   // packet drop logic (drops zero-length packets when vitisnetp4 core is configured to emit dropped headers).
+   logic  drop_pkt;
+   assign drop_pkt = axis_to_drop.tvalid && axis_to_drop.sop && axis_to_drop.tlast &&
+                     axis_to_drop.tkeep == '0;
+
+   // axi4s header drop instantiation.
+   axi4s_drop axi4s_drop_0 (
+      .axi4s_in    (axis_to_drop),
+      .axi4s_out   (axis_app_to_core),
+      .drop_pkt    (drop_pkt)
    );
 
    axi4s_ila axi4s_ila_core_to_app  (.axis_in(axis_core_to_app));

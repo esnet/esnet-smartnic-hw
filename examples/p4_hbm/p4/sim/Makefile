@@ -46,8 +46,8 @@ P4BM_OUTPUT_SVH = run_pkt_test_incl.svh
 P4BM_OUTPUTS = $(P4BM_OUTPUT_META) $(P4BM_OUTPUT_PCAP) $(P4BM_OUTPUT_PCAP_TXT) $(P4BM_LOGFILE_PREFIX)_cli.txt $(P4BM_LOGFILE_PREFIX)_model.txt $(P4BM_OUTPUT_TXT)
 
 # Executable pathnames (particularly if they're not in $PATH)
-P4C_SDNET      = p4c-vitisnet
-RUN_P4BM_SDNET = run-p4bm-vitisnet
+P4C_VITISNET      = p4c-vitisnet
+RUN_P4BM_VITISNET = run-p4bm-vitisnet
 
 # ---------------------------------------------------------------------------
 # Targets
@@ -64,7 +64,7 @@ sim-all-svh: cleansim build
 sim: build
 # Make sure that $(P4BM_DIR)/$(P4BM_SCRIPT) exists (avoids issues if script is missing).
 	(cd $(P4BM_DIR) && wc $(P4BM_SCRIPT) > /dev/null)
-	(cd $(P4BM_DIR) && $(RUN_P4BM_SDNET) -l $(P4BM_LOGFILE_PREFIX) \
+	(cd $(P4BM_DIR) && $(RUN_P4BM_VITISNET) -l $(P4BM_LOGFILE_PREFIX) \
                                              -j $(P4_OBJECT_TEST) -s $(P4BM_SCRIPT) )
 
 test: sim
@@ -91,6 +91,6 @@ clean: cleansim-all
 .PHONY: test-all sim-all sim-all-svh sim test build sim-svh cleansim-all cleansim clean
 
 %.json: %.p4
-	$(P4C_SDNET) $< -o $@
+	$(P4C_VITISNET) $< -o $@
 
 

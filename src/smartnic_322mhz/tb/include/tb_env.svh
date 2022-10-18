@@ -28,7 +28,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
 
     // -- AXI-L
     localparam int AXIL_APP_OFFSET = 'h80000;
-    localparam int AXIL_SDNET_OFFSET = 'hC0000;
+    localparam int AXIL_VITISNET_OFFSET = 'hC0000;
 
     //===================================
     // Properties
@@ -241,7 +241,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
             input  bit [31:0] addr,
             output bit [31:0] data
         );
-        int _addr = AXIL_SDNET_OFFSET + addr;
+        int _addr = AXIL_VITISNET_OFFSET + addr;
         reg_agent.set_rd_timeout(128);
         reg_agent.read_reg(_addr, data);
     endtask
@@ -250,7 +250,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
             input  bit [31:0] addr,
             input  bit [31:0] data
         );
-        int _addr = AXIL_SDNET_OFFSET + addr;
+        int _addr = AXIL_VITISNET_OFFSET + addr;
         reg_agent.set_wr_timeout(128);
         reg_agent.write_reg(_addr, data);
     endtask
