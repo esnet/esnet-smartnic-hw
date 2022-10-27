@@ -17,7 +17,7 @@ regs:
   - name: hdr_length
     desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
     access: rw
-    init: 0x40
+    init: 0x0
 
   - name: port_config
     access: rw
