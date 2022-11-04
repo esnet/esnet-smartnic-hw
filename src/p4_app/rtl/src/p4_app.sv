@@ -116,16 +116,14 @@ module p4_app
       user_metadata_in.drop_reason       = 0;
       user_metadata_in.scratch           = 0;
 
-      user_metadata_in_valid = axis_switch_to_core.tvalid;
+      user_metadata_in_valid = axis_switch_to_core.tvalid && axis_switch_to_core.sop;
    end
 
    // --- metadata_out ---
    user_metadata_t user_metadata_out, user_metadata_out_latch;
    logic           user_metadata_out_valid;
 
-   always @(posedge core_clk) begin
-      if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
-   end
+   always @(posedge core_clk) if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
    
    assign axis_core_to_switch.tdest = user_metadata_out_valid ?
                                       user_metadata_out.egress_port[1:0] : user_metadata_out_latch.egress_port[1:0];

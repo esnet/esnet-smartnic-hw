@@ -7,10 +7,12 @@ import tb_pkg::*;
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_app_datapath_unit_test;
-
+module p4_app_datapath_unit_test
+#(
+    parameter int HDR_LENGTH = 0
+ );
     // Testcase name
-    string name = "p4_app_datapath_ut";
+    string name = $sformatf("p4_app_datapath_hdrlen_%0d_ut", HDR_LENGTH);
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -84,8 +86,8 @@ module p4_app_datapath_unit_test;
         // Issue reset (both datapath and management domains)                                                                                                                                                   
         reset();
 
-        // Write hdr_length register to disable split-join logic.
-        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(0);  // configure hdr slice to 0B.
+        // Write hdr_length register (hdr_length = 0B to disable split-join logic).
+        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
 
         // Initialize SDNet tables
         env.sdnet_init();
@@ -135,7 +137,7 @@ module p4_app_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
-    `include "../../../p4/sim/run_pkt_test_incl.svh"
+       `include "../../../p4/sim/run_pkt_test_incl.svh"
 
     `SVUNIT_TESTS_END
 
@@ -222,4 +224,36 @@ module p4_app_datapath_unit_test;
          if (VERBOSE) `INFO(msg);
      endtask
 
+endmodule
+
+
+
+// 'Boilerplate' unit test wrapper code
+//  Builds unit test for a specific axi4s_split_join configuration in a way
+//  that maintains SVUnit compatibility
+
+`define P4_APP_DATAPATH_UNIT_TEST(HDR_LENGTH)\
+  import svunit_pkg::svunit_testcase;\
+  svunit_testcase svunit_ut;\
+  p4_app_datapath_unit_test #(HDR_LENGTH) test();\
+  function void build();\
+    test.build();\
+    svunit_ut = test.svunit_ut;\
+  endfunction\
+  task run();\
+    test.run();\
+  endtask
+
+/*
+module p4_app_datapath_hdrlen_0_unit_test;
+`P4_APP_DATAPATH_UNIT_TEST(0)
+endmodule
+
+module p4_app_datapath_hdrlen_64_unit_test;
+`P4_APP_DATAPATH_UNIT_TEST(64)
+endmodule
+*/
+
+module p4_app_datapath_hdrlen_256_unit_test;
+`P4_APP_DATAPATH_UNIT_TEST(256)
 endmodule
