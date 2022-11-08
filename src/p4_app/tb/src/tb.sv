@@ -38,10 +38,10 @@ module tb;
         .timestamp           ( timestamp ),
         .axil_if             ( axil_if ),
         .axil_to_sdnet       ( axil_to_sdnet ),
-        .axis_switch_to_core ( axis_in_if ),
-        .axis_core_to_switch ( axis_out_if ),
-        .axis_to_host_0      ( axis_to_adpt ),
-        .axis_from_host_0    ( axis_from_adpt ),
+        .axis_from_switch_0  ( axis_in_if ),
+        .axis_to_switch_0    ( axis_out_if ),
+        .axis_to_switch_1    ( axis_to_adpt ),
+        .axis_from_switch_1  ( axis_from_adpt ),
         .axi_to_hbm          ( axi_to_hbm )
     );
 
