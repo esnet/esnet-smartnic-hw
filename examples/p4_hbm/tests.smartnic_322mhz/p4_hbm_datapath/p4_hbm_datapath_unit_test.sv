@@ -66,6 +66,15 @@ module p4_hbm_datapath_unit_test;
         // Initialize SDNet tables
         env.sdnet_init();
 
+        // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_CMAC_0_TDEST, 2'h3 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_CMAC_1_TDEST, 2'h3 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_HOST_0_TDEST, 2'h3 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_HOST_1_TDEST, 2'h3 );
+
+        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block.
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_CMAC_0_TDEST, 2'h0 );
+
         // Put AXI-S interfaces into quiescent state
         env.axis_driver[0].idle();
         env.axis_monitor[0].idle();
