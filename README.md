@@ -5,12 +5,12 @@ This repository contains the hardware design directory for the ESnet SmartNIC pl
 The ESnet SmartNIC Platform is based on the AMD (Xilinx) OpenNIC Shell, which provides
 an FPGA-based NIC shell with 100Gbps Ethernet ports, and runs on the AMD (Xilinx) Alveo family
 of hardware boards.  More information about the OpenNIC shell can be found at:
-https://github.com/Xilinx/open-nic-shell
+https://github.com/esnet/open-nic-shell
 
 The ESnet SmartNIC platform implements a P4-programmable packet processing core within the
 OpenNIC shell.  The P4 processor is implemented with the AMD (Xilinx) VitisNetP4 IP core.
 More information about the VitisNetP4 core is available at the AMD (Xilinx) Vitis Networking
-P4 Secure Site (once access priveleges are approved and granted).  Further questions can be
+P4 Secure Site (once access privileges are approved and granted).  Further questions can be
 directed to vitisnetp4@xilinx.com.
 
 The SmartNIC platform provides the necessary hardware datapath and control features
@@ -23,9 +23,18 @@ which is located in a companion github repository at:
 https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool suite.
-The current release supports development with Vivado version 2022.1.1.
+The current release supports development with Vivado version 2022.1.1,
+running on Ubuntu 20.04 LTS.
 
+The ESnet SmartNIC platform is made available in the hope that it will
+be useful to the networking community. Users should note that it is
+made available on an "as-is" basis, and should not expect any
+technical support or other assistance with building or using this
+software. For more information, please refer to the LICENSE.md file in
+each of the source code repositories.
 
+The developers of the ESnet SmartNIC platform can be reached by email
+at smartnic@es.net.
 
 ## Repository Structure and Dependencies
 
@@ -34,8 +43,10 @@ each maintained in their own git repository.
 
 The platform includes the following repositories:
 
-   - `OpenNIC shell` (https://github.com/Xilinx/open-nic-shell.git)
-     An FPGA-based NIC shell that runs on the AMD (Xilinx) Alveo family of hardware boards.  
+   - `OpenNIC shell` (https://github.com/esnet/open-nic-shell.git)
+     An FPGA-based NIC shell that runs on the AMD (Xilinx) Alveo
+     family of hardware boards.  This repository is a fork of a
+     Xilinx-provided repository (https://github.com/Xilinx/open-nic-shell.git).
 
    - `ESnet SmartNIC Hardware` (https://github.com/esnet/esnet-smartnic-hw.git)
      Hardware design directory for the ESnet SmartNIC platform.
@@ -47,7 +58,9 @@ The platform includes the following repositories:
      General-purpose components and infrastructure for a structured FPGA design methodology.     
 
    - `SVunit` (https://github.com/svunit/svunit.git)
-     An open-source framework for FPGA System Verilog verification.
+     An open-source framework for FPGA System Verilog
+     verification. SVunit is used by the SmartNIC platform, but is
+     neither maintained nor distributed by ESnet.
 
    - `ESnet Regio` (https://github.com/esnet/regio.git)
      Automation tools for the implementation of FPGA register map logic and software code.
@@ -79,6 +92,7 @@ esnet-smartnic-hw/
 ├── docs/
 ├── esnet-fpga-library/
 ├── examples/
+├── LICENSE.md
 ├── Makefile
 ├── makefile.esnet
 ├── open-nic-shell/
@@ -102,6 +116,9 @@ examples/
   by copying one of the provided example directories, or by modeling portions of the example
   directory structure.
 
+LICENSE.md
+  Contains the licensing terms and copyright notice for this repository.
+
 Makefile
   SmartNIC platform Makefile.  Used to build the FPGA bitfile for the target application,
   as well as generate all artifacts necessary for firmware integration on the hardware platform.
@@ -118,7 +135,8 @@ open-nic_shell/
 paths.mk
   Sets environment variables for standard pathnames.
 
-README.md - This README file.
+README.md
+  This README file.
 
 scripts/
   Contains SmartNIC platform scripts, for application configuration.
@@ -133,7 +151,9 @@ src/
 
 ### Installing the SmartNIC Hardware Design Repository
 
-The following steps guide a new user through the installation of the SmartNIC Hardware Design Repository.
+The following steps guide a new user through the installation of the
+SmartNIC Hardware Design Repository, beginning with a
+suitably-configured host running Ubuntu 20.04 LTS Linux.
 
 1. Install the esnet-smartnic-hw respository by creating a clone from github into a local directory:
 
@@ -256,7 +276,7 @@ The P4 program **MUST** include the following AMD (Xilinx) VitisNetP4 include fi
 
 These files capture built-in constructs and the standard definitions for the AMD (Xilinx) P4 architecture.
 They are located in the Vivado installation directory at:
-/opt/Xilinx/Vivado/2022.1/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/
+`/opt/Xilinx/Vivado/2022.1/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/`
 
 
 ### Interfaces:
