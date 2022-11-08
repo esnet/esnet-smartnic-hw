@@ -29,10 +29,10 @@ module p4_and_verilog #(
    axi4l_intf.peripheral axil_if,
    axi4l_intf.peripheral axil_to_sdnet,
 
-   axi4s_intf.tx axis_core_to_switch,
-   axi4s_intf.rx axis_switch_to_core,
-   axi4s_intf.tx axis_to_host_0,
-   axi4s_intf.rx axis_from_host_0   
+   axi4s_intf.tx axis_to_switch_0,
+   axi4s_intf.rx axis_from_switch_0,
+   axi4s_intf.tx axis_to_switch_1,
+   axi4s_intf.rx axis_from_switch_1
 );
 
    // ----------------------------------------------------------------
@@ -60,42 +60,28 @@ module p4_and_verilog #(
    // ----------------------------------------------------------------
    //  Datpath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
-/*   
-   assign axis_core_to_switch.aclk   = axis_switch_to_core.aclk;
-   assign axis_core_to_switch.aresetn= axis_switch_to_core.aresetn;
-   assign axis_core_to_switch.tvalid = axis_switch_to_core.tvalid && !p4_and_verilog_regs.tpause;
-   assign axis_core_to_switch.tdata  = axis_switch_to_core.tdata;
-   assign axis_core_to_switch.tkeep  = axis_switch_to_core.tkeep;
-   assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
-   assign axis_core_to_switch.tid    = axis_switch_to_core.tid;
-   assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
-   assign axis_core_to_switch.tuser  = axis_switch_to_core.tuser;
+   assign axis_to_switch_1.aclk   = axis_from_switch_1.aclk;
+   assign axis_to_switch_1.aresetn= axis_from_switch_1.aresetn;
+   assign axis_to_switch_1.tvalid = axis_from_switch_1.tvalid;
+   assign axis_to_switch_1.tdata  = axis_from_switch_1.tdata;
+   assign axis_to_switch_1.tkeep  = axis_from_switch_1.tkeep;
+   assign axis_to_switch_1.tlast  = axis_from_switch_1.tlast;
+   assign axis_to_switch_1.tid    = axis_from_switch_1.tid;
+   assign axis_to_switch_1.tdest  = axis_from_switch_1.tdest;
+   assign axis_to_switch_1.tuser  = axis_from_switch_1.tuser;
 
-   assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p4_and_verilog_regs.tpause;
-*/
-
-   assign axis_to_host_0.aclk   = axis_from_host_0.aclk;
-   assign axis_to_host_0.aresetn= axis_from_host_0.aresetn;
-   assign axis_to_host_0.tvalid = axis_from_host_0.tvalid;
-   assign axis_to_host_0.tdata  = axis_from_host_0.tdata;
-   assign axis_to_host_0.tkeep  = axis_from_host_0.tkeep;
-   assign axis_to_host_0.tlast  = axis_from_host_0.tlast;
-   assign axis_to_host_0.tid    = axis_from_host_0.tid;
-   assign axis_to_host_0.tdest  = axis_from_host_0.tdest;
-   assign axis_to_host_0.tuser  = axis_from_host_0.tuser;
-
-   assign axis_from_host_0.tready = axis_to_host_0.tready;
+   assign axis_from_switch_1.tready = axis_to_switch_1.tready;
 
 
    // ----------------------------------------------------------------
    // The SDnet block
    // ----------------------------------------------------------------
    // tuser mapping (from axi4s_pkg).
-   tuser_buffer_context_mode_t   axis_switch_to_core_tuser;
-   assign axis_switch_to_core_tuser = axis_switch_to_core.tuser;
+   tuser_buffer_context_mode_t   axis_from_switch_0_tuser;
+   assign axis_from_switch_0_tuser = axis_from_switch_0.tuser;
 
-   tuser_buffer_context_mode_t   axis_core_to_switch_tuser;
-   assign axis_core_to_switch.tuser = axis_core_to_switch_tuser;
+   tuser_buffer_context_mode_t   axis_to_switch_0_tuser;
+   assign axis_to_switch_0.tuser = axis_to_switch_0_tuser;
 
 
    // metadata type definitions (from xilinx_ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
@@ -105,9 +91,9 @@ module p4_and_verilog #(
    
    always_comb begin
       user_metadata_in.timestamp_ns      = timestamp;
-      user_metadata_in.pid               = axis_switch_to_core_tuser.wr_ptr;
-      user_metadata_in.ingress_port      = {'0, axis_switch_to_core.tid};
-      user_metadata_in.egress_port       = {'0, axis_switch_to_core.tid};
+      user_metadata_in.pid               = axis_from_switch_0_tuser.wr_ptr;
+      user_metadata_in.ingress_port      = {'0, axis_from_switch_0.tid};
+      user_metadata_in.egress_port       = {'0, axis_from_switch_0.tid};
       user_metadata_in.truncate_enable   = 0;
       user_metadata_in.truncate_length   = 0;
       user_metadata_in.rss_enable        = 0;
@@ -115,24 +101,22 @@ module p4_and_verilog #(
       user_metadata_in.drop_reason       = 0;
       user_metadata_in.scratch           = 0;
 
-      user_metadata_in_valid = axis_switch_to_core.tvalid;
+      user_metadata_in_valid = axis_from_switch_0.tvalid && axis_from_switch_0.sop;
    end
 
    // --- metadata_out ---
    user_metadata_t user_metadata_out, user_metadata_out_latch;
    logic           user_metadata_out_valid;
 
-   always @(posedge core_clk) begin
-      if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
-   end
+   always @(posedge core_clk) if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
    
-   assign axis_core_to_switch.tdest = user_metadata_out_valid ?
+   assign axis_to_switch_0.tdest = user_metadata_out_valid ?
                                       user_metadata_out.egress_port[1:0] : user_metadata_out_latch.egress_port[1:0];
 
-   assign axis_core_to_switch_tuser.wr_ptr = user_metadata_out_valid ?
+   assign axis_to_switch_0_tuser.wr_ptr = user_metadata_out_valid ?
                                              user_metadata_out.pid[15:0] : user_metadata_out_latch.pid[15:0];
 
-   assign axis_core_to_switch_tuser.hdr_tlast = '0;
+   assign axis_to_switch_0_tuser.hdr_tlast = '0;
 
 
 
@@ -174,21 +158,21 @@ module p4_and_verilog #(
     .s_axi_rresp   (axil_to_sdnet.rresp),
     
     // AXI Master port
-    .m_axis_tdata  (axis_core_to_switch.tdata),
-    .m_axis_tkeep  (axis_core_to_switch.tkeep),
-    .m_axis_tvalid (axis_core_to_switch.tvalid),
-    .m_axis_tlast  (axis_core_to_switch.tlast),
-    .m_axis_tready (axis_core_to_switch.tready),
+    .m_axis_tdata  (axis_to_switch_0.tdata),
+    .m_axis_tkeep  (axis_to_switch_0.tkeep),
+    .m_axis_tvalid (axis_to_switch_0.tvalid),
+    .m_axis_tlast  (axis_to_switch_0.tlast),
+    .m_axis_tready (axis_to_switch_0.tready),
 
     // AXI Slave port
-    .s_axis_tdata  (axis_switch_to_core.tdata),
-    .s_axis_tkeep  (axis_switch_to_core.tkeep),
-    .s_axis_tvalid (axis_switch_to_core.tvalid),
-    .s_axis_tlast  (axis_switch_to_core.tlast),
-    .s_axis_tready (axis_switch_to_core.tready)
+    .s_axis_tdata  (axis_from_switch_0.tdata),
+    .s_axis_tkeep  (axis_from_switch_0.tkeep),
+    .s_axis_tvalid (axis_from_switch_0.tvalid),
+    .s_axis_tlast  (axis_from_switch_0.tlast),
+    .s_axis_tready (axis_from_switch_0.tready)
     );
 
-    assign axis_core_to_switch.aclk = core_clk;
-    assign axis_core_to_switch.aresetn = core_rstn;
+    assign axis_to_switch_0.aclk = core_clk;
+    assign axis_to_switch_0.aresetn = core_rstn;
 
 endmodule: p4_and_verilog
