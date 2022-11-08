@@ -95,28 +95,6 @@ module smartnic_322mhz_ctrl_unit_test;
         `FAIL_UNLESS(got_data == exp_data);
     `SVTEST_END
 
-    // Test read/write access to smartnic_322mhz.port_config register
-    `SVTEST(set_port_config)
-        smartnic_322mhz_reg_pkg::reg_port_config_t set_config;
-        smartnic_322mhz_reg_pkg::reg_port_config_t get_config;
-
-        set_config.input_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_PORT0;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_USE_META;
-
-        // Read port_config register and confirm init value
-        env.smartnic_322mhz_reg_blk_agent.read_port_config(get_config);
-
-        `FAIL_UNLESS(get_config == smartnic_322mhz_reg_pkg::INIT_PORT_CONFIG);
-
-        // Write new config to port_config register
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Read back...
-        env.smartnic_322mhz_reg_blk_agent.read_port_config(get_config);
-
-        `FAIL_UNLESS(get_config == set_config);
-    `SVTEST_END
-
     // Test div_count and burst_count access.
     `SVTEST(div_count_burst_count)
         logic [3:0][7:0] exp_data;
