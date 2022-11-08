@@ -19,34 +19,282 @@ regs:
     access: rw
     init: 0x0
 
-  - name: port_config
+
+  # ----- Ingress port TID settings (identifies src port). -----
+  - name: igr_sw_cmac_0_tid
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tid' (src port) signal for the CMAC_0 interface to the ingress switch.
+          width: 2
+          init: 0
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: igr_sw_cmac_1_tid
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tid' (src port) signal for the CMAC_1 interface to the ingress switch.
+          width: 2
+          init: 1
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: igr_sw_host_0_tid
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tid' (src port) signal for the HOST_0 interface to the ingress switch.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: igr_sw_host_1_tid
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tid' (src port) signal for the HOST_1 interface to the ingress switch.
+          width: 2
+          init: 3
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+
+  # ----- Ingress switch input port TDEST settings (selects ingress switch output port). -----
+  - name: igr_sw_cmac_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the CMAC_0 interface.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : APP_0
+              1 : APP_1
+              2 : APP_BYPASS
+
+  - name: igr_sw_cmac_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the CMAC_1 interface.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : APP_0
+              1 : APP_1
+              2 : APP_BYPASS
+
+  - name: igr_sw_host_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the HOST_0 interface.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : APP_0
+              1 : APP_1
+              2 : APP_BYPASS
+
+  - name: igr_sw_host_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the HOST_1 interface.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : APP_0
+              1 : APP_1
+              2 : APP_BYPASS
+
+
+  # ----- Bypass TID-to-TDEST mapping registers (selects egress port for each source on the bypass path). -----
+  - name: bypass_cmac_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the CMAC_0 interface.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: bypass_cmac_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the CMAC_1 interface.
+          width: 2
+          init: 3
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: bypass_host_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the HOST_0 interface.
+          width: 2
+          init: 0
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: bypass_host_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the HOST_1 interface.
+          width: 2
+          init: 1
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: bypass_config
     access: rw
     fields:
-      - name: input_enable
-        width: 2
-        init : 3        
-        enum_hex:
-          0 : NONE
-          1 : PORT0
-          2 : PORT1
-          3 : BOTH
-      - name: output_enable
-        width: 2
-        init : 3 
-        enum_hex:
-          0 : PORT0
-          1 : PORT1
-          2 : C2H
-          3 : USE_META
-      - name: app_bypass
-        desc: App bypass enable register.  Set to 1 for traffic to bypass smartnic_app core.  Set to 0 to disable bypass.
-        width: 1
-        init : 0
-      - name: app_tpause
-        desc: App tpause test register.  Set to 1 to assert axi4s backpressure from smartnic_app to ingress switch.
+      - name: tpause
+        desc: tpause test register.  Set to 1 to assert axi4s backpressure from bypass path to ingress switch.
         width: 1
         init : 0
 
+
+  # ----- TDEST-to-TDEST remapping for pkts on the app_core APP_0 output interface. -----
+  - name: app_0_cmac_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_0.
+          width: 2
+          init: 0
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_0_cmac_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_1.
+          width: 2
+          init: 1
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_0_host_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_0.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_0_host_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
+          width: 2
+          init: 3
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+
+  # ----- TDEST-to-TDEST remapping for pkts on the app_core APP_1 output interface. -----
+  - name: app_1_cmac_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_0.
+          width: 2
+          init: 0
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_1_cmac_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_1.
+          width: 2
+          init: 1
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_1_host_0_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_0.
+          width: 2
+          init: 2
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+  - name: app_1_host_1_tdest
+    access : rw
+    fields:
+        - name: value
+          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
+          width: 2
+          init: 3
+          enum_hex:
+              0 : CMAC_0
+              1 : CMAC_1
+              2 : HOST_0
+              3 : HOST_1
+
+
+  # ----- open-nic-shell qdma shaper configuration registers. -----
   - name: div_count
     access : rw
     init   : 0x0000_007F
@@ -55,6 +303,8 @@ regs:
     access : rw
     init   : 0x0000_0061
 
+
+  # ----- Timestamp configuration and monitoring registers. -----
   - name: timestamp_incr
     desc   : Timestamp increment register.  Added to timestamp counter on each 343.75MHz core_clk tick. 32-bit value with a 4-bit integer component and a 28-bit fractional component. 0x2_E8BA2E9 represents 2.90909091 ns.
     width  : 32
@@ -89,9 +339,3 @@ regs:
     desc   : Timestamp read latch trigger.  Full 64-bit timestamp value is loaded atomically into timestamp latch when the rd_latch write event occurs.
     width  : 8
     access : wr_evt
-
-
-
-
-
-        
