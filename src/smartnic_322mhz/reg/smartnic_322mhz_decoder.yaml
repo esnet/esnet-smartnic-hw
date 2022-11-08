@@ -108,6 +108,11 @@ interfaces:
     name: probe_to_host_0
 
   - block: *axi4s_probe
+    address: 0x0c400
+    width: 10
+    name: drops_ovfl_to_host_0
+
+  - block: *axi4s_probe
     address: 0x0c800
     width: 10
     name: probe_to_host_1
