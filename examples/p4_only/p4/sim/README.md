@@ -17,8 +17,8 @@ Prior to running a simulation, the user should update the Makefile with the
 following variable assignments (all other variable assignments can remain
 unchanged):
 
-     P4_SOURCE = <pathname of p4 source	file>
-     P4BM_DIRS = <testcase subdirectory	list>
+     P4_SOURCE = <pathname of p4 source file>
+     P4BM_DIRS = <testcase subdirectory list>
 
 The Makefile includes execution targets to run (or clean) a single testcase
 simulation, or simulation of the full testcase suite.
