@@ -66,6 +66,18 @@ $(vanilla_artifact) : vanilla_bitfile package_vanilla
 # -------------------------------------------------------------------
 # These commands can be used selectively outside the CI environment
 # -------------------------------------------------------------------
+vivado_version_check :
+ifndef XILINX_VIVADO
+	$(error Vivado $(vivado_version) not configured)
+else
+ifneq ($(notdir $(XILINX_VIVADO)), $(vivado_version))
+	$(error Vivado $(vivado_version) not configured (found Vivado $(notdir $(XILINX_VIVADO))))
+else
+	@:
+endif
+endif
+
+.PHONY: vivado_version_check
 
 package_vanilla :
 	@echo "Packaging artifact from vanilla build"
@@ -106,32 +118,28 @@ package :
 	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.export_hwapi.0.zip esnet-smartnic-hwapi \
 	)
 
-project :
+project : vivado_version_check
 	@echo "Creating top level project with no compiles ( fast compile )"
 	( cd $(ONS_ROOT)/script && \
-          source /opt/Xilinx/Vivado/$(vivado_version)/settings64.sh && \
           vivado -mode batch -source build.tcl -tclargs -synth_ip 0 -impl 0 -sim 0  $(vivado_tclargs) \
         )
 
-project_ip :
+project_ip : vivado_version_check
 	@echo "Creating top level project with compiled IP ( medium fast compile )"
 	( cd $(ONS_ROOT)/script && \
-          source /opt/Xilinx/Vivado/$(vivado_version)/settings64.sh && \
 	  vivado -mode batch -source build.tcl -tclargs  -synth_ip 1 -impl 0 -sim 0 $(vivado_tclargs)) \
         )
 
-bitfile :
+bitfile : vivado_version_check
 	@echo "Creating top level project with bitfile ( slow compile )"
 	( cd $(ONS_ROOT)/script && \
-          source /opt/Xilinx/Vivado/$(vivado_version)/settings64.sh && \
 	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 $(vivado_tclargs) -rebuild 1 \
         )
 	@ test -e $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit || (echo ERROR: bitfile not produced. && false)
 
-vanilla_bitfile :
+vanilla_bitfile : vivado_version_check
 	@echo "Creating vanilla bitfile"
 	( cd $(ONS_ROOT)/script && \
-	  source /opt/Xilinx/Vivado/$(vivado_version)/settings64.sh && \
 	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 -rebuild 1 -board au280 -num_phys_func 2 -num_cmac_port 2 -num_queue 512  \
 	  -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -tag $(BUILD_NAME) \
         )
