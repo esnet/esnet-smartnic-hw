@@ -9,7 +9,7 @@ SMARTNIC_DIR := ../..
 # The following variables are optionally configured in this Makefile, or on the command line.
 # If NOT configured, each of these variables gets a default value (as specified below)
 
-# APP_NAME - Appliciation name. Used for default naming conventions below.
+# APP_NAME - Application name. Used for default naming conventions below.
 #export APP_NAME := $(notdir $(abspath $(CURDIR)))
 
 # P4_FILE - Full pathname of application p4 file.
