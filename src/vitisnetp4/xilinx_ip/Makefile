@@ -25,12 +25,14 @@ P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 IP_LIST = $(VITISNETP4_IP_NAME)
 
 SRC_FILES = \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/hw/simulation/vitis_net_p4_dpi_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_top_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_sync_fifos.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_header_sequence_identifier.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_header_field_extractor.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_error_check_module.sv \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_extern_wrapper.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_parser_engine.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_deparser_engine.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_action_engine.sv \
@@ -40,7 +42,7 @@ SRC_FILES = \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_match_action_engine.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_top.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME).sv \
-	$(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME)_wrapper.sv
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME)_wrapper.sv
 
 INC_DIRS = \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/hw/include
@@ -53,8 +55,11 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS =
-EXT_LIBS = cam_v2_3_0 \
-           vitis_net_p4_v1_1_0
+EXT_LIBS = cam_v2_4_0 \
+           vitis_net_p4_v1_2_0 \
+           unisims_ver \
+           unisims_macro \
+           xpm
 
 # ----------------------------------------------------
 # Defines
