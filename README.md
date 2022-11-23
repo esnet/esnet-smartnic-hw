@@ -44,7 +44,7 @@ which is located in a companion github repository at:
 https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
-suite.  The current release supports development with Vivado version 2022.1.1, running on
+suite.  The current release supports development with Vivado version 2022.2.1, running on
 Ubuntu 20.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
 shell and the AMD (Xilinx) Vivado tool suite are all public and openly available, note
 that the AMD (Xilinx) VitisNetP4 IP core is a commercially licensed feature that requires a
@@ -215,9 +215,9 @@ executing the Vivado installation program.  The example BASH shell command is:
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
 
-       > source /tools/Xilinx/Vivado/2022.1/settings64.sh
+       > source /tools/Xilinx/Vivado/2022.2/settings64.sh
 
-   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2022.1/ in this example.
+   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2022.2/ in this example.
 
 3. Set the XILINXD_LICENSE_FILE environment variable accordingly to resolve the site-specific license for
 the AMD (Xilinx) VitisNetp4 IP core.  This can be done with a `.flexlmrc` file in the users home directory,
@@ -225,15 +225,6 @@ or in a BASH script file (such as a `.bashrc` in the users home directory).  The
 command is:
 
        > export XILINXD_LICENSE_FILE=<filename>
-
-**NOTE** The P4 compiler distributed with Vivado 2022.1.x is non-functional due to a bad version check in
-the associated Tcl launch script. The VitisNetP4 version included with Vivado 2022.1.x is v1.1, while the
-script checks for the presence of v1.0. The following workaround is required (note that since this involves
-modifying one of the installation files, sudo access is necessary):
-
-       > sudo sed -i s/vitis_net_p4_v1_0/vitis_net_p4_v1_1/g /tools/Xilinx/Vivado/2022.1/bin/unwrapped/lnx64.o/p4c-vitisnet.tcl
-
-   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2022.1/ in this example.
 
 ### Building the SmartNIC p4_only Example Design
 
