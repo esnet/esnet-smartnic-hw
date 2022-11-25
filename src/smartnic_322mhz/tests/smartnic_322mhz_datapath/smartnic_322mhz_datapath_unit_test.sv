@@ -412,16 +412,6 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
-    `SVTEST(short_pkt)
-        for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/256x54B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/256x54B_pkts.pcap";
-        end
-
-        run_stream_test(); check_stream_test_probes;
-    `SVTEST_END
-
-
     `SVTEST(long_pkt)
         for (int i=0; i<NUM_PORTS; i++) begin
             in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
