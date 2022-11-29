@@ -110,6 +110,8 @@ module smartnic_322mhz
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
 
+   logic [2*NUM_CMAC-1:0]     egr_flow_ctl;
+
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -557,6 +559,12 @@ module smartnic_322mhz
    // core clock domain
    // ----------------------------------------------------------------
 
+   logic [15:0] egr_flow_ctl_thresh [2 * NUM_CMAC];
+   assign egr_flow_ctl_thresh[0] = smartnic_322mhz_regs.egr_cmac_0_fc_thresh[15:0];
+   assign egr_flow_ctl_thresh[1] = smartnic_322mhz_regs.egr_cmac_1_fc_thresh[15:0];
+   assign egr_flow_ctl_thresh[2] = smartnic_322mhz_regs.egr_host_0_fc_thresh[15:0];
+   assign egr_flow_ctl_thresh[3] = smartnic_322mhz_regs.egr_host_1_fc_thresh[15:0];
+
    port_t s_axis_cmac_rx_322mhz_tid [NUM_CMAC];
    assign s_axis_cmac_rx_322mhz_tid[0] = smartnic_322mhz_regs.igr_sw_cmac_0_tid;
    assign s_axis_cmac_rx_322mhz_tid[1] = smartnic_322mhz_regs.igr_sw_cmac_1_tid;
@@ -617,6 +625,8 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_cmac[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_pad[i]),
+        .flow_ctl_thresh (egr_flow_ctl_thresh[i]),
+        .flow_ctl       (egr_flow_ctl[i]),
         .axil_to_probe  (axil_to_probe_to_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
         .axil_if        (axil_to_fifo_to_cmac[i])
@@ -660,6 +670,8 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_host[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_host[i]),
+        .flow_ctl_thresh (egr_flow_ctl_thresh[2+i]),
+        .flow_ctl       (egr_flow_ctl[2+i]),
         .axil_to_probe  (axil_to_probe_to_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
         .axil_if        (axil_to_fifo_to_host[i])
@@ -1046,6 +1058,8 @@ module smartnic_322mhz
     .axis_to_switch_1_tid    ( axis_from_app[1].tid ),
     .axis_to_switch_1_tdest  ( axis_from_app[1].tdest ),
     .axis_to_switch_1_tuser  ( axis_from_app_tuser[1] ),
+    // egress flow control interface
+    .egr_flow_ctl            ( egr_flow_ctl ),
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
     .axi_to_hbm_awid     ( axi_app_to_hbm_awid    ),
