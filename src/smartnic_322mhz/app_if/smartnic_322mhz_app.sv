@@ -129,6 +129,9 @@ module smartnic_322mhz_app
     output logic [1:0]   axis_to_switch_1_tdest,
     output logic         axis_to_switch_1_tuser,
 
+    // flow control signals (one from each egress FIFO).
+    input logic [3:0]    egr_flow_ctl,
+
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_aclk,
