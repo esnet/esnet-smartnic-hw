@@ -128,7 +128,7 @@ task automatic run_pkt_stream (
        output logic [63:0]    tx_pkt_cnt, tx_byte_cnt,
        output logic [63:0]    rx_pkt_cnt, rx_byte_cnt,
        input int              exp_pkt_cnt = 0,
-       input int              tpause = 0, twait = 0,
+       input int              tpause = 0, twait = 0, init_pause = 0,
        input bit              tuser = 0
     );
    
@@ -167,6 +167,7 @@ task automatic run_pkt_stream (
 
           if (exp_pkt_cnt == 0) exp_pkt_cnt = pcap_record_hdr.size();
 
+          #(init_pause);
           while (rx_pkt_cnt < exp_pkt_cnt) begin
              env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
              rx_pkt_cnt++;

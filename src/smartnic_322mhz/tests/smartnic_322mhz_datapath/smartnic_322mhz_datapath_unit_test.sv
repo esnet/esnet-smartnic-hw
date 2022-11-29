@@ -196,50 +196,42 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
-     `SVTEST(switch_with_discards)
-        out_port_map = {2'h1, 2'h0, 2'h3, 2'h2}; configure_port_map;
+    `SVTEST(single_stream_with_egress_discards)
+        int port = $urandom % NUM_PORTS;
+        // for (int port = 0; port < NUM_PORTS; port++) begin
 
-         in_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-        out_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-         pkt_len[0] = 1518;
-         in_pcap[1] = "../../../tests/common/pcap/128x1418B_pkts.pcap";
-        out_pcap[1] = "../../../tests/common/pcap/128x1418B_pkts.pcap";
-         pkt_len[1] = 1418;
-         in_pcap[2] = "../../../tests/common/pcap/128x1318B_pkts.pcap";
-        out_pcap[2] = "../../../tests/common/pcap/128x1318B_pkts.pcap";
-         pkt_len[2] = 1318;
-         in_pcap[3] = "../../../tests/common/pcap/128x1218B_pkts.pcap";
-        out_pcap[3] = "../../../tests/common/pcap/128x1218B_pkts.pcap";
-         pkt_len[3] = 1218;
+            in_pcap[port] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+           out_pcap[port] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+            pkt_len[port] = 1518;
 
-        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
-        for (int i=0; i<NUM_PORTS; i++) begin
-           exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
-        end
+           // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
+           exp_pkt_cnt[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
 
-        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
-        force tb.axis_out_if[1].tready = 0;
-        force tb.axis_out_if[2].tready = 0;
-        force tb.axis_out_if[3].tready = 0;
+           // set flow control threshold.
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_CMAC_0_FC_THRESH + 4*port, 32'd1020);
+          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
 
-        env.axis_driver[0].set_min_gap(4*$ceil(pkt_len[0]/64.0));  // set gap to 4 pkts.
-        env.axis_driver[1].set_min_gap(4*$ceil(pkt_len[1]/64.0));
-        env.axis_driver[2].set_min_gap(4*$ceil(pkt_len[2]/64.0));
-        env.axis_driver[3].set_min_gap(4*$ceil(pkt_len[3]/64.0));
+           fork
+              run_pkt_stream ( .in_port(port), .out_port(out_port_map[port]), .in_pcap(in_pcap[port]), .out_pcap(out_pcap[port]),
+                               .tx_pkt_cnt(tx_pkt_cnt[port]), .tx_byte_cnt(tx_byte_cnt[port]),
+                               .rx_pkt_cnt(rx_pkt_cnt[port]), .rx_byte_cnt(rx_byte_cnt[port]),
+                               .exp_pkt_cnt(exp_pkt_cnt[port]),
+                               .init_pause(50000) );
 
-        fork
-           run_stream_test();
+              #(50000) `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b1 );
+           join
 
-           begin
-              #(100us);
-              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
-              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[2].tready;
-              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
-           end
-	join
+          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
 
-         check_stream_test_probes;
+           check_stream_probes (
+              .in_port         (port),
+              .out_port        (out_port_map[port]),
+              .exp_good_pkts   (rx_pkt_cnt[port]),
+              .exp_good_bytes  (rx_byte_cnt[port]),
+              .exp_ovfl_pkts   (tx_pkt_cnt[port]  - rx_pkt_cnt[port]),
+              .exp_ovfl_bytes  (tx_byte_cnt[port] - rx_byte_cnt[port])
+           );
+        // end
     `SVTEST_END
 
 
@@ -331,7 +323,7 @@ module smartnic_322mhz_datapath_unit_test;
            out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(4*24);  // set gap to 4 pkts.
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
 
         run_stream_test(); check_stream_test_probes;
 
@@ -344,7 +336,7 @@ module smartnic_322mhz_datapath_unit_test;
            out_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5*143);  // set gap to 5 pkts.
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
 
         run_stream_test(); check_stream_test_probes;
     `SVTEST_END
@@ -368,7 +360,7 @@ module smartnic_322mhz_datapath_unit_test;
            out_pcap[i] = "../../../tests/common/pcap/100xrandom_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 jumbo pkts.
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
 
         run_stream_test(); check_stream_test_probes;
 
