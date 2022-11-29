@@ -20,7 +20,7 @@ regs:
     init: 0x0
 
 
-  # ----- Ingress port TID settings (identifies src port). -----
+  # ----- ingress port TID settings (identifies src port). -----
   - name: igr_sw_cmac_0_tid
     access : rw
     fields:
@@ -74,7 +74,7 @@ regs:
               3 : HOST_1
 
 
-  # ----- Ingress switch input port TDEST settings (selects ingress switch output port). -----
+  # ----- ingress switch input port TDEST settings (selects ingress switch output port). -----
   - name: igr_sw_cmac_0_tdest
     access : rw
     fields:
@@ -124,7 +124,7 @@ regs:
               2 : APP_BYPASS
 
 
-  # ----- Bypass TID-to-TDEST mapping registers (selects egress port for each source on the bypass path). -----
+  # ----- bypass TID-to-TDEST mapping registers (selects egress port for each source on the bypass path). -----
   - name: bypass_cmac_0_tdest
     access : rw
     fields:
@@ -284,7 +284,7 @@ regs:
     access : rw
     fields:
         - name: value
-          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
+          desc: remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
           width: 2
           init: 3
           enum_hex:
@@ -294,7 +294,28 @@ regs:
               3 : HOST_1
 
 
-  # ----- open-nic-shell qdma shaper configuration registers. -----
+  # ----- egress FIFO flow control threshold registers. -----
+  # flow control is asserted when FIFO fill level exceeds threshold value.
+  # threshold is specified in units of 64B words.  egress FIFOs are 1020x64B in size.
+
+  - name: egr_cmac_0_fc_thresh
+    access : rw
+    init   : 0xffff_ffff
+
+  - name: egr_cmac_1_fc_thresh
+    access : rw
+    init   : 0xffff_ffff
+
+  - name: egr_host_0_fc_thresh
+    access : rw
+    init   : 0xffff_ffff
+
+  - name: egr_host_1_fc_thresh
+    access : rw
+    init   : 0xffff_ffff
+
+
+# ----- open-nic-shell qdma shaper configuration registers. -----
   - name: div_count
     access : rw
     init   : 0x0000_007F
