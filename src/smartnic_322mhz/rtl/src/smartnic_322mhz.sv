@@ -678,7 +678,7 @@ module smartnic_322mhz
       );
 
       // Terminate unused AXI-L interface
-      axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
+      if (i != 0) axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
 
 
       axi4s_intf_to_signals #(
