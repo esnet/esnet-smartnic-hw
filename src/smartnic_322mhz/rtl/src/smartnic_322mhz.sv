@@ -110,7 +110,7 @@ module smartnic_322mhz
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
 
-   logic [2*NUM_CMAC-1:0]     egr_flow_ctl;
+   logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
 
 
   // Reset is clocked by the 125MHz AXI-Lite clock
@@ -965,6 +965,16 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
    // Application Core
    // ----------------------------------------------------------------
+
+   always @(posedge core_clk) begin
+      if (!core_rstn) begin
+         for (int i=0; i<3; i++) egr_flow_ctl_pipe[i] <= '0;
+      end else begin
+         egr_flow_ctl_pipe[2] <= egr_flow_ctl;
+         for (int i=1; i<3; i++) egr_flow_ctl_pipe[i-1] <= egr_flow_ctl_pipe[i];
+      end
+   end
+
    // Provide dedicated AXI-L interfaces for app and sdnet control
    smartnic_322mhz_app_sdnet_decoder smartnic_322mhz_app_sdnet_decoder (
        .axil_if       (axil_to_app_decoder),
@@ -1059,7 +1069,7 @@ module smartnic_322mhz
     .axis_to_switch_1_tdest  ( axis_from_app[1].tdest ),
     .axis_to_switch_1_tuser  ( axis_from_app_tuser[1] ),
     // egress flow control interface
-    .egr_flow_ctl            ( egr_flow_ctl ),
+    .egr_flow_ctl            ( egr_flow_ctl_pipe[0] ),
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
     .axi_to_hbm_awid     ( axi_app_to_hbm_awid    ),
