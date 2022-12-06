@@ -164,6 +164,10 @@ module smartnic_322mhz
    axi4l_intf   axil_to_fifo_to_host    [NUM_CMAC] ();
    axi4l_intf   axil_to_fifo_from_host  [NUM_CMAC] ();
 
+   axi4l_intf   axil_to_bypass_probe               ();
+   axi4l_intf   axil_to_bypass_ovfl                ();
+   axi4l_intf   axil_to_bypass_fifo                ();
+
    axi4l_intf   axil_to_core_to_app                ();
    axi4l_intf   axil_to_app_to_core                ();
 
@@ -527,6 +531,9 @@ module smartnic_322mhz
    logic axis_core_to_app_2_tready, axis_core_to_app_2_tvalid;
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_bypass_fifo ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo_pipe ();
 
    axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
                  .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_to_app ();
@@ -806,28 +813,48 @@ module smartnic_322mhz
    axi4s_ila axi4s_ila_hdr_from_app (.axis_in(axis_hdr_from_app));
 
 
-   // Bypass path (app_to_core[2]) assignments.
-   assign axis_app_to_core[2].tvalid = axis_core_to_app[2].tvalid;
-   assign axis_app_to_core[2].tdata  = axis_core_to_app[2].tdata;
-   assign axis_app_to_core[2].tkeep  = axis_core_to_app[2].tkeep;
-   assign axis_app_to_core[2].tlast  = axis_core_to_app[2].tlast;
-   assign axis_app_to_core[2].tid    = axis_core_to_app[2].tid;
+   // tpause logic on bypass path (for test purposes).
+   assign axis_core_to_app[2].tvalid = axis_core_to_app_2_tvalid  && !smartnic_322mhz_regs.bypass_config.tpause;
+   assign axis_core_to_app_2_tready  = axis_core_to_app[2].tready && !smartnic_322mhz_regs.bypass_config.tpause;
 
-   assign axis_core_to_app[2].tready = axis_app_to_core[2].tready;
+   axi4s_intf_pipe to_bypass_pipe_0 (.axi4s_if_from_tx(axis_core_to_app[2]), .axi4s_if_to_rx(axis_to_bypass_fifo));
+
+   axi4s_pkt_fifo_sync #(
+     .FIFO_DEPTH     (256),
+     .MAX_PKT_LEN    (MAX_PKT_LEN)
+   ) bypass_fifo (
+     .srst           (1'b0),
+     .axi4s_in       (axis_to_bypass_fifo),
+     .axi4s_out      (axis_from_bypass_fifo),
+     .axil_to_probe  (axil_to_bypass_probe),
+     .axil_to_ovfl   (axil_to_bypass_ovfl),
+     .axil_if        (axil_to_bypass_fifo)
+   );
+
+   axi4l_intf_controller_term axi4l_to_bypass_probe_term (.axi4l_if (axil_to_bypass_probe));
+   axi4l_intf_controller_term axi4l_to_bypass_ovfl_term  (.axi4l_if (axil_to_bypass_ovfl));
+   axi4l_intf_controller_term axi4l_to_bypass_fifo_term  (.axi4l_if (axil_to_bypass_fifo));
+
+   axi4s_intf_pipe from_bypass_pipe_0 (.axi4s_if_from_tx(axis_from_bypass_fifo), .axi4s_if_to_rx(axis_from_bypass_fifo_pipe));
+
+   // Bypass path (app_to_core[2]) assignments.
+   assign axis_from_bypass_fifo_pipe.tready = axis_app_to_core[2].tready;
+
+   assign axis_app_to_core[2].tvalid = axis_from_bypass_fifo_pipe.tvalid;
+   assign axis_app_to_core[2].tdata  = axis_from_bypass_fifo_pipe.tdata;
+   assign axis_app_to_core[2].tkeep  = axis_from_bypass_fifo_pipe.tkeep;
+   assign axis_app_to_core[2].tlast  = axis_from_bypass_fifo_pipe.tlast;
+   assign axis_app_to_core[2].tid    = axis_from_bypass_fifo_pipe.tid;
 
    // muxing logic for bypass tid-to-tdest mapping.
    always_comb begin
-      case (axis_core_to_app[2].tid)
+      case (axis_from_bypass_fifo_pipe.tid)
          CMAC_PORT0 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_cmac_0_tdest;
          CMAC_PORT1 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_cmac_1_tdest;
          HOST_PORT0 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_host_0_tdest;
          HOST_PORT1 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_host_1_tdest;
       endcase
    end
-
-   // tpause logic on bypass path (for test purposes).
-   assign axis_core_to_app[2].tvalid = axis_core_to_app_2_tvalid  && !smartnic_322mhz_regs.bypass_config.tpause;
-   assign axis_core_to_app_2_tready  = axis_core_to_app[2].tready && !smartnic_322mhz_regs.bypass_config.tpause;
 
 
    axi4s_intf_connector axis_core_to_app_connector (.axi4s_from_tx(axis_core_to_app[1]),      .axi4s_to_rx(axis_to_app__demarc[1]));
