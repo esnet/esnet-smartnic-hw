@@ -28,8 +28,10 @@ typedef enum logic [31:0] {
     PROBE_FROM_HOST_PORT0      = 'h9800,
     PROBE_FROM_HOST_PORT1      = 'h9c00,
 
-    PROBE_CORE_TO_APP          = 'ha000,
-    PROBE_APP_TO_CORE          = 'ha800,
+    PROBE_CORE_TO_APP0         = 'ha000,
+    PROBE_CORE_TO_APP1         = 'ha400,
+    PROBE_APP0_TO_CORE         = 'ha800,
+    PROBE_APP1_TO_CORE         = 'hac00,
 
     PROBE_TO_CMAC_PORT0        = 'hb000,
     DROPS_OVFL_TO_CMAC_PORT0   = 'hb400,
@@ -38,7 +40,9 @@ typedef enum logic [31:0] {
     PROBE_TO_HOST_PORT0        = 'hc000,
     DROPS_OVFL_TO_HOST_PORT0   = 'hc400,
     PROBE_TO_HOST_PORT1        = 'hc800,
-    DROPS_OVFL_TO_HOST_PORT1   = 'hcc00
+    DROPS_OVFL_TO_HOST_PORT1   = 'hcc00,
+
+    PROBE_TO_BYPASS            = 'hd000
     } cntr_addr_encoding_t;
 
 typedef union packed {
@@ -236,19 +240,19 @@ task check_stream_probes ( input port_t       in_port, out_port,
 
     // establish base addr for ingress probe
     case (in_port)
-           CMAC_PORT0 : in_port_base_addr = 'h8000;
-           CMAC_PORT1 : in_port_base_addr = 'h8c00;
-           HOST_PORT0 : in_port_base_addr = 'h9800;
-           HOST_PORT1 : in_port_base_addr = 'h9c00;
+           CMAC_PORT0 : in_port_base_addr = PROBE_FROM_CMAC_PORT0; // 'h8000;
+           CMAC_PORT1 : in_port_base_addr = PROBE_FROM_CMAC_PORT1; // 'h8c00;
+           HOST_PORT0 : in_port_base_addr = PROBE_FROM_HOST_PORT0; // 'h9800;
+           HOST_PORT1 : in_port_base_addr = PROBE_FROM_HOST_PORT1; // 'h9c00;
            default    : in_port_base_addr = 'hxxxx;
     endcase
 
     // establish base addr for egress probe
     case (out_port)
-           CMAC_PORT0 : out_port_base_addr = 'hb000;
-           CMAC_PORT1 : out_port_base_addr = 'hb800;
-           HOST_PORT0 : out_port_base_addr = 'hc000;
-           HOST_PORT1 : out_port_base_addr = 'hc800;
+           CMAC_PORT0 : out_port_base_addr = PROBE_TO_CMAC_PORT0; // 'hb000;
+           CMAC_PORT1 : out_port_base_addr = PROBE_TO_CMAC_PORT1; // 'hb800;
+           HOST_PORT0 : out_port_base_addr = PROBE_TO_HOST_PORT0; // 'hc000;
+           HOST_PORT1 : out_port_base_addr = PROBE_TO_HOST_PORT1; // 'hc800;
            default    : out_port_base_addr = 'hxxxx;
     endcase
 
@@ -305,8 +309,8 @@ task check_and_clear_err_probes ( input port_t in_port, input logic [63:0] exp_e
 
     // establish addr for ingress err counts
     case (in_port)
-       CMAC_PORT0 : in_port_err_addr = 'h8800;
-       CMAC_PORT1 : in_port_err_addr = 'h9400;
+       CMAC_PORT0 : in_port_err_addr = DROPS_ERR_FROM_CMAC_PORT0; // 'h8800;
+       CMAC_PORT1 : in_port_err_addr = DROPS_ERR_FROM_CMAC_PORT1; // 'h9400;
        default    : in_port_err_addr = 'hxxxx;
     endcase
 
@@ -318,55 +322,64 @@ endtask;
 
 
 task latch_probe_counters;
-    env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h1 );
-    env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h1 );
-    env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h1 );
-    env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h1 );
 
-    env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h1 );
-    env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h1 );
 
-    env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h1 );
-    env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h1 );
-    env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h1 );
-    env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h1 );
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h1 );
 
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h1 );
 endtask;
 
 
 task latch_and_clear_probe_counters;
-    env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h3 );
-    env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h3 );
-    env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h3 );
-    env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h3 );
 
-    env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h3 );
-    env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h3 );
 
-    env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h3 );
-    env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h3 );
-    env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h3 );
-    env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h3 );
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h3 );
 
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h3 );
 endtask;
 
 
 task clear_and_check_probe_counters;
-    env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h2 );
 
-    env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h2 );
 
-    env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h2 );
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h2 );
+
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h2 );
 
     check_cleared_probe_counters;
-
 endtask;
 
 
@@ -376,14 +389,17 @@ task check_cleared_probe_counters;
     check_probe ( .base_addr(PROBE_FROM_HOST_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
     check_probe ( .base_addr(PROBE_FROM_HOST_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
 
-    check_probe ( .base_addr(PROBE_CORE_TO_APP),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_APP_TO_CORE),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_CORE_TO_APP0),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_CORE_TO_APP1),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_APP0_TO_CORE),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_APP1_TO_CORE),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
 
     check_probe ( .base_addr(PROBE_TO_CMAC_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
     check_probe ( .base_addr(PROBE_TO_CMAC_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
     check_probe ( .base_addr(PROBE_TO_HOST_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
     check_probe ( .base_addr(PROBE_TO_HOST_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
 
+    check_probe ( .base_addr(PROBE_TO_BYPASS),       .exp_pkt_cnt(0), .exp_byte_cnt(0) );
 endtask;
 
 
@@ -391,18 +407,22 @@ task check_probe_control_defaults;
     logic [31:0] rd_data;
     bit          rd_fail = 0;
 
-    env.probe_from_cmac_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_from_cmac_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_from_host_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_from_host_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_cmac_0_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_cmac_1_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_host_0_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_host_1_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
 
-    env.probe_core_to_app_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_app_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_core_to_app0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_core_to_app1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_app0_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_app1_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
 
-    env.probe_to_cmac_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_to_cmac_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_to_host_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-    env.probe_to_host_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_cmac_0_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_cmac_1_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_host_0_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_host_1_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+    env.probe_to_bypass_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
    `FAIL_UNLESS( rd_fail == 0 );
 
 endtask;
