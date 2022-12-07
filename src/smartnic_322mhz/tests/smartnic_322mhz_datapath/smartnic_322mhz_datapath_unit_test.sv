@@ -197,6 +197,8 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(single_stream_with_egress_discards)
+        cntr_addr_t bypass_base_addr;
+
         int port = $urandom % NUM_PORTS;
         // for (int port = 0; port < NUM_PORTS; port++) begin
 
@@ -231,6 +233,10 @@ module smartnic_322mhz_datapath_unit_test;
               .exp_ovfl_pkts   (tx_pkt_cnt[port]  - rx_pkt_cnt[port]),
               .exp_ovfl_bytes  (tx_byte_cnt[port] - rx_byte_cnt[port])
            );
+
+           bypass_base_addr = PROBE_TO_BYPASS;
+           check_probe (.base_addr(bypass_base_addr), .exp_pkt_cnt(tx_pkt_cnt[port]), .exp_byte_cnt(tx_byte_cnt[port]));
+
         // end
     `SVTEST_END
 
@@ -317,7 +323,7 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
-     `SVTEST(max_size_stress)
+    `SVTEST(max_size_stress)
         for (int i=0; i<NUM_PORTS; i++) begin
             in_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
            out_pcap[i] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
@@ -363,7 +369,6 @@ module smartnic_322mhz_datapath_unit_test;
         for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
 
         run_stream_test(); check_stream_test_probes;
-
     `SVTEST_END
 
 
