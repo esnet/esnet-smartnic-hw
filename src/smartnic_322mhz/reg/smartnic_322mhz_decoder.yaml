@@ -75,12 +75,22 @@ interfaces:
   - block: *axi4s_probe
     address: 0x0a000
     width: 10
-    name: probe_core_to_app
+    name: probe_core_to_app0
+
+  - block: *axi4s_probe
+    address: 0x0a400
+    width: 10
+    name: probe_core_to_app1
 
   - block: *axi4s_probe
     address: 0x0a800
     width: 10
-    name: probe_app_to_core
+    name: probe_app0_to_core
+
+  - block: *axi4s_probe
+    address: 0x0ac00
+    width: 10
+    name: probe_app1_to_core
 
   - block: *axi4s_probe
     address: 0x0b000
@@ -122,13 +132,18 @@ interfaces:
     width: 10
     name: drops_ovfl_to_host_1
 
-  - decoder: *fifo
+  - block: *axi4s_probe
     address: 0x0d000
+    width: 10
+    name: probe_to_bypass
+
+  - decoder: *fifo
+    address: 0x0d400
     width: 10
     name: fifo_to_host_0
 
   - decoder: *axi4s_split_join_decoder
-    address: 0x0d400
+    address: 0x0d800
     width: 10
     name: axi4s_split_join
 

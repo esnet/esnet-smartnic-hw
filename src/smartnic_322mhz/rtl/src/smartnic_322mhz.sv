@@ -164,12 +164,12 @@ module smartnic_322mhz
    axi4l_intf   axil_to_fifo_to_host    [NUM_CMAC] ();
    axi4l_intf   axil_to_fifo_from_host  [NUM_CMAC] ();
 
-   axi4l_intf   axil_to_bypass_probe               ();
-   axi4l_intf   axil_to_bypass_ovfl                ();
-   axi4l_intf   axil_to_bypass_fifo                ();
+   axi4l_intf   axil_to_core_to_app [2]            ();
+   axi4l_intf   axil_to_app_to_core [2]            ();
 
-   axi4l_intf   axil_to_core_to_app                ();
-   axi4l_intf   axil_to_app_to_core                ();
+   axi4l_intf   axil_to_probe_to_bypass            ();
+   axi4l_intf   axil_to_ovfl_to_bypass             ();
+   axi4l_intf   axil_to_fifo_to_bypass             ();
 
    smartnic_322mhz_reg_intf   smartnic_322mhz_regs();
 
@@ -216,8 +216,10 @@ module smartnic_322mhz
       .drops_err_from_cmac_1_axil_if   (axil_to_err_from_cmac[1]),
       .probe_from_host_0_axil_if       (axil_to_probe_from_host[0]),
       .probe_from_host_1_axil_if       (axil_to_probe_from_host[1]),
-      .probe_core_to_app_axil_if       (axil_to_core_to_app),
-      .probe_app_to_core_axil_if       (axil_to_app_to_core),
+      .probe_core_to_app0_axil_if      (axil_to_core_to_app[0]),
+      .probe_core_to_app1_axil_if      (axil_to_core_to_app[1]),
+      .probe_app0_to_core_axil_if      (axil_to_app_to_core[0]),
+      .probe_app1_to_core_axil_if      (axil_to_app_to_core[1]),
       .probe_to_cmac_0_axil_if         (axil_to_probe_to_cmac[0]),
       .drops_ovfl_to_cmac_0_axil_if    (axil_to_ovfl_to_cmac[0]),
       .probe_to_cmac_1_axil_if         (axil_to_probe_to_cmac[1]),
@@ -226,6 +228,7 @@ module smartnic_322mhz
       .drops_ovfl_to_host_0_axil_if    (axil_to_ovfl_to_host[0]),
       .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
       .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
+      .probe_to_bypass_axil_if         (axil_to_probe_to_bypass),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
@@ -826,14 +829,13 @@ module smartnic_322mhz
      .srst           (1'b0),
      .axi4s_in       (axis_to_bypass_fifo),
      .axi4s_out      (axis_from_bypass_fifo),
-     .axil_to_probe  (axil_to_bypass_probe),
-     .axil_to_ovfl   (axil_to_bypass_ovfl),
-     .axil_if        (axil_to_bypass_fifo)
+     .axil_to_probe  (axil_to_probe_to_bypass),
+     .axil_to_ovfl   (axil_to_ovfl_to_bypass),
+     .axil_if        (axil_to_fifo_to_bypass)
    );
 
-   axi4l_intf_controller_term axi4l_to_bypass_probe_term (.axi4l_if (axil_to_bypass_probe));
-   axi4l_intf_controller_term axi4l_to_bypass_ovfl_term  (.axi4l_if (axil_to_bypass_ovfl));
-   axi4l_intf_controller_term axi4l_to_bypass_fifo_term  (.axi4l_if (axil_to_bypass_fifo));
+   axi4l_intf_controller_term axi4l_to_ovfl_to_bypass_term  (.axi4l_if (axil_to_ovfl_to_bypass));
+   axi4l_intf_controller_term axi4l_to_fifo_to_bypass_term  (.axi4l_if (axil_to_fifo_to_bypass));
 
    axi4s_intf_pipe from_bypass_pipe_0 (.axi4s_if_from_tx(axis_from_bypass_fifo), .axi4s_if_to_rx(axis_from_bypass_fifo_pipe));
 
@@ -1148,14 +1150,29 @@ module smartnic_322mhz
    assign axis_from_app[0].aresetn = core_rstn;
    assign axis_from_app[1].aresetn = core_rstn;
 
-   axi4s_probe axis_probe_app_to_core (
-      .axi4l_if  (axil_to_app_to_core),
+   axi4s_probe axis_probe_app_to_core_0 (
+      .axi4l_if  (axil_to_app_to_core[0]),
       .axi4s_if  (axis_app_to_core[0])
    );
 
-   axi4s_probe axis_probe_core_to_app (
-      .axi4l_if  (axil_to_core_to_app),
+   axi4s_probe axis_probe_core_to_app_0 (
+      .axi4l_if  (axil_to_core_to_app[0]),
       .axi4s_if  (axis_core_to_app[0])
+   );
+
+   axi4s_probe axis_probe_app_to_core_1 (
+      .axi4l_if  (axil_to_app_to_core[1]),
+      .axi4s_if  (axis_app_to_core[1])
+   );
+
+   axi4s_probe axis_probe_core_to_app_1 (
+      .axi4l_if  (axil_to_core_to_app[1]),
+      .axi4s_if  (axis_core_to_app[1])
+   );
+
+   axi4s_probe axis_probe_to_bypass (
+      .axi4l_if  (axil_to_probe_to_bypass),
+      .axi4s_if  (axis_to_bypass_fifo)
    );
 
 endmodule: smartnic_322mhz
