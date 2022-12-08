@@ -1170,9 +1170,4 @@ module smartnic_322mhz
       .axi4s_if  (axis_core_to_app[1])
    );
 
-   axi4s_probe axis_probe_to_bypass (
-      .axi4l_if  (axil_to_probe_to_bypass),
-      .axi4s_if  (axis_to_bypass_fifo)
-   );
-
 endmodule: smartnic_322mhz
