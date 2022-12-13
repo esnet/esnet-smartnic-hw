@@ -19,13 +19,15 @@ regs:
     access: rw
     init: 0x0
 
-
-  # ----- ingress port TID settings (identifies src port). -----
-  - name: igr_sw_cmac_0_tid
+  # ----- switch configuration registers. -----
+  - name: igr_sw_tid
     access : rw
+    count: 4
     fields:
         - name: value
-          desc: Sets the axi4s 'tid' (src port) signal for the CMAC_0 interface to the ingress switch.
+          desc: sets the axi4s 'tid' (src port) signal for the specified ingress port.
+                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+                igr_sw_tid[0]=1 sets 'tid' from CMAC_0 to CMAC_1.
           width: 2
           init: 0
           enum_hex:
@@ -34,128 +36,30 @@ regs:
               2 : HOST_0
               3 : HOST_1
 
-  - name: igr_sw_cmac_1_tid
+  - name: igr_sw_tdest
     access : rw
+    count: 4
     fields:
         - name: value
-          desc: Sets the axi4s 'tid' (src port) signal for the CMAC_1 interface to the ingress switch.
-          width: 2
-          init: 1
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: igr_sw_host_0_tid
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the axi4s 'tid' (src port) signal for the HOST_0 interface to the ingress switch.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: igr_sw_host_1_tid
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the axi4s 'tid' (src port) signal for the HOST_1 interface to the ingress switch.
+          desc: sets the axi4s 'tdest' signal (ingress switch output port) for the specified ingress port.
+                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+                igr_sw_dest[0]=1 sends pkts from CMAC_0 to APP_1.
           width: 2
           init: 3
           enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-
-  # ----- ingress switch input port TDEST settings (selects ingress switch output port). -----
-  - name: igr_sw_cmac_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the CMAC_0 interface.
-          width: 2
-          init: 2
-          enum_hex:
               0 : APP_0
               1 : APP_1
               2 : APP_BYPASS
+              3 : DROP
 
-  - name: igr_sw_cmac_1_tdest
+  - name: bypass_tdest
     access : rw
+    count: 4
     fields:
         - name: value
-          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the CMAC_1 interface.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : APP_0
-              1 : APP_1
-              2 : APP_BYPASS
-
-  - name: igr_sw_host_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the HOST_0 interface.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : APP_0
-              1 : APP_1
-              2 : APP_BYPASS
-
-  - name: igr_sw_host_1_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the axi4s 'tdest' signal (ingress switch output port) for the HOST_1 interface.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : APP_0
-              1 : APP_1
-              2 : APP_BYPASS
-
-
-  # ----- bypass TID-to-TDEST mapping registers (selects egress port for each source on the bypass path). -----
-  - name: bypass_cmac_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the CMAC_0 interface.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: bypass_cmac_1_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the CMAC_1 interface.
-          width: 2
-          init: 3
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: bypass_host_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the HOST_0 interface.
+          desc: sets the bypass axi4s 'tdest' signal (egress switch output port) for the specified ingress port.
+                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+                bypass_tdest[0]=1 sends pkts from CMAC_0 to CMAC_1.
           width: 2
           init: 0
           enum_hex:
@@ -164,158 +68,63 @@ regs:
               2 : HOST_0
               3 : HOST_1
 
-  - name: bypass_host_1_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Sets the bypass axi4s 'tdest' signal (egress switch output port) for the HOST_1 interface.
-          width: 2
-          init: 1
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: bypass_config
+  - name: switch_config
     access: rw
     fields:
-      - name: tpause
-        desc: tpause test register.  Set to 1 to assert axi4s backpressure from bypass path to ingress switch.
+      - name: igr_sw_tpause
+        desc: set to 1 to assert axi4s backpressure to the ingress switch (test register).
+        width: 1
+        init : 0
+      - name: drop_pkt_loop
+        desc: set to 1 to enable dropping egress packets that have axi4s tdest==tid (egress_port==ingress_port).
+              enables drop logic on 'APP_0' and 'APP_BYPASS'.  drops on 'APP_1' to be implemented in future.
         width: 1
         init : 0
 
-
-  # ----- TDEST-to-TDEST remapping for pkts on the app_core APP_0 output interface. -----
-  - name: app_0_cmac_0_tdest
+  - name: app_0_tdest_remap
     access : rw
+    count: 4
     fields:
         - name: value
-          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_0.
-          width: 2
+          desc: remaps APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to specified egress port.
+                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+                app_0_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
+          width: 3
           init: 0
           enum_hex:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
               3 : HOST_1
+          count: 4
 
-  - name: app_0_cmac_1_tdest
+  - name: app_1_tdest_remap
     access : rw
+    count: 4
     fields:
         - name: value
-          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_1.
-          width: 2
-          init: 1
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: app_0_host_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_0.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: app_0_host_1_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Remaps the APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
-          width: 2
-          init: 3
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-
-  # ----- TDEST-to-TDEST remapping for pkts on the app_core APP_1 output interface. -----
-  - name: app_1_cmac_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_0.
-          width: 2
+          desc: remaps APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to specified egress port.
+                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+                app_1_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
+          width: 3
           init: 0
           enum_hex:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
               3 : HOST_1
+          count: 4
 
-  - name: app_1_cmac_1_tdest
+  - name: egr_fc_thresh
+    desc: egress flow control threshold registers.  one per egress FIFO.
+          indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+          flow control is asserted when FIFO fill level exceeds threshold value.
+          threshold is specified in units of 64B words.  egress FIFOs can hold 1020x64B.
     access : rw
-    fields:
-        - name: value
-          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to CMAC_1.
-          width: 2
-          init: 1
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: app_1_host_0_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: Remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_0.
-          width: 2
-          init: 2
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: app_1_host_1_tdest
-    access : rw
-    fields:
-        - name: value
-          desc: remaps the APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to HOST_1.
-          width: 2
-          init: 3
-          enum_hex:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-
-  # ----- egress FIFO flow control threshold registers. -----
-  # flow control is asserted when FIFO fill level exceeds threshold value.
-  # threshold is specified in units of 64B words.  egress FIFOs are 1020x64B in size.
-
-  - name: egr_cmac_0_fc_thresh
-    access : rw
+    count  : 4
     init   : 0xffff_ffff
 
-  - name: egr_cmac_1_fc_thresh
-    access : rw
-    init   : 0xffff_ffff
-
-  - name: egr_host_0_fc_thresh
-    access : rw
-    init   : 0xffff_ffff
-
-  - name: egr_host_1_fc_thresh
-    access : rw
-    init   : 0xffff_ffff
-
-
-# ----- open-nic-shell qdma shaper configuration registers. -----
+  # ----- open-nic-shell qdma shaper configuration registers. -----
   - name: div_count
     access : rw
     init   : 0x0000_007F
@@ -327,7 +136,9 @@ regs:
 
   # ----- Timestamp configuration and monitoring registers. -----
   - name: timestamp_incr
-    desc   : Timestamp increment register.  Added to timestamp counter on each 343.75MHz core_clk tick. 32-bit value with a 4-bit integer component and a 28-bit fractional component. 0x2_E8BA2E9 represents 2.90909091 ns.
+    desc   : Timestamp increment register.  Added to timestamp counter on each 343.75MHz core_clk tick.
+             32-bit value with a 4-bit integer component and a 28-bit fractional component.
+             0x2_E8BA2E9 represents 2.90909091 ns.
     width  : 32
     access : rw
     init   : 0x2_E8BA2E9
@@ -337,7 +148,8 @@ regs:
     access : rw
 
   - name: timestamp_wr_lower
-    desc   : Timestamp write data (lower word).  Full 64-bit write value is loaded atomically into timestamp counter when the lower word write event occurs.
+    desc   : Timestamp write data (lower word).
+             Full 64-bit value is loaded atomically into timestamp counter when lower word write event occurs.
     access : wr_evt
 
   - name: timestamp_rd_upper
@@ -357,6 +169,7 @@ regs:
     access : ro
 
   - name: timestamp_rd_latch
-    desc   : Timestamp read latch trigger.  Full 64-bit timestamp value is loaded atomically into timestamp latch when the rd_latch write event occurs.
+    desc   : Timestamp read latch trigger.
+             Full 64-bit timestamp is loaded atomically into timestamp latch when rd_latch write event occurs.
     width  : 8
     access : wr_evt
