@@ -137,23 +137,38 @@ interfaces:
     width: 10
     name: probe_to_bypass
 
-  - decoder: *fifo
+  - block: *axi4s_probe
     address: 0x0d400
+    width: 10
+    name: drops_from_igr_sw
+
+  - block: *axi4s_probe
+    address: 0x0d800
+    width: 10
+    name: drops_from_bypass
+
+  - block: *axi4s_probe
+    address: 0x0dc00
+    width: 10
+    name: drops_from_app0
+
+  - decoder: *fifo
+    address: 0x0e000
     width: 10
     name: fifo_to_host_0
 
   - decoder: *axi4s_split_join_decoder
-    address: 0x0d800
+    address: 0x0e400
     width: 10
     name: axi4s_split_join
 
   - decoder: *xilinx_hbm_0
-    address: 0x0e000
+    address: 0x10000
     width: 12
     name: hbm_0
 
   - decoder: *xilinx_hbm_1
-    address: 0x0f000
+    address: 0x11000
     width: 12
     name: hbm_1
 
