@@ -134,7 +134,7 @@ module smartnic_322mhz
   );
 
    // ----------------------------------------------------------------
-   //  axil interface instantiation and regmap logic
+   //  axil interface instantiations and regmap logic
    // ----------------------------------------------------------------
 
    axi4l_intf   s_axil_if                   ();
@@ -171,7 +171,11 @@ module smartnic_322mhz
    axi4l_intf   axil_to_ovfl_to_bypass             ();
    axi4l_intf   axil_to_fifo_to_bypass             ();
 
-   smartnic_322mhz_reg_intf   smartnic_322mhz_regs();
+   axi4l_intf   axil_to_drops_from_igr_sw          ();
+   axi4l_intf   axil_to_drops_from_bypass          ();
+   axi4l_intf   axil_to_drops_from_app0            ();
+
+   smartnic_322mhz_reg_intf   smartnic_322mhz_regs ();
 
 
    // Convert Xilinx AXI-L signals to interface format
@@ -229,6 +233,9 @@ module smartnic_322mhz
       .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
       .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
       .probe_to_bypass_axil_if         (axil_to_probe_to_bypass),
+      .drops_from_igr_sw_axil_if       (axil_to_drops_from_igr_sw),
+      .drops_from_bypass_axil_if       (axil_to_drops_from_bypass),
+      .drops_from_app0_axil_if         (axil_to_drops_from_app0),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
@@ -534,6 +541,8 @@ module smartnic_322mhz
    logic axis_core_to_app_2_tready, axis_core_to_app_2_tvalid;
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_igr_sw_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_bypass_drop ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_bypass_fifo ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo_pipe ();
@@ -569,20 +578,6 @@ module smartnic_322mhz
    // core clock domain
    // ----------------------------------------------------------------
 
-   logic [15:0] egr_flow_ctl_thresh [2 * NUM_CMAC];
-   assign egr_flow_ctl_thresh[0] = smartnic_322mhz_regs.egr_cmac_0_fc_thresh[15:0];
-   assign egr_flow_ctl_thresh[1] = smartnic_322mhz_regs.egr_cmac_1_fc_thresh[15:0];
-   assign egr_flow_ctl_thresh[2] = smartnic_322mhz_regs.egr_host_0_fc_thresh[15:0];
-   assign egr_flow_ctl_thresh[3] = smartnic_322mhz_regs.egr_host_1_fc_thresh[15:0];
-
-   port_t s_axis_cmac_rx_322mhz_tid [NUM_CMAC];
-   assign s_axis_cmac_rx_322mhz_tid[0] = smartnic_322mhz_regs.igr_sw_cmac_0_tid;
-   assign s_axis_cmac_rx_322mhz_tid[1] = smartnic_322mhz_regs.igr_sw_cmac_1_tid;
-
-   port_t s_axis_adpt_tx_322mhz_tid [NUM_CMAC];
-   assign s_axis_adpt_tx_322mhz_tid[0] = smartnic_322mhz_regs.igr_sw_host_0_tid;
-   assign s_axis_adpt_tx_322mhz_tid[1] = smartnic_322mhz_regs.igr_sw_host_1_tid;
-
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
 
       //------------------------ from cmac to core --------------
@@ -596,7 +591,7 @@ module smartnic_322mhz
         .tdata    (s_axis_cmac_rx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (s_axis_cmac_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_cmac_rx_322mhz_tlast[i]),
-        .tid      (s_axis_cmac_rx_322mhz_tid[i]),
+        .tid      (smartnic_322mhz_regs.igr_sw_tid[i]),
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
@@ -635,7 +630,7 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_cmac[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_pad[i]),
-        .flow_ctl_thresh (egr_flow_ctl_thresh[i]),
+        .flow_ctl_thresh (smartnic_322mhz_regs.egr_fc_thresh[i][15:0]),
         .flow_ctl       (egr_flow_ctl[i]),
         .axil_to_probe  (axil_to_probe_to_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
@@ -680,7 +675,7 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_host[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_host[i]),
-        .flow_ctl_thresh (egr_flow_ctl_thresh[2+i]),
+        .flow_ctl_thresh (smartnic_322mhz_regs.egr_fc_thresh[2+i][15:0]),
         .flow_ctl       (egr_flow_ctl[2+i]),
         .axil_to_probe  (axil_to_probe_to_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
@@ -720,7 +715,7 @@ module smartnic_322mhz
         .tdata    (s_axis_adpt_tx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (s_axis_adpt_tx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
-        .tid      (s_axis_adpt_tx_322mhz_tid[i]),
+        .tid      (smartnic_322mhz_regs.igr_sw_tid[2+i]),
         .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),       // this is a deadend for now. No use in smartnic_322mhz
 
@@ -766,10 +761,10 @@ module smartnic_322mhz
     .s_axis_tkeep  ({ axis_host_to_core[1].tkeep  , axis_host_to_core[0].tkeep  , axis_cmac_to_core[1].tkeep  , axis_cmac_to_core[0].tkeep  }),
     .s_axis_tlast  ({ axis_host_to_core[1].tlast  , axis_host_to_core[0].tlast  , axis_cmac_to_core[1].tlast  , axis_cmac_to_core[0].tlast  }),
     .s_axis_tid    ({ axis_host_to_core[1].tid    , axis_host_to_core[0].tid    , axis_cmac_to_core[1].tid    , axis_cmac_to_core[0].tid    }),
-    .s_axis_tdest  ({ smartnic_322mhz_regs.igr_sw_host_1_tdest,
-                      smartnic_322mhz_regs.igr_sw_host_0_tdest,
-                      smartnic_322mhz_regs.igr_sw_cmac_1_tdest,
-                      smartnic_322mhz_regs.igr_sw_cmac_0_tdest }),
+    .s_axis_tdest  ({ smartnic_322mhz_regs.igr_sw_tdest[3],
+                      smartnic_322mhz_regs.igr_sw_tdest[2],
+                      smartnic_322mhz_regs.igr_sw_tdest[1],
+                      smartnic_322mhz_regs.igr_sw_tdest[0] }),
     .s_axis_tready ({ axis_host_to_core[1].tready , axis_host_to_core[0].tready , axis_cmac_to_core[1].tready , axis_cmac_to_core[0].tready }),
     .s_axis_tvalid ({ axis_host_to_core[1].tvalid , axis_host_to_core[0].tvalid , axis_cmac_to_core[1].tvalid , axis_cmac_to_core[0].tvalid }),
 
@@ -798,15 +793,24 @@ module smartnic_322mhz
      .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
    );
 
-   // packet drop logic (drops zero-length packets when vitisnetp4 core is configured to emit dropped headers).
-   logic  drop_pkt;
-   assign drop_pkt = axis_to_drop.tvalid && axis_to_drop.sop && axis_to_drop.tlast &&
-                     axis_to_drop.tkeep == '0;
+   // packet drop logic, which deletes:
+   // zero-length packets (when vitisnetp4 core emits dropped headers), and
+   // packets that have tdest == tid (to prevent switching loops).
+   logic  zero_length, loop_detect, drop_pkt;
 
-   // axi4s header drop instantiation.
+   assign zero_length = axis_to_drop.tvalid && axis_to_drop.sop && axis_to_drop.tlast &&
+                        axis_to_drop.tkeep == '0;
+
+   assign loop_detect = smartnic_322mhz_regs.switch_config.drop_pkt_loop && axis_to_drop.tvalid && axis_to_drop.sop &&
+                        axis_to_drop.tdest == axis_to_drop.tid;
+
+   assign drop_pkt = zero_length || loop_detect;
+
+   // axi4s drop pkt instantiation.
    axi4s_drop axi4s_drop_0 (
       .axi4s_in    (axis_to_drop),
       .axi4s_out   (__axis_app_to_core[0]),
+      .axil_if     (axil_to_drops_from_app0),
       .drop_pkt    (drop_pkt)
    );
 
@@ -816,11 +820,25 @@ module smartnic_322mhz
    axi4s_ila axi4s_ila_hdr_from_app (.axis_in(axis_hdr_from_app));
 
 
-   // tpause logic on bypass path (for test purposes).
-   assign axis_core_to_app[2].tvalid = axis_core_to_app_2_tvalid  && !smartnic_322mhz_regs.bypass_config.tpause;
-   assign axis_core_to_app_2_tready  = axis_core_to_app[2].tready && !smartnic_322mhz_regs.bypass_config.tpause;
+   // tpause logic for ingress switch (for test purposes).
+   assign axis_core_to_app[2].tvalid = axis_core_to_app_2_tvalid  && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
+   assign axis_core_to_app_2_tready  = axis_core_to_app[2].tready && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
 
-   axi4s_intf_pipe to_bypass_pipe_0 (.axi4s_if_from_tx(axis_core_to_app[2]), .axi4s_if_to_rx(axis_to_bypass_fifo));
+   // ingress switch drop pkt logic.  deletes packets that have tdest == 3 (igr_sw DROP code point).
+   logic  igr_sw_drop_pkt;
+
+   assign igr_sw_drop_pkt = axis_core_to_app[2].tvalid && axis_core_to_app[2].sop &&
+                            axis_core_to_app[2].tdest == 2'h3;
+
+   // igr_sw_drop axi4s_drop instantiation.
+   axi4s_drop igr_sw_drop_0 (
+      .axi4s_in    (axis_core_to_app[2]),
+      .axi4s_out   (axis_igr_sw_drop),
+      .axil_if     (axil_to_drops_from_igr_sw),
+      .drop_pkt    (igr_sw_drop_pkt)
+   );
+
+   axi4s_intf_pipe to_bypass_pipe_0 (.axi4s_if_from_tx(axis_igr_sw_drop), .axi4s_if_to_rx(axis_to_bypass_fifo));
 
    axi4s_pkt_fifo_sync #(
      .FIFO_DEPTH     (256),
@@ -840,23 +858,41 @@ module smartnic_322mhz
    axi4s_intf_pipe from_bypass_pipe_0 (.axi4s_if_from_tx(axis_from_bypass_fifo), .axi4s_if_to_rx(axis_from_bypass_fifo_pipe));
 
    // Bypass path (app_to_core[2]) assignments.
-   assign axis_from_bypass_fifo_pipe.tready = axis_app_to_core[2].tready;
+   assign axis_from_bypass_fifo_pipe.tready = axis_to_bypass_drop.tready;
 
-   assign axis_app_to_core[2].tvalid = axis_from_bypass_fifo_pipe.tvalid;
-   assign axis_app_to_core[2].tdata  = axis_from_bypass_fifo_pipe.tdata;
-   assign axis_app_to_core[2].tkeep  = axis_from_bypass_fifo_pipe.tkeep;
-   assign axis_app_to_core[2].tlast  = axis_from_bypass_fifo_pipe.tlast;
-   assign axis_app_to_core[2].tid    = axis_from_bypass_fifo_pipe.tid;
+   assign axis_to_bypass_drop.aclk    = axis_from_bypass_fifo_pipe.aclk;
+   assign axis_to_bypass_drop.aresetn = axis_from_bypass_fifo_pipe.aresetn;
+   assign axis_to_bypass_drop.tvalid  = axis_from_bypass_fifo_pipe.tvalid;
+   assign axis_to_bypass_drop.tdata   = axis_from_bypass_fifo_pipe.tdata;
+   assign axis_to_bypass_drop.tkeep   = axis_from_bypass_fifo_pipe.tkeep;
+   assign axis_to_bypass_drop.tlast   = axis_from_bypass_fifo_pipe.tlast;
+   assign axis_to_bypass_drop.tid     = axis_from_bypass_fifo_pipe.tid;
 
    // muxing logic for bypass tid-to-tdest mapping.
    always_comb begin
       case (axis_from_bypass_fifo_pipe.tid)
-         CMAC_PORT0 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_cmac_0_tdest;
-         CMAC_PORT1 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_cmac_1_tdest;
-         HOST_PORT0 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_host_0_tdest;
-         HOST_PORT1 : axis_app_to_core[2].tdest = smartnic_322mhz_regs.bypass_host_1_tdest;
+         CMAC_PORT0 : axis_to_bypass_drop.tdest = smartnic_322mhz_regs.bypass_tdest[0];
+         CMAC_PORT1 : axis_to_bypass_drop.tdest = smartnic_322mhz_regs.bypass_tdest[1];
+         HOST_PORT0 : axis_to_bypass_drop.tdest = smartnic_322mhz_regs.bypass_tdest[2];
+         HOST_PORT1 : axis_to_bypass_drop.tdest = smartnic_322mhz_regs.bypass_tdest[3];
       endcase
    end
+
+   // bypass packet drop logic.  deletes packets that have tdest == tid (to prevent switching loops).
+   logic  bypass_drop_pkt;
+
+   assign bypass_drop_pkt = smartnic_322mhz_regs.switch_config.drop_pkt_loop &&
+                            axis_to_bypass_drop.tvalid && axis_to_bypass_drop.sop &&
+                            axis_to_bypass_drop.tdest == axis_to_bypass_drop.tid;
+
+   // bypass drop pkt instantiation.
+   axi4s_drop bypass_drop_0 (
+      .axi4s_in    (axis_to_bypass_drop),
+      .axi4s_out   (axis_app_to_core[2]),
+      .axil_if     (axil_to_drops_from_bypass),
+      .drop_pkt    (bypass_drop_pkt)
+   );
+
 
 
    axi4s_intf_connector axis_core_to_app_connector (.axi4s_from_tx(axis_core_to_app[1]),      .axi4s_to_rx(axis_to_app__demarc[1]));
@@ -878,10 +914,10 @@ module smartnic_322mhz
    // muxing logic for app_to_core[0] tdest-to-tdest re-mapping.
    always_comb begin
       case (__axis_app_to_core[0].tdest)
-         CMAC_PORT0 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_cmac_0_tdest;
-         CMAC_PORT1 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_cmac_1_tdest;
-         HOST_PORT0 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_host_0_tdest;
-         HOST_PORT1 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_host_1_tdest;
+         CMAC_PORT0 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_tdest_remap[0];
+         CMAC_PORT1 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_tdest_remap[1];
+         HOST_PORT0 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_tdest_remap[2];
+         HOST_PORT1 : axis_app_to_core[0].tdest = smartnic_322mhz_regs.app_0_tdest_remap[3];
       endcase
    end
 
@@ -901,10 +937,10 @@ module smartnic_322mhz
    // muxing logic for app_to_core[1] tdest-to-tdest re-mapping.
    always_comb begin
       case (__axis_app_to_core[1].tdest)
-         CMAC_PORT0 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_cmac_0_tdest;
-         CMAC_PORT1 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_cmac_1_tdest;
-         HOST_PORT0 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_host_0_tdest;
-         HOST_PORT1 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_host_1_tdest;
+         CMAC_PORT0 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_tdest_remap[0];
+         CMAC_PORT1 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_tdest_remap[1];
+         HOST_PORT0 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_tdest_remap[2];
+         HOST_PORT1 : axis_app_to_core[1].tdest = smartnic_322mhz_regs.app_1_tdest_remap[3];
       endcase
    end
 
