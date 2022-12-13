@@ -129,8 +129,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         probe_to_host_1_reg_blk_agent    = new("probe_core_to_host_1_reg_blk", 'hc800);
         probe_to_bypass_reg_blk_agent    = new("probe_to_bypass_reg_blk",      'hd000);
 
-        hbm_0_reg_agent = new("hbm_0_agent", reg_agent, 'he000);
-        hbm_1_reg_agent = new("hbm_1_agent", reg_agent, 'hf000);
+        hbm_0_reg_agent = new("hbm_0_agent", reg_agent, 'h10000);
+        hbm_1_reg_agent = new("hbm_1_agent", reg_agent, 'h11000);
     endfunction
 
     function void set_debug(input bit debug);

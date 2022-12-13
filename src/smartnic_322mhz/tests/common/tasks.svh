@@ -42,7 +42,11 @@ typedef enum logic [31:0] {
     PROBE_TO_HOST_PORT1        = 'hc800,
     DROPS_OVFL_TO_HOST_PORT1   = 'hcc00,
 
-    PROBE_TO_BYPASS            = 'hd000
+    PROBE_TO_BYPASS            = 'hd000,
+
+    DROPS_FROM_IGR_SW          = 'hd400,
+    DROPS_FROM_BYPASS          = 'hd800,
+    DROPS_FROM_APP0            = 'hdc00
     } cntr_addr_encoding_t;
 
 typedef union packed {
@@ -50,6 +54,7 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
+smartnic_322mhz_reg_pkg::reg_switch_config_t switch_config;
 
 
 //=======================================================================
@@ -118,11 +123,34 @@ task compare_pkts(input byte pkt1[$], pkt2[$]);
 endtask
 
 
+task init_sw_config_regs();
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 3 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], 3 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 1 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[3], 3 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 3 );
+endtask
+
+
 task configure_port_map();
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_CMAC_0_TDEST, out_port_map[0] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_CMAC_1_TDEST, out_port_map[1] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_HOST_0_TDEST, out_port_map[2] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_HOST_1_TDEST, out_port_map[3] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], out_port_map[0] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], out_port_map[1] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], out_port_map[2] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], out_port_map[3] );
 endtask
 
 
@@ -216,7 +244,7 @@ task run_stream_test (input int tpause = 0, twait = 0);
 endtask
    
 
-task check_stream_test_probes (input logic ingress_ovfl_mode = 0);
+task check_stream_test_probes (input logic ovfl_mode = 0);
     for (int i=0; i<NUM_PORTS; i++) begin
        check_stream_probes (
           .in_port         (i), 
@@ -225,7 +253,7 @@ task check_stream_test_probes (input logic ingress_ovfl_mode = 0);
           .exp_good_bytes  (rx_byte_cnt[i]), 
           .exp_ovfl_pkts   (tx_pkt_cnt[i]  - rx_pkt_cnt[i]), 
           .exp_ovfl_bytes  (tx_byte_cnt[i] - rx_byte_cnt[i]),
-          .ingress_ovfl_mode   (ingress_ovfl_mode)
+          .ovfl_mode       (ovfl_mode)
        );
     end
 endtask;
@@ -233,7 +261,7 @@ endtask;
 
 task check_stream_probes ( input port_t       in_port, out_port,
                            input logic [63:0] exp_good_pkts, exp_good_bytes, exp_ovfl_pkts=0, exp_ovfl_bytes=0,
-                           input logic        ingress_ovfl_mode = 0 );
+                           input int          ovfl_mode = 0 );  // ovfl_mode: 0-egress_ovfl, 1-ingress_ovfl, 2-pkt_drops
 
     cntr_addr_t in_port_base_addr, out_port_base_addr;
     logic [63:0] exp_tot_pkts, exp_tot_bytes;
@@ -262,7 +290,7 @@ task check_stream_probes ( input port_t       in_port, out_port,
 
 
     // check ingress and egress probe counts
-    if (ingress_ovfl_mode)
+    if (ovfl_mode==1)
        check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_good_pkts), .exp_byte_cnt(exp_good_bytes));
     else
        check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_tot_pkts),  .exp_byte_cnt(exp_tot_bytes));
@@ -273,16 +301,16 @@ task check_stream_probes ( input port_t       in_port, out_port,
     // check ingress and egress ovfl counts
     if ( (in_port != HOST_PORT0) && (in_port != HOST_PORT1) ) begin  // no ovfl counters for these ingress ports.
        in_port_base_addr = in_port_base_addr + 'h400;
-       if (ingress_ovfl_mode)
+       if (ovfl_mode==1)
           check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
-       else	   
+       else if (ovfl_mode==0)
           check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
     end
 
     out_port_base_addr = out_port_base_addr + 'h400;
-    if (ingress_ovfl_mode)
+    if (ovfl_mode==1)
        check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-    else
+    else if (ovfl_mode==0)
        check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
        
 endtask;
