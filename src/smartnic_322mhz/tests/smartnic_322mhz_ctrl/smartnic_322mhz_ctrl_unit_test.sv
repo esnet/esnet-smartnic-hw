@@ -121,30 +121,30 @@ module smartnic_322mhz_ctrl_unit_test;
         logic [3:0][7:0] got_data;
 
         // check default values.
-        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_CMAC_0_FC_THRESH;
-        env.smartnic_322mhz_reg_blk_agent.read_egr_cmac_0_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(0, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_CMAC_1_FC_THRESH;
-        env.smartnic_322mhz_reg_blk_agent.read_egr_cmac_1_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(1, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_HOST_0_FC_THRESH;
-        env.smartnic_322mhz_reg_blk_agent.read_egr_host_0_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(2, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_HOST_1_FC_THRESH;
-        env.smartnic_322mhz_reg_blk_agent.read_egr_host_1_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(3, got_data); `FAIL_UNLESS(got_data == exp_data);
 
         // check r/w access.
-        exp_data = 32'h1111_1111; env.smartnic_322mhz_reg_blk_agent.write_egr_cmac_0_fc_thresh(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_egr_cmac_0_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = 32'h1111_1111; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(0, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(0, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = 32'h2222_2222; env.smartnic_322mhz_reg_blk_agent.write_egr_cmac_1_fc_thresh(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_egr_cmac_1_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = 32'h2222_2222; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(1, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(1, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = 32'h3333_3333; env.smartnic_322mhz_reg_blk_agent.write_egr_host_0_fc_thresh(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_egr_host_0_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = 32'h3333_3333; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(2, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(2, got_data); `FAIL_UNLESS(got_data == exp_data);
 
-        exp_data = 32'h4444_4444; env.smartnic_322mhz_reg_blk_agent.write_egr_host_1_fc_thresh(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_egr_host_1_fc_thresh(got_data); `FAIL_UNLESS(got_data == exp_data);
+        exp_data = 32'h4444_4444; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(3, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(3, got_data); `FAIL_UNLESS(got_data == exp_data);
 
     `SVTEST_END
 

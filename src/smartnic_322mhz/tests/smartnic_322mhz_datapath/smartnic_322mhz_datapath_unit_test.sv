@@ -66,12 +66,8 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
     real FIFO_DEPTH = 1306.0; // 1024 - 4 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
-    smartnic_322mhz_reg_pkg::reg_bypass_config_t set_config;
-
-    // variables for discard tests.
     int	pkt_len     [NUM_PORTS-1:0];
 
-   
     //===================================
     // Setup for running the Unit Tests
     //===================================
@@ -82,8 +78,13 @@ module smartnic_322mhz_datapath_unit_test;
 
         reset(); // Issue reset (both datapath and management domains)
 
-        // Write hdr_length register to enable split-join logic.
+        // write hdr_length register to enable split-join logic.
         //env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
+
+        // initialize switch configuration registers.
+        init_sw_config_regs;
+
+        switch_config = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
 
         // default variable configuration
          in_pcap[0] = "../../../tests/common/pcap/10xrandom_pkts.pcap";
@@ -182,10 +183,10 @@ module smartnic_322mhz_datapath_unit_test;
         out_port_map = {2'h0, 2'h3, 2'h2, 2'h1};
 
         // program tid regs instead of bypass map.  uses port_map configuration from setup i.e. {2'h3, 2'h2, 2'h1, 2'h0}
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_CMAC_0_TID, 2'h1 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_CMAC_1_TID, 2'h2 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_HOST_0_TID, 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_HOST_1_TID, 2'h0 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 2'h1 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 2'h2 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2'h3 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 2'h0 );
 
         latch_probe_counters;
 
@@ -197,8 +198,6 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(single_stream_with_egress_discards)
-        cntr_addr_t bypass_base_addr;
-
         int port = $urandom % NUM_PORTS;
         // for (int port = 0; port < NUM_PORTS; port++) begin
 
@@ -210,7 +209,7 @@ module smartnic_322mhz_datapath_unit_test;
            exp_pkt_cnt[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
 
            // set flow control threshold.
-           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_CMAC_0_FC_THRESH + 4*port, 32'd1020);
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_FC_THRESH[0] + 4*port, 32'd1020);
           `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
 
            fork
@@ -234,8 +233,7 @@ module smartnic_322mhz_datapath_unit_test;
               .exp_ovfl_bytes  (tx_byte_cnt[port] - rx_byte_cnt[port])
            );
 
-           bypass_base_addr = PROBE_TO_BYPASS;
-           check_probe (.base_addr(bypass_base_addr), .exp_pkt_cnt(tx_pkt_cnt[port]), .exp_byte_cnt(tx_byte_cnt[port]));
+           check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[port]), .exp_byte_cnt(tx_byte_cnt[port]));
 
         // end
     `SVTEST_END
@@ -254,7 +252,7 @@ module smartnic_322mhz_datapath_unit_test;
            exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
-        set_config.tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_bypass_config(set_config);
+        switch_config.igr_sw_tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
    
         fork
            run_stream_test();
@@ -262,11 +260,11 @@ module smartnic_322mhz_datapath_unit_test;
            begin
               #(50us);
               // release backpressure on ingress ports
-              set_config.tpause = 0; env.smartnic_322mhz_reg_blk_agent.write_bypass_config(set_config);
+              switch_config.igr_sw_tpause = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
            end
 	join
 
-        check_stream_test_probes (.ingress_ovfl_mode(1));
+        check_stream_test_probes (.ovfl_mode(1));
     `SVTEST_END
 
 
@@ -299,6 +297,52 @@ module smartnic_322mhz_datapath_unit_test;
              end
 
           end
+    `SVTEST_END
+
+
+    `SVTEST(bypass_drops)
+        switch_config.drop_pkt_loop = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+
+        fork
+           run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .tpause(0), .twait(0) );
+
+           begin 
+              #10us
+              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_probe (.base_addr(DROPS_FROM_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                                   .ovfl_mode(2) );
+           end
+        join_any
+
+    `SVTEST_END
+
+
+    `SVTEST(igr_sw_drops)
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 3 );
+
+        fork
+           run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .tpause(0), .twait(0) );
+
+           begin 
+              #10us
+              check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
+              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                                   .ovfl_mode(2) );
+           end
+        join_any
+
     `SVTEST_END
 
 

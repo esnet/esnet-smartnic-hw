@@ -74,10 +74,10 @@ module p4_app_passthrough_test_unit_test;
 
        `SVTEST( test_default )
              // Configure igr_sw CMAC_0 tdest to APP_1 (igr_sw output port APP_1 is connected to p4_app passthrough path).
-             env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_CMAC_0_TDEST, 2'h1 );
+             env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h1 );
 
              // Configure egr_sw output port APP_1 tdest remapping to redirect CMAC_1 pkts to CMAC_0. 
-             env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_CMAC_1_TDEST, 2'h0 );
+             env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 2'h0 );
 
              run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1) );
        `SVTEST_END
