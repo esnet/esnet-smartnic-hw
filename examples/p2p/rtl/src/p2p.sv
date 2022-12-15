@@ -101,7 +101,7 @@ module p2p #(
    assign axis_to_switch_0.tkeep  = axis_from_switch_0.tkeep;
    assign axis_to_switch_0.tlast  = axis_from_switch_0.tlast;
    assign axis_to_switch_0.tid    = axis_from_switch_0.tid;
-   assign axis_to_switch_0.tdest  = axis_from_switch_0.tdest;
+   assign axis_to_switch_0.tdest  = {'0, axis_from_switch_0.tdest};
    assign axis_to_switch_0.tuser  = axis_from_switch_0.tuser;
 
    assign axis_from_switch_0.tready = axis_to_switch_0.tready && !p2p_regs.tpause;
@@ -112,7 +112,7 @@ module p2p #(
    assign axis_to_switch_1.tkeep  = axis_from_switch_1.tkeep;
    assign axis_to_switch_1.tlast  = axis_from_switch_1.tlast;
    assign axis_to_switch_1.tid    = axis_from_switch_1.tid;
-   assign axis_to_switch_1.tdest  = axis_from_switch_1.tdest;
+   assign axis_to_switch_1.tdest  = {'0, axis_from_switch_1.tdest};
    assign axis_to_switch_1.tuser  = axis_from_switch_1.tuser;
 
    assign axis_from_switch_1.tready = axis_to_switch_1.tready;
