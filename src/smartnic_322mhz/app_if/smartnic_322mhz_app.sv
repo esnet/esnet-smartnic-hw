@@ -103,7 +103,7 @@ module smartnic_322mhz_app
     output logic [63:0]  axis_to_switch_0_tkeep,
     output logic         axis_to_switch_0_tlast,
     output logic [1:0]   axis_to_switch_0_tid,
-    output logic [1:0]   axis_to_switch_0_tdest,
+    output logic [2:0]   axis_to_switch_0_tdest,
     output logic [15:0]  axis_to_switch_0_tuser_wr_ptr,
     output logic         axis_to_switch_0_tuser_hdr_tlast,
 
@@ -126,7 +126,7 @@ module smartnic_322mhz_app
     output logic [63:0]  axis_to_switch_1_tkeep,
     output logic         axis_to_switch_1_tlast,
     output logic [1:0]   axis_to_switch_1_tid,
-    output logic [1:0]   axis_to_switch_1_tdest,
+    output logic [2:0]   axis_to_switch_1_tdest,
     output logic         axis_to_switch_1_tuser,
 
     // flow control signals (one from each egress FIFO).
@@ -188,12 +188,13 @@ module smartnic_322mhz_app
 
     // Typedefs
     typedef logic[1:0] port_t;
+    typedef logic[2:0] egr_tdest_t;
 
     // Interfaces
     axi4l_intf #() axil_if       ();
     axi4l_intf #() axil_sdnet_if ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_switch [2] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_switch [2] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
                  .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_switch [2] ();
@@ -281,7 +282,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface to switch
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)
     ) i_axi4s_to_signals_to_switch (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
@@ -313,7 +314,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface to host
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
     ) i_axi4s_to_signals_to_host (
         .aclk    ( ), // Output
         .aresetn ( ), // Output

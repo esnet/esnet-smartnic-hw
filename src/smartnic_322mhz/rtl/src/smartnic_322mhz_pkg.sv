@@ -29,15 +29,28 @@ package smartnic_322mhz_pkg;
     // --------------------------------------------------------------
 
     typedef enum logic [1:0] {
-        CMAC_PORT0 = 2'b00,
-        CMAC_PORT1 = 2'b01,
-        HOST_PORT0 = 2'b10,
-        HOST_PORT1 = 2'b11
+        CMAC_PORT0 = 2'h0,
+        CMAC_PORT1 = 2'h1,
+        HOST_PORT0 = 2'h2,
+        HOST_PORT1 = 2'h3
     } port_encoding_t;
 
     typedef union packed {
         port_encoding_t encoded;
         bit [1:0]       raw;
     } port_t;
+
+    typedef enum logic [2:0] {
+        CMAC0 = 3'h0,
+        CMAC1 = 3'h1,
+        HOST0 = 3'h2,
+        HOST1 = 3'h3,
+        LOOPBACK = 3'h7
+    } egr_tdest_encoding_t;
+
+    typedef union packed {
+        egr_tdest_encoding_t encoded;
+        bit [2:0]       raw;
+    } egr_tdest_t;
 
 endpackage : smartnic_322mhz_pkg
