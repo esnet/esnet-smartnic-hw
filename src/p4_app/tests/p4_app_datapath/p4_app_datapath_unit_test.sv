@@ -121,6 +121,11 @@ module p4_app_datapath_unit_test;
 //        run_pkt_test ( .testdir("test-default"), .init_timestamp('0), .dest_port(2) );
 //    `SVTEST_END
 
+    `SVTEST(test_pkt_loopback)
+        force tb.axis_in_if.tdest = 2'h2;
+        run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(7) );
+    `SVTEST_END
+
     `SVTEST(test_fwd_p0_w_force)
         force tb.axis_in_if.tdest = 2'h2;
         run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp('0), .dest_port(0) );
@@ -140,7 +145,7 @@ module p4_app_datapath_unit_test;
 
 
      task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
+        input string testdir, input logic[63:0] init_timestamp=0, input egr_tdest_t dest_port=0, input VERBOSE=1 );
 	
         string filename;
 
@@ -159,7 +164,7 @@ module p4_app_datapath_unit_test;
         automatic bit rx_done = 0;
         byte          rx_data[$];
         port_t        id;
-        port_t        dest;
+        egr_tdest_t   dest;
         bit           user;
 
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);

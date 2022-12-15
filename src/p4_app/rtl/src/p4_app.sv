@@ -69,7 +69,7 @@ module p4_app
    assign axis_to_switch_1.tkeep  = axis_from_switch_1.tkeep;
    assign axis_to_switch_1.tlast  = axis_from_switch_1.tlast;
    assign axis_to_switch_1.tid    = axis_from_switch_1.tid;
-   assign axis_to_switch_1.tdest  = axis_from_switch_1.tdest;
+   assign axis_to_switch_1.tdest  = {'0, axis_from_switch_1.tdest};
    assign axis_to_switch_1.tuser  = axis_from_switch_1.tuser;
 
    assign axis_from_switch_1.tready = axis_to_switch_1.tready;
@@ -112,7 +112,7 @@ module p4_app
    always @(posedge core_clk) if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
    
    assign axis_to_switch_0.tdest = user_metadata_out_valid ?
-                                   user_metadata_out.egress_port[1:0] : user_metadata_out_latch.egress_port[1:0];
+                                   user_metadata_out.egress_port : user_metadata_out_latch.egress_port;
 
    assign axis_to_switch_0_tuser.wr_ptr = user_metadata_out_valid ?
                                           user_metadata_out.pid[15:0] : user_metadata_out_latch.pid[15:0];

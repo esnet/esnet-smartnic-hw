@@ -77,6 +77,10 @@ module p4_app_datapath_unit_test
 
        `include "../../../p4/sim/run_pkt_test_incl.svh"
 
+       `SVTEST(test_pkt_loopback)
+           run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(0) );
+       `SVTEST_END
+
     `SVUNIT_TESTS_END
 
 endmodule

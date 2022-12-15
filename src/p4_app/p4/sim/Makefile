@@ -18,11 +18,10 @@ P4_OBJECT_TEST = ../$(P4_OBJECT)
 P4BM_DIR = test-default
 
 # Directories to use for p4bm simulation
-P4BM_DIRS = test-default test-default-w-drops test-fwd-p0
-
+P4BM_DIRS = test-default test-default-w-drops test-fwd-p0 test-pkt-loopback
 
 # Directories to use for system verilog simulation
-SVH_DIRS = $(P4BM_DIRS)
+SVH_DIRS = test-default test-default-w-drops test-fwd-p0
 
 # Directories to use for test (against expected "golden" known-good
 # output traces. By default is the same as $(P4BM_DIRS) but can be
