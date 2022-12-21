@@ -84,49 +84,52 @@ module smartnic_322mhz_app
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
-    input  logic         axis_from_switch_tvalid,
-    output logic         axis_from_switch_tready,
-    input  logic [511:0] axis_from_switch_tdata,
-    input  logic [63:0]  axis_from_switch_tkeep,
-    input  logic         axis_from_switch_tlast,
-    input  logic [1:0]   axis_from_switch_tid,
-    input  logic [1:0]   axis_from_switch_tdest,
-    input  logic [15:0]  axis_from_switch_tuser_wr_ptr,
-    input  logic         axis_from_switch_tuser_hdr_tlast,
+    input  logic         axis_from_switch_0_tvalid,
+    output logic         axis_from_switch_0_tready,
+    input  logic [511:0] axis_from_switch_0_tdata,
+    input  logic [63:0]  axis_from_switch_0_tkeep,
+    input  logic         axis_from_switch_0_tlast,
+    input  logic [1:0]   axis_from_switch_0_tid,
+    input  logic [1:0]   axis_from_switch_0_tdest,
+    input  logic [15:0]  axis_from_switch_0_tuser_wr_ptr,
+    input  logic         axis_from_switch_0_tuser_hdr_tlast,
 
     // AXI-S data interface (to switch)
     // (synchronous to core_clk domain)
-    output logic         axis_to_switch_tvalid,
-    input  logic         axis_to_switch_tready,
-    output logic [511:0] axis_to_switch_tdata,
-    output logic [63:0]  axis_to_switch_tkeep,
-    output logic         axis_to_switch_tlast,
-    output logic [1:0]   axis_to_switch_tid,
-    output logic [1:0]   axis_to_switch_tdest,
-    output logic [15:0]  axis_to_switch_tuser_wr_ptr,
-    output logic         axis_to_switch_tuser_hdr_tlast,
+    output logic         axis_to_switch_0_tvalid,
+    input  logic         axis_to_switch_0_tready,
+    output logic [511:0] axis_to_switch_0_tdata,
+    output logic [63:0]  axis_to_switch_0_tkeep,
+    output logic         axis_to_switch_0_tlast,
+    output logic [1:0]   axis_to_switch_0_tid,
+    output logic [2:0]   axis_to_switch_0_tdest,
+    output logic [15:0]  axis_to_switch_0_tuser_wr_ptr,
+    output logic         axis_to_switch_0_tuser_hdr_tlast,
 
     // AXI-S data interface (from host)
     // (synchronous to core_clk domain)
-    input  logic         axis_from_host_tvalid,
-    output logic         axis_from_host_tready,
-    input  logic [511:0] axis_from_host_tdata,
-    input  logic [63:0]  axis_from_host_tkeep,
-    input  logic         axis_from_host_tlast,
-    input  logic [1:0]   axis_from_host_tid,
-    input  logic [1:0]   axis_from_host_tdest,
-    input  logic         axis_from_host_tuser,
+    input  logic         axis_from_switch_1_tvalid,
+    output logic         axis_from_switch_1_tready,
+    input  logic [511:0] axis_from_switch_1_tdata,
+    input  logic [63:0]  axis_from_switch_1_tkeep,
+    input  logic         axis_from_switch_1_tlast,
+    input  logic [1:0]   axis_from_switch_1_tid,
+    input  logic [1:0]   axis_from_switch_1_tdest,
+    input  logic         axis_from_switch_1_tuser,
 
     // AXI-S data interface (to host)
     // (synchronous to core_clk domain)
-    output logic         axis_to_host_tvalid,
-    input  logic         axis_to_host_tready,
-    output logic [511:0] axis_to_host_tdata,
-    output logic [63:0]  axis_to_host_tkeep,
-    output logic         axis_to_host_tlast,
-    output logic [1:0]   axis_to_host_tid,
-    output logic [1:0]   axis_to_host_tdest,
-    output logic         axis_to_host_tuser,
+    output logic         axis_to_switch_1_tvalid,
+    input  logic         axis_to_switch_1_tready,
+    output logic [511:0] axis_to_switch_1_tdata,
+    output logic [63:0]  axis_to_switch_1_tkeep,
+    output logic         axis_to_switch_1_tlast,
+    output logic [1:0]   axis_to_switch_1_tid,
+    output logic [2:0]   axis_to_switch_1_tdest,
+    output logic         axis_to_switch_1_tuser,
+
+    // flow control signals (one from each egress FIFO).
+    input logic [3:0]    egr_flow_ctl,
 
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
@@ -184,27 +187,25 @@ module smartnic_322mhz_app
 
     // Typedefs
     typedef logic[1:0] port_t;
+    typedef logic[2:0] egr_tdest_t;
 
     // Interfaces
     axi4l_intf #() axil_if       ();
     axi4l_intf #() axil_sdnet_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_switch   ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_switch [2] ();
 
-    tuser_buffer_context_mode_t   axis_to_switch_tuser;
-    assign axis_to_switch_tuser_wr_ptr    = axis_to_switch_tuser.wr_ptr;
-    assign axis_to_switch_tuser_hdr_tlast = axis_to_switch_tuser.hdr_tlast;
+    tuser_buffer_context_mode_t   axis_to_switch_0_tuser;
+    assign axis_to_switch_0_tuser_wr_ptr    = axis_to_switch_0_tuser.wr_ptr;
+    assign axis_to_switch_0_tuser_hdr_tlast = axis_to_switch_0_tuser.hdr_tlast;
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_switch ();
+                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_switch [2] ();
 
-    tuser_buffer_context_mode_t   axis_from_switch_tuser;
-    assign axis_from_switch_tuser.wr_ptr    = axis_from_switch_tuser_wr_ptr;
-    assign axis_from_switch_tuser.hdr_tlast = axis_from_switch_tuser_hdr_tlast;
-
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))    axis_to_host     ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))    axis_from_host   ();
+    tuser_buffer_context_mode_t   axis_from_switch_0_tuser;
+    assign axis_from_switch_0_tuser.wr_ptr    = axis_from_switch_0_tuser_wr_ptr;
+    assign axis_from_switch_0_tuser.hdr_tlast = axis_from_switch_0_tuser_hdr_tlast;
 
     axi3_intf  #(
         .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)
@@ -266,66 +267,66 @@ module smartnic_322mhz_app
     // -- AXI-S interface from switch
     axi4s_intf_from_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
-    ) i_axi4s_intf_from_signals_from_switch (
+    ) i_axi4s_intf_from_signals_from_switch_0 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
-        .tvalid  ( axis_from_switch_tvalid ),
-        .tready  ( axis_from_switch_tready ),
-        .tdata   ( axis_from_switch_tdata ),
-        .tkeep   ( axis_from_switch_tkeep ),
-        .tlast   ( axis_from_switch_tlast ),
-        .tid     ( axis_from_switch_tid ),
-        .tdest   ( axis_from_switch_tdest ),
-        .tuser   ( axis_from_switch_tuser ),
-        .axi4s_if( axis_from_switch )
+        .tvalid  ( axis_from_switch_0_tvalid ),
+        .tready  ( axis_from_switch_0_tready ),
+        .tdata   ( axis_from_switch_0_tdata ),
+        .tkeep   ( axis_from_switch_0_tkeep ),
+        .tlast   ( axis_from_switch_0_tlast ),
+        .tid     ( axis_from_switch_0_tid ),
+        .tdest   ( axis_from_switch_0_tdest ),
+        .tuser   ( axis_from_switch_0_tuser ),
+        .axi4s_if( axis_from_switch[0] )
     );
     // -- AXI-S interface to switch
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
-    ) i_axi4s_to_signals_to_switch (
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)
+    ) i_axi4s_to_signals_to_switch_0 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
-        .tvalid  ( axis_to_switch_tvalid ),
-        .tready  ( axis_to_switch_tready ),
-        .tdata   ( axis_to_switch_tdata ),
-        .tkeep   ( axis_to_switch_tkeep ),
-        .tlast   ( axis_to_switch_tlast ),
-        .tid     ( axis_to_switch_tid ),
-        .tdest   ( axis_to_switch_tdest ),
-        .tuser   ( axis_to_switch_tuser ),
-        .axi4s_if( axis_to_switch )
+        .tvalid  ( axis_to_switch_0_tvalid ),
+        .tready  ( axis_to_switch_0_tready ),
+        .tdata   ( axis_to_switch_0_tdata ),
+        .tkeep   ( axis_to_switch_0_tkeep ),
+        .tlast   ( axis_to_switch_0_tlast ),
+        .tid     ( axis_to_switch_0_tid ),
+        .tdest   ( axis_to_switch_0_tdest ),
+        .tuser   ( axis_to_switch_0_tuser ),
+        .axi4s_if( axis_to_switch[0] )
     );
     // -- AXI-S interface from host
     axi4s_intf_from_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
-    ) i_axi4s_from_signals_from_host (
+    ) i_axi4s_from_signals_from_switch_1 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
-        .tvalid  ( axis_from_host_tvalid ),
-        .tready  ( axis_from_host_tready ),
-        .tdata   ( axis_from_host_tdata ),
-        .tkeep   ( axis_from_host_tkeep ),
-        .tlast   ( axis_from_host_tlast ),
-        .tid     ( axis_from_host_tid ),
-        .tdest   ( axis_from_host_tdest ),
-        .tuser   ( axis_from_host_tuser ),
-        .axi4s_if( axis_from_host )
+        .tvalid  ( axis_from_switch_1_tvalid ),
+        .tready  ( axis_from_switch_1_tready ),
+        .tdata   ( axis_from_switch_1_tdata ),
+        .tkeep   ( axis_from_switch_1_tkeep ),
+        .tlast   ( axis_from_switch_1_tlast ),
+        .tid     ( axis_from_switch_1_tid ),
+        .tdest   ( axis_from_switch_1_tdest ),
+        .tuser   ( axis_from_switch_1_tuser ),
+        .axi4s_if( axis_from_switch[1] )
     );
     // -- AXI-S interface to host
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
-    ) i_axi4s_to_signals_to_host (
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
+    ) i_axi4s_to_signals_to_switch_1 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
-        .tvalid  ( axis_to_host_tvalid ),
-        .tready  ( axis_to_host_tready ),
-        .tdata   ( axis_to_host_tdata ),
-        .tkeep   ( axis_to_host_tkeep ),
-        .tlast   ( axis_to_host_tlast ),
-        .tid     ( axis_to_host_tid ),
-        .tdest   ( axis_to_host_tdest ),
-        .tuser   ( axis_to_host_tuser ),
-        .axi4s_if( axis_to_host )
+        .tvalid  ( axis_to_switch_1_tvalid ),
+        .tready  ( axis_to_switch_1_tready ),
+        .tdata   ( axis_to_switch_1_tdata ),
+        .tkeep   ( axis_to_switch_1_tkeep ),
+        .tlast   ( axis_to_switch_1_tlast ),
+        .tid     ( axis_to_switch_1_tid ),
+        .tdest   ( axis_to_switch_1_tdest ),
+        .tuser   ( axis_to_switch_1_tuser ),
+        .axi4s_if( axis_to_switch[1] )
     );
 
     // -- AXI memory interfaces to HBM
@@ -400,10 +401,10 @@ module smartnic_322mhz_app
         .axil_if       ( axil_if ),
         .axil_to_sdnet ( axil_sdnet_if ),
 
-        .axis_core_to_switch  ( axis_to_switch),
-        .axis_switch_to_core  ( axis_from_switch ),
-        .axis_to_host_0       ( axis_to_host ),
-        .axis_from_host_0     ( axis_from_host )
+        .axis_to_switch_0    ( axis_to_switch[0]),
+        .axis_from_switch_0  ( axis_from_switch[0] ),
+        .axis_to_switch_1    ( axis_to_switch[1] ),
+        .axis_from_switch_1  ( axis_from_switch[1] )
     );
 
     // Terminate AXI HBM interfaces (unused)

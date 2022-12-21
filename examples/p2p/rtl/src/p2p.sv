@@ -26,10 +26,10 @@ module p2p #(
    axi4l_intf.peripheral axil_if,
    axi4l_intf.peripheral axil_to_sdnet,
 
-   axi4s_intf.tx axis_core_to_switch,
-   axi4s_intf.rx axis_switch_to_core,
-   axi4s_intf.tx axis_to_host_0,
-   axi4s_intf.rx axis_from_host_0   
+   axi4s_intf.tx axis_to_switch_0,
+   axi4s_intf.rx axis_from_switch_0,
+   axi4s_intf.tx axis_to_switch_1,
+   axi4s_intf.rx axis_from_switch_1
 );
 
    // ----------------------------------------------------------------
@@ -96,26 +96,26 @@ module p2p #(
    //  Datpath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
    
-   assign axis_core_to_switch.tvalid = axis_switch_to_core.tvalid && !p2p_regs.tpause;
-   assign axis_core_to_switch.tdata  = axis_switch_to_core.tdata;
-   assign axis_core_to_switch.tkeep  = axis_switch_to_core.tkeep;
-   assign axis_core_to_switch.tlast  = axis_switch_to_core.tlast;
-   assign axis_core_to_switch.tid    = axis_switch_to_core.tid;
-   assign axis_core_to_switch.tdest  = axis_switch_to_core.tdest;
-   assign axis_core_to_switch.tuser  = axis_switch_to_core.tuser;
+   assign axis_to_switch_0.tvalid = axis_from_switch_0.tvalid && !p2p_regs.tpause;
+   assign axis_to_switch_0.tdata  = axis_from_switch_0.tdata;
+   assign axis_to_switch_0.tkeep  = axis_from_switch_0.tkeep;
+   assign axis_to_switch_0.tlast  = axis_from_switch_0.tlast;
+   assign axis_to_switch_0.tid    = axis_from_switch_0.tid;
+   assign axis_to_switch_0.tdest  = {'0, axis_from_switch_0.tdest};
+   assign axis_to_switch_0.tuser  = axis_from_switch_0.tuser;
 
-   assign axis_switch_to_core.tready = axis_core_to_switch.tready && !p2p_regs.tpause;
+   assign axis_from_switch_0.tready = axis_to_switch_0.tready && !p2p_regs.tpause;
 
 
-   assign axis_to_host_0.tvalid = axis_from_host_0.tvalid;
-   assign axis_to_host_0.tdata  = axis_from_host_0.tdata;
-   assign axis_to_host_0.tkeep  = axis_from_host_0.tkeep;
-   assign axis_to_host_0.tlast  = axis_from_host_0.tlast;
-   assign axis_to_host_0.tid    = axis_from_host_0.tid;
-   assign axis_to_host_0.tdest  = axis_from_host_0.tdest;
-   assign axis_to_host_0.tuser  = axis_from_host_0.tuser;
+   assign axis_to_switch_1.tvalid = axis_from_switch_1.tvalid;
+   assign axis_to_switch_1.tdata  = axis_from_switch_1.tdata;
+   assign axis_to_switch_1.tkeep  = axis_from_switch_1.tkeep;
+   assign axis_to_switch_1.tlast  = axis_from_switch_1.tlast;
+   assign axis_to_switch_1.tid    = axis_from_switch_1.tid;
+   assign axis_to_switch_1.tdest  = {'0, axis_from_switch_1.tdest};
+   assign axis_to_switch_1.tuser  = axis_from_switch_1.tuser;
 
-   assign axis_from_host_0.tready = axis_to_host_0.tready;
+   assign axis_from_switch_1.tready = axis_to_switch_1.tready;
 
 
 endmodule: p2p

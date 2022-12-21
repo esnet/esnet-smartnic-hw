@@ -95,28 +95,6 @@ module smartnic_322mhz_ctrl_unit_test;
         `FAIL_UNLESS(got_data == exp_data);
     `SVTEST_END
 
-    // Test read/write access to smartnic_322mhz.port_config register
-    `SVTEST(set_port_config)
-        smartnic_322mhz_reg_pkg::reg_port_config_t set_config;
-        smartnic_322mhz_reg_pkg::reg_port_config_t get_config;
-
-        set_config.input_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_PORT0;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_USE_META;
-
-        // Read port_config register and confirm init value
-        env.smartnic_322mhz_reg_blk_agent.read_port_config(get_config);
-
-        `FAIL_UNLESS(get_config == smartnic_322mhz_reg_pkg::INIT_PORT_CONFIG);
-
-        // Write new config to port_config register
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Read back...
-        env.smartnic_322mhz_reg_blk_agent.read_port_config(get_config);
-
-        `FAIL_UNLESS(get_config == set_config);
-    `SVTEST_END
-
     // Test div_count and burst_count access.
     `SVTEST(div_count_burst_count)
         logic [3:0][7:0] exp_data;
@@ -135,6 +113,39 @@ module smartnic_322mhz_ctrl_unit_test;
 
         exp_data = 32'hcafe_beef; env.smartnic_322mhz_reg_blk_agent.write_burst_count(exp_data);
         env.smartnic_322mhz_reg_blk_agent.read_burst_count(got_data); `FAIL_UNLESS(got_data == exp_data);
+    `SVTEST_END
+
+    // Test flow_control access.
+    `SVTEST(flow_control)
+        logic [3:0][7:0] exp_data;
+        logic [3:0][7:0] got_data;
+
+        // check default values.
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(0, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(1, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(2, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = smartnic_322mhz_reg_pkg::INIT_EGR_FC_THRESH;
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(3, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        // check r/w access.
+        exp_data = 32'h1111_1111; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(0, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(0, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 32'h2222_2222; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(1, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(1, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 32'h3333_3333; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(2, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(2, got_data); `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 32'h4444_4444; env.smartnic_322mhz_reg_blk_agent.write_egr_fc_thresh(3, exp_data);
+        env.smartnic_322mhz_reg_blk_agent.read_egr_fc_thresh(3, got_data); `FAIL_UNLESS(got_data == exp_data);
+
     `SVTEST_END
 
     // Test endian check component

@@ -25,8 +25,8 @@ module tb;
     axi4l_intf axil_to_sdnet ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_if ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_if ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_to_adpt ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_if ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_to_adpt ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_from_adpt ();
    
     // DUT instance
@@ -36,10 +36,10 @@ module tb;
         .timestamp           ( timestamp ),
         .axil_if             ( axil_if ),
         .axil_to_sdnet       ( axil_to_sdnet ),
-        .axis_switch_to_core ( axis_in_if ),
-        .axis_core_to_switch ( axis_out_if ),
-        .axis_to_host_0      ( axis_to_adpt ),
-        .axis_from_host_0    ( axis_from_adpt )
+        .axis_from_switch_0  ( axis_in_if ),
+        .axis_to_switch_0    ( axis_out_if ),
+        .axis_to_switch_1    ( axis_to_adpt ),
+        .axis_from_switch_1  ( axis_from_adpt )
     );
 
     //===================================

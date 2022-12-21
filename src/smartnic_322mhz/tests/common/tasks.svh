@@ -28,8 +28,10 @@ typedef enum logic [31:0] {
     PROBE_FROM_HOST_PORT0      = 'h9800,
     PROBE_FROM_HOST_PORT1      = 'h9c00,
 
-    PROBE_CORE_TO_APP          = 'ha000,
-    PROBE_APP_TO_CORE          = 'ha800,
+    PROBE_CORE_TO_APP0         = 'ha000,
+    PROBE_CORE_TO_APP1         = 'ha400,
+    PROBE_APP0_TO_CORE         = 'ha800,
+    PROBE_APP1_TO_CORE         = 'hac00,
 
     PROBE_TO_CMAC_PORT0        = 'hb000,
     DROPS_OVFL_TO_CMAC_PORT0   = 'hb400,
@@ -38,7 +40,13 @@ typedef enum logic [31:0] {
     PROBE_TO_HOST_PORT0        = 'hc000,
     DROPS_OVFL_TO_HOST_PORT0   = 'hc400,
     PROBE_TO_HOST_PORT1        = 'hc800,
-    DROPS_OVFL_TO_HOST_PORT1   = 'hcc00
+    DROPS_OVFL_TO_HOST_PORT1   = 'hcc00,
+
+    PROBE_TO_BYPASS            = 'hd000,
+
+    DROPS_FROM_IGR_SW          = 'hd400,
+    DROPS_FROM_BYPASS          = 'hd800,
+    DROPS_FROM_APP0            = 'hdc00
     } cntr_addr_encoding_t;
 
 typedef union packed {
@@ -46,6 +54,7 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
+smartnic_322mhz_reg_pkg::reg_switch_config_t switch_config;
 
 
 //=======================================================================
@@ -114,13 +123,49 @@ task compare_pkts(input byte pkt1[$], pkt2[$]);
 endtask
 
 
+task init_sw_config_regs();
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 3 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], 3 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 1 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[3], 3 );
+
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 3 );
+endtask
+
+
+task configure_port_map();
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], out_port_map[0] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], out_port_map[1] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], out_port_map[2] );
+   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], out_port_map[3] );
+endtask
+
+
 task automatic run_pkt_stream (
        input port_t           in_port, out_port,
        input string           in_pcap, out_pcap,
        output logic [63:0]    tx_pkt_cnt, tx_byte_cnt,
        output logic [63:0]    rx_pkt_cnt, rx_byte_cnt,
        input int              exp_pkt_cnt = 0,
-       input int              tpause = 0, twait = 0,
+       input int              tpause = 0, twait = 0, init_pause = 0,
        input bit              tuser = 0
     );
    
@@ -159,6 +204,7 @@ task automatic run_pkt_stream (
 
           if (exp_pkt_cnt == 0) exp_pkt_cnt = pcap_record_hdr.size();
 
+          #(init_pause);
           while (rx_pkt_cnt < exp_pkt_cnt) begin
              env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
              rx_pkt_cnt++;
@@ -203,7 +249,7 @@ task run_stream_test (input int tpause = 0, twait = 0);
 endtask
    
 
-task check_stream_test_probes (input logic ingress_ovfl_mode = 0);
+task check_stream_test_probes (input logic ovfl_mode = 0);
     for (int i=0; i<NUM_PORTS; i++) begin
        check_stream_probes (
           .in_port         (i), 
@@ -212,7 +258,7 @@ task check_stream_test_probes (input logic ingress_ovfl_mode = 0);
           .exp_good_bytes  (rx_byte_cnt[i]), 
           .exp_ovfl_pkts   (tx_pkt_cnt[i]  - rx_pkt_cnt[i]), 
           .exp_ovfl_bytes  (tx_byte_cnt[i] - rx_byte_cnt[i]),
-          .ingress_ovfl_mode   (ingress_ovfl_mode)
+          .ovfl_mode       (ovfl_mode)
        );
     end
 endtask;
@@ -220,26 +266,26 @@ endtask;
 
 task check_stream_probes ( input port_t       in_port, out_port,
                            input logic [63:0] exp_good_pkts, exp_good_bytes, exp_ovfl_pkts=0, exp_ovfl_bytes=0,
-                           input logic        ingress_ovfl_mode = 0 );
+                           input int          ovfl_mode = 0 );  // ovfl_mode: 0-egress_ovfl, 1-ingress_ovfl, 2-pkt_drops
 
     cntr_addr_t in_port_base_addr, out_port_base_addr;
     logic [63:0] exp_tot_pkts, exp_tot_bytes;
 
     // establish base addr for ingress probe
     case (in_port)
-           CMAC_PORT0 : in_port_base_addr = 'h8000;
-           CMAC_PORT1 : in_port_base_addr = 'h8c00;
-           HOST_PORT0 : in_port_base_addr = 'h9800;
-           HOST_PORT1 : in_port_base_addr = 'h9c00;
+           CMAC_PORT0 : in_port_base_addr = PROBE_FROM_CMAC_PORT0; // 'h8000;
+           CMAC_PORT1 : in_port_base_addr = PROBE_FROM_CMAC_PORT1; // 'h8c00;
+           HOST_PORT0 : in_port_base_addr = PROBE_FROM_HOST_PORT0; // 'h9800;
+           HOST_PORT1 : in_port_base_addr = PROBE_FROM_HOST_PORT1; // 'h9c00;
            default    : in_port_base_addr = 'hxxxx;
     endcase
 
     // establish base addr for egress probe
     case (out_port)
-           CMAC_PORT0 : out_port_base_addr = 'hb000;
-           CMAC_PORT1 : out_port_base_addr = 'hb800;
-           HOST_PORT0 : out_port_base_addr = 'hc000;
-           HOST_PORT1 : out_port_base_addr = 'hc800;
+           CMAC_PORT0 : out_port_base_addr = PROBE_TO_CMAC_PORT0; // 'hb000;
+           CMAC_PORT1 : out_port_base_addr = PROBE_TO_CMAC_PORT1; // 'hb800;
+           HOST_PORT0 : out_port_base_addr = PROBE_TO_HOST_PORT0; // 'hc000;
+           HOST_PORT1 : out_port_base_addr = PROBE_TO_HOST_PORT1; // 'hc800;
            default    : out_port_base_addr = 'hxxxx;
     endcase
 
@@ -249,7 +295,7 @@ task check_stream_probes ( input port_t       in_port, out_port,
 
 
     // check ingress and egress probe counts
-    if (ingress_ovfl_mode)
+    if (ovfl_mode==1)
        check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_good_pkts), .exp_byte_cnt(exp_good_bytes));
     else
        check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_tot_pkts),  .exp_byte_cnt(exp_tot_bytes));
@@ -260,19 +306,17 @@ task check_stream_probes ( input port_t       in_port, out_port,
     // check ingress and egress ovfl counts
     if ( (in_port != HOST_PORT0) && (in_port != HOST_PORT1) ) begin  // no ovfl counters for these ingress ports.
        in_port_base_addr = in_port_base_addr + 'h400;
-       if (ingress_ovfl_mode)
+       if (ovfl_mode==1)
           check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
-       else	   
+       else if (ovfl_mode==0)
           check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
     end
 
-    if ( (out_port != HOST_PORT0) ) begin  // no ovfl counters for these egress ports.
-       out_port_base_addr = out_port_base_addr + 'h400;
-       if (ingress_ovfl_mode)
-          check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-       else
-          check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
-    end
+    out_port_base_addr = out_port_base_addr + 'h400;
+    if (ovfl_mode==1)
+       check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(0), .exp_byte_cnt(0));
+    else if (ovfl_mode==0)
+       check_probe (.base_addr(out_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
        
 endtask;
 
@@ -293,3 +337,125 @@ task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkt_cnt, e
 endtask;
 
 
+task check_and_clear_err_probes ( input port_t in_port, input logic [63:0] exp_err_pkts, exp_err_bytes );
+    cntr_addr_t in_port_err_addr;
+
+    // establish addr for ingress err counts
+    case (in_port)
+       CMAC_PORT0 : in_port_err_addr = DROPS_ERR_FROM_CMAC_PORT0; // 'h8800;
+       CMAC_PORT1 : in_port_err_addr = DROPS_ERR_FROM_CMAC_PORT1; // 'h9400;
+       default    : in_port_err_addr = 'hxxxx;
+    endcase
+
+    check_probe (.base_addr(in_port_err_addr), .exp_pkt_cnt(exp_err_pkts), .exp_byte_cnt(exp_err_bytes));
+
+    env.reg_agent.write_reg( in_port_err_addr + 'h10, 'h2 ); // CLR_ON_WR_EVT
+
+endtask;
+
+
+task latch_probe_counters;
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h1 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h1 );
+
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h1 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h1 );
+
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h1 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h1 );
+
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h1 );
+endtask;
+
+
+task latch_and_clear_probe_counters;
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h3 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h3 );
+
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h3 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h3 );
+
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h3 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h3 );
+
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h3 );
+endtask;
+
+
+task clear_and_check_probe_counters;
+    env.probe_from_cmac_0_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_cmac_1_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_host_0_reg_blk_agent.write_probe_control  ( 'h2 );
+    env.probe_from_host_1_reg_blk_agent.write_probe_control  ( 'h2 );
+
+    env.probe_core_to_app0_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_core_to_app1_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_app0_to_core_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_app1_to_core_reg_blk_agent.write_probe_control ( 'h2 );
+
+    env.probe_to_cmac_0_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_cmac_1_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_host_0_reg_blk_agent.write_probe_control    ( 'h2 );
+    env.probe_to_host_1_reg_blk_agent.write_probe_control    ( 'h2 );
+
+    env.probe_to_bypass_reg_blk_agent.write_probe_control    ( 'h2 );
+
+    check_cleared_probe_counters;
+endtask;
+
+
+task check_cleared_probe_counters;
+    check_probe ( .base_addr(PROBE_FROM_CMAC_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_FROM_CMAC_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_FROM_HOST_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_FROM_HOST_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+    check_probe ( .base_addr(PROBE_CORE_TO_APP0),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_CORE_TO_APP1),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_APP0_TO_CORE),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_APP1_TO_CORE),    .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+    check_probe ( .base_addr(PROBE_TO_CMAC_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_TO_CMAC_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_TO_HOST_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_TO_HOST_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+
+    check_probe ( .base_addr(PROBE_TO_BYPASS),       .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+endtask;
+
+
+task check_probe_control_defaults;
+    logic [31:0] rd_data;
+    bit          rd_fail = 0;
+
+    env.probe_from_cmac_0_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_cmac_1_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_host_0_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_from_host_1_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+    env.probe_core_to_app0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_core_to_app1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_app0_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_app1_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+    env.probe_to_cmac_0_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_cmac_1_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_host_0_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+    env.probe_to_host_1_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+
+    env.probe_to_bypass_reg_blk_agent.read_probe_control    ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
+   `FAIL_UNLESS( rd_fail == 0 );
+
+endtask;

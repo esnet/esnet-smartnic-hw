@@ -1,67 +1,17 @@
-`include "svunit_defines.svh"
-
-import tb_pkg::*;
-
-//===================================
-// (Failsafe) timeout
-//===================================
-`define SVUNIT_TIMEOUT 200us
-
-module p4_hbm_datapath_unit_test;
-
-    // Testcase name
-    string name = "p4_hbm_datapath_ut";
-
-    // SVUnit base testcase
-    svunit_pkg::svunit_testcase svunit_ut;
-
-    //===================================
-    // DUT + testbench
-    //===================================
-    // This test suite references the common smartnic_322mhz
-    // testbench top level. The 'tb' module is
-    // loaded into the tb_glbl scope, so is available
-    // at tb_glbl.tb.
-    //
-    // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
-    // here for convenience.
-    tb_pkg::tb_env env;
-
-    //===================================
-    // Import common testcase tasks
-    //===================================
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
-
-    //===================================
-    // Build
-    //===================================
-    function void build();
-        svunit_ut = new(name);
-
-        // Build testbench
-        tb.build( .sdnet_driver(1) );  // build tb with sdnet driver.
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
-
-    endfunction
-
     //===================================
     // Setup for running the Unit Tests
     //===================================
     task setup();
         svunit_ut.setup();
 
-        // Flush packets from pipeline
-        env.axis_monitor[0].flush();
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        reset(); // Issue reset (both datapath and management domains)
 
-        // Wait for HBM to initialize
-        #1us;
+        // Write hdr_length register (hdr_length = 0B to disable split-join logic).
+        `ifdef HDR_LENGTH
+            env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
+        `endif
 
         // Initialize SDNet tables
         env.sdnet_init();
@@ -72,30 +22,26 @@ module p4_hbm_datapath_unit_test;
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
 
-        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block.
+        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block. 
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
 
-        // Put AXI-S interfaces into quiescent state
-        env.axis_driver[0].idle();
-        env.axis_monitor[0].idle();
+        `INFO("Waiting to initialize axis fifos...");
+        for (integer i = 0; i < 100 ; i=i+1 ) begin
+          @(posedge tb.clk);
+        end
 
     endtask
 
 
-    //===================================
-    // Here we deconstruct anything we
-    // need after running the Unit Tests
-    //===================================
+    //=======================================
+    // Teardown from running the Unit Tests
+    //=======================================
     task teardown();
         `INFO("Waiting to end testcase...");
         for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
         `INFO("Ending testcase!");
 
         svunit_ut.teardown();
-
-        // Flush remaining packets
-        env.axis_monitor[0].flush();
-        #10us;
 
         // Clean up SDNet tables
         env.sdnet_cleanup();
@@ -104,29 +50,8 @@ module p4_hbm_datapath_unit_test;
 
 
     //=======================================================================
-    // TESTS
+    // Packet test sequence
     //=======================================================================
-
-    //===================================
-    // All tests are defined between the
-    // SVUNIT_TESTS_BEGIN/END macros
-    //
-    // Each individual test must be
-    // defined between `SVTEST(_NAME_)
-    // `SVTEST_END
-    //
-    // i.e.
-    //   `SVTEST(mytest)
-    //     <test code>
-    //   `SVTEST_END
-    //===================================
-
-    `SVUNIT_TESTS_BEGIN
-
-    `include "../../../p4/sim/run_pkt_test_incl.svh"
-
-    `SVUNIT_TESTS_END
-
      task run_pkt_test (
         input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
 	
@@ -168,7 +93,7 @@ module p4_hbm_datapath_unit_test;
          fork
              begin
                  // Send packets
-                 send_pcap(filename, num_pkts, start_idx);  // sends from port 0 by default.
+                 send_pcap(filename, num_pkts, start_idx);  // sends from port 0 (CMAC_0) by default.
              end
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
@@ -188,7 +113,7 @@ module p4_hbm_datapath_unit_test;
                              #5us;
                          end
                          begin
-                             // Monitor received packets
+                             // Monitor received packets on port 0 (CMAC_0).
                              env.axis_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
@@ -209,5 +134,3 @@ module p4_hbm_datapath_unit_test;
      task debug_msg(input string msg, input bit VERBOSE=0);
          if (VERBOSE) `INFO(msg);
      endtask
-
-endmodule

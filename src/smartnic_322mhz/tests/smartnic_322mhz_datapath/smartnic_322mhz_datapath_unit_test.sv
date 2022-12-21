@@ -39,12 +39,12 @@ module smartnic_322mhz_datapath_unit_test;
     /*
     assign tb.axis_sample_clk = tb.clk;
     assign tb.axis_sample_aresetn = !tb.rst;
-    assign tb.axis_sample_if.tvalid = tb.DUT.bypass_mux_to_switch.axi4s_in.tvalid;
-    assign tb.axis_sample_if.tlast  = tb.DUT.bypass_mux_to_switch.axi4s_in.tlast;
-    assign tb.axis_sample_if.tdata  = tb.DUT.bypass_mux_to_switch.axi4s_in.tdata;
-    assign tb.axis_sample_if.tkeep  = tb.DUT.bypass_mux_to_switch.axi4s_in.tkeep;
-    assign tb.axis_sample_if.tuser  = tb.DUT.bypass_mux_to_switch.axi4s_in.tuser;
-    assign tb.axis_sample_if.tready = tb.DUT.bypass_mux_to_switch.axi4s_in.tready;
+    assign tb.axis_sample_if.tvalid = tb.DUT.axi4s_split_join_0.axi4s_in.tvalid;
+    assign tb.axis_sample_if.tlast  = tb.DUT.axi4s_split_join_0.axi4s_in.tlast;
+    assign tb.axis_sample_if.tdata  = tb.DUT.axi4s_split_join_0.axi4s_in.tdata;
+    assign tb.axis_sample_if.tkeep  = tb.DUT.axi4s_split_join_0.axi4s_in.tkeep;
+    assign tb.axis_sample_if.tuser  = tb.DUT.axi4s_split_join_0.axi4s_in.tuser;
+    assign tb.axis_sample_if.tready = tb.DUT.axi4s_split_join_0.axi4s_in.tready;
     */
 
     //===================================
@@ -66,16 +66,26 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
     real FIFO_DEPTH = 1306.0; // 1024 - 4 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
-    smartnic_322mhz_reg_pkg::reg_port_config_t set_config;
-
-    // variables for discard tests.
     int	pkt_len     [NUM_PORTS-1:0];
 
-   
     //===================================
     // Setup for running the Unit Tests
     //===================================
     task setup();
+        svunit_ut.setup();
+
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
+
+        reset(); // Issue reset (both datapath and management domains)
+
+        // write hdr_length register to enable split-join logic.
+        //env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
+
+        // initialize switch configuration registers.
+        init_sw_config_regs;
+
+        switch_config = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+
         // default variable configuration
          in_pcap[0] = "../../../tests/common/pcap/10xrandom_pkts.pcap";
         out_pcap[0] = "../../../tests/common/pcap/10xrandom_pkts.pcap";
@@ -86,26 +96,9 @@ module smartnic_322mhz_datapath_unit_test;
          in_pcap[3] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
         out_pcap[3] = "../../../tests/common/pcap/40xrandom_pkts.pcap";
 
-        out_port_map = {2'h0, 2'h2, 2'h3, 2'h1};
+        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; configure_port_map;
         pkt_len      = {0, 0, 0, 0};  
         exp_pkt_cnt  = {0, 0, 0, 0};  // if exp_pkt_cnt field is set 0, value is determined from pcap file.
-
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
-
-        svunit_ut.setup();
-
-        // Issue reset (both datapath and management domains)
-        reset();
-
-        // Write port_config register to enable app bypass mode.
-        set_config.input_enable  = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_BOTH;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_USE_META;
-        set_config.app_bypass = 1'b1;
-        set_config.app_tpause = 1'b0;
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Write hdr_length register to enable split-join logic.
-        //env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -148,7 +141,18 @@ module smartnic_322mhz_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
+    `SVTEST(single_pkt_stream)
+        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                        .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                        .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                        .exp_pkt_cnt(exp_pkt_cnt[0]),
+                        .tpause(0), .twait(0) );
+    `SVTEST_END
+
+
     `SVTEST(switch_basic_sanity)
+        out_port_map = {2'h0, 2'h3, 2'h2, 2'h1}; configure_port_map;
+
         check_probe_control_defaults;
         latch_probe_counters;
 
@@ -162,7 +166,7 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(switch_and_clear_probe_counts)
-        out_port_map = {2'h1, 2'h2, 2'h0, 2'h3};
+        out_port_map = {2'h2, 2'h1, 2'h0, 2'h3}; configure_port_map;
 
         latch_probe_counters;
 
@@ -175,85 +179,63 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
-    `SVTEST(switch_with_discards)
-        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; 
+    `SVTEST(switch_with_tid_override)
+        out_port_map = {2'h0, 2'h3, 2'h2, 2'h1};
 
-         in_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-        out_pcap[0] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
-         pkt_len[0] = 1518;
-         in_pcap[1] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
-        out_pcap[1] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
-         pkt_len[1] = 9100;
-         in_pcap[2] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
-        out_pcap[2] = "../../../tests/common/pcap/20xrandom_pkts.pcap";
-         pkt_len[2] = 0;
-         in_pcap[3] = "../../../tests/common/pcap/256x566B_pkts.pcap";
-        out_pcap[3] = "../../../tests/common/pcap/256x566B_pkts.pcap";
-         pkt_len[3] = 566;
+        // program tid regs instead of bypass map.  uses port_map configuration from setup i.e. {2'h3, 2'h2, 2'h1, 2'h0}
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 2'h1 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 2'h2 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2'h3 );
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 2'h0 );
 
-        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
-        for (int i=0; i<NUM_PORTS; i++)
-           exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
+        latch_probe_counters;
 
-        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
-        force tb.axis_out_if[1].tready = 0;
-        force tb.axis_out_if[2].tready = 0;
-        force tb.axis_out_if[3].tready = 0;
+        run_stream_test();
 
-        env.axis_driver[0].set_min_gap(2*$ceil(pkt_len[0]/64.0));  // set gap to 2 pkts.
-        env.axis_driver[1].set_min_gap(2*$ceil(pkt_len[1]/64.0));
-        env.axis_driver[2].set_min_gap(2*$ceil(pkt_len[2]/64.0));
-        env.axis_driver[3].set_min_gap(2*$ceil(pkt_len[3]/64.0));
-
-        fork
-           run_stream_test();
-
-           begin
-              #(50us);
-              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
-              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[2].tready;
-              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
-           end
-	join
-
-         check_stream_test_probes;
+        latch_probe_counters;
+        check_stream_test_probes;
     `SVTEST_END
 
 
-    `SVTEST(jumbo_size_discards)
-        for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
-           out_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
-        end
+    `SVTEST(single_stream_with_egress_discards)
+        int port = $urandom % NUM_PORTS;
+        // for (int port = 0; port < NUM_PORTS; port++) begin
 
-        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
-        for (int i=0; i<NUM_PORTS; i++) begin
-            pkt_len[i] = 9100;
-            exp_pkt_cnt[i] = $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
-        end
-        exp_pkt_cnt[2] = 0;  // configures exp_pkt_cnt from pcap file.
+            in_pcap[port] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+           out_pcap[port] = "../../../tests/common/pcap/128x1518B_pkts.pcap";
+            pkt_len[port] = 1518;
 
-        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
-        force tb.axis_out_if[1].tready = 0;
-        force tb.axis_out_if[2].tready = 0;
-        force tb.axis_out_if[3].tready = 0;
+           // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
+           exp_pkt_cnt[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+           // set flow control threshold.
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_FC_THRESH[0] + 4*port, 32'd1020);
+          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
 
-        fork
-           run_stream_test();
+           fork
+              run_pkt_stream ( .in_port(port), .out_port(out_port_map[port]), .in_pcap(in_pcap[port]), .out_pcap(out_pcap[port]),
+                               .tx_pkt_cnt(tx_pkt_cnt[port]), .tx_byte_cnt(tx_byte_cnt[port]),
+                               .rx_pkt_cnt(rx_pkt_cnt[port]), .rx_byte_cnt(rx_byte_cnt[port]),
+                               .exp_pkt_cnt(exp_pkt_cnt[port]),
+                               .init_pause(50000) );
 
-           begin
-              #(50us);
-              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
-              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[1].tready;
-              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
-           end
-	join
+              #(50000) `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b1 );
+           join
 
-        check_stream_test_probes;
+          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
+
+           check_stream_probes (
+              .in_port         (port),
+              .out_port        (out_port_map[port]),
+              .exp_good_pkts   (rx_pkt_cnt[port]),
+              .exp_good_bytes  (rx_byte_cnt[port]),
+              .exp_ovfl_pkts   (tx_pkt_cnt[port]  - rx_pkt_cnt[port]),
+              .exp_ovfl_bytes  (tx_byte_cnt[port] - rx_byte_cnt[port])
+           );
+
+           check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[port]), .exp_byte_cnt(tx_byte_cnt[port]));
+
+        // end
     `SVTEST_END
 
 
@@ -267,10 +249,10 @@ module smartnic_322mhz_datapath_unit_test;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++)
-           exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
+           exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
-        set_config.app_tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
+        switch_config.igr_sw_tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
    
         fork
            run_stream_test();
@@ -278,11 +260,11 @@ module smartnic_322mhz_datapath_unit_test;
            begin
               #(50us);
               // release backpressure on ingress ports
-              set_config.app_tpause = 0; env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
+              switch_config.igr_sw_tpause = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
            end
 	join
 
-        check_stream_test_probes (.ingress_ovfl_mode(1));
+        check_stream_test_probes (.ovfl_mode(1));
     `SVTEST_END
 
 
@@ -318,6 +300,52 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
+    `SVTEST(bypass_drops)
+        switch_config.drop_pkt_loop = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+
+        fork
+           run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .tpause(0), .twait(0) );
+
+           begin 
+              #10us
+              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_probe (.base_addr(DROPS_FROM_BYPASS), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                                   .ovfl_mode(2) );
+           end
+        join_any
+
+    `SVTEST_END
+
+
+    `SVTEST(igr_sw_drops)
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 3 );
+
+        fork
+           run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
+                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
+                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .tpause(0), .twait(0) );
+
+           begin 
+              #10us
+              check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
+              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                                   .ovfl_mode(2) );
+           end
+        join_any
+
+    `SVTEST_END
+
+
     `SVTEST(single_packets)
          env.axis_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
 
@@ -326,66 +354,6 @@ module smartnic_322mhz_datapath_unit_test;
                          .out_pcap ("../../../tests/common/pcap/64B_multiples_10pkts.pcap"),
                          .tx_pkt_cnt(tx_pkt_cnt[1]), .tx_byte_cnt(tx_byte_cnt[1]),
                          .rx_pkt_cnt(rx_pkt_cnt[1]), .rx_byte_cnt(rx_byte_cnt[1]) );
-    `SVTEST_END
-
-
-    `SVTEST(port_config_0)
-        force tb.axis_in_if[0].tdest = 2'h2; // force axis_in_if[0] to direct all traffic to port 2 (HOST_PORT0). 
-
-        // Write port_config register to direct all traffic to CMAC_PORT0
-        set_config.input_enable  = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_PORT0;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_PORT0;
-
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Run pkt traffic. Expect rx pkts at CMAC_PORT0, as per port_config setting.
-        run_pkt_stream ( .in_port(0), .out_port(0), 
-                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
-
-         release tb.axis_in_if[0].tdest;
-    `SVTEST_END
-
-      
-    `SVTEST(port_config_1)
-        force tb.axis_in_if[0].tdest = 2'h2; // force axis_in_if[0] to direct all traffic to port 2 (HOST_PORT0). 
-
-        // Write port_config register to direct all traffic to CMAC_PORT1
-        set_config.input_enable  = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_PORT0;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_PORT1;
-
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Run pkt traffic. Expect rx pkts at CMAC_PORT1, as per port_config setting.
-        run_pkt_stream ( .in_port(0), .out_port(1), 
-                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
-
-         release tb.axis_in_if[0].tdest;
-    `SVTEST_END
-
-
-    `SVTEST(port_config_2)
-        force tb.axis_in_if[0].tdest = 2'h2; // force axis_in_if[0] to direct all traffic to port 2 (HOST_PORT0). 
-
-        // Write port_config register to direct all traffic to CMAC_PORT0
-        set_config.input_enable  = smartnic_322mhz_reg_pkg::PORT_CONFIG_INPUT_ENABLE_PORT0;
-        set_config.output_enable = smartnic_322mhz_reg_pkg::PORT_CONFIG_OUTPUT_ENABLE_C2H;
-
-        env.smartnic_322mhz_reg_blk_agent.write_port_config(set_config);
-
-        // Run pkt traffic. Expect rx pkts at HOST_PORT1, as per port_config setting.
-        run_pkt_stream ( .in_port(0), .out_port(3), 
-                         .in_pcap ("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .out_pcap("../../../tests/common/pcap/10xrandom_pkts.pcap"),
-                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]) );
-
-        release tb.axis_in_if[0].tdest;
     `SVTEST_END
 
 
@@ -442,25 +410,49 @@ module smartnic_322mhz_datapath_unit_test;
            out_pcap[i] = "../../../tests/common/pcap/100xrandom_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 jumbo pkts.
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
 
         run_stream_test(); check_stream_test_probes;
-
     `SVTEST_END
+
 
 // The following tests are commented out of the regression run for resource and runtime efficiency, but retained
 // for the option of manual execution.
 
 /*
-    `SVTEST(single_pkt_stream)
-        out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
+    `SVTEST(jumbo_size_discards)
+        for (int i=0; i<NUM_PORTS; i++) begin
+            in_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+           out_pcap[i] = "../../../tests/common/pcap/32x9100B_pkts.pcap";
+        end
 
-        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
-                        .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                        .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                        .exp_pkt_cnt(exp_pkt_cnt[0]),
-                        .tpause(0), .twait(0) );
-    `SVTEST_END
+        // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
+        for (int i=0; i<NUM_PORTS; i++) begin
+            pkt_len[i] = 9100;
+            exp_pkt_cnt[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
+        end
+
+        force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
+        force tb.axis_out_if[1].tready = 0;
+        force tb.axis_out_if[2].tready = 0;
+        force tb.axis_out_if[3].tready = 0;
+
+        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0)); // set gap to 5 pkts.
+
+        fork
+           run_stream_test();
+
+           begin
+              #(125us);
+              force   tb.axis_out_if[0].tready = 1; release tb.axis_out_if[0].tready;
+              force   tb.axis_out_if[1].tready = 1; release tb.axis_out_if[1].tready;
+              force   tb.axis_out_if[2].tready = 1; release tb.axis_out_if[1].tready;
+              force   tb.axis_out_if[3].tready = 1; release tb.axis_out_if[3].tready;
+           end
+	join
+
+        check_stream_test_probes;
+     `SVTEST_END
 
 
      `SVTEST(max_size_discards)
@@ -472,7 +464,7 @@ module smartnic_322mhz_datapath_unit_test;
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++) begin
             pkt_len[i] = 1518;
-            exp_pkt_cnt[i] = $ceil(FIFO_DEPTH/$ceil(pkt_len[i]/64.0));
+            exp_pkt_cnt[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
         end
         exp_pkt_cnt[2] = 0;  // configures exp_pkt_cnt from pcap file.
 
@@ -499,128 +491,5 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 */
     `SVUNIT_TESTS_END
-
-
-
-    task check_and_clear_err_probes ( input port_t in_port, input logic [63:0] exp_err_pkts, exp_err_bytes );
-        cntr_addr_t in_port_err_addr;
-
-        // establish addr for ingress err counts
-        case (in_port)
-               CMAC_PORT0 : in_port_err_addr = 'h8800;
-               CMAC_PORT1 : in_port_err_addr = 'h9400;
-	    default : in_port_err_addr = 'hxxxx;
-        endcase
-
-        check_probe (.base_addr(in_port_err_addr), .exp_pkt_cnt(exp_err_pkts), .exp_byte_cnt(exp_err_bytes));
-
-        env.reg_agent.write_reg( in_port_err_addr + 'h10, 'h2 ); // CLR_ON_WR_EVT
-
-    endtask;
-
-
-    task latch_probe_counters;
-        logic [31:0] rd_data;
-        bit 	     rd_fail = 0;
-
-        // set probe_control.
-        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h1 );
-        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h1 );
-        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h1 );
-        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h1 );
-
-        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h1 );
-        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h1 );
-
-        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h1 );
-        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h1 );
-        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h1 );
-        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h1 );
-
-    endtask;
-
-
-    task latch_and_clear_probe_counters;
-        logic [31:0] rd_data;
-        bit 	     rd_fail = 0;
-
-        // set probe_control.
-        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h3 );
-        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h3 );
-        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h3 );
-        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h3 );
-
-        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h3 );
-        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h3 );
-
-        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h3 );
-        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h3 );
-        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h3 );
-        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h3 );
-
-    endtask;
-
-
-    task clear_and_check_probe_counters;
-        logic [31:0] rd_data;
-        bit 	     rd_fail = 0;
-
-        // set probe_control.
-        env.probe_from_cmac_0_reg_blk_agent.write_probe_control ( 'h2 );
-        env.probe_from_cmac_1_reg_blk_agent.write_probe_control ( 'h2 );
-        env.probe_from_host_0_reg_blk_agent.write_probe_control ( 'h2 );
-        env.probe_from_host_1_reg_blk_agent.write_probe_control ( 'h2 );
-
-        env.probe_core_to_app_reg_blk_agent.write_probe_control ( 'h2 );
-        env.probe_app_to_core_reg_blk_agent.write_probe_control ( 'h2 );
-
-        env.probe_to_cmac_0_reg_blk_agent.write_probe_control   ( 'h2 );
-        env.probe_to_cmac_1_reg_blk_agent.write_probe_control   ( 'h2 );
-        env.probe_to_host_0_reg_blk_agent.write_probe_control   ( 'h2 );
-        env.probe_to_host_1_reg_blk_agent.write_probe_control   ( 'h2 );
-
-        check_cleared_probe_counters;
-
-    endtask;
-
-
-    task check_cleared_probe_counters;
-
-       check_probe ( .base_addr(PROBE_FROM_CMAC_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_FROM_CMAC_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_FROM_HOST_PORT0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_FROM_HOST_PORT1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-
-       check_probe ( .base_addr(PROBE_CORE_TO_APP),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_APP_TO_CORE),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-
-       check_probe ( .base_addr(PROBE_TO_CMAC_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_TO_CMAC_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_TO_HOST_PORT0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-       check_probe ( .base_addr(PROBE_TO_HOST_PORT1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-
-    endtask;
-
-
-    task check_probe_control_defaults;
-        logic [31:0] rd_data;
-        bit 	     rd_fail = 0;
-
-        env.probe_from_cmac_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_cmac_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_host_0_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_from_host_1_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-
-        env.probe_core_to_app_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_app_to_core_reg_blk_agent.read_probe_control ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-
-        env.probe_to_cmac_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_cmac_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_host_0_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-        env.probe_to_host_1_reg_blk_agent.read_probe_control   ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
-       `FAIL_UNLESS( rd_fail == 0 );
-
-    endtask;
-
 
 endmodule

@@ -36,12 +36,54 @@ l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
 l4 = TCP(sport=1024,dport=2048)
 
 payload = ''
-for i in range(1464): payload += random.choice(string.ascii_lowercase) # 1508B pkt
+for i in range(1464): payload += random.choice(string.ascii_lowercase) # 1518B pkt
 
 pkts = []
 pkts += l2/l3/l4/Raw(load=payload)
 
 wrpcap("128x1518B_pkts.pcap", pkts)
+
+
+#----------------------------------------------------------------
+l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
+l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
+l4 = TCP(sport=1024,dport=2048)
+
+payload = ''
+for i in range(1364): payload += random.choice(string.ascii_lowercase) # 1418B pkt
+
+pkts = []
+pkts += l2/l3/l4/Raw(load=payload)
+
+wrpcap("128x1418B_pkts.pcap", pkts)
+
+
+#----------------------------------------------------------------
+l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
+l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
+l4 = TCP(sport=1024,dport=2048)
+
+payload = ''
+for i in range(1264): payload += random.choice(string.ascii_lowercase) # 1318B pkt
+
+pkts = []
+pkts += l2/l3/l4/Raw(load=payload)
+
+wrpcap("128x1318B_pkts.pcap", pkts)
+
+
+#----------------------------------------------------------------
+l2 = Ether(dst="01:02:03:04:05:06", src="07:08:09:0A:0B:0C")
+l3 = IP(dst='lbl.gov/29',src='es.net/28') # 128 pkts
+l4 = TCP(sport=1024,dport=2048)
+
+payload = ''
+for i in range(1164): payload += random.choice(string.ascii_lowercase) # 1218B pkt
+
+pkts = []
+pkts += l2/l3/l4/Raw(load=payload)
+
+wrpcap("128x1218B_pkts.pcap", pkts)
 
 
 #----------------------------------------------------------------
