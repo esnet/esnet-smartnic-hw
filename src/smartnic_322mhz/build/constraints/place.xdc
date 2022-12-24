@@ -24,6 +24,7 @@ add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*a
 add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_source*"]
 add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_dest*"]
 resize_pblock       pblock_slr_1_to_2 -add {CLOCKREGION_X0Y7:CLOCKREGION_X5Y7}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_1_to_2]
 
 # SLR2->SRL1 crossing
 create_pblock       pblock_slr_2_to_1
@@ -31,3 +32,4 @@ add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*a
 add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_source*"]
 add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_dest*"]
 resize_pblock       pblock_slr_2_to_1 -add {CLOCKREGION_X0Y8:CLOCKREGION_X5Y8}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_2_to_1]
