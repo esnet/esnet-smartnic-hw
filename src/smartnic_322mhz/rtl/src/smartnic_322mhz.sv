@@ -484,7 +484,7 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
    generate
        if (INCLUDE_HBM1) begin : g__hbm_1
-           // Include memory controller for 'Left' HBM stack (4GB)
+           // Include memory controller for 'Right' HBM stack (4GB)
 
            // (Local) interfaces
            axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
