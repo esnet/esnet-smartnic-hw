@@ -43,9 +43,12 @@ software artifacts necessary for seamless integration with the SmartNIC runtime 
 which is located in a companion github repository at:
 https://github.com/esnet/esnet-smartnic-fw
 
-The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool suite.
-The current release supports development with Vivado version 2022.1.1,
-running on Ubuntu 20.04 LTS.
+The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
+suite.  The current release supports development with Vivado version 2022.1.1, running on
+Ubuntu 20.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
+shell and the AMD (Xilinx) Vivado tool suite are all public and openly available, note
+that the AMD (Xilinx) VitisNetP4 IP core is a commercially licensed feature that requires a
+site-specific license file.
 
 The ESnet SmartNIC platform is made available in the hope that it will
 be useful to the networking community. Users should note that it is
@@ -198,12 +201,25 @@ suitably-configured host running Ubuntu 20.04 LTS Linux.
 
 ### Installing and Configuring the Vivado Runtime Environment
 
-Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option, and configure the runtime
-   environment by executing the settings64.sh script located in the Vivado installation directory:
+1. Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option. Note, to include the
+VitisNetP4 option, the `VitisNetP4_Option_VISIBLE` environment variable must be set to `true` prior to
+executing the Vivado installation program.  The example BASH shell command is:
+
+       > export VitisNetP4_Option_VISIBLE=true
+
+2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
+installation directory:
    
        > source /opt/Xilinx/Vivado/2022.1/settings64.sh
 
    where the Vivado installation directory is located at /opt/Xilinx/Vivado/2022.1/ in this example.
+
+3. Set the XILINXD_LICENSE_FILE environment variable accordingly to resolve the site-specific license for
+the AMD (Xilinx) VitisNetp4 IP core.  This can be done with a `.flexlmrc` file in the users home directory,
+or in a BASH script file (such as a `.bashrc` in the users home directory).  The example BASH shell
+command is:
+
+       > export XILINXD_LICENSE_FILE=<filename>
 
 
 ### Building the SmartNIC p4_only Example Design
