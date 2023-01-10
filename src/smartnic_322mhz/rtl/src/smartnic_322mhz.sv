@@ -552,11 +552,6 @@ module smartnic_322mhz
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo_pipe ();
 
    axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_to_app ();
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_hdr_from_app ();
-
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
                  .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app [2] ();
 
    tuser_buffer_context_mode_t  axis_to_app_tuser [2];
@@ -818,10 +813,10 @@ module smartnic_322mhz
       .drop_pkt    (drop_pkt)
    );
 
-   axi4s_ila axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
-   axi4s_ila axi4s_ila_app_to_core  (.axis_in(__axis_app_to_core[0]));
-   axi4s_ila axi4s_ila_hdr_to_app   (.axis_in(axis_hdr_to_app));
-   axi4s_ila axi4s_ila_hdr_from_app (.axis_in(axis_hdr_from_app));
+   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
+   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_app_to_core  (.axis_in(__axis_app_to_core[0]));
+   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
+   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
 
 
    // tpause logic for ingress switch (for test purposes).
