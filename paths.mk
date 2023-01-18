@@ -1,11 +1,14 @@
 # -----------------------------------------------
 # Project path setup
+#
+# Describe paths within library to provided resources.
+#
+# The intent of this file is that it can be sourced
+# by an enclosing project. As such, project-specific paths,
+# such as the location of config files or output directories,
+# are intentionally not included here, to avoid contention
+# with values set by the enclosing project.
 # -----------------------------------------------
-# Set relative to PROJ_ROOT (current) directory
-# Note: PROJ_ROOT is configured in calling (parent) Makefile
-CFG_ROOT     := $(abspath $(PROJ_ROOT)/cfg)
-ONS_ROOT     := $(abspath $(PROJ_ROOT)/open-nic-shell)
-LIB_ROOT     := $(abspath $(PROJ_ROOT)/esnet-fpga-library)
-
-# Configure paths to tools/resources provided by library
-include $(LIB_ROOT)/paths.mk
+# Set relative to SMARTNIC__ROOT (current) directory
+# Note: SMARTNIC_ROOT is configured in calling (parent) Makefile
+ONS_ROOT := $(abspath $(SMARTNIC_ROOT)/open-nic-shell)

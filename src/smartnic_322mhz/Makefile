@@ -1,15 +1,24 @@
-all: compile_rtl regression
+# -----------------------------------------------
+# Path setup
+# -----------------------------------------------
+IP_ROOT := .
 
-compile_%:
-	$(MAKE) -C $* compile
+# -----------------------------------------------
+# IP config
+# -----------------------------------------------
+include $(IP_ROOT)/config.mk
 
-build:
-	$(MAKE) -C build
+# -----------------------------------------------
+# Targets
+# -----------------------------------------------
+all: regression
 
-regression:
-	cd tests/regression && make
+regression: _regression
 
-clean:
-	$(MAKE) -C rtl clean
+clean: _clean
 
-.PHONY: build
+.PHONY: all regression clean
+
+# Import standard IP root targets
+include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+

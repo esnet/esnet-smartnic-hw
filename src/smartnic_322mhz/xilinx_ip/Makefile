@@ -15,6 +15,12 @@ include $(IP_ROOT)/config.mk
 #   Note: if no sources are explicitly listed, all
 #   source files from ./src are added automatically,
 #   with include directory ./include
+#
+#   NOTE: IP output products are being generated at
+#         the path represented by $(COMPONENT_OUT_PATH). This
+#         path can be queried using 'make get_ip_out_dir',
+#         and $(COMPONENT_OUT_PATH) can be used to reference these
+#         files for compilation.
 # ----------------------------------------------------
 IP_LIST = \
     axis_switch_egress \
@@ -24,21 +30,22 @@ IP_LIST = \
     hbm_4g_left \
     hbm_4g_right
 
-SRC_FILES =
+SRC_FILES = \
+    $(COMPONENT_OUT_PATH)/axis_switch_egress/sim/axis_switch_egress.v \
+    $(COMPONENT_OUT_PATH)/axis_switch_ingress/sim/axis_switch_ingress.v \
+    $(COMPONENT_OUT_PATH)/clk_wiz_0/clk_wiz_0_clk_wiz.v \
+    $(COMPONENT_OUT_PATH)/clk_wiz_0/clk_wiz_0.v \
+    $(COMPONENT_OUT_PATH)/clk_wiz_1/clk_wiz_1_clk_wiz.v \
+    $(COMPONENT_OUT_PATH)/clk_wiz_1/clk_wiz_1.v
 INC_DIRS =
-SRC_LIST_FILES = \
-    axis_switch_egress/sources.f \
-    axis_switch_ingress/sources.f \
-    clk_wiz_0/sources.f \
-    clk_wiz_1/sources.f
+SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = 
-
+COMPONENTS =
 EXT_LIBS = \
            axi_infrastructure_v1_1_0 \
            axi_clock_converter_v2_1_25 \
@@ -75,9 +82,33 @@ compile: _ip _compile
 
 synth: _ip_synth
 
-clean: _clean_compile _ip_proj_clean
+clean: _clean_compile _ip_clean _ip_proj_clean
 
 .PHONY: all compile synth clean
+
+# ----------------------------------------------------
+# Info targets
+# ----------------------------------------------------
+get_ip_out_dir:
+	@echo "$(COMPONENT_OUT_PATH)"
+
+.PHONY: get_ip_out_dir
+
+# ----------------------------------------------------
+# IP management targets
+#
+#   These targets are used for managing IP, i.e. creating
+#   new IP, or modifying or upgrading existing IP.
+# ----------------------------------------------------
+ip_proj: _ip_proj
+
+ip_upgrade: _ip_upgrade
+
+ip_status: _ip_status
+
+ip_proj_clean: _ip_proj_clean
+
+.PHONY: ip_proj ip_upgrade ip_status _ip_proj_clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

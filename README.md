@@ -113,6 +113,7 @@ The directory structure for the ESnet SmartNIC hardware design repository is cap
 ```
 esnet-smartnic-hw/
 ├── cfg/
+├── config.mk
 ├── docs/
 ├── esnet-fpga-library/
 ├── examples/
@@ -156,8 +157,11 @@ open-nic_shell/
   OpenNIC shell delivers an FPGA-based NIC shell with 100Gbps Ethernet ports,
   for use on the AMD (Xilinx) Alveo platform.
 
+config.mk
+  Sets environment variables for the SmartNIC project. 
+
 paths.mk
-  Sets environment variables for standard pathnames.
+  Describes paths to resources provided by the SmartNIC project.
 
 README.md
   This README file.

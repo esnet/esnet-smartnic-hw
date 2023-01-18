@@ -1,13 +1,8 @@
-# ----------------------------------------------------
-# Application config
-# ----------------------------------------------------
-APP_DIR ?= ../..
-include $(APP_DIR)/.app_config.mk
-
 # -----------------------------------------------
 # IP config (for compilation library setup)
 # -----------------------------------------------
 IP_ROOT = ../..
+
 include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
@@ -26,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) p4_app_tb.glbl p4_app_tb.tb
+TOP = $(SVUNIT_TOP) p4_app__tb.glbl p4_app__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -43,10 +38,13 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = p4_app_rtl=$(IP_ROOT)/rtl/$(APP_NAME) \
-             verif tb \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl
+COMPONENTS = p4_app.rtl \
+             p4_app.verif \
+             p4_app.tb \
+             vitisnetp4.xilinx_ip \
+             vitisnetp4.verif \
+             common.axi4l.rtl \
+             common.axi4s.rtl
 
 EXT_LIBS =
 
@@ -62,7 +60,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/$(APP_NAME)/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 
@@ -83,24 +81,17 @@ all: p4bm build_test sim
 p4bm:
 	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(IP_ROOT)/p4/sim
 
-build_test: config _build_test
-
-config:
-	$(MAKE) -s -C $(IP_ROOT)/rtl config APP_DIR=$(abspath $(APP_DIR))
+build_test: _build_test
 
 sim: _sim
 
 clean: _clean_test _clean_sim
 
-.PHONY: all p4bm build_test config sim clean
-
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -C $(APP_DIR) config
+.PHONY: all p4bm build_test sim clean
 
 # ----------------------------------------------------
 # Test configuration
 # ----------------------------------------------------
-LIB_NAME = test
 SRC_DIR = .
 INC_DIR = .
 
@@ -110,7 +101,7 @@ INC_DIR = .
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Export SVUNIT configuration
-SVUNIT_TOP = $(LIB_NAME).$(SVUNIT_TOP_MODULE)
+SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------
