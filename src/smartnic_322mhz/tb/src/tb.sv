@@ -237,10 +237,7 @@ module tb;
     //===================================
     // Build
     //===================================
-    function void build(
-            input logic sdnet_driver=0,
-            input string hier_path="tb"
-        );
+    function void build();
 
         if (env == null) begin
             // Instantiate environment
@@ -269,24 +266,8 @@ module tb;
 
             env.connect();
 
-            // Create SDNet driver
-            if (sdnet_driver) env.sdnet_create(hier_path);
-
         end
     endfunction
-
-
-    // Export AXI-L accessors to SDnet shared library
-    export "DPI-C" task axi_lite_wr;
-    task axi_lite_wr(input int address, input int data);
-       env.sdnet_write(address, data);
-    endtask
-
-    export "DPI-C" task axi_lite_rd;
-    task axi_lite_rd(input int address, inout int data);
-       env.sdnet_read(address, data);
-    endtask
-
 
     // Monitor sample interface - count and display packets.
     int sample_pkt_cnt;
@@ -297,5 +278,16 @@ module tb;
        $display($sformatf("Sample packet # %0d", sample_pkt_cnt));
        pcap_pkg::print_pkt_data(sample_data);
     end
+
+    // Export AXI-L accessors to VitisNetP4 shared library
+    export "DPI-C" task axi_lite_wr;
+    task axi_lite_wr(input int address, input int data);
+        env.sdnet_write(address, data);
+    endtask
+
+    export "DPI-C" task axi_lite_rd;
+    task axi_lite_rd(input int address, inout int data);
+        env.sdnet_read(address, data);
+    endtask
 
 endmodule : tb

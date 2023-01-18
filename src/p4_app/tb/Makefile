@@ -1,9 +1,3 @@
-# ----------------------------------------------------
-# Application config
-# ----------------------------------------------------
-APP_DIR ?= ..
-include $(APP_DIR)/.app_config.mk
-
 # -----------------------------------------------
 # IP config (for compilation library setup)
 # -----------------------------------------------
@@ -27,16 +21,15 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = verif \
-             p4_app_xilinx_ip=$(IP_ROOT)/xilinx_ip/$(APP_NAME) \
-             std_rtl=$(LIB_ROOT)/src/std/rtl \
-             std_verif=$(LIB_ROOT)/src/std/verif \
-             axi3_rtl=$(LIB_ROOT)/src/axi3/rtl \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl \
-             smartnic_322mhz_rtl=$(PROJ_ROOT)/src/smartnic_322mhz/rtl \
-             axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
-             axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
+COMPONENTS = p4_app.verif \
+             smartnic_322mhz.rtl \
+             std.rtl@common \
+             std.verif@common \
+             axi3.rtl@common \
+             axi4l.rtl@common \
+             axi4s.rtl@common \
+             axi4l.verif@common \
+             axi4s.verif@common
 
 EXT_LIBS =
 
@@ -58,17 +51,11 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: ip _compile
+compile: _compile
 
 clean: _clean_compile
 
-ip:
-	@$(MAKE) -s -C $(IP_ROOT)/xilinx_ip ip APP_DIR=$(abspath $(APP_DIR))
-
-.PHONY: all compile clean ip
-
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -s -C $(APP_DIR) config
+.PHONY: all compile clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

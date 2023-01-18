@@ -29,6 +29,8 @@ module p4_app_datapath_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
+    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
     //===================================
     // Import common testcase tasks
     //=================================== 
@@ -48,6 +50,7 @@ module p4_app_datapath_unit_test;
 
         // Include inter-packet gap to simplify cache result prediction
         //env.axis_driver.set_min_gap(50);
+        vitisnetp4_agent = new;
 
     endfunction
 
@@ -108,9 +111,9 @@ module p4_app_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
-    `SVTEST(sdnet_init)
-        // Initialize SDNet tables
-        env.sdnet_init();
+    `SVTEST(init)
+        // Initialize VitisNetP4 tables
+        vitisnetp4_agent.init();
     `SVTEST_END
 
     `include "../../../p4/sim/run_pkt_test_incl.svh"
@@ -170,10 +173,10 @@ module p4_app_datapath_unit_test;
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
         env.ts_agent.set_static(timestamp);
 
-        debug_msg("Start writing sdnet_0 tables...", VERBOSE);
+        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/runsim.txt"};
-        env.sdnet_table_init_from_file(filename);
-        debug_msg("Done writing sdnet_0 tables...", VERBOSE);
+        vitisnetp4_agent.table_init_from_file(filename);
+        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/expected/packets_out.pcap"};

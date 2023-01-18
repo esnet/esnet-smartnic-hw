@@ -28,6 +28,9 @@ module p4_app_passthrough_test_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
+    // VitisNetP4 table agent
+    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
     //===================================
     // Import common testcase tasks
     //===================================
@@ -41,10 +44,12 @@ module p4_app_passthrough_test_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build( .sdnet_driver(1) );  // build tb with sdnet driver.
+        tb.build();
 
         // Retrieve reference to testbench environment class
         env = tb.env;
+
+        vitisnetp4_agent = new;
 
     endfunction
 

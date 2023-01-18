@@ -39,11 +39,11 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 # ----------------------------------------------------
 COMPONENTS = smartnic_322mhz.rtl \
 			 smartnic_322mhz.tb \
-             common.std.verif \
-             common.axi4l.rtl \
-             common.axi4l.verif \
-             common.axi4s.rtl \
-             common.axi4s.verif
+             std.verif@common \
+             axi4l.rtl@common \
+             axi4l.verif@common \
+             axi4s.rtl@common \
+             axi4s.verif@common
 
 EXT_LIBS =
 

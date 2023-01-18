@@ -2,13 +2,8 @@
 # IP config (for compilation library setup)
 # -----------------------------------------------
 IP_ROOT = ..
-include $(IP_ROOT)/config.mk
 
-# ----------------------------------------------------
-# Application config (p4_app by default)
-# ----------------------------------------------------
-APP_DIR ?= $(abspath $(PROJ_ROOT)/src/p4_app)
-include $(APP_DIR)/.app_config.mk
+include $(IP_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -27,15 +22,16 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = xilinx_ip reg.verif rtl \
-             std_rtl=$(LIB_ROOT)/src/std/rtl \
-             std_verif=$(LIB_ROOT)/src/std/verif \
-             reg.reg.verif=$(LIB_ROOT)/src/reg/reg/verif \
-             axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
-             axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
-             axi4s_reg_verif=$(LIB_ROOT)/src/axi4s/reg/verif \
-             xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif \
-             p4_app_xilinx_ip=$(APP_ROOT)/xilinx_ip/$(APP_NAME)
+COMPONENTS = smartnic_322mhz.rtl \
+             smartnic_322mhz.xilinx_ip \
+             smartnic_322mhz.regio.verif \
+             std.rtl@common \
+             std.verif@common \
+             reg.endian.regio.verif@common \
+             axi4l.verif@common \
+             axi4s.verif@common \
+             axi4s.regio.verif@common \
+             xilinx.hbm.verif@common
 
 EXT_LIBS =
 
@@ -57,17 +53,11 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: ip _compile
+compile: _compile
 
 clean: _clean_compile
 
-ip:
-	@$(MAKE) -s -C $(APP_ROOT)/xilinx_ip ip APP_DIR=$(abspath $(APP_DIR))
-
-.PHONY: all compile clean ip
-
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -s -C $(APP_DIR) config
+.PHONY: all compile clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

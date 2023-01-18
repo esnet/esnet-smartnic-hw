@@ -13,8 +13,8 @@
             env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
         `endif
 
-        // Initialize SDNet tables
-        env.sdnet_init();
+        // Initialize VitisNetP4 tables
+        vitisnetp4_agent.init();
 
         // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
@@ -44,7 +44,7 @@
         svunit_ut.teardown();
 
         // Clean up SDNet tables
-        env.sdnet_cleanup();
+        vitisnetp4_agent.cleanup();
 
     endtask
 
@@ -78,10 +78,10 @@
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
         env.ts_agent.set_static(timestamp);
 
-        debug_msg("Start writing sdnet_0 tables...", VERBOSE);
+        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/runsim.txt"};
-        env.sdnet_table_init_from_file(filename);
-        debug_msg("Done writing sdnet_0 tables...", VERBOSE);
+        vitisnetp4_agent.table_init_from_file(filename);
+        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};

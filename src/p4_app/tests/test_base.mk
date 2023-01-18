@@ -43,8 +43,8 @@ COMPONENTS = p4_app.rtl \
              p4_app.tb \
              vitisnetp4.xilinx_ip \
              vitisnetp4.verif \
-             common.axi4l.rtl \
-             common.axi4s.rtl
+             axi4l.rtl@common \
+             axi4s.rtl@common
 
 EXT_LIBS =
 

@@ -113,7 +113,3 @@ vitisnetp4_wrapper: $(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv
 
 $(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv: $(VITISNETP4_XCI_FILE)
 	$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $(VITISNETP4_XCI_FILE) --out_dir $(VITISNETP4_XCI_DIR) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
-debug:
-	@echo $(IP_ROOT)
-	@echo $(SRC_ROOT)
-	@echo $(PROJ_ROOT)
