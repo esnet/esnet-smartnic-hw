@@ -29,6 +29,8 @@ module p4_hbm_datapath_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
+    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
     //===================================
     // Import common testcase tasks
     //===================================
@@ -46,6 +48,7 @@ module p4_hbm_datapath_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
+        vitisnetp4_agent = new;
     endfunction
 
     //===================================
@@ -61,7 +64,7 @@ module p4_hbm_datapath_unit_test;
         reset();
 
         // Initialize SDNet tables
-        env.sdnet_init();
+        vitisnetp4_agent.init();
 
         // Put AXI-S interfaces into quiescent state
         env.axis_driver.idle();
@@ -86,7 +89,7 @@ module p4_hbm_datapath_unit_test;
         #10us;
 
         // Clean up SDNet tables
-        env.sdnet_cleanup();
+        vitisnetp4_agent.cleanup();
 
     endtask
 
@@ -144,7 +147,7 @@ module p4_hbm_datapath_unit_test;
 
         debug_msg("Start writing sdnet_0 tables...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/runsim.txt"};
-        env.sdnet_table_init_from_file(filename);
+        vitisnetp4_agent.table_init_from_file(filename);
         debug_msg("Done writing sdnet_0 tables...", VERBOSE);
 
         debug_msg("Reading expected pcap file...", VERBOSE);

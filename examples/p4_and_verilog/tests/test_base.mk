@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Path setup
 # -----------------------------------------------
-IP_ROOT := $(abspath ../..)
+IP_ROOT := ..
 
 # -----------------------------------------------
 # IP config
@@ -24,7 +24,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) p4_and_verilog_tb.glbl p4_and_verilog_tb.tb
+TOP = $(SVUNIT_TOP) p4_and_verilog__tb.glbl p4_and_verilog__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -41,9 +41,11 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = rtl verif tb \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl
+COMPONENTS = p4_and_verilog.rtl \
+             p4_and_verilog.verif \
+             p4_and_verilog.tb \
+             axi4l.rtl@common@smartnic \
+             axi4s.rtl@common@smartnic
 
 EXT_LIBS =
 
@@ -59,7 +61,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 
@@ -78,7 +80,7 @@ SIM_OPTS +=
 all: p4bm build_test sim
 
 p4bm:
-	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(IP_ROOT)/p4/sim
+	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(APP_DIR)/p4/sim
 
 build_test: _build_test
 
@@ -91,7 +93,6 @@ clean: _clean_test _clean_sim
 # ----------------------------------------------------
 # Test configuration
 # ----------------------------------------------------
-LIB_NAME = test
 SRC_DIR = .
 INC_DIR = .
 
@@ -101,7 +102,7 @@ INC_DIR = .
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Export SVUNIT configuration
-SVUNIT_TOP = $(LIB_NAME).$(SVUNIT_TOP_MODULE)
+SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------

@@ -5,11 +5,6 @@
 SMARTNIC_ROOT = $(abspath $(APP_DIR)/../..)
 
 # -----------------------------------------------
-# Application paths
-# -----------------------------------------------
-SRC_ROOT := $(abspath $(APP_DIR)/src)
-
-# -----------------------------------------------
 # Standard application config
 # -----------------------------------------------
 include $(SMARTNIC_ROOT)/scripts/app_config_base.mk

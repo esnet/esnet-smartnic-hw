@@ -1,21 +1,9 @@
 # ----------------------------------------------------
-# Application config
-# ----------------------------------------------------
-APP_DIR ?= ../..
-include $(APP_DIR)/.app_config.mk
-
-# -----------------------------------------------
-# Path config
-# -----------------------------------------------
-PROJ_ROOT = ../../../..
-include $(PROJ_ROOT)/paths.mk
-
-# -----------------------------------------------
 # IP config (for compilation library setup)
 # -----------------------------------------------
-IP_ROOT = $(APP_ROOT)
+IP_ROOT = ..
 
-include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
 # Configuration
@@ -33,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz_tb.glbl smartnic_322mhz_tb.tb
+TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.glbl smartnic_322mhz__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -41,7 +29,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz_tb.glbl smartnic_322mhz_tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES = $(IP_ROOT)/app_if/src/smartnic_322mhz_app.sv
+SRC_FILES = $(APP_DIR)/.app/src/p4_app/app_if/src/smartnic_322mhz_app.sv
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
@@ -50,14 +38,17 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = p4_app_rtl=$(IP_ROOT)/rtl/$(APP_NAME) \
-             std_verif=$(LIB_ROOT)/src/std/verif \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl \
-             axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
-             axi4s_verif=$(LIB_ROOT)/src/axi4s/verif \
-             smartnic_322mhz_rtl=$(PROJ_ROOT)/src/smartnic_322mhz/rtl \
-             smartnic_322mhz_tb=$(PROJ_ROOT)/src/smartnic_322mhz/tb
+COMPONENTS = \
+             vitisnetp4.xilinx_ip \
+             vitisnetp4.verif \
+             p4_app.rtl@smartnic \
+             std.verif@common@smartnic \
+             axi4l.rtl@common@smartnic \
+             axi4s.rtl@common@smartnic \
+             axi4l.verif@common@smartnic \
+             axi4s.verif@common@smartnic \
+             smartnic_322mhz.rtl@smartnic \
+             smartnic_322mhz.tb@smartnic
 
 EXT_LIBS =
 
@@ -73,7 +64,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/$(APP_NAME)/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 
@@ -96,8 +87,7 @@ p4bm:
 
 build_test: config _build_test
 
-config:
-	$(MAKE) -s -C $(IP_ROOT)/rtl config APP_DIR=$(abspath $(APP_DIR))
+config: $(APP_DIR)/.app/config.mk
 
 sim: _sim
 
@@ -105,13 +95,12 @@ clean: _clean_test _clean_sim
 
 .PHONY: all p4bm build_test config sim clean
 
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -C $(APP_DIR) config
+$(APP_DIR)/.app/config.mk: $(APP_DIR)/Makefile
+	@$(MAKE) -s -C $(APP_DIR) config
 
 # ----------------------------------------------------
 # Test configuration
 # ----------------------------------------------------
-LIB_NAME = test
 SRC_DIR = .
 INC_DIR = .
 
@@ -121,7 +110,7 @@ INC_DIR = .
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Export SVUNIT configuration
-SVUNIT_TOP = $(LIB_NAME).$(SVUNIT_TOP_MODULE)
+SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------

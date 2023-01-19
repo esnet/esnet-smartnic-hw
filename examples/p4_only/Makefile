@@ -23,15 +23,15 @@ SMARTNIC_DIR := ../..
 
 #------- Targets -------
 build:
-	$(MAKE) -C $(SMARTNIC_DIR) build APP_DIR=$(CURDIR)
+	@$(MAKE) -s -C $(SMARTNIC_DIR) build APP_DIR=$(CURDIR)
 
 config:
-	$(MAKE) -C $(SMARTNIC_DIR) config APP_DIR=$(CURDIR)
+	@$(MAKE) -s -C $(SMARTNIC_DIR) config APP_DIR=$(CURDIR)
 
-clean_build:
-	$(MAKE) -C $(SMARTNIC_DIR) clean_build APP_DIR=$(CURDIR)
+clean:
+	@$(MAKE) -s -C $(SMARTNIC_DIR) clean_build APP_DIR=$(CURDIR)
 
 clean_artifacts:
-	$(MAKE) -C $(SMARTNIC_DIR) clean_artifacts APP_DIR=$(CURDIR)
+	@$(MAKE) -s -C $(SMARTNIC_DIR) clean_artifacts APP_DIR=$(CURDIR)
 
-.PHONY: build config clean_build clean_artifacts
+.PHONY: build config clean clean_artifacts

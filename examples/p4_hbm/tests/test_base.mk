@@ -1,19 +1,9 @@
 # ----------------------------------------------------
-# Application config
-# ----------------------------------------------------
-APP_DIR = ../..
-
-# -----------------------------------------------
-# Path config
-# -----------------------------------------------
-PROJ_ROOT = $(APP_DIR)/.app
-include $(PROJ_ROOT)/config.mk
-
-# -----------------------------------------------
 # IP config (for compilation library setup)
 # -----------------------------------------------
-IP_ROOT = $(APP_DIR)
-include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+IP_ROOT = ..
+
+include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
 # Configuration
@@ -31,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) p4_app_tb.glbl p4_app_tb.tb
+TOP = $(SVUNIT_TOP) p4_app__tb.glbl p4_app__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -48,10 +38,13 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = p4_app_rtl=$(IP_ROOT)/rtl/$(APP_NAME) \
-             verif tb \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl
+COMPONENTS = vitisnetp4.xilinx_ip \
+             vitisnetp4.verif \
+             p4_app.rtl@smartnic \
+             p4_app.verif@smartnic \
+             p4_app.tb@smartnic \
+             axi4l.rtl@common@smartnic \
+             axi4s.rtl@common@smartnic 
 
 EXT_LIBS =
 
@@ -67,7 +60,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(abspath $(IP_ROOT))/xilinx_ip/$(APP_NAME)/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 
@@ -90,8 +83,7 @@ p4bm:
 
 build_test: config _build_test
 
-config:
-	$(MAKE) -s -C $(IP_ROOT)/rtl config APP_DIR=$(abspath $(APP_DIR))
+config: $(APP_DIR)/.app/config.mk
 
 sim: _sim
 
@@ -99,13 +91,12 @@ clean: _clean_test _clean_sim
 
 .PHONY: all p4bm build_test config sim clean
 
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -C $(APP_DIR) config
+$(APP_DIR)/.app/config.mk: $(APP_DIR)/Makefile
+	@$(MAKE) -s -C $(APP_DIR) config
 
 # ----------------------------------------------------
 # Test configuration
 # ----------------------------------------------------
-LIB_NAME = test
 SRC_DIR = .
 INC_DIR = .
 
@@ -115,7 +106,7 @@ INC_DIR = .
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Export SVUNIT configuration
-SVUNIT_TOP = $(LIB_NAME).$(SVUNIT_TOP_MODULE)
+SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------

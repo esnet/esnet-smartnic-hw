@@ -1,20 +1,17 @@
 # -----------------------------------------------
-# Path setup
+# Path to root of SmartNIC repo
+# (all other project paths are inferred)
 # -----------------------------------------------
-# Set relative to IP directory
-# Note: IP_ROOT is configured in calling (parent) Makefile
-PROJ_ROOT := $(abspath $(IP_ROOT)/../..)
-
-# All other project paths can be derived
-include $(PROJ_ROOT)/paths.mk
+SMARTNIC_ROOT = $(abspath $(APP_DIR)/../..)
 
 # -----------------------------------------------
-# Custom IP config
+# Application paths
 # -----------------------------------------------
-# IP library name - if unset, defaults to IP_ROOT directory name
-IP_NAME =
+SRC_ROOT := $(abspath $(APP_DIR)/src)
+
+P4_FILE = $(abspath $(APP_DIR)/p4/p4_and_verilog.p4)
 
 # -----------------------------------------------
-# Import base IP config
+# Standard application config
 # -----------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+include $(SMARTNIC_ROOT)/scripts/app_config_base.mk

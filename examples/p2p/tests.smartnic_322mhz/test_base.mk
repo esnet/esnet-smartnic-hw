@@ -3,9 +3,6 @@
 # -----------------------------------------------
 IP_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
 include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
@@ -32,7 +29,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.glbl smartnic_322mhz__tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES = $(PROJ_ROOT)/app_if/src/smartnic_322mhz_app.sv
+SRC_FILES = $(APP_DIR)/app_if/src/smartnic_322mhz_app.sv
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
@@ -41,14 +38,15 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = rtl regio.verif \
-             smartnic.common.std.verif \
-             smartnic.common.axi4l.rtl \
-             smartnic.common.axi4s.rtl \
-             smartnic.common.axi4l.verif \
-             smartnic.common.axi4s.verif \
-             smartnic.smartnic_322mhz.rtl \
-             smartnic.smartnic_322mhz.tb
+COMPONENTS = p2p.rtl \
+             p2p.regio.verif \
+             std.verif@common@smartnic \
+             axi4l.rtl@common@smartnic \
+             axi4s.rtl@common@smartnic \
+             axi4l.verif@common@smartnic \
+             axi4s.verif@common@smartnic \
+             smartnic_322mhz.rtl@smartnic \
+             smartnic_322mhz.tb@smartnic
 
 EXT_LIBS =
 
