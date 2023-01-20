@@ -275,8 +275,9 @@ module smartnic_322mhz
    );
 
    // Xilinx usr_access register instantiation.
-   USR_ACCESSE2 USR_ACCESS2_0 (.CFGCLK(), .DATA (smartnic_322mhz_regs.usr_access_nxt), .DATAVALID());
+//   USR_ACCESSE2 USR_ACCESS2_0 (.CFGCLK(), .DATA (smartnic_322mhz_regs.usr_access_nxt), .DATAVALID());
 
+   assign smartnic_322mhz_regs.usr_access_nxt   = '0;
    assign smartnic_322mhz_regs.usr_access_nxt_v = '1;
 
    // Sample and sync outgoing div_count and burst_count register signals.
