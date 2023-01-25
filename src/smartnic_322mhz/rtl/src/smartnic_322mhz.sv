@@ -87,9 +87,6 @@ module smartnic_322mhz
   input                       mod_rstn,
   output                      mod_rst_done,
 
-  output               [15:0] div_count,
-  output               [15:0] burst_count,
-
   input                       axil_aclk,
   input                       axis_aclk,
   input [NUM_CMAC-1:0]        cmac_clk
@@ -272,35 +269,6 @@ module smartnic_322mhz
      .rstn              (core_rstn),
      .timestamp         (timestamp),
      .smartnic_322mhz_regs (smartnic_322mhz_regs)
-   );
-
-   // Xilinx usr_access register instantiation.
-//   USR_ACCESSE2 USR_ACCESS2_0 (.CFGCLK(), .DATA (smartnic_322mhz_regs.usr_access_nxt), .DATAVALID());
-
-   assign smartnic_322mhz_regs.usr_access_nxt   = '0;
-   assign smartnic_322mhz_regs.usr_access_nxt_v = '1;
-
-   // Sample and sync outgoing div_count and burst_count register signals.
-   sync_bus_sampled #(
-      .DATA_T   ( logic [15:0] )
-   ) i_sync_bus_sampled__div_count (
-      .clk_in   ( core_clk ),
-      .rst_in   ( ~core_rstn ),
-      .data_in  ( smartnic_322mhz_regs.div_count[15:0] ),
-      .clk_out  ( axis_aclk ),
-      .rst_out  ( 1'b0 ),
-      .data_out ( div_count )
-   );
-
-   sync_bus_sampled #(
-      .DATA_T   ( logic [15:0] )
-   ) i_sync_bus_sampled__burst_count (
-      .clk_in   ( core_clk ),
-      .rst_in   ( ~core_rstn ),
-      .data_in  ( smartnic_322mhz_regs.burst_count[15:0] ),
-      .clk_out  ( axis_aclk ),
-      .rst_out  ( 1'b0 ),
-      .data_out ( burst_count )
    );
 
 

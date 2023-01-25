@@ -71,9 +71,6 @@ module tb;
     logic                       mod_rstn;
     logic                       mod_rst_done;
 
-    logic                [15:0] div_count;
-    logic                [15:0] burst_count;
-
     logic                       axil_aclk;
     logic                       axis_aclk;
     logic        [NUM_CMAC-1:0] cmac_clk;
