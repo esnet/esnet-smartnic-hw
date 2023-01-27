@@ -56,7 +56,7 @@ smartnic_322mhz #(
   .m_axis_adpt_rx_322mhz_tlast     (m_axis_adap_rx_322mhz_tlast),
   .m_axis_adpt_rx_322mhz_tdest     (),
   .m_axis_adpt_rx_322mhz_tuser_err (m_axis_adap_rx_322mhz_tuser_err),
-  .m_axis_adpt_rx_322mhz_tready    ('1),
+  .m_axis_adpt_rx_322mhz_tready    (m_axis_adap_rx_322mhz_tready),
 
   .m_axis_cmac_tx_322mhz_tvalid           (m_axis_cmac_tx_tvalid),
   .m_axis_cmac_tx_322mhz_tdata            (m_axis_cmac_tx_tdata),
@@ -77,10 +77,6 @@ smartnic_322mhz #(
   .mod_rstn                        (mod_rstn[0]),
   .mod_rst_done                    (mod_rst_done[0]),
 
-  .div_count                       (div_count),
-  .burst_count                     (burst_count),
-
   .axil_aclk                       (axil_aclk),
-  .axis_aclk                       (axis_aclk),
   .cmac_clk                        (cmac_clk)
 );

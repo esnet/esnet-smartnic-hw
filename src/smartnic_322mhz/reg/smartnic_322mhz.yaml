@@ -9,8 +9,6 @@ regs:
       access : ro
       init   : 0
 
-  - name: usr_access
-
   - name: status
     init: 0xC0BEBEEF
 
@@ -123,16 +121,6 @@ regs:
     access : rw
     count  : 4
     init   : 0xffff_ffff
-
-  # ----- open-nic-shell qdma shaper configuration registers. -----
-  - name: div_count
-    access : rw
-    init   : 0x0000_007F
-
-  - name: burst_count
-    access : rw
-    init   : 0x0000_0061
-
 
   # ----- Timestamp configuration and monitoring registers. -----
   - name: timestamp_incr

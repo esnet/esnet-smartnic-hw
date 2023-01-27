@@ -95,26 +95,6 @@ module smartnic_322mhz_ctrl_unit_test;
         `FAIL_UNLESS(got_data == exp_data);
     `SVTEST_END
 
-    // Test div_count and burst_count access.
-    `SVTEST(div_count_burst_count)
-        logic [3:0][7:0] exp_data;
-        logic [3:0][7:0] got_data;
-
-        // check default values.
-        exp_data = smartnic_322mhz_reg_pkg::INIT_DIV_COUNT;
-        env.smartnic_322mhz_reg_blk_agent.read_div_count(got_data); `FAIL_UNLESS(got_data == exp_data);
-
-        exp_data = smartnic_322mhz_reg_pkg::INIT_BURST_COUNT;
-        env.smartnic_322mhz_reg_blk_agent.read_burst_count(got_data); `FAIL_UNLESS(got_data == exp_data);
-
-        // check r/w access.
-        exp_data = 32'hbabe_face; env.smartnic_322mhz_reg_blk_agent.write_div_count(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_div_count(got_data); `FAIL_UNLESS(got_data == exp_data);
-
-        exp_data = 32'hcafe_beef; env.smartnic_322mhz_reg_blk_agent.write_burst_count(exp_data);
-        env.smartnic_322mhz_reg_blk_agent.read_burst_count(got_data); `FAIL_UNLESS(got_data == exp_data);
-    `SVTEST_END
-
     // Test flow_control access.
     `SVTEST(flow_control)
         logic [3:0][7:0] exp_data;
