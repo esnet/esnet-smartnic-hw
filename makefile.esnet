@@ -6,7 +6,7 @@
 
 # Configure project paths
 PROJ_ROOT := $(CURDIR)
-include $(PROJ_ROOT)/paths.mk
+include $(PROJ_ROOT)/config.mk
 
 BUILD_NAME ?= open-nic-ci
 
@@ -18,7 +18,8 @@ APP_ROOT            ?= $(PROJ_ROOT)/src/p4_app
 ARTIFACTS_DIR       ?= $(APP_ROOT)/artifacts
 ARTIFACTS_BUILD_DIR ?= $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
-# Export LIB_ROOT (referenced in Tcl source lists)
+# Export paths (referenced in Tcl source lists)
+export OUTPUT_ROOT
 export LIB_ROOT
 
 vanilla_build_dir = $(ONS_ROOT)/build/au280_$(vanilla_build_name)

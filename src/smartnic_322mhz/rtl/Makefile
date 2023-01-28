@@ -25,13 +25,16 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = xilinx_ip reg \
-             xilinx_hbm_rtl=$(LIB_ROOT)/src/xilinx/hbm/rtl \
-             xilinx_axi_rtl=$(LIB_ROOT)/src/xilinx/axi/rtl \
-             xilinx_axis_rtl=$(LIB_ROOT)/src/xilinx/axis/rtl \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl \
-             xilinx_hbm_verif=$(LIB_ROOT)/src/xilinx/hbm/verif
+COMPONENTS = smartnic_322mhz.xilinx_ip \
+             smartnic_322mhz.regio.rtl \
+			 reg.endian.rtl@common \
+			 reg.proxy.rtl@common \
+             xilinx.hbm.rtl@common \
+             xilinx.axi.rtl@common \
+             xilinx.axis.rtl@common \
+             axi4l.rtl@common \
+             axi4s.rtl@common \
+             xilinx.hbm.verif@common
 
 EXT_LIBS =
 

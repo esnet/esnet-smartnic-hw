@@ -29,6 +29,8 @@ module p4_hbm_datapath_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
+    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
     //===================================
     // Import common testcase tasks
     //===================================
@@ -41,11 +43,12 @@ module p4_hbm_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build( .sdnet_driver(1) );  // build tb with sdnet driver.
+        tb.build();
 
         // Retrieve reference to testbench environment class
         env = tb.env;
 
+        vitisnetp4_agent = new;
     endfunction
 
     //===================================
@@ -64,7 +67,7 @@ module p4_hbm_datapath_unit_test;
         #1us;
 
         // Initialize SDNet tables
-        env.sdnet_init();
+        vitisnetp4_agent.init();
 
         // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
@@ -72,7 +75,7 @@ module p4_hbm_datapath_unit_test;
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
 
-        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block.
+        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to VitisNetP4 block.
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
 
         // Put AXI-S interfaces into quiescent state
@@ -98,7 +101,7 @@ module p4_hbm_datapath_unit_test;
         #10us;
 
         // Clean up SDNet tables
-        env.sdnet_cleanup();
+        vitisnetp4_agent.cleanup();
 
     endtask
 
@@ -153,10 +156,10 @@ module p4_hbm_datapath_unit_test;
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
         env.ts_agent.set_static(timestamp);
 
-        debug_msg("Start writing sdnet_0 tables...", VERBOSE);
+        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/runsim.txt"};
-        env.sdnet_table_init_from_file(filename);
-        debug_msg("Done writing sdnet_0 tables...", VERBOSE);
+        vitisnetp4_agent.table_init_from_file(filename);
+        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};

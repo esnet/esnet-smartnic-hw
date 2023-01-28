@@ -6,7 +6,7 @@
 
 # Configure project paths
 PROJ_ROOT := $(CURDIR)
-include $(PROJ_ROOT)/paths.mk
+include $(PROJ_ROOT)/config.mk
 
 # Configure default application if none is specified
 APP_DIR ?= $(CURDIR)/src/p4_app
@@ -22,34 +22,40 @@ jobs ?= 16
 
 #------- Targets -------
 
-build: config bitfile package
+build: bitfile package
 
-config :
+config : $(APP_DIR)/.app/config.mk
 	$(_print_app_config)
-	$(_write_app_config)
 
-bitfile :
+$(APP_DIR)/.app/config.mk: $(APP_DIR)/Makefile
+	$(_configure_app)
+
+proj_paths:
+	$(_proj_print_paths)
+
+bitfile : config
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
-	$(MAKE) -C $(APP_ROOT)/app_if APP_DIR=$(APP_DIR)
-	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT)
+	@$(MAKE) -s -C $(APP_ROOT)/app_if
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT)
 	@echo "Generating smartnic bitfile..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
+	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
 		BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
 
 package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME)..."
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
+	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
 
 clean_build :
-	$(MAKE) -C $(APP_ROOT)/app_if clean
-	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/src/p4_app/xilinx_ip clean
-	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build clean
-	$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build BUILD_NAME=$(BUILD_NAME)
+ifneq ($(wildcard $(APP_DIR)/app_if),)
+	@-$(MAKE) -s -C $(APP_DIR)/app_if clean
+endif
+	@-rm -rf $(APP_DIR)/.app
+	-$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet clean_build BUILD_NAME=$(BUILD_NAME)
 
 clean_artifacts :
-	@rm -rf $(ARTIFACTS_BUILD_DIR)
+	@-rm -rf $(ARTIFACTS_BUILD_DIR)
 
 .PHONY : config bitfile package clean_build clean_artifacts
 
@@ -61,5 +67,5 @@ $(ARTIFACTS_DIR) :
 	@mkdir $(ARTIFACTS_DIR)
 
 build_smartnic_322mhz :
-	$(MAKE) -C $(PROJ_ROOT)/src/smartnic_322mhz/build all
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build all
 

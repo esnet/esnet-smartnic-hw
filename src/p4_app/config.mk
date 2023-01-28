@@ -3,18 +3,15 @@
 # -----------------------------------------------
 # Set relative to IP directory
 # Note: IP_ROOT is configured in calling (parent) Makefile
-PROJ_ROOT := $(abspath $(IP_ROOT)/../..)
+SRC_ROOT := $(abspath $(IP_ROOT)/..)
 
 # All other project paths can be derived
-include $(PROJ_ROOT)/paths.mk
+include $(SRC_ROOT)/config.mk
 
 # -----------------------------------------------
-# Custom IP config
+# Import default IP config
 # -----------------------------------------------
-# IP library name - if unset, defaults to IP_ROOT directory name
-IP_NAME =
+include $(SCRIPTS_ROOT)/Makefiles/ip_config_base.mk
 
-# -----------------------------------------------
-# Import base IP config
-# -----------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+# Application config
+P4_FILE = $(IP_ROOT)/p4/p4_app.p4

@@ -95,9 +95,7 @@ module tb;
     //===================================
     // Build
     //===================================
-    function void build(
-            input string hier_path="tb"
-        );
+    function void build();
         if (env == null) begin
             // Instantiate environment
             env = new("tb_env",0); // Configure for little-endian
@@ -116,13 +114,10 @@ module tb;
             env.axi_to_hbm_vif = axi_to_hbm;
 
             env.connect();
-
-            // Create SDNet driver
-            env.sdnet_create(hier_path);
         end
     endfunction
 
-    // Export AXI-L accessors to SDnet shared library
+    // Export AXI-L accessors to VitisNetP4 shared library
     export "DPI-C" task axi_lite_wr;
     task axi_lite_wr(input int address, input int data);
         env.sdnet_write(address, data);

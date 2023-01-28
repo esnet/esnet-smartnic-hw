@@ -4,12 +4,6 @@
 IP_ROOT = ../..
 include $(IP_ROOT)/config.mk
 
-# ----------------------------------------------------
-# Application config (p4_app by default)
-# ----------------------------------------------------
-APP_DIR ?= $(abspath $(PROJ_ROOT)/src/p4_app)
-include $(APP_DIR)/.app_config.mk
-
 # -----------------------------------------------
 # Configuration
 # Note: these parameters can also be provided
@@ -26,7 +20,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz_tb.glbl smartnic_322mhz_tb.tb
+TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.glbl smartnic_322mhz__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -43,13 +37,13 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = rtl tb \
-             p4_app_rtl=$(APP_ROOT)/rtl/$(APP_NAME) \
-             std_verif=$(LIB_ROOT)/src/std/verif \
-             axi4l_rtl=$(LIB_ROOT)/src/axi4l/rtl \
-             axi4l_verif=$(LIB_ROOT)/src/axi4l/verif \
-             axi4s_rtl=$(LIB_ROOT)/src/axi4s/rtl \
-             axi4s_verif=$(LIB_ROOT)/src/axi4s/verif
+COMPONENTS = smartnic_322mhz.rtl \
+			 smartnic_322mhz.tb \
+             std.verif@common \
+             axi4l.rtl@common \
+             axi4l.verif@common \
+             axi4s.rtl@common \
+             axi4s.verif@common
 
 EXT_LIBS =
 
@@ -77,7 +71,7 @@ all: build_test pcap sim
 pcap:
 	cd $(PROJ_ROOT)/src/smartnic_322mhz/tests/common/pcap; python3 gen_pcap.py;
 
-build_test: config _build_test
+build_test: _build_test
 
 config:
 	$(MAKE) -s -C $(APP_ROOT)/rtl config APP_DIR=$(abspath $(APP_DIR))
@@ -94,7 +88,6 @@ $(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
 # ----------------------------------------------------
 # Test configuration
 # ----------------------------------------------------
-LIB_NAME = test
 SRC_DIR = .
 INC_DIR = .
 
@@ -104,7 +97,7 @@ INC_DIR = .
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Export SVUNIT configuration
-SVUNIT_TOP = $(LIB_NAME).$(SVUNIT_TOP_MODULE)
+SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------
