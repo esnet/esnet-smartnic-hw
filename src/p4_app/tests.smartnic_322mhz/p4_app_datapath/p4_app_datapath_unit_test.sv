@@ -37,8 +37,8 @@ module p4_app_datapath_unit_test
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
-    `include "../../../../../src/p4_app/tests.smartnic_322mhz/common/tasks.svh"
+    `include "../../../../src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../common/tasks.svh"
 
     //===================================
     // Build
@@ -80,7 +80,7 @@ module p4_app_datapath_unit_test
 
     `SVUNIT_TESTS_BEGIN
 
-       `include "../../../p4/sim/run_pkt_test_incl.svh"
+       `include "../../p4/sim/run_pkt_test_incl.svh"
 
        `SVTEST(test_pkt_loopback)
            run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(0) );

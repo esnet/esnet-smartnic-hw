@@ -20,7 +20,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.glbl smartnic_322mhz__tb.tb
+TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -60,7 +60,7 @@ override DEFINES += SIMULATION
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS +=
-ELAB_OPTS += --relax --debug typical
+ELAB_OPTS += --debug typical
 SIM_OPTS +=
 
 # ----------------------------------------------------

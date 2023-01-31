@@ -24,7 +24,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) p4_and_verilog__tb.glbl p4_and_verilog__tb.tb
+TOP = $(SVUNIT_TOP) p4_and_verilog__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -70,7 +70,7 @@ VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 # ----------------------------------------------------
 COMPILE_OPTS +=
 
-ELAB_OPTS += --relax --debug typical --sv_lib $(VITISNETP4_DRV_DPI_LIB) --sv_root $(VITISNETP4_DRV_DPI_DIR)
+ELAB_OPTS += --debug typical --sv_lib $(VITISNETP4_DRV_DPI_LIB) --sv_root $(VITISNETP4_DRV_DPI_DIR)
 
 SIM_OPTS +=
 

@@ -34,8 +34,8 @@ module p4_app_passthrough_test_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
-    `include "../../../../../src/p4_app/tests.smartnic_322mhz/common/tasks.svh"
+    `include "../../../../src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../common/tasks.svh"
 
     //===================================
     // Build
