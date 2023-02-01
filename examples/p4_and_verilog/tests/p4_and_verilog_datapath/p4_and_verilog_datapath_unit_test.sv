@@ -122,7 +122,7 @@ module p4_and_verilog_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
-    `include "../../../p4/sim/run_pkt_test_incl.svh"
+    `include "../../p4/sim/run_pkt_test_incl.svh"
 
     `SVUNIT_TESTS_END
 

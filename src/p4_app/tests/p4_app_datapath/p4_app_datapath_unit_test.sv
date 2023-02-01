@@ -116,7 +116,7 @@ module p4_app_datapath_unit_test;
         vitisnetp4_agent.init();
     `SVTEST_END
 
-    `include "../../../p4/sim/run_pkt_test_incl.svh"
+    `include "../../p4/sim/run_pkt_test_incl.svh"
 
 // Commented out due outstanding (init?) issue. Test passes on its own, but not within test suite.
 //    `SVTEST(test_default_w_force)
