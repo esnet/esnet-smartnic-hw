@@ -56,6 +56,8 @@ smartnic_322mhz #(
   .m_axis_adpt_rx_322mhz_tlast     (m_axis_adap_rx_322mhz_tlast),
   .m_axis_adpt_rx_322mhz_tdest     (),
   .m_axis_adpt_rx_322mhz_tuser_err (m_axis_adap_rx_322mhz_tuser_err),
+  .m_axis_adpt_rx_322mhz_tuser_rss_enable  (m_axis_adap_rx_322mhz_tuser_rss_hash_valid),
+  .m_axis_adpt_rx_322mhz_tuser_rss_entropy (m_axis_adap_rx_322mhz_tuser_rss_hash),
   .m_axis_adpt_rx_322mhz_tready    (m_axis_adap_rx_322mhz_tready),
 
   .m_axis_cmac_tx_322mhz_tvalid           (m_axis_cmac_tx_tvalid),
