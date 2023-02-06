@@ -66,6 +66,8 @@ module smartnic_322mhz
   output [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tlast,
   output [(2*NUM_CMAC)-1:0]   m_axis_adpt_rx_322mhz_tdest,
   output [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tuser_err,
+  output [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tuser_rss_enable,
+  output [(12*NUM_CMAC)-1:0]  m_axis_adpt_rx_322mhz_tuser_rss_entropy,
   input [NUM_CMAC-1:0]        m_axis_adpt_rx_322mhz_tready,
 
   output [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tvalid,
@@ -106,6 +108,8 @@ module smartnic_322mhz
 
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
+
+   tuser_smartnic_meta_t      m_axis_adpt_rx_322mhz_tuser [NUM_CMAC];
 
    logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
 
@@ -487,58 +491,57 @@ module smartnic_322mhz
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t),
-                 .TUSER_T(bit), .TUSER_MODE(PKT_ERROR))                axis_from_cmac    [NUM_CMAC] ();
-
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_host    [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_cmac      [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_host      [NUM_CMAC] ();
-
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_pad [NUM_CMAC] ();
-
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_to_core [NUM_CMAC] ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64),
-                 .TID_T(port_t), .TDEST_T(port_t))                     axis_core_to_cmac [NUM_CMAC] ();
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .DATA_BYTE_WID(64),
-                 .TID_T(port_t), .TDEST_T(port_t))                     axis_core_to_host [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core [NUM_CMAC] ();
-
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_core_to_app [2] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t)) __axis_app_to_core [2] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_app_to_core [2] ();
-
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_core_to_bypass  ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_bypass_to_core  ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_cmac    [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_host    [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_to_core [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_host_to_core [NUM_CMAC] ();
 
    logic axis_core_to_bypass_tready, axis_core_to_bypass_tvalid;
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_to_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_bypass ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_igr_sw_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_bypass_fifo ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_bypass_fifo ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_bypass_fifo_pipe ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_bypass_drop ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_bypass_to_core ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_igr_sw_drop ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_bypass_drop ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_to_bypass_fifo ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_from_bypass_fifo_pipe ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_core_to_app [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_app__demarc [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_app [2] ();
 
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app [2] ();
-
-   tuser_buffer_context_mode_t  axis_to_app_tuser [2];
+   tuser_smartnic_meta_t axis_to_app_tuser [2];
    assign axis_to_app_tuser[0] = axis_to_app[0].tuser;
    assign axis_to_app_tuser[1] = axis_to_app[1].tuser;
 
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app [2] ();
-
-   tuser_buffer_context_mode_t  axis_from_app_tuser [2];
+   tuser_smartnic_meta_t axis_from_app_tuser [2];
    assign axis_from_app[0].tuser = axis_from_app_tuser[0];
    assign axis_from_app[1].tuser = axis_from_app_tuser[1];
 
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_app__demarc [2] ();
-   axi4s_intf  #(.TUSER_MODE(BUFFER_CONTEXT), .DATA_BYTE_WID(64), .TID_T(port_t),
-                 .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_app__demarc [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_app [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_app__demarc [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_drop ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    __axis_app_to_core [2] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_app_to_core [2] ();
 
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_host [NUM_CMAC] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_host    [NUM_CMAC] ();
+
+   axi4s_intf  #(.MODE(IGNORES_TREADY),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_pad       [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_cmac      [NUM_CMAC] ();
 
 
    // ----------------------------------------------------------------
@@ -555,7 +558,7 @@ module smartnic_322mhz
         .aclk     (cmac_clk[i]),
         .aresetn  (cmac_rstn[i]),
         .tvalid   (s_axis_cmac_rx_322mhz_tvalid[i]),
-        .tready   (s_axis_cmac_rx_322mhz_tready[i]),               // NOTE: tready signal is ignored by open-nic-shell.
+        .tready   (s_axis_cmac_rx_322mhz_tready[i]), // NOTE: tready signal is ignored by open-nic-shell.
         .tdata    (s_axis_cmac_rx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (s_axis_cmac_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_cmac_rx_322mhz_tlast[i]),
@@ -650,26 +653,31 @@ module smartnic_322mhz
         .axil_if        (axil_to_fifo_to_host[i])
       );
 
+      // axi4s_ila axi4s_ila_to_host (.axis_in(axis_to_host[i]));
+
       // Terminate unused AXI-L interface
       if (i != 0) axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
 
-
       axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
       ) axis_to_host_to_signals (
         .aclk     (),
         .aresetn  (),
         .tvalid   (m_axis_adpt_rx_322mhz_tvalid[i]),
-        .tready   (m_axis_adpt_rx_322mhz_tready[i]),   // tied high in opennic box322mhz instantiation.
+        .tready   (m_axis_adpt_rx_322mhz_tready[i]),
         .tdata    (m_axis_adpt_rx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (m_axis_adpt_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (m_axis_adpt_rx_322mhz_tlast[i]),
         .tid      (),
         .tdest    (m_axis_adpt_rx_322mhz_tdest[`getvec(2, i)]),
-        .tuser    (m_axis_adpt_rx_322mhz_tuser_err[i]),
+        .tuser    (m_axis_adpt_rx_322mhz_tuser[i]),
 
         .axi4s_if (axis_to_host[i])
       );
+
+      assign m_axis_adpt_rx_322mhz_tuser_err[i] = '0;
+      assign m_axis_adpt_rx_322mhz_tuser_rss_enable[i] = m_axis_adpt_rx_322mhz_tuser[i].rss_enable;
+      assign m_axis_adpt_rx_322mhz_tuser_rss_entropy[`getvec(12, i)] = m_axis_adpt_rx_322mhz_tuser[i].rss_entropy;
 
 
       //------------------------ from host to core --------------
@@ -685,7 +693,7 @@ module smartnic_322mhz
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
         .tid      (smartnic_322mhz_regs.igr_sw_tid[2+i]),
         .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
-        .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),       // this is a deadend for now. No use in smartnic_322mhz
+        .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic_322mhz.
 
         .axi4s_if (axis_from_host[i])
       );
@@ -747,7 +755,12 @@ module smartnic_322mhz
    assign axis_core_to_app[1].aresetn = core_rstn;
    assign axis_core_to_bypass.aresetn = core_rstn;
 
+   assign axis_core_to_app[0].tuser = '0;
+   assign axis_core_to_app[1].tuser = '0;
+   assign axis_core_to_bypass.tuser = '0;
 
+   assign axis_core_to_app[0].tdest[2] = '0;
+   assign axis_core_to_app[1].tdest[2] = '0;
 
    // axi4s_split_join instantiation (separates and recombines packet headers).
    axi4s_split_join #(
@@ -784,8 +797,8 @@ module smartnic_322mhz
 
    axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
    axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_app_to_core  (.axis_in(__axis_app_to_core[0]));
-//   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
-//   axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
+   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
+   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
 
 
    // tpause logic for ingress switch (for test purposes).
@@ -918,6 +931,24 @@ module smartnic_322mhz
    end
 
 
+   logic [12:0] axis_app_to_core_tuser [NUM_CMAC];
+   assign axis_app_to_core_tuser[0] = {axis_app_to_core[0].tuser.rss_enable, axis_app_to_core[0].tuser.rss_entropy};
+   assign axis_app_to_core_tuser[1] = {axis_app_to_core[1].tuser.rss_enable, axis_app_to_core[1].tuser.rss_entropy};
+
+   logic [12:0] axis_core_to_host_tuser [NUM_CMAC];
+   assign axis_core_to_host[0].tuser.pid         = '0;
+   assign axis_core_to_host[0].tuser.rss_enable  = axis_core_to_host_tuser[0][12];
+   assign axis_core_to_host[0].tuser.rss_entropy = axis_core_to_host_tuser[0][11:0];
+   assign axis_core_to_host[0].tuser.hdr_tlast   = '0;
+   assign axis_core_to_host[1].tuser.pid         = '0;
+   assign axis_core_to_host[1].tuser.rss_enable  = axis_core_to_host_tuser[1][12];
+   assign axis_core_to_host[1].tuser.rss_entropy = axis_core_to_host_tuser[1][11:0];
+   assign axis_core_to_host[1].tuser.hdr_tlast   = '0;
+
+   logic [12:0] axis_core_to_cmac_tuser [NUM_CMAC];
+   assign axis_core_to_cmac[0].tuser = '0;
+   assign axis_core_to_cmac[1].tuser = '0;
+
    axis_switch_egress axis_switch_egress
    (
     .aclk    ( core_clk ),
@@ -928,6 +959,7 @@ module smartnic_322mhz
     .m_axis_tlast  ({ axis_core_to_host[1].tlast  , axis_core_to_host[0].tlast  , axis_core_to_cmac[1].tlast  , axis_core_to_cmac[0].tlast  }),
     .m_axis_tid    ({ axis_core_to_host[1].tid    , axis_core_to_host[0].tid    , axis_core_to_cmac[1].tid    , axis_core_to_cmac[0].tid    }),
     .m_axis_tdest  ({ axis_core_to_host[1].tdest  , axis_core_to_host[0].tdest  , axis_core_to_cmac[1].tdest  , axis_core_to_cmac[0].tdest  }),
+    .m_axis_tuser  ({ axis_core_to_host_tuser[1]  , axis_core_to_host_tuser[0]  , axis_core_to_cmac_tuser[1]  , axis_core_to_cmac_tuser[0]  }),
     .m_axis_tready ({ axis_core_to_host[1].tready , axis_core_to_host[0].tready , axis_core_to_cmac[1].tready , axis_core_to_cmac[0].tready }),
     .m_axis_tvalid ({ axis_core_to_host[1].tvalid , axis_core_to_host[0].tvalid , axis_core_to_cmac[1].tvalid , axis_core_to_cmac[0].tvalid }),
 
@@ -936,6 +968,7 @@ module smartnic_322mhz
     .s_axis_tlast  ({ axis_bypass_to_core.tlast  , axis_app_to_core[1].tlast  , axis_app_to_core[0].tlast  }),
     .s_axis_tid    ({ axis_bypass_to_core.tid    , axis_app_to_core[1].tid    , axis_app_to_core[0].tid    }),
     .s_axis_tdest  ({ axis_bypass_to_core.tdest  , axis_app_to_core[1].tdest  , axis_app_to_core[0].tdest  }),
+    .s_axis_tuser  ({                  13'h0000  , axis_app_to_core_tuser[1]  , axis_app_to_core_tuser[0]  }),
     .s_axis_tready ({ axis_bypass_to_core.tready , axis_app_to_core[1].tready , axis_app_to_core[0].tready }),
     .s_axis_tvalid ({ axis_bypass_to_core.tvalid , axis_app_to_core[1].tvalid , axis_app_to_core[0].tvalid }),
 
@@ -969,7 +1002,7 @@ module smartnic_322mhz
 
    // AXI-S interfaces
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t),
        .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app_1 (
        .axi4s_from_tx (axis_to_app__demarc[1]),
@@ -977,7 +1010,7 @@ module smartnic_322mhz
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t),
        .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__core_to_app_0 (
        .axi4s_from_tx (axis_to_app__demarc[0]),
@@ -985,7 +1018,7 @@ module smartnic_322mhz
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
        .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core_1 (
        .axi4s_from_tx (axis_from_app[1]),
@@ -993,7 +1026,7 @@ module smartnic_322mhz
    );
 
    axi4s_reg_slice #(
-       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t),
+       .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
        .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
    ) i_axi4s_reg_slice__app_to_core_0 (
        .axi4s_from_tx (axis_from_app[0]),
@@ -1076,8 +1109,7 @@ module smartnic_322mhz
     .axis_from_switch_0_tlast  ( axis_to_app[0].tlast ),
     .axis_from_switch_0_tid    ( axis_to_app[0].tid ),
     .axis_from_switch_0_tdest  ( axis_to_app[0].tdest ),
-    .axis_from_switch_0_tuser_wr_ptr    ( axis_to_app_tuser[0].wr_ptr ),
-    .axis_from_switch_0_tuser_hdr_tlast ( axis_to_app_tuser[0].hdr_tlast ),
+    .axis_from_switch_0_tuser_pid ( axis_to_app_tuser[0].pid ),
     // AXI-S data interface (from app, to switch input 0)
     .axis_to_switch_0_tvalid ( axis_from_app[0].tvalid ),
     .axis_to_switch_0_tready ( axis_from_app[0].tready ),
@@ -1086,8 +1118,9 @@ module smartnic_322mhz
     .axis_to_switch_0_tlast  ( axis_from_app[0].tlast ),
     .axis_to_switch_0_tid    ( axis_from_app[0].tid ),
     .axis_to_switch_0_tdest  ( axis_from_app[0].tdest ),
-    .axis_to_switch_0_tuser_wr_ptr    ( axis_from_app_tuser[0].wr_ptr ),
-    .axis_to_switch_0_tuser_hdr_tlast ( axis_from_app_tuser[0].hdr_tlast ),
+    .axis_to_switch_0_tuser_pid ( axis_from_app_tuser[0].pid ),
+    .axis_to_switch_0_tuser_rss_enable  ( axis_from_app_tuser[0].rss_enable ),
+    .axis_to_switch_0_tuser_rss_entropy ( axis_from_app_tuser[0].rss_entropy ),
     // AXI-S data interface (from switch output 1, to app)
     .axis_from_switch_1_tvalid ( axis_to_app[1].tvalid ),
     .axis_from_switch_1_tready ( axis_to_app[1].tready ),
@@ -1096,7 +1129,7 @@ module smartnic_322mhz
     .axis_from_switch_1_tlast  ( axis_to_app[1].tlast ),
     .axis_from_switch_1_tid    ( axis_to_app[1].tid ),
     .axis_from_switch_1_tdest  ( axis_to_app[1].tdest ),
-    .axis_from_switch_1_tuser  ( axis_to_app_tuser[1] ),
+    .axis_from_switch_1_tuser_pid ( axis_to_app_tuser[1].pid ),
     // AXI-S data interface (from app, to switch input 1)
     .axis_to_switch_1_tvalid ( axis_from_app[1].tvalid ),
     .axis_to_switch_1_tready ( axis_from_app[1].tready ),
@@ -1105,7 +1138,9 @@ module smartnic_322mhz
     .axis_to_switch_1_tlast  ( axis_from_app[1].tlast ),
     .axis_to_switch_1_tid    ( axis_from_app[1].tid ),
     .axis_to_switch_1_tdest  ( axis_from_app[1].tdest ),
-    .axis_to_switch_1_tuser  ( axis_from_app_tuser[1] ),
+    .axis_to_switch_1_tuser_pid ( axis_from_app_tuser[1].pid ),
+    .axis_to_switch_1_tuser_rss_enable  ( axis_from_app_tuser[1].rss_enable ),
+    .axis_to_switch_1_tuser_rss_entropy ( axis_from_app_tuser[1].rss_entropy ),
     // egress flow control interface
     .egr_flow_ctl            ( egr_flow_ctl_pipe[0] ),
     // AXI3 interfaces to HBM
@@ -1152,12 +1187,14 @@ module smartnic_322mhz
     .axi_to_hbm_rready   ( axi_app_to_hbm_rready  )
    );
 
-   // Drive AXI-S clock/reset
    assign axis_from_app[0].aclk = core_clk;
    assign axis_from_app[1].aclk = core_clk;
 
    assign axis_from_app[0].aresetn = core_rstn;
    assign axis_from_app[1].aresetn = core_rstn;
+
+   assign axis_from_app_tuser[0].hdr_tlast = '0;
+   assign axis_from_app_tuser[1].hdr_tlast = '0;
 
    axi4s_probe axis_probe_app_to_core_0 (
       .axi4l_if  (axil_to_app_to_core[0]),

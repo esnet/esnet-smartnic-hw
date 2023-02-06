@@ -53,4 +53,11 @@ package smartnic_322mhz_pkg;
         bit [2:0]       raw;
     } egr_tdest_t;
 
+    typedef struct packed {
+        logic [15:0] pid;
+        logic        rss_enable;
+        logic [11:0] rss_entropy;
+        logic        hdr_tlast;
+    } tuser_smartnic_meta_t;
+
 endpackage : smartnic_322mhz_pkg
