@@ -91,8 +91,7 @@ module smartnic_322mhz_app
     input  logic         axis_from_switch_0_tlast,
     input  logic [1:0]   axis_from_switch_0_tid,
     input  logic [1:0]   axis_from_switch_0_tdest,
-    input  logic [15:0]  axis_from_switch_0_tuser_wr_ptr,
-    input  logic         axis_from_switch_0_tuser_hdr_tlast,
+    input  logic [15:0]  axis_from_switch_0_tuser_pid,
 
     // AXI-S data interface (to switch)
     // (synchronous to core_clk domain)
@@ -103,8 +102,9 @@ module smartnic_322mhz_app
     output logic         axis_to_switch_0_tlast,
     output logic [1:0]   axis_to_switch_0_tid,
     output logic [2:0]   axis_to_switch_0_tdest,
-    output logic [15:0]  axis_to_switch_0_tuser_wr_ptr,
-    output logic         axis_to_switch_0_tuser_hdr_tlast,
+    output logic [15:0]  axis_to_switch_0_tuser_pid,
+    output logic         axis_to_switch_0_tuser_rss_enable,
+    output logic [11:0]  axis_to_switch_0_tuser_rss_entropy,
 
     // AXI-S data interface (from host)
     // (synchronous to core_clk domain)
@@ -115,7 +115,7 @@ module smartnic_322mhz_app
     input  logic         axis_from_switch_1_tlast,
     input  logic [1:0]   axis_from_switch_1_tid,
     input  logic [1:0]   axis_from_switch_1_tdest,
-    input  logic         axis_from_switch_1_tuser,
+    input  logic [15:0]  axis_from_switch_1_tuser_pid,
 
     // AXI-S data interface (to host)
     // (synchronous to core_clk domain)
@@ -126,7 +126,9 @@ module smartnic_322mhz_app
     output logic         axis_to_switch_1_tlast,
     output logic [1:0]   axis_to_switch_1_tid,
     output logic [2:0]   axis_to_switch_1_tdest,
-    output logic         axis_to_switch_1_tuser,
+    output logic [15:0]  axis_to_switch_1_tuser_pid,
+    output logic         axis_to_switch_1_tuser_rss_enable,
+    output logic [11:0]  axis_to_switch_1_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl,
@@ -189,23 +191,41 @@ module smartnic_322mhz_app
     typedef logic[1:0] port_t;
     typedef logic[2:0] egr_tdest_t;
 
+    typedef struct packed {
+        logic [15:0] pid;
+        logic        rss_enable;
+        logic [11:0] rss_entropy;
+    } tuser_smartnic_meta_t;
+
     // Interfaces
     axi4l_intf #() axil_if       ();
     axi4l_intf #() axil_sdnet_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_to_switch [2]  ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [2]  ();
 
-    tuser_buffer_context_mode_t   axis_to_switch_0_tuser;
-    assign axis_to_switch_0_tuser.wr_ptr    = axis_to_switch_0_tuser_wr_ptr;
-    assign axis_to_switch_0_tuser.hdr_tlast = axis_to_switch_0_tuser_hdr_tlast;
+    tuser_smartnic_meta_t  axis_to_switch_0_tuser;
+    assign axis_to_switch_0_tuser.pid         = axis_to_switch_0_tuser_pid;
+    assign axis_to_switch_0_tuser.rss_enable  = axis_to_switch_0_tuser_rss_enable;
+    assign axis_to_switch_0_tuser.rss_entropy = axis_to_switch_0_tuser_rss_entropy;
+
+    tuser_smartnic_meta_t  axis_to_switch_1_tuser;
+    assign axis_to_switch_1_tuser.pid         = axis_to_switch_1_tuser_pid;
+    assign axis_to_switch_1_tuser.rss_enable  = axis_to_switch_1_tuser_rss_enable;
+    assign axis_to_switch_1_tuser.rss_entropy = axis_to_switch_1_tuser_rss_entropy;
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)) axis_from_switch [2] ();
+                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_from_switch [2] ();
 
-    tuser_buffer_context_mode_t   axis_from_switch_0_tuser;
-    assign axis_from_switch_0_tuser.wr_ptr    = axis_from_switch_0_tuser_wr_ptr;
-    assign axis_from_switch_0_tuser.hdr_tlast = axis_from_switch_0_tuser_hdr_tlast;
+    tuser_smartnic_meta_t  axis_from_switch_0_tuser;
+    assign axis_from_switch_0_tuser.pid         = axis_from_switch_0_tuser_pid;
+    assign axis_from_switch_0_tuser.rss_enable  = 0;
+    assign axis_from_switch_0_tuser.rss_entropy = 0;
+
+    tuser_smartnic_meta_t  axis_from_switch_1_tuser;
+    assign axis_from_switch_1_tuser.pid         = axis_from_switch_1_tuser_pid;
+    assign axis_from_switch_1_tuser.rss_enable  = 0;
+    assign axis_from_switch_1_tuser.rss_entropy = 0;
 
     axi3_intf  #(
         .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)
@@ -266,7 +286,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface from switch
     axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_buffer_context_mode_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
     ) i_axi4s_intf_from_signals_from_switch_0 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
@@ -282,7 +302,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface to switch
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_buffer_context_mode_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
     ) i_axi4s_to_signals_to_switch_0 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
@@ -298,7 +318,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface from host
     axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
     ) i_axi4s_from_signals_from_switch_1 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
@@ -314,7 +334,7 @@ module smartnic_322mhz_app
     );
     // -- AXI-S interface to host
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
     ) i_axi4s_to_signals_to_switch_1 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
