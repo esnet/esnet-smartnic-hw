@@ -35,7 +35,7 @@ P4 Secure Site (once access privileges are approved and granted).  Further quest
 directed to vitisnetp4@xilinx.com.
 
 The SmartNIC platform provides the necessary hardware datapath and control features
-to operate the custom VitisNetP4 processor core.  
+to operate the custom VitisNetP4 processor core.
 
 The `esnet-smartnic-hw` repository includes the RTL source files, verification test suites
 and build scripts for compiling a user P4 file into a downloadable bitfile, as well as the
@@ -79,7 +79,7 @@ The platform includes the following repositories:
      Firmware design directory for the ESnet SmartNIC platform.
 
    - `ESnet FPGA library` (https://github.com/esnet/esnet-fpga-library.git)
-     General-purpose components and infrastructure for a structured FPGA design methodology.     
+     General-purpose components and infrastructure for a structured FPGA design methodology.
 
    - `SVunit` (https://github.com/svunit/svunit.git)
      An open-source framework for FPGA System Verilog
@@ -158,7 +158,7 @@ open-nic_shell/
   for use on the AMD (Xilinx) Alveo platform.
 
 config.mk
-  Sets environment variables for the SmartNIC project. 
+  Sets environment variables for the SmartNIC project.
 
 paths.mk
   Describes paths to resources provided by the SmartNIC project.
@@ -175,7 +175,7 @@ src/
 ```
 
 
-## Getting Started 
+## Getting Started
 
 ### Installing the SmartNIC Hardware Design Repository
 
@@ -213,10 +213,10 @@ executing the Vivado installation program.  The example BASH shell command is:
 
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
-   
-       > source /opt/Xilinx/Vivado/2022.1/settings64.sh
 
-   where the Vivado installation directory is located at /opt/Xilinx/Vivado/2022.1/ in this example.
+       > source /tools/Xilinx/Vivado/2022.1/settings64.sh
+
+   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2022.1/ in this example.
 
 3. Set the XILINXD_LICENSE_FILE environment variable accordingly to resolve the site-specific license for
 the AMD (Xilinx) VitisNetp4 IP core.  This can be done with a `.flexlmrc` file in the users home directory,
@@ -225,6 +225,14 @@ command is:
 
        > export XILINXD_LICENSE_FILE=<filename>
 
+**NOTE** The P4 compiler distributed with Vivado 2022.1.x is non-functional due to a bad version check in
+the associated Tcl launch script. The VitisNetP4 version included with Vivado 2022.1.x is v1.1, while the
+script checks for the presence of v1.0. The following workaround is required (note that since this involves
+modifying one of the installation files, sudo access is necessary):
+
+       > sudo sed -i s/vitis_net_p4_v1_0/vitis_net_p4_v1_1/g /tools/Xilinx/Vivado/2022.1/bin/unwrapped/lnx64.o/p4c-vitisnet.tcl
+
+   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2022.1/ in this example.
 
 ### Building the SmartNIC p4_only Example Design
 
@@ -316,7 +324,7 @@ The P4 program **MUST** include the following AMD (Xilinx) VitisNetP4 include fi
 
 These files capture built-in constructs and the standard definitions for the AMD (Xilinx) P4 architecture.
 They are located in the Vivado installation directory at:
-`/opt/Xilinx/Vivado/2022.1/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/`
+`$XILINX_VIVADO/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/`
 
 
 ### Interfaces:
