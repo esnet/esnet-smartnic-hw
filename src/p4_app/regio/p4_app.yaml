@@ -11,6 +11,10 @@ regs:
   - name: status
     init: 0xcafebeef
 
+  - name: rss
+    access: rw
+    init: 0x00000abc
+
   - name: tpause
     desc   : tpause enable register.  when set to 1, (overrides) deasserts tready on the ingress axi4s interface. 
     access : rw

@@ -123,10 +123,12 @@ module p4_app
                                                user_metadata_out.pid[15:0]   : user_metadata_out_latch.pid[15:0];
 
    assign axis_to_switch_0_tuser.rss_enable =  user_metadata_out_valid ?
-                                               user_metadata_out.rss_enable  : user_metadata_out_latch.rss_enable;
+                                               (p4_app_regs.rss[17] ? p4_app_regs.rss[16] : user_metadata_out.rss_enable) :
+                                               user_metadata_out_latch.rss_enable;
 
    assign axis_to_switch_0_tuser.rss_entropy = user_metadata_out_valid ?
-                                               user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
+                                               (p4_app_regs.rss[17] ? p4_app_regs.rss[11:0] : user_metadata_out.rss_entropy) :
+                                               user_metadata_out_latch.rss_entropy;
 
 
 
