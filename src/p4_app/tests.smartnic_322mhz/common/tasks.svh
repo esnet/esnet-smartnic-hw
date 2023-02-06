@@ -9,9 +9,7 @@
         reset(); // Issue reset (both datapath and management domains)
 
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
-        `ifdef HDR_LENGTH
-            env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
-        `endif
+        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
 
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();
@@ -24,6 +22,9 @@
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block. 
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+
+        // Remap tdest for CMAC_0 to HOST_0
+        //env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 2'h2 );
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -114,7 +115,7 @@
                          end
                          begin
                              // Monitor received packets on port 0 (CMAC_0).
-                             env.axis_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                             env.axis_monitor[dest_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
