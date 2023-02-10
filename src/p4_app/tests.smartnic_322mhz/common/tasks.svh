@@ -23,9 +23,6 @@
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block. 
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
 
-        // Remap tdest for CMAC_0 to HOST_0
-        //env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 2'h2 );
-
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
           @(posedge tb.clk);

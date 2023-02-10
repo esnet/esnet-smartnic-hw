@@ -78,7 +78,7 @@ module tb;
     logic        [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
-    smartnic_322mhz DUT(.*);
+    smartnic_322mhz #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
 
     //===================================
     // Local signals
