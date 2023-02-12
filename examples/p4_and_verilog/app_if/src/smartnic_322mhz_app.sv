@@ -202,7 +202,7 @@ module smartnic_322mhz_app
     axi4l_intf #() axil_sdnet_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [2]  ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [2] ();
 
     tuser_smartnic_meta_t  axis_to_switch_0_tuser;
     assign axis_to_switch_0_tuser.pid         = axis_to_switch_0_tuser_pid;
@@ -219,13 +219,13 @@ module smartnic_322mhz_app
 
     tuser_smartnic_meta_t  axis_from_switch_0_tuser;
     assign axis_from_switch_0_tuser.pid         = axis_from_switch_0_tuser_pid;
-    assign axis_from_switch_0_tuser.rss_enable  = 0;
-    assign axis_from_switch_0_tuser.rss_entropy = 0;
+    assign axis_from_switch_0_tuser.rss_enable  = '0;
+    assign axis_from_switch_0_tuser.rss_entropy = '0;
 
     tuser_smartnic_meta_t  axis_from_switch_1_tuser;
     assign axis_from_switch_1_tuser.pid         = axis_from_switch_1_tuser_pid;
-    assign axis_from_switch_1_tuser.rss_enable  = 0;
-    assign axis_from_switch_1_tuser.rss_entropy = 0;
+    assign axis_from_switch_1_tuser.rss_enable  = '0;
+    assign axis_from_switch_1_tuser.rss_entropy = '0;
 
     axi3_intf  #(
         .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)

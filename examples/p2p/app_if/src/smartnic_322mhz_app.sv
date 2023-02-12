@@ -182,6 +182,7 @@ module smartnic_322mhz_app
 
     // Parameters
     localparam int  AXIS_DATA_BYTE_WID = 64;
+
     localparam int  AXI_HBM_DATA_BYTE_WID = 32;
     localparam int  AXI_HBM_ADDR_WID = 33;
     localparam type AXI_HBM_ID_T = logic[5:0];
@@ -195,7 +196,6 @@ module smartnic_322mhz_app
         logic        rss_enable;
         logic [11:0] rss_entropy;
     } tuser_smartnic_meta_t;
-
 
     // Interfaces
     axi4l_intf #() axil_if       ();
