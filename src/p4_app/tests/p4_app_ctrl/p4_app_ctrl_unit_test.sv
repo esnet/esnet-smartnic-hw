@@ -106,6 +106,32 @@ module p4_app_ctrl_unit_test;
         `FAIL_UNLESS(got_data == p4_app_reg_pkg::INIT_STATUS);
     `SVTEST_END
       
+    // Test write access to p4_app.rss_config register
+    `SVTEST(write_p4_app_rss_config)
+        p4_app_reg_pkg::reg_rss_config_t   rss_config, got_data;
+
+        // Write rss_config register
+        rss_config.enable = 1'b1;
+        rss_config.rss_enable = 1'b1;
+        rss_config.rss_entropy = 12'habc;
+        env.p4_app_reg_agent.write_rss_config(rss_config);
+
+        // Read rss_config register
+        env.p4_app_reg_agent.read_rss_config(got_data);
+        `FAIL_UNLESS(got_data == rss_config);
+
+        // Change rss_config settings
+        rss_config.rss_entropy = 12'h123;
+        env.p4_app_reg_agent.write_rss_config(rss_config);
+
+        rss_config.rss_enable = 1'b0;
+        env.p4_app_reg_agent.write_rss_config(rss_config);
+
+        rss_config.enable = 1'b0;
+        env.p4_app_reg_agent.write_rss_config(rss_config);
+
+    `SVTEST_END
+
     `SVUNIT_TESTS_END
 
 endmodule

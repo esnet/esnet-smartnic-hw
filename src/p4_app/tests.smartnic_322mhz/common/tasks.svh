@@ -9,9 +9,7 @@
         reset(); // Issue reset (both datapath and management domains)
 
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
-        `ifdef HDR_LENGTH
-            env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
-        `endif
+        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
 
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();
@@ -114,7 +112,7 @@
                          end
                          begin
                              // Monitor received packets on port 0 (CMAC_0).
-                             env.axis_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                             env.axis_monitor[dest_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );

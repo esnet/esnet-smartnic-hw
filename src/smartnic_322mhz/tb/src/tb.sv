@@ -50,6 +50,8 @@ module tb;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tlast;
     logic   [(2*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tuser_err;
+    logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tuser_rss_enable;
+    logic  [(12*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tuser_rss_entropy;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tready;
 
     logic       [NUM_CMAC-1:0] m_axis_cmac_tx_322mhz_tvalid;
@@ -76,7 +78,7 @@ module tb;
     logic        [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
-    smartnic_322mhz DUT(.*);
+    smartnic_322mhz #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
 
     //===================================
     // Local signals

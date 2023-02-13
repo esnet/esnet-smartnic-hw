@@ -76,11 +76,17 @@ module p4_and_verilog #(
    // ----------------------------------------------------------------
    // The SDnet block
    // ----------------------------------------------------------------
-   // tuser mapping (from axi4s_pkg).
-   tuser_buffer_context_mode_t   axis_from_switch_0_tuser;
+   // tuser mapping (from smartnic_322mhz_pkg).
+   typedef struct packed {
+       logic [15:0] pid;
+       logic        rss_enable;
+       logic [11:0] rss_entropy;
+   } tuser_smartnic_meta_t;
+
+   tuser_smartnic_meta_t  axis_from_switch_0_tuser;
    assign axis_from_switch_0_tuser = axis_from_switch_0.tuser;
 
-   tuser_buffer_context_mode_t   axis_to_switch_0_tuser;
+   tuser_smartnic_meta_t  axis_to_switch_0_tuser;
    assign axis_to_switch_0.tuser = axis_to_switch_0_tuser;
 
 
@@ -91,7 +97,7 @@ module p4_and_verilog #(
    
    always_comb begin
       user_metadata_in.timestamp_ns      = timestamp;
-      user_metadata_in.pid               = axis_from_switch_0_tuser.wr_ptr;
+      user_metadata_in.pid               = axis_from_switch_0_tuser.pid;
       user_metadata_in.ingress_port      = {'0, axis_from_switch_0.tid};
       user_metadata_in.egress_port       = {'0, axis_from_switch_0.tid};
       user_metadata_in.truncate_enable   = 0;
@@ -113,11 +119,14 @@ module p4_and_verilog #(
    assign axis_to_switch_0.tdest = user_metadata_out_valid ?
                                    user_metadata_out.egress_port : user_metadata_out_latch.egress_port;
 
-   assign axis_to_switch_0_tuser.wr_ptr = user_metadata_out_valid ?
-                                             user_metadata_out.pid[15:0] : user_metadata_out_latch.pid[15:0];
+   assign axis_to_switch_0_tuser.pid         = user_metadata_out_valid ?
+                                               user_metadata_out.pid[15:0] : user_metadata_out_latch.pid[15:0];
 
-   assign axis_to_switch_0_tuser.hdr_tlast = '0;
+   assign axis_to_switch_0_tuser.rss_enable  = user_metadata_out_valid ?
+                                               user_metadata_out.rss_enable  : user_metadata_out_latch.rss_enable;
 
+   assign axis_to_switch_0_tuser.rss_entropy = user_metadata_out_valid ?
+                                               user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
 
 
 

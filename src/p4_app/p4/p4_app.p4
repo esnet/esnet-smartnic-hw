@@ -83,8 +83,11 @@ control MatchActionImpl( inout headers hdr,
             return;
         }
         
-        if (hdr.ethernet.isValid())
+        if (hdr.ethernet.isValid()) {
+            sn_meta.rss_entropy = 9w0 ++ sn_meta.ingress_port;
+            sn_meta.rss_enable = 1w1;
             forward.apply();
+        }
         else
             dropPacket();
     }

@@ -26,6 +26,8 @@ module p4_app_passthrough_test_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
+    localparam int HDR_LENGTH = 0;
+
     tb_pkg::tb_env env;
 
     // VitisNetP4 table agent
