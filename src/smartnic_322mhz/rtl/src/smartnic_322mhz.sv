@@ -875,8 +875,8 @@ module smartnic_322mhz
 
 
 
-   axi4s_intf_connector axis_core_to_app_connector (.axi4s_from_tx(axis_core_to_app[1]),      .axi4s_to_rx(axis_to_app__demarc[1]));
-   axi4s_intf_connector axis_app_to_core_connector (.axi4s_from_tx(axis_from_app__demarc[1]), .axi4s_to_rx(__axis_app_to_core[1]));
+   axi4s_intf_pipe axis_core_to_app_pipe (.axi4s_if_from_tx(axis_core_to_app[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1]));
+   axi4s_intf_pipe axis_app_to_core_pipe (.axi4s_if_from_tx(axis_from_app__demarc[1]), .axi4s_if_to_rx(__axis_app_to_core[1]));
 
 
    // axis_app_to_core[0] assignments.
