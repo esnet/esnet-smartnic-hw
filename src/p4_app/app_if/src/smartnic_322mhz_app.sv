@@ -204,12 +204,12 @@ module smartnic_322mhz_app
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
                  .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [2] ();
 
-    tuser_smartnic_meta_t   axis_to_switch_0_tuser;
+    tuser_smartnic_meta_t  axis_to_switch_0_tuser;
     assign axis_to_switch_0_tuser_pid         = axis_to_switch_0_tuser.pid;
     assign axis_to_switch_0_tuser_rss_enable  = axis_to_switch_0_tuser.rss_enable;
     assign axis_to_switch_0_tuser_rss_entropy = axis_to_switch_0_tuser.rss_entropy;
 
-    tuser_smartnic_meta_t   axis_to_switch_1_tuser;
+    tuser_smartnic_meta_t  axis_to_switch_1_tuser;
     assign axis_to_switch_1_tuser_pid         = axis_to_switch_1_tuser.pid;
     assign axis_to_switch_1_tuser_rss_enable  = axis_to_switch_1_tuser.rss_enable;
     assign axis_to_switch_1_tuser_rss_entropy = axis_to_switch_1_tuser.rss_entropy;
@@ -287,7 +287,7 @@ module smartnic_322mhz_app
     // -- AXI-S interface from switch
     axi4s_intf_from_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_intf_from_signals_from_switch (
+    ) i_axi4s_intf_from_signals_from_switch_0 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
         .tvalid  ( axis_from_switch_0_tvalid ),
@@ -303,7 +303,7 @@ module smartnic_322mhz_app
     // -- AXI-S interface to switch
     axi4s_intf_to_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_to_signals_to_switch (
+    ) i_axi4s_to_signals_to_switch_0 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
         .tvalid  ( axis_to_switch_0_tvalid ),
@@ -319,7 +319,7 @@ module smartnic_322mhz_app
     // -- AXI-S interface from host
     axi4s_intf_from_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_from_signals_from_host (
+    ) i_axi4s_from_signals_from_switch_1 (
         .aclk    ( core_clk ),
         .aresetn ( core_rstn ),
         .tvalid  ( axis_from_switch_1_tvalid ),
@@ -335,7 +335,7 @@ module smartnic_322mhz_app
     // -- AXI-S interface to host
     axi4s_intf_to_signals #(
         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_to_signals_to_host (
+    ) i_axi4s_to_signals_to_switch_1 (
         .aclk    ( ), // Output
         .aresetn ( ), // Output
         .tvalid  ( axis_to_switch_1_tvalid ),
@@ -413,25 +413,20 @@ module smartnic_322mhz_app
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
     p4_app p4_app_0
-    (       
+    (
         .core_clk      ( core_clk ),
         .core_rstn     ( core_rstn ),
         .timestamp     ( timestamp ),
-            
+
         .axil_if       ( axil_if ),
         .axil_to_sdnet ( axil_sdnet_if ),
-            
+
         .axis_to_switch_0    ( axis_to_switch[0] ),
         .axis_from_switch_0  ( axis_from_switch[0] ),
         .axis_to_switch_1    ( axis_to_switch[1] ),
         .axis_from_switch_1  ( axis_from_switch[1] ),
-            
+
         .axi_to_hbm    ( axi_to_hbm )
-    );      
-            
+    );
+
 endmodule: smartnic_322mhz_app
-            
-            
-            
-            
-            
