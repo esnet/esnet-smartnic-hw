@@ -24,6 +24,12 @@ jobs ?= 16
 
 build: bitfile package
 
+# Include targets for config validation
+# - checks Vivado version
+# - checks that licenses are available for IP, where required
+# - checks that required command-line utilities are available in path
+include $(SCRIPTS_ROOT)/Makefiles/config.mk
+
 config : $(APP_DIR)/.app/config.mk
 	$(_print_app_config)
 
@@ -33,7 +39,7 @@ $(APP_DIR)/.app/config.mk: $(APP_DIR)/Makefile
 proj_paths:
 	$(_proj_print_paths)
 
-bitfile : config
+bitfile : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
 	@$(MAKE) -s -C $(APP_ROOT)/app_if
