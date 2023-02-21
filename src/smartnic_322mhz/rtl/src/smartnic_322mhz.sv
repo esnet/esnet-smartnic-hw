@@ -275,6 +275,22 @@ module smartnic_322mhz
      .smartnic_322mhz_regs (smartnic_322mhz_regs)
    );
 
+   // axis_to_host_tpause synchronizers
+   logic axis_to_host_tpause [NUM_CMAC];
+
+   sync_level sync_level_0 (
+      .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_0_tpause ),
+      .clk_out ( cmac_clk[0] ),
+      .rst_out ( 1'b0 ),
+      .lvl_out ( axis_to_host_tpause[0] )
+   );
+
+   sync_level sync_level_1 (
+      .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_1_tpause ),
+      .clk_out ( cmac_clk[1] ),
+      .rst_out ( 1'b0 ),
+      .lvl_out ( axis_to_host_tpause[1] )
+   );
 
    // ----------------------------------------------------------------
    //  HBM0 (Left stack, 4GB)
@@ -663,8 +679,8 @@ module smartnic_322mhz
       ) axis_to_host_to_signals (
         .aclk     (),
         .aresetn  (),
-        .tvalid   (m_axis_adpt_rx_322mhz_tvalid[i]),
-        .tready   (m_axis_adpt_rx_322mhz_tready[i]),
+        .tvalid   (),  // see assignment below
+        .tready   (m_axis_adpt_rx_322mhz_tready[i] && !axis_to_host_tpause[i]),
         .tdata    (m_axis_adpt_rx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (m_axis_adpt_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (m_axis_adpt_rx_322mhz_tlast[i]),
@@ -674,6 +690,8 @@ module smartnic_322mhz
 
         .axi4s_if (axis_to_host[i])
       );
+
+      assign m_axis_adpt_rx_322mhz_tvalid[i] = axis_to_host[i].tvalid && !axis_to_host_tpause[i];
 
       assign m_axis_adpt_rx_322mhz_tuser_err[i] = '0;
       assign m_axis_adpt_rx_322mhz_tuser_rss_enable[i] = m_axis_adpt_rx_322mhz_tuser[i].rss_enable;
@@ -801,7 +819,7 @@ module smartnic_322mhz
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
 
    // tpause logic for ingress switch (for test purposes).
-   assign axis_core_to_bypass.tvalid = axis_core_to_bypass_tvalid  && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
+   assign axis_core_to_bypass.tvalid = axis_core_to_bypass_tvalid && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
    assign axis_core_to_bypass_tready = axis_core_to_bypass.tready && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
 
    // ingress switch drop pkt logic.  deletes packets that have tdest == 3 (igr_sw DROP code point).

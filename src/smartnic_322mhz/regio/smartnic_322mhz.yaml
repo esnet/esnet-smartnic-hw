@@ -73,6 +73,14 @@ regs:
         desc: set to 1 to assert axi4s backpressure to the ingress switch (test register).
         width: 1
         init : 0
+      - name: axis_to_host_0_tpause
+        desc: set to 1 to assert axi4s backpressure to the host_0 egress FIFO (test register).
+        width: 1
+        init : 0
+      - name: axis_to_host_1_tpause
+        desc: set to 1 to assert axi4s backpressure to the host_1 egress FIFO (test register).
+        width: 1
+        init : 0
       - name: drop_pkt_loop
         desc: set to 1 to enable dropping egress packets that have axi4s tdest==tid (egress_port==ingress_port).
               enables drop logic on 'APP_0' and 'APP_BYPASS'.  drops on 'APP_1' to be implemented in future.

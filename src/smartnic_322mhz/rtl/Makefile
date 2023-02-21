@@ -27,8 +27,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 COMPONENTS = smartnic_322mhz.xilinx_ip \
              smartnic_322mhz.regio.rtl \
-			 reg.endian.rtl@common \
-			 reg.proxy.rtl@common \
+             reg.endian.rtl@common \
+             reg.proxy.rtl@common \
              xilinx.hbm.rtl@common \
              xilinx.axi.rtl@common \
              xilinx.axis.rtl@common \
