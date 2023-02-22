@@ -4,6 +4,7 @@
 # - assumes PROJ_ROOT is defined by calling Makefile
 # - at a minimum, must provide:
 #
+#     SMARTNIC_ROOT: path to root of SmartNIC repo
 #     LIB_ROOT: path to common FPGA library providing scripts/tools
 #     SRC_ROOT: path to main source (i.e. RTL) library
 #     CFG_ROOT__LOCAL: path to local config files (for device config, etc.)
