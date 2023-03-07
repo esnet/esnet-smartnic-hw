@@ -6,7 +6,6 @@ set out_root $env(OUTPUT_ROOT)
 read_ip $out_root/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
 read_ip $out_root/common/axi4l/xilinx_ip/axi_clock_converter_0/axi_clock_converter_0.xci
 read_ip $out_root/common/axi4s/xilinx_ip/ila_axi4s/ila_axi4s.xci
-read_ip $out_root/common/axi4s/xilinx_ip/axis_data_fifo/axis_data_fifo.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_egress/axis_switch_egress.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_ingress/axis_switch_ingress.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_0/clk_wiz_0.xci
