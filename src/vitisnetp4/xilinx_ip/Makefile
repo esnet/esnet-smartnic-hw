@@ -109,7 +109,8 @@ include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 include $(SCRIPTS_ROOT)/Makefiles/vivado_vitisnetp4.mk
 
 vitisnetp4_wrapper: $(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv
+
 .PHONY: vitisnetp4_wrapper
 
-$(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv: $(VITISNETP4_XCI_FILE)
+$(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv: $(VITISNETP4_IP_DIR)/.ip__$(VITISNETP4_IP_NAME)
 	$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $(VITISNETP4_XCI_FILE) --out_dir $(VITISNETP4_XCI_DIR) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
