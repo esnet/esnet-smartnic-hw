@@ -14,14 +14,11 @@ add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "N
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/axis_probe_app_to_core_*"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/axis_probe_core_to_app_*"]
 resize_pblock       pblock_smartnic_platform -add {CLOCKREGION_X2Y6:CLOCKREGION_X5Y7}
-#resize_pblock       pblock_smartnic_platform -add {SLR1}
 
 # Smartnic app core
-#create_pblock       pblock_smartnic_app
-#add_cells_to_pblock pblock_smartnic_app [get_cells [list box_322mhz_inst/smartnic_322mhz/smartnic_322mhz_app]]
-#add_cells_to_pblock pblock_smartnic_app [get_cells [list box_322mhz_inst/smartnic_322mhz/smartnic_322mhz_app_sdnet_decoder]]
-#resize_pblock       pblock_smartnic_app -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
-#resize_pblock       pblock_smartnic_app -add {SLR2}
+create_pblock       pblock_smartnic_appcore
+add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/smartnic_322mhz_app*"]
+resize_pblock       pblock_smartnic_appcore -add {SLR2}
 
 # SLR1->SRL2 crossing
 create_pblock       pblock_slr_1_to_2
