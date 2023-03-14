@@ -21,6 +21,10 @@ SMARTNIC_DIR := ../..
 # BUILD_NAME - Name of subdirectory for artifacts of latest build i.e. artifacts go to $(ARTIFACTS_DIR)/$(BUILD_NAME)
 #export BUILD_NAME := esnet-smartnic-$(APP_NAME)
 
+# BOARD - Name of AMD (Xilinx) Alveo board used for target application.
+# Supports 'au280' and 'au55c'.  Default is 'au280'.
+#export BOARD := au280
+
 #------- Targets -------
 build:
 	@$(MAKE) -s -C $(SMARTNIC_DIR) build APP_DIR=$(CURDIR)

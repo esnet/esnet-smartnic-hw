@@ -52,6 +52,14 @@ P4_OPTS_DEFAULT :=
 endif
 P4_OPTS ?= $(P4_OPTS_DEFAULT)
 
+
+# Board specification
+# ----------------------------------------------------
+# Specifies name of AMD (Xilinx) Alveo board used for application.
+# Supports 'au280' and 'au55c'.
+BOARD_DEFAULT := au280
+BOARD ?= $(BOARD_DEFAULT)
+
 # Build name
 # ----------------------------------------------------
 # Specify name of build and build artifacts
@@ -81,6 +89,7 @@ _print_app_config := \
      echo "APP_DIR      : $(APP_DIR)"; \
      echo "APP_NAME     : $(APP_NAME)"; \
      echo "APP_ROOT     : $(APP_ROOT)"; \
+     echo "BOARD        : $(BOARD)"; \
      echo "BUILD_NAME   : $(BUILD_NAME)"; \
      echo "ARTIFACTS_DIR: $(ARTIFACTS_DIR)"; \
      echo "P4_FILE      : $(P4_FILE)"; \
@@ -93,6 +102,7 @@ _print_app_config := \
      echo "APP_DIR      : $(APP_DIR)"; \
      echo "APP_NAME     : $(APP_NAME)"; \
      echo "APP_ROOT     : $(APP_ROOT)"; \
+     echo "BOARD        : $(BOARD)"; \
      echo "BUILD_NAME   : $(BUILD_NAME)"; \
      echo "ARTIFACTS_DIR: $(ARTIFACTS_DIR)";
 endif
@@ -129,9 +139,10 @@ _configure_app_common := \
      echo "APP_NAME       := $(APP_NAME)"                    >> $(APP_CFG_FILE); \
 	 echo "APP_TYPE       := $(APP_TYPE)"                    >> $(APP_CFG_FILE); \
      echo "APP_ROOT       := $(APP_ROOT)"                    >> $(APP_CFG_FILE); \
+     echo "BOARD          := $(BOARD)"                       >> $(APP_CFG_FILE); \
      echo "BUILD_NAME     := $(BUILD_NAME)"                  >> $(APP_CFG_FILE); \
      echo "ARTIFACTS_DIR  := $(ARTIFACTS_DIR)"               >> $(APP_CFG_FILE); \
-   	 echo "P4_FILE        := $(P4_FILE)"                     >> $(APP_CFG_FILE); \
+	 echo "P4_FILE        := $(P4_FILE)"                     >> $(APP_CFG_FILE); \
      echo "P4_OPTS        := $(P4_OPTS)"                     >> $(APP_CFG_FILE); \
      echo ""                                                 >> $(APP_CFG_FILE); \
 	 echo "\# Standard application parameters"               >> $(APP_CFG_FILE); \
