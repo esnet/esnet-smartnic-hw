@@ -108,6 +108,7 @@ sim_platform:
       - esnet-fpga-library
       - examples
       - open-nic-shell
+      - .out
     exclude:
       - .git/**
       - .git
