@@ -10,8 +10,6 @@ read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_egress/axis_switch_egres
 read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_ingress/axis_switch_ingress.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_0/clk_wiz_0.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_1/clk_wiz_1.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_left/hbm_4g_left.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_right/hbm_4g_right.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
 read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_0.vh
@@ -32,7 +30,6 @@ read_verilog -quiet -sv [glob $lib_root/src/apb/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4l/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*_pkg.sv ]
-read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axis/rtl/src/*_pkg.sv ]
 
@@ -52,7 +49,17 @@ read_verilog -quiet -sv [glob $lib_root/src/apb/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4l/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*.sv ]
-read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*.sv ]
+
+# HBM RTL and pkg sources, unless BOARD does NOT support HBM (i.e. au250).
+if { [info exists env(BOARD)] } {
+  if { [string trim $env(BOARD)] != "au250" } {
+    read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_left/hbm_4g_left.xci
+    read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_right/hbm_4g_right.xci
+
+    read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*_pkg.sv ]
+    read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*.sv ]
+  }
+}
 
 read_verilog -quiet -sv [glob $out_root/smartnic_322mhz/build/rtl/src/*.sv ]
 
