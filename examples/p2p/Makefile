@@ -23,7 +23,7 @@ SMARTNIC_DIR := ../..
 
 # BOARD - Name of AMD (Xilinx) Alveo board used for target application.
 # Supports 'au280' and 'au55c'.  Default is 'au280'.
-export BOARD := au55c
+export BOARD := au250
 
 #------- Targets -------
 build:

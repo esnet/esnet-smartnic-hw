@@ -109,7 +109,7 @@ package :
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@( cd $(artifact_dir)/.. && \
 	   echo "packing artifact zip file $(BUILD_NAME)-artifact.tar.gz" && \
-	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.export_hwapi.0.zip esnet-smartnic-hwapi \
+	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.$(BOARD).export_hwapi.0.zip esnet-smartnic-hwapi \
 	)
 
 project : config_check
