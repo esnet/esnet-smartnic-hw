@@ -100,6 +100,13 @@ sim_platform:
   tags:
     - ht-synth
   script:
+    - |
+      cat <<_EOF >> bitfile.env
+      EXAMPLES_DIR=$EXAMPLES_DIR
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      _EOF
+    - cat bitfile.env
     - make -C $EXAMPLES_DIR/$SN_HW_APP_NAME build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
@@ -116,6 +123,9 @@ sim_platform:
       - .gitlab-ci.yml
       - .gitmodules
     when: always
+    reports:
+      dotenv:
+        bitfile.env
     expire_in: 2 weeks
   timeout: 8h
   needs: []
@@ -183,10 +193,13 @@ build_vanilla_ons:
     - ht-misc
   before_script: []
   script:
+    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
     - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.$SN_HW_BOARD.export_hwapi.0.zip
     - |
       cat <<_EOF >> hwapi.env
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
       _EOF
     - cat hwapi.env
   artifacts:
@@ -202,37 +215,21 @@ build_vanilla_ons:
 
 hwapi_p4_and_verilog:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_and_verilog
-    SN_HW_BOARD: au55c
   needs:
     - build_p4_and_verilog
 
 hwapi_p2p:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p2p
-    SN_HW_BOARD: au250
   needs:
     - build_p2p
 
 hwapi_p4_only:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_only
-    SN_HW_BOARD: au280
   needs:
     - build_p4_only
 
 hwapi_p4_hbm:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_hbm
-    SN_HW_BOARD: au280
   needs:
     - build_p4_hbm
   allow_failure: true
@@ -243,11 +240,13 @@ hwapi_p4_hbm:
     SN_HW_GROUP: $CI_PROJECT_NAMESPACE
     SN_HW_REPO: $CI_PROJECT_NAME
     SN_HW_BRANCH: $CI_COMMIT_BRANCH
+    SN_HW_APP_NAME: $SN_HW_APP_NAME
+    SN_HW_BOARD: $SN_HW_BOARD
     # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
     ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
     project: ht/esnet-smartnic-fw
-    branch: main
+    branch: board-var-dev
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
@@ -257,8 +256,6 @@ hwapi_p4_hbm:
 fw_p4_and_verilog:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_and_verilog
-    SN_HW_BOARD: au55c
     SN_HW_API_JOB: hwapi_p4_and_verilog
   needs:
     - hwapi_p4_and_verilog
@@ -266,8 +263,6 @@ fw_p4_and_verilog:
 fw_p4_only:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_only
-    SN_HW_BOARD: au280
     SN_HW_API_JOB: hwapi_p4_only
   needs:
     - hwapi_p4_only
@@ -275,8 +270,6 @@ fw_p4_only:
 fw_p4_hbm:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_hbm
-    SN_HW_BOARD: au280
     SN_HW_API_JOB: hwapi_p4_hbm
   needs:
     - hwapi_p4_hbm
