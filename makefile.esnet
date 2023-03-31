@@ -108,8 +108,8 @@ package :
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/*.ltx $(artifact_dir)/firmware
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@( cd $(artifact_dir)/.. && \
-	   echo "packing artifact zip file $(BUILD_NAME)-artifact.tar.gz" && \
-	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.esnet-smartnic-hw.$(BOARD).export_hwapi.0.zip esnet-smartnic-hwapi \
+	   echo "packing artifact zip file artifacts.$(BOARD).$(BUILD_NAME).0.zip" && \
+	   zip -r $(ARTIFACTS_BUILD_DIR)/artifacts.$(BOARD).$(BUILD_NAME).0.zip esnet-smartnic-hwapi \
 	)
 
 project : config_check

@@ -243,7 +243,7 @@ From the esnet-smartnic-hw directory:
        > make
 
    Upon completion, the above step creates an artifact zipfile with the default pathname:
-   `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
+   `artifacts/<BUILD_NAME>/artifacts.<BOARD>.<BUILD_NAME>.0.zip`
 
    This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
    In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,

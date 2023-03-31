@@ -63,7 +63,7 @@ BOARD ?= $(BOARD_DEFAULT)
 # Build name
 # ----------------------------------------------------
 # Specify name of build and build artifacts
-BUILD_NAME_DEFAULT := esnet-smartnic-$(APP_NAME)
+BUILD_NAME_DEFAULT := $(APP_NAME)
 BUILD_NAME ?= $(BUILD_NAME_DEFAULT)
 
 # (Build) artifacts

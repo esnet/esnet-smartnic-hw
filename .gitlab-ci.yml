@@ -194,7 +194,7 @@ build_vanilla_ons:
   before_script: []
   script:
     - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
-    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.$SN_HW_BOARD.export_hwapi.0.zip
+    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.0.zip
     - |
       cat <<_EOF >> hwapi.env
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
@@ -203,7 +203,7 @@ build_vanilla_ons:
       _EOF
     - cat hwapi.env
   artifacts:
-    name: "artifacts.$SN_HW_APP_NAME.$SN_HW_BOARD.$CI_PIPELINE_ID"
+    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
     paths:
       - esnet-smartnic-hwapi
     when: always
