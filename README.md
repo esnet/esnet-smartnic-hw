@@ -352,7 +352,7 @@ For more details about the `Standard Metadata` definitions, see *Vitis Networkin
 In order for the compiled VitisNetP4 core to match the SmartNIC application interface, a user P4 program **MUST**
 define the User Metadata structure as follows:
 
-    struct short_metadata {
+    struct smartnic_metadata {
         bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
         bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
@@ -364,7 +364,6 @@ define the User Metadata structure as follows:
         bit<4>  drop_reason;     // reserved (tied to 0).
         bit<32> scratch;         // reserved (tied to 0).
     }
-
 
 ### Lookup Engines and Externs:
 
