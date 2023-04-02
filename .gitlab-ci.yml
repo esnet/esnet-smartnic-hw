@@ -194,7 +194,7 @@ build_vanilla_ons:
   before_script: []
   script:
     - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
-    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.0.zip
+    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.open-nic-ci.0.zip
     - |
       cat <<_EOF >> hwapi.env
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
