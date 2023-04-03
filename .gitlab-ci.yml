@@ -246,7 +246,7 @@ hwapi_p4_hbm:
     ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
     project: ht/esnet-smartnic-fw
-    branch: board-var-dev
+    branch: main
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
