@@ -243,7 +243,7 @@ From the esnet-smartnic-hw directory:
        > make
 
    Upon completion, the above step creates an artifact zipfile with the default pathname:
-   `artifacts/esnet-smartnic-<BUILD_NAME>/artifacts.<BUILD_NAME>.export_hwapi.manual.zip`
+   `artifacts/<BUILD_NAME>/artifacts.<BOARD>.<BUILD_NAME>.0.zip`
 
    This artifact zipfile contains all of the necessary h/w artifacts to integrate with the firmware.
    In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
@@ -352,7 +352,7 @@ For more details about the `Standard Metadata` definitions, see *Vitis Networkin
 In order for the compiled VitisNetP4 core to match the SmartNIC application interface, a user P4 program **MUST**
 define the User Metadata structure as follows:
 
-    struct short_metadata {
+    struct smartnic_metadata {
         bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
         bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
@@ -364,7 +364,6 @@ define the User Metadata structure as follows:
         bit<4>  drop_reason;     // reserved (tied to 0).
         bit<32> scratch;         // reserved (tied to 0).
     }
-
 
 ### Lookup Engines and Externs:
 

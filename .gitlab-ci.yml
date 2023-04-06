@@ -14,7 +14,7 @@ variables:
   RANDOMIZE_SEED: 0
 
 .common:
-  image: $CI_REGISTRY/ht/xilinx-tools-docker:26009-g26ccc4b6
+  image: $CI_REGISTRY/ht/xilinx-tools-docker:33821-gbdb40b52
   before_script:
     - source /opt/Xilinx/Vivado/2022.1/settings64.sh
     - if [ $RANDOMIZE_SEED -gt 0 ]; then export SEED=$RANDOM; fi
@@ -100,7 +100,14 @@ sim_platform:
   tags:
     - ht-synth
   script:
-    - make -C $EXAMPLES_DIR/$SN_HW_APP_NAME build BUILD_NAME=open-nic-ci
+    - |
+      cat <<_EOF >> bitfile.env
+      EXAMPLES_DIR=$EXAMPLES_DIR
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      _EOF
+    - cat bitfile.env
+    - make -C $EXAMPLES_DIR/$SN_HW_APP_NAME build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -116,6 +123,9 @@ sim_platform:
       - .gitlab-ci.yml
       - .gitmodules
     when: always
+    reports:
+      dotenv:
+        bitfile.env
     expire_in: 2 weeks
   timeout: 8h
   needs: []
@@ -127,24 +137,28 @@ build_p4_and_verilog:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_and_verilog
+    SN_HW_BOARD: au55c
 
 build_p2p:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p2p
+    SN_HW_BOARD: au250
 
 build_p4_only:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_only
+    SN_HW_BOARD: au280
 
 build_p4_hbm:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_hbm
+    SN_HW_BOARD: au280
   allow_failure: true
 
 build_vanilla_ons:
@@ -179,14 +193,17 @@ build_vanilla_ons:
     - ht-misc
   before_script: []
   script:
-    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.esnet-smartnic-hw.export_hwapi.0.zip
+    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
+    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.open-nic-ci.0.zip
     - |
       cat <<_EOF >> hwapi.env
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
       _EOF
     - cat hwapi.env
   artifacts:
-    name: "artifacts.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
+    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
     paths:
       - esnet-smartnic-hwapi
     when: always
@@ -198,33 +215,21 @@ build_vanilla_ons:
 
 hwapi_p4_and_verilog:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_and_verilog
   needs:
     - build_p4_and_verilog
 
 hwapi_p2p:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p2p
   needs:
     - build_p2p
 
 hwapi_p4_only:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_only
   needs:
     - build_p4_only
 
 hwapi_p4_hbm:
   extends: .hwapi
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_hbm
   needs:
     - build_p4_hbm
   allow_failure: true
@@ -235,6 +240,8 @@ hwapi_p4_hbm:
     SN_HW_GROUP: $CI_PROJECT_NAMESPACE
     SN_HW_REPO: $CI_PROJECT_NAME
     SN_HW_BRANCH: $CI_COMMIT_BRANCH
+    SN_HW_APP_NAME: $SN_HW_APP_NAME
+    SN_HW_BOARD: $SN_HW_BOARD
     # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
     ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
@@ -249,7 +256,6 @@ hwapi_p4_hbm:
 fw_p4_and_verilog:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_and_verilog
     SN_HW_API_JOB: hwapi_p4_and_verilog
   needs:
     - hwapi_p4_and_verilog
@@ -257,7 +263,6 @@ fw_p4_and_verilog:
 fw_p4_only:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_only
     SN_HW_API_JOB: hwapi_p4_only
   needs:
     - hwapi_p4_only
@@ -265,7 +270,6 @@ fw_p4_only:
 fw_p4_hbm:
   extends: .trigger_fw
   variables:
-    SN_HW_APP_NAME: p4_hbm
     SN_HW_API_JOB: hwapi_p4_hbm
   needs:
     - hwapi_p4_hbm

@@ -1,4 +1,4 @@
-short_metadata.ingress_global_timestamp=1 short_metadata.dest_port=3 short_metadata.truncate_enable=0 short_metadata.packet_length=0200 short_metadata.rss_override_enable=0 short_metadata.rss_override=00;
-short_metadata.ingress_global_timestamp=2 short_metadata.dest_port=3 short_metadata.truncate_enable=0 short_metadata.packet_length=0200 short_metadata.rss_override_enable=0 short_metadata.rss_override=00;
-short_metadata.ingress_global_timestamp=3 short_metadata.dest_port=3 short_metadata.truncate_enable=0 short_metadata.packet_length=0200 short_metadata.rss_override_enable=0 short_metadata.rss_override=00;
-short_metadata.ingress_global_timestamp=4 short_metadata.dest_port=3 short_metadata.truncate_enable=0 short_metadata.packet_length=0200 short_metadata.rss_override_enable=0 short_metadata.rss_override=00;
+smartnic_metadata.timestamp_ns=1 smartnic_metadata.egress_port=3
+smartnic_metadata.timestamp_ns=2 smartnic_metadata.egress_port=3
+smartnic_metadata.timestamp_ns=3 smartnic_metadata.egress_port=3
+smartnic_metadata.timestamp_ns=4 smartnic_metadata.egress_port=3

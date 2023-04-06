@@ -26,9 +26,11 @@ IP_LIST = \
     axis_switch_egress \
     axis_switch_ingress \
     clk_wiz_0 \
-    clk_wiz_1 \
-    hbm_4g_left \
-    hbm_4g_right
+    clk_wiz_1
+
+ifneq ($(BOARD), au250)
+    IP_LIST += hbm_4g_left hbm_4g_right
+endif
 
 SRC_FILES = \
     $(COMPONENT_OUT_PATH)/axis_switch_egress/sim/axis_switch_egress.v \

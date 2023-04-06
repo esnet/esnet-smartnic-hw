@@ -8,7 +8,7 @@
 
 count=$1
 
-meta=short_metadata
+meta=smartnic_metadata
 
 for i in `seq $count`; do
     echo "${meta}.ingress_global_timestamp=`printf %04x ${i}` ${meta}.egress_spec=0000 ${meta}.processed=01 ${meta}.packet_length=00a6 ;"
