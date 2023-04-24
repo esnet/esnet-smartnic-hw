@@ -1,15 +1,24 @@
 # P4 Behavioural Simulation
 
+## Makefile
+
 The execution of P4 behavioural simulations is driven by the Makefile
 in the p4/sim/ directory.
 
 This Makefile includes the variable assignments that specify how to run
-a p4 behavioural simulation, as well as the list of testcases that should
-be included in a full simulation run.
+a p4 behavioural simulation, as well as the name of the p4 file and list
+of testcases that should be included in a full simulation run.
 
 Each testcase is captured in a separate subdirectory, which contains the
 input and output files for the specified test.  The testcase subdirectories
 follow the naming pattern of `test-<NAME>`.
+
+Prior to running a simulation, the user should update the Makefile with the
+following variable assignments (all other variable assignments can remain
+unchanged):
+
+     P4_SOURCE = <pathname of p4 source file>
+     P4BM_DIRS = <testcase subdirectory list>
 
 The Makefile includes execution targets to run (or clean) a single testcase
 simulation, or simulation of the full testcase suite.
@@ -57,12 +66,3 @@ packet metadata.
 Note: An expected/ directory is optionally included to capture the expected
 output results of a testcase.  This expected output can be used for
 automated regression testing.
-
-
-## Testcases: p4_hbm
-
-`test-fwd-p0` - The p4_hbm design includes a single example testcase called
-test-fwd-p0.  This testcase programs a small number of table entries that
-forward the specified packet flows to destination port 0.  The input
-stimulus includes a single packet on each flow to validate that all packets
-are forwarded to port 0.

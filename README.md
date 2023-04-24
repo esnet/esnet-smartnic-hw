@@ -71,6 +71,7 @@ The platform includes the following repositories:
      An FPGA-based NIC shell that runs on the AMD (Xilinx) Alveo
      family of hardware boards.  This repository is a fork of a
      Xilinx-provided repository (https://github.com/Xilinx/open-nic-shell.git).
+     This repository also includes customizations for the ESnet SmartNIC platform.
 
    - `ESnet SmartNIC Hardware` (https://github.com/esnet/esnet-smartnic-hw.git)
      Hardware design directory for the ESnet SmartNIC platform.
@@ -129,6 +130,9 @@ esnet-smartnic-hw/
 cfg/
   Contains global configuration files for the SmartNIC project.
 
+config.mk
+  Sets environment variables for the SmartNIC project.
+
 docs/
   Contains documentation files for the SmartNIC platform.
 
@@ -156,9 +160,6 @@ open-nic_shell/
   Contains the AMD (Xilinx) OpenNIC Shell repository (imported as a git submodule).
   OpenNIC shell delivers an FPGA-based NIC shell with 100Gbps Ethernet ports,
   for use on the AMD (Xilinx) Alveo platform.
-
-config.mk
-  Sets environment variables for the SmartNIC project.
 
 paths.mk
   Describes paths to resources provided by the SmartNIC project.
@@ -312,7 +313,7 @@ User P4 files **MUST** be structured to comply with this processing architecture
 desired within each of these processing stages.
 
 More details about the AMD (Xilinx) P4 architecture can be found in the *Vitis Networking P4 User Guide, UG1308
-(v2021.2 Early Access) January 4, 2022*.
+(v2022.1) August 6, 2022*.
 
 
 ### Include files:
@@ -347,7 +348,7 @@ The VitisNetP4 core supports both `Standard Metadata` (defined and set by the P4
 program.
 
 For more details about the `Standard Metadata` definitions, see *Vitis Networking P4 User Guide, UG1308
-(v2021.2 Early Access) January 4, 2022.*
+(v2022.1) August 6, 2022*.
 
 In order for the compiled VitisNetP4 core to match the SmartNIC application interface, a user P4 program **MUST**
 define the User Metadata structure as follows:
@@ -382,11 +383,11 @@ Support for these features may be added in a future release.
 The following reference documents can be accessed from the AMD (Xilinx) Vitis Networking P4 Secure Site
 (once access priveleges are approved and granted):
 
-- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2021.2 Early Access) January 4, 2022.*
+- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2022.1) August 6, 2022*.
 
-- *Vitis Networking P4 User Guide, UG1308 (v2021.2 Early Access) January 4, 2022.*
+- *Vitis Networking P4 User Guide, UG1308 (v2022.1) August 6, 2022*.
 
-- *Vitis Networking P4 Getting Started Guide, UG1373 (v2021.2 Early Access) January 4, 2022.*
+- *Vitis Networking P4 Getting Started Guide, UG1373 (v2022.1) August 6, 2022*.
 
 Users may also be interested in the information at https://p4.org/.
 
