@@ -1,5 +1,5 @@
 set curdir [pwd]
-cd ../../smartnic_250mhz/build/
+cd ../smartnic_250mhz/build/
 
 # read design sources
 source add_sources.tcl

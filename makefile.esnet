@@ -13,7 +13,7 @@ BUILD_NAME ?= open-nic-ci
 
 vanilla_build_name = vanilla
 open_nic_build = $(ONS_ROOT)/build/$(BOARD)_$(BUILD_NAME)
-plugin_dir = ../../src/open-nic-plugin/esnet_smartnic
+plugin_dir = ../../src/open-nic-plugin
 
 APP_ROOT            ?= $(PROJ_ROOT)/src/p4_app
 ARTIFACTS_DIR       ?= $(APP_ROOT)/artifacts
