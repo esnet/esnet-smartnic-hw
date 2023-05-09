@@ -1,0 +1,15 @@
+name: smartnic_250mhz
+info: |
+  smartnic_250mhz is the top level module for the 250MHz
+  packet processing component.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: scratchpad
+    desc: scratchpad register
+    access: rw
+    init: 0x0

@@ -1,0 +1,11 @@
+name: smartnic_250mhz
+
+blocks:
+  smartnic_250mhz: &smartnic_250mhz
+    !include ../src/smartnic_250mhz/regio/smartnic_250mhz.yaml
+
+interfaces:
+  - block: *smartnic_250mhz
+    address: 0x00000
+    width: 10
+    name: smartnic_250mhz_regs

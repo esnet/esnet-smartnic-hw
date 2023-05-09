@@ -31,8 +31,6 @@ CI_PIPELINE_ID       ?= $(shell date +"%s")
 bitstream_userid     ?= $(shell printf "0x%08x" $(CI_PIPELINE_ID))
 bitstream_usr_access ?= $(bitstream_userid)
 
-regmap_dir   = src/smartnic_322mhz/build/regio-yaml
-
 jobs ?= 32
 
 max_pkt_len   ?= 1518
@@ -97,7 +95,8 @@ package :
 	@echo "The wireshark/plugins directory is a placeholder for wireshark .lua files,"    > $(artifact_dir)/wireshark/plugins/README.md
 	@echo "which can be used to decode custom protocol headers defined in the .p4 file." >> $(artifact_dir)/wireshark/plugins/README.md
 	@cp -r $(ONS_ROOT)/regmap/spec/* $(artifact_dir)/regmap/spec
-	@cp $(regmap_dir)/* $(artifact_dir)/regmap/spec
+	@cp src/smartnic_322mhz/build/regio-yaml/* $(artifact_dir)/regmap/spec
+	@cp src/smartnic_250mhz/build/regio-yaml/* $(artifact_dir)/regmap/spec
 	@$(REGIO_ROOT)/regio-elaborate \
 	   --file-type top \
 	   --include-dir $(artifact_dir)/regmap/spec \
