@@ -21,7 +21,10 @@ TOP = smartnic_322mhz_app
 # Regmap YAML definitions
 # -----------------------------------------------
 REG_BLOCK_YAML =
-REG_DECODER_YAML := $(APP_DIR)/app_if/src/smartnic_322mhz_app_decoder.yaml
+REG_DECODER_YAML := \
+    $(APP_DIR)/app_if/src/smartnic_322mhz_app_decoder.yaml \
+    $(LIB_ROOT)/src/fifo/regio/fifo_core_decoder.yaml
+
 
 # -----------------------------------------------
 # regio options
@@ -35,8 +38,9 @@ REGIO_GENERATE_OPTS := --recursive
 all: opt
 
 ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4l.xilinx_ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.xilinx_ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.xilinx_ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4l.xilinx_ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4s.xilinx_ip@common@smartnic
 .PHONY: ip
 
 pre_synth: _reg_rtl ip
