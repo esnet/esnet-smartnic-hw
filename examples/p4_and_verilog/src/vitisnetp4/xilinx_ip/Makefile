@@ -54,8 +54,8 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS =
-EXT_LIBS = cam_v2_4_0 \
-           vitis_net_p4_v1_2_0 \
+EXT_LIBS = cam_v2_5_0 \
+           vitis_net_p4_v1_3_0 \
            unisims_ver \
            unisims_macro \
            xpm
