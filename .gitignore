@@ -15,12 +15,7 @@ hs_err_pid*.log
 webtalk*.log
 webtalk*.jou
 
-P4Test_vivado/
-p4prog_with_truncate/
-old/
-zips/
 artifacts/
-esnet-open-nic-unzip/
 
 # Precompiled libraries
 *.sdb
@@ -33,6 +28,9 @@ esnet-open-nic-unzip/
 **/run_[0-9]*/
 .sim_waves.tcl
 **/tests*/*/*.wcfg
+
+# VitisNetP4
+*thrift.log
 
 # Synthesis
 *.dcp
