@@ -44,6 +44,7 @@ bitfile : config config_check
 	@echo "Generating smartnic platform IP..."
 	@$(MAKE) -s -C $(APP_ROOT)/app_if
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT)
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build
 	@echo "Generating smartnic bitfile..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)

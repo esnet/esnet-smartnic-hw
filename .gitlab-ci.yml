@@ -84,12 +84,15 @@ sim_platform:
     - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_$SEED/sim.log
     - make -C examples/p2p/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic_322mhz/regression/run_$SEED/sim.log
+    - make -C src/smartnic_250mhz/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic_250mhz/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
         - src/smartnic_322mhz/tests/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic_322mhz/regression/run_*/tests.xml
+        - src/smartnic_250mhz/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []

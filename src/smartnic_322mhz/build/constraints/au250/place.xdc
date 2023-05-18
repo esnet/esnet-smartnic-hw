@@ -20,18 +20,18 @@ create_pblock       pblock_smartnic_appcore
 add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/smartnic_322mhz_app*"]
 resize_pblock       pblock_smartnic_appcore -add {SLR3}
 
-# SLR1->SRL2 crossing
-create_pblock       pblock_slr_1_to_2
-add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_master*"]
-add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_source*"]
-add_cells_to_pblock pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_dest*"]
-resize_pblock       pblock_slr_1_to_2 -add {CLOCKREGION_X2Y11:CLOCKREGION_X5Y11}
-set_property IS_SOFT FALSE [get_pblocks pblock_slr_1_to_2]
+# Smartnic platform-to-app interfaces
+create_pblock       pblock_smartnic_platform_to_app_if
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_master*"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_source*"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_dest*"]
+resize_pblock       pblock_smartnic_platform_to_app_if -add {CLOCKREGION_X2Y11:CLOCKREGION_X5Y11}
+set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_platform_to_app_if]
 
-# SLR2->SRL1 crossing
-create_pblock       pblock_slr_2_to_1
-add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_slave*"]
-add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_source*"]
-add_cells_to_pblock pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_dest*"]
-resize_pblock       pblock_slr_2_to_1 -add {CLOCKREGION_X2Y12:CLOCKREGION_X5Y12}
-set_property IS_SOFT FALSE [get_pblocks pblock_slr_2_to_1]
+# Smartnic app-to-platform interfaces
+create_pblock       pblock_smartnic_app_to_platform_if
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_slave*"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_source*"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_dest*"]
+resize_pblock       pblock_smartnic_app_to_platform_if -add {CLOCKREGION_X2Y12:CLOCKREGION_X5Y12}
+set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_app_to_platform_if]

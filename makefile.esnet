@@ -13,7 +13,7 @@ BUILD_NAME ?= open-nic-ci
 
 vanilla_build_name = vanilla
 open_nic_build = $(ONS_ROOT)/build/$(BOARD)_$(BUILD_NAME)
-plugin_dir = ../../src/open-nic-plugin/esnet_smartnic
+plugin_dir = ../../src/open-nic-plugin
 
 APP_ROOT            ?= $(PROJ_ROOT)/src/p4_app
 ARTIFACTS_DIR       ?= $(APP_ROOT)/artifacts
@@ -30,8 +30,6 @@ bitfile_dir  = $(artifact_dir)/bitfiles
 CI_PIPELINE_ID       ?= $(shell date +"%s")
 bitstream_userid     ?= $(shell printf "0x%08x" $(CI_PIPELINE_ID))
 bitstream_usr_access ?= $(bitstream_userid)
-
-regmap_dir   = src/smartnic_322mhz/build/regio-yaml
 
 jobs ?= 32
 
@@ -97,7 +95,8 @@ package :
 	@echo "The wireshark/plugins directory is a placeholder for wireshark .lua files,"    > $(artifact_dir)/wireshark/plugins/README.md
 	@echo "which can be used to decode custom protocol headers defined in the .p4 file." >> $(artifact_dir)/wireshark/plugins/README.md
 	@cp -r $(ONS_ROOT)/regmap/spec/* $(artifact_dir)/regmap/spec
-	@cp $(regmap_dir)/* $(artifact_dir)/regmap/spec
+	@cp src/smartnic_322mhz/build/regio-yaml/* $(artifact_dir)/regmap/spec
+	@cp src/smartnic_250mhz/build/regio-yaml/* $(artifact_dir)/regmap/spec
 	@$(REGIO_ROOT)/regio-elaborate \
 	   --file-type top \
 	   --include-dir $(artifact_dir)/regmap/spec \
@@ -105,7 +104,7 @@ package :
 	   $(artifact_dir)/regmap/spec/esnet-smartnic-top.yaml
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit $(artifact_dir)/firmware/esnet-smartnic.bit
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs	
-	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/*.ltx $(artifact_dir)/firmware
+	-@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/*.ltx $(artifact_dir)/firmware
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@( cd $(artifact_dir)/.. && \
 	   echo "packing artifact zip file artifacts.$(BOARD).$(BUILD_NAME).0.zip" && \

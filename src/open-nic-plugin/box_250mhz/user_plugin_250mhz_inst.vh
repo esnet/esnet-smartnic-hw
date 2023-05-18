@@ -1,55 +1,31 @@
-// *************************************************************************
-//
-// Copyright 2020 Xilinx, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// *************************************************************************
 initial begin
-  if (USE_PHYS_FUNC == 0) begin
-    $fatal("No implementation for USE_PHYS_FUNC = %d", 0);
-  end
-  if (NUM_PHYS_FUNC != NUM_CMAC_PORT) begin
-    $fatal("No implementation for NUM_PHYS_FUNC (%d) != NUM_CMAC_PORT (%d)",
-      NUM_PHYS_FUNC, NUM_CMAC_PORT);
+  if (NUM_PHYS_FUNC == 0) begin
+    $fatal("No implementation for NUM_PHYS_FUNC = 0.");
   end
 end
 
-localparam C_NUM_USER_BLOCK = 1;
+// Tie off unused reset pair status
+assign mod_rst_done[15:1] = '1;
 
-// Make sure for all the unused reset pair, corresponding bits in
-// "mod_rst_done" are tied to 0
-assign mod_rst_done[15:C_NUM_USER_BLOCK] = {(16-C_NUM_USER_BLOCK){1'b1}};
-
-p2p_250mhz #(
+smartnic_250mhz #(
   .NUM_INTF (NUM_PHYS_FUNC)
-) p2p_250mhz_inst (
-  .s_axil_awvalid                   (axil_p2p_awvalid),
-  .s_axil_awaddr                    (axil_p2p_awaddr),
-  .s_axil_awready                   (axil_p2p_awready),
-  .s_axil_wvalid                    (axil_p2p_wvalid),
-  .s_axil_wdata                     (axil_p2p_wdata),
-  .s_axil_wready                    (axil_p2p_wready),
-  .s_axil_bvalid                    (axil_p2p_bvalid),
-  .s_axil_bresp                     (axil_p2p_bresp),
-  .s_axil_bready                    (axil_p2p_bready),
-  .s_axil_arvalid                   (axil_p2p_arvalid),
-  .s_axil_araddr                    (axil_p2p_araddr),
-  .s_axil_arready                   (axil_p2p_arready),
-  .s_axil_rvalid                    (axil_p2p_rvalid),
-  .s_axil_rdata                     (axil_p2p_rdata),
-  .s_axil_rresp                     (axil_p2p_rresp),
-  .s_axil_rready                    (axil_p2p_rready),
+) smartnic_250mhz_inst (
+  .s_axil_awvalid                   (s_axil_awvalid),
+  .s_axil_awaddr                    (s_axil_awaddr),
+  .s_axil_awready                   (s_axil_awready),
+  .s_axil_wvalid                    (s_axil_wvalid),
+  .s_axil_wdata                     (s_axil_wdata),
+  .s_axil_wready                    (s_axil_wready),
+  .s_axil_bvalid                    (s_axil_bvalid),
+  .s_axil_bresp                     (s_axil_bresp),
+  .s_axil_bready                    (s_axil_bready),
+  .s_axil_arvalid                   (s_axil_arvalid),
+  .s_axil_araddr                    (s_axil_araddr),
+  .s_axil_arready                   (s_axil_arready),
+  .s_axil_rvalid                    (s_axil_rvalid),
+  .s_axil_rdata                     (s_axil_rdata),
+  .s_axil_rresp                     (s_axil_rresp),
+  .s_axil_rready                    (s_axil_rready),
 
   .s_axis_qdma_h2c_tvalid           (s_axis_qdma_h2c_tvalid),
   .s_axis_qdma_h2c_tdata            (s_axis_qdma_h2c_tdata),
@@ -94,16 +70,16 @@ p2p_250mhz #(
   .mod_rstn                         (mod_rstn[0]),
   .mod_rst_done                     (mod_rst_done[0]),
 
-// For AU55N, we generate 100MHz reference clock which is needed when HBM IP is instantiated 
-// in user-defined logic.
-// TODO: This should be done for all boards that have HBM.
 `ifdef __au55n__
   .ref_clk_100mhz                   (ref_clk_100mhz),
-`else
-//  .ref_clk_100mhz                   ()
+`elsif __au55c_
+  .ref_clk_100mhz                   (ref_clk_100mhz),
+`elsif __au50__
+  .ref_clk_100mhz                   (ref_clk_100mhz),
+`elsif __au280__
+  .ref_clk_100mhz                   (ref_clk_100mhz),
 `endif
 
   .axil_aclk                        (axil_aclk),
   .axis_aclk                        (axis_aclk)
-
 );

@@ -1,8 +1,6 @@
 `define getbit(width, index, offset)    ((index)*(width) + (offset))
 `define getvec(width, index)            ((index)*(width)) +: (width)
 
-`timescale 1ns/1ps
-
 module smartnic_322mhz
 #(
   parameter int NUM_CMAC = 2,
