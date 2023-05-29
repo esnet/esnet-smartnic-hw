@@ -27,8 +27,7 @@ p4_package:
 	@find $(dir $(P4_FILE)) -name \*.lua -exec cp {} ./ \;
 
 driver_package:
-	# NOTE: ignore 'no-unused-variable' warning to work around lack of support for zero-length P4 counter arrays
-	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers TARGET_COMPILE_FLAGS=-Wno-unused-variable && \
+	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers && \
 	 tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers/install .
 
 clean:
