@@ -33,6 +33,14 @@ struct smartnic_metadata {
     bit<32> scratch;         // reserved (tied to 0).
 }
 
+struct ext_fcn_input_t {
+    bit<3> data;
+}
+
+struct ext_fcn_output_t {
+    bit<3> data;
+}
+
 // ****************************************************************************** //
 // *************************** P A R S E R  ************************************* //
 // ****************************************************************************** //
@@ -59,8 +67,16 @@ control MatchActionImpl( inout headers hdr,
                          inout smartnic_metadata sn_meta,
                          inout standard_metadata_t smeta) {
 
+    // Extern function
+    UserExtern<ext_fcn_input_t, ext_fcn_output_t>(2) ext_fcn;
+
+    ext_fcn_input_t  ext_fcn_in;
+    ext_fcn_output_t ext_fcn_out;
+
     action forwardPacket(bit<3> dest_port) {
-        sn_meta.egress_port = dest_port;
+        ext_fcn_in.data = dest_port;
+        ext_fcn.apply(ext_fcn_in, ext_fcn_out);
+        sn_meta.egress_port = ext_fcn_out.data;
     }
     
     action dropPacket() {

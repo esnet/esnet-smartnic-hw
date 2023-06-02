@@ -1,3 +1,4 @@
+user_externs/*.so
 *_out.meta
 *_out.pcap
 *_out.pcap.txt

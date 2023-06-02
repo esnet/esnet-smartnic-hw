@@ -65,7 +65,7 @@ EXTERNS = $(wildcard $(EXTERN_DIR)/*.so)
 # Comma-separated list of extern C++ object files as seen from $(P4BM_DIR)
 EXTERN_SO_LIST_TEST = $(shell echo $(EXTERNS:%=../%) | tr ' ' ',')
 
-all: build sim
+all: build extern sim
 
 build: $(P4_OBJECT)
 
@@ -76,7 +76,7 @@ sim:
 # Make sure that $(P4BM_DIR)/$(P4BM_SCRIPT) exists.  run-p4bm-sdnet
 # reacts badly if the script file doesn't exist.
 	(cd $(P4BM_DIR) && wc $(P4BM_SCRIPT) > /dev/null)
-	(cd $(P4BM_DIR) && $(RUN_P4BM_VITISNET) $(RUN_P4BM_OPTIONS) -l $(P4BM_LOGFILE_PREFIX) -j $(P4_OBJECT_TEST) -s $(P4BM_SCRIPT) )
+	(cd $(P4BM_DIR) && $(RUN_P4BM_VITISNET) $(RUN_P4BM_OPTIONS) -l $(P4BM_LOGFILE_PREFIX) -j $(P4_OBJECT_TEST) -s $(P4BM_SCRIPT) -m $(EXTERN_SO_LIST_TEST))
 	(cd $(P4BM_DIR) && $(TCPDUMP) -envXX -r $(P4BM_OUTPUT_PCAP) > $(P4BM_OUTPUT_PCAP_TXT))
 	(cd $(P4BM_DIR) && $(TCPDUMP) -envXX -r expected/$(P4BM_OUTPUT_PCAP) > expected/$(P4BM_OUTPUT_PCAP_TXT))
 
@@ -102,10 +102,10 @@ clean: cleansim
 	$(P4C_VITISNET) $< -o $@
 
 # All
-sim-all: build
+sim-all: build extern
 	for d in $(P4BM_DIRS); do $(MAKE) P4BM_DIR=$$d sim || exit 1; done
 
-sim-all-svh: cleansim build
+sim-all-svh: cleansim build extern
 	for d in $(SVH_DIRS); do $(MAKE) P4BM_DIR=$$d sim-svh || exit 1; done
 
 test-all:

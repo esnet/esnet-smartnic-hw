@@ -29,7 +29,7 @@ TOP = $(SVUNIT_TOP) p4_app__tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES =
+SRC_FILES = $(IP_ROOT)/extern/rtl/smartnic_extern.sv
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 

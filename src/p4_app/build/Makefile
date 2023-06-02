@@ -2,13 +2,13 @@
 # Paths
 # ----------------------------------------------------
 IP_ROOT = ..
-
 include $(IP_ROOT)/config.mk
 
 # -----------------------------------------------
 # Export parameters (used in add_sources.tcl)
 # -----------------------------------------------
 export LIB_ROOT
+export SRC_ROOT
 export OUTPUT_ROOT
 export SMARTNIC_ROOT
 
