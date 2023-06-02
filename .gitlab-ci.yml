@@ -35,13 +35,15 @@ p4bm:
     - make -C examples/p4_only/p4/sim sim-all
     - make -C examples/p4_and_verilog/p4/sim build sim-all
     - make -C examples/p4_hbm/p4/sim sim-all
+    - make -C examples/p4_with_extern/p4/sim sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
       - src/p4_app/p4/sim
       - examples/p4_only/p4/sim
-      - examples/p4_hbm/p4/sim
       - examples/p4_and_verilog/p4/sim
+      - examples/p4_hbm/p4/sim
+      - examples/p4_with_extern/p4/sim
   needs: []
 
 sim_p4_apps:
@@ -162,6 +164,13 @@ build_p4_only_u55c:
     SN_HW_APP_NAME: p4_only
     SN_HW_BOARD: au55c
 
+build_p4_with_extern:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_with_extern
+    SN_HW_BOARD: au55c
+
 build_p4_hbm:
   extends: .bitfile
   variables:
@@ -242,6 +251,11 @@ hwapi_p4_only_u55c:
   needs:
     - build_p4_only_u55c
 
+hwapi_p4_with_extern:
+  extends: .hwapi
+  needs:
+    - build_p4_with_extern
+
 hwapi_p4_hbm:
   extends: .hwapi
   needs:
@@ -287,6 +301,13 @@ fw_p4_only_u55c:
     SN_HW_API_JOB: hwapi_p4_only_u55c
   needs:
     - hwapi_p4_only_u55c
+
+fw_p4_with_extern:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_with_extern
+  needs:
+    - hwapi_p4_with_extern
 
 fw_p4_hbm:
   extends: .trigger_fw
