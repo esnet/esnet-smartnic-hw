@@ -14,9 +14,8 @@ variables:
   RANDOMIZE_SEED: 0
 
 .common:
-  image: $CI_REGISTRY/ht/xilinx-tools-docker:33821-gbdb40b52
+  image: $CI_REGISTRY/ht/xilinx-tools-docker:36639-g97523045
   before_script:
-    - source /opt/Xilinx/Vivado/2022.1/settings64.sh
     - if [ $RANDOMIZE_SEED -gt 0 ]; then export SEED=$RANDOM; fi
     - echo "Running pipeline with SEED $SEED..."
   variables:

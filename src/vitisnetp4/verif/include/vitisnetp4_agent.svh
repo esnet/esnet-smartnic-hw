@@ -20,7 +20,7 @@ class vitisnetp4_agent #(
     function void create(
             input string hier_path
         );
-        import sdnet_0_pkg::*;
+        import vitis_net_p4_dpi_pkg::*;
         debug_msg("---------------- VitisNetP4: Create. -------------");
         if (this._drv == null) begin
             this._drv = XilVitisNetP4DpiCreateEnv(hier_path);
