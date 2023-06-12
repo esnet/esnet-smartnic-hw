@@ -86,6 +86,7 @@
 #include "stateful.h"
 #include "random.h"
 #include "_assert.h"
+#include "InternetChecksumInterface.h"
 
 namespace bm {
 
@@ -96,6 +97,8 @@ class Packet;
 class NamedCalculation;
 class MeterArray;
 class CounterArray;
+class Checksum;
+class InternetChecksum;
 
 // forward declaration of ActionPrimitive_
 class ActionPrimitive_;
@@ -160,16 +163,7 @@ struct ActionData {
   std::vector<Data> action_data{};
 };
 
-struct ActionEngineState {
-  Packet &pkt;
-  PHV &phv;
-  const ActionData &action_data;
-  const std::vector<Data> &const_values;
-
-  ActionEngineState(Packet *pkt,
-                    const ActionData &action_data,
-                    const std::vector<Data> &const_values);
-};
+struct ActionEngineState;
 
 class ExternType;
 
@@ -187,7 +181,8 @@ struct ActionParam {
         EXPRESSION,
         EXTERN_INSTANCE,
         STRING,
-        HEADER_UNION, HEADER_UNION_STACK} tag;
+        HEADER_UNION, HEADER_UNION_STACK, PARAMS_VECTOR, FIELD_LIST,
+        CHECKSUM, INTERNET_CHECKSUM} tag;
 
   union {
     unsigned int const_offset;
@@ -216,6 +211,18 @@ struct ActionParam {
     } register_gen;
 
     header_stack_id_t header_stack;
+
+    // for lists of numerical values, used for the log_msg primitive and nothing
+    // else at the moment
+    struct {
+      unsigned int start;
+      unsigned int end;
+    } params_vector;
+
+    struct {
+      unsigned int start;
+      unsigned int end;
+    } field_list;
 
     // special case when trying to access a field in the last header of a stack
     struct {
@@ -248,6 +255,18 @@ struct ActionParam {
 
     ExternType *extern_instance;
 
+    struct {
+      std::string *checksum_name; //The instance is not known at init time, only name
+      std::unordered_map<std::string, Checksum * > *checksums;
+    } checksum_instance;
+
+    struct {
+        std::string  *checksum_name;
+        std::unordered_map<std::string, InternetChecksumInterface *> *checksums;
+        MethodType type;
+        std::string *instance_name;
+    } internet_checksum_instance;
+
     // I use a pointer here to avoid complications with the union; the string
     // memory is owned by ActionFn (just like for ArithExpression above)
     const std::string *str;
@@ -259,6 +278,21 @@ struct ActionParam {
 
   // convert to the correct type when calling a primitive
   template <typename T> T to(ActionEngineState *state) const;
+};
+
+struct ActionEngineState {
+  Packet &pkt;
+  PHV &phv;
+  const ActionData &action_data;
+  const std::vector<Data> &const_values;
+  const std::vector<ActionParam> &parameters_vector;
+  const std::vector<ActionParam> &field_list;
+
+  ActionEngineState(Packet *pkt,
+                    const ActionData &action_data,
+                    const std::vector<Data> &const_values,
+                    const std::vector<ActionParam> &parameters_vector,
+                    const std::vector<ActionParam> &field_list);
 };
 
 // template specializations for ActionParam "casting"
@@ -483,6 +517,46 @@ const char *ActionParam::to<const char *>(ActionEngineState *state) const {
   return str->c_str();
 }
 
+// used for primitives that take as a parameter a "list" of values. Currently we
+// only support "const std::vector<Data>" as the type used by the C++ primitive
+// and currently this is only used by log_msg.
+// TODO(antonin): more types (e.g. "const std::vector<const Data &>") if needed
+// we can support list of other value types as well, e.g. list of headers
+// we are not limited to using a vector as the data structure either
+template <> inline
+const std::vector<Data>
+ActionParam::to<const std::vector<Data>>(ActionEngineState *state) const {
+  _BM_ASSERT(tag == ActionParam::PARAMS_VECTOR && "not a params vector");
+  std::vector<Data> vec;
+
+  for (auto i = params_vector.start ; i < params_vector.end ; i++) {
+    // re-use previously-defined cast method; note that we use to<const Data &>
+    // and not to<const Data>, as it does not exists
+    // if something in the parameters_vector cannot be cast to "const Data &",
+    // the code will assert
+    vec.push_back(state->parameters_vector[i].to<const Data &>(state));
+  }
+
+  return vec;
+}
+
+template <> inline
+const std::vector<Field>
+ActionParam::to<const std::vector<Field>>(ActionEngineState *state) const {
+  _BM_ASSERT(tag == ActionParam::FIELD_LIST && "not a field list");
+  std::vector<Field> vec;
+
+  for (auto i = field_list.start ; i < field_list.end ; i++) {
+    // re-use previously-defined cast method; note that we use to<const Field &>
+    // and not to<const Field>, as it does not exists
+    // if something in the field list cannot be cast to "const Field &",
+    // the code will assert
+    vec.push_back(state->field_list[i].to<const Field &>(state));
+  }
+
+  return vec;
+}
+
 /* This is adapted from stack overflow code:
    http://stackoverflow.com/questions/11044504/any-solution-to-unpack-a-vector-to-function-arguments-in-c
 */
@@ -682,13 +756,27 @@ class ActionFn :  public NamedP4Object {
   void push_back_primitive(ActionPrimitive_ *primitive,
                            std::unique_ptr<SourceInfo> source_info = nullptr);
 
+  // These methods are used when we need to push a "vector of parameters"
+  // (i.e. when a primitive, such as log_msg, uses a list of values as one of
+  // its parameters). First parameter_start_vector is called to signal the
+  // beginning of the "vector of parameters", then the parameter_push_back_*
+  // methods are called as usual, and finally parameter_end_vector is called to
+  // signal the end.
+  void parameter_start_vector();
+  void parameter_end_vector();
+  void parameter_start_field_list();
+  void parameter_end_field_list();
+
   void grab_register_accesses(RegisterSync *register_sync) const;
 
   size_t get_num_params() const;
 
  private:
+  using ParameterList = std::vector<ActionParam>;
+
   std::vector<ActionPrimitiveCall> primitives{};
   std::vector<ActionParam> params{};
+  ParameterList sub_params{};
   RegisterSync register_sync{};
   std::vector<Data> const_values{};
   // should I store the objects in the vector, instead of pointers?

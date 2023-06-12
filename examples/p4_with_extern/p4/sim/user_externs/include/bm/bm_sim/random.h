@@ -48,8 +48,8 @@
 --
 -- Vendor         : Xilinx
 -- Revision       : $Revision: #1 $
--- Date           : $DateTime: 2019/06/12 09:58:19 $
--- Last Author    : $Author: tobin $
+-- Date           : $DateTime: 2022/01/26 02:55:31 $
+-- Last Author    : $Author: phayes $
 --
 --------------------------------------------------------------------------------
 -- Description : Header file defining the random extern object for Xilinx SDNet

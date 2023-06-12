@@ -69,17 +69,15 @@ TARGET_ARCH=x86_64-linux-gnu
 # Variables to simplify compilation command
 EARLY_CXXFLAGS = -DBMLOG_DEBUG_ON -DBMLOG_TRACE_ON
 INCLUDES = -isystem $(XILINX_VIVADO)/tps/lnx64/gcc-6.2.0/include \
-			-I$(XILINX_VIVADO)/include \
 			-I$(XILINX_HLS)/include \
 			-I$(XILINX_VIVADO)/tps/boost_1_72_0 \
 			-I./include \
-			-I./include/spdlog \
 			-I/usr/include/$(TARGET_ARCH)
-LATE_CXXFLAGS =  -Wall -Wextra -fPIC -pthread -g -O2 -L/usr/lib/$(TARGET_ARCH) -B/usr/lib/$(TARGET_ARCH)
+LATE_CXXFLAGS = -Wall -Wextra -fPIC -pthread -g -O2 -B/usr/lib/$(TARGET_ARCH)
 
 # For using the version of g++ distributed with vivado
 export PATH := $(XILINX_VIVADO)/tps/lnx64/gcc-6.2.0/bin:$(PATH)
-export PATH := $(XILINX_VIVADO)/tps/lnx64/binutils-2.26/bin:$(PATH)
+export PATH := $(XILINX_VIVADO)/tps/lnx64/binutils-2.37/bin:$(PATH)
 
 # Which module we're building
 EXTERN_SRCS=$(wildcard *.cpp)
