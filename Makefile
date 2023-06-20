@@ -39,6 +39,30 @@ $(APP_DIR)/.app/config.mk: $(APP_DIR)/Makefile
 proj_paths:
 	$(_proj_print_paths)
 
+example : config $(APP_DIR)/example
+ifneq ($(wildcard $(APP_DIR)/p4/sim/user_externs/smartnic_extern.cpp),)
+	@echo "Compiling smartnic_extern .cpp model..."
+	@$(MAKE) -s -C $(APP_DIR)/p4/sim/user_externs
+endif
+	@echo "Copying source files for example design generation into example/.src dir..."
+	cp $(P4_FILE) $(APP_DIR)/example/.src
+	cp $(EXAMPLE_TEST_DIR)/runsim.txt $(APP_DIR)/example/.src/cli_commands.txt
+	-cp $(EXAMPLE_TEST_DIR)/*_in.pcap $(EXAMPLE_TEST_DIR)/*_in.user $(EXAMPLE_TEST_DIR)/*_in.meta $(APP_DIR)/example/.src 2> /dev/null
+	-cp $(EXAMPLE_TEST_DIR)/../user_externs/smartnic_extern.so $(APP_DIR)/example/.src 2> /dev/null
+	@echo "Generating vitisnetp4 ip in example/ subdirectory, using application p4 file..."
+	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/xilinx_ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(P4_FILE))
+	@echo "Cleaning up unused and unecessary files (vitisnetp4 design ip and log files)..."
+	rm -rf $(APP_DIR)/example/.ip* $(APP_DIR)/example/.Xil* $(APP_DIR)/example/vivado*.log
+	rm -rf $(APP_DIR)/example/sdnet_0.tcl $(APP_DIR)/example/sdnet_0
+ifneq ($(wildcard $(APP_DIR)/extern/rtl/smartnic_extern.sv),)
+	@echo "Stitching extern into examples design..."
+	@$(MAKE) -s -C $(APP_DIR)/extern
+endif
+
+$(APP_DIR)/example:
+	@mkdir -p $@
+	@mkdir -p $@/.src
+
 bitfile : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
@@ -64,7 +88,7 @@ endif
 clean_artifacts :
 	@-rm -rf $(ARTIFACTS_BUILD_DIR)
 
-.PHONY : config bitfile package clean_build clean_artifacts
+.PHONY : config example bitfile package clean_build clean_artifacts
 
 
 $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
