@@ -28,9 +28,10 @@ P4BM_DIRS = test-fwd-p0
 P4BM_SCRIPT         = runsim.txt
 P4BM_LOGFILE_PREFIX = $(P4BM_SCRIPT)
 P4BM_OUTPUT_PCAP    = packets_out.pcap
+P4BM_OUTPUT_USER    = packets_out.user
 P4BM_OUTPUT_META    = packets_out.meta
 P4BM_OUTPUTS        = $(P4BM_LOGFILE_PREFIX)_cli.txt $(P4BM_LOGFILE_PREFIX)_model.txt \
-                      $(P4BM_OUTPUT_META) $(P4BM_OUTPUT_PCAP)
+                      $(P4BM_OUTPUT_META) $(P4BM_OUTPUT_PCAP) $(P4BM_OUTPUT_USER)
 
 # Executable pathnames (particularly if they're not in $PATH)
 P4C_VITISNET      = p4c-vitisnet
