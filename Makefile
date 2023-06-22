@@ -46,7 +46,7 @@ ifneq ($(wildcard $(APP_DIR)/p4/sim/user_externs/smartnic_extern.cpp),)
 endif
 	@echo "Copying source files for example design generation into example/.src dir..."
 	cp $(P4_FILE) $(APP_DIR)/example/.src
-	cp $(EXAMPLE_TEST_DIR)/runsim.txt $(APP_DIR)/example/.src/cli_commands.txt
+	cp $(EXAMPLE_TEST_DIR)/cli_commands.txt $(APP_DIR)/example/.src
 	-cp $(EXAMPLE_TEST_DIR)/*_in.pcap $(EXAMPLE_TEST_DIR)/*_in.user $(EXAMPLE_TEST_DIR)/*_in.meta $(APP_DIR)/example/.src 2> /dev/null
 	-cp $(EXAMPLE_TEST_DIR)/../user_externs/smartnic_extern.so $(APP_DIR)/example/.src 2> /dev/null
 	@echo "Generating vitisnetp4 ip in example/ subdirectory, using application p4 file..."

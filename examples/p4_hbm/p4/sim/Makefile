@@ -36,7 +36,7 @@ P4BM_TEST_DIRS = $(P4BM_DIRS)
 # Files within each test directory, as seen from within $(P4BM_DIR)
 # Note that $(P4BM_OUTPUT_PCAP) and $(P4BM_OUTPUT_META) are
 # implicitly named in $(P4BM_SCRIPT).
-P4BM_SCRIPT = runsim.txt
+P4BM_SCRIPT = cli_commands.txt
 P4BM_LOGFILE_PREFIX = $(P4BM_SCRIPT)
 P4BM_OUTPUT_PCAP = packets_out.pcap
 P4BM_OUTPUT_PCAP_TXT = packets_out.pcap.txt

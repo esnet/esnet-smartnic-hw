@@ -154,7 +154,7 @@ module p4_and_verilog_datapath_unit_test;
         env.ts_agent.set_static(timestamp);
 
         debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/runsim.txt"};
+        filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
         vitisnetp4_agent.table_init_from_file(filename);
         debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
 
