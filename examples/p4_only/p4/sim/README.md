@@ -44,22 +44,33 @@ To clean all simulation output products from the p4 directory, type:
 
 The input stimulus file set for each testcase includes three files:
 
-`cli_commands.txt` - Command script to set table entries and initiate input
+1. `cli_commands.txt` - Command script to set table entries and initiate input
 stimulus. Commands and syntax follow the Xilinx p4bm-vitisnet-cli.
 
-`packets_in.pcap` - PCAP file containing the input packet stream.
+2. `packets_in.user` - Input packet stream user data.  Each byte sequence terminated
+by a semicolon (;) represents a packet.  Packets are captured in sequence.  The '%'
+character is used to start comments.
 
-`packets_in.meta` - Input packet metadata.  Each line corresponds
+    `packets_in.pcap` - PCAP file containing the input packet stream.
+                        Alternative format to `packets_in.user` (optional).
+
+3. `packets_in.meta` - Input packet metadata.  Each line corresponds
 to a packet in the input PCAP file (in sequence).  The syntax of the metadata
 is described in the Xilinx VitisnetP4 documentation.  Note: Each metadata record
 must be terminated by a semicolon (;).
 
+For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2023.1) May 16, 2023*.
+
 
 ## Testcase Output Files
 
-`packets_out.pcap` - PCAP file containing the output packet stream.
+1. `packets_out.user` - Output packet stream user data. Same syntax as input
+packet stream user data.
 
-`packets_out.meta` - Output packet metadata.  Each line corresponds
+   `packets_out.pcap` - PCAP file containing the output packet stream,
+                        if packets_in format was `packets_in.pcap`.
+
+2. `packets_out.meta` - Output packet metadata.  Each line corresponds
 to a packet in the output PCAP file (in sequence).  Same syntax as input
 packet metadata.
 
@@ -74,4 +85,5 @@ automated regression testing.
 test-fwd-p0.  This testcase programs a small number of table entries that
 forward the specified packet flows to destination port 0.  The input
 stimulus includes a single packet on each flow to validate that all packets
-are forwarded to port 0.
+are forwarded to port 0.  All other packets are forwarded to the egress_port specified
+by the input meta data.
