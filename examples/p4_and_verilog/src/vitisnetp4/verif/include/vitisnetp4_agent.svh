@@ -109,7 +109,7 @@ class vitisnetp4_agent #(
         else
             __filename = filename.substr(0,filename.len-5);      
 
-        // Parse CLI command file (e.g. runsim.txt)
+        // Parse CLI command file (e.g. cli_commands.txt)
         parse_cli_commands(__filename, cli_cmds);
 
         for (int cmd_idx=0; cmd_idx<cli_cmds.size(); cmd_idx++) begin

@@ -29,7 +29,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES = $(IP_ROOT)/app_if/src/smartnic_322mhz_app.sv
+SRC_FILES = $(IP_ROOT)/app_if/src/smartnic_322mhz_app.sv $(IP_ROOT)/extern/rtl/smartnic_extern.sv
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 

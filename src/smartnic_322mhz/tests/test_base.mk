@@ -38,7 +38,7 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
 COMPONENTS = smartnic_322mhz.rtl \
-			 smartnic_322mhz.tb \
+             smartnic_322mhz.tb \
              std.verif@common \
              axi4l.rtl@common \
              axi4l.verif@common \
@@ -73,17 +73,11 @@ pcap:
 
 build_test: _build_test
 
-config:
-	$(MAKE) -s -C $(APP_ROOT)/rtl config APP_DIR=$(abspath $(APP_DIR))
-
 sim: _sim
 
 clean: _clean_test _clean_sim
 
 .PHONY: all pcap build_test sim clean
-
-$(APP_DIR)/.app_config.mk: $(APP_DIR)/Makefile
-	$(MAKE) -C $(APP_DIR) config
 
 # ----------------------------------------------------
 # Test configuration

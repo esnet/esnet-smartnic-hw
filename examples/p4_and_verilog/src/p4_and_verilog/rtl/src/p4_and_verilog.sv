@@ -1,10 +1,8 @@
 `timescale 1ns/1ps
 
-import p4_and_verilog_pkg::*;
-import axi4s_pkg::*;
-
-module p4_and_verilog #(
-) (
+module p4_and_verilog
+   import p4_and_verilog_pkg::*;
+(
    input logic        core_clk,
    input logic        core_rstn,
    input timestamp_t  timestamp,
@@ -17,6 +15,11 @@ module p4_and_verilog #(
    axi4s_intf.tx axis_to_switch_1,
    axi4s_intf.rx axis_from_switch_1
 );
+
+   // ----------------------------------------------------------------
+   //  Imports
+   // ----------------------------------------------------------------
+   import axi4s_pkg::*;
 
    // ----------------------------------------------------------------
    //  Register map block and decoder instantiations

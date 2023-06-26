@@ -56,7 +56,7 @@ P4_OPTS ?= $(P4_OPTS_DEFAULT)
 # Board specification
 # ----------------------------------------------------
 # Specifies name of AMD (Xilinx) Alveo board used for application.
-# Supports 'au280' and 'au55c'.
+# Supports 'au280', 'au250' and 'au55c'.
 BOARD_DEFAULT := au280
 BOARD ?= $(BOARD_DEFAULT)
 
@@ -155,6 +155,7 @@ _configure_app_p4 := \
 	 cp $(SCRIPTS_ROOT)/Makefiles/templates/ip_config.mk $(APP_PROJ_ROOT)/src/p4_app/config.mk; \
 	 cp -r $(SMARTNIC_ROOT)/src/p4_app/app_if $(APP_PROJ_ROOT)/src/p4_app/; \
 	 cp -r $(SMARTNIC_ROOT)/src/p4_app/build $(APP_PROJ_ROOT)/src/p4_app/; \
+	 cp -r $(APP_DIR)/extern $(APP_PROJ_ROOT)/src/p4_app/; \
 	 make -s -C $(APP_ROOT)/app_if clean;
 
 _configure_app_verilog :=

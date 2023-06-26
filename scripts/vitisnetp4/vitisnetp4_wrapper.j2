@@ -27,6 +27,22 @@ module {{ props.name }}_wrapper (
 );
     import sdnet_0_pkg::*;
 
+    {%- if props.num_user_externs > 0 %}
+    USER_EXTERN_OUT_T    user_extern_out;
+    USER_EXTERN_VALID_T  user_extern_out_valid;
+    USER_EXTERN_IN_T     user_extern_in;
+    USER_EXTERN_VALID_T  user_extern_in_valid;
+
+    smartnic_extern smartnic_extern_0 (
+      .clk                     ( core_clk ),
+      .rstn                    ( core_rstn ),
+      .extern_from_sdnet       ( user_extern_out ),
+      .extern_from_sdnet_valid ( user_extern_out_valid ),
+      .extern_to_sdnet         ( user_extern_in ),
+      .extern_to_sdnet_valid   ( user_extern_in_valid )
+    );
+    {% endif %}
+
     // --- sdnet_0 instance ---
     //   Generated using Xilinx VitisNet P4 from P4 file:
     //   {{ props.p4_file }}
@@ -50,7 +66,13 @@ module {{ props.name }}_wrapper (
         .user_metadata_in_valid  (user_metadata_in_valid),   
         .user_metadata_out       (user_metadata_out),
         .user_metadata_out_valid (user_metadata_out_valid),  
-        
+        {%- if props.num_user_externs > 0 %}
+        // Externs
+        .user_extern_in          (user_extern_in),
+        .user_extern_in_valid    (user_extern_in_valid),
+        .user_extern_out         (user_extern_out),
+        .user_extern_out_valid   (user_extern_out_valid),
+        {% endif %}
         // Slave AXI-lite interface
         .s_axi_awaddr            (axil_if.awaddr),
         .s_axi_awvalid           (axil_if.awvalid),

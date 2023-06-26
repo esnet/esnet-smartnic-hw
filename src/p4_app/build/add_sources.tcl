@@ -1,5 +1,6 @@
 set smartnic_src_root $env(SMARTNIC_ROOT)/src
 set lib_root $env(LIB_ROOT)
+set src_root $env(SRC_ROOT)
 set out_root $env(OUTPUT_ROOT)
 
 # IP
@@ -35,6 +36,11 @@ read_verilog -quiet -sv [glob $smartnic_src_root/p4_app/rtl/src/*.sv ]
 
 read_verilog -quiet -sv [glob $out_root/p4_app/build/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $out_root/vitisnetp4/xilinx_ip/sdnet_0/sdnet_0_wrapper.sv ]
+
+# Application extern
+if {[file exists $src_root/p4_app/extern/rtl/smartnic_extern.sv]} {
+    read_verilog -sv [glob $src_root/p4_app/extern/rtl/*.sv ]
+}
 
 # Application wrapper
 read_verilog -sv ../app_if/src/smartnic_322mhz_app.sv

@@ -44,7 +44,7 @@ To clean all simulation output products from the p4 directory, type:
 
 The input stimulus file set for each testcase includes three files:
 
-`runsim.txt` - Command script to set table entries and initiate input
+`cli_commands.txt` - Command script to set table entries and initiate input
 stimulus. Commands and syntax follow the Xilinx p4bm-vitisnet-cli.
 
 `packets_in.pcap` - PCAP file containing the input packet stream.
