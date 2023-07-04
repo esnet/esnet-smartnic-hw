@@ -11,9 +11,8 @@ class vitisnetp4_agent #(
     // Methods
     //===================================
     // Constructor
-    function new(input string name="vitisnetp4_agent", input string hier_path="tb");
+    function new(input string name="vitisnetp4_agent");
         super.new(name);
-        create(hier_path);
     endfunction
 
     // Create VitisNetP4 driver
@@ -100,6 +99,10 @@ class vitisnetp4_agent #(
         int filename_len = filename.len;
         string filename_ext = filename.substr(filename.len-4,filename.len-1);
 
+        // Always print this message to bracket print output from table driver
+        // (no obvious way to disable driver output)
+        print_msg("INFO: ", get_name(), "---------------- VitisNetP4: Initialize tables from file. -------------");
+
         reset_tables();
 
         // parse_cli_commands function adds '.txt' extension to filename input argument
@@ -181,6 +184,7 @@ class vitisnetp4_agent #(
 
            endcase
        end
+        print_msg("INFO: ", get_name(), "---------------- VitisNetP4: Initialize tables from file Done. -------------");
     endtask
 
     // Include Xilinx example design utilities for reading config file

@@ -48,7 +48,10 @@ module p4_hbm_datapath_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
+        // Create P4 table agent
         vitisnetp4_agent = new;
+        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
+                                       // path to AXI-L write/read tasks
     endfunction
 
     //===================================
@@ -81,7 +84,6 @@ module p4_hbm_datapath_unit_test;
         // Put AXI-S interfaces into quiescent state
         env.axis_driver[0].idle();
         env.axis_monitor[0].idle();
-
     endtask
 
 
@@ -90,10 +92,6 @@ module p4_hbm_datapath_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
-        `INFO("Waiting to end testcase...");
-        for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
-        `INFO("Ending testcase!");
-
         svunit_ut.teardown();
 
         // Flush remaining packets
@@ -102,7 +100,6 @@ module p4_hbm_datapath_unit_test;
 
         // Clean up SDNet tables
         vitisnetp4_agent.cleanup();
-
     endtask
 
 

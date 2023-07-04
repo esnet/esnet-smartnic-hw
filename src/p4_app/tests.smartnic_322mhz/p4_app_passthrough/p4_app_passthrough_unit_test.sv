@@ -51,8 +51,10 @@ module p4_app_passthrough_test_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
+        // Create P4 table agent
         vitisnetp4_agent = new;
-
+        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
+                                       // path to AXI-L write/read tasks
     endfunction
 
     //===================================
