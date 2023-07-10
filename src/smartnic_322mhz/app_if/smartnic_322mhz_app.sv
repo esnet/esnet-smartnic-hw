@@ -401,10 +401,10 @@ module smartnic_322mhz_app
 
     // Terminate AXI4-S interfaces (unused)
     axi4s_intf_tx_term axis_to_switch_0_tx_term   (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_to_switch[0]));
-    axi4s_intf_rx_term axis_from_switch_0_rx_term (.axi4s_if(axis_from_switch[0]));
+    axi4s_intf_rx_sink axis_from_switch_0_rx_sink (.axi4s_if(axis_from_switch[0]));
 
     axi4s_intf_tx_term axis_to_switch_1_tx_term   (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_to_switch[1]));
-    axi4s_intf_rx_term axis_from_switch_1_rx_term (.axi4s_if(axis_from_switch[1]));
+    axi4s_intf_rx_sink axis_from_switch_1_rx_sink (.axi4s_if(axis_from_switch[1]));
 
     // Terminate AXI HBM interfaces (unused)
     generate

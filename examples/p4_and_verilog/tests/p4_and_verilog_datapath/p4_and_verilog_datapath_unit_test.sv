@@ -48,10 +48,10 @@ module p4_and_verilog_datapath_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
-        // Include inter-packet gap to simplify cache result prediction
-        //env.axis_driver.set_min_gap(50);
-
+        // Create P4 table agent
         vitisnetp4_agent = new;
+        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
+                                       // path to AXI-L write/read tasks
     endfunction
 
     //===================================
