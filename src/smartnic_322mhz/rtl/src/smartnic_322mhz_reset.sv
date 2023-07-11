@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module smartnic_322mhz_reset #(
   parameter int NUM_CMAC = 1
 ) (

@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module p2p #(
 ) (
    input logic        core_clk,

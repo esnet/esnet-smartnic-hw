@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module p4_app
    import p4_app_pkg::*;
 (
