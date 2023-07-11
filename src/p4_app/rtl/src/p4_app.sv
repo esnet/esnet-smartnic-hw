@@ -22,6 +22,7 @@ module p4_app
    // ----------------------------------------------------------------
 
    axi4l_intf  axil_to_p4_app ();
+   axi4l_intf  axil_to_p4_app__core_clk ();
    
    p4_app_reg_intf  p4_app_regs();
 
@@ -30,11 +31,19 @@ module p4_app
       .axil_if          (axil_if),
       .p4_app_axil_if   (axil_to_p4_app)
    );
+
    
+   // Pass AXI-L interface from aclk (AXI-L clock) to clk domain
+   axi4l_intf_cdc i_axil_intf_cdc (
+       .axi4l_if_from_controller   ( axil_to_p4_app ),
+       .clk_to_peripheral          ( core_clk ),
+       .axi4l_if_to_peripheral     ( axil_to_p4_app__core_clk )
+   );
+
    // p4_app register block
    p4_app_reg_blk p4_app_reg_blk 
    (
-    .axil_if    (axil_to_p4_app),
+    .axil_if    (axil_to_p4_app__core_clk),
     .reg_blk_if (p4_app_regs)                 
    );
 
