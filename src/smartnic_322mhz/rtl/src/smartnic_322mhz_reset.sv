@@ -2,87 +2,80 @@ module smartnic_322mhz_reset #(
     parameter int NUM_CMAC = 1
 ) (
     // Generic signal pair for reset
-    input  logic                mod_rstn,
+    input  logic                mod_rstn,  // assume async
     output logic                mod_rst_done,
 
-    output logic                axil_aresetn,
-    output logic [NUM_CMAC-1:0] cmac_rstn,
     input  logic                axil_aclk,
-    input  logic [NUM_CMAC-1:0] cmac_clk,
+    output logic                axil_srstn, // synchronous to axil_aclk (async assert, sync deassert)
 
-    output logic                core_rstn,
+    input  logic [NUM_CMAC-1:0] cmac_clk,
+    output logic [NUM_CMAC-1:0] cmac_srstn, // synchronous to cmac_clk (async assert, sync deassert)
+
     output logic                core_clk,  // we synthesize this clock in this block
+    output logic                core_srstn, // synchronous to core_clk (async assert, sync deassert)
 
     output logic                clk_100mhz,
     output logic                hbm_ref_clk
 );
 
     localparam int RESET_DURATION = 100;
+    localparam int TIMER_WID = $clog2(RESET_DURATION);
 
-    logic        rstn;
-    logic        reset_in_progress = 1'b0;
-    logic [15:0] reset_timer = 0;
+    logic                 srstn;
+    logic [TIMER_WID-1:0] reset_timer;
 
-    // Local reset `rstn` will be asserted for at least 2 cycles asynchronously,
-    // and deasserted synchronously with the clock
-    xpm_cdc_async_rst #(
-        .DEST_SYNC_FF    (2),
-        .INIT_SYNC_FF    (0),
-        .RST_ACTIVE_HIGH (0)
-    ) axil_rst_inst (
-        .src_arst  (mod_rstn),
-        .dest_arst (rstn),
-        .dest_clk  (axil_aclk)
+    // Retime module reset to AXI-L clock domain (async assert, synchronous deassert)
+    sync_reset #(
+        .OUTPUT_ACTIVE_LOW (1)
+    ) sync_reset__axil (
+        .rst_in    (mod_rstn),
+        .clk_out   (axil_aclk),
+        .srst_out  (srstn)
     );
 
+    initial reset_timer = '0;
+    always @(posedge axil_aclk) begin
+        if (!srstn)                            reset_timer <= '0;
+        else if (reset_timer < RESET_DURATION) reset_timer <= reset_timer + 1;
+    end
+
+    // AXI-L reset is debounced version of synchronized module reset (async assert, sync deassert)
+    initial axil_srstn = 1'b0;
+    always @(posedge axil_aclk or negedge srstn) begin
+        if (!srstn)                             axil_srstn <= 1'b0;
+        else if (reset_timer >= RESET_DURATION) axil_srstn <= 1'b1;
+    end
+
+    // Signal module reset done (fully synchronous to axil_aclk)
     initial mod_rst_done = 1'b0;
     always @(posedge axil_aclk) begin
-        if (~reset_in_progress && ~rstn) begin
-            reset_in_progress <= 1'b1;
-            mod_rst_done      <= 1'b0;
-        end else if (reset_in_progress && (reset_timer >= RESET_DURATION)) begin
-            reset_in_progress <= 1'b0;
-            mod_rst_done      <= 1'b1;
-        end
+        if (!srstn)                             mod_rst_done <= 1'b0;
+        else if (reset_timer >= RESET_DURATION) mod_rst_done <= 1'b1;
     end
 
-    always @(posedge axil_aclk) begin
-        if (reset_in_progress) begin
-            reset_timer <= reset_timer + 1;
-        end else begin
-            reset_timer <= 0;
-        end
-    end
-
-    assign axil_aresetn = ~reset_in_progress;
-
-    // CMAC domain resets are generated from the locally generated AXI-lite reset
+    // CMAC domain resets are generated from the locally generated AXI-L reset
     generate
         for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__cmac
-        xpm_cdc_async_rst #(
-            .DEST_SYNC_FF    (2),
-            .INIT_SYNC_FF    (0),
-            .RST_ACTIVE_HIGH (0)
-        ) cmac_rst_inst (
-            .src_arst  (axil_aresetn),
-            .dest_arst (cmac_rstn[i]),
-            .dest_clk  (cmac_clk[i])
-        );
+            sync_reset #(
+                .OUTPUT_ACTIVE_LOW (1)
+            ) sync_reset__cmac (
+                .rst_in  (axil_srstn),
+                .clk_out (cmac_clk[i]),
+                .srst_out(cmac_srstn[i])
+            );
         end : g__cmac
     endgenerate
 
-    // core clock domain resets are generated from the locally generated AXI-lite reset
-    xpm_cdc_async_rst #(
-        .DEST_SYNC_FF    (2),
-        .INIT_SYNC_FF    (0),
-        .RST_ACTIVE_HIGH (0)
-    ) core_rst_inst (
-        .src_arst  (axil_aresetn),
-        .dest_arst (core_rstn),
-        .dest_clk  (core_clk)
+    // core clock domain reset is generated from the locally generated AXI-L reset
+    sync_reset #(
+        .OUTPUT_ACTIVE_LOW (1)
+    ) sync_reset__core_clk (
+        .rst_in   (axil_srstn),
+        .clk_out  (core_clk),
+        .srst_out (core_srstn)
     );
 
-    // core clock domain is asynchronous wrt. CMAC domains, and is derived from AXI-lite via a PLL
+    // core clock domain is asynchronous wrt. CMAC domains, and is derived from the AXI-L clock via a PLL
     clk_wiz_0 axi_to_core_clk(
          .clk_in1  ( axil_aclk ),
          .clk_out1 ( core_clk )
