@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module p4_and_verilog
    import p4_and_verilog_pkg::*;
 (

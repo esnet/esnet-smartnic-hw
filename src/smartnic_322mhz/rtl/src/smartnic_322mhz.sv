@@ -103,12 +103,13 @@ module smartnic_322mhz
     .mod_rstn     (mod_rstn),
     .mod_rst_done (mod_rst_done),
 
-    .axil_aresetn (axil_aresetn),
-    .cmac_rstn    (cmac_rstn),
     .axil_aclk    (axil_aclk),
-    .cmac_clk     (cmac_clk),
+    .axil_srstn   (axil_aresetn),
 
-    .core_rstn    (core_rstn),
+    .cmac_clk     (cmac_clk),
+    .cmac_srstn   (cmac_rstn),
+
+    .core_srstn   (core_rstn),
     .core_clk     (core_clk),
 
     .clk_100mhz   (clk_100mhz),
@@ -489,6 +490,8 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
 
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_from_cmac  [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_cmac    [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_host    [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_to_core [NUM_CMAC] ();
@@ -538,6 +541,7 @@ module smartnic_322mhz
    axi4s_intf  #(.MODE(IGNORES_TREADY),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_cmac [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_pad       [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_to_cmac    [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_cmac      [NUM_CMAC] ();
 
 
@@ -563,10 +567,17 @@ module smartnic_322mhz
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
-        .axi4s_if (axis_from_cmac[i])
+        .axi4s_if (__axis_from_cmac[i])
       );
 
       // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
+
+      axi4s_reg_slice #(
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t)
+      ) axi4s_reg_slice_from_cmac (
+          .axi4s_from_tx (__axis_from_cmac[i]),
+          .axi4s_to_rx   (axis_from_cmac[i])
+      );
 
       axi4s_probe #( .MODE(ERRORS) ) axi4s_err_from_cmac (
             .axi4l_if  (axil_to_err_from_cmac[i]),
@@ -608,7 +619,14 @@ module smartnic_322mhz
       // axi4s pad instantiation.
       axi4s_pad axi4s_pad_0 (
         .axi4s_in    (axis_to_pad[i]),
-        .axi4s_out   (axis_to_cmac[i])
+        .axi4s_out   (__axis_to_cmac[i])
+      );
+
+      axi4s_reg_slice #(
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t)
+      ) axi4s_reg_slice_to_cmac (
+          .axi4s_from_tx (__axis_to_cmac[i]),
+          .axi4s_to_rx   (axis_to_cmac[i])
       );
 
       // axi4s_ila axi4s_ila_1 (.axis_in(axis_core_to_cmac[i]));
