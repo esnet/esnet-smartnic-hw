@@ -8,6 +8,7 @@ read_ip $out_root/smartnic/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila
 # Packages
 read_verilog -quiet -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/mem/rtl/src/*_pkg.sv ]
+read_verilog -quiet -sv [glob $lib_root/src/sync/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axis/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*_pkg.sv ]
@@ -39,3 +40,6 @@ read_verilog -sv ../../../app_if/src/smartnic_322mhz_app.sv
 # Constraints
 read_xdc -unmanaged -mode out_of_context constraints/timing_ooc.xdc
 read_xdc -unmanaged -mode out_of_context constraints/place_ooc.xdc
+
+source $lib_root/src/mem/build/constraints.tcl
+source $lib_root/src/sync/build/constraints.tcl

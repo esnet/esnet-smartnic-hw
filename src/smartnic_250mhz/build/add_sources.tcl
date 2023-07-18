@@ -17,6 +17,7 @@ read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_registe
 read_verilog -quiet -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/mem/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/fifo/rtl/src/*_pkg.sv ]
+read_verilog -quiet -sv [glob $lib_root/src/sync/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4l/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
@@ -42,3 +43,6 @@ read_verilog -quiet -sv [glob ../rtl/src/*.sv ]
 # Constraints
 read_xdc -mode out_of_context constraints/timing_ooc.xdc
 read_xdc -mode out_of_context constraints/place_ooc.xdc
+
+source $lib_root/src/mem/build/constraints.tcl
+source $lib_root/src/sync/build/constraints.tcl

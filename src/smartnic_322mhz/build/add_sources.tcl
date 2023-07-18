@@ -24,6 +24,7 @@ read_verilog -sv [glob $app_root/app_if/smartnic_322mhz_app_pkg.sv]
 # Packages
 read_verilog -quiet -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/mem/rtl/src/*_pkg.sv ]
+read_verilog -quiet -sv [glob $lib_root/src/sync/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/fifo/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/apb/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4l/rtl/src/*_pkg.sv ]
@@ -70,3 +71,6 @@ read_checkpoint -cell smartnic_322mhz_app $app_root/app_if/smartnic_322mhz_app.d
 # Constraints
 read_xdc -mode out_of_context constraints/timing_ooc.xdc
 read_xdc -mode out_of_context constraints/place_ooc.xdc
+
+source $lib_root/src/mem/build/constraints.tcl
+source $lib_root/src/sync/build/constraints.tcl
