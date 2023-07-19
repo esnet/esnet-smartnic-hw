@@ -4,7 +4,6 @@ set out_root $env(OUTPUT_ROOT)
 
 # IP
 read_ip $out_root/smartnic/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
-read_ip $out_root/smartnic/common/axi4l/xilinx_ip/axi_clock_converter_0/axi_clock_converter_0.xci
 
 # Packages
 read_verilog -quiet -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]

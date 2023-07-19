@@ -63,7 +63,6 @@ $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml:
 
 ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.xilinx_ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4l.xilinx_ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.xilinx_ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common

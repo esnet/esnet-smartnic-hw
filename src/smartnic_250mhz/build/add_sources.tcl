@@ -3,7 +3,6 @@ set out_root $env(OUTPUT_ROOT)
 
 # IP
 read_ip $out_root/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
-read_ip $out_root/common/axi4l/xilinx_ip/axi_clock_converter_0/axi_clock_converter_0.xci
 read_ip $out_root/common/axi4s/xilinx_ip/ila_axi4s/ila_axi4s.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
