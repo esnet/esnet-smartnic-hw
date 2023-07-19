@@ -71,7 +71,6 @@ module smartnic_322mhz
   output                      mod_rst_done,
 
   input                       axil_aclk,
-  input                       axis_aclk,
   input [NUM_CMAC-1:0]        cmac_clk
 );
 
