@@ -2,7 +2,7 @@ set curdir [pwd]
 cd ../smartnic_322mhz/build/
 
 # read design sources
-source add_sources.tcl
+source sources.tcl
 read_checkpoint -cell box_322mhz_inst/smartnic_322mhz/smartnic_322mhz_app $app_root/app_if/smartnic_322mhz_app.dcp
 
 # read constraints

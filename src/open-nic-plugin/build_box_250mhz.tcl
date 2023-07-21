@@ -2,7 +2,7 @@ set curdir [pwd]
 cd ../smartnic_250mhz/build/
 
 # read design sources
-source add_sources.tcl
+source sources.tcl
 
 # read constraints
 read_xdc constraints/${board}/timing.xdc
