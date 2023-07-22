@@ -103,7 +103,7 @@ module smartnic_322mhz
     .mod_rst_done (mod_rst_done),
 
     .axil_aclk    (axil_aclk),
-    .axil_srstn   (axil_aresetn),
+    .axil_aresetn (axil_aresetn),
 
     .cmac_clk     (cmac_clk),
     .cmac_srstn   (cmac_rstn),

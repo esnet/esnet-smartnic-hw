@@ -51,9 +51,10 @@ module smartnic_322mhz_hbm #(
     // Reset synchronization
     // ----------------------------------------------------------------
     sync_reset i_sync_reset (
-        .rst_in   ( rstn ),
-        .clk_out  ( clk ),
-        .srst_out ( srst )
+        .clk_in  ( clk ),
+        .rst_in  ( rstn ),
+        .clk_out ( clk ),
+        .rst_out ( srst )
     );
     // -------------------------------------------
     // Instantiations
