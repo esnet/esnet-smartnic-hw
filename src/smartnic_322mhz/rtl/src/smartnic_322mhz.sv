@@ -362,8 +362,8 @@ module smartnic_322mhz
                    .ADDR_WID     (33),
                    .ID_T         (logic[5:0])
                ) axi3_intf_from_signals__hbm (
-                   .aclk     ( axi_app_to_hbm_aclk    [g_hbm_if] ),
-                   .aresetn  ( axi_app_to_hbm_aresetn [g_hbm_if] ),
+                   .aclk     ( core_clk ),
+                   .aresetn  ( core_rstn ),
                    .awid     ( axi_app_to_hbm_awid    [g_hbm_if] ),
                    .awaddr   ( axi_app_to_hbm_awaddr  [g_hbm_if] ),
                    .awlen    ( axi_app_to_hbm_awlen   [g_hbm_if] ),
@@ -411,9 +411,6 @@ module smartnic_322mhz
                    .rready   ( axi_app_to_hbm_rready  [g_hbm_if] ),
                    .axi3_if  ( axi_if_from_app__demarc )
                );
-
-               assign axi_app_to_hbm_aclk[g_hbm_if] = core_clk;
-               assign axi_app_to_hbm_aresetn[g_hbm_if] = core_rstn;
 
                // Inter-SLR pipelining
                axi3_reg_slice #(
@@ -1192,6 +1189,8 @@ module smartnic_322mhz
     .egr_flow_ctl            ( egr_flow_ctl_pipe[0] ),
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
+    .axi_to_hbm_aclk     ( axi_app_to_hbm_aclk    ),
+    .axi_to_hbm_aresetn  ( axi_app_to_hbm_aresetn ),
     .axi_to_hbm_awid     ( axi_app_to_hbm_awid    ),
     .axi_to_hbm_awaddr   ( axi_app_to_hbm_awaddr  ),
     .axi_to_hbm_awlen    ( axi_app_to_hbm_awlen   ),
