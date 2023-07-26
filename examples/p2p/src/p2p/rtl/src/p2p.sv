@@ -24,6 +24,8 @@ module p2p #(
    p2p_reg_intf  p2p_regs();
    p2p_reg_intf  sdnet_regs();
 
+   logic tpause;
+
    // p2p register decoder
    p2p_decoder p2p_decoder (
       .axil_if       (axil_if),
@@ -41,6 +43,19 @@ module p2p #(
    (
     .axil_if    (axil_to_p2p_regs),
     .reg_blk_if (p2p_regs)
+   );
+
+   // Synchronize tpause
+   sync_level #(
+       .RST_VALUE ( 1'b0 )
+   ) i_sync_level__tpause (
+       .clk_in  (axil_if.aclk),
+       .rst_in  (!axil_if.aresetn),
+       .rdy_in  ( ),
+       .lvl_in  (p2p_regs.tpause),
+       .clk_out (core_clk),
+       .rst_out (!core_rstn),
+       .lvl_out (tpause)
    );
 
    // sdnet register block
@@ -77,7 +92,7 @@ module p2p #(
    //  Datpath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
    
-   assign axis_to_switch_0.tvalid = axis_from_switch_0.tvalid && !p2p_regs.tpause;
+   assign axis_to_switch_0.tvalid = axis_from_switch_0.tvalid && !tpause;
    assign axis_to_switch_0.tdata  = axis_from_switch_0.tdata;
    assign axis_to_switch_0.tkeep  = axis_from_switch_0.tkeep;
    assign axis_to_switch_0.tlast  = axis_from_switch_0.tlast;
@@ -85,7 +100,7 @@ module p2p #(
    assign axis_to_switch_0.tdest  = {'0, axis_from_switch_0.tdest};
    assign axis_to_switch_0.tuser  = axis_from_switch_0.tuser;
 
-   assign axis_from_switch_0.tready = axis_to_switch_0.tready && !p2p_regs.tpause;
+   assign axis_from_switch_0.tready = axis_to_switch_0.tready && !tpause;
 
 
    assign axis_to_switch_1.tvalid = axis_from_switch_1.tvalid;
