@@ -39,7 +39,6 @@ all: opt
 
 ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.xilinx_ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4l.xilinx_ip@common@smartnic
 	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4s.xilinx_ip@common@smartnic
 .PHONY: ip
 

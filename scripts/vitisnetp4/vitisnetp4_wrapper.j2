@@ -155,15 +155,6 @@ module {{ props.name }}_wrapper (
     generate
         // Assign all other HBM AXI signals
         for (genvar i = 0; i < M_AXI_HBM_NUM_SLOTS; i++) begin : g__hbm_axi_if
-            // Resynchronize reset
-            logic aresetn;
-            sync_reset #(
-                .OUTPUT_ACTIVE_LOW(1)
-            ) i_sync_reset (
-                .rst_in(core_rstn),
-                .clk_out(core_clk),
-                .srst_out(aresetn)
-            );
             // Drive clock/reset
             assign axi_to_hbm[i].aclk = core_clk;
             assign axi_to_hbm[i].aresetn = core_rstn;

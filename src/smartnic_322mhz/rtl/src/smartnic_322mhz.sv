@@ -71,7 +71,6 @@ module smartnic_322mhz
   output                      mod_rst_done,
 
   input                       axil_aclk,
-  input                       axis_aclk,
   input [NUM_CMAC-1:0]        cmac_clk
 );
 
@@ -104,7 +103,7 @@ module smartnic_322mhz
     .mod_rst_done (mod_rst_done),
 
     .axil_aclk    (axil_aclk),
-    .axil_srstn   (axil_aresetn),
+    .axil_aresetn (axil_aresetn),
 
     .cmac_clk     (cmac_clk),
     .cmac_srstn   (cmac_rstn),
@@ -261,6 +260,9 @@ module smartnic_322mhz
    logic axis_to_host_tpause [NUM_CMAC];
 
    sync_level sync_level_0 (
+      .clk_in  ( core_clk ),
+      .rst_in  ( 1'b0 ),
+      .rdy_in  ( ),
       .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_0_tpause ),
       .clk_out ( cmac_clk[0] ),
       .rst_out ( 1'b0 ),
@@ -268,6 +270,9 @@ module smartnic_322mhz
    );
 
    sync_level sync_level_1 (
+      .clk_in  ( core_clk ),
+      .rst_in  ( 1'b0 ),
+      .rdy_in  ( ),
       .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_1_tpause ),
       .clk_out ( cmac_clk[1] ),
       .rst_out ( 1'b0 ),
@@ -357,8 +362,8 @@ module smartnic_322mhz
                    .ADDR_WID     (33),
                    .ID_T         (logic[5:0])
                ) axi3_intf_from_signals__hbm (
-                   .aclk     ( axi_app_to_hbm_aclk    [g_hbm_if] ),
-                   .aresetn  ( axi_app_to_hbm_aresetn [g_hbm_if] ),
+                   .aclk     ( core_clk ),
+                   .aresetn  ( core_rstn ),
                    .awid     ( axi_app_to_hbm_awid    [g_hbm_if] ),
                    .awaddr   ( axi_app_to_hbm_awaddr  [g_hbm_if] ),
                    .awlen    ( axi_app_to_hbm_awlen   [g_hbm_if] ),
@@ -406,9 +411,6 @@ module smartnic_322mhz
                    .rready   ( axi_app_to_hbm_rready  [g_hbm_if] ),
                    .axi3_if  ( axi_if_from_app__demarc )
                );
-
-               assign axi_app_to_hbm_aclk[g_hbm_if] = core_clk;
-               assign axi_app_to_hbm_aresetn[g_hbm_if] = core_rstn;
 
                // Inter-SLR pipelining
                axi3_reg_slice #(
@@ -551,6 +553,9 @@ module smartnic_322mhz
    // ----------------------------------------------------------------
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
+       // (Local) signals
+       port_t cmac_igr_sw_tid [NUM_CMAC];
+       port_t host_igr_sw_tid [NUM_CMAC];
 
       //------------------------ from cmac to core --------------
       axi4s_intf_from_signals #(
@@ -563,11 +568,23 @@ module smartnic_322mhz
         .tdata    (s_axis_cmac_rx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (s_axis_cmac_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_cmac_rx_322mhz_tlast[i]),
-        .tid      (smartnic_322mhz_regs.igr_sw_tid[i]),
+        .tid      (cmac_igr_sw_tid[i]),
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
         .axi4s_if (__axis_from_cmac[i])
+      );
+
+      // Cross CMAC ingress switch port selection to cmac_clk domain
+      sync_bus_sampled #(
+        .DATA_T   ( port_t )
+      ) i_sync_bus_sampled__cmac_igr_sw_tid (
+        .clk_in   ( core_clk ),
+        .rst_in   ( 1'b0 ),
+        .data_in  ( smartnic_322mhz_regs.igr_sw_tid[i]),
+        .clk_out  ( cmac_clk[i] ),
+        .rst_out  ( 1'b0 ),
+        .data_out ( cmac_igr_sw_tid[i] )
       );
 
       // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
@@ -708,13 +725,24 @@ module smartnic_322mhz
         .tdata    (s_axis_adpt_tx_322mhz_tdata[`getvec(512, i)]),
         .tkeep    (s_axis_adpt_tx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
-        .tid      (smartnic_322mhz_regs.igr_sw_tid[2+i]),
+        .tid      (host_igr_sw_tid[i]),
         .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic_322mhz.
 
         .axi4s_if (axis_from_host[i])
       );
 
+      // Cross Host ingress switch port selection to cmac_clk domain
+      sync_bus_sampled #(
+        .DATA_T   ( port_t )
+      ) i_sync_bus_sampled__host_igr_sw_tid (
+        .clk_in   ( core_clk ),
+        .rst_in   ( 1'b0 ),
+        .data_in  ( smartnic_322mhz_regs.igr_sw_tid[2+i]),
+        .clk_out  ( cmac_clk[i] ),
+        .rst_out  ( 1'b0 ),
+        .data_out ( host_igr_sw_tid[i] )
+      );
 
       axi4s_pkt_fifo_async #(
         .FIFO_DEPTH     (128),
@@ -1161,6 +1189,8 @@ module smartnic_322mhz
     .egr_flow_ctl            ( egr_flow_ctl_pipe[0] ),
     // AXI3 interfaces to HBM
     // (synchronous to core clock domain)
+    .axi_to_hbm_aclk     ( axi_app_to_hbm_aclk    ),
+    .axi_to_hbm_aresetn  ( axi_app_to_hbm_aresetn ),
     .axi_to_hbm_awid     ( axi_app_to_hbm_awid    ),
     .axi_to_hbm_awaddr   ( axi_app_to_hbm_awaddr  ),
     .axi_to_hbm_awlen    ( axi_app_to_hbm_awlen   ),
