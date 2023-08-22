@@ -177,6 +177,7 @@ build_p4_hbm:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_hbm
     SN_HW_BOARD: au280
+  when: manual
   allow_failure: true
 
 build_vanilla_ons:
