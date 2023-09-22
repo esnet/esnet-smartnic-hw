@@ -1,0 +1,57 @@
+name: qdma_device_queues
+info: |
+  QDMA Device Queue Registers
+  Ref: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # QDMA_TRQ_SEL_QUEUE_PF (0x18000)
+  # This group of registers are repeated 2048 times, 1 for each queue
+
+  - name: int_cidx
+    fields:
+      - name: sw_cidx
+        width: 16
+        access: rw
+      - name: ring_idx
+        width: 8
+        access: rw
+  - name: h2c_dsc_pidx
+    fields:
+      - name: h2c_pidx
+        width: 16
+      - name: irq_arm
+        width: 1
+  - name: c2h_dsc_pidx
+    fields:
+      - name: c2h_pidx
+        width: 16
+      - name: irq_arm
+        width: 1
+  - name: cmpt_cidx
+    fields:
+      - name: wrb_cidx
+        width: 16
+      - name: c2h_count_threshold
+        width: 4
+      - name: c2h_timer_cnt_index
+        width: 4
+      - name: trigger_mode
+        width: 3
+        enum:
+          0x0 : disabled
+          0x1 : every
+          0x2 : user_count
+          0x3 : user
+          0x4 : user_timer
+          0x5 : user_timer_count
+      - name: en_sts_desc_wrb
+        width: 1
+      - name: irq_en_wrb
+        width: 1
+
+
+
+    

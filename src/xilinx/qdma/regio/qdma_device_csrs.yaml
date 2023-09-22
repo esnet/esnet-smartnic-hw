@@ -1,0 +1,632 @@
+name: qdma_device_csrs
+info: |
+  QDMA Device CSRs
+  Ref: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf
+  Ref: https://github.com/Xilinx/open-nic-driver/blob/main/qdma_access/qdma_register.h
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # QDMA_TRQ_SEL_GLBL1 (0x00000)
+
+  - name: cfg_block_id
+    access: ro
+    fields:
+      - name: version
+        width: 8
+      - name: rsvd
+        width: 8
+      - name: config_identifier
+        width: 4
+      - name: identifier
+        width: 12
+  - name: cfg_busdev
+  - name: cfg_pcie_max_pl_sz
+    fields:
+      - name: max_payload_issued
+        width: 3
+        enum:
+          0x0 : PLD_128
+          0x1 : PLD_256
+          0x2 : PLD_512
+          0x3 : PLD_1024
+          0x4 : PLD_2048
+          0x5 : PLD_4096
+      - name: rsvd1
+        width: 1
+      - name: max_payload_prog
+        width: 3
+        enum:
+          0x0 : PLD_128
+          0x1 : PLD_256
+          0x2 : PLD_512
+          0x3 : PLD_1024
+          0x4 : PLD_2048
+          0x5 : PLD_4096
+      - name: rsvd2
+        width: 25
+  - name: cfg_pcie_max_rdrq_sz
+    fields:
+      - name: max_read_size_issued
+        width: 3
+        enum:
+          0x0 : PLD_128
+          0x1 : PLD_256
+          0x2 : PLD_512
+          0x3 : PLD_1024
+          0x4 : PLD_2048
+          0x5 : PLD_4096
+      - name: rsvd1
+        width: 1
+      - name: max_read_size_prog
+        width: 3
+        enum:
+          0x0 : PLD_128
+          0x1 : PLD_256
+          0x2 : PLD_512
+          0x3 : PLD_1024
+          0x4 : PLD_2048
+          0x5 : PLD_4096
+  - name: cfg_sys_id
+    fields:
+      - name: system_id
+        width: 16
+      - name: type
+        width: 1
+        enum:
+          0x0 : SOFT_IP
+          0x1 : HARD_IP
+  - name: cfg_msix_en
+    access: ro
+  - name: cfg_pcie_data_width
+    fields:
+      - name: dp_width
+        width: 3
+        enum:
+          0x0 : WIDTH_64
+          0x1 : WIDTH_128
+          0x2 : WIDTH_256
+          0x3 : WIDTH_512
+  - name: cfg_pcie_ctrl
+    fields:
+      - name: relaxed_ordering
+        width: 1
+      - name: rrq_disable
+        width: 1
+      - name: rsvd
+        width: 14
+      - name: mgmt_axil_ctrl
+        width: 2
+        enum:
+          0x0 : RR
+          0x1 : MGMT_ONLY
+          0x2 : AXIL_ONLY
+  - name: cfg_msi_en
+
+  - meta:
+      pad_until: 0x40
+
+  - name: cfg_axi_usr_max_pl_sz
+  - name: cfg_axi_usr_max_rdrq_sz
+
+  - meta:
+      pad_until: 0x4c
+
+  - name: cfg_misc_ctrl
+
+  - meta:
+      pad_until: 0x80
+
+  - name: cfg_scratch_reg
+
+  - meta:
+      pad_until: 0xA0
+
+  - name: cfg_gic
+    fields:
+      - name: gic_irq
+        info: setting this bit will generate an assertion of the GIC pin
+        width: 1
+
+  - meta:
+      pad_until: 0xF0
+
+  - name: qdma_ram_sbe_msk_a
+  - name: qdma_ram_sbe_sts_a
+  - name: qdma_ram_dbe_msk_a
+  - name: qdma_ram_dbe_sts_a
+
+  # QDMA_TRQ_SEL_GLBL2 (0x00100)
+
+  - name: glbl2_id
+    fields:
+      - name: version
+        width: 8
+      - name: identifier
+        width: 24
+  - name: glbl2_pf_bl_int
+  - name: glbl2_pf_vf_bl_int
+  - name: glbl_pf_bl_ext
+  - name: glbl_pf_vf_bl_ext
+  - name: glbl2_chnl_inst
+  - name: glbl2_chnl_qdma
+  - name: glbl2_chnl_strm
+  - name: glbl2_qdma_cap
+  - meta:
+      pad_until: 0x128
+  - name: glbl2_pasid_cap
+  - name: glbl2_func_ret
+  - name: glbl2_sys_id
+  - name: glbl2_misc_cap
+
+  - meta:
+      pad_until: 0x1B8
+
+  - name: glbl2_dbg_pcie_rq
+    count: 2
+  - name: glbl2_dbg_aximm_wr
+    count: 2
+  - name: glbl2_dbg_aximm_rd
+    count: 2
+
+  # QDMA_TRQ_SEL_GLBL (0x00200)
+
+  - meta:
+      pad_until: 0x200
+
+  - meta:
+      pad_until: 0x204
+
+  - name: glbl_rngsz
+    count: 16
+    fields:
+      - name: ring_size
+        width: 16
+
+  - meta:
+      pad_until: 0x248
+
+  - name: glbl_err_stat
+    fields:
+      - default:
+          width: 1
+      - name: err_ram_sbe
+      - name: err_ram_dbe
+      - name: err_sdc
+      - name: err_trq
+      - name: err_h2c_mm_0
+      - name: err_h2c_mm_1
+      - name: err_c2h_mm_0
+      - name: err_c2h_mm_1
+      - name: err_c2h_st
+      - name: ind_ctxt_cmd_err
+        width: 6
+      - name: err_bdg
+      - name: err_h2c_st
+      - name: err_fab
+  - name: glbl_err_mask
+  - name: glbl_dsc_cfg
+  - name: glbl_dsc_err_sts
+    fields:
+      - default:
+          width: 1
+      - name: poison
+      - name: ur_ca
+      - name: bcnt
+      - name: param
+      - name: addr
+      - name: tag
+      - name: flr
+      - name: timeout
+      - name: dat_poison
+      - name: rsvd
+        width: 2
+      - name: flr_cancel
+      - name: dma
+      - name: dsc
+      - name: rq_cancel
+      - name: dbe
+      - name: sbe
+      - name: port_id
+  - name: glbl_dsc_err_msk
+  - name: glbl_dsc_err_log0
+    fields:
+      - name: qid
+        width: 13
+      - name: rsvd
+        width: 17
+      - name: sel
+        width: 1
+        enum:
+          0x0 : H2C
+          0x1 : C2H
+      - name: valid
+        width: 1
+  - name: glbl_dsc_err_log1
+    fields:
+      - name: err_type
+        width: 5
+      - name: sub_type
+        width: 4
+        enum:
+          0x0 : NON_UPDATE_ERR
+          # No entry for 1
+          0x2 : PIDX_UPDATE_OVFL
+          0x3 : RX_TOO_MANY_CREDITS
+          0x4 : FENCED_CREDIT_RX
+          0x5 : VIRTIO_AVAIL_PAGE_SPAN
+      - name: rsvd
+        width: 3
+      - name: cidx
+        width: 16
+  - name: glbl_trq_err_sts
+  - name: glbl_trq_err_msk
+  - name: glbl_trq_err_log
+  - name: glbl_dsc_dbg_dat0
+    fields:
+      - default:
+          width: 2
+      - name: dsc_out_stall
+      - name: fab_mrkr_rsp_stall
+      - name: rr1_fifo_spc_stall
+      - name: rcp_fifo_spc_stall
+      - name: rrq_stall
+      - name: tm_dsc_stall
+        width: 1
+      - name: irq_fifo_fl
+        width: 1
+      - name: ctxt_arb_req
+        width: 5
+        enum:
+          0x0 : EVT_SRC
+          0x1 : TRQ_SRC
+          0x2 : WBC_SRC
+          0x3 : CRD_SRC
+          0x4 : IND_SRC
+      - name: ctxt_arb_qid
+        width: 12
+      - name: ctxt_arb_dir
+        width: 1
+  - name: glbl_dsc_dbg_dat1
+    fields:
+      - name: dsc_spc_h2c
+        width: 8
+      - name: dsc_spc_c2h
+        width: 8
+      - name: evt_spc_h2c
+        width: 6
+      - name: evt_spc_c2h
+        width: 6
+  - name: glbl_dsc_dbg_ctl
+    fields:
+      - name: select
+        width: 3
+        enum:
+          0x0 : TRQ_SRC_ENC
+          0x1 : WBC_SRC_ENC
+          0x2 : CRD_SRC_ENC
+          0x3 : IND_SRC_ENC
+          0x4 : EVT_SRC_ENC
+          0x5 : IMM_SRC_ENC
+          0x6 : RCP_SRC_ENC
+          0x7 : FEN_SRC_ENC
+  - name: glbl_dsc_err_log2
+    fields:
+      - name: new_pidx
+        width: 16
+      - name: old_pidx
+        width: 16
+
+  - meta:
+      pad_until: 0x288
+
+  - name: glbl_interrupt_cfg
+
+  # QDMA_TRQ_SEL_FMAP (0x00400)
+
+  - meta:
+      pad_until: 0x400
+
+  - name: trq_sel_fmap
+    count: 256
+
+  # QDMA_TRQ_SEL_IND (0x00800)
+
+  - meta:
+      pad_until: 0x804
+
+  - name: ind_ctxt_data
+    count: 8
+  - name: ind_ctxt_mask
+    count: 8
+  - name: ind_ctxt_cmd
+    fields:
+      - name: busy
+        width: 1
+      - name: sel
+        width: 4
+      - name: op
+        width: 2
+      - name: qid
+        width: 11
+
+
+  # QDMA_TRQ_SEL_C2H (0x00A00)
+
+  - meta:
+      pad_until: 0xA00
+
+  - name: c2h_timer_cnt
+    count: 16
+  - name: c2h_cnt_thresh
+    count: 16
+
+  - meta:
+      pad_until: 0xA88
+
+  - name: c2h_stat_s_axis_c2h_accepted
+  - name: c2h_stat_s_axis_cmpt_accepted
+  - name: c2h_stat_desc_rsp_pkt_accepted
+  - name: c2h_stat_axis_pkg_cmp
+  - name: c2h_stat_desc_rsp_accepted
+  - name: c2h_stat_desc_rsp_cmp
+  - name: c2h_stat_wrq_out
+  - name: c2h_stat_wpl_ren_accepted
+  - name: c2h_stat_total_wrq_len
+  - name: c2h_stat_total_wpl_len
+  - name: c2h_buf_sz
+    count: 16
+  - name: c2h_err_stat
+  - name: c2h_err_mask
+  - name: c2h_fatal_err_stat
+  - name: c2h_fatal_err_mask
+  - name: c2h_fatal_err_enable
+  - name: glbl_err_int
+  - name: c2h_pfch_cfg
+  - name: c2h_int_timer_tick
+  - name: c2h_stat_desc_rsp_drop_accepted
+  - name: c2h_stat_desc_rsp_err_accepted
+  - name: c2h_stat_desc_req
+  - name: c2h_stat_debug_dma_eng_0
+    access: ro
+    fields:
+      - name: main_sm_cs
+        width: 4
+      - name: wrb_sm_cs
+        width: 1
+      - name: wrb_fifo_out_cnt
+        width: 3
+      - name: wrb_fifo_in_rdy
+        width: 1
+      - name: arb_fifo_out_qid
+        width: 12
+      - name: arb_fifo_out_vld
+        width: 1
+      - name: qid_fifo_in_rdy
+        width: 1
+      - name: payload_fifo_in_rdy
+        width: 1
+      - name: s_axis_wrb_tready
+        width: 3
+      - name: s_axis_wrb_tvalid
+        width: 3
+      - name: s_axis_c2h_tready
+        width: 1
+      - name: s_axis_c2h_tvalid
+        width: 1
+  - name: c2h_stat_debug_dma_eng_1
+    access: ro
+    fields:
+      - name: pld_st_fifo_cnt
+        width: 7
+      - name: payload_fifo_out_cnt
+        width: 11
+      - name: qid_fifo_out_cnt
+        width: 11
+  - name: c2h_stat_debug_dma_eng_2
+    access: ro
+    fields:
+      - name: pld_st_fifo_cnt
+        width: 7
+      - name: payload_fifo_out_cnt
+        width: 11
+      - name: qid_fifo_out_cnt
+        width: 11
+  - name: c2h_stat_debug_dma_eng_3
+    access: ro
+    fields:
+      - default:
+          width: 1
+      - name: pld_st_fifo_in_rdy
+      - name: wcp_fifo_in_rdy
+      - name: wrq_packet_pre_eor
+      - name: wrq_packet_out_data_marker
+      - name: wrq_packet_out_data_error
+      - name: wrq_packet_out_data_drop
+      - name: wrq_fifo_out_rdy
+      - name: wrq_rdy
+      - name: wrq_vld
+      - name: pld_pkt_id_larger_0
+      - name: desc_rsp_fifo_in_rdy
+      - name: desc_cnt_fifo_in_rdy
+      - name: pld_st_fifo_out_data_error
+      - name: pld_st_fifo_out_data_drop
+      - name: pld_st_fifo_out_data_avl_idx_enable
+      - name: pld_st_fifo_out_data_eop
+      - name: pld_st_fifo_out_vld
+      - name: payload_fifo_out_vld
+      - name: qid_fifo_out_vld
+      - name: wrq_fifo_out_cnt
+        width: 5
+  - name: c2h_dbg_pfch_err_ctxt
+  - name: c2h_first_err_qid
+    access: ro
+    fields:
+      - name: qid
+        width: 13
+      - name: rsvd
+        width: 3
+      - name: err_type
+        width: 5
+        enum:
+          0x0 : mty_mismatch
+          0x1 : len_mismatch
+          0x2 : qid_mismatch
+          0x3 : dec_rsp_error
+          0x4 : avl_ring_dsc_err
+          0x5 : eng_wpl_data_par_err
+          0x6 : msi_int_fail
+          0x7 : err_desc_cnt
+          0x8 : sh_cmpt_dsc_err
+          0x9 : port_id_ctxt_mismatch
+          0xa : wrb_inv_q_err
+          0xb : wrb_qfull_err
+          0xc : wrb_cidx_err
+          0xd : wrb_prty_err
+          0xe : hdr_ecc_uncorr_err
+          0xf : hdr_ecc_corr_err
+          0x10 : hdr_par_err
+          0x11 : wrb_port_id_err
+  - name: stat_num_cmpt_in
+  - name: stat_num_cmpt_out
+  - name: stat_num_cmpt_drp
+  - name: stat_num_stat_desc_out
+  - name: stat_num_dsc_crdt_sent
+  - name: stat_num_fch_dsc_rcvd
+  - name: stat_num_byp_dsc_rcvd
+  - name: c2h_cmpt_coal_cfg
+  - name: c2h_intr_h2c_req
+  - name: c2h_intr_c2h_mm_req
+  - name: c2h_intr_err_int_req
+  - name: c2h_intr_c2h_st_req
+  - name: c2h_intr_h2c_err_mm_msix_ack
+  - name: c2h_intr_h2c_err_mm_msix_fail
+  - name: c2h_intr_h2c_err_mm_no_msix
+  - name: c2h_intr_h2c_err_mm_ctxt_inval
+  - name: c2h_intr_c2h_st_msix_ack
+  - name: c2h_intr_c2h_st_msix_fail
+  - name: c2h_intr_c2h_st_no_msix
+  - name: c2h_intr_c2h_st_ctxt_inval
+  - name: c2h_stat_wr_cmp
+  - name: c2h_stat_debug_dma_eng_4
+    access: ro
+    fields:
+      - default:
+          width: 1
+      - name: pld_st_fifo_in_rdy
+      - name: wcp_fifo_in_rdy
+      - name: wrq_packet_pre_eor
+      - name: wrq_packet_out_data_marker
+      - name: wrq_packet_out_data_error
+      - name: wrq_packet_out_data_drop
+      - name: wrq_fifo_out_rdy
+      - name: wrq_rdy
+      - name: wrq_vld
+      - name: pld_pkt_id_larger_0
+      - name: desc_rsp_fifo_in_rdy
+      - name: desc_cnt_fifo_in_rdy
+      - name: pld_st_fifo_out_data_error
+      - name: pld_st_fifo_out_data_drop
+      - name: pld_st_fifo_out_data_avl_idx_enable
+      - name: pld_st_fifo_out_data_eop
+      - name: pld_st_fifo_out_vld
+      - name: payload_fifo_out_vld
+      - name: qid_fifo_out_vld
+      - name: wrq_fifo_out_cnt
+        width: 5
+  - name: c2h_stat_debug_dma_eng_5
+    access: ro
+    fields:
+      - default:
+          width: 1
+      - name: arb_fifo_out_data_has_cmpt
+      - name: arb_fifo_out_data_marker
+      - name: arb_fifo_out_data_num_buf_ov
+      - name: arb_fifo_out_data_drop_req
+      - name: arb_fifo_out_data_var_desc
+      - name: arb_fifo_out_data_virt_ch
+      - name: arb_fifo_out_data_len
+        width: 16
+      - name: arb_fifo_out_cnt
+        width: 2
+      - name: wrb_fifo_in_req
+        width: 5
+      - name: wrb_sm_virt_ch
+        width: 1
+  - name: c2h_dbg_pfch_qid
+  - name: c2h_dbg_pfch
+  - name: c2h_int_debug
+  - name: c2h_stat_imm_accepted
+  - name: c2h_stat_marker_accepted
+  - name: c2h_stat_disable_cmp_accepted
+  - name: c2h_c2h_payload_fifo_crdt_cnt
+  - name: c2h_intr_dyn_req
+  - name: c2h_intr_dyn_msix
+  - name: c2h_drop_len_mismatch
+  - name: c2h_drop_desc_rsp_len
+  - name: c2h_drop_qid_fifo_len
+  - name: c2h_drop_payload_cnt
+  - name: qdma_c2h_cmpt_format
+    count: 7
+  - name: c2h_pfch_cache_depth
+  - name: c2h_cmpt_coal_buf_depth
+  - name: c2h_pfch_crdt
+
+  # QDMA_TRQ_SEL_H2C (0x00E00)
+
+  - meta:
+      pad_until: 0xE00
+
+  - name: h2c_err_stat
+  - name: h2c_err_mask
+  - name: h2c_first_err_qid
+  - name: h2c_dbg_reg
+    count: 5
+  - name: h2c_fatal_err_en
+  - name: h2c_req_throt
+  - name: h2c_aln_dbg_reg0
+
+  # QDMA_TRQ_SEL_C2H_MM (0x01000)
+  # Not in current open-nic design
+  # Skipped for now
+
+  # QDMA_TRQ_SEL_H2C_MM (0x01200)
+  # Not in current open-nic design
+  # Skipped for now
+
+  # QDMA_PF_MAILBOX (0x02400)
+  # Not in current open-nic design
+
+  # - meta:
+  #     pad_until: 0x2400
+
+  # - name: func_status
+  # - name: func_cmd
+  # - name: func_intr_vec
+  # - name: target_func
+  # - name: intr_ctrl
+
+  # - meta:
+  #     pad_until: 0x2420
+
+  # - name: pf_ack
+  #   count: 8
+
+  # - meta:
+  #     pad_until: 0x2500
+
+  # - name: flr_ctrl_status
+
+  # - meta:
+  #     pad_until: 0x2800
+
+  # - name: msg_in
+  #   count: 32
+
+  # - meta:
+  #     pad_until: 0x2c00
+
+  # - name: msg_out
+  #   count: 32
+
