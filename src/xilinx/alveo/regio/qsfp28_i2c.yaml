@@ -1,0 +1,4 @@
+name: qsfp28_i2c
+info: |
+  Placeholder for an i2c controller.
+regs: []

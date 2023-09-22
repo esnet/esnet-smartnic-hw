@@ -1,0 +1,32 @@
+toplevel:
+  name: esnet_smartnic
+  info: |
+    ESnet SmartNIC FPGA
+  pci_vendor: 0x10ee
+  pci_device: 0x903f
+
+  bars:
+    0:
+      name: bar0
+      desc: DMA memory
+      size: 0x00020000
+      decoder:
+        name: bar0
+        decoders:
+          qdma_pf_decoder: &qdma_pf_decoder
+            !include ../src/xilinx/qdma/regio/qdma_pf_decoder.yaml
+        interfaces:
+          - decoder: *qdma_pf_decoder
+            address: 0x000000
+    2:
+      name: bar2
+      desc: all user logic
+      size: 0x00400000
+      decoder:
+        name: bar2
+        decoders:
+          bar2_decoder: &bar2_decoder
+            !include ../src/xilinx/alveo/regio/bar2_decoder_app.yaml
+        interfaces:
+          - decoder: *bar2_decoder
+            address: 0x000000

@@ -1,0 +1,36 @@
+name: cmac_adapter
+info: |
+  Glue logic between Xilinx QDMA and the Box322 containing the Xilinx SDnet block
+regs:
+  - default:
+      width: 32
+      access: ro
+  - name: tx_packets_lo
+  - name: tx_packets_hi
+
+  - name: tx_bytes_lo
+  - name: tx_bytes_hi
+
+  - name: tx_drop_packets_lo
+  - name: tx_drop_packets_hi
+
+  - name: tx_drop_bytes_lo
+  - name: tx_drop_bytes_hi
+
+  - name: rx_packets_lo
+  - name: rx_packets_hi
+
+  - name: rx_bytes_lo
+  - name: rx_bytes_hi
+
+  - name: rx_drop_packets_lo
+  - name: rx_drop_packets_hi
+
+  - name: rx_drop_bytes_lo
+  - name: rx_drop_bytes_hi
+
+  - name: rx_err_packets_lo
+  - name: rx_err_packets_hi
+
+  - name: rx_err_bytes_lo
+  - name: rx_err_bytes_hi

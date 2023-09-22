@@ -1,0 +1,25 @@
+name: cmac
+
+blocks:
+  cmac: &cmac
+    !include ../src/xilinx/cmac/regio/cmac.yaml
+  qsfp28_i2c: &qsfp28_i2c
+    !include ../src/xilinx/alveo/regio/qsfp28_i2c.yaml
+  cmac_adapter: &cmac_adapter
+    !include ../src/xilinx/alveo/regio/cmac_adapter.yaml
+
+interfaces:
+  - block: *cmac
+    address: 0x00000
+    width: 13
+    name: cmac
+
+  - block: *qsfp28_i2c
+    address: 0x02000
+    width: 12
+    name: qsfp28_i2c
+    
+  - block: *cmac_adapter
+    address: 0x03000
+    width: 12
+    name: cmac_adapter

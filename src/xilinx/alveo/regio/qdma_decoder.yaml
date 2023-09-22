@@ -1,0 +1,16 @@
+name: qdma
+
+blocks:
+  qdma_function: &qdma_function
+    !include ../src/xilinx/alveo/regio/qdma_function.yaml
+
+interfaces:
+  - name: qdma_func0
+    block: *qdma_function
+    address: 0x0000
+    width: 12
+
+  - name: qdma_func1
+    block: *qdma_function
+    address: 0x1000
+    width: 12

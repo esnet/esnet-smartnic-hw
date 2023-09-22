@@ -1,0 +1,52 @@
+name: xilinx_alveo
+
+blocks:
+  syscfg: &syscfg
+    !include ../src/xilinx/alveo/regio/syscfg.yaml
+  qspi: &qspi
+    !include ../src/xilinx/qspi/regio/qspi.yaml
+  cms: &cms
+    !include ../src/xilinx/cms/regio/cms.yaml
+
+decoders:
+  qdma_decoder: &qdma_decoder
+    !include ../src/xilinx/alveo/regio/qdma_decoder.yaml
+  cmac_decoder: &cmac_decoder
+    !include ../src/xilinx/alveo/regio/cmac_decoder.yaml
+  sysmon_decoder: &sysmon_decoder
+    !include ../src/xilinx/sysmon/regio/sysmon_decoder.yaml
+
+interfaces:
+  - block: *syscfg
+    address: 0x000000
+    name: syscfg
+
+  - decoder: *qdma_decoder
+    address: 0x001000
+    name: qdma
+
+  - decoder: *cmac_decoder
+    address: 0x008000
+    suffix: '0'
+    name: cmac
+
+  - decoder: *cmac_decoder
+    address: 0x00C000
+    suffix: '1'
+    name: cmac
+
+  - decoder: *sysmon_decoder
+    address: 0x010000
+    width: 14
+    name: sysmon
+
+  - block: *qspi
+    address: 0x20000
+    width: 12
+    name: qspi
+
+  - block: *cms
+    address: 0x40000
+    width: 18
+    name: cms
+
