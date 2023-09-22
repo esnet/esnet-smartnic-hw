@@ -1,0 +1,263 @@
+name: sysmon
+info: |
+  Xilinx UltraScale Architecture System Monitor
+  Ref: UG580: https://www.xilinx.com/support/documentation/user_guides/ug580-ultrascale-sysmon.pdf
+  Ref: PG184: https://www.xilinx.com/support/documentation/ip_documentation/system_management_wiz/v1_3/pg185-system-management-wiz.pdf
+
+  The SYSMON includes an analog-to-digital converter (ADC) as well as on-chip sensors
+  that can be used to sample external voltages and monitor on-die operating conditions,
+  such as temperature and supply voltage levels.
+regs:
+  - default:
+      width: 32
+      access: ro
+  - name: software_reset
+    access: wo
+  - name: status
+    fields:
+      - default:
+          width: 1
+      - name: ch0
+      - name: ch1
+      - name: ch2
+      - name: ch3
+      - name: ch4
+      - name: ch5
+      - name: eoc
+      - name: eos
+      - name: busy
+      - name: jtag_locked
+      - name: jtag_modified
+      - name: jtag_busy
+
+  - name: alarm_output_status
+    fields:
+      - default:
+          width: 1
+      - name: ot
+      - name: user_temp
+      - name: user_vccint
+      - name: user_vccaux
+      - name: user_vbram
+      - name: rsvd0
+        width: 3
+      - name: any_user
+      - name: supplies
+        width: 4
+      - name: rsvd1
+        width: 3
+      - name: any
+
+  - name: convst
+    access: wo
+  - name: sysmon_reset
+    access: wo
+    fields:
+      - name: reset
+        width: 1
+
+  - meta:
+      pad_until: 0x5C
+
+  - name: global_interrupt_enable
+    access: rw
+    fields:
+      - name: rsvd
+        width: 31
+      - name: gier
+        width: 1
+  - name: ip_interrupt_status
+    access: rw
+    fields:
+      - default:
+          width: 1
+      - name: ot
+      - name: user_temp
+      - name: user_vccint
+      - name: user_vccaux
+      - name: eos
+      - name: eoc
+      - name: jtag_locked
+      - name: jtag_modified
+      - name: ot_deactive
+      - name: user_temp_deactive
+      - name: user_vbram
+      - name: rsvd
+        width: 3
+      - name: user_vuser0
+      - name: user_vuser1
+      - name: user_vuser2
+      - name: user_vuser3
+
+  - name: ip_interrupt_enable
+    access: rw
+    fields:
+      - default:
+          width: 1
+      - name: ot
+      - name: user_temp
+      - name: user_vccint
+      - name: user_vccaux
+      - name: eos
+      - name: eoc
+      - name: jtag_locked
+      - name: jtag_modified
+      - name: ot_deactive
+      - name: user_temp_deactive
+      - name: user_vbram
+      - name: rsvd
+        width: 3
+      - name: user_vuser0
+      - name: user_vuser1
+      - name: user_vuser2
+      - name: user_vuser3
+
+  - meta:
+      pad_until: 0x400
+
+  - name: temperature
+    fields:
+      - name: rsvd
+        width: 6
+      - name: adc
+        width: 10
+  - name: VCCINT
+  - name: VCCAUX
+  - name: VP/VN
+  - name: VREFP
+  - name: VREFN
+  - name: VCCBRAM
+
+  - meta:
+      pad_until: 0x420
+
+  - name: supply_offset
+  - name: adc_offset
+  - name: gain_error
+  - name: vcc_psintlp
+  - name: vcc_psinfp
+  - name: vcc_psaux
+  - name: vauxp_vauxn
+    count: 16
+  - name: max_temp
+  - name: max_vccint
+  - name: max_vccaux
+  - name: max_vbram
+
+  - name: min_temp
+  - name: min_vccint
+  - name: min_vccaux
+  - name: min_vbram
+
+  - name: max_vcc_psintlp
+  - name: max_vcc_psinfp
+  - name: max_vcc_psaux
+
+  - meta:
+      pad_until: 0x4B0
+
+  - name: min_vcc_psintlp
+  - name: min_vcc_psinfp
+  - name: min_vcc_psaux
+
+  - meta:
+      pad_until: 0x4E0
+
+  - name: i2c_address
+
+  - meta:
+      pad_until: 0x4FC
+
+  - name: flag
+    fields:
+      - default:
+          width: 1
+      - name: alm0
+      - name: alm1
+      - name: alm2
+      - name: ot
+      - name: alm3
+      - name: alm4
+      - name: alm5
+      - name: alm6
+      - name: rsvd
+      - name: ref
+        enum:
+          0x0: external
+          0x1: internal
+      - name: jtgr
+      - name: jtgd
+
+  - default:
+      access: rw
+
+  - name: config_reg_0
+  - name: config_reg_1
+  - name: config_reg_2
+  - name: config_reg_3
+  - name: config_reg_4
+    access: ro
+  - name: analog_bus
+    access: ro
+
+  - name: sequence_8
+  - name: sequence_9
+  - name: sequence_0
+  - name: sequence_1
+  - name: sequence_2
+  - name: sequence_3
+  - name: sequence_4
+  - name: sequence_5
+  - name: sequence_6
+  - name: sequence_7
+  - name: alarm_threshold_0
+  - name: alarm_threshold_1
+  - name: alarm_threshold_2
+  - name: alarm_threshold_3
+  - name: alarm_threshold_4
+  - name: alarm_threshold_5
+  - name: alarm_threshold_6
+  - name: alarm_threshold_7
+  - name: alarm_threshold_8
+
+  - meta:
+      pad_until: 0x570
+
+  - name: alarm_threshold_12
+
+  - meta:
+      pad_until: 0x580
+
+  - name: alarm_threshold_16
+  - name: alarm_threshold_17
+  - name: alarm_threshold_18
+  - name: alarm_threshold_19
+
+  - meta:
+      pad_until: 0x5A0
+
+  - name: alarm_threshold_22
+  - name: alarm_threshold_23
+  - name: alarm_threshold_24
+  - name: alarm_threshold_25
+
+  - meta:
+      pad_until: 0x600
+
+  - default:
+      access: ro
+
+  - name: v_user0
+  - name: v_user1
+  - name: v_user2
+  - name: v_user3
+
+  - name: max_v_user0
+  - name: max_v_user1
+  - name: max_v_user2
+  - name: max_v_user3
+
+  - name: min_v_user0
+  - name: min_v_user1
+  - name: min_v_user2
+  - name: min_v_user3
