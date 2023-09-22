@@ -1,0 +1,394 @@
+name: cmac
+info: |
+  Xilinx CMAC
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  - name: gt_reset
+  - name: reset
+    fields:
+      - name: usr_rx_serdes_reset
+        width: 10
+      - meta:
+          pad_until: 28
+      - name: ctl_an_reset
+        width: 1
+      - meta:
+          pad_until: 30
+      - name: usr_rx_reset
+        width: 1
+      - name: usr_tx_reset
+        width: 1
+  - name: switch_core_mode
+  - name: conf_tx_1
+    fields:
+      - name: ctl_tx_enable
+        width: 1
+      - meta:
+          pad_until: 3
+      - name: ctl_tx_send_lfi
+        width: 1
+      - name: ctl_tx_send_rfi
+        width: 1
+      - name: ctl_tx_send_idle
+        width: 1
+      - meta:
+          pad_until: 16
+      - name: ctl_tx_test_pattern
+        width: 1
+  - meta:
+      pad_until: 0x14
+  - name: conf_rx_1
+    fields:
+      - name: ctl_rx_enable
+        width: 1
+      - meta:
+          pad_until: 7
+      - name: ctl_rx_force_resync
+        width: 1
+      - name: ctl_rx_test_pattern
+        width: 1
+  - meta:
+      pad_until: 0x20
+  - name: core_mode
+  - name: core_version
+  - meta:
+      pad_until: 0x2c
+  - name: conf_tx_bip_override
+    fields:
+      - name: ctl_tx_lane0_vlm_bip7_ovrd_val
+        width: 8
+      - name: ctl_tx_lane0_vlm_bip7_ovrd
+        width: 1
+
+  - name: conf_tx_fc_ctrl_1
+  - name: conf_tx_fc_rfrh_1
+  - name: conf_tx_fc_rfrh_2
+  - name: conf_tx_fc_rfrh_3
+  - name: conf_tx_fc_rfrh_4
+  - name: conf_tx_fc_rfrh_5
+  - name: conf_tx_fc_qnta_1
+  - name: conf_tx_fc_qnta_2
+  - name: conf_tx_fc_qnta_3
+  - name: conf_tx_fc_qnta_4
+  - name: conf_tx_fc_qnta_5
+  - name: conf_tx_otn_pkt_len
+  - name: conf_tx_otn_ctrl
+  - meta:
+      pad_until: 0x84
+  - name: conf_rx_fc_ctrl_1
+  - name: conf_rx_fc_ctrl_2
+  - meta:
+      pad_until: 0x90
+  - name: gt_loopback
+  - meta:
+      pad_until: 0xA0
+  - name: conf_an_ctrl_1
+  - name: conf_an_ctrl_2
+  - name: conf_an_ability
+  - name: conf_lt_ctrl_1
+  - name: conf_lt_trained
+  - name: conf_lt_preset
+  - name: conf_lt_init
+  - name: conf_lt_seed_0
+  - name: conf_lt_seed_1
+  - name: conf_lt_coef_0
+  - name: conf_lt_coef_1
+  - name: user_0
+
+  - meta:
+      pad_until: 0x200
+
+  - default:
+      access: ro
+
+  - name: stat_tx_status
+    fields:
+      - name: stat_tx_local_fault
+        width: 1
+  - name: stat_rx_status
+    fields:
+      - name: stat_rx_status
+        width: 1
+      - name: stat_rx_aligned
+        width: 1
+      - name: stat_rx_misaligned
+        width: 1
+      - name: stat_rx_aligned_err
+        width: 1
+      - name: stat_rx_hi_ber
+        width: 1
+      - name: stat_rx_remote_fault
+        width: 1
+      - name: stat_rx_local_fault
+        width: 1
+      - name: stat_rx_internal_local_fault
+        width: 1
+      - name: stat_rx_received_local_fault
+        width: 1
+      - name: stat_rx_test_pattern_mismatch
+        width: 3
+      - name: stat_rx_bad_preamble
+        width: 1
+      - name: stat_rx_bad_sfd
+        width: 1
+      - name: stat_rx_got_signal_os
+        width: 1
+  - name: stat_status_1
+  - name: stat_rx_block_lock
+  - name: stat_rx_lane_sync
+  - name: stat_rx_lane_sync_err
+  - name: stat_rx_am_err
+  - name: stat_rx_am_len_err
+  - name: stat_rx_am_repeat_err
+  - name: stat_rx_pcsl_demuxed
+  - name: stat_rx_pcs_lane_num_1
+  - name: stat_rx_pcs_lane_num_2
+  - name: stat_rx_pcs_lane_num_3
+  - name: stat_rx_pcs_lane_num_4
+  - name: stat_rx_bip_override
+  - name: stat_tx_otn_status
+  - meta:
+      pad_until: 0x258
+  - name: stat_an_status
+  - name: stat_an_ability
+  - name: stat_an_link_ctl_1
+  - name: stat_lt_status_1
+  - name: stat_lt_status_2
+  - name: stat_lt_status_3
+  - name: stat_lt_status_4
+  - name: stat_lt_coef_0
+  - name: stat_lt_coef_1
+  - name: stat_an_link_ctl_2
+
+  - meta:
+      pad_until: 0x2b0
+  - name: tick
+
+  - meta:
+      pad_until: 0x2b8
+  - default:
+      width: 64
+  - name: stat_cycle_count
+  - name: stat_rx_bip_err_0
+  - name: stat_rx_bip_err_1
+  - name: stat_rx_bip_err_2
+  - name: stat_rx_bip_err_3
+  - name: stat_rx_bip_err_4
+  - name: stat_rx_bip_err_5
+  - name: stat_rx_bip_err_6
+  - name: stat_rx_bip_err_7
+  - name: stat_rx_bip_err_8
+  - name: stat_rx_bip_err_9
+  - name: stat_rx_bip_err_10
+  - name: stat_rx_bip_err_11
+  - name: stat_rx_bip_err_12
+  - name: stat_rx_bip_err_13
+  - name: stat_rx_bip_err_14
+  - name: stat_rx_bip_err_15
+  - name: stat_rx_bip_err_16
+  - name: stat_rx_bip_err_17
+  - name: stat_rx_bip_err_18
+  - name: stat_rx_bip_err_19
+  - name: stat_rx_framing_err_0
+  - name: stat_rx_framing_err_1
+  - name: stat_rx_framing_err_2
+  - name: stat_rx_framing_err_3
+  - name: stat_rx_framing_err_4
+  - name: stat_rx_framing_err_5
+  - name: stat_rx_framing_err_6
+  - name: stat_rx_framing_err_7
+  - name: stat_rx_framing_err_8
+  - name: stat_rx_framing_err_9
+  - name: stat_rx_framing_err_10
+  - name: stat_rx_framing_err_11
+  - name: stat_rx_framing_err_12
+  - name: stat_rx_framing_err_13
+  - name: stat_rx_framing_err_14
+  - name: stat_rx_framing_err_15
+  - name: stat_rx_framing_err_16
+  - name: stat_rx_framing_err_17
+  - name: stat_rx_framing_err_18
+  - name: stat_rx_framing_err_19
+  - meta:
+      pad_until: 0x418
+  - name: stat_rx_bad_code
+  - meta:
+      pad_until: 0x458
+  - name: stat_tx_frame_error
+  - meta:
+      pad_until: 0x500
+
+  - default:
+      width: 64
+  - name: stat_tx_total_pkts
+  - name: stat_tx_total_good_pkts
+  - name: stat_tx_total_bytes
+  - name: stat_tx_total_good_bytes
+  - name: stat_tx_pkt_64_bytes
+  - name: stat_tx_pkt_65_127_bytes
+  - name: stat_tx_pkt_128_255_bytes
+  - name: stat_tx_pkt_256_511_bytes
+  - name: stat_tx_pkt_512_1023_bytes
+  - name: stat_tx_pkt_1024_1518_bytes
+  - name: stat_tx_pkt_1519_1522_bytes
+  - name: stat_tx_pkt_1523_1548_bytes
+  - name: stat_tx_pkt_1549_2047_bytes
+  - name: stat_tx_pkt_2048_4095_bytes
+  - name: stat_tx_pkt_4096_8191_bytes
+  - name: stat_tx_pkt_8192_9215_bytes
+  - name: stat_tx_pkt_large
+  - name: stat_tx_pkt_small
+  - meta:
+      pad_until: 0x5b8
+  - name: stat_tx_bad_fcs
+  - meta:
+      pad_until: 0x5d0
+  - name: stat_tx_unicast
+  - name: stat_tx_multicast
+  - name: stat_tx_broadcast
+  - name: stat_tx_vlan
+  - name: stat_tx_pause
+  - name: stat_tx_user_pause
+  - meta:
+      pad_until: 0x608
+  - name: stat_rx_total_pkts
+  - name: stat_rx_total_good_pkts
+  - name: stat_rx_total_bytes
+  - name: stat_rx_total_good_bytes
+  - name: stat_rx_pkt_64_bytes
+  - name: stat_rx_pkt_65_127_bytes
+  - name: stat_rx_pkt_128_255_bytes
+  - name: stat_rx_pkt_256_511_bytes
+  - name: stat_rx_pkt_512_1023_bytes
+  - name: stat_rx_pkt_1024_1518_bytes
+  - name: stat_rx_pkt_1519_1522_bytes
+  - name: stat_rx_pkt_1523_1548_bytes
+  - name: stat_rx_pkt_1549_2047_bytes
+  - name: stat_rx_pkt_2048_4095_bytes
+  - name: stat_rx_pkt_4096_8191_bytes
+  - name: stat_rx_pkt_8192_9215_bytes
+  - name: stat_rx_pkt_large
+  - name: stat_rx_pkt_small
+  - name: stat_rx_undersize
+  - name: stat_rx_fragment
+  - name: stat_rx_oversize
+  - name: stat_rx_toolong
+  - name: stat_rx_jabber
+  - name: stat_rx_bad_fcs
+  - name: stat_rx_pkt_bad_fcs
+  - name: stat_rx_stomped_fcs
+  - name: stat_rx_unicast
+  - name: stat_rx_multicast
+  - name: stat_rx_broadcast
+  - name: stat_rx_vlan
+  - name: stat_rx_pause
+  - name: stat_rx_user_pause
+  - name: stat_rx_inrangeerr
+  - name: stat_rx_truncated
+  - name: stat_otn_tx_jabber
+  - name: stat_otn_tx_oversize
+  - name: stat_otn_tx_undersize
+  - name: stat_otn_tx_toolong
+  - name: stat_otn_tx_fragment
+  - name: stat_otn_tx_pkt_bad_fcs
+  - name: stat_otn_tx_stomped_fcs
+  - name: stat_otn_tx_bad_code
+
+  - meta:
+      pad_until: 0x1000
+
+  - name: rsfec_conf_ind_correction
+    width: 32
+    access: rw
+    fields:
+      - name: ctl_rx_rsfec_en_cor
+        width: 1
+      - name: ctl_rx_rsfec_en_ind
+        width: 1
+      - name: ctl_rx_rsfec_ieee_err_ind_mode
+        width: 1
+
+  - name: stat_rsfec_status
+    width: 32
+    fields:
+      - meta:
+          pad_until: 2
+      - name: stat_rx_rsfec_hi_ser
+        width: 1
+      - name: stat_rx_rsfec_hi_ser_lh
+        width: 1
+      - meta:
+          pad_until: 8
+      - name: stat_rx_rsfec_am_lock0
+        width: 1
+      - name: stat_rx_rsfec_am_lock1
+        width: 1
+      - name: stat_rx_rsfec_am_lock2
+        width: 1
+      - name: stat_rx_rsfec_am_lock3
+        width: 1
+      - meta:
+          pad_until: 14
+      - name: stat_rx_rsfec_lane_alignment_status
+        width: 1
+
+  - name: stat_rx_rsfec_corrected_cw_inc
+  - name: stat_rx_rsfec_uncorrected_cw_inc
+
+  - default:
+      width: 32
+
+  - name: stat_rsfec_lane_mapping
+    fields:
+      - name: stat_rx_rsfec_lane_map0
+        width: 2
+      - name: stat_rx_rsfec_lane_map1
+        width: 2
+      - name: stat_rx_rsfec_lane_map2
+        width: 2
+      - name: stat_rx_rsfec_lane_map3
+        width: 2
+
+  - name: stat_rx_rsfec_err_count0_inc
+  - meta:
+      pad_until: 0x1024
+  - name: stat_rx_rsfec_err_count1_inc
+  - meta:
+      pad_until: 0x102c
+  - name: stat_rx_rsfec_err_count2_inc
+  - meta:
+      pad_until: 0x1034
+  - name: stat_rx_rsfec_err_count3_inc
+  - meta:
+      pad_until: 0x103c
+  - name: stat_rx_rsfec_cw_inc
+
+  - meta:
+      pad_until: 0x1044
+  - name: stat_tx_otn_rsfec_status
+    fields:
+      - name: stat_tx_rsfec_blk_lock
+        width: 1
+      - name: stat_tx_rsfec_am_lock
+        width: 1
+      - name: stat_tx_rsfec_ln_align_status
+        width: 1
+
+  - meta:
+      pad_until: 0x107c
+  - name: rsfec_conf_enable
+    access: rw
+    fields:
+      - name: ctl_rx_rsfec_enable
+        width: 1
+      - name: ctl_tx_rsfec_enable
+        width: 1
+
+  # - name: adpt_offset_tx_pkt_recv
+  # - name: adpt_offset_tx_pkt_drop
+  # - name: adpt_offset_rx_pkt_recv
+  # - name: adpt_offset_rx_pkt_drop
+  # - name: adpt_offset_rx_pkt_error
