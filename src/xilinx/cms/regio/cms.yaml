@@ -1,0 +1,298 @@
+name: cms
+info: |
+  Xilinx Card Management Subsystem
+regs:
+  - default:
+      width: 32
+      access: ro
+
+  - meta:
+      pad_until: 0x20000
+  - name: mb_resetn_reg
+    access: rw
+  - meta:
+      pad_until: 0x22000
+  - name: host_intc
+    fields:
+      - name: watchdog_timeout
+        width: 1
+  - meta:
+      pad_until: 0x28000
+  - name: reg_map_id_reg
+  - name: fw_version_reg
+  - name: status_reg
+    fields:
+      - meta:
+          pad_until: 24
+      - name: sat_ctrl_comms_ver
+        width: 4
+      - name: sat_ctrl_mode
+        width: 4
+  - name: error_reg
+    fields:
+      - meta:
+          pad_until: 20
+      - name: sat_ctrl_err_code
+        width: 6
+      - name: pkt_error
+        width: 1
+      - name: sat_ctrl_err
+        width: 1
+  - meta:
+      pad_until: 0x28014
+  - name: profile_name_reg
+  - name: control_reg
+    access: rw
+    fields:
+      - name: reset_max_avg_sensors
+        width: 1
+      - name: reset_error_reg
+        width: 1
+      - meta:
+          pad_until: 5
+      - name: mailbox_msg_status
+        width: 1
+      - name: reboot_microblaze
+        width: 1
+      - meta:
+          pad_until: 26
+      - name: qsfp_gpio_enable
+        width: 1
+      - name: hbm_temp_monitor_enable
+        width: 1
+  - meta:
+      pad_until: 0x28020
+  - name: _12v_pex_max_reg
+  - name: _12v_pex_avg_reg
+  - name: _12v_pex_ins_reg
+  - name: _3v3_pex_max_reg
+  - name: _3v3_pex_avg_reg
+  - name: _3v3_pex_ins_reg
+  - name: _3v3_aux_max_reg
+  - name: _3v3_aux_avg_reg
+  - name: _3v3_aux_ins_reg
+  - name: _12v_aux_max_reg
+  - name: _12v_aux_avg_reg
+  - name: _12v_aux_ins_reg
+  - name: ddr4_vpp_btm_max_reg
+  - name: ddr4_vpp_btm_avg_reg
+  - name: ddr4_vpp_btm_ins_reg
+  - name: sys_5v5_max_reg
+  - name: sys_5v5_avg_reg
+  - name: sys_5v5_ins_reg 
+  - name: vcc1v2_top_max_reg
+  - name: vcc1v2_top_avg_reg
+  - name: vcc1v2_top_ins_reg
+  - name: vcc1v8_max_reg
+  - name: vcc1v8_avg_reg
+  - name: vcc1v8_ins_reg
+  - name: vcc0v85_max_reg
+  - name: vcc0v85_avg_reg
+  - name: vcc0v85_ins_reg
+  - name: ddr4_vpp_top_max_reg
+  - name: ddr4_vpp_top_avg_reg
+  - name: ddr4_vpp_top_ins_reg
+  - name: mgt0v9avcc_max_reg
+  - name: mgt0v9avcc_avg_reg
+  - name: mgt0v9avcc_ins_reg
+  - name: _12v_sw_max_reg
+  - name: _12v_sw_avg_reg
+  - name: _12v_sw_ins_reg
+  - name: mgtavtt_max_reg
+  - name: mgtavtt_avg_reg
+  - name: mgtavtt_ins_reg
+  - name: vcc1v2_btm_max_reg
+  - name: vcc1v2_btm_avg_reg
+  - name: vcc1v2_btm_ins_reg
+  - name: _12vpex_i_in_max_reg
+  - name: _12vpex_i_in_avg_reg
+  - name: _12vpex_i_in_ins_reg
+  - name: _12v_aux_i_in_max_reg
+  - name: _12v_aux_i_in_avg_reg
+  - name: _12v_aux_i_in_ins_reg
+  - name: vccint_max_reg
+  - name: vccint_avg_reg
+  - name: vccint_ins_reg
+  - name: vccint_i_max_reg
+  - name: vccint_i_avg_reg
+  - name: vccint_i_ins_reg
+  - name: fpga_temp_max_reg
+  - name: fpga_temp_avg_reg
+  - name: fpga_temp_ins_reg
+  - name: fan_temp_max_reg
+  - name: fan_temp_avg_reg
+  - name: fan_temp_ins_reg
+  - name: dimm_temp0_max_reg
+  - name: dimm_temp0_avg_reg
+  - name: dimm_temp0_ins_reg
+  - name: dimm_temp1_max_reg
+  - name: dimm_temp1_avg_reg
+  - name: dimm_temp1_ins_reg
+  - name: dimm_temp2_max_reg
+  - name: dimm_temp2_avg_reg
+  - name: dimm_temp2_ins_reg
+  - name: dimm_temp3_max_reg
+  - name: dimm_temp3_avg_reg
+  - name: dimm_temp3_ins_reg
+  - name: se98_temp0_max_reg
+  - name: se98_temp0_avg_reg
+  - name: se98_temp0_ins_reg
+  - name: se98_temp1_max_reg
+  - name: se98_temp1_avg_reg
+  - name: se98_temp1_ins_reg
+  - name: se98_temp2_max_reg
+  - name: se98_temp2_avg_reg
+  - name: se98_temp2_ins_reg
+  - name: fan_speed_max_reg
+  - name: fan_speed_avg_reg
+  - name: fan_speed_ins_reg
+  - name: cage_temp0_max_reg
+  - name: cage_temp0_avg_reg
+  - name: cage_temp0_ins_reg
+  - name: cage_temp1_max_reg
+  - name: cage_temp1_avg_reg
+  - name: cage_temp1_ins_reg
+  - name: cage_temp2_max_reg
+  - name: cage_temp2_avg_reg
+  - name: cage_temp2_ins_reg
+  - name: cage_temp3_max_reg
+  - name: cage_temp3_avg_reg
+  - name: cage_temp3_ins_reg
+  - meta:
+      pad_until: 0x28260
+  - name: hbm_temp1_max_reg
+  - name: hbm_temp1_avg_reg
+  - name: hbm_temp1_ins_reg
+  - name: vcc3v3_max_reg
+  - name: vcc3v3_avg_reg
+  - name: vcc3v3_ins_reg
+  - name: _3v3pex_i_in_max_reg
+  - name: _3v3pex_i_in_avg_reg
+  - name: _3v3pex_i_in_ins_reg
+  - name: vccint_io_i_max_reg
+  - name: vccint_io_i_avg_reg
+  - name: vccint_io_i_ins_reg
+  - name: hbm_1v2_max_reg
+  - name: hbm_1v2_avg_reg
+  - name: hbm_1v2_ins_reg
+  - name: vpp2v5_max_reg
+  - name: vpp2v5_avg_reg
+  - name: vpp2v5_ins_reg
+  - name: vccint_io_max_reg
+  - name: vccint_io_avg_reg
+  - name: vccint_io_ins_reg
+  - name: hbm_temp2_max_reg
+  - name: hbm_temp2_avg_reg
+  - name: hbm_temp2_ins_reg
+  - name: _12v_aux1_max_reg
+  - name: _12v_aux1_avg_reg
+  - name: _12v_aux1_ins_reg
+  - name: vccint_temp_max_reg
+  - name: vccint_temp_avg_reg
+  - name: vccint_temp_ins_reg
+  - name: pex_12v_power_max_reg
+  - name: pex_12v_power_avg_reg
+  - name: pex_12v_power_ins_reg
+  - name: pex_3v3_power_max_reg
+  - name: pex_3v3_power_avg_reg
+  - name: pex_3v3_power_ins_reg
+  - name: aux_3v3_i_max_reg
+  - name: aux_3v3_i_avg_reg
+  - name: aux_3v3_i_ins_reg
+  - meta:
+      pad_until: 0x28300
+  - name: host_msg_offset_reg
+  - name: host_msg_error_reg
+# 0x0: "cms_host_msg_no_err"
+# 0x1: "cms_host_msg_bad_opcode_err"
+# 0x2: "cms_host_brd_info_missing_err"
+# 0x3: "cms_host_msg_length_err"
+# 0x4: "cms_host_msg_sat_fw_write_fail"
+# 0x5: "cms_host_msg_sat_fw_update_fail"
+# 0x6: "cms_host_msg_sat_fw_load_fail"
+# 0x7: "cms_host_msg_sat_fw_erase_fail"
+# 0x9: "cms_host_msg_csdr_failed"
+# 0xa: "cms_host_msg_qsfp_fail"
+  - meta:
+      pad_until: 0x2830c
+  - name: host_status2_reg
+    fields:
+      - name: reg_map_ready
+        width: 1
+  - meta:
+      pad_until: 0x28314
+  - name: vcc1v2_i_max_reg
+  - name: vcc1v2_i_avg_reg
+  - name: vcc1v2_i_ins_reg
+  - name: v12_in_i_max_reg
+  - name: v12_in_i_avg_reg
+  - name: v12_in_i_ins_reg
+  - name: v12_in_aux0_i_max_reg
+  - name: v12_in_aux0_i_avg_reg
+  - name: v12_in_aux0_i_ins_reg
+  - name: v12_in_aux1_i_max_reg
+  - name: v12_in_aux1_i_avg_reg
+  - name: v12_in_aux1_i_ins_reg
+  - name: vccaux_max_reg
+  - name: vccaux_avg_reg
+  - name: vccaux_ins_reg
+  - name: vccaux_pmc_max_reg
+  - name: vccaux_pmc_avg_reg
+  - name: vccaux_pmc_ins_reg
+  - name: vccram_max_reg
+  - name: vccram_avg_reg
+  - name: vccram_ins_reg
+  - meta:
+      pad_until: 0x28370
+  - name: power_good_ins_reg
+  - name: vccint_power_max_reg
+  - name: vccint_power_avg_reg
+  - name: vccint_power_ins_reg
+  - name: vccint_vcu_0v9_max_reg
+  - name: vccint_vcu_0v9_avg_reg
+  - name: vccint_vcu_0v9_ins_reg
+  - name: _1v2_vccio_max_reg
+  - name: _1v2_vccio_avg_reg
+  - name: _1v2_vccio_ins_reg
+  - name: gtavcc_max_reg
+  - name: gtavcc_avg_reg
+  - name: gtavcc_ins_reg
+  - meta:
+      pad_until: 0x283b0
+  - name: vccsoc_max_reg
+  - name: vccsoc_avg_reg
+  - name: vccsoc_ins_reg
+  - name: vcc_5v0_max_reg
+  - name: vcc_5v0_avg_reg
+  - name: vcc_5v0_ins_reg
+  - name: _2v5_vpp23_max_reg
+  - name: _2v5_vpp23_avg_reg
+  - name: _2v5_vpp23_ins_reg
+  - name: gtvcc_aux_max_reg
+  - name: gtvcc_aux_avg_reg
+  - name: gtvcc_aux_ins_reg
+  - meta:
+      pad_until: 0x28410
+  - name: hbm_1v2_i_max_reg
+  - name: hbm_1v2_i_avg_reg
+  - name: hbm_1v2_i_ins_reg
+  - name: cmc_vcc1v5_max_reg
+  - name: cmc_vcc1v5_avg_reg
+  - name: cmc_vcc1v5_ins_reg
+  - name: cmc_mgtavcc_max_reg
+  - name: cmc_mgtavcc_avg_reg
+  - name: cmc_mgtavcc_ins_reg
+  - name: cmc_mgtavtt_i_max_reg
+  - name: cmc_mgtavtt_i_avg_reg
+  - name: cmc_mgtavtt_i_ins_reg
+  - name: cmc_mgtavcc_i_max_reg
+  - name: cmc_mgtavcc_i_avg_reg
+  - name: cmc_mgtavcc_i_ins_reg
+  - meta:
+      pad_until: 0x28c4c
+  - name: core_build_version_reg
+  - name: oem_id_reg
+  - meta:
+      pad_until: 0x29000
+  - name: mailbox
+    count: 37
