@@ -197,6 +197,81 @@ module smartnic_322mhz_datapath_unit_test;
     `SVTEST_END
 
 
+    `SVTEST(igr_switch_reconfig)
+        int count = 0;
+        int igr_sw_tdest;
+        int enable_monitor;
+
+        //int igr_port = $urandom % NUM_PORTS;
+        for (int igr_port = 0; igr_port < NUM_PORTS; igr_port++) begin
+          igr_sw_tdest   = 2; // select BYPASS interface to start.
+          enable_monitor = 1; // enable output monitor when BYPASS is selected.  disable for APP0 interface (which sinks traffic).
+
+          env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+
+          for (int i = 0; i < 3; i++) begin  // reconfigure igr_sw_tdest iteratively.
+             fork
+               // Stream 2x9100B packets from igr_port (through bypass path).  Monitoring output if enabled.
+               run_pkt_stream ( .in_port(igr_port), .out_port(out_port_map[igr_port]),
+                                .in_pcap  ("../../common/pcap/32x9100B_pkts.pcap"),
+                                .out_pcap ("../../common/pcap/32x9100B_pkts.pcap"),
+                                .tx_pkt_cnt(tx_pkt_cnt[igr_port]), .tx_byte_cnt(tx_byte_cnt[igr_port]),
+                                .rx_pkt_cnt(rx_pkt_cnt[igr_port]), .rx_byte_cnt(rx_byte_cnt[igr_port]),
+                                .num_pkts(2), .exp_pkt_cnt(2),
+                                .tpause(0), .twait(0), .enable_monitor(enable_monitor) );
+
+               // Reconfigure IGR_SW_TDEST (during 2nd packet).
+               begin
+                 count = 0;
+                 while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
+                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 0 : 2;  // alternate directing traffic to bypass and app0 interfaces.
+                 enable_monitor = (igr_sw_tdest == 2) ? 1 : 0;  // disable output monitor when traffic flows to app0 interface.
+                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+               end
+             join
+          end
+        end
+    `SVTEST_END
+
+
+    `SVTEST(egr_switch_reconfig)
+        int count = 0;
+
+        // assign egr_port to random value for regression.  uncomment 'for' loop below to test all egress ports.
+        int egr_port = $urandom % NUM_PORTS;
+        //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
+
+           // Configure igr_sw tdest register (CMAC_0 -> BYPASS).
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h2 );
+
+           // Configure bypass tdest register (to direct traffic to egr_port).
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], egr_port );
+
+           for (int i = 0; i < 4; i++) begin  // reconfigure egr_port iteratively.
+             fork
+                // Stream 2x9100B packets through BYPASS interface.  Monitoring output.
+                run_pkt_stream ( .in_port(0), .out_port(egr_port),
+                                 .in_pcap  ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .out_pcap ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
+                                 .rx_pkt_cnt(rx_pkt_cnt[egr_port]), .rx_byte_cnt(rx_byte_cnt[egr_port]),
+                                 .num_pkts(2), .exp_pkt_cnt(2),
+                                 .tpause(0), .twait(0) );
+
+                // Reconfigure BYPASS_TDEST (during 2nd packet).
+                begin
+                  count = 0;
+                  while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
+                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port );
+                end
+             join
+
+             egr_port = ~egr_port;  // invert egress port for next iteration (tracks reconfiguration in above iteration).
+           end
+        //end
+    `SVTEST_END
+
+
     `SVTEST(single_stream_with_egress_discards)
         int port = $urandom % NUM_PORTS;
         // for (int port = 0; port < NUM_PORTS; port++) begin
