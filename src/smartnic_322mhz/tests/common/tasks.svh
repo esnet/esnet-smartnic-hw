@@ -164,9 +164,10 @@ task automatic run_pkt_stream (
        input string           in_pcap, out_pcap,
        output logic [63:0]    tx_pkt_cnt, tx_byte_cnt,
        output logic [63:0]    rx_pkt_cnt, rx_byte_cnt,
-       input int              exp_pkt_cnt = 0,
+       input int              num_pkts = 0, exp_pkt_cnt = 0,
        input int              tpause = 0, twait = 0, init_pause = 0,
-       input bit              tuser = 0
+       input bit              tuser = 0,
+       input bit              enable_monitor = 1
     );
    
     // variabes for reading pcap data$
@@ -175,7 +176,6 @@ task automatic run_pkt_stream (
     pcap_pkg::pcaprec_hdr_t   pcap_record_hdr[$];
 
     // variables for sending packet data
-    int num_pkts  = 0;
     int start_idx = 0;
 
     // variables for receiving (monitoring) packet data
@@ -198,7 +198,7 @@ task automatic run_pkt_stream (
           // Send packets	    
           send_pcap(in_pcap, num_pkts, start_idx, twait, in_port, out_port, tuser);
        end
-       begin
+       if (enable_monitor == 1) begin
           // Monitor output packets
           rx_pkt_cnt = 0; rx_byte_cnt = 0;
 
