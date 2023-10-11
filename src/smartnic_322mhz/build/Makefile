@@ -73,14 +73,11 @@ ip:
 pre_synth: reg_rtl ip $(APP_ROOT)/app_if/smartnic_322mhz_app.dcp
 synth:     _synth
 opt:       _opt
-place:     _place
-phys_opt:  _phys_opt
-route:     _route
 
 $(APP_ROOT)/app_if/smartnic_322mhz_app.dcp:
 	@$(MAKE) -s -C $(APP_ROOT)/app_if
 
-.PHONY: pre_synth synth opt place phys_opt route
+.PHONY: pre_synth synth opt
 
 
 reg_package: cp_app_dec | $(REGIO_YAML_DIR)
