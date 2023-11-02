@@ -45,10 +45,7 @@ ip:
 pre_synth: _reg_rtl ip
 synth:     _synth
 opt:       _opt
-place:     _place
-phys_opt:  _phys_opt
-route:     _route
-.PHONY: pre_synth synth opt place phys_opt route
+.PHONY: pre_synth synth opt
 
 clean: _reg_clean _clean_build
 .PHONY: clean
