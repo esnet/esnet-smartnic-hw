@@ -17,6 +17,7 @@ module p4_and_verilog
    // ----------------------------------------------------------------
    //  Imports
    // ----------------------------------------------------------------
+   import p4_and_verilog_pkg::*;
    import axi4s_pkg::*;
 
    // ----------------------------------------------------------------
@@ -60,12 +61,6 @@ module p4_and_verilog
    // ----------------------------------------------------------------
    // The SDnet block
    // ----------------------------------------------------------------
-   // tuser mapping (from smartnic_322mhz_pkg).
-   typedef struct packed {
-       logic [15:0] pid;
-       logic        rss_enable;
-       logic [11:0] rss_entropy;
-   } tuser_smartnic_meta_t;
 
    tuser_smartnic_meta_t  axis_from_switch_0_tuser;
    assign axis_from_switch_0_tuser = axis_from_switch_0.tuser;
@@ -106,12 +101,17 @@ module p4_and_verilog
    assign axis_to_switch_0_tuser.pid         = user_metadata_out_valid ?
                                                user_metadata_out.pid[15:0] : user_metadata_out_latch.pid[15:0];
 
+   assign axis_to_switch_0_tuser.trunc_enable = user_metadata_out_valid ?
+                                                user_metadata_out.truncate_enable : user_metadata_out_latch.truncate_enable;
+
+   assign axis_to_switch_0_tuser.trunc_length = user_metadata_out_valid ?
+                                                user_metadata_out.truncate_length : user_metadata_out_latch.truncate_length;
+
    assign axis_to_switch_0_tuser.rss_enable  = user_metadata_out_valid ?
                                                user_metadata_out.rss_enable  : user_metadata_out_latch.rss_enable;
 
    assign axis_to_switch_0_tuser.rss_entropy = user_metadata_out_valid ?
                                                user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
-
 
 
    // --- sdnet_0 instance (p4_and_verilog) ---
