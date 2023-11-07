@@ -44,7 +44,7 @@ which is located in a companion github repository at:
 https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
-suite.  The current release supports development with Vivado version 2023.1, running on
+suite.  The current release supports development with Vivado version 2023.2, running on
 Ubuntu 20.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
 shell and the AMD (Xilinx) Vivado tool suite are all public and openly available, note
 that the AMD (Xilinx) VitisNetP4 IP core is a commercially licensed feature that requires a
@@ -211,9 +211,9 @@ suitably-configured host running Ubuntu 20.04 LTS Linux.
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
 
-       > source /tools/Xilinx/Vivado/2023.1/settings64.sh
+       > source /tools/Xilinx/Vivado/2023.2/settings64.sh
 
-   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2023.1/ in this example.
+   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2023.2/ in this example.
 
 3. Set the XILINXD_LICENSE_FILE environment variable accordingly to resolve the site-specific license for
 the AMD (Xilinx) VitisNetp4 IP core.  This can be done with a `.flexlmrc` file in the users home directory,
@@ -300,7 +300,7 @@ User P4 files **MUST** be structured to comply with this processing architecture
 desired within each of these processing stages.
 
 More details about the AMD (Xilinx) P4 architecture can be found in the *Vitis Networking P4 User Guide, UG1308
-(v2023.1) May 16, 2023*.
+(v2023.2) Oct 18, 2023*.
 
 
 ### Include files:
@@ -312,7 +312,7 @@ The P4 program **MUST** include the following AMD (Xilinx) VitisNetP4 include fi
 
 These files capture built-in constructs and the standard definitions for the AMD (Xilinx) P4 architecture.
 They are located in the Vivado installation directory at:
-`$XILINX_VIVADO/data/ip/xilinx/vitis_net_p4_v1_1/include/p4/`
+`$XILINX_VIVADO/data/ip/xilinx/vitis_net_p4_v2_0/include/p4/`
 
 
 ### Interfaces:
@@ -335,7 +335,7 @@ The VitisNetP4 core supports both `Standard Metadata` (defined and set by the P4
 program.
 
 For more details about the `Standard Metadata` definitions, see *Vitis Networking P4 User Guide, UG1308
-(v2023.1) May 16, 2023*.
+(v2023.2) Oct 18, 2023*.
 
 In order for the compiled VitisNetP4 core to match the SmartNIC application interface, a user P4 program **MUST**
 define the User Metadata structure as follows:
@@ -370,11 +370,11 @@ Support for these features may be added in a future release.
 The following reference documents can be accessed from the AMD (Xilinx) Vitis Networking P4 Secure Site
 (once access priveleges are approved and granted):
 
-- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2023.1) May 10, 2023*.
+- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2023.2) Oct 18, 2023*.
 
-- *Vitis Networking P4 User Guide, UG1308 (v2023.1) May 16, 2023*.
+- *Vitis Networking P4 User Guide, UG1308 (v2023.2) Oct 18, 2023*.
 
-- *Vitis Networking P4 Getting Started Guide, UG1373 (v2023.1) May 16, 2023*.
+- *Vitis Networking P4 Getting Started Guide, UG1373 (v2023.2) Oct 18, 2023*.
 
 Users may also be interested in the information at https://p4.org/.
 
