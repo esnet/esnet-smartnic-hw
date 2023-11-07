@@ -39,6 +39,7 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
 # ----------------------------------------------------
 COMPONENTS = p4_app.rtl \
+             p4_app.verif \
              vitisnetp4.xilinx_ip \
              vitisnetp4.verif \
              smartnic_322mhz.rtl \
