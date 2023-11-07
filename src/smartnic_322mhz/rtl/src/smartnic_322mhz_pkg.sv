@@ -39,6 +39,8 @@ package smartnic_322mhz_pkg;
 
     typedef struct packed {
         logic [15:0] pid;
+        logic        trunc_enable;
+        logic [15:0] trunc_length;
         logic        rss_enable;
         logic [11:0] rss_entropy;
         logic        hdr_tlast;

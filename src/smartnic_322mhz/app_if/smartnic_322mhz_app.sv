@@ -87,6 +87,8 @@ module smartnic_322mhz_app
     output logic [1:0]   axis_to_switch_0_tid,
     output logic [2:0]   axis_to_switch_0_tdest,
     output logic [15:0]  axis_to_switch_0_tuser_pid,
+    output logic         axis_to_switch_0_tuser_trunc_enable,
+    output logic [15:0]  axis_to_switch_0_tuser_trunc_length,
     output logic         axis_to_switch_0_tuser_rss_enable,
     output logic [11:0]  axis_to_switch_0_tuser_rss_entropy,
 
@@ -111,6 +113,8 @@ module smartnic_322mhz_app
     output logic [1:0]   axis_to_switch_1_tid,
     output logic [2:0]   axis_to_switch_1_tdest,
     output logic [15:0]  axis_to_switch_1_tuser_pid,
+    output logic         axis_to_switch_1_tuser_trunc_enable,
+    output logic [15:0]  axis_to_switch_1_tuser_trunc_length,
     output logic         axis_to_switch_1_tuser_rss_enable,
     output logic [11:0]  axis_to_switch_1_tuser_rss_entropy,
 
@@ -162,6 +166,7 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
+    import smartnic_322mhz_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
@@ -170,16 +175,6 @@ module smartnic_322mhz_app
     localparam int  AXI_HBM_DATA_BYTE_WID = 32;
     localparam int  AXI_HBM_ADDR_WID = 33;
     localparam type AXI_HBM_ID_T = logic[5:0];
-
-    // Typedefs
-    typedef logic[1:0] port_t;
-    typedef logic[2:0] egr_tdest_t;
-
-    typedef struct packed {
-        logic [15:0] pid;
-        logic        rss_enable;
-        logic [11:0] rss_entropy;
-    } tuser_smartnic_meta_t;
 
     // Interfaces
     axi4l_intf #() axil_if       ();
@@ -192,21 +187,29 @@ module smartnic_322mhz_app
 
     tuser_smartnic_meta_t  axis_to_switch_0_tuser;
     assign axis_to_switch_0_tuser_pid         = axis_to_switch_0_tuser.pid;
+    assign axis_to_switch_0_tuser_trunc_enable = axis_to_switch_0_tuser.trunc_enable;
+    assign axis_to_switch_0_tuser_trunc_length = axis_to_switch_0_tuser.trunc_length;
     assign axis_to_switch_0_tuser_rss_enable  = axis_to_switch_0_tuser.rss_enable;
     assign axis_to_switch_0_tuser_rss_entropy = axis_to_switch_0_tuser.rss_entropy;
 
     tuser_smartnic_meta_t  axis_to_switch_1_tuser;
     assign axis_to_switch_1_tuser_pid         = axis_to_switch_1_tuser.pid;
+    assign axis_to_switch_1_tuser_trunc_enable = axis_to_switch_1_tuser.trunc_enable;
+    assign axis_to_switch_1_tuser_trunc_length = axis_to_switch_1_tuser.trunc_length;
     assign axis_to_switch_1_tuser_rss_enable  = axis_to_switch_1_tuser.rss_enable;
     assign axis_to_switch_1_tuser_rss_entropy = axis_to_switch_1_tuser.rss_entropy;
 
     tuser_smartnic_meta_t  axis_from_switch_0_tuser;
     assign axis_from_switch_0_tuser.pid         = axis_from_switch_0_tuser_pid;
+    assign axis_from_switch_0_tuser.trunc_enable = '0;
+    assign axis_from_switch_0_tuser.trunc_length = '0;
     assign axis_from_switch_0_tuser.rss_enable  = '0;
     assign axis_from_switch_0_tuser.rss_entropy = '0;
 
     tuser_smartnic_meta_t  axis_from_switch_1_tuser;
     assign axis_from_switch_1_tuser.pid         = axis_from_switch_1_tuser_pid;
+    assign axis_from_switch_1_tuser.trunc_enable = '0;
+    assign axis_from_switch_1_tuser.trunc_length = '0;
     assign axis_from_switch_1_tuser.rss_enable  = '0;
     assign axis_from_switch_1_tuser.rss_entropy = '0;
 
