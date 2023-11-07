@@ -27,6 +27,22 @@ regs:
         width: 12
         init : 0x000
 
+  - name: trunc_config
+    access: rw
+    fields:
+      - name: enable
+        desc: set to 1 to enable trunc_config register (activates register ovveride).
+        width: 1
+        init : 0
+      - name: trunc_enable
+        desc: set to 1 to enable trunc_length register (overrides p4 trunc_length metadata field).
+        width: 1
+        init : 0
+      - name: trunc_length
+        desc: set to 16-bit trunc_length value (used to truncate egress packet length).
+        width: 16
+        init : 0x0000
+
   - name: tpause
     desc   : tpause enable register.  when set to 1, (overrides) deasserts tready on the ingress axi4s interface. 
     access : rw
