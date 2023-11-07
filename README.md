@@ -206,11 +206,7 @@ suitably-configured host running Ubuntu 20.04 LTS Linux.
 
 ### Installing and Configuring the Vivado Runtime Environment
 
-1. Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option. Note, to include the
-VitisNetP4 option, the `VitisNetP4_Option_VISIBLE` environment variable must be set to `true` prior to
-executing the Vivado installation program.  The example BASH shell command is:
-
-       > export VitisNetP4_Option_VISIBLE=true
+1. Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option.
 
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
