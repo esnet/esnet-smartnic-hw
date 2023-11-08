@@ -865,7 +865,9 @@ module smartnic_322mhz
    logic [15:0] trunc_length;
    assign trunc_length = axis_to_trunc.tuser.trunc_enable ? axis_to_trunc.tuser.trunc_length : '1;
 
-   axi4s_trunc axi4s_trunc_0 (
+   axi4s_trunc #(
+      .BIGENDIAN(0), .OUT_PIPE(1)
+   ) axi4s_trunc_0 (
       .axi4s_in(axis_to_trunc),
       .axi4s_out(__axis_app_to_core[0]),
       .length(trunc_length)
