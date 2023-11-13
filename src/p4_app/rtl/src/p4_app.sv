@@ -25,7 +25,7 @@ module p4_app
    axi4l_intf  axil_to_p4_app ();
    axi4l_intf  axil_to_p4_app__core_clk ();
    
-   p4_app_reg_intf  p4_app_regs();
+   p4_app_reg_intf  p4_app_regs [2] ();
 
    // p4_app register decoder
    p4_app_decoder p4_app_decoder (
@@ -34,7 +34,7 @@ module p4_app
    );
 
    
-   // Pass AXI-L interface from aclk (AXI-L clock) to clk domain
+   // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
    axi4l_intf_cdc i_axil_intf_cdc (
        .axi4l_if_from_controller   ( axil_to_p4_app ),
        .clk_to_peripheral          ( core_clk ),
@@ -45,9 +45,14 @@ module p4_app
    p4_app_reg_blk p4_app_reg_blk 
    (
     .axil_if    (axil_to_p4_app__core_clk),
-    .reg_blk_if (p4_app_regs)                 
+    .reg_blk_if (p4_app_regs[0])
    );
 
+   // p4_app register pipeline stages
+   always @(posedge core_clk) begin
+      p4_app_regs[1].trunc_config <= p4_app_regs[0].trunc_config;
+      p4_app_regs[1].rss_config   <= p4_app_regs[0].rss_config;
+   end
 
    // ----------------------------------------------------------------
    //  Datapath pass-through connections (hard-wired bypass)
@@ -106,16 +111,16 @@ module p4_app
 
    assign axis_to_switch_0_tuser.pid         = user_metadata_out_valid ? user_metadata_out.pid[15:0]   : user_metadata_out_latch.pid[15:0];
 
-   assign axis_to_switch_0_tuser.trunc_enable = p4_app_regs.trunc_config.enable ? p4_app_regs.trunc_config.trunc_enable :
+   assign axis_to_switch_0_tuser.trunc_enable = p4_app_regs[1].trunc_config.enable ? p4_app_regs[1].trunc_config.trunc_enable :
                                                (user_metadata_out_valid ? user_metadata_out.truncate_enable : user_metadata_out_latch.truncate_enable);
 
-   assign axis_to_switch_0_tuser.trunc_length = p4_app_regs.trunc_config.enable ? p4_app_regs.trunc_config.trunc_length :
+   assign axis_to_switch_0_tuser.trunc_length = p4_app_regs[1].trunc_config.enable ? p4_app_regs[1].trunc_config.trunc_length :
                                                (user_metadata_out_valid ? user_metadata_out.truncate_length : user_metadata_out_latch.truncate_length);
 
-   assign axis_to_switch_0_tuser.rss_enable  = p4_app_regs.rss_config.enable ? p4_app_regs.rss_config.rss_enable :
+   assign axis_to_switch_0_tuser.rss_enable  = p4_app_regs[1].rss_config.enable ? p4_app_regs[1].rss_config.rss_enable :
                                                (user_metadata_out_valid ? user_metadata_out.rss_enable  : user_metadata_out_latch.rss_enable);
 
-   assign axis_to_switch_0_tuser.rss_entropy = p4_app_regs.rss_config.enable ? p4_app_regs.rss_config.rss_entropy :
+   assign axis_to_switch_0_tuser.rss_entropy = p4_app_regs[1].rss_config.enable ? p4_app_regs[1].rss_config.rss_entropy :
                                                (user_metadata_out_valid ? user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy);
 
 
