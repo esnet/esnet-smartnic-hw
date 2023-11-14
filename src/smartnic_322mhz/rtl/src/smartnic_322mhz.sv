@@ -536,6 +536,8 @@ module smartnic_322mhz
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_drop ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_trunc ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    __axis_app_to_core [2] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_app_to_core [2] ();
@@ -855,9 +857,20 @@ module smartnic_322mhz
    // axi4s drop pkt instantiation.
    axi4s_drop axi4s_drop_0 (
       .axi4s_in    (axis_to_drop),
-      .axi4s_out   (__axis_app_to_core[0]),
+      .axi4s_out   (axis_to_trunc),
       .axil_if     (axil_to_drops_from_app0),
       .drop_pkt    (drop_pkt)
+   );
+
+   logic [15:0] trunc_length;
+   assign trunc_length = axis_to_trunc.tuser.trunc_enable ? axis_to_trunc.tuser.trunc_length : '1;
+
+   axi4s_trunc #(
+      .BIGENDIAN(0), .OUT_PIPE(1)
+   ) axi4s_trunc_0 (
+      .axi4s_in(axis_to_trunc),
+      .axi4s_out(__axis_app_to_core[0]),
+      .length(trunc_length)
    );
 
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
@@ -1170,6 +1183,8 @@ module smartnic_322mhz
     .axis_to_switch_0_tid    ( axis_from_app[0].tid ),
     .axis_to_switch_0_tdest  ( axis_from_app[0].tdest ),
     .axis_to_switch_0_tuser_pid ( axis_from_app_tuser[0].pid ),
+    .axis_to_switch_0_tuser_trunc_enable ( axis_from_app_tuser[0].trunc_enable ),
+    .axis_to_switch_0_tuser_trunc_length ( axis_from_app_tuser[0].trunc_length ),
     .axis_to_switch_0_tuser_rss_enable  ( axis_from_app_tuser[0].rss_enable ),
     .axis_to_switch_0_tuser_rss_entropy ( axis_from_app_tuser[0].rss_entropy ),
     // AXI-S data interface (from switch output 1, to app)
@@ -1190,6 +1205,8 @@ module smartnic_322mhz
     .axis_to_switch_1_tid    ( axis_from_app[1].tid ),
     .axis_to_switch_1_tdest  ( axis_from_app[1].tdest ),
     .axis_to_switch_1_tuser_pid ( axis_from_app_tuser[1].pid ),
+    .axis_to_switch_1_tuser_trunc_enable ( axis_from_app_tuser[1].trunc_enable ),
+    .axis_to_switch_1_tuser_trunc_length ( axis_from_app_tuser[1].trunc_length ),
     .axis_to_switch_1_tuser_rss_enable  ( axis_from_app_tuser[1].rss_enable ),
     .axis_to_switch_1_tuser_rss_entropy ( axis_from_app_tuser[1].rss_entropy ),
     // egress flow control interface

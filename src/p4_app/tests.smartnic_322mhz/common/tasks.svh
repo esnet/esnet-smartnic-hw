@@ -51,7 +51,8 @@
     // Packet test sequence
     //=======================================================================
      task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
+        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0,
+        input int max_pkt_size = 0, input VERBOSE=1 );
 	
         string filename;
 
@@ -117,7 +118,7 @@
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
                              debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                             compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1]);
+                             compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1], max_pkt_size);
                             `FAIL_IF_LOG( dest != dest_port,
                                          $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
                          end

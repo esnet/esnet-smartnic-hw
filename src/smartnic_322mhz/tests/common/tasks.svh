@@ -97,15 +97,17 @@ endtask
 
 
 // Compare packets
-task compare_pkts(input byte pkt1[$], pkt2[$]);
+task compare_pkts(input byte pkt1[$], pkt2[$], input int size=0);
     automatic int byte_idx = 0;
 
-    if ( pkt1.size() != pkt2.size() ) begin
+    if ((size == 0) || (size > pkt2.size)) size = pkt2.size;
+
+    if ( pkt1.size() != size ) begin
        $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
        $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
 
-      `FAIL_IF_LOG( pkt1.size() != pkt2.size(),
-                    $sformatf("FAIL!!! Packet size mismatch. size1=%0d size2=%0d", pkt1.size(), pkt2.size()))
+      `FAIL_IF_LOG( pkt1.size() != size,
+                    $sformatf("FAIL!!! Packet size mismatch. size1=%0d size2=%0d", pkt1.size(), size) )
     end
 
     byte_idx = 0;
