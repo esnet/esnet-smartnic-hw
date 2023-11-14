@@ -34,7 +34,6 @@ p4bm:
     - make -C src/p4_app/p4/sim build sim-all
     - make -C examples/p4_only/p4/sim sim-all
     - make -C examples/p4_and_verilog/p4/sim build sim-all
-    - make -C examples/p4_hbm/p4/sim sim-all
     - make -C examples/p4_with_extern/p4/sim sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
@@ -42,7 +41,6 @@ p4bm:
       - src/p4_app/p4/sim
       - examples/p4_only/p4/sim
       - examples/p4_and_verilog/p4/sim
-      - examples/p4_hbm/p4/sim
       - examples/p4_with_extern/p4/sim
   needs: []
 
@@ -56,10 +54,6 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_$SEED/sim.log
     - make -C src/p4_app/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_$SEED/sim.log
-    - make -C examples/p4_hbm/tests/regression
-    - grep 'PASSED.*suites passing' examples/p4_hbm/tests/regression/run_$SEED/sim.log
-    - make -C examples/p4_hbm/tests.smartnic_322mhz/regression
-    - grep 'PASSED.*suites passing' examples/p4_hbm/tests.smartnic_322mhz/regression/run_$SEED/sim.log
     - make -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
@@ -68,8 +62,6 @@ sim_p4_apps:
       junit:
         - src/p4_app/tests/regression/run_*/tests.xml
         - src/p4_app/tests.smartnic_322mhz/regression/run_*/tests.xml
-        - examples/p4_hbm/tests/regression/run_*/tests.xml
-        - examples/p4_hbm/tests.smartnic_322mhz/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
@@ -171,15 +163,6 @@ build_p4_with_extern:
     SN_HW_APP_NAME: p4_with_extern
     SN_HW_BOARD: au55c
 
-build_p4_hbm:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_hbm
-    SN_HW_BOARD: au280
-  when: manual
-  allow_failure: true
-
 build_vanilla_ons:
   stage: bitfile
   extends: .common
@@ -257,12 +240,6 @@ hwapi_p4_with_extern:
   needs:
     - build_p4_with_extern
 
-hwapi_p4_hbm:
-  extends: .hwapi
-  needs:
-    - build_p4_hbm
-  allow_failure: true
-
 .trigger_fw:
   stage: trigger_downstream
   variables:
@@ -309,16 +286,3 @@ fw_p4_with_extern:
     SN_HW_API_JOB: hwapi_p4_with_extern
   needs:
     - hwapi_p4_with_extern
-
-fw_p4_hbm:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_hbm
-  needs:
-    - hwapi_p4_hbm
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      allow_failure: true
-    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-      when: manual
-      allow_failure: true
