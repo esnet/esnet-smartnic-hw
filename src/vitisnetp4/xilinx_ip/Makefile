@@ -25,7 +25,6 @@ P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 IP_LIST = $(VITISNETP4_IP_NAME)
 
 SRC_FILES = \
-    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/hw/simulation/vitis_net_p4_dpi_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_top_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_pkg.sv \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog/$(VITISNETP4_IP_NAME)_sync_fifos.sv \
@@ -54,7 +53,8 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS =
+COMPONENTS = vitisnetp4.dpi
+
 EXT_LIBS = cam_v2_5_0 \
            vitis_net_p4_v1_3_0 \
            unisims_ver \
