@@ -61,7 +61,8 @@ module p4_hbm_datapath_unit_test;
         svunit_ut.setup();
 
         // Flush packets from pipeline
-        env.axis_monitor.flush();
+        env.axis_monitor[0].flush();
+        env.axis_monitor[1].flush();
 
         // Issue reset (both datapath and management domains)
         reset();
@@ -70,8 +71,10 @@ module p4_hbm_datapath_unit_test;
         vitisnetp4_agent.init();
 
         // Put AXI-S interfaces into quiescent state
-        env.axis_driver.idle();
-        env.axis_monitor.idle();
+        env.axis_driver[0].idle();
+        env.axis_driver[1].idle();
+        env.axis_monitor[0].idle();
+        env.axis_monitor[1].idle();
 
     endtask
 
@@ -88,7 +91,8 @@ module p4_hbm_datapath_unit_test;
         svunit_ut.teardown();
 
         // Flush remaining packets
-        env.axis_monitor.flush();
+        env.axis_monitor[0].flush();
+        env.axis_monitor[1].flush();
         #10us;
 
         // Clean up SDNet tables
@@ -122,9 +126,10 @@ module p4_hbm_datapath_unit_test;
     `SVUNIT_TESTS_END
 
 
-     task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
-	
+     task automatic run_pkt_test (
+        input string testdir, input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
+        input write_p4_tables=1, VERBOSE=1 );
+
         string filename;
 
         // variabes for reading expected pcap data
@@ -136,22 +141,25 @@ module p4_hbm_datapath_unit_test;
         automatic logic [63:0] timestamp = init_timestamp;
         automatic int          num_pkts  = 0;
         automatic int          start_idx = 0;
+        automatic int          twait = 0;
 
         // variables for receiving (monitoring) packet data
         automatic int rx_pkt_cnt = 0;
         automatic bit rx_done = 0;
         byte          rx_data[$];
         port_t        id;
-        port_t        dest;
+        egr_tdest_t   dest;
         bit           user;
 
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
         env.ts_agent.set_static(timestamp);
 
-        debug_msg("Start writing sdnet_0 tables...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
-        vitisnetp4_agent.table_init_from_file(filename);
-        debug_msg("Done writing sdnet_0 tables...", VERBOSE);
+        if (write_p4_tables==1) begin
+           debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
+           filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
+           vitisnetp4_agent.table_init_from_file(filename);
+           debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
+        end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
@@ -163,13 +171,13 @@ module p4_hbm_datapath_unit_test;
          fork
              begin
                  // Send packets
-                 send_pcap(filename, num_pkts, start_idx);
+                 send_pcap(filename, num_pkts, start_idx, twait, in_if, in_if, dest_port);
              end
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
                  while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if.tlast or posedge rx_done) begin
-                       if (tb.axis_in_if.tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
+                    @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
+                       if (tb.axis_in_if[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
                     end
                  end
              end
@@ -184,7 +192,7 @@ module p4_hbm_datapath_unit_test;
                          end
                          begin
                              // Monitor received packets
-                             env.axis_monitor.receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                             env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
