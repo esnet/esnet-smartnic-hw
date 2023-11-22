@@ -24,6 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 COMPONENTS = p4_app.regio.rtl \
              util.rtl@common \
+             arb.rtl@common \
              axi4l.rtl@common \
              axi4s.rtl@common
 

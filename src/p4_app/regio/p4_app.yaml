@@ -11,6 +11,19 @@ regs:
   - name: status
     init: 0xcafebeef
 
+  - name: p4_proc_config
+    access: rw
+    fields:
+      - name: hdr_length
+        desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
+        width: 16
+        init: 0x0
+      - name: drop_pkt_loop
+        desc: set to 1 to enable dropping egress packets that have axi4s tdest==tid (egress_port==ingress_port).
+              enables drop logic on 'APP_0' and 'APP_BYPASS'.  drops on 'APP_1' to be implemented in future.
+        width: 1
+        init : 0
+
   - name: rss_config
     access: rw
     fields:
