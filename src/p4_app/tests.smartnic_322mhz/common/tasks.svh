@@ -9,7 +9,9 @@
         reset(); // Issue reset (both datapath and management domains)
 
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
-        env.smartnic_322mhz_reg_blk_agent.write_hdr_length(HDR_LENGTH);
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_config.drop_pkt_loop = 1'b0;
+        p4_app_reg_agent.write_p4_proc_config(p4_proc_config);
 
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();
@@ -20,8 +22,11 @@
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
 
-        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block. 
+        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block.
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+
+        // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to sdnet block.
+        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -50,9 +55,9 @@
     //=======================================================================
     // Packet test sequence
     //=======================================================================
-     task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0,
-        input int max_pkt_size = 0, input VERBOSE=1 );
+     task automatic run_pkt_test (
+        input string testdir, input logic[63:0] init_timestamp=0, input port_t in_port=0, out_port=0,
+        input int max_pkt_size = 0, input logic write_p4_tables=1, VERBOSE=1 );
 	
         string filename;
 
@@ -65,6 +70,8 @@
         automatic logic [63:0] timestamp = init_timestamp;
         automatic int          num_pkts  = 0;
         automatic int          start_idx = 0;
+        automatic int          twait = 0;
+        automatic int          tuser = 0;
 
         // variables for receiving (monitoring) packet data
         automatic int rx_pkt_cnt = 0;
@@ -77,10 +84,12 @@
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
         env.ts_agent.set_static(timestamp);
 
-        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
-        vitisnetp4_agent.table_init_from_file(filename);
-        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
+        if (write_p4_tables==1) begin
+          debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
+          filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
+          vitisnetp4_agent.table_init_from_file(filename);
+          debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
+        end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
@@ -92,7 +101,7 @@
          fork
              begin
                  // Send packets
-                 send_pcap(filename, num_pkts, start_idx);  // sends from port 0 (CMAC_0) by default.
+                 send_pcap(filename, num_pkts, start_idx, twait, in_port, out_port, tuser);
              end
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
@@ -113,14 +122,14 @@
                          end
                          begin
                              // Monitor received packets on port 0 (CMAC_0).
-                             env.axis_monitor[dest_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                             env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
                              debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                              compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1], max_pkt_size);
-                            `FAIL_IF_LOG( dest != dest_port,
-                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
+                            `FAIL_IF_LOG( dest != out_port,
+                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, out_port) )
                          end
                      join_any
                      disable fork;

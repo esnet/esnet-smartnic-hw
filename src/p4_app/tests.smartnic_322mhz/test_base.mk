@@ -83,7 +83,8 @@ SIM_OPTS +=
 all: p4bm build_test sim
 
 p4bm:
-	$(MAKE) sim-all-svh RUN_P4BM_OPTIONS="" P4BM_LOGFILE="-l log" -C $(IP_ROOT)/p4/sim
+	$(MAKE) sim-all     P4BM_LOGFILE="-l log" -C $(IP_ROOT)/p4/sim
+	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(IP_ROOT)/p4/sim
 
 build_test: _build_test
 
