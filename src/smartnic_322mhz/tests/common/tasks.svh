@@ -45,8 +45,7 @@ typedef enum logic [31:0] {
     PROBE_TO_BYPASS            = 'hd000,
 
     DROPS_FROM_IGR_SW          = 'hd400,
-    DROPS_FROM_BYPASS          = 'hd800,
-    DROPS_FROM_APP0            = 'hdc00
+    DROPS_FROM_BYPASS          = 'hd800
     } cntr_addr_encoding_t;
 
 typedef union packed {
