@@ -84,8 +84,8 @@ control MatchActionImpl( inout headers hdr,
         }
         
         if (hdr.ethernet.isValid()) {
-            sn_meta.rss_entropy = 9w0 ++ sn_meta.ingress_port;
-            sn_meta.rss_enable = 1w1;
+            sn_meta.rss_entropy = 12w0;
+            sn_meta.rss_enable = 1w0;
             forward.apply();
         }
         else
