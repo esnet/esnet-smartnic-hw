@@ -1,6 +1,6 @@
 class vitisnetp4_agent #(
 ) extends std_verif_pkg::agent;
-  
+
     // Pointer to VitisNetP4 driver
     protected chandle _drv;
 
@@ -69,24 +69,6 @@ class vitisnetp4_agent #(
         debug_msg("---------------- VitisNetP4: Driver destroyed. -------------");
     endtask
 
-    // TEMP: local 'automatic' copy of sdnet_0_pkg::get_action_arg_widths function
-    // (required to enable multiple invocations of table_init_from_file task)
-    function automatic void get_action_arg_widths;
-        input string table_name;
-        input string action_name;
-        output int   widths[$];
-
-        int tbl_idx, act_idx;
-
-        tbl_idx = sdnet_0_pkg::get_table_id(table_name);
-        act_idx = sdnet_0_pkg::get_action_id(table_name, action_name);
-
-        for (int i = 0; i < sdnet_0_pkg::XilVitisNetP4TableList[tbl_idx].Config.ActionListPtr[act_idx].ParamListPtr.size(); i++) begin
-            widths[i] = sdnet_0_pkg::XilVitisNetP4TableList[tbl_idx].Config.ActionListPtr[act_idx].ParamListPtr[i].Value;
-        end
-
-    endfunction
-
     // sdnet_table_init is based on the procedure described in the example_control.sv file of xilinx sdnet_0 example design
     task table_init_from_file(input string filename);
         const bit VERBOSE = (this.get_debug_level() > 1);
@@ -121,7 +103,7 @@ class vitisnetp4_agent #(
         if (filename_ext.compare(".txt"))
             __filename = filename;
         else
-            __filename = filename.substr(0,filename.len-5);      
+            __filename = filename.substr(0,filename.len-5);
 
         // Parse CLI command file (e.g. cli_commands.txt)
         parse_cli_commands(__filename, cli_cmds);
@@ -135,9 +117,7 @@ class vitisnetp4_agent #(
                    table_is_ternary = sdnet_0_pkg::table_is_ternary(cli_cmd.table_name);
                    action_id        = sdnet_0_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
                    action_id_width  = sdnet_0_pkg::get_table_action_id_width(cli_cmd.table_name);
-                   // TEMP: use local 'automatic' version of get_action_arg_widths function.
-                   //sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
-                   get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    split_action_params_and_prio(table_is_ternary, cli_cmd.action_params, action_params, entry_priority);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, action_params, response);
@@ -157,9 +137,7 @@ class vitisnetp4_agent #(
                    action_id        = sdnet_0_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
                    action_id_width  = sdnet_0_pkg::get_table_action_id_width(cli_cmd.table_name);
                    table_format_str = sdnet_0_pkg::get_table_format_string(cli_cmd.table_name);
-                   // TEMP: use local 'automatic' version of get_action_arg_widths function.
-                   //sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
-                   get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   sdnet_0_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, cli_cmd.action_params, response);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    if (VERBOSE) begin
