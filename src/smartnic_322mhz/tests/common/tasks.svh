@@ -439,8 +439,8 @@ endtask;
 
 
 task check_probe_control_defaults;
-    logic [31:0] rd_data;
-    bit          rd_fail = 0;
+    logic [31:0]  rd_data;
+    automatic bit rd_fail = 0;
 
     env.probe_from_cmac_0_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
     env.probe_from_cmac_1_reg_blk_agent.read_probe_control  ( rd_data ); rd_fail = rd_fail || (rd_data != 0);
