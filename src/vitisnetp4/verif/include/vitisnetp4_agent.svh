@@ -49,13 +49,24 @@ class vitisnetp4_agent #(
         debug_msg("---------------- VitisNetP4: Reset table state done.. -------------");
     endtask
 
-    // Terminate VitisNetP4 driver
-    // - terminate and destroy instantiated drivers
-    task cleanup();
+    // Terminate VitisNetP4 drivers (tables, externs, etc.)
+    task terminate();
         import sdnet_0_pkg::*;
 
+        debug_msg("---------------- VitisNetP4: Terminate. -------------");
+        if (this._drv == null) begin
+            debug_msg("---------------- VitisNetP4: Terminate failed (Driver doesn't exist). -------------");
+        end else begin
+            terminate(this._ctxPtr);
+            debug_msg("---------------- VitisNetP4: Terminate done. -------------");
+        end
+    endtask
+
+    // Destroy VitisNetP4 driver instance
+    task destroy();
         debug_msg("---------------- VitisNetP4: Destroy. -------------");
-        terminate(this._ctxPtr);
+        vitis_net_p4_dpi_pkg::XilVitisNetP4DpiDestroyEnv(_drv);
+        debug_msg("---------------- VitisNetP4: Driver destroyed. -------------");
     endtask
 
     // TEMP: local 'automatic' copy of sdnet_0_pkg::get_action_arg_widths function
