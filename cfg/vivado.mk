@@ -8,12 +8,12 @@
 # 'Major' release version
 # - full dot-release, e.g. 2021.2, 2022.1
 # - matches install directory, e.g. /tools/Xilinx/Vivado/2022.1
-VIVADO_VERSION = 2023.1
+VIVADO_VERSION = 2023.2
 
 # 'Patched' release version
 # - e.g. 2022.1, 2022.1.1, 2022.1.1_AR88888
 # - matches output of `vivado -version`, e.g. Vivado v2022.1.1 (64-bit)
-VIVADO_VERSION__WITH_PATCHES = 2023.1
+VIVADO_VERSION__WITH_PATCHES = 2023.2
 
 # ------------------------------------------------------------------
 # Vivado IP configuration
@@ -27,4 +27,4 @@ VIVADO_VERSION__WITH_PATCHES = 2023.1
 # ------------------------------------------------------------------
 LICENSED_IP = \
     xilinx.com:ip:cmac_usplus:3.1 \
-    xilinx.com:ip:vitis_net_p4:1.3
+    xilinx.com:ip:vitis_net_p4:2.0

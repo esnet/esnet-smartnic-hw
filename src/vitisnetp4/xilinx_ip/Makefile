@@ -44,7 +44,13 @@ SRC_FILES = \
     $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME)_wrapper.sv
 
 INC_DIRS = \
-    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/hw/include
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/hdl/fpga_asic_macros_v1_0/hdl/include/fpga \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/hdl/mcfh_v1_0/hdl/mcfh_include \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/hdl/cue_v1_0/hdl \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/hdl/infrastructure_v6_4/ic_infrastructure/libs/axi \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/hdl/axil_mil_v2_4/axil_mil/sv/axil_mil \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/hw/simulation \
+    $(VITISNET_IP_DIR)/$(VITISNETP4_IP_NAME)/src/verilog
 
 SRC_LIST_FILES =
 
@@ -55,8 +61,10 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 COMPONENTS = vitisnetp4.dpi
 
-EXT_LIBS = cam_v2_5_0 \
-           vitis_net_p4_v1_3_0 \
+EXT_LIBS = cam_v2_6_0 \
+           cam_blk_lib_v1_0_0 \
+           cdcam_v1_0_0 \
+           vitis_net_p4_v2_0_0 \
            unisims_ver \
            unisims_macro \
            xpm

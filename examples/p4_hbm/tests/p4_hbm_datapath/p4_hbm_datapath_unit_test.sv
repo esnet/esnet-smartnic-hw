@@ -92,7 +92,7 @@ module p4_hbm_datapath_unit_test;
         #10us;
 
         // Clean up SDNet tables
-        vitisnetp4_agent.cleanup();
+        vitisnetp4_agent.terminate();
 
     endtask
 
@@ -174,7 +174,7 @@ module p4_hbm_datapath_unit_test;
                  end
              end
              begin
-                 time t = $time;
+                 automatic time t = $time;
                  // Monitor output packets
                  while (rx_pkt_cnt < exp_pcap_record_hdr.size() || ($time < t + 5us)) begin
                      fork

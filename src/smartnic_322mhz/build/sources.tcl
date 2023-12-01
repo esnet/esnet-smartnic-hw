@@ -11,7 +11,7 @@ read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_0/clk_wiz_0.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_1/clk_wiz_1.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
-read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_0.vh
+read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_1.vh
 read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_vl_rfs.v
 read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_register_slice_v1_1_vl_rfs.v
 read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_0.vh

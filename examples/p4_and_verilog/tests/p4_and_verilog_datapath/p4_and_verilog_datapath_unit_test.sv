@@ -97,7 +97,7 @@ module p4_and_verilog_datapath_unit_test;
         #10us;
 
         // Clean up SDNet tables
-        vitisnetp4_agent.cleanup();
+        vitisnetp4_agent.terminate();
 
     endtask
 

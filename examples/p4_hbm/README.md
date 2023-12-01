@@ -1,5 +1,8 @@
 # Example Design: p4_hbm
 
+***NOTE***: Vivado 2023.2 deprecates HBM P4 tables in UltraScale+ designs.
+            As a result, the p4_hbm application is similarly deprecated.
+
 The p4_hbm example design provides the P4 source code and a behavioural simulation testcase for a
 P4 application core that leverages the integrated HBM (high-bandwidth memory) to implement a large (1M)
 IPv4/IPv6 filter.
