@@ -123,50 +123,6 @@ module p4_app_datapath_unit_test;
 
     `include "../../p4/sim/run_pkt_test_incl.svh"
 
-// Commented out due outstanding (init?) issue. Test passes on its own, but not within test suite.
-//    `SVTEST(test_default_w_force)
-//        force tb.axis_in_if[0].tid = 2'h2;
-//        run_pkt_test ( .testdir("test-default"), .init_timestamp('0), .dest_port(2) );
-//    `SVTEST_END
-
-    `SVTEST(test_pkt_loopback_w_force)
-        force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(7) );
-    `SVTEST_END
-
-    `SVTEST(test_fwd_p0_w_force)
-        force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp('0), .dest_port(0) );
-    `SVTEST_END
-
-    `SVTEST(test_fwd_p1_w_force)
-        force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
-    `SVTEST_END
-
-    `SVTEST(test_fwd_p3_w_force)
-        force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p3"), .init_timestamp('0), .dest_port(3) );
-    `SVTEST_END
-
-    `SVTEST(test_traffic_mux)
-        fork
-           // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
-
-           // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
-           // (without re-programming the p4 tables).
-           @(posedge tb.axis_in_if[1].tvalid)
-               run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
-
-           // manually pause traffic through ingress mux, and restart.
-           @(posedge tb.axis_in_if[1].tvalid) begin
-               env.p4_app_reg_agent.write_tpause(1);
-               env.p4_app_reg_agent.write_tpause(0);
-           end
-        join
-    `SVTEST_END
-
     `SVUNIT_TESTS_END
 
 

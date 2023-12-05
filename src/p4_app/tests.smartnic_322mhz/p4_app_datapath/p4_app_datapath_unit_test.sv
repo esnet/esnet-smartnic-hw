@@ -1,7 +1,7 @@
 `include "svunit_defines.svh"
 
 import tb_pkg::*;
-import p4_app_verif_pkg::*;
+import p4_proc_verif_pkg::*;
 
 //===================================
 // (Failsafe) timeout
@@ -35,11 +35,11 @@ module p4_app_datapath_unit_test
     // VitisNetP4 table agent
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
-    // p4_app register agent and variables
-    p4_app_reg_agent  p4_app_reg_agent;
+    // p4_proc register agent and variables
+    p4_proc_reg_agent  p4_proc_reg_agent;
 
-    p4_app_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
-    p4_app_reg_pkg::reg_trunc_config_t    trunc_config;
+    p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
+    p4_proc_reg_pkg::reg_trunc_config_t    trunc_config;
 
     wire [11:0] rss_entropy [2];
     assign rss_entropy[0] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
@@ -69,7 +69,7 @@ module p4_app_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agent
-        p4_app_reg_agent = new("p4_app_reg_agent", env.reg_agent, 'h80000);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'h84000);
     endfunction
 
     //===================================
@@ -150,7 +150,7 @@ module p4_app_datapath_unit_test
               trunc_config.enable = 1'b1;
               trunc_config.trunc_enable = 1'b1;
               trunc_config.trunc_length = $urandom_range(65,500);
-              p4_app_reg_agent.write_trunc_config(trunc_config);
+              p4_proc_reg_agent.write_trunc_config(trunc_config);
 
               run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0), .max_pkt_size(trunc_config.trunc_length) );
            end

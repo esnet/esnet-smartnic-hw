@@ -3,12 +3,10 @@ name: p4_app
 blocks:
   p4_app: &p4_app
     !include ../src/p4_app/regio/p4_app.yaml
-  axi4s_probe: &axi4s_probe
-    !include src/axi4s/regio/axi4s_probe.yaml
 
 decoders:
-  axi4s_split_join_decoder: &axi4s_split_join_decoder
-    !include src/axi4s/regio/axi4s_split_join_decoder.yaml
+  p4_proc_decoder: &p4_proc_decoder
+    !include ../src/p4_proc/regio/p4_proc_decoder.yaml
 
 interfaces:
   - block: *p4_app
@@ -16,17 +14,7 @@ interfaces:
     width: 10
     name: p4_app
 
-  - block: *axi4s_probe
-    address: 0x0400
-    width: 10
-    name: drops_from_proc_port_0
-
-  - block: *axi4s_probe
-    address: 0x0800
-    width: 10
-    name: drops_from_proc_port_1
-
-  - decoder: *axi4s_split_join_decoder
-    address: 0x0c00
-    width: 10
-    name: axi4s_split_join_0
+  - decoder: *p4_proc_decoder
+    address: 0x04000
+    width: 14
+    name: p4_proc

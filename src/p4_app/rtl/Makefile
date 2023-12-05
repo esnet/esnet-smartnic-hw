@@ -22,11 +22,7 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = p4_app.regio.rtl \
-             util.rtl@common \
-             arb.rtl@common \
-             axi4l.rtl@common \
-             axi4s.rtl@common
+COMPONENTS = p4_proc.rtl
 
 EXT_LIBS =
 

@@ -21,6 +21,7 @@ read_verilog -quiet -sv [glob $lib_root/src/arb/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/fifo/rtl/src/*_pkg.sv ]
 
+read_verilog -quiet -sv [glob $smartnic_src_root/p4_proc/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $smartnic_src_root/p4_app/rtl/src/*_pkg.sv ]
 
 read_verilog -quiet -sv [glob $out_root/p4_app/build/rtl/src/*_pkg.sv ]
@@ -38,6 +39,7 @@ read_verilog -quiet -sv [glob $lib_root/src/arb/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/fifo/rtl/src/*.sv ]
 
+read_verilog -quiet -sv [glob $smartnic_src_root/p4_proc/rtl/src/*.sv ]
 read_verilog -quiet -sv [glob $smartnic_src_root/p4_app/rtl/src/*.sv ]
 
 read_verilog -quiet -sv [glob $out_root/p4_app/build/rtl/src/*.sv ]

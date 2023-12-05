@@ -11,7 +11,7 @@
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
         p4_proc_config.hdr_length = HDR_LENGTH;
         p4_proc_config.drop_pkt_loop = 1'b0;
-        p4_app_reg_agent.write_p4_proc_config(p4_proc_config);
+        p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();

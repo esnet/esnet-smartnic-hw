@@ -40,6 +40,7 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 # ----------------------------------------------------
 COMPONENTS = p4_app.rtl \
              p4_app.verif \
+             p4_proc.verif \
              vitisnetp4.xilinx_ip \
              vitisnetp4.verif \
              smartnic_322mhz.rtl \
