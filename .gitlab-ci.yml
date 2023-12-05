@@ -31,6 +31,7 @@ p4bm:
   tags:
     - ht-sim
   script:
+    - make -C src/p4_proc/p4/sim build sim-all
     - make -C src/p4_app/p4/sim build sim-all
     - make -C examples/p4_only/p4/sim sim-all
     - make -C examples/p4_and_verilog/p4/sim build sim-all
@@ -38,6 +39,7 @@ p4bm:
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
+      - src/p4_proc/p4/sim
       - src/p4_app/p4/sim
       - examples/p4_only/p4/sim
       - examples/p4_and_verilog/p4/sim
@@ -50,6 +52,8 @@ sim_p4_apps:
   tags:
     - ht-sim
   script:
+    - make -C src/p4_proc/tests/regression
+    - grep 'PASSED.*suites passing' src/p4_proc/tests/regression/run_$SEED/sim.log
     - make -C src/p4_app/tests/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_$SEED/sim.log
     - make -C src/p4_app/tests.smartnic_322mhz/regression
@@ -60,6 +64,7 @@ sim_p4_apps:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
+        - src/p4_proc/tests/regression/run_*/tests.xml
         - src/p4_app/tests/regression/run_*/tests.xml
         - src/p4_app/tests.smartnic_322mhz/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
