@@ -125,7 +125,8 @@ esnet-smartnic-hw/
 ├── paths.mk
 ├── README.md
 ├── scripts/
-└── src/
+├── src/
+└── test/
 
 cfg/
   Contains global configuration files for the SmartNIC project.
@@ -173,6 +174,10 @@ scripts/
 src/
   Contains RTL source and verification code for SmartNIC platform FPGA design components,
   captured in System Verilog.
+
+test/
+  Contains Robot Framework test suite files and Python library code for SmartNIC platform FPGA
+  functional testing on hardware. Tests are executed within containers built by esnet-smartnic-fw.
 ```
 
 
