@@ -18,7 +18,7 @@ P4_OBJECT_TEST = ../$(P4_OBJECT)
 P4BM_DIR = test-default
 
 # Directories to use for p4bm simulation
-P4BM_DIRS = test-default test-default-w-drops test-fwd-p0 test-pkt-loopback
+P4BM_DIRS = test-default test-default-w-drops test-fwd-p0 test-fwd-p1 test-fwd-p3 test-pkt-loopback
 
 # Directories to use for system verilog simulation
 SVH_DIRS = test-default test-default-w-drops test-fwd-p0
@@ -47,7 +47,8 @@ DIFF_PCAP = diff.pcap
 # Where to get executables (particularly if they're not in $PATH)
 P4C_VITISNET = p4c-vitisnet
 RUN_P4BM_VITISNET = run-p4bm-vitisnet
-RUN_P4BM_OPTIONS  = -d
+#RUN_P4BM_OPTIONS  = -d
+RUN_P4BM_OPTIONS  =
 TCPDUMP = tcpdump
 
 # Use a locally-modified version of pcap_diff that can compare

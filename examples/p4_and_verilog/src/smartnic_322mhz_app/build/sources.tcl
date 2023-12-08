@@ -16,6 +16,7 @@ read_verilog -quiet -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axis/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4l/rtl/src/*_pkg.sv ]
+read_verilog -quiet -sv [glob $lib_root/src/arb/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/axi4s/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/fifo/rtl/src/*_pkg.sv ]
 

@@ -131,7 +131,6 @@ module smartnic_322mhz
    axi4l_intf   axil_to_app_decoder         ();
    axi4l_intf   axil_to_app                 ();
    axi4l_intf   axil_to_sdnet               ();
-   axi4l_intf   axil_to_split_join          ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
    axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
@@ -158,7 +157,6 @@ module smartnic_322mhz
 
    axi4l_intf   axil_to_drops_from_igr_sw          ();
    axi4l_intf   axil_to_drops_from_bypass          ();
-   axi4l_intf   axil_to_drops_from_app0            ();
 
    smartnic_322mhz_reg_intf   smartnic_322mhz_regs ();
 
@@ -220,11 +218,9 @@ module smartnic_322mhz
       .probe_to_bypass_axil_if         (axil_to_probe_to_bypass),
       .drops_from_igr_sw_axil_if       (axil_to_drops_from_igr_sw),
       .drops_from_bypass_axil_if       (axil_to_drops_from_bypass),
-      .drops_from_app0_axil_if         (axil_to_drops_from_app0),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
-      .axi4s_split_join_axil_if        (axil_to_split_join),
       .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
@@ -534,10 +530,6 @@ module smartnic_322mhz
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_app__demarc [2] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_drop ();
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_trunc ();
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    __axis_app_to_core [2] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_app_to_core [2] ();
@@ -829,50 +821,6 @@ module smartnic_322mhz
    assign axis_core_to_app[0].tdest[2] = '0;
    assign axis_core_to_app[1].tdest[2] = '0;
 
-   // axi4s_split_join instantiation (separates and recombines packet headers).
-   axi4s_split_join #(
-     .BIGENDIAN(0)
-   ) axi4s_split_join_0 (
-     .axi4s_in      (axis_core_to_app[0]),
-     .axi4s_out     (axis_to_drop),
-     .axi4s_hdr_out (axis_to_app__demarc[0]),
-     .axi4s_hdr_in  (axis_from_app__demarc[0]),
-     .axil_if       (axil_to_split_join),
-     .hdr_length    (smartnic_322mhz_regs.hdr_length[15:0])
-   );
-
-   // packet drop logic, which deletes:
-   // zero-length packets (when vitisnetp4 core emits dropped headers), and
-   // packets that have tdest == tid (to prevent switching loops).
-   logic  zero_length, loop_detect, drop_pkt;
-
-   assign zero_length = axis_to_drop.tvalid && axis_to_drop.sop && axis_to_drop.tlast &&
-                        axis_to_drop.tkeep == '0;
-
-   assign loop_detect = smartnic_322mhz_regs.switch_config.drop_pkt_loop && axis_to_drop.tvalid && axis_to_drop.sop &&
-                        axis_to_drop.tdest == axis_to_drop.tid;
-
-   assign drop_pkt = zero_length || loop_detect;
-
-   // axi4s drop pkt instantiation.
-   axi4s_drop axi4s_drop_0 (
-      .axi4s_in    (axis_to_drop),
-      .axi4s_out   (axis_to_trunc),
-      .axil_if     (axil_to_drops_from_app0),
-      .drop_pkt    (drop_pkt)
-   );
-
-   logic [15:0] trunc_length;
-   assign trunc_length = axis_to_trunc.tuser.trunc_enable ? axis_to_trunc.tuser.trunc_length : '1;
-
-   axi4s_trunc #(
-      .BIGENDIAN(0), .OUT_PIPE(1)
-   ) axi4s_trunc_0 (
-      .axi4s_in(axis_to_trunc),
-      .axi4s_out(__axis_app_to_core[0]),
-      .length(trunc_length)
-   );
-
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_app_to_core  (.axis_in(__axis_app_to_core[0]));
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
@@ -954,9 +902,11 @@ module smartnic_322mhz
    );
 
 
+   axi4s_intf_pipe axis_core_to_app_pipe_0 (.axi4s_if_from_tx(axis_core_to_app[0]),      .axi4s_if_to_rx(axis_to_app__demarc[0]));
+   axi4s_intf_pipe axis_app_to_core_pipe_0 (.axi4s_if_from_tx(axis_from_app__demarc[0]), .axi4s_if_to_rx(__axis_app_to_core[0]));
 
-   axi4s_intf_pipe axis_core_to_app_pipe (.axi4s_if_from_tx(axis_core_to_app[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1]));
-   axi4s_intf_pipe axis_app_to_core_pipe (.axi4s_if_from_tx(axis_from_app__demarc[1]), .axi4s_if_to_rx(__axis_app_to_core[1]));
+   axi4s_intf_pipe axis_core_to_app_pipe_1 (.axi4s_if_from_tx(axis_core_to_app[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1]));
+   axi4s_intf_pipe axis_app_to_core_pipe_1 (.axi4s_if_from_tx(axis_from_app__demarc[1]), .axi4s_if_to_rx(__axis_app_to_core[1]));
 
 
    // axis_app_to_core[0] pipe.
@@ -1183,8 +1133,6 @@ module smartnic_322mhz
     .axis_to_switch_0_tid    ( axis_from_app[0].tid ),
     .axis_to_switch_0_tdest  ( axis_from_app[0].tdest ),
     .axis_to_switch_0_tuser_pid ( axis_from_app_tuser[0].pid ),
-    .axis_to_switch_0_tuser_trunc_enable ( axis_from_app_tuser[0].trunc_enable ),
-    .axis_to_switch_0_tuser_trunc_length ( axis_from_app_tuser[0].trunc_length ),
     .axis_to_switch_0_tuser_rss_enable  ( axis_from_app_tuser[0].rss_enable ),
     .axis_to_switch_0_tuser_rss_entropy ( axis_from_app_tuser[0].rss_entropy ),
     // AXI-S data interface (from switch output 1, to app)
@@ -1205,8 +1153,6 @@ module smartnic_322mhz
     .axis_to_switch_1_tid    ( axis_from_app[1].tid ),
     .axis_to_switch_1_tdest  ( axis_from_app[1].tdest ),
     .axis_to_switch_1_tuser_pid ( axis_from_app_tuser[1].pid ),
-    .axis_to_switch_1_tuser_trunc_enable ( axis_from_app_tuser[1].trunc_enable ),
-    .axis_to_switch_1_tuser_trunc_length ( axis_from_app_tuser[1].trunc_length ),
     .axis_to_switch_1_tuser_rss_enable  ( axis_from_app_tuser[1].rss_enable ),
     .axis_to_switch_1_tuser_rss_entropy ( axis_from_app_tuser[1].rss_entropy ),
     // egress flow control interface

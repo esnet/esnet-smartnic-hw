@@ -24,10 +24,10 @@ module tb;
     axi4l_intf axil_if       ();
     axi4l_intf axil_to_sdnet ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_if ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_if ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_to_adpt ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_from_adpt ();
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [2] ();
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [2] ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
@@ -38,10 +38,8 @@ module tb;
         .timestamp           ( timestamp ),
         .axil_if             ( axil_if ),
         .axil_to_sdnet       ( axil_to_sdnet ),
-        .axis_from_switch_0  ( axis_in_if ),
-        .axis_to_switch_0    ( axis_out_if ),
-        .axis_to_switch_1    ( axis_to_adpt ),
-        .axis_from_switch_1  ( axis_from_adpt ),
+        .axis_from_switch    ( axis_in_if ),
+        .axis_to_switch      ( axis_out_if ),
         .axi_to_hbm          ( axi_to_hbm )
     );
 
@@ -86,11 +84,11 @@ module tb;
     assign timestamp = timestamp_if.timestamp;
 
     // Assign AXI-S input clock/reset
-    assign axis_in_if.aclk = clk;
-    assign axis_in_if.aresetn = rstn;
+    assign axis_in_if[0].aclk = clk;
+    assign axis_in_if[0].aresetn = rstn;
 
-    assign axis_from_adpt.aclk = clk;
-    assign axis_from_adpt.aresetn = rstn;
+    assign axis_in_if[1].aclk = clk;
+    assign axis_in_if[1].aresetn = rstn;
 
     //===================================
     // Build
@@ -106,10 +104,10 @@ module tb;
             env.timestamp_vif = timestamp_if;
             env.axil_vif = axil_if;
             env.axil_sdnet_vif = axil_to_sdnet;
-            env.axis_in_vif = axis_in_if;
-            env.axis_out_vif = axis_out_if;
-            env.axis_to_adpt_vif = axis_to_adpt;
-            env.axis_from_adpt_vif = axis_from_adpt;
+            env.axis_in_vif[0]  = axis_in_if[0];
+            env.axis_out_vif[0] = axis_out_if[0];
+            env.axis_in_vif[1]  = axis_in_if[1];
+            env.axis_out_vif[1] = axis_out_if[1];
 
             env.axi_to_hbm_vif = axi_to_hbm;
 

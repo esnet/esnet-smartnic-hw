@@ -1,7 +1,7 @@
 `include "svunit_defines.svh"
 
 import tb_pkg::*;
-import p4_app_verif_pkg::*;
+import p4_proc_verif_pkg::*;
 
 //===================================
 // (Failsafe) timeout
@@ -35,8 +35,11 @@ module p4_app_datapath_unit_test
     // VitisNetP4 table agent
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
-    // p4_app register agent
-    p4_app_reg_agent  p4_app_reg_agent;
+    // p4_proc register agent and variables
+    p4_proc_reg_agent  p4_proc_reg_agent;
+
+    p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
+    p4_proc_reg_pkg::reg_trunc_config_t    trunc_config;
 
     wire [11:0] rss_entropy [2];
     assign rss_entropy[0] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
@@ -66,7 +69,7 @@ module p4_app_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agent
-        p4_app_reg_agent = new("p4_app_reg_agent", env.reg_agent, 'h80000);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'h84000);
     endfunction
 
     //===================================
@@ -103,23 +106,23 @@ module p4_app_datapath_unit_test
                  src_port = 2'h2; dst_port = 2'h2;
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .dest_port(dst_port) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .out_port(dst_port) );
 
                  // redirect traffic to dst_port=HOST_1.
                  dst_port = 2'h3;
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .dest_port(dst_port) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .out_port(dst_port) );
 
                  // relabel source traffic from src_port=HOST_1.
                  src_port = 2'h3;
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .dest_port(dst_port) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .out_port(dst_port) );
 
                  // redirect traffic to dst_port=HOST_0.
                  dst_port = 2'h2;
                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .dest_port(dst_port) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .out_port(dst_port) );
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
@@ -138,21 +141,33 @@ module p4_app_datapath_unit_test
        `SVTEST_END
 
        `SVTEST(test_pkt_loopback)
-           run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(0) );
+           run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0) );
        `SVTEST_END
 
        `SVTEST(test_egr_pkt_trunc)
-           p4_app_reg_pkg::reg_trunc_config_t  trunc_config;
-
-           repeat (3) begin
-              // Write trunc_config register
+           repeat (1) begin
+              // Write trunc_config register and run pkt test.
               trunc_config.enable = 1'b1;
               trunc_config.trunc_enable = 1'b1;
               trunc_config.trunc_length = $urandom_range(65,500);
-              p4_app_reg_agent.write_trunc_config(trunc_config);
+              p4_proc_reg_agent.write_trunc_config(trunc_config);
 
-              run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(0), .max_pkt_size(trunc_config.trunc_length) );
+              run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0), .max_pkt_size(trunc_config.trunc_length) );
            end
+       `SVTEST_END
+
+       `SVTEST(test_traffic_mux)
+           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
+           //write_p4_tables ( .testdir("test-fwd-p1") );
+           fork
+              // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
+              run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(1), .out_port(1) );
+
+              // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
+              // (without re-programming the p4 tables).
+              @(posedge tb.axis_in_if[1].tvalid)
+                run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_port(0), .out_port(0), .write_p4_tables(0) );
+           join
        `SVTEST_END
 
        `include "../../p4/sim/run_pkt_test_incl.svh"
@@ -179,7 +194,7 @@ endmodule
     test.run();\
   endtask
 
-/*
+
 module p4_app_datapath_hdrlen_0_unit_test;
 `P4_APP_DATAPATH_UNIT_TEST(0)
 endmodule
@@ -187,8 +202,8 @@ endmodule
 module p4_app_datapath_hdrlen_64_unit_test;
 `P4_APP_DATAPATH_UNIT_TEST(64)
 endmodule
-*/
 
 module p4_app_datapath_hdrlen_256_unit_test;
 `P4_APP_DATAPATH_UNIT_TEST(256)
 endmodule
+

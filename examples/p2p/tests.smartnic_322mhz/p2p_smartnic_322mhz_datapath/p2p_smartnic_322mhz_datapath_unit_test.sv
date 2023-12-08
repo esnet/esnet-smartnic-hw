@@ -182,7 +182,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
                #10us
                check_probe (.base_addr(PROBE_CORE_TO_APP0), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
                check_probe (.base_addr(PROBE_APP0_TO_CORE), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-               check_probe (.base_addr(DROPS_FROM_APP0), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+//               check_probe (.base_addr(DROPS_FROM_APP0), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
                check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
                                     .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
                                     .ovfl_mode(2) );

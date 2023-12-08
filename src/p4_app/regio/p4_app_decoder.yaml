@@ -4,8 +4,17 @@ blocks:
   p4_app: &p4_app
     !include ../src/p4_app/regio/p4_app.yaml
 
+decoders:
+  p4_proc_decoder: &p4_proc_decoder
+    !include ../src/p4_proc/regio/p4_proc_decoder.yaml
+
 interfaces:
   - block: *p4_app
     address: 0x0000
-    width: 12
+    width: 10
     name: p4_app
+
+  - decoder: *p4_proc_decoder
+    address: 0x04000
+    width: 14
+    name: p4_proc

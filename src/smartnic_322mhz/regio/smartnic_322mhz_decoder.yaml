@@ -13,8 +13,6 @@ decoders:
     !include ../src/smartnic_322mhz/regio/smartnic_322mhz_app_sdnet_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
-  axi4s_split_join_decoder: &axi4s_split_join_decoder
-    !include src/axi4s/regio/axi4s_split_join_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
     !include ../src/smartnic_322mhz/regio/xilinx_hbm_0_decoder.yaml
   xilinx_hbm_1: &xilinx_hbm_1
@@ -147,20 +145,10 @@ interfaces:
     width: 10
     name: drops_from_bypass
 
-  - block: *axi4s_probe
-    address: 0x0dc00
-    width: 10
-    name: drops_from_app0
-
   - decoder: *fifo
     address: 0x0e000
     width: 10
     name: fifo_to_host_0
-
-  - decoder: *axi4s_split_join_decoder
-    address: 0x0e400
-    width: 10
-    name: axi4s_split_join
 
   - decoder: *xilinx_hbm_0
     address: 0x10000

@@ -407,10 +407,8 @@ module smartnic_322mhz_app
         .axil_if       ( axil_if ),
         .axil_to_sdnet ( axil_sdnet_if ),
 
-        .axis_to_switch_0    ( axis_to_switch[0] ),
-        .axis_from_switch_0  ( axis_from_switch[0] ),
-        .axis_to_switch_1    ( axis_to_switch[1] ),
-        .axis_from_switch_1  ( axis_from_switch[1] ),
+        .axis_to_switch   ( axis_to_switch ),
+        .axis_from_switch ( axis_from_switch ),
 
         .axi_to_hbm    ( axi_to_hbm )
     );
