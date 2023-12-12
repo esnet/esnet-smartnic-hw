@@ -71,7 +71,8 @@ EARLY_CXXFLAGS = -DBMLOG_DEBUG_ON -DBMLOG_TRACE_ON
 INCLUDES = -isystem $(XILINX_VIVADO)/tps/lnx64/gcc-6.2.0/include \
 			-I$(XILINX_HLS)/include \
 			-I$(XILINX_VIVADO)/tps/boost_1_72_0 \
-			-I./include \
+			-I$(XILINX_VIVADO)/examples/vitis_net_p4_examples/user_externs/include \
+			-I$(XILINX_VIVADO)/examples/vitis_net_p4_examples/user_externs/include/spdlog \
 			-I/usr/include/$(TARGET_ARCH)
 LATE_CXXFLAGS = -Wall -Wextra -fPIC -pthread -g -O2 -B/usr/lib/$(TARGET_ARCH)
 
