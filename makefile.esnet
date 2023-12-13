@@ -33,7 +33,7 @@ bitstream_usr_access ?= $(bitstream_userid)
 
 jobs ?= 32
 
-max_pkt_len   ?= 1518
+max_pkt_len   ?= 9100
 vivado_tclargs = -board $(BOARD) -jobs $(jobs) -tag $(BUILD_NAME) -user_plugin $(plugin_dir)  -num_phys_func 2 -num_cmac_port 2 -num_queue 512 \
 	         -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -max_pkt_len $(max_pkt_len)
 

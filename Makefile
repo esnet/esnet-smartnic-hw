@@ -17,7 +17,7 @@ include $(PROJ_ROOT)/scripts/app_config.mk
 ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
 # Build options
-max_pkt_len ?= 1518
+max_pkt_len ?= 9100
 jobs ?= 16
 
 #------- Targets -------
