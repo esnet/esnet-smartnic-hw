@@ -124,8 +124,8 @@
                              // Monitor received packets on port 0 (CMAC_0).
                              env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
-                             debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
-                                                  rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
+                             debug_msg( $sformatf( "      Port %0d. Receiving packet # %0d (of %0d)...",
+                                                  out_port, rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
                              debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                              compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1], max_pkt_size);
                             `FAIL_IF_LOG( dest != out_port,

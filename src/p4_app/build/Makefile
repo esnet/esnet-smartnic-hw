@@ -32,6 +32,11 @@ REG_DECODER_YAML := \
 REGIO_ELABORATE_OPTS :=
 REGIO_GENERATE_OPTS := --recursive
 
+# -----------------------------------------------
+# vitisnetp4 options
+# -----------------------------------------------
+EXTERN_PORTS ?= False
+
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
@@ -39,8 +44,8 @@ all: opt
 
 ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.xilinx_ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=vitisnetp4.xilinx_ip
-.PHONY: ip
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) EXTERN_PORTS=$(EXTERN_PORTS) COMPONENT=vitisnetp4.xilinx_ip
+.PHONY: ip trial
 
 pre_synth: _reg_rtl ip
 synth:     _synth
