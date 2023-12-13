@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description='Generate vitisnet component helper
 parser.add_argument ('json_file', help='vitisnet json specification')
 parser.add_argument ('--template-dir', '-t', default='.', help='location of Jinja2 template files')
 parser.add_argument ('--out_dir', '-o', default='.', help='output directory for generated files')
+parser.add_argument ('--extern_ports', '-e', default=False, help='specifies whether to include extern ports in wrapper interface')
 
 args = parser.parse_args()
 
@@ -64,6 +65,9 @@ props['hbm_axi_if_data_wid'] = int(get_param_value('M_AXI_HBM_DATA_WIDTH'))
 # CAM mem clock
 props['cam_mem_clk_en'] = bool(get_param_value('CAM_MEM_CLK_ENABLE'))
 props['cam_mem_clk_freq_mhz'] = float(get_param_value('CAM_MEM_CLK_FREQ_MHZ'))
+
+# Extern ports
+props['extern_ports'] = bool(args.extern_ports=='True')
 
 # Write SV file according to Jinja2 template
 env = Environment(loader=FileSystemLoader(args.template_dir))
