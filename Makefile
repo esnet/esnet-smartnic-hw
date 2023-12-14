@@ -67,16 +67,16 @@ bitfile : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo "Generating smartnic platform IP..."
 	@$(MAKE) -s -C $(APP_ROOT)/app_if
-	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT)
-	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
 	@echo "Generating smartnic bitfile..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
 
 package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME)..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
 
 clean_build :
 ifneq ($(wildcard $(APP_DIR)/app_if),)
