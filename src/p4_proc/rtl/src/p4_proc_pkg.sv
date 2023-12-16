@@ -50,6 +50,7 @@ package p4_proc_pkg;
     } egr_tdest_t;
 
     typedef struct packed {
+        timestamp_t  timestamp;
         logic [15:0] pid;
         logic        trunc_enable;
         logic [15:0] trunc_length;
