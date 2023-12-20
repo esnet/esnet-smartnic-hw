@@ -1,6 +1,5 @@
 # Smartnic platform
 create_pblock       pblock_smartnic_platform
-add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/reset_inst"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/axis_switch_ingress"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/axis_switch_egress"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/g__fifo*"]
@@ -16,6 +15,7 @@ resize_pblock       pblock_smartnic_platform -add {SLR2}
 
 # Smartnic app core
 create_pblock       pblock_smartnic_appcore
+add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/reset_inst"]
 add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic_322mhz/smartnic_322mhz_app*"]
 resize_pblock       pblock_smartnic_appcore -add {SLR1}
 
