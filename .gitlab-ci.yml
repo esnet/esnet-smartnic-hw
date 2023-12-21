@@ -6,6 +6,7 @@ stages:
   - rtl_sim
   - ip
   - bitfile
+  - validate
   - package
   - trigger_downstream
 
@@ -155,7 +156,6 @@ smartnic_ip_au250:
         bitfile.env
     expire_in: 2 weeks
   timeout: 8h
-  needs: []
   except:
       - schedules
 
@@ -222,6 +222,53 @@ build_vanilla_ons:
   rules:
     - when: manual
       allow_failure: true
+
+.validate:
+  stage: validate
+  extends: .common
+  tags:
+    - ht-misc
+  variables:
+    VALIDATE_WNS_MIN: "-0.100"
+    VALIDATE_TNS_MIN: "-100.0"
+  script:
+    - make -s validate BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+  artifacts:
+    reports:
+      junit:
+        - open-nic-shell/build/${SN_HW_BOARD}_open-nic-ci/build_summary.xml
+  timeout: 30m
+  rules:
+    - allow_failure: true
+
+validate_p4_and_verilog:
+  extends: .validate
+  needs:
+    - build_p4_and_verilog
+
+validate_p2p:
+  extends: .validate
+  needs:
+    - build_p2p
+
+validate_p4_only_u280:
+  extends: .validate
+  variables:
+    VALIDATE_WNS_MIN: "-0.250"
+    VALIDATE_TNS_MIN: "-500.0"
+  needs:
+    - build_p4_only_u280
+
+validate_p4_only_u55c:
+  extends: .validate
+  variables:
+  needs:
+    - build_p4_only_u55c
+
+validate_p4_with_extern:
+  extends: .validate
+  needs:
+    - build_p4_with_extern
 
 .hwapi:
   stage: package
