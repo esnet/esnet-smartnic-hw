@@ -1,9 +1,3 @@
-# Fully automated full chip assembly done from here.
-#
-#  Yatish Kumar
-#  Apr 2021
-#----------------------------------------------------
-
 # Configure project paths
 PROJ_ROOT := $(CURDIR)
 include $(PROJ_ROOT)/config.mk
@@ -36,6 +30,9 @@ jobs ?= 32
 max_pkt_len   ?= 9100
 vivado_tclargs = -board $(BOARD) -jobs $(jobs) -tag $(BUILD_NAME) -num_phys_func 2 -num_cmac_port 2 -num_queue 512 \
 	         -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -max_pkt_len $(max_pkt_len)
+
+VALIDATE_WNS_MIN ?= 0
+VALIDATE_TNS_MIN ?= 0
 
 help :	
 	@echo "make init_open_nic_build   -- Invoke this to create a shell build with build_name = $(open_nic_build)"
@@ -103,8 +100,9 @@ package :
 	   --output-file $(artifact_dir)/regmap/esnet-smartnic-top-ir.yaml \
 	   $(artifact_dir)/regmap/spec/esnet-smartnic-top.yaml
 	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit $(artifact_dir)/firmware/esnet-smartnic.bit
-	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs	
+	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs
 	-@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/*.ltx $(artifact_dir)/firmware
+	-@cp $(open_nic_build)/build_summary.json $(artifact_dir)/firmware
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@( cd $(artifact_dir)/.. && \
 	   echo "packing artifact zip file artifacts.$(BOARD).$(BUILD_NAME).0.zip" && \
@@ -140,6 +138,14 @@ vanilla_bitfile : config_check
 	mkdir vanilla_artifact
 	cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs vanilla_artifact
 	cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit vanilla_artifact
+
+validate_build:
+	@# Summarize timing report
+	@$(SCRIPTS_ROOT)/vivado/gen_summary.py $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell_timing_summary_routed.rpt \
+		--build-name $(BOARD)_$(BUILD_NAME) --summary-json-file $(open_nic_build)/build_summary.json
+	@# Check timing against specified thresholds; generate JUnit XML file as output
+	@$(SCRIPTS_ROOT)/vivado/check_timing.py $(open_nic_build)/build_summary.json --junit-xml-file $(open_nic_build)/build_summary.xml \
+		--wns-min $(VALIDATE_WNS_MIN) --tns-min $(VALIDATE_TNS_MIN)
 
 clean_build:
 	@rm -rf $(open_nic_build)

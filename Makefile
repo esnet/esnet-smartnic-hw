@@ -16,6 +16,9 @@ include $(PROJ_ROOT)/scripts/app_config.mk
 
 ARTIFACTS_BUILD_DIR := $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
+VALIDATE_WNS_MIN ?= 0
+VALIDATE_TNS_MIN ?= 0
+
 # Build options
 max_pkt_len ?= 9100
 jobs ?= 16
@@ -78,6 +81,11 @@ package : | $(ARTIFACTS_BUILD_DIR)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
 
+validate: | $(ARTIFACTS_BUILD_DIR)
+	@$(MAKE) -s -C $(PROJ_ROOT) -f makefile.esnet validate_build \
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) \
+		VALIDATE_WNS_MIN=$(VALIDATE_WNS_MIN) VALIDATE_TNS_MIN=$(VALIDATE_TNS_MIN)
+
 clean_build :
 ifneq ($(wildcard $(APP_DIR)/app_if),)
 	@-$(MAKE) -s -C $(APP_DIR)/app_if clean
@@ -89,7 +97,6 @@ clean_artifacts :
 	@-rm -rf $(ARTIFACTS_BUILD_DIR)
 
 .PHONY : config example bitfile package clean_build clean_artifacts
-
 
 $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
 	@mkdir $(ARTIFACTS_BUILD_DIR)
