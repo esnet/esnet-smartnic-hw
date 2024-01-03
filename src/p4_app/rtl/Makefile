@@ -42,6 +42,8 @@ COMPILE_OPTS=
 ELAB_OPTS=--debug typical
 SIM_OPTS=
 
+EXTERN_PORTS ?= False
+
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------

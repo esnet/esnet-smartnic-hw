@@ -1,11 +1,20 @@
 module p4_proc
     import p4_proc_pkg::*;
 #(
-    parameter int N = 2  // Number of processor ports.
+    parameter int   N = 2,                // Number of processor ports.
+    parameter bit   EXTERN_PORTS = 0,     // 1: Connects extern ports to wrapper, 0: Ties off extern ports
+    parameter type  USER_EXTERN_OUT_T   = bit,
+    parameter type  USER_EXTERN_IN_T    = bit,
+    parameter type  USER_EXTERN_VALID_T = bit
 ) (
     input logic        core_clk,
     input logic        core_rstn,
     input timestamp_t  timestamp,
+
+    output USER_EXTERN_OUT_T    user_extern_out,
+    output USER_EXTERN_VALID_T  user_extern_out_valid,
+    input  USER_EXTERN_IN_T     user_extern_in,
+    input  USER_EXTERN_VALID_T  user_extern_in_valid,
 
     axi4l_intf.peripheral axil_if,
     axi4l_intf.peripheral axil_to_sdnet,
@@ -18,14 +27,20 @@ module p4_proc
     import axi4s_pkg::*;
     import arb_pkg::*;
 
+    // -------------------------------------------------
+    // Parameter checking
+    // -------------------------------------------------
+    initial std_pkg::param_check_gt(N, 1, "N");
+    initial std_pkg::param_check_lt(N, 2, "N");
+
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
     axi4l_intf  axil_to_p4_proc ();
     axi4l_intf  axil_to_p4_proc__core_clk ();
 
-    axi4l_intf  axil_to_drops[N] ();
-    axi4l_intf  axil_to_split_join[N] ();
+    axi4l_intf  axil_to_drops[2] ();
+    axi4l_intf  axil_to_split_join[2] ();
 
     p4_proc_reg_intf  p4_proc_regs[2] ();
 
@@ -72,19 +87,24 @@ module p4_proc
 
     logic [15:0] trunc_length[N];
 
-    tuser_smartnic_meta_t  axis_from_split_join_tuser[N];
+    tuser_smartnic_meta_t  _axis_from_switch_tuser[N];
+    tuser_smartnic_meta_t  _axis_from_split_join_tuser[N];
+    tuser_smartnic_meta_t  axis_to_sdnet_tuser;
     tuser_smartnic_meta_t  axis_from_sdnet_tuser;
 
-    axi4s_intf  #( .TUSER_T(logic [9:0]),
+    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_switch[N] ();
+
+    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join[N] ();
 
     axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_split_join[N] ();
 
-    axi4s_intf  #( .TUSER_T(logic [9:0]),
+    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        _axis_to_sdnet ();
 
-    axi4s_intf  #( .TUSER_T(logic [9:0]),
+    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        axis_to_sdnet ();
 
     axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
@@ -104,12 +124,35 @@ module p4_proc
     //  per port functionality.  pkt split-join, drop and truncation logic.
     // --------------------------------------------------------------------
     generate for (genvar i = 0; i < N; i += 1) begin : g__proc_port
+        // add timestamp to tuser signal.
+        assign _axis_from_switch[i].aclk         = axis_from_switch[i].aclk;
+        assign _axis_from_switch[i].aresetn      = axis_from_switch[i].aresetn;
+        assign _axis_from_switch[i].tvalid       = axis_from_switch[i].tvalid;
+        assign _axis_from_switch[i].tlast        = axis_from_switch[i].tlast;
+        assign _axis_from_switch[i].tkeep        = axis_from_switch[i].tkeep;
+        assign _axis_from_switch[i].tdata        = axis_from_switch[i].tdata;
+        assign _axis_from_switch[i].tid          = axis_from_switch[i].tid;
+        assign _axis_from_switch[i].tdest        = axis_from_switch[i].tdest;
+
+        always_comb begin
+             _axis_from_switch_tuser[i] = axis_from_switch[i].tuser;
+             _axis_from_switch_tuser[i].timestamp = timestamp;
+             _axis_from_switch[i].tuser           = _axis_from_switch_tuser[i];
+        end
+//        assign _axis_from_switch_tuser[i].timestamp = timestamp;
+//        assign _axis_from_switch_tuser[i].pid[8:0]  = axis_from_switch_tuser[i].pid[8:0];
+//        assign _axis_from_switch_tuser[i].pid[9]    = i;
+//        assign _axis_from_switch[i].tuser           = _axis_from_switch_tuser[i];
+
+        assign axis_from_switch[i].tready = _axis_from_switch[i].tready;
+
+
         // axi4s_split_join instantiation (separates and recombines packet headers).
         axi4s_split_join #(
             .BIGENDIAN  (0),
             .FIFO_DEPTH (512)
         ) axi4s_split_join_inst (
-            .axi4s_in      (axis_from_switch[i]),
+            .axi4s_in      (_axis_from_switch[i]),
             .axi4s_out     (axis_to_drop[i]),
             .axi4s_hdr_out (axis_from_split_join[i]),
             .axi4s_hdr_in  (axis_to_split_join[i]),
@@ -117,9 +160,8 @@ module p4_proc
             .hdr_length    (p4_proc_regs[1].p4_proc_config.hdr_length)
         );
 
-        // extract tuser signals for SDnet processor ingress.
-        assign axis_from_split_join_tuser[i] = axis_from_split_join[i].tuser;
 
+        // add proc_port to tuser pid signal.
         assign _axis_from_split_join[i].aclk        = axis_from_split_join[i].aclk;
         assign _axis_from_split_join[i].aresetn     = axis_from_split_join[i].aresetn;
         assign _axis_from_split_join[i].tvalid      = axis_from_split_join[i].tvalid;
@@ -128,10 +170,15 @@ module p4_proc
         assign _axis_from_split_join[i].tdata       = axis_from_split_join[i].tdata;
         assign _axis_from_split_join[i].tid         = axis_from_split_join[i].tid;
         assign _axis_from_split_join[i].tdest       = axis_from_split_join[i].tdest;
-        assign _axis_from_split_join[i].tuser[8:0]  = axis_from_split_join_tuser[i].pid[8:0];
-        assign _axis_from_split_join[i].tuser[9]    = i;
+
+        always_comb begin
+             _axis_from_split_join_tuser[i] = axis_from_split_join[i].tuser;
+             _axis_from_split_join_tuser[i].pid[9] = i;
+             _axis_from_split_join[i].tuser = _axis_from_split_join_tuser[i];
+        end
 
         assign axis_from_split_join[i].tready = _axis_from_split_join[i].tready;
+ 
 
         // packet drop logic.  deletes zero-length packets, and packets with tdest == tid i.e. switching loops.
         assign zero_length[i] = axis_to_drop[i].tvalid && axis_to_drop[i].sop && axis_to_drop[i].tlast &&
@@ -152,6 +199,7 @@ module p4_proc
             .drop_pkt    (drop_pkt[i])
         );
 
+
         // pkt trunc logic.  truncates pkt length based on (p4-driven) tuser meta data.
         assign trunc_length[i] = axis_to_trunc[i].tuser.trunc_enable ? axis_to_trunc[i].tuser.trunc_length : '1;
 
@@ -168,38 +216,72 @@ module p4_proc
     endgenerate
 
 
+    // ----------------------------------------------------------------
+    // axi4s mux and demux logic for N > 1, or connection logic for N = 1.
+    // ----------------------------------------------------------------
+    generate
+    if (N > 1) begin
+        // --- hdr if muxing logic ---
+        axi4s_mux #(.N(N)) axi4s_mux_0 (
+            .axi4s_in (_axis_from_split_join),
+            .axi4s_out(_axis_to_sdnet)
+        );
+
+        // gate tready and tvalid with tpause register (used for test purposes).
+        assign axis_to_sdnet.aclk    = _axis_to_sdnet.aclk;
+        assign axis_to_sdnet.aresetn = _axis_to_sdnet.aresetn;
+        assign axis_to_sdnet.tvalid  = _axis_to_sdnet.tvalid && !p4_proc_regs[1].tpause;
+        assign axis_to_sdnet.tlast   = _axis_to_sdnet.tlast;
+        assign axis_to_sdnet.tkeep   = _axis_to_sdnet.tkeep;
+        assign axis_to_sdnet.tdata   = _axis_to_sdnet.tdata;
+        assign axis_to_sdnet.tid     = _axis_to_sdnet.tid;
+        assign axis_to_sdnet.tdest   = _axis_to_sdnet.tdest;
+        assign axis_to_sdnet.tuser   = _axis_to_sdnet.tuser;
+
+        assign _axis_to_sdnet.tready = axis_to_sdnet.tready  && !p4_proc_regs[1].tpause;
+
+        // --- demux to egress hdr interfaces ---
+        axi4s_intf_1to2_demux axi4s_intf_1to2_demux_0 (
+            .axi4s_in   (axis_from_sdnet),
+            .axi4s_out0 (axis_to_split_join[0]),
+            .axi4s_out1 (axis_to_split_join[1]),
+            .output_sel (axis_from_sdnet_proc_port)
+        );
+    end else begin // N <= 1
+        // gate tready and tvalid with tpause register (used for test purposes).
+        assign axis_to_sdnet.aclk    = axis_from_split_join[0].aclk;
+        assign axis_to_sdnet.aresetn = axis_from_split_join[0].aresetn;
+        assign axis_to_sdnet.tvalid  = axis_from_split_join[0].tvalid && !p4_proc_regs[1].tpause;
+        assign axis_to_sdnet.tlast   = axis_from_split_join[0].tlast;
+        assign axis_to_sdnet.tkeep   = axis_from_split_join[0].tkeep;
+        assign axis_to_sdnet.tdata   = axis_from_split_join[0].tdata;
+        assign axis_to_sdnet.tid     = axis_from_split_join[0].tid;
+        assign axis_to_sdnet.tdest   = axis_from_split_join[0].tdest;
+        assign axis_to_sdnet.tuser   = axis_from_split_join[0].tuser;
+
+        assign axis_from_split_join[0].tready = axis_to_sdnet.tready  && !p4_proc_regs[1].tpause;
+
+        axi4s_intf_connector axi4s_intf_connector_0 (.axi4s_from_tx(axis_from_sdnet), .axi4s_to_rx(axis_to_split_join[0]));
+
+        axi4l_intf_peripheral_term axi4l_to_split_join_1_peripheral_term (.axi4l_if(axil_to_split_join[1]));
+        axi4l_intf_peripheral_term axi4l_to_drops_1_peripheral_term (.axi4l_if(axil_to_drops[1]));
+    end
+    endgenerate
+
 
     // ----------------------------------------------------------------
     // The SDnet block and supporting logic.
     // ----------------------------------------------------------------
-    // --- hdr if muxing logic ---
-    axi4s_mux #(.N(N)) axi4s_mux_0 (
-        .axi4s_in (_axis_from_split_join),
-        .axi4s_out(_axis_to_sdnet)
-    );
-
-    // gate tready and tvalid with tpause register (used for test purposes).
-    assign axis_to_sdnet.aclk    = _axis_to_sdnet.aclk;
-    assign axis_to_sdnet.aresetn = _axis_to_sdnet.aresetn;
-    assign axis_to_sdnet.tvalid  = _axis_to_sdnet.tvalid && !p4_proc_regs[1].tpause;
-    assign axis_to_sdnet.tlast   = _axis_to_sdnet.tlast;
-    assign axis_to_sdnet.tkeep   = _axis_to_sdnet.tkeep;
-    assign axis_to_sdnet.tdata   = _axis_to_sdnet.tdata;
-    assign axis_to_sdnet.tid     = _axis_to_sdnet.tid;
-    assign axis_to_sdnet.tdest   = _axis_to_sdnet.tdest;
-    assign axis_to_sdnet.tuser   = _axis_to_sdnet.tuser;
-
-    assign _axis_to_sdnet.tready = axis_to_sdnet.tready  && !p4_proc_regs[1].tpause;
-
-
     // metadata type definitions (from xilinx_ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
     // --- metadata_in ---
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;
    
+    assign axis_to_sdnet_tuser = axis_to_sdnet.tuser;
+
     always_comb begin
-        user_metadata_in.timestamp_ns      = timestamp;
-        user_metadata_in.pid               = {'0, axis_to_sdnet.tuser};
+        user_metadata_in.timestamp_ns      = axis_to_sdnet_tuser.timestamp;
+        user_metadata_in.pid               = {'0, axis_to_sdnet_tuser.pid[9:0]};
         user_metadata_in.ingress_port      = {'0, axis_to_sdnet.tid};
         user_metadata_in.egress_port       = {'0, axis_to_sdnet.tid};
         user_metadata_in.truncate_enable   = 0;
@@ -244,29 +326,44 @@ module p4_proc
 
 
     // --- sdnet_0 instance (p4_proc) ---
-    sdnet_0_wrapper sdnet_0_p4_proc (
-        .core_clk                (core_clk),
-        .core_rstn               (core_rstn),
-        .axil_if                 (axil_to_sdnet),
-        .axis_rx                 (axis_to_sdnet),
-        .axis_tx                 (axis_from_sdnet),
-        .user_metadata_in_valid  (user_metadata_in_valid),
-        .user_metadata_in        (user_metadata_in),
-        .user_metadata_out_valid (user_metadata_out_valid),
-        .user_metadata_out       (user_metadata_out),
-        .axi_to_hbm              (axi_to_hbm)
-    );
+    generate
+        if (EXTERN_PORTS) begin
+            sdnet_0_wrapper sdnet_0_p4_proc (
+                .core_clk                (core_clk),
+                .core_rstn               (core_rstn),
+                .axil_if                 (axil_to_sdnet),
+                .axis_rx                 (axis_to_sdnet),
+                .axis_tx                 (axis_from_sdnet),
+                .user_metadata_in_valid  (user_metadata_in_valid),
+                .user_metadata_in        (user_metadata_in),
+                .user_metadata_out_valid (user_metadata_out_valid),
+                .user_metadata_out       (user_metadata_out),
+                .user_extern_out         (user_extern_out),
+                .user_extern_out_valid   (user_extern_out_valid),
+                .user_extern_in          (user_extern_in),
+                .user_extern_in_valid    (user_extern_in_valid),
+                .axi_to_hbm              (axi_to_hbm)
+            );
+        end else begin
+            sdnet_0_wrapper sdnet_0_p4_proc (
+                .core_clk                (core_clk),
+                .core_rstn               (core_rstn),
+                .axil_if                 (axil_to_sdnet),
+                .axis_rx                 (axis_to_sdnet),
+                .axis_tx                 (axis_from_sdnet),
+                .user_metadata_in_valid  (user_metadata_in_valid),
+                .user_metadata_in        (user_metadata_in),
+                .user_metadata_out_valid (user_metadata_out_valid),
+                .user_metadata_out       (user_metadata_out),
+                .axi_to_hbm              (axi_to_hbm)
+            );
+
+            assign user_extern_out_valid = 1'b0;
+            assign user_extern_out       = 1'b0;
+        end
+    endgenerate
 
     assign axis_from_sdnet.aclk = core_clk;
     assign axis_from_sdnet.aresetn = core_rstn;
-
-
-    // --- demux to egress hdr interfaces ---
-    axi4s_intf_1to2_demux axi4s_intf_1to2_demux_0 (
-        .axi4s_in   (axis_from_sdnet),
-        .axi4s_out0 (axis_to_split_join[0]),
-        .axi4s_out1 (axis_to_split_join[1]),
-        .output_sel (axis_from_sdnet_proc_port)
-    );
 
 endmodule: p4_proc

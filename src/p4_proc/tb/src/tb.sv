@@ -33,15 +33,19 @@ module tb;
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
     // DUT instance
-    p4_proc #(.N(N)) DUT(
-        .core_clk            ( clk ),
-        .core_rstn           ( rstn ),
-        .timestamp           ( timestamp ),
-        .axil_if             ( axil_if ),
-        .axil_to_sdnet       ( axil_to_sdnet ),
-        .axis_from_switch    ( axis_in_if ),
-        .axis_to_switch      ( axis_out_if ),
-        .axi_to_hbm          ( axi_to_hbm )
+    p4_proc #(.N(N), .EXTERN_PORTS(0)) DUT (
+        .core_clk                ( clk ),
+        .core_rstn               ( rstn ),
+        .timestamp               ( timestamp ),
+        .axil_if                 ( axil_if ),
+        .axil_to_sdnet           ( axil_to_sdnet ),
+        .axis_from_switch        ( axis_in_if ),
+        .axis_to_switch          ( axis_out_if ),
+        .user_extern_out         ( ),
+        .user_extern_out_valid   ( ),
+        .user_extern_in          ( 1'b0 ),
+        .user_extern_in_valid    ( 1'b0 ),
+        .axi_to_hbm              ( axi_to_hbm )
     );
 
     hbm_bfm #(.PSEUDO_CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));

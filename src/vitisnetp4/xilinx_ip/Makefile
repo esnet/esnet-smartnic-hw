@@ -82,6 +82,8 @@ COMPILE_OPTS=
 ELAB_OPTS=--debug typical
 SIM_OPTS=
 
+EXTERN_PORTS ?= False
+
 # ----------------------------------------------------
 # Compile Targets
 # ----------------------------------------------------
@@ -126,4 +128,4 @@ vitisnetp4_wrapper: $(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv
 .PHONY: vitisnetp4_wrapper
 
 $(VITISNETP4_XCI_DIR)/$(VITISNETP4_IP_NAME)_wrapper.sv: $(VITISNETP4_IP_DIR)/.ip__$(VITISNETP4_IP_NAME)
-	$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $(VITISNETP4_XCI_FILE) --out_dir $(VITISNETP4_XCI_DIR) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
+	$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $(VITISNETP4_XCI_FILE) --out_dir $(VITISNETP4_XCI_DIR) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4 --extern_ports $(EXTERN_PORTS)
