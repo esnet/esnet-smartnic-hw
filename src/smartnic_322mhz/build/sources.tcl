@@ -21,6 +21,13 @@ read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_registe
 # Application package
 read_verilog -sv [glob $app_root/app_if/smartnic_322mhz_app_pkg.sv]
 
+# Reg packages
+read_verilog -quiet -sv [glob $out_root/common/axi4s/regio/rtl/src/*_pkg.sv]
+read_verilog -quiet -sv [glob $out_root/common/fifo/regio/rtl/src/*_pkg.sv]
+read_verilog -quiet -sv [glob $out_root/common/reg/endian/regio/rtl/src/*_pkg.sv]
+read_verilog -quiet -sv [glob $out_root/common/reg/proxy/regio/rtl/src/*_pkg.sv]
+read_verilog -quiet -sv [glob $out_root/smartnic_322mhz/regio/rtl/src/*_pkg.sv]
+
 # Packages
 read_verilog -quiet -sv [glob $lib_root/src/std/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/reg/rtl/src/*_pkg.sv ]
@@ -36,9 +43,14 @@ read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axi/rtl/src/*_pkg.sv ]
 read_verilog -quiet -sv [glob $lib_root/src/xilinx/axis/rtl/src/*_pkg.sv ]
 
-read_verilog -quiet -sv [glob $out_root/smartnic_322mhz/build/rtl/src/*_pkg.sv ]
-
 read_verilog -quiet -sv [glob ../rtl/src/*_pkg.sv ]
+
+# Reg RTL
+read_verilog -quiet -sv [glob $out_root/common/axi4s/regio/rtl/src/*.sv]
+read_verilog -quiet -sv [glob $out_root/common/fifo/regio/rtl/src/*.sv]
+read_verilog -quiet -sv [glob $out_root/common/reg/endian/regio/rtl/src/*.sv]
+read_verilog -quiet -sv [glob $out_root/common/reg/proxy/regio/rtl/src/*.sv]
+read_verilog -quiet -sv [glob $out_root/smartnic_322mhz/regio/rtl/src/*.sv]
 
 # RTL
 read_verilog -quiet -sv [glob $lib_root/src/util/rtl/src/*.sv ]
@@ -64,8 +76,6 @@ if { [info exists env(BOARD)] } {
     read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*.sv ]
   }
 }
-
-read_verilog -quiet -sv [glob $out_root/smartnic_322mhz/build/rtl/src/*.sv ]
 
 read_verilog -quiet -sv [glob ../rtl/src/*.sv ]
 

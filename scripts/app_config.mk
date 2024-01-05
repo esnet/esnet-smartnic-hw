@@ -123,6 +123,10 @@ _configure_app_src_lib := \
 	 sed -i 's:<libraries>:smartnic=$(SMARTNIC_ROOT)/src:' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<common-lib-name>:common@smartnic:' $(APP_PROJ_ROOT)/src/config.mk;
 
+_configure_app_out_dir := \
+	 mkdir -p $(APP_PROJ_ROOT)/out; \
+	 echo "This directory contains output products from IP generation, simulation, synthesis, etc." >> $(APP_PROJ_ROOT)/out/.README;
+
 _configure_app_common := \
      @mkdir -p $(APP_PROJ_ROOT); \
 	 echo "\#==============================================" >  $(APP_CFG_FILE); \
@@ -147,7 +151,8 @@ _configure_app_common := \
      echo ""                                                 >> $(APP_CFG_FILE); \
 	 echo "\# Standard application parameters"               >> $(APP_CFG_FILE); \
 	 echo "include $(SMARTNIC_ROOT)/scripts/app_config_base.mk" >> $(APP_CFG_FILE); \
-	 $(_configure_app_src_lib)
+	 $(_configure_app_src_lib) \
+	 $(_configure_app_out_dir)
 
 _configure_app_p4 := \
 	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4 $(APP_PROJ_ROOT)/src/; \
@@ -155,7 +160,7 @@ _configure_app_p4 := \
 	 cp $(SCRIPTS_ROOT)/Makefiles/templates/ip_config.mk $(APP_PROJ_ROOT)/src/p4_app/config.mk; \
 	 cp -r $(SMARTNIC_ROOT)/src/p4_app/app_if $(APP_PROJ_ROOT)/src/p4_app/; \
 	 cp -r $(SMARTNIC_ROOT)/src/p4_app/build $(APP_PROJ_ROOT)/src/p4_app/; \
-	 cp -r $(APP_DIR)/extern $(APP_PROJ_ROOT)/src/p4_app/; \
+	 cp -r $(APP_DIR)/extern $(APP_PROJ_ROOT)/src/p4_app/ 2>/dev/null; \
 	 make -s -C $(APP_ROOT)/app_if clean;
 
 _configure_app_verilog :=
