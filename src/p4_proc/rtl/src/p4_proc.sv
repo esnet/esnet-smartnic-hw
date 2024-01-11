@@ -205,7 +205,7 @@ module p4_proc
 
         // axi4s pkt truncate instantiation.
         axi4s_trunc #(
-            .BIGENDIAN(0), .OUT_PIPE(1)
+            .BIGENDIAN(0), .IN_PIPE(1), .OUT_PIPE(1)
         ) axi4s_trunc_inst (
             .axi4s_in(axis_to_trunc[i]),
             .axi4s_out(axis_to_switch[i]),
