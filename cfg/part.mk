@@ -2,7 +2,7 @@
 # Repo configuration
 # -----------------------------------------
 # select open-nic-shell repo by default.
-BOARD_REPO = $(ONS_ROOT)/board_files/Xilinx
+BOARD_REPO = $(abspath $(CFG_ROOT)/../open-nic-shell/board_files/Xilinx)
 
 # -----------------------------------------
 # Device configuration
