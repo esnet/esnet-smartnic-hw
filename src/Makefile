@@ -26,6 +26,10 @@ synth: _synth
 
 .PHONY: synth
 
+info: _info
+
+.PHONY: info
+
 clean: _clean
 
 .PHONY: clean
