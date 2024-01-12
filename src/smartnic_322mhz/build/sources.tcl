@@ -3,8 +3,8 @@ set app_root $env(APP_ROOT)
 set out_root $env(OUTPUT_ROOT)
 
 # IP
-read_ip $out_root/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
-read_ip $out_root/common/axi4s/xilinx_ip/ila_axi4s/ila_axi4s.xci
+read_ip $out_root/common/fifo/ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
+read_ip $out_root/common/axi4s/ip/ila_axi4s/ila_axi4s.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_egress/axis_switch_egress.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_ingress/axis_switch_ingress.xci
 read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_0/clk_wiz_0.xci

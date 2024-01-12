@@ -5,7 +5,7 @@ set out_root $env(OUTPUT_ROOT)
 
 # IP
 read_ip -quiet $out_root/vitisnetp4/xilinx_ip/sdnet_0/sdnet_0.xci
-read_ip $out_root/smartnic/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
+read_ip $out_root/smartnic/common/fifo/ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
 
 # Packages
 read_verilog -quiet -sv [glob $lib_root/src/std/rtl/src/*_pkg.sv ]
