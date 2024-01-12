@@ -15,9 +15,7 @@ all: regression
 
 regression: _regression
 
-clean: _clean
-
-.PHONY: all regression clean
+.PHONY: all regression
 
 # Import standard IP root targets
 include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk

@@ -33,12 +33,16 @@ all: compile
 
 reg: _reg | smartnic_322mhz_app_decoder.yaml
 
-compile: _compile
+compile: _reg_compile
 
-clean: _clean
+synth: _reg_synth
+
+info: _reg_info
+
+clean: _reg_clean
 	@rm -f smartnic_322mhz_app_decoder.yaml
 
-.PHONY: all reg compile clean
+.PHONY: all reg compile synth info clean
 
 smartnic_322mhz_app_decoder.yaml:
 	@cp $(IP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml ./

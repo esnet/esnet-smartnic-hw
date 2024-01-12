@@ -18,9 +18,17 @@ compile_clean: _compile_clean
 
 .PHONY: compile compile_clean
 
+reg: _reg
+
+.PHONY: reg
+
 synth: _synth
 
 .PHONY: synth
+
+info: _info
+
+.PHONY: info
 
 clean: _clean
 

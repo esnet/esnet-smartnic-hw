@@ -43,7 +43,7 @@ EXTERN_PORTS ?= False
 all: opt
 
 ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.xilinx_ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.ip@common@smartnic
 	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) EXTERN_PORTS=$(EXTERN_PORTS) COMPONENT=vitisnetp4.xilinx_ip
 .PHONY: ip
 

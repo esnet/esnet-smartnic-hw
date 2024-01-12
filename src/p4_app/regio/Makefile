@@ -29,11 +29,15 @@ all: compile
 
 reg: _reg
 
-compile: _compile
+compile: _reg_compile
 
-clean: _clean
+synth: _reg_synth
 
-.PHONY: all reg compile clean
+info: _reg_info
+
+clean: _reg_clean
+
+.PHONY: all reg compile synth info clean
 
 # -----------------------------------------------
 # Include regio targets

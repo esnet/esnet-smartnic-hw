@@ -38,8 +38,8 @@ reg: cp_app_dec
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_322mhz.regio
 
 ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.xilinx_ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.xilinx_ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=smartnic_322mhz.xilinx_ip

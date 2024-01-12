@@ -1,8 +1,11 @@
 # -----------------------------------------------
-# IP config (for compilation library setup)
+# Path setup
 # -----------------------------------------------
-IP_ROOT = ..
+IP_ROOT := ..
 
+# -----------------------------------------------
+# IP config
+# -----------------------------------------------
 include $(IP_ROOT)/config.mk
 
 # ----------------------------------------------------
@@ -49,11 +52,15 @@ EXTERN_PORTS ?= False
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+compile: _compile_sim
 
-clean: _clean_compile
+synth: _compile_synth
 
-.PHONY: all compile clean
+info: _compile_info
+
+clean: _compile_clean
+
+.PHONY: all compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets
