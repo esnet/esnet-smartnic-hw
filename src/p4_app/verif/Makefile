@@ -50,11 +50,13 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+compile: _compile_sim
 
-clean: _clean_compile
+info: _compile_info
 
-.PHONY: all compile clean
+clean: _compile_clean
+
+.PHONY: all compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

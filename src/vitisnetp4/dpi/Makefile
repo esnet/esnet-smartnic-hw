@@ -16,7 +16,7 @@ include $(IP_ROOT)/config.mk
 #   source files from ./src are added automatically,
 #   with include directory ./include
 # ----------------------------------------------------
-SRC_FILES = $(shell find $(XILINX_VIVADO)/data/ip/xilinx -name "vitis_net_p4_dpi_pkg.sv")
+SRC_FILES = $(shell find $(XILINX_VIVADO)/data/ip/xilinx/vitis_net_p4* -name "vitis_net_p4_dpi_pkg.sv")
 INC_DIRS =
 SRC_LIST_FILES =
 
@@ -46,11 +46,13 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+compile: _compile_sim
 
-clean: _clean_compile
+info: _compile_info
 
-.PHONY: all compile clean
+clean: _compile_clean
+
+.PHONY: all compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

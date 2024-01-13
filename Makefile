@@ -53,7 +53,7 @@ endif
 	-cp $(EXAMPLE_TEST_DIR)/*_in.pcap $(EXAMPLE_TEST_DIR)/*_in.user $(EXAMPLE_TEST_DIR)/*_in.meta $(APP_DIR)/example/.src 2> /dev/null
 	-cp $(EXAMPLE_TEST_DIR)/../user_externs/smartnic_extern.so $(APP_DIR)/example/.src 2> /dev/null
 	@echo "Generating vitisnetp4 ip in example/ subdirectory, using application p4 file..."
-	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/xilinx_ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(P4_FILE))
+	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(P4_FILE))
 	@echo "Cleaning up unused and unecessary files (vitisnetp4 design ip and log files)..."
 	rm -rf $(APP_DIR)/example/.ip* $(APP_DIR)/example/.Xil* $(APP_DIR)/example/vivado*.log
 	rm -rf $(APP_DIR)/example/sdnet_0.tcl $(APP_DIR)/example/sdnet_0

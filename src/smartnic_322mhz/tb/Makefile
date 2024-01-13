@@ -1,8 +1,11 @@
 # -----------------------------------------------
-# IP config (for compilation library setup)
+# Path setup
 # -----------------------------------------------
-IP_ROOT = ..
+IP_ROOT := ..
 
+# -----------------------------------------------
+# IP config
+# -----------------------------------------------
 include $(IP_ROOT)/config.mk
 
 # ----------------------------------------------------
@@ -23,7 +26,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS = smartnic_322mhz.rtl \
-             smartnic_322mhz.xilinx_ip \
+             smartnic_322mhz.ip \
              smartnic_322mhz.regio.verif \
              std.rtl@common \
              std.verif@common \
@@ -53,11 +56,13 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+compile: _compile_sim
 
-clean: _clean_compile
+info: _compile_info
 
-.PHONY: all compile clean
+clean: _compile_clean
+
+.PHONY: all compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

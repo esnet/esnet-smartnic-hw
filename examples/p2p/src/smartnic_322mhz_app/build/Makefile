@@ -38,8 +38,8 @@ REGIO_GENERATE_OPTS := --recursive
 all: opt
 
 ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.xilinx_ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4s.xilinx_ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=axi4s.ip@common@smartnic
 .PHONY: ip
 
 pre_synth: _reg_rtl ip

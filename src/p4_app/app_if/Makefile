@@ -17,7 +17,7 @@ package: build_package reg_package p4_package driver_package
 
 build_package:
 	@cp $(OUTPUT_ROOT)/p4_app/build/smartnic_322mhz_app.opt.dcp smartnic_322mhz_app.dcp
-	@cp $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/sdnet_0_app_pkg.sv smartnic_322mhz_app_pkg.sv
+	@cp $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0/sdnet_0_app_pkg.sv smartnic_322mhz_app_pkg.sv
 	@sed -i 's/sdnet_0/smartnic_322mhz/g' smartnic_322mhz_app_pkg.sv
 
 reg_package:
@@ -28,8 +28,8 @@ p4_package:
 	@find $(dir $(P4_FILE)) -name \*.lua -exec cp {} ./ \;
 
 driver_package:
-	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers && \
-	 tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers/install .
+	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0/src/sw/drivers && \
+	 tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0/src/sw/drivers/install .
 
 clean:
 	@$(MAKE) -s -C ../build clean

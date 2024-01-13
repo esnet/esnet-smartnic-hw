@@ -25,7 +25,7 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = smartnic_322mhz.xilinx_ip \
+COMPONENTS = smartnic_322mhz.ip \
              smartnic_322mhz.regio.rtl \
              reg.endian.rtl@common \
              reg.proxy.rtl@common \
@@ -56,11 +56,15 @@ SIM_OPTS=
 # ----------------------------------------------------
 all: compile
 
-compile: _compile
+compile: _compile_sim
 
-clean: _clean_compile
+synth: _compile_synth
 
-.PHONY: all compile clean
+info: _compile_info
+
+clean: _compile_clean
+
+.PHONY: all compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

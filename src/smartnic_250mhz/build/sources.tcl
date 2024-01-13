@@ -2,8 +2,8 @@ set lib_root $env(LIB_ROOT)
 set out_root $env(OUTPUT_ROOT)
 
 # IP
-read_ip $out_root/common/fifo/xilinx_ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
-read_ip $out_root/common/axi4s/xilinx_ip/ila_axi4s/ila_axi4s.xci
+read_ip $out_root/common/fifo/ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
+read_ip $out_root/common/axi4s/ip/ila_axi4s/ila_axi4s.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
 read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_1.vh

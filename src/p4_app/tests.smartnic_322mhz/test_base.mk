@@ -41,7 +41,7 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 COMPONENTS = p4_app.rtl \
              p4_app.verif \
              p4_proc.verif \
-             vitisnetp4.xilinx_ip \
+             vitisnetp4.ip \
              vitisnetp4.verif \
              smartnic_322mhz.rtl \
              smartnic_322mhz.tb \
@@ -65,7 +65,7 @@ override DEFINES += SIMULATION
 # ----------------------------------------------------
 # VitisNetP4 DPI-C driver
 # ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0
+VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0
 VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
 VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
 

@@ -34,14 +34,14 @@ reg:
 ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.xilinx_ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.xilinx_ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common
 
 ip_clean:
 	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=xilinx.axi.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=axi4s.xilinx_ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=fifo.xilinx_ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=axi4s.ip@common
+	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=fifo.ip@common
 
 .PHONY: reg ip ip_clean
 
