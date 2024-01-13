@@ -261,7 +261,6 @@ validate_p4_only_u280:
 
 validate_p4_only_u55c:
   extends: .validate
-  variables:
   needs:
     - build_p4_only_u55c
 
