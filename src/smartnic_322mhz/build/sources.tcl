@@ -5,10 +5,10 @@ set out_root $env(OUTPUT_ROOT)
 # IP
 read_ip $out_root/common/fifo/ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
 read_ip $out_root/common/axi4s/ip/ila_axi4s/ila_axi4s.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_egress/axis_switch_egress.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/axis_switch_ingress/axis_switch_ingress.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_0/clk_wiz_0.xci
-read_ip $out_root/smartnic_322mhz/xilinx_ip/clk_wiz_1/clk_wiz_1.xci
+read_ip $out_root/smartnic_322mhz/ip/axis_switch_egress/axis_switch_egress.xci
+read_ip $out_root/smartnic_322mhz/ip/axis_switch_ingress/axis_switch_ingress.xci
+read_ip $out_root/smartnic_322mhz/ip/clk_wiz_0/clk_wiz_0.xci
+read_ip $out_root/smartnic_322mhz/ip/clk_wiz_1/clk_wiz_1.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
 read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_1.vh
@@ -69,8 +69,8 @@ read_verilog -quiet -sv [glob $lib_root/src/axi3/rtl/src/*.sv ]
 # HBM RTL and pkg sources, unless BOARD does NOT support HBM (i.e. au250).
 if { [info exists env(BOARD)] } {
   if { [string trim $env(BOARD)] != "au250" } {
-    read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_left/hbm_4g_left.xci
-    read_ip $out_root/smartnic_322mhz/xilinx_ip/hbm_4g_right/hbm_4g_right.xci
+    read_ip $out_root/smartnic_322mhz/ip/hbm_4g_left/hbm_4g_left.xci
+    read_ip $out_root/smartnic_322mhz/ip/hbm_4g_right/hbm_4g_right.xci
 
     read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*_pkg.sv ]
     read_verilog -quiet -sv [glob $lib_root/src/xilinx/hbm/rtl/src/*.sv ]

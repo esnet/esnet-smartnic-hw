@@ -69,7 +69,7 @@ module p4_and_verilog
    assign axis_to_switch_0.tuser = axis_to_switch_0_tuser;
 
 
-   // metadata type definitions (from xilinx_ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
+   // metadata type definitions (from ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
    // --- metadata_in ---
    user_metadata_t user_metadata_in;
    logic           user_metadata_in_valid;

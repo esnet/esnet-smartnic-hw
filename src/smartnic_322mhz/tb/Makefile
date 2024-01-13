@@ -26,7 +26,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
 COMPONENTS = smartnic_322mhz.rtl \
-             smartnic_322mhz.xilinx_ip \
+             smartnic_322mhz.ip \
              smartnic_322mhz.regio.verif \
              std.rtl@common \
              std.verif@common \

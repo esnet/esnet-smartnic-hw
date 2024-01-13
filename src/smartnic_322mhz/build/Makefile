@@ -42,7 +42,7 @@ ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
 	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=smartnic_322mhz.xilinx_ip
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=smartnic_322mhz.ip
 
 .PHONY: reg ip
 

@@ -18,7 +18,7 @@ include $(IP_ROOT)/config.mk
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS = include \
-           $(COMPONENT_OUT_PATH)/../xilinx_ip/sdnet_0_ex/imports
+           $(COMPONENT_OUT_PATH)/../ip/sdnet_0_ex/imports
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -26,7 +26,7 @@ SRC_LIST_FILES =
 #   List IP component and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = vitisnetp4.xilinx_ip \
+COMPONENTS = vitisnetp4.ip \
              vitisnetp4.dpi \
              std.verif@$(COMMON_LIB_NAME)
 EXT_LIBS =

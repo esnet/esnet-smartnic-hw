@@ -27,8 +27,8 @@ p4_package:
 	@find $(dir $(P4_FILE)) -name \*.lua -exec cp {} ./ \;
 
 driver_package:
-	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers && \
-	 tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/xilinx_ip/sdnet_0/src/sw/drivers/install .
+	@$(MAKE) -s -C $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0/src/sw/drivers && \
+	 tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0/src/sw/drivers/install .
 
 clean:
 	@$(MAKE) -s -C $(SRC_ROOT)/smartnic_322mhz_app/build clean

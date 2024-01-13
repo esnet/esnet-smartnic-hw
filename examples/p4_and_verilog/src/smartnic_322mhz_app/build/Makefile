@@ -38,7 +38,7 @@ all: opt
 
 ip:
 	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=vitisnetp4.xilinx_ip
+	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=vitisnetp4.ip
 .PHONY: ip
 
 pre_synth: _reg_rtl ip
