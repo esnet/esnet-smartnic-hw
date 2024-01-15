@@ -183,6 +183,7 @@ build_p4_only_u280:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_only
     SN_HW_BOARD: au280
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     [smartnic_ip_au280]
 
