@@ -253,9 +253,6 @@ validate_p2p:
 
 validate_p4_only_u280:
   extends: .validate
-  variables:
-    VALIDATE_WNS_MIN: "-0.250"
-    VALIDATE_TNS_MIN: "-500.0"
   needs:
     - build_p4_only_u280
 
