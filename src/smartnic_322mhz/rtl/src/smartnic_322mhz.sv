@@ -589,7 +589,8 @@ module smartnic_322mhz
       // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
 
       axi4s_reg_slice #(
-          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t)
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t),
+          .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
       ) axi4s_reg_slice_from_cmac (
           .axi4s_from_tx (__axis_from_cmac[i]),
           .axi4s_to_rx   (axis_from_cmac[i])
@@ -639,7 +640,8 @@ module smartnic_322mhz
       );
 
       axi4s_reg_slice #(
-          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t)
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t),
+          .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
       ) axi4s_reg_slice_to_cmac (
           .axi4s_from_tx (__axis_to_cmac[i]),
           .axi4s_to_rx   (axis_to_cmac[i])

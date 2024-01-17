@@ -183,6 +183,7 @@ build_p4_only_u280:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_only
     SN_HW_BOARD: au280
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     [smartnic_ip_au280]
 
@@ -253,9 +254,6 @@ validate_p2p:
 
 validate_p4_only_u280:
   extends: .validate
-  variables:
-    VALIDATE_WNS_MIN: "-0.250"
-    VALIDATE_TNS_MIN: "-500.0"
   needs:
     - build_p4_only_u280
 
