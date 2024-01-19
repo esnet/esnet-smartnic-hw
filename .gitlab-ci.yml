@@ -97,6 +97,27 @@ sim_platform:
   timeout: 2h
   needs: []
 
+ons_ip_cache_key:
+  stage: ip
+  extends: .common
+  tags:
+    - ht-sim
+  script:
+    - |
+      cat <<_EOF | tee dependencies.txt
+      VIVADO_VERSION=$VIVADO_VERSION
+      $(git submodule status -- open-nic-shell | awk '{ print $1,$2 }')
+      _EOF
+    - |
+      cat <<_EOF | tee cache_key.env
+      ONS_IP_CACHE_KEY=$(sha1sum dependencies.txt | awk '{ print $1 }')
+      _EOF
+  artifacts:
+    reports:
+      dotenv:
+        cache_key.env
+  needs: []
+
 .ons_ip:
   stage: ip
   extends: .common
@@ -107,8 +128,13 @@ sim_platform:
   artifacts:
     paths:
       - open-nic-shell/build
+  cache:
+    - key: cache-ons_ip-$SN_HW_BOARD-$ONS_IP_CACHE_KEY
+      paths:
+        - open-nic-shell/build
   timeout: 4h
-  needs: []
+  needs:
+    - ons_ip_cache_key
 
 ons_ip_au280:
   extends: .ons_ip
