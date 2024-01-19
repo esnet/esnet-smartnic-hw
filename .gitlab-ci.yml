@@ -97,6 +97,34 @@ sim_platform:
   timeout: 2h
   needs: []
 
+.ons_ip:
+  stage: ip
+  extends: .common
+  tags:
+    - ht-synth
+  script:
+    - make -f makefile.esnet project_ip BOARD=$SN_HW_BOARD
+  artifacts:
+    paths:
+      - open-nic-shell/build
+  timeout: 4h
+  needs: []
+
+ons_ip_au280:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au280
+
+ons_ip_au55c:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au55c
+
+ons_ip_au250:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au250
+
 .smartnic_ip:
   stage: ip
   extends: .common
@@ -105,11 +133,9 @@ sim_platform:
   script:
     - make -C src/smartnic_250mhz/build ip BOARD=$SN_HW_BOARD
     - make -C src/smartnic_322mhz/build ip BOARD=$SN_HW_BOARD
-    - make -f makefile.esnet project_ip BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
-      - open-nic-shell/build
   timeout: 4h
   needs: []
 
@@ -166,7 +192,8 @@ build_p4_and_verilog:
     SN_HW_APP_NAME: p4_and_verilog
     SN_HW_BOARD: au55c
   needs:
-    [smartnic_ip_au55c]
+    - ons_ip_au55c
+    - smartnic_ip_au55c
 
 build_p2p:
   extends: .bitfile
@@ -175,7 +202,8 @@ build_p2p:
     SN_HW_APP_NAME: p2p
     SN_HW_BOARD: au250
   needs:
-    [smartnic_ip_au250]
+    - ons_ip_au250
+    - smartnic_ip_au250
 
 build_p4_only_u280:
   extends: .bitfile
@@ -185,7 +213,8 @@ build_p4_only_u280:
     SN_HW_BOARD: au280
     IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
-    [smartnic_ip_au280]
+    - ons_ip_au280
+    - smartnic_ip_au280
 
 build_p4_only_u55c:
   extends: .bitfile
@@ -194,7 +223,8 @@ build_p4_only_u55c:
     SN_HW_APP_NAME: p4_only
     SN_HW_BOARD: au55c
   needs:
-    [smartnic_ip_au55c]
+    - ons_ip_au55c
+    - smartnic_ip_au55c
 
 build_p4_with_extern:
   extends: .bitfile
@@ -203,7 +233,8 @@ build_p4_with_extern:
     SN_HW_APP_NAME: p4_with_extern
     SN_HW_BOARD: au55c
   needs:
-    [smartnic_ip_au55c]
+    - ons_ip_au55c
+    - smartnic_ip_au55c
 
 build_vanilla_ons:
   stage: bitfile
