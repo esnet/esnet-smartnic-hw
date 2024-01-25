@@ -121,7 +121,8 @@ _configure_app_src_lib := \
 	 sed -i 's:<library-name>:$(APP_NAME):' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<library-desc>:$(APP_NAME) SmartNIC application library:' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<libraries>:smartnic=$(SMARTNIC_ROOT)/src:' $(APP_PROJ_ROOT)/src/config.mk; \
-	 sed -i 's:<common-lib-name>:common@smartnic:' $(APP_PROJ_ROOT)/src/config.mk;
+	 sed -i 's:<common-lib-name>:common@smartnic:' $(APP_PROJ_ROOT)/src/config.mk; \
+	 sed -i 's:.*<lib-env>.*:BOARD ?= au280\nLIB_ENV = \\\n\tBOARD=$$(BOARD) \\\n\tIP_OUT_SUBDIR=$$(BOARD):g' $(APP_PROJ_ROOT)/src/config.mk;
 
 _configure_app_out_dir := \
 	 mkdir -p $(APP_PROJ_ROOT)/out; \
