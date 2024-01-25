@@ -7,10 +7,12 @@ import tb_pkg::*;
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_proc_datapath_unit_test;
-
+module p4_proc_datapath_unit_test
+#(
+    parameter int HDR_LENGTH = 0
+ );
     // Testcase name
-    string name = "p4_proc_datapath_ut";
+    string name = $sformatf("p4_proc_datapath_hdrlen_%0d_ut", HDR_LENGTH);
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -30,6 +32,11 @@ module p4_proc_datapath_unit_test;
     tb_pkg::tb_env env;
 
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
+    p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
+    p4_proc_reg_pkg::reg_trunc_config_t    trunc_config;
+
+    int exp_pkt_cnt, exp_byte_cnt;
 
     //===================================
     // Import common testcase tasks
@@ -73,6 +80,11 @@ module p4_proc_datapath_unit_test;
         env.axis_driver[1].idle();
         env.axis_monitor[0].idle();
         env.axis_monitor[1].idle();
+
+        // Write hdr_length register (hdr_length = 0B to disable split-join logic).
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_config.drop_pkt_loop = 1'b0;
+        env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
     endtask
 
@@ -126,53 +138,99 @@ module p4_proc_datapath_unit_test;
 // Commented out due outstanding (init?) issue. Test passes on its own, but not within test suite.
 //    `SVTEST(test_default_w_force)
 //        force tb.axis_in_if[0].tid = 2'h2;
-//        run_pkt_test ( .testdir("test-default"), .init_timestamp('0), .dest_port(2) );
+//        run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(2) );
 //    `SVTEST_END
 
     `SVTEST(test_pkt_loopback_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(7) );
+        run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(7) );
     `SVTEST_END
 
     `SVTEST(test_fwd_p0_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp('0), .dest_port(0) );
+        run_pkt_test ( .testdir("test-fwd-p0"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(0) );
     `SVTEST_END
 
     `SVTEST(test_fwd_p1_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
+        run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(1) );
     `SVTEST_END
 
     `SVTEST(test_fwd_p3_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
-        run_pkt_test ( .testdir("test-fwd-p3"), .init_timestamp('0), .dest_port(3) );
+        run_pkt_test ( .testdir("test-fwd-p3"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(3) );
     `SVTEST_END
 
     `SVTEST(test_traffic_mux)
         fork
            // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
+           run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+                          .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
 
            // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
            // (without re-programming the p4 tables).
            @(posedge tb.axis_in_if[1].tvalid)
-               run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
+               run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+                              .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
 
            // manually pause traffic through ingress mux, and restart.
            @(posedge tb.axis_in_if[1].tvalid) begin
                env.p4_proc_reg_agent.write_tpause(1);
                env.p4_proc_reg_agent.write_tpause(0);
-           end
+            end
         join
+    `SVTEST_END
+
+    `SVTEST(test_pkt_loop_drops)
+        // Write drop_pkt_loop register.
+        p4_proc_config.drop_pkt_loop = 1'b1;
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+
+        fork
+           begin
+              // run packet stream from CMAC1-to-CMAC1 (includes programming the p4 tables accordingly).
+              run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+                             .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1), .enable_monitor(0) );
+              check_probe (DROPS_FROM_PROC_PORT_1, exp_pkt_cnt, exp_byte_cnt);
+
+              // run packet streams from CMAC0-to-CMAC0 (skips reprogramming the p4 tables).
+              run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+                             .init_timestamp(1), .in_if(0), .out_if(0), .dest_port(0), .enable_monitor(0), .write_p4_tables(0) );
+              check_probe (DROPS_FROM_PROC_PORT_0, exp_pkt_cnt, exp_byte_cnt);
+           end
+           begin
+              // monitor output interfaces for any valid axi4s transactions.
+              forever @(negedge tb.axis_out_if[0].aclk) begin
+                 `FAIL_IF_LOG( tb.axis_out_if[0].tready && tb.axis_out_if[0].tvalid,
+                               $sformatf("FAIL!!! Valid axi4s transaction received on output interface 0") )
+                 `FAIL_IF_LOG( tb.axis_out_if[1].tready && tb.axis_out_if[1].tvalid,
+                               $sformatf("FAIL!!! Valid axi4s transaction received on output interface 1") )
+              end
+           end
+        join_any
+    `SVTEST_END
+
+    `SVTEST(test_egr_pkt_trunc)
+        repeat (1) begin
+           // Write trunc_config register and run pkt test.
+           trunc_config.enable = 1'b1;
+           trunc_config.trunc_enable = 1'b1;
+           trunc_config.trunc_length = $urandom_range(65,500);
+           env.p4_proc_reg_agent.write_trunc_config(trunc_config);
+
+           run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+                          .init_timestamp('0), .dest_port(7), .max_pkt_size(trunc_config.trunc_length) );
+        end
     `SVTEST_END
 
     `SVUNIT_TESTS_END
 
 
      task automatic run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
-        input write_p4_tables=1, VERBOSE=1 );
+        input string testdir, output int exp_pkt_cnt, exp_byte_cnt,
+        input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
+        input int max_pkt_size = 0, input bit write_p4_tables=1, enable_monitor=1, VERBOSE=1 );
 	
         string filename;
 
@@ -206,8 +264,11 @@ module p4_proc_datapath_unit_test;
         end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/expected/packets_out.pcap"};
+        filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
         pcap_pkg::read_pcap(filename, exp_pcap_hdr, exp_pcap_record_hdr, exp_data);
+
+        exp_pkt_cnt = exp_pcap_record_hdr.size();
+        exp_byte_cnt = 0; for (integer i = 0; i < exp_pkt_cnt; i=i+1) exp_byte_cnt = exp_byte_cnt + exp_data[i].size();
 
         debug_msg("Starting simulation...", VERBOSE);
          filename = {"../../../p4/sim/", testdir, "/packets_in.pcap"};
@@ -226,17 +287,19 @@ module p4_proc_datapath_unit_test;
                  end
              end
              begin
-                 // Monitor output packets
-                 while (rx_pkt_cnt < exp_pcap_record_hdr.size()) begin
-                     env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
-                     rx_pkt_cnt++;
-                     debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...", 
-                                           rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
+                 if (enable_monitor == 1) begin
+                      // Monitor output packets
+                      while (rx_pkt_cnt < exp_pcap_record_hdr.size()) begin
+                          env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
+                          rx_pkt_cnt++;
+                          debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
+                                                rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
 
-                     debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                     compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1]);
-                    `FAIL_IF_LOG( dest != dest_port, 
-                                  $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
+                          debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
+                          compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1], max_pkt_size);
+                          `FAIL_IF_LOG( dest != dest_port,
+                                        $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
+                      end
                  end
                  rx_done = 1;
              end
@@ -247,4 +310,33 @@ module p4_proc_datapath_unit_test;
          if (VERBOSE) `INFO(msg);
      endtask
       
+endmodule
+
+
+// 'Boilerplate' unit test wrapper code
+// Builds unit test for a specific axi4s_split_join configuration in a way
+// that maintains SVUnit compatibility
+
+`define P4_PROC_DATAPATH_UNIT_TEST(HDR_LENGTH)\
+  import svunit_pkg::svunit_testcase;\
+  svunit_testcase svunit_ut;\
+  p4_proc_datapath_unit_test #(HDR_LENGTH) test();\
+  function void build();\
+    test.build();\
+    svunit_ut = test.svunit_ut;\
+  endfunction\
+  task run();\
+    test.run();\
+  endtask
+
+module p4_proc_datapath_hdrlen_0_unit_test;
+`P4_PROC_DATAPATH_UNIT_TEST(0)
+endmodule
+
+module p4_proc_datapath_hdrlen_64_unit_test;
+`P4_PROC_DATAPATH_UNIT_TEST(64)
+endmodule
+
+module p4_proc_datapath_hdrlen_256_unit_test;
+`P4_PROC_DATAPATH_UNIT_TEST(256)
 endmodule
