@@ -96,7 +96,7 @@ module p4_app_datapath_unit_test
 
     `SVUNIT_TESTS_BEGIN
 
-       `SVTEST(test_rss_metadata)
+       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata through datapath to smartnic_322mhz ports.
            port_t  src_port, dst_port;
 
            fork

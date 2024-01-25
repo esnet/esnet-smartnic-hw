@@ -171,7 +171,8 @@ module p4_app_datapath_unit_test;
          fork
              begin
                  // Send packets
-                 send_pcap(filename, num_pkts, start_idx, twait, in_if, in_if, dest_port);
+                 send_pcap(.pcap_filename(filename), .num_pkts(num_pkts), .start_idx(start_idx),
+                           .twait(twait), .in_if(in_if), .id(in_if), .dest(dest_port));
              end
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
