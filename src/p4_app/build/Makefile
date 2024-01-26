@@ -18,50 +18,45 @@ export SMARTNIC_ROOT
 TOP = smartnic_322mhz_app
 
 # -----------------------------------------------
-# Regmap YAML definitions
-# -----------------------------------------------
-REG_BLOCK_YAML =
-REG_DECODER_YAML := \
-    ../app_if/src/smartnic_322mhz_app_decoder.yaml \
-    $(LIB_ROOT)/src/fifo/regio/fifo_core_decoder.yaml
-
-
-# -----------------------------------------------
-# regio options
-# -----------------------------------------------
-REGIO_ELABORATE_OPTS :=
-REGIO_GENERATE_OPTS := --recursive
-
-# -----------------------------------------------
 # vitisnetp4 options
 # -----------------------------------------------
 EXTERN_PORTS ?= False
+
+# -----------------------------------------------
+# User-specific environment
+# -specify environment variables to pass to
+#  library operations in NAME=VALUE format, e.g.:
+#  USER_ENV= VAR1=VAR1_VALUE VAR2=VAR2_VALUE
+# -----------------------------------------------
+USER_ENV = \
+    EXTERN_PORTS=$(EXTERN_PORTS)
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
 all: opt
 
-ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) COMPONENT=fifo.ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth BOARD=$(BOARD) EXTERN_PORTS=$(EXTERN_PORTS) COMPONENT=vitisnetp4.ip
-.PHONY: ip
+reg:
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=fifo.regio@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=axi4s.regio@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=p4_proc.regio@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=p4_app.regio@smartnic
 
-pre_synth: _reg_rtl ip
+ip:
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=vitisnetp4.ip USER_ENV=$(USER_ENV)
+.PHONY: reg ip
+
+pre_synth: reg ip
 synth:     _synth
 opt:       _opt
 .PHONY: pre_synth synth opt
 
-clean: _reg_clean _clean_build
+clean: _clean_build
 .PHONY: clean
 
 # -----------------------------------------------
 # Include Vivado definitions/targets
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk
-
-# -----------------------------------------------
-# Include regio targets
-# -----------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/regio.mk
-

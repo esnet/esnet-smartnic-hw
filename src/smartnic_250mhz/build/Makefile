@@ -11,6 +11,7 @@ include $(IP_ROOT)/config.mk
 # Export path variables for use in build (Tcl) scripts
 export LIB_ROOT
 export OUTPUT_ROOT
+export BOARD
 
 # -----------------------------------------------
 # Specify top-level module

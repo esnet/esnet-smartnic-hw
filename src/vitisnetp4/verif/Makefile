@@ -18,7 +18,7 @@ include $(IP_ROOT)/config.mk
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS = include \
-           $(COMPONENT_OUT_PATH)/../ip/sdnet_0_ex/imports
+           $(COMPONENT_OUT_PATH)/../ip/$(BOARD)/sdnet_0_ex/imports
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
