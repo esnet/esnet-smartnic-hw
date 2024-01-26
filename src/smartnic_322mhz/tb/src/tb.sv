@@ -236,6 +236,12 @@ module tb;
     assign axis_out_if[3].tuser  = m_axis_adpt_rx_322mhz_tuser_err[1];
     assign m_axis_adpt_rx_322mhz_tready[1] = axis_out_if[3].tready;
 
+    // axis_out tvalid monitors
+    always @(negedge axis_out_if[0].tvalid) if (axis_out_if[0].tready && !axis_out_if[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_out_if[1].tvalid) if (axis_out_if[1].tready && !axis_out_if[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_out_if[2].tvalid) if (axis_out_if[2].tready && !axis_out_if[2].tlast) $display ("Port2: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_out_if[3].tvalid) if (axis_out_if[3].tready && !axis_out_if[3].tlast) $display ("Port3: tvalid gap.  May lead to ONS underflow!");
+
     //===================================
     // Build
     //===================================
