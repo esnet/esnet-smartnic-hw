@@ -58,18 +58,11 @@ EXT_LIBS =
 override DEFINES += SIMULATION
 
 # ----------------------------------------------------
-# VitisNetP4 DPI-C driver
-# ----------------------------------------------------
-VITISNETP4_DRV_DPI_DIR = $(OUTPUT_ROOT)/vitisnetp4/ip/sdnet_0
-VITISNETP4_DRV_DPI_LIB = vitisnetp4_drv_dpi
-VITISNETP4_DRV_DPI_FILE = $(VITISNETP4_DRV_DPI_DIR)/$(VITISNETP4_DRV_DPI_LIB).so
-
-# ----------------------------------------------------
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS +=
 
-ELAB_OPTS += --debug typical --sv_lib $(VITISNETP4_DRV_DPI_LIB) --sv_root $(VITISNETP4_DRV_DPI_DIR)
+ELAB_OPTS += --debug typical
 
 SIM_OPTS +=
 
@@ -103,6 +96,11 @@ include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 # Export SVUNIT configuration
 SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
 SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
+
+# ----------------------------------------------------
+# Import VitisNetP4 IP simulation configuration
+# ----------------------------------------------------
+include $(SCRIPTS_ROOT)/Makefiles/test_vitisnetp4.mk
 
 # ----------------------------------------------------
 # Import Vivado sim targets

@@ -32,8 +32,3 @@ include $(PROJ_ROOT)/paths.mk
 # Include standard project Makefile snippet
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/proj_config_base.mk
-
-# -----------------------------------------------
-# Define common library
-# -----------------------------------------------
-COMMON_LIB_NAME := common

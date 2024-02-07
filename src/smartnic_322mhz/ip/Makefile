@@ -9,18 +9,23 @@ IP_ROOT := ..
 include $(IP_ROOT)/config.mk
 
 # ----------------------------------------------------
-# Sources
-#   List source files and include directories for component.
-#   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
-#   Note: if no sources are explicitly listed, all
-#   source files from ./src are added automatically,
-#   with include directory ./include
+# IP listing
 #
-#   NOTE: By default, IP output products are being generated at
-#         the path represented by $(COMPONENT_OUT_PATH). This
-#         path can be queried using 'make info',
-#         and $(COMPONENT_OUT_PATH) can be used to reference these
-#         files for compilation.
+#   Each IP core in the source component needs to be
+#   explicitly listed here. Each core must have a
+#   corresponding Tcl stub describing IP creation
+#   (Vivado `create_ip` command invocation) and
+#   configuration in the current directory.
+#
+#   e.g.:
+#
+#   IP_LIST = ip1 ip2
+#
+#	Assumes ./ip1.tcl and ./ip2.tcl exist
+#
+#	Note: ./ip3.tcl and ./ip4.tcl could also exist, but
+#	will be ignored by this makefile since they are
+#	not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
     axis_switch_egress \
@@ -32,22 +37,39 @@ ifneq ($(BOARD), au250)
     IP_LIST += hbm_4g_left hbm_4g_right
 endif
 
-SRC_FILES = \
-    $(COMPONENT_OUT_PATH)/axis_switch_egress/sim/axis_switch_egress.v \
-    $(COMPONENT_OUT_PATH)/axis_switch_ingress/sim/axis_switch_ingress.v \
-    $(COMPONENT_OUT_PATH)/clk_wiz_0/clk_wiz_0_clk_wiz.v \
-    $(COMPONENT_OUT_PATH)/clk_wiz_0/clk_wiz_0.v \
-    $(COMPONENT_OUT_PATH)/clk_wiz_1/clk_wiz_1_clk_wiz.v \
-    $(COMPONENT_OUT_PATH)/clk_wiz_1/clk_wiz_1.v
-INC_DIRS =
-SRC_LIST_FILES =
+# ----------------------------------------------------
+# Simulation sources
+#
+#   List source files and include directories for compiling
+#   the IP core (or a model of the component) for simulation.
+#
+#   NOTE: The paths to the sources should be specified
+#         relative to the directory into which the IP output
+#         products are generated. For example, to include the
+#         verilog source file describing the simulation model
+#         for IP core `foo`, the following could be used:
+#
+#         IP_SIM_SRC_FILES = foo/sim/foo.v
+#
+#         and NOT:
+#
+#         IP_SIM_SRC_FILES = <path-to-out-dir>/foo/sim/foo.v
+#
+#         (The <path-to-out-dir> is prepended automatically)
+# ----------------------------------------------------
+#  List simulation source files and include directories
+#  (see $SCRIPTS_ROOT/Makefiles/sources.mk)
+IP_SIM_SRC_FILES = \
+    axis_switch_egress/sim/axis_switch_egress.v \
+    axis_switch_ingress/sim/axis_switch_ingress.v \
+    clk_wiz_0/clk_wiz_0_clk_wiz.v \
+    clk_wiz_0/clk_wiz_0.v \
+    clk_wiz_1/clk_wiz_1_clk_wiz.v \
+    clk_wiz_1/clk_wiz_1.v
+IP_SIM_INC_DIRS =
 
-# ----------------------------------------------------
-# Dependencies
-#   List IP component and external library dependencies
+#   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
-# ----------------------------------------------------
-COMPONENTS =
 EXT_LIBS = \
            axi_infrastructure_v1_1_0 \
            axi_clock_converter_v2_1_28 \
@@ -63,55 +85,35 @@ EXT_LIBS = \
            xpm
 
 # ----------------------------------------------------
-# Defines
-#   List macro definitions.
-# ----------------------------------------------------
-DEFINES =
-
-# ----------------------------------------------------
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS=
-ELAB_OPTS=--debug typical
-SIM_OPTS=
 
 # ----------------------------------------------------
-# Compile Targets
+# Targets
 # ----------------------------------------------------
-all: compile
+all: synth compile
 
-ip: _ip
-
+ip:      _ip
 compile: _ip_compile
+synth:   _ip_synth
+info:    _ip_info
+status:  _ip_status
+upgrade: _ip_upgrade
+clean:   _ip_clean
 
-synth: _ip_synth
-
-clean: _ip_clean
-
-.PHONY: all ip compile synth clean
-
-# ----------------------------------------------------
-# Info targets
-# ----------------------------------------------------
-info: _ip_info
-
-.PHONY: info
+.PHONY: all ip compile synth info status upgrade clean
 
 # ----------------------------------------------------
-# IP management targets
+# IP project management targets
 #
 #   These targets are used for managing IP, i.e. creating
-#   new IP, or modifying or upgrading existing IP.
+#   new IP, or modifying existing IP.
 # ----------------------------------------------------
-ip_proj: _ip_proj
+proj:       _ip_proj
+proj_clean: _ip_proj_clean
 
-ip_upgrade: _ip_upgrade
-
-ip_status: _ip_status
-
-ip_proj_clean: _ip_proj_clean
-
-.PHONY: ip_proj ip_upgrade ip_status ip_proj_clean
+.PHONY: proj proj_clean
 
 # ----------------------------------------------------
 # Import Vivado IP management targets

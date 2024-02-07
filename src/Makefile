@@ -12,27 +12,20 @@ help: _help
 
 .PHONY: help
 
+reg:     _reg
+ip:      _ip
+info:    _info
 compile: _compile
+synth:   _synth
+driver:  _driver
+clean:   _clean
 
-compile_clean: _compile_clean
+.PHONY: reg ip info compile synth clean
 
-.PHONY: compile compile_clean
+# Remove all output products for all library components
+clean_all: _clean_all
 
-reg: _reg
-
-.PHONY: reg
-
-synth: _synth
-
-.PHONY: synth
-
-info: _info
-
-.PHONY: info
-
-clean: _clean
-
-.PHONY: clean
+.PHONY: _clean_all
 
 # ----------------------------------------------------
 # Include standard library targets

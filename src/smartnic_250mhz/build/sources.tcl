@@ -1,17 +1,18 @@
 set lib_root $env(LIB_ROOT)
 set out_root $env(OUTPUT_ROOT)
+set board $env(BOARD)
 
 # IP
-read_ip $out_root/common/fifo/ip/fifo_xilinx_ila/fifo_xilinx_ila.xci
-read_ip $out_root/common/axi4s/ip/ila_axi4s/ila_axi4s.xci
+read_ip $out_root/common/fifo/ip/$board/fifo_xilinx_ila/fifo_xilinx_ila.xci
+read_ip $out_root/common/axi4s/ip/$board/ila_axi4s/ila_axi4s.xci
 
 # Register slice IP (not synthesized OOC but need to provide Xilinx libs)
-read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_1.vh
-read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_vl_rfs.v
-read_verilog $out_root/common/xilinx/axis/ip/xilinx_axis_reg_slice/hdl/axis_register_slice_v1_1_vl_rfs.v
-read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_0.vh
-read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_vl_rfs.v
-read_verilog $out_root/common/xilinx/axi/ip/xilinx_axi_reg_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
+read_verilog $out_root/common/xilinx/axis/ip/$board/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_1.vh
+read_verilog $out_root/common/xilinx/axis/ip/$board/xilinx_axis_reg_slice/hdl/axis_infrastructure_v1_1_vl_rfs.v
+read_verilog $out_root/common/xilinx/axis/ip/$board/xilinx_axis_reg_slice/hdl/axis_register_slice_v1_1_vl_rfs.v
+read_verilog $out_root/common/xilinx/axi/ip/$board/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_0.vh
+read_verilog $out_root/common/xilinx/axi/ip/$board/xilinx_axi_reg_slice/hdl/axi_infrastructure_v1_1_vl_rfs.v
+read_verilog $out_root/common/xilinx/axi/ip/$board/xilinx_axi_reg_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
 
 # Reg packages
 read_verilog -quiet -sv [glob $out_root/common/fifo/regio/rtl/src/*_pkg.sv]

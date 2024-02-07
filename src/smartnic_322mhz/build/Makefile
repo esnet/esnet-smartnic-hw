@@ -12,6 +12,7 @@ include $(IP_ROOT)/config.mk
 export LIB_ROOT
 export APP_ROOT ?= $(PROJ_ROOT)/src/p4_app
 export OUTPUT_ROOT
+export BOARD
 
 # -----------------------------------------------
 # Specify top-level module
