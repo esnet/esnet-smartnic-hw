@@ -33,11 +33,11 @@ p4bm:
   tags:
     - ht-sim
   script:
-    - make -C src/p4_proc/p4/sim build sim-all
-    - make -C src/p4_app/p4/sim build sim-all
-    - make -C examples/p4_only/p4/sim sim-all
-    - make -C examples/p4_and_verilog/p4/sim build sim-all
-    - make -C examples/p4_with_extern/p4/sim sim-all
+    - make -s -C src/p4_proc/p4/sim build sim-all
+    - make -s -C src/p4_app/p4/sim build sim-all
+    - make -s -C examples/p4_only/p4/sim sim-all
+    - make -s -C examples/p4_and_verilog/p4/sim build sim-all
+    - make -s -C examples/p4_with_extern/p4/sim sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -54,13 +54,13 @@ sim_p4_apps:
   tags:
     - ht-sim
   script:
-    - make -C src/p4_proc/tests/regression
+    - make -s -C src/p4_proc/tests/regression
     - grep 'PASSED.*suites passing' src/p4_proc/tests/regression/run_$SEED/sim.log
-    - make -C src/p4_app/tests/regression
+    - make -s -C src/p4_app/tests/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_$SEED/sim.log
-    - make -C src/p4_app/tests.smartnic_322mhz/regression
+    - make -s -C src/p4_app/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_$SEED/sim.log
-    - make -C examples/p4_and_verilog/tests/regression
+    - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
@@ -80,11 +80,11 @@ sim_platform:
   tags:
     - ht-sim
   script:
-    - make -C src/smartnic_322mhz/tests/regression
+    - make -s -C src/smartnic_322mhz/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_$SEED/sim.log
-    - make -C examples/p2p/tests.smartnic_322mhz/regression
+    - make -s -C examples/p2p/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic_322mhz/regression/run_$SEED/sim.log
-    - make -C src/smartnic_250mhz/tests/regression
+    - make -s -C src/smartnic_250mhz/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_250mhz/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
@@ -178,8 +178,10 @@ smartnic_ip_cache_key:
   tags:
     - ht-synth
   script:
-    - make -C src/smartnic_250mhz/build ip BOARD=$SN_HW_BOARD
-    - make -C src/smartnic_322mhz/build ip BOARD=$SN_HW_BOARD
+    - make -s -C src refresh
+    - make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
+    - make -s -C src/smartnic_322mhz_app/blackbox/app_if BOARD=$SN_HW_BOARD
+    - make -s -C src synth COMPONENT=smartnic_322mhz.build BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
@@ -220,13 +222,14 @@ smartnic_ip_au250:
       _EOF
     - cat bitfile.env
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-    - mv .out $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
+    - make -s -C src refresh
+    - cp -r .out $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
-      - $EXAMPLES_DIR/$SN_HW_APP_NAME/.app
-      - $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts
+      - .out
+      - $EXAMPLES_DIR/$SN_HW_APP_NAME
       - open-nic-shell/build
     when: always
     reports:
