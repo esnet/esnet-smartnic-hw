@@ -11,12 +11,12 @@ include $(APP_DIR)/config.mk
 all: build package
 
 build:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=smartnic_322mhz_app.build BOARD=$(BOARD)
+	@$(MAKE) -s -C $(SRC_ROOT) opt COMPONENT=smartnic_322mhz_app.build BOARD=$(BOARD)
 
 package: build_package reg_package p4_package driver_package
 
 build_package:
-	@cp $(OUTPUT_ROOT)/smartnic_322mhz_app/build/$(BOARD)/proj/proj.runs/synth_1/smartnic_322mhz_app.dcp smartnic_322mhz_app.dcp
+	@cp $(OUTPUT_ROOT)/smartnic_322mhz_app/build/$(BOARD)/proj/proj.runs/impl_1/smartnic_322mhz_app_opt.dcp smartnic_322mhz_app.dcp
 	@cp $(SRC_ROOT)/smartnic_322mhz_app/rtl/src/smartnic_322mhz_app_pkg.sv smartnic_322mhz_app_pkg.sv
 
 reg_package:

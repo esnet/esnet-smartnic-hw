@@ -29,7 +29,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES = $(PROJ_ROOT)/src/smartnic_322mhz/app_if/smartnic_322mhz_app.sv
+SRC_FILES =
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
@@ -41,6 +41,7 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 SUBCOMPONENTS = \
     smartnic_322mhz.rtl \
     smartnic_322mhz.tb \
+    smartnic_322mhz_app.stub.rtl \
     std.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \

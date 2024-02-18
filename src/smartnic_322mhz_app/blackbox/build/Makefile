@@ -1,14 +1,14 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
-TOP = smartnic_250mhz
+TOP = smartnic_322mhz_app
 
 # ----------------------------------------------------
 # Sources
@@ -28,12 +28,12 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_250mhz.rtl
+    smartnic_322mhz_app.blackbox.rtl
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: opt validate
+all: opt
 
 pre_synth: _pre_synth
 synth:     _build_core_synth

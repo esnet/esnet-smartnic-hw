@@ -1,14 +1,9 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
-
-# -----------------------------------------------
-# Specify top-level module
-# -----------------------------------------------
-TOP = smartnic_250mhz
 
 # ----------------------------------------------------
 # Sources
@@ -27,33 +22,38 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
+
 SUBCOMPONENTS = \
-    smartnic_250mhz.rtl
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi3.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME)
+
+EXT_LIBS =
+
+# ----------------------------------------------------
+# Defines
+#   List macro definitions.
+# ----------------------------------------------------
+DEFINES =
+
+# ----------------------------------------------------
+# Options
+# ----------------------------------------------------
+COMPILE_OPTS =
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: opt validate
+all: compile synth
 
-pre_synth: _pre_synth
-synth:     _build_core_synth
-opt:       _build_core_opt
-place:     _build_core_place
-validate:  _build_core_validate
-info:      _build_core_info
-clean:     _build_clean
+compile: _compile_sim
+synth:   _compile_synth
+info:    _compile_info
+clean:   _compile_clean
 
-.PHONY: pre_synth synth opt validate info clean
+.PHONY: all compile synth info clean
 
 # ----------------------------------------------------
-# Project management targets
+# Import Vivado compile targets
 # ----------------------------------------------------
-proj       : _proj
-proj_clean : _proj_clean
-
-.PHONY: proj proj_clean
-
-# -----------------------------------------------
-# Include Vivado definitions/targets
-# -----------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk
+include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
