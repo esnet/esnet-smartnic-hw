@@ -1,18 +1,11 @@
 # -----------------------------------------------
-# (Global) Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
-include $(IP_ROOT)/config.mk
+include $(COMPONENT_ROOT)/config.mk
 
-# Export path variables for use in build (Tcl) scripts
-export LIB_ROOT
-export APP_ROOT ?= $(PROJ_ROOT)/src/p4_app
-export OUTPUT_ROOT
-export BOARD
+APP_ROOT ?= $(PROJ_ROOT)/src/smartnic_322mhz
 
 # -----------------------------------------------
 # Specify top-level module
@@ -20,45 +13,66 @@ export BOARD
 TOP = smartnic_322mhz
 
 # ----------------------------------------------------
+# Sources
+#   List source files and include directories for component.
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
+#   NOTE: along with explictly-listed sources, all
+#   source files from ./src are added automatically, and
+#   .include is added as an include directory automatically.
+# ----------------------------------------------------
+SRC_FILES = \
+    $(APP_ROOT)/app_if/smartnic_322mhz_app_pkg.sv
+
+INC_DIRS =
+SRC_LIST_FILES =
+
+# ----------------------------------------------------
+# Dependencies
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
+# ----------------------------------------------------
+SUBCOMPONENTS = \
+    smartnic_322mhz.rtl
+
+# ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: opt
-
-cp_app_dec: $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml
-	@cp $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml $(IP_ROOT)/regio
-
-$(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml:
-	@$(MAKE) -s -C $(APP_ROOT)/app_if
+all: opt validate
 
 reg: cp_app_dec
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=axi4s.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=fifo.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=reg.endian.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=reg.proxy.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.hbm.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_322mhz.regio
+pre_synth: reg _pre_synth
+	@cp $(COMPONENT_OUT_SYNTH_PATH)/sources.tcl ./
 
-ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=smartnic_322mhz.ip
+synth:     _build_core_synth
+opt:       _build_core_opt
+place:     _build_core_place
+validate:  _build_core_validate
+info:      _build_core_info _app_info
+clean:     _build_clean
 
-.PHONY: reg ip
+.PHONY: pre_synth synth opt validate info clean
 
-pre_synth: reg ip $(APP_ROOT)/app_if/smartnic_322mhz_app.dcp
-synth:     _synth
-opt:       _opt
+cp_app_dec: $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml
+	@cp $(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml $(COMPONENT_ROOT)/regio/
 
-$(APP_ROOT)/app_if/smartnic_322mhz_app.dcp:
-	@$(MAKE) -s -C $(APP_ROOT)/app_if
+$(APP_ROOT)/app_if/smartnic_322mhz_app_decoder.yaml:
+	$(error smartnic_322mhz_app_decoder.yaml not present in $(APP_ROOT)/app_if. Build application before executing SmartNIC build)
 
-.PHONY: pre_synth synth opt
+$(APP_ROOT)/app_if/smartnic_322mhz_app_pkg.sv:
+	$(error smartnic_322mhz_app_pkg.sv not present in $(APP_ROOT)/app_if. Build application before executing SmartNIC build)
 
-clean: _clean_build
+_app_info:
+	@echo "------------------------------------------------------"
+	@echo "Application configuration"
+	@echo "------------------------------------------------------"
+	@echo "APP_ROOT           : $(APP_ROOT)"
+# ----------------------------------------------------
+# Project management targets
+# ----------------------------------------------------
+proj       : _proj
+proj_clean : _proj_clean
 
-.PHONY: clean
+.PHONY: proj proj_clean
 
 # -----------------------------------------------
 # Include Vivado definitions/targets

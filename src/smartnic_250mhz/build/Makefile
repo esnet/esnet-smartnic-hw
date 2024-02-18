@@ -1,17 +1,9 @@
 # -----------------------------------------------
-# (Global) Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
-include $(IP_ROOT)/config.mk
-
-# Export path variables for use in build (Tcl) scripts
-export LIB_ROOT
-export OUTPUT_ROOT
-export BOARD
+include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Specify top-level module
@@ -19,36 +11,50 @@ export BOARD
 TOP = smartnic_250mhz
 
 # ----------------------------------------------------
+# Sources
+#   List source files and include directories for component.
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
+#   NOTE: along with explictly-listed sources, all
+#   source files from ./src are added automatically, and
+#   .include is added as an include directory automatically.
+# ----------------------------------------------------
+SRC_FILES =
+INC_DIRS =
+SRC_LIST_FILES =
+
+# ----------------------------------------------------
+# Dependencies
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
+# ----------------------------------------------------
+SUBCOMPONENTS = \
+    smartnic_250mhz.rtl
+
+# ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: opt
-pre_synth: reg ip
-synth:     _synth
-opt:       _opt
+all: opt validate
 
-.PHONY: pre_synth synth opt
+pre_synth: _pre_synth
+	@cp $(COMPONENT_OUT_SYNTH_PATH)/sources.tcl ./
 
-reg:
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=fifo.regio@common
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_250mhz.regio
+synth:     _build_core_synth
+opt:       _build_core_opt
+place:     _build_core_place
+validate:  _build_core_validate
+info:      _build_core_info
+clean:     _build_clean
+	@rm -rf sources.tcl
 
-ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axi.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common
+.PHONY: pre_synth synth opt validate info clean
 
-ip_clean:
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=xilinx.axi.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=xilinx.axis.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=axi4s.ip@common
-	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=fifo.ip@common
+# ----------------------------------------------------
+# Project management targets
+# ----------------------------------------------------
+proj       : _proj
+proj_clean : _proj_clean
 
-.PHONY: reg ip ip_clean
-
-clean: clean_build ip_clean
-
-.PHONY: clean
+.PHONY: proj proj_clean
 
 # -----------------------------------------------
 # Include Vivado definitions/targets

@@ -1,8 +1,9 @@
 # -----------------------------------------------
-# IP config (for compilation library setup)
+# Component setup
 # -----------------------------------------------
-IP_ROOT = ../..
-include $(IP_ROOT)/config.mk
+COMPONENT_ROOT := ../..
+
+include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Configuration
@@ -25,7 +26,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for test
-#   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
 SRC_FILES = $(PROJ_ROOT)/src/smartnic_322mhz/app_if/smartnic_322mhz_app.sv
@@ -34,16 +35,17 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
 # ----------------------------------------------------
 # Dependencies
-#   List IP component and external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk for details)
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
-COMPONENTS = smartnic_322mhz.rtl \
-             smartnic_322mhz.tb \
-             std.verif@common \
-             axi4l.rtl@common \
-             axi4l.verif@common \
-             axi4s.rtl@common \
-             axi4s.verif@common
+SUBCOMPONENTS = \
+    smartnic_322mhz.rtl \
+    smartnic_322mhz.tb \
+    std.verif@common \
+    axi4l.rtl@common \
+    axi4l.verif@common \
+    axi4s.rtl@common \
+    axi4s.verif@common
 
 EXT_LIBS =
 
@@ -54,14 +56,24 @@ EXT_LIBS =
 #   command line, as e.g.:
 #     make DEFINES="DEBUG FAST=TRUE"
 # ----------------------------------------------------
-override DEFINES += SIMULATION
+override DEFINES +=
+
+# ----------------------------------------------------
+# Run-time arguments
+#   List runtime arguments passed to simulator as
+#   plusarg (+ARG) references.
+#   Arguments listed here will add to any arguments
+#   set at the command line, as e.g.:
+#   make PLUSARGS="FAST_SIM MODE=1"
+# ----------------------------------------------------
+override PLUSARGS +=
 
 # ----------------------------------------------------
 # Options
 # ----------------------------------------------------
-COMPILE_OPTS +=
-ELAB_OPTS += --debug typical
-SIM_OPTS +=
+COMPILE_OPTS =
+ELAB_OPTS = --debug typical
+SIM_OPTS =
 
 # ----------------------------------------------------
 # Targets
@@ -72,12 +84,11 @@ pcap:
 	cd $(PROJ_ROOT)/src/smartnic_322mhz/tests/common/pcap; python3 gen_pcap.py;
 
 build_test: _build_test
+sim:        _sim
+info:       _sim_info
+clean:      _clean_test _clean_sim
 
-sim: _sim
-
-clean: _clean_test _clean_sim
-
-.PHONY: all pcap build_test sim clean
+.PHONY: all pcap build_test sim info clean
 
 # ----------------------------------------------------
 # Test configuration

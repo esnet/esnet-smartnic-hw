@@ -1,12 +1,9 @@
 # -----------------------------------------------
-# Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
-include $(IP_ROOT)/config.mk
+include $(COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # IP listing
@@ -58,7 +55,7 @@ endif
 #         (The <path-to-out-dir> is prepended automatically)
 # ----------------------------------------------------
 #  List simulation source files and include directories
-#  (see $SCRIPTS_ROOT/Makefiles/sources.mk)
+#  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
     axis_switch_egress/sim/axis_switch_egress.v \
     axis_switch_ingress/sim/axis_switch_ingress.v \
@@ -66,10 +63,11 @@ IP_SIM_SRC_FILES = \
     clk_wiz_0/clk_wiz_0.v \
     clk_wiz_1/clk_wiz_1_clk_wiz.v \
     clk_wiz_1/clk_wiz_1.v
+
 IP_SIM_INC_DIRS =
 
 #   List external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
            axi_infrastructure_v1_1_0 \
            axi_clock_converter_v2_1_28 \
@@ -87,12 +85,12 @@ EXT_LIBS = \
 # ----------------------------------------------------
 # Options
 # ----------------------------------------------------
-COMPILE_OPTS=
+COMPILE_OPTS =
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: synth compile
+all: ip compile synth
 
 ip:      _ip
 compile: _ip_compile
