@@ -14,7 +14,7 @@ TOP = smartnic_322mhz_app
 # Sources
 #   List source files and include directories for component.
 #   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
-#   NOTE: along with explictly-listed sources, all
+#   NOTE: along with explicitly-listed sources, all
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
