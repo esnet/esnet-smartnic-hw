@@ -9,7 +9,7 @@ PROJ_ROOT := $(CURDIR)
 include $(PROJ_ROOT)/config.mk
 
 # Configure default application if none is specified
-APP_DIR ?= $(CURDIR)/src/p4_app
+APP_DIR ?= $(CURDIR)/src/smartnic_322mhz_app/p4_only
 
 # Include standard application configuration
 include $(PROJ_ROOT)/scripts/app_config.mk
@@ -68,18 +68,38 @@ $(APP_DIR)/example:
 
 bitfile : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
-	@echo "Generating smartnic platform IP..."
-	@$(MAKE) -s -C $(APP_ROOT)/app_if
-	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build APP_ROOT=$(APP_ROOT) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
-	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
-	@echo "Generating smartnic bitfile..."
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo "Building application $(APP_NAME) for $(BOARD) ..."
+	@echo
+	@$(MAKE) -s -C $(APP_ROOT)/app_if BOARD=$(BOARD)
+	@echo
+	@echo "Done."
+	@echo "----------------------------------------------------------"
+	@echo "Preparing smartnic_322mhz IP ..."
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/build pre_synth APP_ROOT=$(APP_ROOT) BOARD=$(BOARD)
+	@echo
+	@echo "Done."
+	@echo "----------------------------------------------------------"
+	@echo "Preparing smartnic_250mhz IP ..."
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build pre_synth BOARD=$(BOARD)
+	@echo
+	@echo "Done."
+	@echo "----------------------------------------------------------"
+	@echo "Building OpenNIC shell ..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
+	@echo
+	@echo "Done."
 
 package : | $(ARTIFACTS_BUILD_DIR)
-	@echo "Packaging build $(BUILD_NAME)..."
+	@echo "----------------------------------------------------------"
+	@echo "Packaging build $(BUILD_NAME) ..."
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_322mhz/regio reg APP_ROOT=$(APP_ROOT)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
+	@echo
+	@echo "Done."
 
 validate: | $(ARTIFACTS_BUILD_DIR)
 	@$(MAKE) -s -C $(PROJ_ROOT) -f makefile.esnet validate_build \

@@ -1,0 +1,14 @@
+blocks:
+  smartnic_322mhz_app: &id001
+    info: 'This block is a placeholder for the registers in the smartnic application
+      core.
+
+      '
+    name: smartnic_322mhz_app
+    regs: []
+interfaces:
+- address: 0
+  block: *id001
+  name: smartnic_322mhz_app
+  width: 18
+name: smartnic_322mhz_app

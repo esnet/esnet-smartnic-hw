@@ -1,12 +1,12 @@
 # -----------------------------------------------
 # Path setup
 # -----------------------------------------------
-IP_ROOT := .
+COMPONENT_ROOT := .
 
 # -----------------------------------------------
-# IP config
+# Component config
 # -----------------------------------------------
-include $(IP_ROOT)/config.mk
+include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Targets
@@ -17,6 +17,6 @@ regression: _regression
 
 .PHONY: all regression
 
-# Import standard IP root targets
-include $(SCRIPTS_ROOT)/Makefiles/ip_base.mk
+# Import standard (root) component targets
+include $(SCRIPTS_ROOT)/Makefiles/component_base.mk
 

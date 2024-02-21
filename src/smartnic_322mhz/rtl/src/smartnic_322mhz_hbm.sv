@@ -625,7 +625,7 @@ module smartnic_322mhz_hbm #(
         .*
     );
  
-`ifdef SIMULATION
+`ifndef SYNTHESIS
     
     // HBM simulations not supported in Vivado Simulator
     // (instantiate functional model instead)

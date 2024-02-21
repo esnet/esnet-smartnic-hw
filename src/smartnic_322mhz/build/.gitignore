@@ -1,4 +1,2 @@
-*.hw/**
-out/**
-regio-yaml/**
-src/**
+sources.tcl
+add_sources.tcl

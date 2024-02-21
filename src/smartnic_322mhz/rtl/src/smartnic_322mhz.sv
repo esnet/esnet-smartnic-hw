@@ -5,7 +5,7 @@ module smartnic_322mhz
 #(
   parameter int NUM_CMAC = 2,
   parameter int MAX_PKT_LEN = 9100,
-`ifdef SIMULATION
+`ifndef SYNTHESIS
   parameter bit INCLUDE_HBM0 = 1'b1,
   parameter bit INCLUDE_HBM1 = 1'b1
 `else

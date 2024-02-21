@@ -1,17 +1,9 @@
 # -----------------------------------------------
-# (Global) Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-include $(IP_ROOT)/config.mk
-
-# -----------------------------------------------
-# Export parameters used in add_sources.tcl
-# -----------------------------------------------
-export LIB_ROOT
-export SRC_ROOT
-export OUTPUT_ROOT
-export BOARD
+include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Specify top-level module
@@ -19,26 +11,47 @@ export BOARD
 TOP = smartnic_322mhz_app
 
 # ----------------------------------------------------
+# Sources
+#   List source files and include directories for component.
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
+#   NOTE: along with explictly-listed sources, all
+#   source files from ./src are added automatically, and
+#   .include is added as an include directory automatically.
+# ----------------------------------------------------
+SRC_FILES =
+INC_DIRS =
+SRC_LIST_FILES =
+
+# ----------------------------------------------------
+# Dependencies
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
+# ----------------------------------------------------
+SUBCOMPONENTS = \
+    smartnic_322mhz_app.rtl
+
+# ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: opt
+all: opt validate
 
-reg:
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=fifo.regio@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=p2p.regio
+pre_synth: _pre_synth
+synth:     _build_core_synth
+opt:       _build_core_opt
+place:     _build_core_place
+validate:  _build_core_validate
+info:      _build_core_info
+clean:     _build_clean
 
-ip:
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=fifo.ip@common@smartnic
-	@$(MAKE) -s -C $(SRC_ROOT) synth COMPONENT=axi4s.ip@common@smartnic
-.PHONY: ip
+.PHONY: pre_synth synth opt validate info clean
 
-pre_synth: reg ip
-synth:     _synth
-opt:       _opt
-.PHONY: pre_synth synth opt
+# ----------------------------------------------------
+# Project management targets
+# ----------------------------------------------------
+proj       : _proj
+proj_clean : _proj_clean
 
-clean: _clean_build
-.PHONY: clean
+.PHONY: proj proj_clean
 
 # -----------------------------------------------
 # Include Vivado definitions/targets

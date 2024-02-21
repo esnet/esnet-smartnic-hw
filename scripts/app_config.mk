@@ -17,8 +17,10 @@ else
 APP_TYPE := P4
 endif
 
+APP_PROJ_ROOT := $(APP_DIR)/.app
+
 ifeq ($(APP_TYPE),P4)
-APP_ROOT := $(APP_DIR)/.app/src/p4_app
+APP_ROOT := $(APP_PROJ_ROOT)
 else
 APP_ROOT := $(APP_DIR)
 endif
@@ -110,7 +112,6 @@ endif
 # Write config to file
 # - write application configuration to a file
 # ----------------------------------------------------
-APP_PROJ_ROOT := $(APP_DIR)/.app
 APP_CFG_FILE := $(APP_PROJ_ROOT)/config.mk
 
 _configure_app_src_lib := \
@@ -157,11 +158,10 @@ _configure_app_common := \
 
 _configure_app_p4 := \
 	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4 $(APP_PROJ_ROOT)/src/; \
-	 mkdir -p $(APP_PROJ_ROOT)/src/p4_app; \
-	 cp $(SCRIPTS_ROOT)/Makefiles/templates/ip_config.mk $(APP_PROJ_ROOT)/src/p4_app/config.mk; \
-	 cp -r $(SMARTNIC_ROOT)/src/p4_app/app_if $(APP_PROJ_ROOT)/src/p4_app/; \
-	 cp -r $(SMARTNIC_ROOT)/src/p4_app/build $(APP_PROJ_ROOT)/src/p4_app/; \
-	 cp -r $(APP_DIR)/extern $(APP_PROJ_ROOT)/src/p4_app/ 2>/dev/null; \
+	 cp -r $(SMARTNIC_ROOT)/src/smartnic_322mhz_app $(APP_PROJ_ROOT)/src/; \
+	 mv $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
+	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
+	 cp -r $(APP_DIR)/extern/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/ 2>/dev/null; \
 	 make -s -C $(APP_ROOT)/app_if clean;
 
 _configure_app_verilog :=

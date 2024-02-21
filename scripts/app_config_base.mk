@@ -12,6 +12,8 @@ include $(SMARTNIC_ROOT)/paths.mk
 LIB_ROOT := $(SMARTNIC_ROOT)/esnet-fpga-library
 include $(LIB_ROOT)/paths.mk
 
+BOARD ?= au280
+
 # Device configuration
 CFG_ROOT := $(SMARTNIC_ROOT)/cfg
 
@@ -21,6 +23,7 @@ OUTPUT_ROOT := $(APP_DIR)/.app/out
 # Auto-configure source library for P4-only applications
 ifeq ($(wildcard $(APP_DIR)/app_if/.),)
 SRC_ROOT := $(APP_DIR)/.app/src
+SMARTNIC_LIB_NAME := smartnic
 endif
 
 include $(SCRIPTS_ROOT)/Makefiles/proj_config_base.mk

@@ -1,20 +1,17 @@
 # -----------------------------------------------
-# Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
-include $(IP_ROOT)/config.mk
+include $(COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
-#   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
-#   Note: if no sources are explicitly listed, all
-#   source files from ./src are added automatically,
-#   with include directory ./include
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
+#   NOTE: along with explictly-listed sources, all
+#   source files from ./src are added automatically, and
+#   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS =
@@ -22,14 +19,16 @@ SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
-#   List IP component and external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = p4_proc.regio.rtl \
-             p4_proc.regio.verif \
-             std.verif@common \
-             axi4l.verif@common \
-             axi4s.verif@common
+SUBCOMPONENTS = \
+    p4_proc.regio.rtl \
+    p4_proc.regio.verif \
+    std.verif@common \
+    axi4l.verif@common \
+    axi4s.verif@common
+
 EXT_LIBS =
 
 # ----------------------------------------------------
@@ -41,9 +40,7 @@ DEFINES =
 # ----------------------------------------------------
 # Options
 # ----------------------------------------------------
-COMPILE_OPTS=
-ELAB_OPTS=--debug typical
-SIM_OPTS=
+COMPILE_OPTS =
 
 # ----------------------------------------------------
 # Targets
@@ -51,10 +48,8 @@ SIM_OPTS=
 all: compile
 
 compile: _compile_sim
-
-info: _compile_info
-
-clean: _compile_clean
+info:    _compile_info
+clean:   _compile_clean
 
 .PHONY: all compile info clean
 

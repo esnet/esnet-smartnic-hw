@@ -95,8 +95,8 @@ package :
 	@echo "The wireshark/plugins directory is a placeholder for wireshark .lua files,"    > $(artifact_dir)/wireshark/plugins/README.md
 	@echo "which can be used to decode custom protocol headers defined in the .p4 file." >> $(artifact_dir)/wireshark/plugins/README.md
 	@cp -r $(ONS_ROOT)/regmap/spec/* $(artifact_dir)/regmap/spec
-	@cp $(OUTPUT_ROOT)/smartnic_322mhz/regio/ir/smartnic_322mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box1_322mhz_decoder.yaml
-	@cp $(OUTPUT_ROOT)/smartnic_250mhz/regio/ir/smartnic_250mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box0_250mhz_decoder.yaml
+	@cp .out/smartnic_322mhz/regio/ir/smartnic_322mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box1_322mhz_decoder.yaml
+	@cp .out/smartnic_250mhz/regio/ir/smartnic_250mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box0_250mhz_decoder.yaml
 	@$(REGIO_ROOT)/regio-elaborate \
 	   --file-type top \
 	   --include-dir $(artifact_dir)/regmap/spec \

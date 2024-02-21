@@ -1,20 +1,17 @@
 # -----------------------------------------------
-# Path setup
+# Component setup
 # -----------------------------------------------
-IP_ROOT := ..
+COMPONENT_ROOT := ..
 
-# -----------------------------------------------
-# IP config
-# -----------------------------------------------
-include $(IP_ROOT)/config.mk
+include $(COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
-#   (see $(SCRIPTS_ROOT)/Makefiles/sources.mk)
-#   Note: if no sources are explicitly listed, all
-#   source files from ./src are added automatically,
-#   with include directory ./include
+#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
+#   NOTE: along with explictly-listed sources, all
+#   source files from ./src are added automatically, and
+#   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS =
@@ -22,19 +19,19 @@ SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
-#   List IP component and external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/dependencies.mk)
+#   List subcomponent and external library dependencies
+#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-COMPONENTS = smartnic_322mhz.ip \
-             smartnic_322mhz.regio.rtl \
-             reg.endian.rtl@common \
-             reg.proxy.rtl@common \
-             xilinx.hbm.rtl@common \
-             xilinx.axi.rtl@common \
-             xilinx.axis.rtl@common \
-             axi4l.rtl@common \
-             axi4s.rtl@common \
-             xilinx.hbm.verif@common
+SUBCOMPONENTS = \
+    smartnic_322mhz.ip \
+    smartnic_322mhz.regio.rtl \
+    reg.endian.rtl@common \
+    reg.proxy.rtl@common \
+    xilinx.hbm.rtl@common \
+    xilinx.axi.rtl@common \
+    xilinx.axis.rtl@common \
+    axi4l.rtl@common \
+    axi4s.rtl@common
 
 EXT_LIBS =
 
@@ -47,22 +44,17 @@ DEFINES =
 # ----------------------------------------------------
 # Options
 # ----------------------------------------------------
-COMPILE_OPTS=
-ELAB_OPTS=--debug typical
-SIM_OPTS=
+COMPILE_OPTS =
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile
+all: compile synth
 
 compile: _compile_sim
-
-synth: _compile_synth
-
-info: _compile_info
-
-clean: _compile_clean
+synth:   _compile_synth
+info:    _compile_info
+clean:   _compile_clean
 
 .PHONY: all compile synth info clean
 
