@@ -161,7 +161,7 @@ _configure_app_p4 := \
 	 cp -r $(SMARTNIC_ROOT)/src/smartnic_322mhz_app $(APP_PROJ_ROOT)/src/; \
 	 mv $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
 	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
-	 cp -r $(APP_DIR)/extern/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/ 2>/dev/null; \
+	 cp $(APP_DIR)/extern/rtl/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/ 2>/dev/null || rm $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/smartnic_extern.sv; \
 	 make -s -C $(APP_ROOT)/app_if clean;
 
 _configure_app_verilog :=
