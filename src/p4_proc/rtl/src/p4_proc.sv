@@ -1,5 +1,5 @@
 module p4_proc
-    import p4_proc_pkg::*;
+    import smartnic_322mhz_pkg::*;
 #(
     parameter int   N = 2,                // Number of processor ports.
     parameter bit   EXTERN_PORTS = 0,     // 1: Connects extern ports to wrapper, 0: Ties off extern ports
@@ -24,6 +24,7 @@ module p4_proc
 
     axi3_intf.controller  axi_to_hbm[16]
 );
+    import p4_proc_pkg::*;
     import axi4s_pkg::*;
     import arb_pkg::*;
 
@@ -32,6 +33,22 @@ module p4_proc
     // -------------------------------------------------
     initial std_pkg::param_check_gt(N, 1, "N");
     initial std_pkg::param_check_lt(N, 2, "N");
+
+    // -------------------------------------------------
+    // Typedefs
+    // -------------------------------------------------
+    // Metadata format within p4_proc
+    // (needs to be a superset of the fields described
+    //  in smartnic_322mhz_pkg::tuser_smartnic_meta_t)
+    typedef struct packed {
+        timestamp_t  timestamp;
+        logic [15:0] pid;
+        logic        trunc_enable;
+        logic [15:0] trunc_length;
+        logic        rss_enable;
+        logic [11:0] rss_entropy;
+        logic        hdr_tlast;
+    } tuser_t;
 
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
@@ -87,36 +104,36 @@ module p4_proc
 
     logic [15:0] trunc_length[N];
 
-    tuser_smartnic_meta_t  _axis_from_switch_tuser[N];
-    tuser_smartnic_meta_t  _axis_from_split_join_tuser[N];
-    tuser_smartnic_meta_t  axis_to_sdnet_tuser;
-    tuser_smartnic_meta_t  axis_from_sdnet_tuser;
+    tuser_t  _axis_from_switch_tuser[N];
+    tuser_t  _axis_from_split_join_tuser[N];
+    tuser_t  axis_to_sdnet_tuser;
+    tuser_t  axis_from_sdnet_tuser;
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_switch[N] ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join[N] ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_split_join[N] ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        _axis_to_sdnet ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        axis_to_sdnet ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_sdnet ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_split_join[N] ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_drop[N] ();
 
-    axi4s_intf  #( .TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_trunc[N] ();
 
 
