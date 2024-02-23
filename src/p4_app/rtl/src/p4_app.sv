@@ -1,5 +1,5 @@
 module p4_app
-   import p4_app_pkg::*;
+   import smartnic_322mhz_pkg::*;
 #(
    parameter int N = 2  // Number of processor ports.
 ) (
