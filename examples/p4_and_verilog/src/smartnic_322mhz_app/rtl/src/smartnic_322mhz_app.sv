@@ -165,7 +165,7 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
-    import p4_and_verilog_pkg::*;
+    import smartnic_322mhz_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
