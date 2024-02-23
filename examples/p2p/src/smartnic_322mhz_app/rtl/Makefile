@@ -24,6 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     p2p.rtl \
+    smartnic_322mhz.pkg@smartnic \
     axi4l.rtl@common@smartnic \
     axi3.rtl@common@smartnic \
     axi4s.rtl@common@smartnic
