@@ -1,5 +1,4 @@
 module smartnic_322mhz_timestamp
-//    import smartnic_322mhz_pkg::*;
 #() (
     input  logic        clk,
     input  logic        rstn,

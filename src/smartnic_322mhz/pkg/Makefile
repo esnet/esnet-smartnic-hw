@@ -22,18 +22,7 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    smartnic_322mhz.pkg \
-    smartnic_322mhz.ip \
-    smartnic_322mhz.regio.rtl \
-    reg.endian.rtl@common \
-    reg.proxy.rtl@common \
-    xilinx.hbm.rtl@common \
-    xilinx.axi.rtl@common \
-    xilinx.axis.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common
-
+SUBCOMPONENTS =
 EXT_LIBS =
 
 # ----------------------------------------------------
