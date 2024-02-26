@@ -1,5 +1,5 @@
 module p4_and_verilog
-   import p4_and_verilog_pkg::*;
+   import smartnic_322mhz_pkg::*;
 (
    input logic        core_clk,
    input logic        core_rstn,
@@ -68,8 +68,6 @@ module p4_and_verilog
    tuser_smartnic_meta_t  axis_to_switch_0_tuser;
    assign axis_to_switch_0.tuser = axis_to_switch_0_tuser;
 
-
-   // metadata type definitions (from ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
    // --- metadata_in ---
    user_metadata_t user_metadata_in;
    logic           user_metadata_in_valid;

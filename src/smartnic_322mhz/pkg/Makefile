@@ -22,13 +22,7 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    p2p.rtl \
-    smartnic_322mhz.pkg@smartnic \
-    axi4l.rtl@common@smartnic \
-    axi3.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic
-
+SUBCOMPONENTS =
 EXT_LIBS =
 
 # ----------------------------------------------------

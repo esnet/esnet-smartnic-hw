@@ -23,6 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    smartnic_322mhz.pkg \
     p4_app.regio.rtl \
     p4_proc.rtl \
     axi4l.rtl@common \
