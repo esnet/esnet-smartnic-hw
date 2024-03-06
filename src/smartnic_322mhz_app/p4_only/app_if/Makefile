@@ -19,8 +19,8 @@ package: build_package reg_package p4_package driver_package
 
 build_package:
 	@cp $(OUTPUT_ROOT)/smartnic_322mhz_app/p4_only/build/$(BOARD)/proj/proj.runs/impl_1/smartnic_322mhz_app_opt.dcp smartnic_322mhz_app.dcp
-	@cp $(OUTPUT_ROOT)/vitisnetp4/rtl/sdnet_0_app_pkg.sv smartnic_322mhz_app_pkg.sv
-	@sed -i 's/sdnet_0/smartnic_322mhz/g' smartnic_322mhz_app_pkg.sv
+	@cp $(OUTPUT_ROOT)/vitisnetp4_igr/rtl/sdnet_igr_app_pkg.sv smartnic_322mhz_app_pkg.sv
+	@sed -i 's/sdnet_igr/smartnic_322mhz/g' smartnic_322mhz_app_pkg.sv
 
 reg_package:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_322mhz_app.p4_only.regio
@@ -32,6 +32,8 @@ p4_package:
 
 driver_package:
 	@$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4.ip
+	@$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_igr.ip
+	@$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_egr.ip
 	@tar -cf smartnic_322mhz_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/ip/$(BOARD)/sdnet_0/src/sw/drivers/install .
 
 clean:

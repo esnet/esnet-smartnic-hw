@@ -24,7 +24,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 
 SUBCOMPONENTS = \
-    vitisnetp4.rtl \
+    vitisnetp4_igr.rtl \
+    vitisnetp4_egr.rtl \
     p4_app.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi3.rtl@$(COMMON_LIB_NAME) \

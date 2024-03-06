@@ -1,7 +1,9 @@
 // smartnic_322mhz_app (empty) stub module. Used for platform level tests.
 (*black_box*) module smartnic_322mhz_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16
+    parameter int AXI_HBM_NUM_IFS = 16,
+    parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
+    parameter int M = 2  // Number of vitisnetp4 processors.
 ) (
     input  logic         core_clk,
     input  logic         core_rstn,
@@ -40,83 +42,57 @@
     // (SDNet) AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic         axil_sdnet_aresetn,
+    input  logic [(M*  1)-1:0] axil_sdnet_aresetn,
     // -- Write address
-    input  logic         axil_sdnet_awvalid,
-    output logic         axil_sdnet_awready,
-    input  logic [31:0]  axil_sdnet_awaddr,
-    input  logic [2:0]   axil_sdnet_awprot,
+    input  logic [(M*  1)-1:0] axil_sdnet_awvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_awready,
+    input  logic [(M* 32)-1:0] axil_sdnet_awaddr,
+    input  logic [(M*  3)-1:0] axil_sdnet_awprot,
     // -- Write data
-    input  logic         axil_sdnet_wvalid,
-    output logic         axil_sdnet_wready,
-    input  logic [31:0]  axil_sdnet_wdata,
-    input  logic [3:0]   axil_sdnet_wstrb,
+    input  logic [(M*  1)-1:0] axil_sdnet_wvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_wready,
+    input  logic [(M* 32)-1:0] axil_sdnet_wdata,
+    input  logic [(M*  4)-1:0] axil_sdnet_wstrb,
     // -- Write response
-    output logic         axil_sdnet_bvalid,
-    input  logic         axil_sdnet_bready,
-    output logic [1:0]   axil_sdnet_bresp,
+    output logic [(M*  1)-1:0] axil_sdnet_bvalid,
+    input  logic [(M*  1)-1:0] axil_sdnet_bready,
+    output logic [(M*  2)-1:0] axil_sdnet_bresp,
     // -- Read address
-    input  logic         axil_sdnet_arvalid,
-    output logic         axil_sdnet_arready,
-    input  logic [31:0]  axil_sdnet_araddr,
-    input  logic [2:0]   axil_sdnet_arprot,
+    input  logic [(M*  1)-1:0] axil_sdnet_arvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_arready,
+    input  logic [(M* 32)-1:0] axil_sdnet_araddr,
+    input  logic [(M*  3)-1:0] axil_sdnet_arprot,
     // -- Read data
-    output logic         axil_sdnet_rvalid,
-    input  logic         axil_sdnet_rready,
-    output logic [31:0]  axil_sdnet_rdata,
-    output logic [1:0]   axil_sdnet_rresp,
+    output logic [(M*  1)-1:0] axil_sdnet_rvalid,
+    input  logic [(M*  1)-1:0] axil_sdnet_rready,
+    output logic [(M* 32)-1:0] axil_sdnet_rdata,
+    output logic [(M*  2)-1:0] axil_sdnet_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
-    input  logic         axis_from_switch_0_tvalid,
-    output logic         axis_from_switch_0_tready,
-    input  logic [511:0] axis_from_switch_0_tdata,
-    input  logic [63:0]  axis_from_switch_0_tkeep,
-    input  logic         axis_from_switch_0_tlast,
-    input  logic [1:0]   axis_from_switch_0_tid,
-    input  logic [1:0]   axis_from_switch_0_tdest,
-    input  logic [15:0]  axis_from_switch_0_tuser_pid,
+    input  logic [(M*N*  1)-1:0] axis_from_switch_tvalid,
+    output logic [(M*N*  1)-1:0] axis_from_switch_tready,
+    input  logic [(M*N*512)-1:0] axis_from_switch_tdata,
+    input  logic [(M*N* 64)-1:0] axis_from_switch_tkeep,
+    input  logic [(M*N*  1)-1:0] axis_from_switch_tlast,
+    input  logic [(M*N*  2)-1:0] axis_from_switch_tid,
+    input  logic [(M*N*  2)-1:0] axis_from_switch_tdest,
+    input  logic [(M*N* 16)-1:0] axis_from_switch_tuser_pid,
 
     // AXI-S data interface (to switch)
     // (synchronous to core_clk domain)
-    output logic         axis_to_switch_0_tvalid,
-    input  logic         axis_to_switch_0_tready,
-    output logic [511:0] axis_to_switch_0_tdata,
-    output logic [63:0]  axis_to_switch_0_tkeep,
-    output logic         axis_to_switch_0_tlast,
-    output logic [1:0]   axis_to_switch_0_tid,
-    output logic [2:0]   axis_to_switch_0_tdest,
-    output logic [15:0]  axis_to_switch_0_tuser_pid,
-    output logic         axis_to_switch_0_tuser_trunc_enable,
-    output logic [15:0]  axis_to_switch_0_tuser_trunc_length,
-    output logic         axis_to_switch_0_tuser_rss_enable,
-    output logic [11:0]  axis_to_switch_0_tuser_rss_entropy,
-
-    // AXI-S data interface (from host)
-    // (synchronous to core_clk domain)
-    input  logic         axis_from_switch_1_tvalid,
-    output logic         axis_from_switch_1_tready,
-    input  logic [511:0] axis_from_switch_1_tdata,
-    input  logic [63:0]  axis_from_switch_1_tkeep,
-    input  logic         axis_from_switch_1_tlast,
-    input  logic [1:0]   axis_from_switch_1_tid,
-    input  logic [1:0]   axis_from_switch_1_tdest,
-    input  logic [15:0]  axis_from_switch_1_tuser_pid,
-
-    // AXI-S data interface (to host)
-    // (synchronous to core_clk domain)
-    output logic         axis_to_switch_1_tvalid,
-    input  logic         axis_to_switch_1_tready,
-    output logic [511:0] axis_to_switch_1_tdata,
-    output logic [63:0]  axis_to_switch_1_tkeep,
-    output logic         axis_to_switch_1_tlast,
-    output logic [1:0]   axis_to_switch_1_tid,
-    output logic [2:0]   axis_to_switch_1_tdest,
-    output logic [15:0]  axis_to_switch_1_tuser_pid,
-    output logic         axis_to_switch_1_tuser_trunc_enable,
-    output logic [15:0]  axis_to_switch_1_tuser_trunc_length,
-    output logic         axis_to_switch_1_tuser_rss_enable,
-    output logic [11:0]  axis_to_switch_1_tuser_rss_entropy,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tvalid,
+    input  logic [(M*N*  1)-1:0] axis_to_switch_tready,
+    output logic [(M*N*512)-1:0] axis_to_switch_tdata,
+    output logic [(M*N* 64)-1:0] axis_to_switch_tkeep,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tlast,
+    output logic [(M*N*  2)-1:0] axis_to_switch_tid,
+    output logic [(M*N*  3)-1:0] axis_to_switch_tdest,
+    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_pid,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_trunc_enable,
+    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_trunc_length,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_rss_enable,
+    output logic [(M*N* 12)-1:0] axis_to_switch_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl,
