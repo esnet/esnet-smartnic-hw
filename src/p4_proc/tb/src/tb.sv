@@ -1,6 +1,7 @@
 module tb;
     import tb_pkg::*;
     import smartnic_322mhz_pkg::*;
+    import p4_proc_pkg::*;
 
     // (Local) parameters
     localparam int AXIS_DATA_WID = 512;
@@ -25,28 +26,86 @@ module tb;
     axi4l_intf axil_if       ();
     axi4l_intf axil_to_sdnet ();
 
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [N] ();
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [N] ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_sdnet ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_sdnet ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
+    user_metadata_t user_metadata_in;
+    logic           user_metadata_in_valid;
+    user_metadata_t user_metadata_out, user_metadata_out_latch;
+    logic           user_metadata_out_valid;
+
     // DUT instance
-    p4_proc #(.N(N), .EXTERN_PORTS(0)) DUT (
+    p4_proc #(.N(N)) DUT (
         .core_clk                ( clk ),
         .core_rstn               ( rstn ),
         .timestamp               ( timestamp ),
         .axil_if                 ( axil_if ),
-        .axil_to_sdnet           ( axil_to_sdnet ),
         .axis_from_switch        ( axis_in_if ),
         .axis_to_switch          ( axis_out_if ),
-        .user_extern_out         ( ),
-        .user_extern_out_valid   ( ),
-        .user_extern_in          ( 1'b0 ),
-        .user_extern_in_valid    ( 1'b0 ),
+        .axis_from_sdnet         ( axis_from_sdnet ),
+        .axis_to_sdnet           ( axis_to_sdnet ),
+        .user_metadata_in_valid  ( user_metadata_in_valid ),
+        .user_metadata_in        ( user_metadata_in ),
+        .user_metadata_out_valid ( user_metadata_out_valid ),
+        .user_metadata_out       ( user_metadata_out )
+    );
+
+    sdnet_0_wrapper sdnet_0_wrapper_inst (
+        .core_clk                ( clk ),
+        .core_rstn               ( rstn ),
+
+        .axil_sdnet_aclk         ( axil_to_sdnet.aclk ),
+        .axil_sdnet_aresetn      ( axil_to_sdnet.aresetn ),
+        .axil_sdnet_awvalid      ( axil_to_sdnet.awvalid ),
+        .axil_sdnet_awready      ( axil_to_sdnet.awready ),
+        .axil_sdnet_awaddr       ( axil_to_sdnet.awaddr  ),
+        .axil_sdnet_awprot       ( axil_to_sdnet.awprot  ),
+        .axil_sdnet_wvalid       ( axil_to_sdnet.wvalid  ),
+        .axil_sdnet_wready       ( axil_to_sdnet.wready  ),
+        .axil_sdnet_wdata        ( axil_to_sdnet.wdata   ),
+        .axil_sdnet_wstrb        ( axil_to_sdnet.wstrb   ),
+        .axil_sdnet_bvalid       ( axil_to_sdnet.bvalid  ),
+        .axil_sdnet_bready       ( axil_to_sdnet.bready  ),
+        .axil_sdnet_bresp        ( axil_to_sdnet.bresp   ),
+        .axil_sdnet_arvalid      ( axil_to_sdnet.arvalid ),
+        .axil_sdnet_arready      ( axil_to_sdnet.arready ),
+        .axil_sdnet_araddr       ( axil_to_sdnet.araddr  ),
+        .axil_sdnet_arprot       ( axil_to_sdnet.arprot  ),
+        .axil_sdnet_rvalid       ( axil_to_sdnet.rvalid  ),
+        .axil_sdnet_rready       ( axil_to_sdnet.rready  ),
+        .axil_sdnet_rdata        ( axil_to_sdnet.rdata   ),
+        .axil_sdnet_rresp        ( axil_to_sdnet.rresp   ),
+
+        .axis_to_sdnet_tdata     ( axis_to_sdnet.tdata ),
+        .axis_to_sdnet_tkeep     ( axis_to_sdnet.tkeep ),
+        .axis_to_sdnet_tvalid    ( axis_to_sdnet.tvalid ),
+        .axis_to_sdnet_tlast     ( axis_to_sdnet.tlast ),
+        .axis_to_sdnet_tready    ( axis_to_sdnet.tready ),
+
+        .axis_from_sdnet_tdata   ( axis_from_sdnet.tdata ),
+        .axis_from_sdnet_tkeep   ( axis_from_sdnet.tkeep ),
+        .axis_from_sdnet_tvalid  ( axis_from_sdnet.tvalid ),
+        .axis_from_sdnet_tlast   ( axis_from_sdnet.tlast ),
+        .axis_from_sdnet_tready  ( axis_from_sdnet.tready ),
+
+        .user_metadata_in_valid  ( user_metadata_in_valid ),
+        .user_metadata_in        ( user_metadata_in ),
+        .user_metadata_out_valid ( user_metadata_out_valid ),
+        .user_metadata_out       ( user_metadata_out ),
+
         .axi_to_hbm              ( axi_to_hbm )
     );
+
+    assign axis_from_sdnet.aclk = clk;
+    assign axis_from_sdnet.aresetn = rstn;
 
     hbm_bfm #(.PSEUDO_CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
 

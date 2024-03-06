@@ -23,8 +23,8 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    p4_proc.rtl \
     p4_proc.verif \
-    smartnic_322mhz.rtl \
     std.rtl@common \
     std.verif@common \
     axi3.rtl@common \
@@ -32,6 +32,7 @@ SUBCOMPONENTS = \
     axi4s.rtl@common \
     axi4l.verif@common \
     axi4s.verif@common \
+    xilinx.hbm.rtl@common \
     xilinx.hbm.verif@common
 
 EXT_LIBS =
