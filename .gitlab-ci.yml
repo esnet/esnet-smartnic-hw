@@ -291,6 +291,28 @@ build_p4_with_extern:
     - ons_ip_au55c
     - smartnic_ip_au55c
 
+build_p4_multi_proc_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
+    SN_HW_BOARD: au280
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+
+build_p4_multi_proc_u55c:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
+    SN_HW_BOARD: au55c
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
+  needs:
+    - ons_ip_au55c
+    - smartnic_ip_au55c
+
 build_vanilla_ons:
   stage: bitfile
   extends: .common
@@ -353,6 +375,16 @@ validate_p4_with_extern:
   needs:
     - build_p4_with_extern
 
+validate_p4_multi_proc_u280:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u280
+
+validate_p4_multi_proc_u55c:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u55c
+
 .hwapi:
   stage: package
   extends: .common
@@ -413,6 +445,16 @@ hwapi_p4_with_extern:
   needs:
     - build_p4_with_extern
 
+hwapi_p4_multi_proc_u280:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u280
+
+hwapi_p4_multi_proc_u55c:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u55c
+
 .trigger_fw:
   stage: trigger_downstream
   variables:
@@ -459,3 +501,17 @@ fw_p4_with_extern:
     SN_HW_API_JOB: hwapi_p4_with_extern
   needs:
     - hwapi_p4_with_extern
+
+fw_p4_multi_proc_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u280
+  needs:
+    - hwapi_p4_multi_proc_u280
+
+fw_p4_multi_proc_u55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u55c
+  needs:
+    - hwapi_p4_multi_proc_u55c
