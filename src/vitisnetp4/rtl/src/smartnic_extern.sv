@@ -1,4 +1,4 @@
-module smartnic_extern
+module sdnet_0_extern
     import sdnet_0_pkg::*;
 (
     input   logic clk,
@@ -27,4 +27,4 @@ module smartnic_extern
     assign extern_to_sdnet       = out_pipe;
     assign extern_to_sdnet_valid = out_valid_pipe;
 
-endmodule: smartnic_extern
+endmodule: sdnet_0_extern
