@@ -350,10 +350,10 @@ define the User Metadata structure as follows:
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
         bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
         bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
-        bit<1>  truncate_enable; // reserved (tied to 0).
-        bit<16> truncate_length; // reserved (tied to 0).
-        bit<1>  rss_enable;      // reserved (tied to 0).
-        bit<12> rss_entropy;     // reserved (tied to 0).
+        bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
+        bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
+        bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
+        bit<12> rss_entropy;     // 12b set to rss_entropy hash value (used for open-nic-shell qdma qid selection).
         bit<4>  drop_reason;     // reserved (tied to 0).
         bit<32> scratch;         // reserved (tied to 0).
     }
