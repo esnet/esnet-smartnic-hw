@@ -12,46 +12,11 @@ module {{ props.name }}_wrapper
     input logic           core_rstn,
 
     // AXI-L
-    input  logic         axil_sdnet_aclk,
-    input  logic         axil_sdnet_aresetn,
-    // -- Write address
-    input  logic         axil_sdnet_awvalid,
-    output logic         axil_sdnet_awready,
-    input  logic [31:0]  axil_sdnet_awaddr,
-    input  logic [2:0]   axil_sdnet_awprot,
-    // -- Write data
-    input  logic         axil_sdnet_wvalid,
-    output logic         axil_sdnet_wready,
-    input  logic [31:0]  axil_sdnet_wdata,
-    input  logic [3:0]   axil_sdnet_wstrb,
-    // -- Write response
-    output logic         axil_sdnet_bvalid,
-    input  logic         axil_sdnet_bready,
-    output logic [1:0]   axil_sdnet_bresp,
-    // -- Read address
-    input  logic         axil_sdnet_arvalid,
-    output logic         axil_sdnet_arready,
-    input  logic [31:0]  axil_sdnet_araddr,
-    input  logic [2:0]   axil_sdnet_arprot,
-    // -- Read data
-    output logic         axil_sdnet_rvalid,
-    input  logic         axil_sdnet_rready,
-    output logic [31:0]  axil_sdnet_rdata,
-    output logic [1:0]   axil_sdnet_rresp,
+    axi4l_intf.peripheral axil_if,
 
-    // AXI-S Master port
-    output logic [TDATA_NUM_BYTES*8-1:0]      axis_from_sdnet_tdata,
-    output logic [TDATA_NUM_BYTES-1:0]        axis_from_sdnet_tkeep,
-    output logic                              axis_from_sdnet_tvalid,
-    output logic                              axis_from_sdnet_tlast,
-    input  logic                              axis_from_sdnet_tready,
-
-    // AXI-S Slave port
-    input  logic [TDATA_NUM_BYTES*8-1:0]      axis_to_sdnet_tdata,
-    input  logic [TDATA_NUM_BYTES-1:0]        axis_to_sdnet_tkeep,
-    input  logic                              axis_to_sdnet_tvalid,
-    input  logic                              axis_to_sdnet_tlast,
-    output logic                              axis_to_sdnet_tready,
+    // AXI
+    axi4s_intf.rx         axis_rx,
+    axi4s_intf.tx         axis_tx,
 
     // Metadata
     input  logic          user_metadata_in_valid,
@@ -97,8 +62,8 @@ module {{ props.name }}_wrapper
         // Clocks & Resets
         .s_axis_aclk             (core_clk), // {{ props.axis_clk_freq_mhz }} MHz
         .s_axis_aresetn          (core_rstn),
-        .s_axi_aclk              (axil_sdnet_aclk),
-        .s_axi_aresetn           (axil_sdnet_aresetn),
+        .s_axi_aclk              (axil_if.aclk),
+        .s_axi_aresetn           (axil_if.aresetn),
         .cam_mem_aclk            (core_clk), // {{ props.cam_mem_clk_freq_mhz }} MHz
         .cam_mem_aresetn         (core_rstn),
         {%- if props.hbm_axi_if_num > 0 %}
@@ -118,39 +83,40 @@ module {{ props.name }}_wrapper
         .user_extern_out_valid   (user_extern_out_valid),
         {% endif %}
         // Slave AXI-lite interface
-        .s_axi_awaddr            (axil_sdnet_awaddr),
-        .s_axi_awvalid           (axil_sdnet_awvalid),
-        .s_axi_awready           (axil_sdnet_awready),
-        .s_axi_wdata             (axil_sdnet_wdata),
-        .s_axi_wstrb             (axil_sdnet_wstrb),
-        .s_axi_wvalid            (axil_sdnet_wvalid),
-        .s_axi_wready            (axil_sdnet_wready),
-        .s_axi_bresp             (axil_sdnet_bresp),
-        .s_axi_bvalid            (axil_sdnet_bvalid),
-        .s_axi_bready            (axil_sdnet_bready),
-        .s_axi_araddr            (axil_sdnet_araddr),
-        .s_axi_arvalid           (axil_sdnet_arvalid),
-        .s_axi_arready           (axil_sdnet_arready),
-        .s_axi_rdata             (axil_sdnet_rdata),
-        .s_axi_rvalid            (axil_sdnet_rvalid),
-        .s_axi_rready            (axil_sdnet_rready),
-        .s_axi_rresp             (axil_sdnet_rresp),
+        .s_axi_awaddr            (axil_if.awaddr),
+        .s_axi_awvalid           (axil_if.awvalid),
+        .s_axi_awready           (axil_if.awready),
+        .s_axi_wdata             (axil_if.wdata),
+        .s_axi_wstrb             (axil_if.wstrb),
+        .s_axi_wvalid            (axil_if.wvalid),
+        .s_axi_wready            (axil_if.wready),
+        .s_axi_bresp             (axil_if.bresp),
+        .s_axi_bvalid            (axil_if.bvalid),
+        .s_axi_bready            (axil_if.bready),
+        .s_axi_araddr            (axil_if.araddr),
+        .s_axi_arvalid           (axil_if.arvalid),
+        .s_axi_arready           (axil_if.arready),
+        .s_axi_rdata             (axil_if.rdata),
+        .s_axi_rvalid            (axil_if.rvalid),
+        .s_axi_rready            (axil_if.rready),
+        .s_axi_rresp             (axil_if.rresp),
        
         // AXI-S Rx
-        .s_axis_tdata            (axis_to_sdnet_tdata),
-        .s_axis_tkeep            (axis_to_sdnet_tkeep),
-        .s_axis_tvalid           (axis_to_sdnet_tvalid),
-        .s_axis_tlast            (axis_to_sdnet_tlast),
-        .s_axis_tready           (axis_to_sdnet_tready),
+        .s_axis_tdata            (axis_rx.tdata),
+        .s_axis_tkeep            (axis_rx.tkeep),
+        .s_axis_tvalid           (axis_rx.tvalid),
+        .s_axis_tlast            (axis_rx.tlast),
+        .s_axis_tready           (axis_rx.tready),
         
         // AXI-S Tx
-        .m_axis_tdata            (axis_from_sdnet_tdata),
-        .m_axis_tkeep            (axis_from_sdnet_tkeep),
-        .m_axis_tvalid           (axis_from_sdnet_tvalid),
-        .m_axis_tlast            (axis_from_sdnet_tlast),
-        .m_axis_tready           (axis_from_sdnet_tready){{ ',' if props.hbm_axi_if_num > 0 }}
+        .m_axis_tdata            (axis_tx.tdata),
+        .m_axis_tkeep            (axis_tx.tkeep),
+        .m_axis_tvalid           (axis_tx.tvalid),
+        .m_axis_tlast            (axis_tx.tlast),
+        .m_axis_tready           (axis_tx.tready){{ ',' if props.hbm_axi_if_num > 0 }}
 
         {%- for hbm_if_idx,hbm_if_name in props.hbm_axi_ifs.items(): %}
+
         // HBM AXI {{ hbm_if_name }}
         .m_axi_hbm{{ hbm_if_name }}_awid        (axi_to_hbm[{{ hbm_if_idx }}].awid),     // output wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_awid
         .m_axi_hbm{{ hbm_if_name }}_awaddr      (axi_to_hbm[{{ hbm_if_idx }}].awaddr),   // output wire [{{ props.hbm_axi_if_addr_wid - 1 }} : 0] m_axi_hbm{{ hbm_if_name }}_awaddr
