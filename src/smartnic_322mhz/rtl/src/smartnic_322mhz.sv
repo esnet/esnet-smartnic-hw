@@ -546,12 +546,6 @@ module smartnic_322mhz
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_host    [NUM_CMAC] ();
 
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_sw_igr_float [NUM_CMAC] ();
-
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_T(logic[12:0]),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_sw_egr_float [NUM_CMAC] ();
-
    axi4s_intf  #(.MODE(IGNORES_TREADY),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_cmac [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_pad       [NUM_CMAC] ();
@@ -809,7 +803,7 @@ module smartnic_322mhz
     .m_axis_tdest  ({ axis_core_to_bypass.tdest  , axis_core_to_app[1].tdest[1:0] , axis_core_to_app[0].tdest[1:0] }),
     .m_axis_tready ({ axis_core_to_bypass_tready , axis_core_to_app[1].tready , axis_core_to_app[0].tready }),
     .m_axis_tvalid ({ axis_core_to_bypass_tvalid , axis_core_to_app[1].tvalid , axis_core_to_app[0].tvalid }),
-/*
+
     .s_axis_tdata  ({ axis_host_to_core_p[1].tdata  , axis_host_to_core_p[0].tdata  , axis_cmac_to_core_p[1].tdata  , axis_cmac_to_core_p[0].tdata  }),
     .s_axis_tkeep  ({ axis_host_to_core_p[1].tkeep  , axis_host_to_core_p[0].tkeep  , axis_cmac_to_core_p[1].tkeep  , axis_cmac_to_core_p[0].tkeep  }),
     .s_axis_tlast  ({ axis_host_to_core_p[1].tlast  , axis_host_to_core_p[0].tlast  , axis_cmac_to_core_p[1].tlast  , axis_cmac_to_core_p[0].tlast  }),
@@ -817,14 +811,6 @@ module smartnic_322mhz
     .s_axis_tdest  ({ igr_sw_tdest[3]               , igr_sw_tdest[2]               , igr_sw_tdest[1]               , igr_sw_tdest[0]               }),
     .s_axis_tready ({ axis_host_to_core_p[1].tready , axis_host_to_core_p[0].tready , axis_cmac_to_core_p[1].tready , axis_cmac_to_core_p[0].tready }),
     .s_axis_tvalid ({ axis_host_to_core_p[1].tvalid , axis_host_to_core_p[0].tvalid , axis_cmac_to_core_p[1].tvalid , axis_cmac_to_core_p[0].tvalid }),
-*/
-    .s_axis_tdata  ({ 512'd0, 512'd0, axis_cmac_to_core_p[1].tdata  , axis_cmac_to_core_p[0].tdata  }),
-    .s_axis_tkeep  ({ 64'd0, 64'd0, axis_cmac_to_core_p[1].tkeep  , axis_cmac_to_core_p[0].tkeep  }),
-    .s_axis_tlast  ({ 1'd0, 1'd0, axis_cmac_to_core_p[1].tlast  , axis_cmac_to_core_p[0].tlast  }),
-    .s_axis_tid    ({ 2'd0, 2'd0, axis_cmac_to_core_p[1].tid    , axis_cmac_to_core_p[0].tid    }),
-    .s_axis_tdest  ({ 2'd0, 2'd0, igr_sw_tdest[1]               , igr_sw_tdest[0]               }),
-    .s_axis_tready ({  axis_sw_igr_float[1].tready, axis_sw_igr_float[0].tready, axis_cmac_to_core_p[1].tready , axis_cmac_to_core_p[0].tready }),
-    .s_axis_tvalid ({ 1'd0, 1'd0, axis_cmac_to_core_p[1].tvalid , axis_cmac_to_core_p[0].tvalid }),
 
     .s_decode_err  ()
    );
@@ -930,11 +916,27 @@ module smartnic_322mhz
    axi4s_intf_pipe axis_core_to_app_pipe_1 (.axi4s_if_from_tx(axis_core_to_app[1]),      .axi4s_if_to_rx(axis_to_app__demarc[0][1]));
    axi4s_intf_pipe axis_app_to_core_pipe_1 (.axi4s_if_from_tx(axis_from_app__demarc[0][1]), .axi4s_if_to_rx(__axis_app_to_core[1]));
 
-   axi4s_intf_pipe axis_core_to_app_pipe_2 (.axi4s_if_from_tx(axis_host_to_core_p[0]),      .axi4s_if_to_rx(axis_to_app__demarc[1][0]));
-   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[1][0]), .axi4s_if_to_rx(axis_core_to_host[0]));
 
-   axi4s_intf_pipe axis_core_to_app_pipe_3 (.axi4s_if_from_tx(axis_host_to_core_p[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1][1]));
-   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[1][1]), .axi4s_if_to_rx(axis_core_to_host[1]));
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_p4_egr [2] ();
+
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    place_holder [2] ();
+
+   axi4s_intf_tx_term  axi4s_intf_tx_term_0  (.axi4s_if(axis_to_p4_egr[0]));
+   axi4s_intf_tx_term  axi4s_intf_tx_term_1  (.axi4s_if(axis_to_p4_egr[1]));
+   axi4s_intf_rx_block axi4s_intf_rx_block_0 (.axi4s_if(place_holder[0]));
+   axi4s_intf_rx_block axi4s_intf_rx_block_1 (.axi4s_if(place_holder[1]));
+
+//   axi4s_intf_pipe axis_core_to_app_pipe_2 (.axi4s_if_from_tx(axis_host_to_core_p[0]),      .axi4s_if_to_rx(axis_to_app__demarc[1][0]));
+   axi4s_intf_pipe axis_core_to_app_pipe_2 (.axi4s_if_from_tx(axis_to_p4_egr[0]),      .axi4s_if_to_rx(axis_to_app__demarc[1][0]));
+//   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[1][0]), .axi4s_if_to_rx(axis_core_to_host[0]));
+   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[1][0]), .axi4s_if_to_rx(place_holder[0]));
+
+//   axi4s_intf_pipe axis_core_to_app_pipe_3 (.axi4s_if_from_tx(axis_host_to_core_p[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1][1]));
+   axi4s_intf_pipe axis_core_to_app_pipe_3 (.axi4s_if_from_tx(axis_to_p4_egr[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1][1]));
+//   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[1][1]), .axi4s_if_to_rx(axis_core_to_host[1]));
+   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[1][1]), .axi4s_if_to_rx(place_holder[1]));
 
    // axis_app_to_core[0] pipe.
    axi4s_intf_pipe axis_app_to_core_0_pipe (.axi4s_if_from_tx(__axis_app_to_core[0]), .axi4s_if_to_rx(axis_app_to_core[0]));
@@ -975,7 +977,7 @@ module smartnic_322mhz
    logic [12:0] axis_app_to_core_tuser [NUM_CMAC];
    assign axis_app_to_core_tuser[0] = {axis_app_to_core[0].tuser.rss_enable, axis_app_to_core[0].tuser.rss_entropy};
    assign axis_app_to_core_tuser[1] = {axis_app_to_core[1].tuser.rss_enable, axis_app_to_core[1].tuser.rss_entropy};
-/*
+
    logic [12:0] axis_core_to_host_tuser [NUM_CMAC];
    assign axis_core_to_host[0].tuser.pid         = '0;
    assign axis_core_to_host[0].tuser.rss_enable  = axis_core_to_host_tuser[0][12];
@@ -985,7 +987,7 @@ module smartnic_322mhz
    assign axis_core_to_host[1].tuser.rss_enable  = axis_core_to_host_tuser[1][12];
    assign axis_core_to_host[1].tuser.rss_entropy = axis_core_to_host_tuser[1][11:0];
    assign axis_core_to_host[1].tuser.hdr_tlast   = '0;
-*/
+
    logic [12:0] axis_core_to_cmac_tuser [NUM_CMAC];
    assign axis_core_to_cmac[0].tuser = '0;
    assign axis_core_to_cmac[1].tuser = '0;
@@ -994,7 +996,7 @@ module smartnic_322mhz
    (
     .aclk    ( core_clk ),
     .aresetn ( core_rstn ),
-/*
+
     .m_axis_tdata  ({ axis_core_to_host[1].tdata  , axis_core_to_host[0].tdata  , axis_core_to_cmac[1].tdata  , axis_core_to_cmac[0].tdata  }),
     .m_axis_tkeep  ({ axis_core_to_host[1].tkeep  , axis_core_to_host[0].tkeep  , axis_core_to_cmac[1].tkeep  , axis_core_to_cmac[0].tkeep  }),
     .m_axis_tlast  ({ axis_core_to_host[1].tlast  , axis_core_to_host[0].tlast  , axis_core_to_cmac[1].tlast  , axis_core_to_cmac[0].tlast  }),
@@ -1003,15 +1005,6 @@ module smartnic_322mhz
     .m_axis_tuser  ({ axis_core_to_host_tuser[1]  , axis_core_to_host_tuser[0]  , axis_core_to_cmac_tuser[1]  , axis_core_to_cmac_tuser[0]  }),
     .m_axis_tready ({ axis_core_to_host[1].tready , axis_core_to_host[0].tready , axis_core_to_cmac[1].tready , axis_core_to_cmac[0].tready }),
     .m_axis_tvalid ({ axis_core_to_host[1].tvalid , axis_core_to_host[0].tvalid , axis_core_to_cmac[1].tvalid , axis_core_to_cmac[0].tvalid }),
-*/
-    .m_axis_tdata  ({ axis_sw_egr_float[1].tdata, axis_sw_egr_float[0].tdata, axis_core_to_cmac[1].tdata  , axis_core_to_cmac[0].tdata  }),
-    .m_axis_tkeep  ({ axis_sw_egr_float[1].tkeep, axis_sw_egr_float[0].tkeep, axis_core_to_cmac[1].tkeep  , axis_core_to_cmac[0].tkeep  }),
-    .m_axis_tlast  ({ axis_sw_egr_float[1].tlast, axis_sw_egr_float[0].tlast, axis_core_to_cmac[1].tlast  , axis_core_to_cmac[0].tlast  }),
-    .m_axis_tid    ({ axis_sw_egr_float[1].tid,   axis_sw_egr_float[0].tid,   axis_core_to_cmac[1].tid    , axis_core_to_cmac[0].tid    }),
-    .m_axis_tdest  ({ axis_sw_egr_float[1].tdest, axis_sw_egr_float[0].tdest, axis_core_to_cmac[1].tdest  , axis_core_to_cmac[0].tdest  }),
-    .m_axis_tuser  ({ axis_sw_egr_float[1].tuser, axis_sw_egr_float[0].tuser, axis_core_to_cmac_tuser[1]  , axis_core_to_cmac_tuser[0]  }),
-    .m_axis_tready ({ 1'd1, 1'd1, axis_core_to_cmac[1].tready , axis_core_to_cmac[0].tready }),
-    .m_axis_tvalid ({ axis_sw_egr_float[1].tvalid, axis_sw_egr_float[0].tvalid, axis_core_to_cmac[1].tvalid , axis_core_to_cmac[0].tvalid }),
 
     .s_axis_tdata  ({ axis_bypass_to_core.tdata  , axis_app_to_core[1].tdata  , axis_app_to_core[0].tdata  }),
     .s_axis_tkeep  ({ axis_bypass_to_core.tkeep  , axis_app_to_core[1].tkeep  , axis_app_to_core[0].tkeep  }),
@@ -1027,13 +1020,13 @@ module smartnic_322mhz
 
    assign axis_core_to_cmac[0].aclk = core_clk;
    assign axis_core_to_cmac[1].aclk = core_clk;
-//   assign axis_core_to_host[0].aclk = core_clk;
-//   assign axis_core_to_host[1].aclk = core_clk;
+   assign axis_core_to_host[0].aclk = core_clk;
+   assign axis_core_to_host[1].aclk = core_clk;
 
    assign axis_core_to_cmac[0].aresetn = core_rstn;
    assign axis_core_to_cmac[1].aresetn = core_rstn;
-//   assign axis_core_to_host[0].aresetn = core_rstn;
-//   assign axis_core_to_host[1].aresetn = core_rstn;
+   assign axis_core_to_host[0].aresetn = core_rstn;
+   assign axis_core_to_host[1].aresetn = core_rstn;
 
 
    // ----------------------------------------------------------------
@@ -1205,6 +1198,7 @@ module smartnic_322mhz
 
    generate
        for (genvar j = 0; j < 2; j += 1) begin
+/*
            assign axis_from_app[1][j].tvalid             = axis_to_switch_tvalid[0][j];  // cross connections from app core 0 to 1.
            assign axis_to_switch_tready[0][j]             = axis_from_app[1][j].tready;
            assign axis_from_app[1][j].tdata              = axis_to_switch_tdata[0][j];
@@ -1230,6 +1224,32 @@ module smartnic_322mhz
            assign axis_from_app_tuser[0][j].trunc_length    = axis_to_switch_tuser_trunc_length[1][j];
            assign axis_from_app_tuser[0][j].rss_enable      = axis_to_switch_tuser_rss_enable[1][j];
            assign axis_from_app_tuser[0][j].rss_entropy     = axis_to_switch_tuser_rss_entropy[1][j];
+*/
+           assign axis_from_app[0][j].tvalid             = axis_to_switch_tvalid[0][j];
+           assign axis_to_switch_tready[0][j]             = axis_from_app[0][j].tready;
+           assign axis_from_app[0][j].tdata              = axis_to_switch_tdata[0][j];
+           assign axis_from_app[0][j].tkeep              = axis_to_switch_tkeep[0][j];
+           assign axis_from_app[0][j].tlast              = axis_to_switch_tlast[0][j];
+           assign axis_from_app[0][j].tid                = axis_to_switch_tid[0][j];
+           assign axis_from_app[0][j].tdest              = axis_to_switch_tdest[0][j];
+           assign axis_from_app_tuser[0][j].pid             = axis_to_switch_tuser_pid[0][j];
+           assign axis_from_app_tuser[0][j].trunc_enable    = axis_to_switch_tuser_trunc_enable[0][j];
+           assign axis_from_app_tuser[0][j].trunc_length    = axis_to_switch_tuser_trunc_length[0][j];
+           assign axis_from_app_tuser[0][j].rss_enable      = axis_to_switch_tuser_rss_enable[0][j];
+           assign axis_from_app_tuser[0][j].rss_entropy     = axis_to_switch_tuser_rss_entropy[0][j];
+
+           assign axis_from_app[1][j].tvalid             = axis_to_switch_tvalid[1][j];
+           assign axis_to_switch_tready[1][j]             = axis_from_app[1][j].tready;
+           assign axis_from_app[1][j].tdata              = axis_to_switch_tdata[1][j];
+           assign axis_from_app[1][j].tkeep              = axis_to_switch_tkeep[1][j];
+           assign axis_from_app[1][j].tlast              = axis_to_switch_tlast[1][j];
+           assign axis_from_app[1][j].tid                = axis_to_switch_tid[1][j];
+           assign axis_from_app[1][j].tdest              = axis_to_switch_tdest[1][j];
+           assign axis_from_app_tuser[1][j].pid             = axis_to_switch_tuser_pid[1][j];
+           assign axis_from_app_tuser[1][j].trunc_enable    = axis_to_switch_tuser_trunc_enable[1][j];
+           assign axis_from_app_tuser[1][j].trunc_length    = axis_to_switch_tuser_trunc_length[1][j];
+           assign axis_from_app_tuser[1][j].rss_enable      = axis_to_switch_tuser_rss_enable[1][j];
+           assign axis_from_app_tuser[1][j].rss_entropy     = axis_to_switch_tuser_rss_entropy[1][j];
        end
    endgenerate
 
