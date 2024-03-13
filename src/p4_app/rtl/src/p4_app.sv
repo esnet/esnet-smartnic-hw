@@ -6,39 +6,10 @@ module p4_app
 ) (
    input logic        core_clk,
    input logic        core_rstn,
-   input logic        axil_aclk,
    input timestamp_t  timestamp,
 
    axi4l_intf.peripheral axil_if,
-
-   // (SDNet) AXI-L control interface
-   // (synchronous to axil_aclk domain)
-   // -- Reset
-   input  logic [(M*  1)-1:0] axil_sdnet_aresetn,
-   // -- Write address
-   input  logic [(M*  1)-1:0] axil_sdnet_awvalid,
-   output logic [(M*  1)-1:0] axil_sdnet_awready,
-   input  logic [(M* 32)-1:0] axil_sdnet_awaddr,
-   input  logic [(M*  3)-1:0] axil_sdnet_awprot,
-   // -- Write data
-   input  logic [(M*  1)-1:0] axil_sdnet_wvalid,
-   output logic [(M*  1)-1:0] axil_sdnet_wready,
-   input  logic [(M* 32)-1:0] axil_sdnet_wdata,
-   input  logic [(M*  4)-1:0] axil_sdnet_wstrb,
-   // -- Write response
-   output logic [(M*  1)-1:0] axil_sdnet_bvalid,
-   input  logic [(M*  1)-1:0] axil_sdnet_bready,
-   output logic [(M*  2)-1:0] axil_sdnet_bresp,
-   // -- Read address
-   input  logic [(M*  1)-1:0] axil_sdnet_arvalid,
-   output logic [(M*  1)-1:0] axil_sdnet_arready,
-   input  logic [(M* 32)-1:0] axil_sdnet_araddr,
-   input  logic [(M*  3)-1:0] axil_sdnet_arprot,
-   // -- Read data
-   output logic [(M*  1)-1:0] axil_sdnet_rvalid,
-   input  logic [(M*  1)-1:0] axil_sdnet_rready,
-   output logic [(M* 32)-1:0] axil_sdnet_rdata,
-   output logic [(M*  2)-1:0] axil_sdnet_rresp,
+   axi4l_intf.peripheral axil_to_sdnet[M],
 
    axi4s_intf.tx      axis_to_switch[M][N],
    axi4s_intf.rx      axis_from_switch[M][N],
@@ -92,33 +63,20 @@ module p4_app
    axi4s_intf #(.TUSER_T(TUSER_T),
                 .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_from_sdnet[M] ();
 
-   logic [M-1:0][DATA_BYTE_WID*8-1:0]  axis_to_sdnet_tdata;
-   logic [M-1:0][DATA_BYTE_WID-1:0]    axis_to_sdnet_tkeep;
-   logic [M-1:0]                       axis_to_sdnet_tvalid;
-   logic [M-1:0]                       axis_to_sdnet_tlast;
-   logic [M-1:0]                       axis_to_sdnet_tready;
+   axi4s_intf #(.TUSER_T(TUSER_T),
+                .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_to_demux[N] ();
 
-   logic [M-1:0][DATA_BYTE_WID*8-1:0]  axis_from_sdnet_tdata;
-   logic [M-1:0][DATA_BYTE_WID-1:0]    axis_from_sdnet_tkeep;
-   logic [M-1:0]                       axis_from_sdnet_tvalid;
-   logic [M-1:0]                       axis_from_sdnet_tlast;
-   logic [M-1:0]                       axis_from_sdnet_tready;
+   axi4s_intf #(.TUSER_T(TUSER_T),
+                .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_to_p4_app_igr[N] ();
 
-   generate for (genvar i = 0; i < M; i += 1)
-       begin
-           assign axis_to_sdnet_tdata[i]    = axis_to_sdnet[i].tdata;
-           assign axis_to_sdnet_tkeep[i]    = axis_to_sdnet[i].tkeep;
-           assign axis_to_sdnet_tlast[i]    = axis_to_sdnet[i].tlast;
-           assign axis_to_sdnet_tvalid[i]   = axis_to_sdnet[i].tvalid;
-           assign axis_to_sdnet[i].tready   = axis_to_sdnet_tready[i];
+   axi4s_intf #(.TUSER_T(TUSER_T),
+                .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_to_p4_app_egr[N] ();
 
-           assign axis_from_sdnet[i].tdata  = axis_from_sdnet_tdata[i];
-           assign axis_from_sdnet[i].tkeep  = axis_from_sdnet_tkeep[i];
-           assign axis_from_sdnet[i].tlast  = axis_from_sdnet_tlast[i];
-           assign axis_from_sdnet[i].tvalid = axis_from_sdnet_tvalid[i];
-           assign axis_from_sdnet_tready[i] = axis_from_sdnet[i].tready;
-       end
-   endgenerate
+   axi4s_intf #(.TUSER_T(TUSER_T),
+                .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_to_mux[N] ();
+
+   axi4s_intf #(.TUSER_T(TUSER_T),
+                .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axis_from_mux[N] ();
 
    user_metadata_t user_metadata_in[M];
    logic           user_metadata_in_valid[M];
@@ -127,64 +85,33 @@ module p4_app
    logic           user_metadata_out_valid[M];
 
    // --- ingress p4 processor complex (p4_proc + sdnet_igr_wrapper) ---
-   p4_proc #(.N(2)) p4_proc_igr (
-      .core_clk                ( core_clk ),
-      .core_rstn               ( core_rstn ),
-      .timestamp               ( timestamp ),
-      .axil_if                 ( axil_to_p4_proc ),
-      .axis_to_switch          ( axis_to_switch[0] ),
-      .axis_from_switch        ( axis_from_switch[0] ),
-      .axis_from_sdnet         ( axis_from_sdnet[0] ),
-      .axis_to_sdnet           ( axis_to_sdnet[0] ),
-      .user_metadata_in_valid  ( user_metadata_in_valid[0] ),
-      .user_metadata_in        ( user_metadata_in[0] ),
-      .user_metadata_out_valid ( user_metadata_out_valid[0] ),
-      .user_metadata_out       ( user_metadata_out[0] )
+//   p4_proc_igr #(.N(N)) p4_proc_igr (
+   p4_proc_p2p #(.N(N)) p4_proc_igr (
+      .core_clk                       ( core_clk ),
+      .core_rstn                      ( core_rstn ),
+      .timestamp                      ( timestamp ),
+      .axil_if                        ( axil_to_p4_proc ),
+      .axis_in                        ( axis_from_switch[0] ),
+      .axis_out                       ( axis_to_demux ),
+      .axis_to_sdnet                  ( axis_to_sdnet[0] ),
+      .axis_from_sdnet                ( axis_from_sdnet[0] ),
+      .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[0] ),
+      .user_metadata_to_sdnet         ( user_metadata_in[0] ),
+      .user_metadata_from_sdnet_valid ( user_metadata_out_valid[0] ),
+      .user_metadata_from_sdnet       ( user_metadata_out[0] )
    );
 
-   sdnet_igr_wrapper sdnet_igr_wrapper_0 (
+//   sdnet_igr_wrapper sdnet_igr_wrapper_inst (
+   sdnet_stub sdnet_igr_wrapper_inst (
       .core_clk                ( core_clk ),
       .core_rstn               ( core_rstn ),
-
-      .axil_sdnet_aclk         ( axil_aclk ),
-      .axil_sdnet_aresetn      ( axil_sdnet_aresetn [0 +: 1] ),
-      .axil_sdnet_awvalid      ( axil_sdnet_awvalid [0 +: 1] ),
-      .axil_sdnet_awready      ( axil_sdnet_awready [0 +: 1] ),
-      .axil_sdnet_awaddr       ( axil_sdnet_awaddr  [0 +: 32] ),
-      .axil_sdnet_awprot       ( axil_sdnet_awprot  [0 +: 3] ),
-      .axil_sdnet_wvalid       ( axil_sdnet_wvalid  [0 +: 1] ),
-      .axil_sdnet_wready       ( axil_sdnet_wready  [0 +: 1] ),
-      .axil_sdnet_wdata        ( axil_sdnet_wdata   [0 +: 32] ),
-      .axil_sdnet_wstrb        ( axil_sdnet_wstrb   [0 +: 4] ),
-      .axil_sdnet_bvalid       ( axil_sdnet_bvalid  [0 +: 1] ),
-      .axil_sdnet_bready       ( axil_sdnet_bready  [0 +: 1] ),
-      .axil_sdnet_bresp        ( axil_sdnet_bresp   [0 +: 2] ),
-      .axil_sdnet_arvalid      ( axil_sdnet_arvalid [0 +: 1] ),
-      .axil_sdnet_arready      ( axil_sdnet_arready [0 +: 1] ),
-      .axil_sdnet_araddr       ( axil_sdnet_araddr  [0 +: 32] ),
-      .axil_sdnet_arprot       ( axil_sdnet_arprot  [0 +: 3] ),
-      .axil_sdnet_rvalid       ( axil_sdnet_rvalid  [0 +: 1] ),
-      .axil_sdnet_rready       ( axil_sdnet_rready  [0 +: 1] ),
-      .axil_sdnet_rdata        ( axil_sdnet_rdata   [0 +: 32] ),
-      .axil_sdnet_rresp        ( axil_sdnet_rresp   [0 +: 2] ),
-
-      .axis_to_sdnet_tdata     ( axis_to_sdnet_tdata[0] ),
-      .axis_to_sdnet_tkeep     ( axis_to_sdnet_tkeep[0] ),
-      .axis_to_sdnet_tvalid    ( axis_to_sdnet_tvalid[0] ),
-      .axis_to_sdnet_tlast     ( axis_to_sdnet_tlast[0] ),
-      .axis_to_sdnet_tready    ( axis_to_sdnet_tready[0] ),
-
-      .axis_from_sdnet_tdata   ( axis_from_sdnet_tdata[0] ),
-      .axis_from_sdnet_tkeep   ( axis_from_sdnet_tkeep[0] ),
-      .axis_from_sdnet_tvalid  ( axis_from_sdnet_tvalid[0] ),
-      .axis_from_sdnet_tlast   ( axis_from_sdnet_tlast[0] ),
-      .axis_from_sdnet_tready  ( axis_from_sdnet_tready[0] ),
-
+      .axil_if                 ( axil_to_sdnet[0] ),
+      .axis_rx                 ( axis_to_sdnet[0] ),
+      .axis_tx                 ( axis_from_sdnet[0] ),
       .user_metadata_in_valid  ( user_metadata_in_valid[0] ),
       .user_metadata_in        ( user_metadata_in[0] ),
       .user_metadata_out_valid ( user_metadata_out_valid[0] ),
       .user_metadata_out       ( user_metadata_out[0] ),
-
       .axi_to_hbm              ( axi_to_hbm )
    );
 
@@ -197,19 +124,20 @@ module p4_app
            axi4l_intf  axil_to_p4_proc_1 ();
            axi4l_intf_controller_term axil_to_p4_proc_1_term (.axi4l_if (axil_to_p4_proc_1));
 
-           p4_proc #(.N(2)) p4_proc_1 (
-               .core_clk                ( core_clk ),
-               .core_rstn               ( core_rstn ),
-               .timestamp               ( timestamp ),
-               .axil_if                 ( axil_to_p4_proc_1 ),
-               .axis_to_switch          ( axis_to_switch[1] ),
-               .axis_from_switch        ( axis_from_switch[1] ),
-               .axis_from_sdnet         ( axis_from_sdnet[1] ),
-               .axis_to_sdnet           ( axis_to_sdnet[1] ),
-               .user_metadata_in_valid  ( user_metadata_in_valid[1] ),
-               .user_metadata_in        ( user_metadata_in[1] ),
-               .user_metadata_out_valid ( user_metadata_out_valid[1] ),
-               .user_metadata_out       ( user_metadata_out[1] )
+//           p4_proc_egr #(.N(N)) p4_proc_egr (
+           p4_proc_p2p #(.N(N)) p4_proc_egr (
+               .core_clk                       ( core_clk ),
+               .core_rstn                      ( core_rstn ),
+               .timestamp                      ( timestamp ),
+               .axil_if                        ( axil_to_p4_proc_1 ),
+               .axis_in                        ( axis_from_mux ),
+               .axis_out                       ( axis_to_switch[0] ),
+               .axis_to_sdnet                  ( axis_to_sdnet[1] ),
+               .axis_from_sdnet                ( axis_from_sdnet[1] ),
+               .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[1] ),
+               .user_metadata_to_sdnet         ( user_metadata_in[1] ),
+               .user_metadata_from_sdnet_valid ( user_metadata_out_valid[1] ),
+               .user_metadata_from_sdnet       ( user_metadata_out[1] )
            );
 
            axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_1[16] ();
@@ -218,49 +146,17 @@ module p4_app
                 axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm_1[g_hbm_if]));
            end : g__hbm_if
 
-           sdnet_egr_wrapper sdnet_egr_wrapper_0 (
+//           sdnet_egr_wrapper sdnet_egr_wrapper_inst (
+           sdnet_stub sdnet_egr_wrapper_inst (
                .core_clk                ( core_clk ),
                .core_rstn               ( core_rstn ),
-
-               .axil_sdnet_aclk         ( axil_aclk ),
-               .axil_sdnet_aresetn      ( axil_sdnet_aresetn [ 1 +: 1]),
-               .axil_sdnet_awvalid      ( axil_sdnet_awvalid [ 1 +: 1] ),
-               .axil_sdnet_awready      ( axil_sdnet_awready [ 1 +: 1] ),
-               .axil_sdnet_awaddr       ( axil_sdnet_awaddr  [32 +: 32] ),
-               .axil_sdnet_awprot       ( axil_sdnet_awprot  [ 3 +: 3] ),
-               .axil_sdnet_wvalid       ( axil_sdnet_wvalid  [ 1 +: 1] ),
-               .axil_sdnet_wready       ( axil_sdnet_wready  [ 1 +: 1] ),
-               .axil_sdnet_wdata        ( axil_sdnet_wdata   [32 +: 32] ),
-               .axil_sdnet_wstrb        ( axil_sdnet_wstrb   [ 4 +: 4] ),
-               .axil_sdnet_bvalid       ( axil_sdnet_bvalid  [ 1 +: 1] ),
-               .axil_sdnet_bready       ( axil_sdnet_bready  [ 1 +: 1] ),
-               .axil_sdnet_bresp        ( axil_sdnet_bresp   [ 2 +: 2] ),
-               .axil_sdnet_arvalid      ( axil_sdnet_arvalid [ 1 +: 1] ),
-               .axil_sdnet_arready      ( axil_sdnet_arready [ 1 +: 1] ),
-               .axil_sdnet_araddr       ( axil_sdnet_araddr  [32 +: 32] ),
-               .axil_sdnet_arprot       ( axil_sdnet_arprot  [ 3 +: 3] ),
-               .axil_sdnet_rvalid       ( axil_sdnet_rvalid  [ 1 +: 1] ),
-               .axil_sdnet_rready       ( axil_sdnet_rready  [ 1 +: 1] ),
-               .axil_sdnet_rdata        ( axil_sdnet_rdata   [32 +: 32] ),
-               .axil_sdnet_rresp        ( axil_sdnet_rresp   [ 2 +: 2] ),
-
-               .axis_to_sdnet_tdata     ( axis_to_sdnet_tdata[1] ),
-               .axis_to_sdnet_tkeep     ( axis_to_sdnet_tkeep[1] ),
-               .axis_to_sdnet_tvalid    ( axis_to_sdnet_tvalid[1] ),
-               .axis_to_sdnet_tlast     ( axis_to_sdnet_tlast[1] ),
-               .axis_to_sdnet_tready    ( axis_to_sdnet_tready[1] ),
-
-               .axis_from_sdnet_tdata   ( axis_from_sdnet_tdata[1] ),
-               .axis_from_sdnet_tkeep   ( axis_from_sdnet_tkeep[1] ),
-               .axis_from_sdnet_tvalid  ( axis_from_sdnet_tvalid[1] ),
-               .axis_from_sdnet_tlast   ( axis_from_sdnet_tlast[1] ),
-               .axis_from_sdnet_tready  ( axis_from_sdnet_tready[1] ),
-
+               .axil_if                 ( axil_to_sdnet[1] ),
+               .axis_rx                 ( axis_to_sdnet[1] ),
+               .axis_tx                 ( axis_from_sdnet[1] ),
                .user_metadata_in_valid  ( user_metadata_in_valid[1] ),
                .user_metadata_in        ( user_metadata_in[1] ),
                .user_metadata_out_valid ( user_metadata_out_valid[1] ),
                .user_metadata_out       ( user_metadata_out[1] ),
-
                .axi_to_hbm              ( axi_to_hbm_1 )
            );
 
@@ -268,5 +164,52 @@ module p4_app
            assign axis_from_sdnet[1].aresetn = core_rstn;
        end
    endgenerate
+
+
+   // ----------------------------------------------------------------------
+   // p4_app datapath logic (mux/demux and ingress/egress blocks).
+   // ----------------------------------------------------------------------
+   generate for (genvar i = 0; i < N; i += 1) begin
+       axi4s_intf_1to2_demux axi4s_intf_1to2_demux_inst (
+           .axi4s_in   ( axis_to_demux[i] ),
+           .axi4s_out0 ( axis_to_p4_app_igr[i] ),
+           .axi4s_out1 ( axis_to_switch[1][i] ),
+//           .output_sel ( axis_to_demux[i].tdest[1] )
+           .output_sel ( 1'b0 )
+       );
+   end endgenerate
+
+   axi4l_intf  axil_to_p4_app_igr ();
+   axi4l_intf_controller_term axil_to_p4_app_igr_term (.axi4l_if (axil_to_p4_app_igr));
+
+//   p4_app_igr #(.N(N)) p4_app_igr_inst (
+   p4_app_p2p #(.N(N)) p4_app_igr_inst (
+       .axi4s_in   ( axis_to_p4_app_igr ),
+       .axi4s_out  ( axis_to_p4_app_egr ),
+       .axil_if    ( axil_to_p4_app_igr )
+   );
+
+   axi4l_intf  axil_to_p4_app_egr ();
+   axi4l_intf_controller_term axil_to_p4_app_egr_term (.axi4l_if (axil_to_p4_app_egr));
+
+//   p4_app_egr #(.N(N)) p4_app_egr_inst (
+   p4_app_p2p #(.N(N)) p4_app_egr_inst (
+       .axi4s_in   ( axis_to_p4_app_egr ),
+       .axi4s_out  ( axis_to_mux ),
+       .axil_if    ( axil_to_p4_app_egr )
+   );
+
+   axi4s_intf #(.TUSER_T(TUSER_T),
+       .DATA_BYTE_WID(DATA_BYTE_WID), .TID_T(TID_T), .TDEST_T(TDEST_T))  axi4s_mux_in[N][2] ();
+
+   generate for (genvar i = 0; i < N; i += 1) begin
+       axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]),         .axi4s_to_rx(axi4s_mux_in[i][0]) );
+       axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axis_from_switch[1][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
+
+       axi4s_mux axi4s_mux_inst (
+           .axi4s_in   ( axi4s_mux_in[i] ),
+           .axi4s_out  ( axis_from_mux[i] )
+       );
+   end endgenerate
 
 endmodule: p4_app
