@@ -152,7 +152,8 @@ module smartnic_322mhz_app
     localparam type AXI_HBM_ID_T = logic[5:0];
 
     // Interfaces
-    axi4l_intf #() axil_if       ();
+    axi4l_intf #() axil_if ();
+    axi4l_intf #() axil_to_sdnet[M] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
                  .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [M][N] ();
@@ -190,7 +191,7 @@ module smartnic_322mhz_app
     // MAP FROM 'FLAT' SIGNAL REPRESENTATION TO INTERFACE REPRESENTATION (COMMON TO ALL APPLICATIONS)
     // -------------------------------------------------------------------------------------------------------
     // -- AXI-L interface
-    axi4l_intf_from_signals i_axi4l_intf_from_signals (
+    axi4l_intf_from_signals axil_if_from_signals (
         .aclk     ( axil_aclk ),
         .aresetn  ( axil_aresetn ),
         .awvalid  ( axil_awvalid ),
@@ -217,6 +218,32 @@ module smartnic_322mhz_app
 
     generate
         for (genvar i = 0; i < M; i += 1) begin
+            // -- AXI-L to sdnet interface
+            axi4l_intf_from_signals axil_to_sdnet_from_signals (
+                .aclk     ( axil_aclk ),
+                .aresetn  ( axil_sdnet_aresetn [i* 1 +: 1]),
+                .awvalid  ( axil_sdnet_awvalid [i* 1 +: 1] ),
+                .awready  ( axil_sdnet_awready [i* 1 +: 1] ),
+                .awaddr   ( axil_sdnet_awaddr  [i*32 +: 32] ),
+                .awprot   ( axil_sdnet_awprot  [i* 3 +: 3] ),
+                .wvalid   ( axil_sdnet_wvalid  [i* 1 +: 1] ),
+                .wready   ( axil_sdnet_wready  [i* 1 +: 1] ),
+                .wdata    ( axil_sdnet_wdata   [i*32 +: 32] ),
+                .wstrb    ( axil_sdnet_wstrb   [i* 4 +: 4] ),
+                .bvalid   ( axil_sdnet_bvalid  [i* 1 +: 1] ),
+                .bready   ( axil_sdnet_bready  [i* 1 +: 1] ),
+                .bresp    ( axil_sdnet_bresp   [i* 2 +: 2] ),
+                .arvalid  ( axil_sdnet_arvalid [i* 1 +: 1] ),
+                .arready  ( axil_sdnet_arready [i* 1 +: 1] ),
+                .araddr   ( axil_sdnet_araddr  [i*32 +: 32] ),
+                .arprot   ( axil_sdnet_arprot  [i* 3 +: 3] ),
+                .rvalid   ( axil_sdnet_rvalid  [i* 1 +: 1] ),
+                .rready   ( axil_sdnet_rready  [i* 1 +: 1] ),
+                .rdata    ( axil_sdnet_rdata   [i*32 +: 32] ),
+                .rresp    ( axil_sdnet_rresp   [i* 2 +: 2] ),
+                .axi4l_if ( axil_to_sdnet[i] )
+            );
+
             for (genvar j = 0; j < N; j += 1) begin
                 // -- AXI-S interface from switch
                 axi4s_intf_from_signals #(
@@ -321,35 +348,11 @@ module smartnic_322mhz_app
     (
         .core_clk      ( core_clk ),
         .core_rstn     ( core_rstn ),
-        .axil_aclk     ( axil_aclk ),
         .timestamp     ( timestamp ),
-
         .axil_if       ( axil_if ),
-
-        .axil_sdnet_aresetn      ( axil_sdnet_aresetn ),
-        .axil_sdnet_awvalid      ( axil_sdnet_awvalid ),
-        .axil_sdnet_awready      ( axil_sdnet_awready ),
-        .axil_sdnet_awaddr       ( axil_sdnet_awaddr ),
-        .axil_sdnet_awprot       ( axil_sdnet_awprot ),
-        .axil_sdnet_wvalid       ( axil_sdnet_wvalid ),
-        .axil_sdnet_wready       ( axil_sdnet_wready ),
-        .axil_sdnet_wdata        ( axil_sdnet_wdata ),
-        .axil_sdnet_wstrb        ( axil_sdnet_wstrb ),
-        .axil_sdnet_bvalid       ( axil_sdnet_bvalid ),
-        .axil_sdnet_bready       ( axil_sdnet_bready ),
-        .axil_sdnet_bresp        ( axil_sdnet_bresp ),
-        .axil_sdnet_arvalid      ( axil_sdnet_arvalid ),
-        .axil_sdnet_arready      ( axil_sdnet_arready ),
-        .axil_sdnet_araddr       ( axil_sdnet_araddr ),
-        .axil_sdnet_arprot       ( axil_sdnet_arprot ),
-        .axil_sdnet_rvalid       ( axil_sdnet_rvalid ),
-        .axil_sdnet_rready       ( axil_sdnet_rready ),
-        .axil_sdnet_rdata        ( axil_sdnet_rdata ),
-        .axil_sdnet_rresp        ( axil_sdnet_rresp ),
-
+        .axil_to_sdnet ( axil_to_sdnet ),
         .axis_to_switch   ( axis_to_switch ),
         .axis_from_switch ( axis_from_switch ),
-
         .axi_to_hbm    ( axi_to_hbm )
     );
 
