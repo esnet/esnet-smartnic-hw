@@ -10,17 +10,17 @@ module p4_proc
 
     axi4l_intf.peripheral axil_if,
 
-    axi4s_intf.tx axis_to_switch[N],
-    axi4s_intf.rx axis_from_switch[N],
+    axi4s_intf.rx axis_in[N],
+    axi4s_intf.tx axis_out[N],
 
     axi4s_intf.tx axis_to_sdnet,
     axi4s_intf.rx axis_from_sdnet,
 
-    output user_metadata_t user_metadata_in,
-    output logic           user_metadata_in_valid,
+    output user_metadata_t user_metadata_to_sdnet,
+    output logic           user_metadata_to_sdnet_valid,
 
-    input  user_metadata_t user_metadata_out,
-    input  logic           user_metadata_out_valid
+    input  user_metadata_t user_metadata_from_sdnet,
+    input  logic           user_metadata_from_sdnet_valid
 );
 
     // -------------------------------------------------
@@ -87,13 +87,13 @@ module p4_proc
 
     logic [15:0] trunc_length[N];
 
-    tuser_t  _axis_from_switch_tuser[N];
+    tuser_t  _axis_in_tuser[N];
     tuser_t  _axis_from_split_join_tuser[N];
     tuser_t  axis_to_sdnet_tuser;
     tuser_t  axis_from_sdnet_tuser;
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_switch[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_in[N] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join[N] ();
@@ -119,22 +119,22 @@ module p4_proc
     // --------------------------------------------------------------------
     generate for (genvar i = 0; i < N; i += 1) begin : g__proc_port
         // add timestamp to tuser signal.
-        assign _axis_from_switch[i].aclk         = axis_from_switch[i].aclk;
-        assign _axis_from_switch[i].aresetn      = axis_from_switch[i].aresetn;
-        assign _axis_from_switch[i].tvalid       = axis_from_switch[i].tvalid;
-        assign _axis_from_switch[i].tlast        = axis_from_switch[i].tlast;
-        assign _axis_from_switch[i].tkeep        = axis_from_switch[i].tkeep;
-        assign _axis_from_switch[i].tdata        = axis_from_switch[i].tdata;
-        assign _axis_from_switch[i].tid          = axis_from_switch[i].tid;
-        assign _axis_from_switch[i].tdest        = axis_from_switch[i].tdest;
+        assign _axis_in[i].aclk         = axis_in[i].aclk;
+        assign _axis_in[i].aresetn      = axis_in[i].aresetn;
+        assign _axis_in[i].tvalid       = axis_in[i].tvalid;
+        assign _axis_in[i].tlast        = axis_in[i].tlast;
+        assign _axis_in[i].tkeep        = axis_in[i].tkeep;
+        assign _axis_in[i].tdata        = axis_in[i].tdata;
+        assign _axis_in[i].tid          = axis_in[i].tid;
+        assign _axis_in[i].tdest        = axis_in[i].tdest;
 
         always_comb begin
-             _axis_from_switch_tuser[i] = axis_from_switch[i].tuser;
-             _axis_from_switch_tuser[i].timestamp = timestamp;
-             _axis_from_switch[i].tuser           = _axis_from_switch_tuser[i];
+             _axis_in_tuser[i]           = axis_in[i].tuser;
+             _axis_in_tuser[i].timestamp = timestamp;
+             _axis_in[i].tuser           = _axis_in_tuser[i];
         end
 
-        assign axis_from_switch[i].tready = _axis_from_switch[i].tready;
+        assign axis_in[i].tready = _axis_in[i].tready;
 
 
         // axi4s_split_join instantiation (separates and recombines packet headers).
@@ -142,7 +142,7 @@ module p4_proc
             .BIGENDIAN  (0),
             .FIFO_DEPTH (512)
         ) axi4s_split_join_inst (
-            .axi4s_in      (_axis_from_switch[i]),
+            .axi4s_in      (_axis_in[i]),
             .axi4s_out     (axis_to_drop[i]),
             .axi4s_hdr_out (axis_from_split_join[i]),
             .axi4s_hdr_in  (axis_to_split_join[i]),
@@ -198,7 +198,7 @@ module p4_proc
             .BIGENDIAN(0), .IN_PIPE(1), .OUT_PIPE(1)
         ) axi4s_trunc_inst (
             .axi4s_in(axis_to_trunc[i]),
-            .axi4s_out(axis_to_switch[i]),
+            .axi4s_out(axis_out[i]),
             .length(trunc_length[i])
         );
 
@@ -263,50 +263,56 @@ module p4_proc
     // SDnet block supporting logic.
     // ----------------------------------------------------------------
     // metadata type definitions (from ip/<app_name>/sdnet_0/src/verilog/sdnet_0_pkg.sv).
-    // --- metadata_in ---
+    // --- metadata_to_sdnet ---
     assign axis_to_sdnet_tuser = axis_to_sdnet.tuser;
 
     always_comb begin
-        user_metadata_in.timestamp_ns      = axis_to_sdnet_tuser.timestamp;
-        user_metadata_in.pid               = {'0, axis_to_sdnet_tuser.pid[9:0]};
-        user_metadata_in.ingress_port      = {'0, axis_to_sdnet.tid};
-        user_metadata_in.egress_port       = {'0, axis_to_sdnet.tid};
-        user_metadata_in.truncate_enable   = 0;
-        user_metadata_in.truncate_length   = 0;
-        user_metadata_in.rss_enable        = 0;
-        user_metadata_in.rss_entropy       = 0;
-        user_metadata_in.drop_reason       = 0;
-        user_metadata_in.scratch           = 0;
+        user_metadata_to_sdnet.timestamp_ns      = axis_to_sdnet_tuser.timestamp;
+        user_metadata_to_sdnet.pid               = {'0, axis_to_sdnet_tuser.pid[9:0]};
+        user_metadata_to_sdnet.ingress_port      = {'0, axis_to_sdnet.tid};
+        user_metadata_to_sdnet.egress_port       = {'0, axis_to_sdnet.tid};
+        user_metadata_to_sdnet.truncate_enable   = 0;
+        user_metadata_to_sdnet.truncate_length   = 0;
+        user_metadata_to_sdnet.rss_enable        = 0;
+        user_metadata_to_sdnet.rss_entropy       = 0;
+        user_metadata_to_sdnet.drop_reason       = 0;
+        user_metadata_to_sdnet.scratch           = 0;
 
-        user_metadata_in_valid = axis_to_sdnet.tvalid && axis_to_sdnet.sop;
+        user_metadata_to_sdnet_valid = axis_to_sdnet.tvalid && axis_to_sdnet.sop;
     end
 
-    // --- metadata_out ---
-    user_metadata_t user_metadata_out_latch;
+    // --- metadata_from_sdnet ---
+    user_metadata_t user_metadata_from_sdnet_latch;
 
-    always @(posedge core_clk) if (user_metadata_out_valid) user_metadata_out_latch <= user_metadata_out;
+    always @(posedge core_clk) if (user_metadata_from_sdnet_valid) user_metadata_from_sdnet_latch <= user_metadata_from_sdnet;
    
-    assign axis_from_sdnet_proc_port = user_metadata_out_valid ? user_metadata_out.pid[9] : user_metadata_out_latch.pid[9];
+    assign axis_from_sdnet_proc_port = user_metadata_from_sdnet_valid ?
+                                       user_metadata_from_sdnet.pid[9] : user_metadata_from_sdnet_latch.pid[9];
 
-    assign axis_from_sdnet.tid   = user_metadata_out_valid ?
-                                   user_metadata_out.ingress_port : user_metadata_out_latch.ingress_port;
+    assign axis_from_sdnet.tid   = user_metadata_from_sdnet_valid ?
+                                   user_metadata_from_sdnet.ingress_port : user_metadata_from_sdnet_latch.ingress_port;
 
-    assign axis_from_sdnet.tdest = user_metadata_out_valid ?
-                                   user_metadata_out.egress_port : user_metadata_out_latch.egress_port;
+    assign axis_from_sdnet.tdest = user_metadata_from_sdnet_valid ?
+                                   user_metadata_from_sdnet.egress_port : user_metadata_from_sdnet_latch.egress_port;
 
-    assign axis_from_sdnet_tuser.pid          = user_metadata_out_valid ? {7'd0, user_metadata_out.pid[8:0]} : {7'd0, user_metadata_out_latch.pid[8:0]};
+    assign axis_from_sdnet_tuser.pid          = user_metadata_from_sdnet_valid ?
+                                                {7'd0, user_metadata_from_sdnet.pid[8:0]} : {7'd0, user_metadata_from_sdnet_latch.pid[8:0]};
 
     assign axis_from_sdnet_tuser.trunc_enable = p4_proc_regs[1].trunc_config.enable ? p4_proc_regs[1].trunc_config.trunc_enable :
-                                                (user_metadata_out_valid ? user_metadata_out.truncate_enable : user_metadata_out_latch.truncate_enable);
+                                                ( user_metadata_from_sdnet_valid ?
+                                                  user_metadata_from_sdnet.truncate_enable : user_metadata_from_sdnet_latch.truncate_enable );
 
     assign axis_from_sdnet_tuser.trunc_length = p4_proc_regs[1].trunc_config.enable ? p4_proc_regs[1].trunc_config.trunc_length :
-                                                (user_metadata_out_valid ? user_metadata_out.truncate_length : user_metadata_out_latch.truncate_length);
+                                                ( user_metadata_from_sdnet_valid ?
+                                                  user_metadata_from_sdnet.truncate_length : user_metadata_from_sdnet_latch.truncate_length );
 
     assign axis_from_sdnet_tuser.rss_enable   = p4_proc_regs[1].rss_config.enable ? p4_proc_regs[1].rss_config.rss_enable :
-                                                (user_metadata_out_valid ? user_metadata_out.rss_enable  : user_metadata_out_latch.rss_enable);
+                                                ( user_metadata_from_sdnet_valid ?
+                                                  user_metadata_from_sdnet.rss_enable  : user_metadata_from_sdnet_latch.rss_enable );
 
     assign axis_from_sdnet_tuser.rss_entropy  = p4_proc_regs[1].rss_config.enable ? p4_proc_regs[1].rss_config.rss_entropy :
-                                                (user_metadata_out_valid ? user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy);
+                                                ( user_metadata_from_sdnet_valid ?
+                                                  user_metadata_from_sdnet.rss_entropy : user_metadata_from_sdnet_latch.rss_entropy );
 
     assign axis_from_sdnet.tuser = axis_from_sdnet_tuser;
 
