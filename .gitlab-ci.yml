@@ -223,7 +223,7 @@ smartnic_ip_au250:
     - cat bitfile.env
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
     - make -s -C src refresh
-    - cp -r .out $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
+    - cp -pr .out $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
