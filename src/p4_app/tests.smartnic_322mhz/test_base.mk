@@ -50,7 +50,7 @@ SUBCOMPONENTS = \
     axi4s.rtl@common \
     axi4l.verif@common \
     axi4s.verif@common \
-    packet.verif@common
+    pcap.pkg@common
 
 EXT_LIBS =
 

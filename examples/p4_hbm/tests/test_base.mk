@@ -45,7 +45,10 @@ SUBCOMPONENTS = \
     p4_app.verif@smartnic \
     p4_app.tb@smartnic \
     axi4l.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic 
+    axi4s.rtl@common@smartnic \
+    axi4l.verif@common@smartnic \
+    axi4s.verif@common@smartnic \
+    pcap.pkg@common@smartnic
 
 EXT_LIBS =
 
