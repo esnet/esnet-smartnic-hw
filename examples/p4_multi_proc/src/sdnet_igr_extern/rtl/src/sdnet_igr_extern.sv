@@ -1,5 +1,5 @@
-module smartnic_extern
-    import sdnet_0_pkg::*;
+module sdnet_igr_extern
+    import sdnet_igr_pkg::*;
 (
     input   logic clk,
     input   logic rstn,
@@ -26,4 +26,4 @@ module smartnic_extern
     assign extern_to_sdnet       = data_pipe[0];
     assign extern_to_sdnet_valid = valid_pipe[0];
 
-endmodule: smartnic_extern
+endmodule: sdnet_igr_extern
