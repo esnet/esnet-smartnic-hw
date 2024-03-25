@@ -22,16 +22,12 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-
 SUBCOMPONENTS = \
-    smartnic_322mhz.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    smartnic_322mhz_app.p4_only.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    p4_proc.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    vitisnetp4_igr.rtl \
-    vitisnetp4_egr.rtl \
-    axi4l.rtl@$(COMMON_LIB_NAME) \
-    axi3.rtl@$(COMMON_LIB_NAME) \
-    axi4s.rtl@$(COMMON_LIB_NAME)
+    smartnic_322mhz_app.p4_only.regio.rtl \
+    smartnic_322mhz_app.p4_only.regio.verif \
+    std.verif@common \
+    axi4l.verif@common \
+    axi4s.verif@common
 
 EXT_LIBS =
 
@@ -49,14 +45,13 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile synth
+all: compile
 
 compile: _compile_sim
-synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile synth info clean
+.PHONY: all compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

@@ -1,0 +1,12 @@
+name: p4_app
+info: |
+  p4_app is the top level module for the p4 application core used on the esnet smart nic platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xcafebeef

@@ -142,6 +142,7 @@ module smartnic_322mhz_app
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
     import smartnic_322mhz_pkg::*;
+    import p4_proc_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
@@ -248,7 +249,7 @@ module smartnic_322mhz_app
                 // -- AXI-S interface from switch
                 axi4s_intf_from_signals #(
                     .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-                ) i_axi4s_intf_from_signals_from_switch_0 (
+                ) i_axi4s_intf_from_signals_from_switch (
                     .aclk    ( core_clk ),
                     .aresetn ( core_rstn ),
                     .tvalid  ( axis_from_switch_tvalid [(i*N+j)*  1 +:   1] ),
@@ -264,7 +265,7 @@ module smartnic_322mhz_app
                 // -- AXI-S interface to switch
                 axi4s_intf_to_signals #(
                     .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-                ) i_axi4s_to_signals_to_switch_0 (
+                ) i_axi4s_to_signals_to_switch (
                     .aclk    ( ), // Output
                     .aresetn ( ), // Output
                     .tvalid  ( axis_to_switch_tvalid [(i*N+j)*  1 +:   1] ),
@@ -344,16 +345,257 @@ module smartnic_322mhz_app
     // -------------------------------------------------------------------------------------------------------
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
-    p4_app #(.N(N), .M(M)) p4_app_0
-    (
-        .core_clk      ( core_clk ),
-        .core_rstn     ( core_rstn ),
-        .timestamp     ( timestamp ),
-        .axil_if       ( axil_if ),
-        .axil_to_sdnet ( axil_to_sdnet ),
-        .axis_to_switch   ( axis_to_switch ),
-        .axis_from_switch ( axis_from_switch ),
-        .axi_to_hbm    ( axi_to_hbm )
+
+    // ----------------------------------------------------------------------
+    //  axil register map. axil intf, regio block and decoder instantiations.
+    // ----------------------------------------------------------------------
+    axi4l_intf  axil_to_p4_app ();
+    axi4l_intf  axil_to_p4_app__core_clk ();
+    axi4l_intf  axil_to_p4_proc ();
+
+    p4_app_reg_intf  p4_app_regs ();
+
+    // smartnic_322mhz_app register decoder
+    p4_app_decoder p4_app_decoder_inst (
+       .axil_if          ( axil_if ),
+       .p4_app_axil_if   ( axil_to_p4_app ),
+       .p4_proc_axil_if  ( axil_to_p4_proc )
     );
+
+    // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
+    axi4l_intf_cdc i_axil_intf_cdc (
+        .axi4l_if_from_controller  ( axil_to_p4_app ),
+        .clk_to_peripheral         ( core_clk ),
+        .axi4l_if_to_peripheral    ( axil_to_p4_app__core_clk )
+    );
+
+    // smartnic_322mhz_app register block
+    p4_app_reg_blk p4_app_reg_blk (
+        .axil_if    ( axil_to_p4_app__core_clk ),
+        .reg_blk_if ( p4_app_regs )
+    );
+
+
+    // ----------------------------------------------------------------------
+    // p4 processor signals and interfaces.
+    // ----------------------------------------------------------------------
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_sdnet[M] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_sdnet[M] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_demux[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_igr[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  float[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_egr[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_mux[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axi4s_mux_in[N][2] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_mux[N] ();
+
+    user_metadata_t user_metadata_in[M];
+    logic           user_metadata_in_valid[M];
+
+    user_metadata_t user_metadata_out[M];
+    logic           user_metadata_out_valid[M];
+
+    // ----------------------------------------------------------------------
+    // ingress p4 processor complex (p4_proc + sdnet_igr_wrapper)
+    // ----------------------------------------------------------------------
+    localparam logic P4_PROC_IGR_MODE = 1;
+
+    generate
+        if (P4_PROC_IGR_MODE) begin
+            p4_proc #(.N(N)) p4_proc_igr (
+                .core_clk                       ( core_clk ),
+                .core_rstn                      ( core_rstn ),
+                .timestamp                      ( timestamp ),
+                .axil_if                        ( axil_to_p4_proc ),
+                .axis_in                        ( axis_from_switch[0] ),
+                .axis_out                       ( axis_to_demux ),
+                .axis_to_sdnet                  ( axis_to_sdnet[0] ),
+                .axis_from_sdnet                ( axis_from_sdnet[0] ),
+                .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[0] ),
+                .user_metadata_to_sdnet         ( user_metadata_in[0] ),
+                .user_metadata_from_sdnet_valid ( user_metadata_out_valid[0] ),
+                .user_metadata_from_sdnet       ( user_metadata_out[0] )
+            );
+
+            sdnet_igr_wrapper sdnet_igr_wrapper_inst (
+                .core_clk                ( core_clk ),
+                .core_rstn               ( core_rstn ),
+                .axil_if                 ( axil_to_sdnet[0] ),
+                .axis_rx                 ( axis_to_sdnet[0] ),
+                .axis_tx                 ( axis_from_sdnet[0] ),
+                .user_metadata_in_valid  ( user_metadata_in_valid[0] ),
+                .user_metadata_in        ( user_metadata_in[0] ),
+                .user_metadata_out_valid ( user_metadata_out_valid[0] ),
+                .user_metadata_out       ( user_metadata_out[0] ),
+                .axi_to_hbm              ( axi_to_hbm )
+            );
+
+        end else begin  // P4_PROC_IGR_MODE == 0
+            axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc) );
+            axi4l_intf_peripheral_term axil_to_sdnet_0_term ( .axi4l_if (axil_to_sdnet[0]) );
+
+            for (genvar i = 0; i < N; i += 1) begin
+                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+                axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_switch[0][i]), .axi4s_if_to_rx(axis_to_demux[i]) );
+            end
+
+            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+                axi3_intf_controller_term axi_to_hbm_term (.axi3_if(axi_to_hbm[g_hbm_if]));
+            end : g__hbm_if
+
+        end
+    endgenerate
+
+    // ----------------------------------------------------------------------
+    // egress p4 processor complex (p4_proc + sdnet_igr_wrapper)
+    // ----------------------------------------------------------------------
+    localparam logic P4_PROC_EGR_MODE = 0;
+
+    axi4l_intf  axil_to_p4_proc_1 ();
+    axi4l_intf_controller_term axil_to_p4_proc_1_term (.axi4l_if (axil_to_p4_proc_1));
+
+    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_1[AXI_HBM_NUM_IFS] ();
+
+    generate
+        for (genvar g_hbm1_if = 0; g_hbm1_if < AXI_HBM_NUM_IFS; g_hbm1_if++) begin : g__hbm1_if
+            // For now, terminate sdnet_1 HBM memory interfaces (unused)
+            axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm_1[g_hbm1_if]));
+        end : g__hbm1_if
+
+        if (P4_PROC_EGR_MODE) begin
+            p4_proc #(.N(N)) p4_proc_egr (
+                .core_clk                       ( core_clk ),
+                .core_rstn                      ( core_rstn ),
+                .timestamp                      ( timestamp ),
+                .axil_if                        ( axil_to_p4_proc_1 ),
+                .axis_in                        ( axis_from_mux ),
+                .axis_out                       ( axis_to_switch[1] ),
+                .axis_to_sdnet                  ( axis_to_sdnet[1] ),
+                .axis_from_sdnet                ( axis_from_sdnet[1] ),
+                .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[1] ),
+                .user_metadata_to_sdnet         ( user_metadata_in[1] ),
+                .user_metadata_from_sdnet_valid ( user_metadata_out_valid[1] ),
+                .user_metadata_from_sdnet       ( user_metadata_out[1] )
+            );
+
+            sdnet_egr_wrapper sdnet_egr_wrapper_inst (
+                .core_clk                ( core_clk ),
+                .core_rstn               ( core_rstn ),
+                .axil_if                 ( axil_to_sdnet[1] ),
+                .axis_rx                 ( axis_to_sdnet[1] ),
+                .axis_tx                 ( axis_from_sdnet[1] ),
+                .user_metadata_in_valid  ( user_metadata_in_valid[1] ),
+                .user_metadata_in        ( user_metadata_in[1] ),
+                .user_metadata_out_valid ( user_metadata_out_valid[1] ),
+                .user_metadata_out       ( user_metadata_out[1] ),
+                .axi_to_hbm              ( axi_to_hbm_1 )
+            );
+
+        end else begin  // P4_PROC_EGR_MODE == 0
+            axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc_1) );
+            axi4l_intf_peripheral_term axil_to_sdnet_1_term   ( .axi4l_if (axil_to_sdnet[1]) );
+
+            for (genvar i = 0; i < N; i += 1) begin
+                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+                axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(axis_to_switch[1][i]) );
+            end
+
+            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
+                axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm_1[g_hbm_if]));
+            end : g__hbm_if
+        end
+
+    endgenerate
+
+
+    // ----------------------------------------------------------------------
+    // smartnic app datapath logic (mux/demux and ingress/egress blocks).
+    // ----------------------------------------------------------------------
+    generate for (genvar i = 0; i < N; i += 1) begin
+        axi4s_intf_1to2_demux axi4s_intf_1to2_demux_inst (
+            .axi4s_in   ( axis_to_demux[i] ),
+            .axi4s_out0 ( axis_to_smartnic_app_igr[i] ),
+            .axi4s_out1 ( float[i] ),
+//            .output_sel ( axis_to_demux[i].tdest[1] )
+            .output_sel ( 1'b0 )
+        );
+    end endgenerate
+
+    axi4l_intf  axil_to_smartnic_app_igr ();
+    axi4l_intf_controller_term axil_to_smartnic_app_igr_term (.axi4l_if (axil_to_smartnic_app_igr));
+
+    localparam logic SMARTNIC_APP_IGR_MODE = 0;
+
+    generate
+        if (SMARTNIC_APP_IGR_MODE) begin
+            smartnic_app_igr #(.N(N)) smartnic_app_igr_inst (
+                .axi4s_in   ( axis_to_smartnic_app_igr ),
+                .axi4s_out  ( axis_to_smartnic_app_egr ),
+                .axil_if    ( axil_to_smartnic_app_igr )
+            );
+
+        end else begin  // SMARTNIC_APP_IGR_MODE == 0
+            axi4l_intf_peripheral_term axil_to_smartnic_app_igr_term ( .axi4l_if (axil_to_smartnic_app_igr) );
+
+            for (genvar i = 0; i < N; i += 1) begin
+                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+                axi4s_full_pipe smartnic_app_igr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_igr[i]), .axi4s_if_to_rx(axis_to_smartnic_app_egr[i]) );
+            end
+
+        end
+    endgenerate
+
+
+    axi4l_intf  axil_to_smartnic_app_egr ();
+    axi4l_intf_controller_term axil_to_smartnic_app_egr_term (.axi4l_if (axil_to_smartnic_app_egr));
+
+    localparam logic SMARTNIC_APP_EGR_MODE = 0;
+
+    generate
+        if (SMARTNIC_APP_EGR_MODE) begin
+            smartnic_app_egr #(.N(N)) smartnic_app_egr_inst (
+                .axi4s_in   ( axis_to_smartnic_app_egr ),
+                .axi4s_out  ( axis_to_mux ),
+                .axil_if    ( axil_to_smartnic_app_egr )
+            );
+
+        end else begin  // SMARTNIC_APP_EGR_MODE == 0
+            axi4l_intf_peripheral_term axil_to_smartnic_app_egr_term ( .axi4l_if (axil_to_smartnic_app_egr) );
+
+            for (genvar i = 0; i < N; i += 1) begin
+                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+                axi4s_full_pipe smartnic_app_egr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_egr[i]), .axi4s_if_to_rx(axis_to_mux[i]) );
+            end
+
+        end
+    endgenerate
+
+
+    generate for (genvar i = 0; i < N; i += 1) begin
+        axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]),         .axi4s_to_rx(axi4s_mux_in[i][0]) );
+        axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axis_from_switch[1][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
+
+        axi4s_mux axi4s_mux_inst (
+            .axi4s_in   ( axi4s_mux_in[i] ),
+            .axi4s_out  ( axis_from_mux[i] )
+        );
+    end endgenerate
 
 endmodule: smartnic_322mhz_app

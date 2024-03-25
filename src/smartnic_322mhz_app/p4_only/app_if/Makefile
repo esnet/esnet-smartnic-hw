@@ -5,7 +5,7 @@ COMPONENT_ROOT = ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
-P4_FILE ?= $(SRC_ROOT)/p4_app/p4/p4_app.p4
+P4_FILE ?= $(P4_IGR_FILE)
 
 # ----------------------------------------------------
 # Targets
@@ -15,7 +15,8 @@ all: build package
 build:
 	@$(MAKE) -s -C $(SRC_ROOT) opt COMPONENT=smartnic_322mhz_app.p4_only.build BOARD=$(BOARD)
 
-package: build_package reg_package p4_package driver_package
+#package: build_package reg_package p4_package driver_package
+package: build_package reg_package p4_package
 
 build_package:
 	@cp $(OUTPUT_ROOT)/smartnic_322mhz_app/p4_only/build/$(BOARD)/proj/proj.runs/impl_1/smartnic_322mhz_app_opt.dcp smartnic_322mhz_app.dcp
