@@ -61,10 +61,8 @@
 	
         string filename;
 
-        // variabes for reading expected pcap data
-        byte                      exp_data[$][$];
-        pcap_pkg::pcap_hdr_t      exp_pcap_hdr;
-        pcap_pkg::pcaprec_hdr_t   exp_pcap_record_hdr[$];
+        // expected pcap data
+        pcap_pkg::pcap_t exp_pcap;
 
         // variables for sending packet data
         automatic logic [63:0] timestamp = init_timestamp;
@@ -93,7 +91,7 @@
 
         debug_msg("Reading expected pcap file...", VERBOSE);
         filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
-        pcap_pkg::read_pcap(filename, exp_pcap_hdr, exp_pcap_record_hdr, exp_data);
+        exp_pcap = pcap_pkg::read_pcap(filename);
 
         debug_msg("Starting simulation...", VERBOSE);
          filename = {"../../../p4/sim/", testdir, "/packets_in.pcap"};
@@ -114,7 +112,7 @@
              begin
                  automatic time t = $time;
                  // Monitor output packets
-                 while (rx_pkt_cnt < exp_pcap_record_hdr.size() || ($time < t + 5us)) begin
+                 while (rx_pkt_cnt < exp_pcap.records.size() || ($time < t + 5us)) begin
                      fork
                          begin
                              // Always monitor for some minumum period, even if no receive packets are expected
@@ -125,9 +123,9 @@
                              env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Port %0d. Receiving packet # %0d (of %0d)...",
-                                                  out_port, rx_pkt_cnt, exp_pcap_record_hdr.size()), VERBOSE );
+                                                  out_port, rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
                              debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                             compare_pkts(rx_data, exp_data[start_idx+rx_pkt_cnt-1], max_pkt_size);
+                             compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
                             `FAIL_IF_LOG( dest != out_port,
                                          $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, out_port) )
                          end

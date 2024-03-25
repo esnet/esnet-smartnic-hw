@@ -45,7 +45,9 @@ SUBCOMPONENTS = \
     vitisnetp4.rtl \
     vitisnetp4.verif \
     axi4l.rtl@common \
-    axi4s.rtl@common
+    axi4s.rtl@common \
+    axi4l.verif@common \
+    axi4s.verif@common
 
 EXT_LIBS =
 

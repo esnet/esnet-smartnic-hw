@@ -46,7 +46,8 @@ SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi4l.verif@common \
     axi4s.rtl@common \
-    axi4s.verif@common
+    axi4s.verif@common \
+    pcap.pkg@common
 
 EXT_LIBS =
 

@@ -47,6 +47,7 @@ SUBCOMPONENTS = \
     axi4s.rtl@common@smartnic \
     axi4l.verif@common@smartnic \
     axi4s.verif@common@smartnic \
+    pcap.pkg@common@smartnic \
     smartnic_322mhz.rtl@smartnic \
     smartnic_322mhz.tb@smartnic
 

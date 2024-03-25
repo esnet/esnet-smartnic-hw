@@ -48,7 +48,7 @@ SUBCOMPONENTS = \
     smartnic_322mhz.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \
-    packet.verif@common
+    pcap.pkg@common
 
 EXT_LIBS =
 

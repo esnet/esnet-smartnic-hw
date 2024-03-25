@@ -171,10 +171,8 @@ task automatic run_pkt_stream (
        input bit              enable_monitor = 1
     );
    
-    // variabes for reading pcap data$
-    byte                      pcap_data[$][$];
-    pcap_pkg::pcap_hdr_t      pcap_hdr;
-    pcap_pkg::pcaprec_hdr_t   pcap_record_hdr[$];
+    // variables for reading pcap data
+    pcap_pkg::pcap_t pcap;
 
     // variables for sending packet data
     int start_idx = 0;
@@ -186,12 +184,12 @@ task automatic run_pkt_stream (
     bit   user;
 
    `INFO($sformatf("Stream in_port %0d: Reading input pcap file...", in_port));
-    pcap_pkg::read_pcap(in_pcap, pcap_hdr, pcap_record_hdr, pcap_data);
-    tx_pkt_cnt  = pcap_record_hdr.size();
-    tx_byte_cnt = 0;  foreach (pcap_data[i,]) tx_byte_cnt += pcap_data[i].size();
+    pcap = pcap_pkg::read_pcap(in_pcap);
+    tx_pkt_cnt  = pcap.records.size();
+    tx_byte_cnt = 0;  foreach (pcap.records[i]) tx_byte_cnt += pcap.records[i].pkt_data.size();
 
    `INFO($sformatf("Stream in_port %0d: Reading output pcap file...", in_port));
-    pcap_pkg::read_pcap(out_pcap, pcap_hdr, pcap_record_hdr, pcap_data);
+    pcap = pcap_pkg::read_pcap(out_pcap);
    
    `INFO($sformatf("Stream in_port %0d: Starting packet stream...", in_port));
     fork
@@ -203,7 +201,7 @@ task automatic run_pkt_stream (
           // Monitor output packets
           rx_pkt_cnt = 0; rx_byte_cnt = 0;
 
-          if (exp_pkt_cnt == 0) exp_pkt_cnt = pcap_record_hdr.size();
+          if (exp_pkt_cnt == 0) exp_pkt_cnt = pcap.records.size();
 
           #(init_pause);
           while (rx_pkt_cnt < exp_pkt_cnt) begin
@@ -213,7 +211,7 @@ task automatic run_pkt_stream (
             `INFO($sformatf("       Stream in_port %0d (out_port %0d): Receiving packet # %0d (of %0d)...", 
                                     in_port, out_port, rx_pkt_cnt, exp_pkt_cnt) );
              // pcap_pkg::print_pkt_data(rx_data);
-             compare_pkts(rx_data, pcap_data[start_idx+rx_pkt_cnt-1]);
+             compare_pkts(rx_data, pcap.records[start_idx+rx_pkt_cnt-1].pkt_data);
           end
        end
     join
