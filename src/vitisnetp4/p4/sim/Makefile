@@ -7,7 +7,7 @@
 # file as an artifact (needed by the P4 behavior model simulation)
 # in the same directory as the .p4 source file, which might be
 # somewhere different from the Makefile.
-P4_SOURCE = ../p4_proc.p4
+P4_SOURCE = ../p4_app.p4
 P4_OBJECT = $(P4_SOURCE:.p4=.json)
 # JSON object file as seen from $(P4BM_DIR)
 P4_OBJECT_TEST = ../$(P4_OBJECT)
