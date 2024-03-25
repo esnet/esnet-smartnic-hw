@@ -161,6 +161,9 @@ module {{ props.name }}_wrapper
         {%- endfor %}
     );
 
+    assign axis_tx.aclk = core_clk;
+    assign axis_tx.aresetn = core_rstn;
+
     generate
         // Assign all other HBM AXI signals
         for (genvar i = 0; i < M_AXI_HBM_NUM_SLOTS; i++) begin : g__hbm_axi_if
