@@ -133,7 +133,7 @@ module p4_proc_datapath_unit_test
         vitisnetp4_agent.init();
     `SVTEST_END
 
-    `include "../../p4/sim/run_pkt_test_incl.svh"
+    `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
 // Commented out due outstanding (init?) issue. Test passes on its own, but not within test suite.
 //    `SVTEST(test_default_w_force)
@@ -256,20 +256,21 @@ module p4_proc_datapath_unit_test
 
         if (write_p4_tables==1) begin
            debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-           filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
+           filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
            vitisnetp4_agent.table_init_from_file(filename);
            debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
         end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/packets_out.pcap"};
+
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
         exp_pcap = pcap_pkg::read_pcap(filename);
 
         exp_pkt_cnt = exp_pcap.records.size();
         exp_byte_cnt = 0; for (integer i = 0; i < exp_pkt_cnt; i=i+1) exp_byte_cnt = exp_byte_cnt + exp_pcap.records[i].pkt_data.size();
 
         debug_msg("Starting simulation...", VERBOSE);
-         filename = {"../../../p4/sim/", testdir, "/packets_in.pcap"};
+         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
          rx_pkt_cnt = 0;
          fork
              begin
