@@ -98,7 +98,7 @@ module smartnic_322mhz_datapath_unit_test;
 
         out_port_map = {2'h3, 2'h2, 2'h1, 2'h0}; configure_port_map;
         pkt_len      = {0, 0, 0, 0};  
-        exp_pkt_cnt  = {0, 0, 0, 0};  // if exp_pkt_cnt field is set 0, value is determined from pcap file.
+        exp_pkts     = {0, 0, 0, 0};  // if exp_pkts field is set 0, value is determined from pcap file.
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -145,7 +145,7 @@ module smartnic_322mhz_datapath_unit_test;
         run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                        .exp_pkt_cnt(exp_pkt_cnt[0]),
+                        .exp_pkt_cnt(exp_pkts[0]),
                         .tpause(0), .twait(0) );
     `SVTEST_END
 
@@ -281,7 +281,7 @@ module smartnic_322mhz_datapath_unit_test;
             pkt_len[port] = 1518;
 
            // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
-           exp_pkt_cnt[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
+           exp_pkts[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
 
            // set flow control threshold.
            env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_FC_THRESH[0] + 4*port, 32'd1020);
@@ -291,7 +291,7 @@ module smartnic_322mhz_datapath_unit_test;
               run_pkt_stream ( .in_port(port), .out_port(out_port_map[port]), .in_pcap(in_pcap[port]), .out_pcap(out_pcap[port]),
                                .tx_pkt_cnt(tx_pkt_cnt[port]), .tx_byte_cnt(tx_byte_cnt[port]),
                                .rx_pkt_cnt(rx_pkt_cnt[port]), .rx_byte_cnt(rx_byte_cnt[port]),
-                               .exp_pkt_cnt(exp_pkt_cnt[port]),
+                               .exp_pkt_cnt(exp_pkts[port]),
                                .init_pause(50000) );
 
               #(50000) `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b1 );
@@ -324,7 +324,7 @@ module smartnic_322mhz_datapath_unit_test;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++)
-           exp_pkt_cnt[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
+           exp_pkts[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
         switch_config.igr_sw_tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
@@ -382,7 +382,7 @@ module smartnic_322mhz_datapath_unit_test;
            run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                          .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .exp_pkt_cnt(exp_pkts[0]),
                          .tpause(0), .twait(0) );
 
            begin 
@@ -405,7 +405,7 @@ module smartnic_322mhz_datapath_unit_test;
            run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                          .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                         .exp_pkt_cnt(exp_pkt_cnt[0]),
+                         .exp_pkt_cnt(exp_pkts[0]),
                          .tpause(0), .twait(0) );
 
            begin 
@@ -504,7 +504,7 @@ module smartnic_322mhz_datapath_unit_test;
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++) begin
             pkt_len[i] = 9100;
-            exp_pkt_cnt[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
+            exp_pkts[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
         end
 
         force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
@@ -539,9 +539,9 @@ module smartnic_322mhz_datapath_unit_test;
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++) begin
             pkt_len[i] = 1518;
-            exp_pkt_cnt[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
+            exp_pkts[i] = FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
         end
-        exp_pkt_cnt[2] = 0;  // configures exp_pkt_cnt from pcap file.
+        exp_pkts[2] = 0;  // configures exp_pkts from pcap file.
 
         force tb.axis_out_if[0].tready = 0;  // force backpressure on egress ports with discard points
         force tb.axis_out_if[1].tready = 0;
