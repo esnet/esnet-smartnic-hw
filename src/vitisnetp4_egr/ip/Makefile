@@ -10,7 +10,8 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 VITISNETP4_IP_NAME = sdnet_egr
 
-P4_FILE = $(abspath $(COMPONENT_ROOT)/p4/p4_egr.p4)
+P4_EGR_FILE ?= $(SMARTNIC_ROOT)/src/vitisnetp4/p4/p4_app.p4
+P4_FILE = $(P4_EGR_FILE)
 P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 
 EXTERN_PORTS ?= False
@@ -31,7 +32,9 @@ COMPILE_OPTS=
 # ----------------------------------------------------
 all: synth compile
 
-ip:      _vitisnetp4_ip
+echo_var:
+	@echo "Egress P4_FILE: $(P4_FILE)"
+ip:      echo_var _vitisnetp4_ip
 compile: _vitisnetp4_compile
 synth:   _vitisnetp4_synth
 driver:  _vitisnetp4_driver
@@ -40,7 +43,7 @@ status:  _ip_status
 upgrade: _ip_upgrade
 clean:   _vitisnetp4_clean
 
-.PHONY: all ip compile synth info status upgrade clean
+.PHONY: all echo_var ip compile synth info status upgrade clean
 
 # ----------------------------------------------------
 # IP project management targets
