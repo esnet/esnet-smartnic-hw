@@ -25,8 +25,7 @@ jobs ?= 16
 
 #------- Targets -------
 
-#build: bitfile package
-build: bitfile
+build: bitfile package
 
 # Include targets for config validation
 # - checks Vivado version

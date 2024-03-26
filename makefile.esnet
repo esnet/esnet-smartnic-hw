@@ -89,8 +89,16 @@ package :
 	@mkdir -p $(artifact_dir)/libvitisnetp4drv
 	@mkdir -p $(artifact_dir)/regmap/spec
 	@mkdir -p $(artifact_dir)/wireshark/plugins
-	-@tar xf $(APP_ROOT)/app_if/smartnic_322mhz_app_drv.tar -C $(artifact_dir)/libvitisnetp4drv
-	-@cp $(APP_ROOT)/app_if/smartnic_322mhz_app.p4 $(artifact_dir)/firmware/esnet-smartnic.p4
+	if [ -e $(APP_ROOT)/app_if/smartnic_322mhz_app_igr_drv.tar ]; then \
+	   mkdir -p $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \
+	   tar xf $(APP_ROOT)/app_if/smartnic_322mhz_app_igr_drv.tar -C $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \
+	   cp $(APP_ROOT)/app_if/smartnic_322mhz_app_igr.p4 $(artifact_dir)/firmware/esnet-smartnic-igr.p4; \
+	fi
+	if [ -e $(APP_ROOT)/app_if/smartnic_322mhz_app_egr_drv.tar ]; then \
+	   mkdir -p $(artifact_dir)/libvitisnetp4drv/sdnet_egr; \
+	   tar xf $(APP_ROOT)/app_if/smartnic_322mhz_app_egr_drv.tar -C $(artifact_dir)/libvitisnetp4drv/sdnet_egr; \
+	   cp $(APP_ROOT)/app_if/smartnic_322mhz_app_egr.p4 $(artifact_dir)/firmware/esnet-smartnic-egr.p4; \
+	fi
 	-@cp $(APP_ROOT)/app_if/*.lua $(artifact_dir)/wireshark/plugins
 	@echo "The wireshark/plugins directory is a placeholder for wireshark .lua files,"    > $(artifact_dir)/wireshark/plugins/README.md
 	@echo "which can be used to decode custom protocol headers defined in the .p4 file." >> $(artifact_dir)/wireshark/plugins/README.md

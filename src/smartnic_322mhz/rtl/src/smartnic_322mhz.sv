@@ -9,8 +9,7 @@ module smartnic_322mhz
   parameter bit INCLUDE_HBM0 = 1'b1,
   parameter bit INCLUDE_HBM1 = 1'b1
 `else
-  parameter bit INCLUDE_HBM0 = 1'b0, // Application-specific HBM controller include/exclude
-//  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
+  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
                                      // HBM0 controller is connected to application logic
                                      // (can be excluded for non-HBM applications to optimize resources/complexity)
   parameter bit INCLUDE_HBM1 = 1'b0  // HBM1 is connected to platform logic
