@@ -19,5 +19,9 @@ interfaces:
     name: app
   - block: *sdnet
     address: 0x40000
-    width: 18
-    name: sdnet
+    width: 17
+    name: sdnet_igr
+  - block: *sdnet
+    address: 0x60000
+    width: 17
+    name: sdnet_egr

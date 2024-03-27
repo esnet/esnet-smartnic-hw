@@ -922,24 +922,22 @@ module smartnic_322mhz
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_to_p4_egr [2] ();
 
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    place_holder [2] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_p4_igr [2] ();
 
    axi4s_intf_tx_term  axi4s_intf_tx_term_0  (.axi4s_if(axis_to_p4_egr[0]));
    axi4s_intf_tx_term  axi4s_intf_tx_term_1  (.axi4s_if(axis_to_p4_egr[1]));
-   axi4s_intf_rx_block axi4s_intf_rx_block_0 (.axi4s_if(place_holder[0]));
-   axi4s_intf_rx_block axi4s_intf_rx_block_1 (.axi4s_if(place_holder[1]));
+   axi4s_intf_rx_block axi4s_intf_rx_block_0 (.axi4s_if(axis_from_p4_igr[0]));
+   axi4s_intf_rx_block axi4s_intf_rx_block_1 (.axi4s_if(axis_from_p4_igr[1]));
 
 //   axi4s_intf_pipe axis_core_to_app_pipe_2 (.axi4s_if_from_tx(axis_host_to_core_p[0]),      .axi4s_if_to_rx(axis_to_app__demarc[1][0]));
    axi4s_intf_pipe axis_core_to_app_pipe_2 (.axi4s_if_from_tx(axis_to_p4_egr[0]),      .axi4s_if_to_rx(axis_to_app__demarc[1][0]));
 //   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[1][0]), .axi4s_if_to_rx(axis_core_to_host[0]));
-//   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[1][0]), .axi4s_if_to_rx(place_holder[0]));
-   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[0][0]), .axi4s_if_to_rx(place_holder[0]));
+   axi4s_intf_pipe axis_app_to_core_pipe_2 (.axi4s_if_from_tx(axis_from_app__demarc[0][0]), .axi4s_if_to_rx(axis_from_p4_igr[0]));
 
 //   axi4s_intf_pipe axis_core_to_app_pipe_3 (.axi4s_if_from_tx(axis_host_to_core_p[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1][1]));
    axi4s_intf_pipe axis_core_to_app_pipe_3 (.axi4s_if_from_tx(axis_to_p4_egr[1]),      .axi4s_if_to_rx(axis_to_app__demarc[1][1]));
 //   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[1][1]), .axi4s_if_to_rx(axis_core_to_host[1]));
-//   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[1][1]), .axi4s_if_to_rx(place_holder[1]));
-   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[0][1]), .axi4s_if_to_rx(place_holder[1]));
+   axi4s_intf_pipe axis_app_to_core_pipe_3 (.axi4s_if_from_tx(axis_from_app__demarc[0][1]), .axi4s_if_to_rx(axis_from_p4_igr[1]));
 
    // axis_app_to_core[0] pipe.
    axi4s_intf_pipe axis_app_to_core_0_pipe (.axi4s_if_from_tx(__axis_app_to_core[0]), .axi4s_if_to_rx(axis_app_to_core[0]));
@@ -1140,9 +1138,6 @@ module smartnic_322mhz
        assign axil_to_sdnet[i].rresp = axil_sdnet_rresp[i];
    end endgenerate
 
-   axi4l_intf_controller_term axil_to_sdnet_1_term (.axi4l_if (axil_to_sdnet[1]));
-
-
    logic [M-1:0][2-1:0]        axis_from_switch_tvalid;
    logic [M-1:0][2-1:0]        axis_from_switch_tready;
    logic [M-1:0][2-1:0][511:0] axis_from_switch_tdata;
@@ -1202,9 +1197,10 @@ module smartnic_322mhz
 
    // Provide dedicated AXI-L interfaces for app and sdnet control
    smartnic_322mhz_app_sdnet_decoder smartnic_322mhz_app_sdnet_decoder (
-       .axil_if       (axil_to_app_decoder),
-       .sdnet_axil_if (axil_to_sdnet[0]),
-       .app_axil_if   (axil_to_app)
+       .axil_if           (axil_to_app_decoder),
+       .app_axil_if       (axil_to_app),
+       .sdnet_igr_axil_if (axil_to_sdnet[0]),
+       .sdnet_egr_axil_if (axil_to_sdnet[1])
    );
 
    smartnic_322mhz_app smartnic_322mhz_app

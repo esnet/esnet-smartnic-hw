@@ -351,15 +351,16 @@ module smartnic_322mhz_app
     // ----------------------------------------------------------------------
     axi4l_intf  axil_to_p4_app ();
     axi4l_intf  axil_to_p4_app__core_clk ();
-    axi4l_intf  axil_to_p4_proc ();
+    axi4l_intf  axil_to_p4_proc[M] ();
 
     p4_app_reg_intf  p4_app_regs ();
 
     // smartnic_322mhz_app register decoder
     p4_app_decoder p4_app_decoder_inst (
-       .axil_if          ( axil_if ),
-       .p4_app_axil_if   ( axil_to_p4_app ),
-       .p4_proc_axil_if  ( axil_to_p4_proc )
+       .axil_if              ( axil_if ),
+       .p4_app_axil_if       ( axil_to_p4_app ),
+       .p4_proc_igr_axil_if  ( axil_to_p4_proc[0] ),
+       .p4_proc_egr_axil_if  ( axil_to_p4_proc[1] )
     );
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
@@ -423,7 +424,7 @@ module smartnic_322mhz_app
                 .core_clk                       ( core_clk ),
                 .core_rstn                      ( core_rstn ),
                 .timestamp                      ( timestamp ),
-                .axil_if                        ( axil_to_p4_proc ),
+                .axil_if                        ( axil_to_p4_proc[0] ),
                 .axis_in                        ( axis_from_switch[0] ),
                 .axis_out                       ( axis_to_demux ),
                 .axis_to_sdnet                  ( axis_to_sdnet[0] ),
@@ -448,7 +449,7 @@ module smartnic_322mhz_app
             );
 
         end else begin  // P4_PROC_IGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc) );
+            axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
             axi4l_intf_peripheral_term axil_to_sdnet_0_term ( .axi4l_if (axil_to_sdnet[0]) );
 
             for (genvar i = 0; i < N; i += 1) begin
@@ -468,15 +469,12 @@ module smartnic_322mhz_app
     // ----------------------------------------------------------------------
     localparam logic P4_PROC_EGR_MODE = 0;
 
-    axi4l_intf  axil_to_p4_proc_1 ();
-    axi4l_intf_controller_term axil_to_p4_proc_1_term (.axi4l_if (axil_to_p4_proc_1));
-
-    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_1[AXI_HBM_NUM_IFS] ();
+    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_egr[AXI_HBM_NUM_IFS] ();
 
     generate
         for (genvar g_hbm1_if = 0; g_hbm1_if < AXI_HBM_NUM_IFS; g_hbm1_if++) begin : g__hbm1_if
             // For now, terminate sdnet_1 HBM memory interfaces (unused)
-            axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm_1[g_hbm1_if]));
+            axi3_intf_controller_term axi_to_hbm_egr_term (.axi3_if(axi_to_hbm_egr[g_hbm1_if]));
         end : g__hbm1_if
 
         if (P4_PROC_EGR_MODE) begin
@@ -484,7 +482,7 @@ module smartnic_322mhz_app
                 .core_clk                       ( core_clk ),
                 .core_rstn                      ( core_rstn ),
                 .timestamp                      ( timestamp ),
-                .axil_if                        ( axil_to_p4_proc_1 ),
+                .axil_if                        ( axil_to_p4_proc[1] ),
                 .axis_in                        ( axis_from_mux ),
                 .axis_out                       ( axis_to_switch[1] ),
                 .axis_to_sdnet                  ( axis_to_sdnet[1] ),
@@ -505,11 +503,11 @@ module smartnic_322mhz_app
                 .user_metadata_in        ( user_metadata_in[1] ),
                 .user_metadata_out_valid ( user_metadata_out_valid[1] ),
                 .user_metadata_out       ( user_metadata_out[1] ),
-                .axi_to_hbm              ( axi_to_hbm_1 )
+                .axi_to_hbm              ( axi_to_hbm_egr )
             );
 
         end else begin  // P4_PROC_EGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc_1) );
+            axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc[1]) );
             axi4l_intf_peripheral_term axil_to_sdnet_1_term   ( .axi4l_if (axil_to_sdnet[1]) );
 
             for (genvar i = 0; i < N; i += 1) begin
@@ -518,7 +516,7 @@ module smartnic_322mhz_app
             end
 
             for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-                axi3_intf_controller_term axi_to_hbm_1_term (.axi3_if(axi_to_hbm_1[g_hbm_if]));
+                axi3_intf_controller_term axi_to_hbm_egr_term (.axi3_if(axi_to_hbm_egr[g_hbm_if]));
             end : g__hbm_if
         end
 
