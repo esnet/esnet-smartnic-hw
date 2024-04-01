@@ -19,7 +19,7 @@ interfaces:
     width: 14
     name: p4_proc_igr
 
-  - decoder: *p4_proc_decoder
-    address: 0x08000
-    width: 14
-    name: p4_proc_egr
+  #- decoder: *p4_proc_decoder
+  #  address: 0x08000
+  #  width: 14
+  #  name: p4_proc_egr

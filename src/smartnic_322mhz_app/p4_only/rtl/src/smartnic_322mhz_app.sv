@@ -359,9 +359,11 @@ module smartnic_322mhz_app
     p4_app_decoder p4_app_decoder_inst (
        .axil_if              ( axil_if ),
        .p4_app_axil_if       ( axil_to_p4_app ),
-       .p4_proc_igr_axil_if  ( axil_to_p4_proc[0] ),
-       .p4_proc_egr_axil_if  ( axil_to_p4_proc[1] )
+       .p4_proc_igr_axil_if  ( axil_to_p4_proc[0] )
+//       .p4_proc_egr_axil_if  ( axil_to_p4_proc[1] )  // temporarily commented out.
     );
+
+    axi4l_intf_controller_term axil_to_p4_proc_1_controller_term ( .axi4l_if (axil_to_p4_proc[1]) );
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
