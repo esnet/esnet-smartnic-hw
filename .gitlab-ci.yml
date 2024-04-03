@@ -35,7 +35,7 @@ p4bm:
   script:
     - make -s -C src/vitisnetp4/p4/sim build sim-all
     - make -s -C examples/p4_only/p4/sim sim-all
-#    - make -s -C examples/p4_and_verilog/p4/sim build sim-all
+    - make -s -C examples/p4_and_verilog/p4/sim build sim-all
     - make -s -C examples/p4_with_extern/p4/sim sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_igr sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_egr sim-all
@@ -44,7 +44,7 @@ p4bm:
     paths:
       - src/vitisnetp4/p4/sim
       - examples/p4_only/p4/sim
-#      - examples/p4_and_verilog/p4/sim
+      - examples/p4_and_verilog/p4/sim
       - examples/p4_with_extern/p4/sim
       - examples/p4_multi_proc/p4/sim_igr
       - examples/p4_multi_proc/p4/sim_egr
@@ -62,8 +62,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' src/smartnic_322mhz_app/p4_only/tests/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression
     - grep 'PASSED.*suites passing' src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression/run_$SEED/sim.log
-#    - make -s -C examples/p4_and_verilog/tests/regression
-#    - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
+    - make -s -C examples/p4_and_verilog/tests/regression
+    - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
@@ -71,7 +71,7 @@ sim_p4_apps:
         - src/p4_proc/tests/regression/run_*/tests.xml
         - src/smartnic_322mhz_app/p4_only/tests/regression/run_*/tests.xml
         - src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression/run_*/tests.xml
-#        - examples/p4_and_verilog/tests/regression/run_*/tests.xml
+        - examples/p4_and_verilog/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []
@@ -84,8 +84,8 @@ sim_platform:
   script:
     - make -s -C src/smartnic_322mhz/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_322mhz/tests/regression/run_$SEED/sim.log
-#    - make -s -C examples/p2p/tests.smartnic_322mhz/regression
-#    - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic_322mhz/regression/run_$SEED/sim.log
+    - make -s -C examples/p2p/tests.smartnic_322mhz/regression
+    - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic_322mhz/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_250mhz/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_250mhz/tests/regression/run_$SEED/sim.log
   artifacts:
@@ -93,7 +93,7 @@ sim_platform:
     reports:
       junit:
         - src/smartnic_322mhz/tests/regression/run_*/tests.xml
-#        - examples/p2p/tests.smartnic_322mhz/regression/run_*/tests.xml
+        - examples/p2p/tests.smartnic_322mhz/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
@@ -242,25 +242,25 @@ smartnic_ip_au250:
   except:
       - schedules
 
-#build_p4_and_verilog:
-#  extends: .bitfile
-#  variables:
-#    EXAMPLES_DIR: examples
-#    SN_HW_APP_NAME: p4_and_verilog
-#    SN_HW_BOARD: au55c
-#  needs:
-#    - ons_ip_au55c
-#    - smartnic_ip_au55c
+build_p4_and_verilog:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_and_verilog
+    SN_HW_BOARD: au55c
+  needs:
+    - ons_ip_au55c
+    - smartnic_ip_au55c
 
-#build_p2p:
-#  extends: .bitfile
-#  variables:
-#    EXAMPLES_DIR: examples
-#    SN_HW_APP_NAME: p2p
-#    SN_HW_BOARD: au250
-#  needs:
-#    - ons_ip_au250
-#    - smartnic_ip_au250
+build_p2p:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p2p
+    SN_HW_BOARD: au250
+  needs:
+    - ons_ip_au250
+    - smartnic_ip_au250
 
 build_p4_only_u280:
   extends: .bitfile
@@ -352,15 +352,15 @@ build_vanilla_ons:
   rules:
     - allow_failure: true
 
-#validate_p4_and_verilog:
-#  extends: .validate
-#  needs:
-#    - build_p4_and_verilog
+validate_p4_and_verilog:
+  extends: .validate
+  needs:
+    - build_p4_and_verilog
 
-#validate_p2p:
-#  extends: .validate
-#  needs:
-#    - build_p2p
+validate_p2p:
+  extends: .validate
+  needs:
+    - build_p2p
 
 validate_p4_only_u280:
   extends: .validate
@@ -422,15 +422,15 @@ validate_p4_multi_proc_u55c:
         hwapi.env
   timeout: 30m
 
-#hwapi_p4_and_verilog:
-#  extends: .hwapi
-#  needs:
-#    - build_p4_and_verilog
+hwapi_p4_and_verilog:
+  extends: .hwapi
+  needs:
+    - build_p4_and_verilog
 
-#hwapi_p2p:
-#  extends: .hwapi
-#  needs:
-#    - build_p2p
+hwapi_p2p:
+  extends: .hwapi
+  needs:
+    - build_p2p
 
 hwapi_p4_only_u280:
   extends: .hwapi
@@ -476,12 +476,12 @@ hwapi_p4_multi_proc_u55c:
       when: manual
       allow_failure: true
 
-#fw_p4_and_verilog:
-#  extends: .trigger_fw
-#  variables:
-#    SN_HW_API_JOB: hwapi_p4_and_verilog
-#  needs:
-#    - hwapi_p4_and_verilog
+fw_p4_and_verilog:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_and_verilog
+  needs:
+    - hwapi_p4_and_verilog
 
 fw_p4_only_u280:
   extends: .trigger_fw
