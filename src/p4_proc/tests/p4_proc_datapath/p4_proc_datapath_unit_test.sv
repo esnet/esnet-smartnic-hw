@@ -144,21 +144,25 @@ module p4_proc_datapath_unit_test
     `SVTEST(test_pkt_loopback_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
         run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(7) );
+        release tb.axis_in_if[0].tdest;
     `SVTEST_END
 
     `SVTEST(test_fwd_p0_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
         run_pkt_test ( .testdir("test-fwd-p0"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(0) );
+        release tb.axis_in_if[0].tdest;
     `SVTEST_END
 
     `SVTEST(test_fwd_p1_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
         run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(1) );
+        release tb.axis_in_if[0].tdest;
     `SVTEST_END
 
     `SVTEST(test_fwd_p3_w_force)
         force tb.axis_in_if[0].tdest = 2'h2;
         run_pkt_test ( .testdir("test-fwd-p3"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(3) );
+        release tb.axis_in_if[0].tdest;
     `SVTEST_END
 
     `SVTEST(test_traffic_mux)
