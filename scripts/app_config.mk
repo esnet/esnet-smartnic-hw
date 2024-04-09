@@ -36,7 +36,8 @@ APP_NAME ?= $(shell echo $(APP_NAME_DEFAULT) | tr '[:upper:]' '[:lower:]')
 # ----------------------------------------------------
 # Full pathname of application p4 files
 ifeq ($(APP_TYPE),P4)
-P4_IGR_FILE_DEFAULT := $(APP_DIR)/p4/$(APP_NAME).p4
+P4_FILE ?= $(APP_DIR)/p4/$(APP_NAME).p4
+P4_IGR_FILE_DEFAULT := $(P4_FILE)
 P4_EGR_FILE_DEFAULT :=
 else
 P4_IGR_FILE_DEFAULT :=
