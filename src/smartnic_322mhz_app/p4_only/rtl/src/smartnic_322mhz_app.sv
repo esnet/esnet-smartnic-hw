@@ -282,6 +282,8 @@ module smartnic_322mhz_app
         end
     endgenerate
 
+    // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_switch[0][0]));
+
     // -- AXI memory interfaces to HBM
     generate
         for (genvar g_hbm_if = 0; g_hbm_if < AXI_HBM_NUM_IFS; g_hbm_if++) begin : g__hbm_if
@@ -450,6 +452,9 @@ module smartnic_322mhz_app
                 .axi_to_hbm              ( axi_to_hbm )
             );
 
+        // axi4s_ila axi4s_ila_1 (.axis_in(axis_to_sdnet[0]));
+        // axi4s_ila axi4s_ila_2 (.axis_in(axis_from_sdnet[0]));
+
         end else begin  // P4_PROC_IGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
             axi4l_intf_peripheral_term axil_to_sdnet_0_term ( .axi4l_if (axil_to_sdnet[0]) );
@@ -538,6 +543,8 @@ module smartnic_322mhz_app
         );
     end endgenerate
 
+    // axi4s_ila axi4s_ila_3 (.axis_in(axis_to_demux[0]));
+
     axi4l_intf  axil_to_smartnic_app_igr ();
     axi4l_intf_controller_term axil_to_smartnic_app_igr_term (.axi4l_if (axil_to_smartnic_app_igr));
 
@@ -587,6 +594,7 @@ module smartnic_322mhz_app
         end
     endgenerate
 
+    // axi4s_ila axi4s_ila_4 (.axis_in(axis_to_mux[0]));
 
     generate for (genvar i = 0; i < N; i += 1) begin
         axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]),         .axi4s_to_rx(axi4s_mux_in[i][0]) );
@@ -597,5 +605,7 @@ module smartnic_322mhz_app
             .axi4s_out  ( axis_from_mux[i] )
         );
     end endgenerate
+
+    // axi4s_ila axi4s_ila_5 (.axis_in(axis_from_mux[0]));
 
 endmodule: smartnic_322mhz_app

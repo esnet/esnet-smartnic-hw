@@ -790,6 +790,8 @@ module smartnic_322mhz
          igr_sw_tdest[3] <= smartnic_322mhz_regs.igr_sw_tdest[3];
    end
 
+   logic [1:0] tdest_no_connect [2];
+
    axis_switch_ingress axis_switch_ingress
    (
     .aclk    ( core_clk ),
@@ -799,7 +801,7 @@ module smartnic_322mhz
     .m_axis_tkeep  ({ axis_core_to_bypass.tkeep  , axis_core_to_app[1].tkeep  , axis_core_to_app[0].tkeep  }),
     .m_axis_tlast  ({ axis_core_to_bypass.tlast  , axis_core_to_app[1].tlast  , axis_core_to_app[0].tlast  }),
     .m_axis_tid    ({ axis_core_to_bypass.tid    , axis_core_to_app[1].tid    , axis_core_to_app[0].tid    }),
-    .m_axis_tdest  ({ axis_core_to_bypass.tdest  , axis_core_to_app[1].tdest[1:0] , axis_core_to_app[0].tdest[1:0] }),
+    .m_axis_tdest  ({ axis_core_to_bypass.tdest  , tdest_no_connect[1]        , tdest_no_connect[0]        }),
     .m_axis_tready ({ axis_core_to_bypass_tready , axis_core_to_app[1].tready , axis_core_to_app[0].tready }),
     .m_axis_tvalid ({ axis_core_to_bypass_tvalid , axis_core_to_app[1].tvalid , axis_core_to_app[0].tvalid }),
 
@@ -826,8 +828,8 @@ module smartnic_322mhz
    assign axis_core_to_app[1].tuser = '0;
    assign axis_core_to_bypass.tuser = '0;
 
-   assign axis_core_to_app[0].tdest[2] = '0;
-   assign axis_core_to_app[1].tdest[2] = '0;
+   assign axis_core_to_app[0].tdest = {1'b0, axis_core_to_app[0].tid};
+   assign axis_core_to_app[1].tdest = {1'b0, axis_core_to_app[1].tid};
 
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_app_to_core  (.axis_in(__axis_app_to_core[0]));
@@ -1018,6 +1020,8 @@ module smartnic_322mhz
 
     .s_decode_err ()
    );
+
+   // axi4s_ila axi4s_ila_0 (.axis_in(axis_app_to_core[0]));
 
    assign axis_core_to_cmac[0].aclk = core_clk;
    assign axis_core_to_cmac[1].aclk = core_clk;
