@@ -28,9 +28,17 @@ export P4_EGR_FILE := $(CURDIR)/p4/$(APP_NAME)_egr.p4
 # Supports 'au280', 'au250' and 'au55c'.  Default is 'au280'.
 #export BOARD := au280
 
+
+# AMD example design variables - used to generate the AMD example design (for xsim verilog simulation).
+# P4_FILE - Full pathname of p4 file used for example design generation.
+  export P4_FILE := $(P4_IGR_FILE)
+# VITISNETP4_IP_NAME - module name of vitisnetp4 instance used for example design generation (default: sdnet_0).
+  export VITISNETP4_IP_NAME := sdnet_igr
 # EXAMPLE_TEST_DIR - Full pathname of p4 test directory used for example design generation.
-export EXAMPLE_ROOT := $(CURDIR)/src/vitisnetp4_egr
-export EXAMPLE_TEST_DIR := $(EXAMPLE_ROOT)/p4/sim/test-fwd-p0
+  export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim_igr/test-fwd-p0
+# EXAMPLE_EXTERN_DIR - Full pathname of extern src directory used for example design generation.
+  export EXAMPLE_EXTERN_DIR := $(CURDIR)/src/$(VITISNETP4_IP_NAME)_extern
+
 
 #------- Targets -------
 build:
