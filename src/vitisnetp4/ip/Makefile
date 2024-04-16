@@ -27,7 +27,9 @@ COMPILE_OPTS=
 # ----------------------------------------------------
 # Compile Targets
 # ----------------------------------------------------
+ifneq ($(P4_FILE),)
 all: synth compile
+endif
 
 ip:      _vitisnetp4_ip
 compile: _vitisnetp4_compile

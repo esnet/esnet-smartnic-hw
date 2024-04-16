@@ -29,7 +29,7 @@ module p4_app_datapath_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
-    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+    vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 
     int exp_pkt_cnt, exp_byte_cnt;
 

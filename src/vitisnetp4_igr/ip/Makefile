@@ -30,7 +30,9 @@ COMPILE_OPTS=
 # ----------------------------------------------------
 # Compile Targets
 # ----------------------------------------------------
+ifneq ($(P4_FILE),)
 all: synth compile
+endif
 
 echo_var:
 	@echo "Ingress P4_FILE: $(P4_FILE)"

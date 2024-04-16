@@ -42,8 +42,8 @@ SUBCOMPONENTS = \
     smartnic_322mhz_app.p4_only.rtl \
     smartnic_322mhz_app.p4_only.verif \
     smartnic_322mhz_app.p4_only.tb \
-    vitisnetp4.rtl \
-    vitisnetp4.verif \
+    vitisnetp4_igr.rtl \
+    vitisnetp4_igr.verif \
     axi4l.rtl@common \
     axi4s.rtl@common \
     axi4l.verif@common \
