@@ -199,22 +199,18 @@ _instantiate_p4_egr_passthru := \
          sed -i 's:vitisnetp4_egr\.rtl::' $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/Makefile;
 
 _instantiate_smartnic_app_igr := \
-         echo "_instantiate_smartnic_app_igr!!"; \
          sed -i 's:localparam logic SMARTNIC_APP_IGR_MODE = 0:localparam logic SMARTNIC_APP_IGR_MODE = 1:' \
                 $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
 
 _instantiate_smartnic_app_egr := \
-         echo "_instantiate_smartnic_app_egr!!"; \
          sed -i 's:localparam logic SMARTNIC_APP_EGR_MODE = 0:localparam logic SMARTNIC_APP_EGR_MODE = 1:' \
                 $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
 
 _instantiate_smartnic_app_igr_passthru := \
-         echo "_instantiate_smartnic_app_igr_passthrough!!"; \
          sed -i 's:localparam logic SMARTNIC_APP_IGR_MODE = 1:localparam logic SMARTNIC_APP_IGR_MODE = 0:' \
                 $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
 
 _instantiate_smartnic_app_egr_passthru := \
-         echo "_instantiate_smartnic_app_egr_passthrough!!"; \
          sed -i 's:localparam logic SMARTNIC_APP_EGR_MODE = 1:localparam logic SMARTNIC_APP_EGR_MODE = 0:' \
                 $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
 

@@ -89,6 +89,11 @@ package :
 	@mkdir -p $(artifact_dir)/libvitisnetp4drv
 	@mkdir -p $(artifact_dir)/regmap/spec
 	@mkdir -p $(artifact_dir)/wireshark/plugins
+	if [ -e $(APP_ROOT)/app_if/smartnic_322mhz_app_drv.tar ]; then \
+	   mkdir -p $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \
+	   tar xf $(APP_ROOT)/app_if/smartnic_322mhz_app_drv.tar -C $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \
+	   cp $(APP_ROOT)/app_if/smartnic_322mhz_app.p4 $(artifact_dir)/firmware/esnet-smartnic-igr.p4; \
+	fi
 	if [ -e $(APP_ROOT)/app_if/smartnic_322mhz_app_igr_drv.tar ]; then \
 	   mkdir -p $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \
 	   tar xf $(APP_ROOT)/app_if/smartnic_322mhz_app_igr_drv.tar -C $(artifact_dir)/libvitisnetp4drv/sdnet_igr; \

@@ -239,8 +239,6 @@ smartnic_ip_au250:
         bitfile.env
     expire_in: 2 weeks
   timeout: 8h
-  except:
-      - schedules
 
 build_p4_and_verilog:
   extends: .bitfile
@@ -251,6 +249,9 @@ build_p4_and_verilog:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p2p:
   extends: .bitfile
@@ -261,6 +262,9 @@ build_p2p:
   needs:
     - ons_ip_au250
     - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_only_u280:
   extends: .bitfile
@@ -288,10 +292,10 @@ build_p4_with_extern:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_with_extern
-    SN_HW_BOARD: au55c
+    SN_HW_BOARD: au250
   needs:
-    - ons_ip_au55c
-    - smartnic_ip_au55c
+    - ons_ip_au250
+    - smartnic_ip_au250
 
 build_p4_multi_proc_u280:
   extends: .bitfile
@@ -314,6 +318,9 @@ build_p4_multi_proc_u55c:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_vanilla_ons:
   stage: bitfile
