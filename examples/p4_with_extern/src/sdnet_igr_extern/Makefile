@@ -3,7 +3,7 @@
 # ----------------------------------------------------
 APP_DIR = $(abspath ..)
 
-VITISNETP4_IP_NAME ?= sdnet_0
+VITISNETP4_IP_NAME ?= sdnet_igr
 
 # ----------------------------------------------------
 # Targets
