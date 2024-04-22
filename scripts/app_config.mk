@@ -153,8 +153,8 @@ _configure_app_common := \
      echo "BOARD          := $(BOARD)"                       >> $(APP_CFG_FILE); \
      echo "BUILD_NAME     := $(BUILD_NAME)"                  >> $(APP_CFG_FILE); \
      echo "ARTIFACTS_DIR  := $(ARTIFACTS_DIR)"               >> $(APP_CFG_FILE); \
-	 echo "P4_IGR_FILE        := $(P4_IGR_FILE)"                     >> $(APP_CFG_FILE); \
-	 echo "P4_EGR_FILE        := $(P4_EGR_FILE)"                     >> $(APP_CFG_FILE); \
+	 echo "export P4_IGR_FILE        := $(P4_IGR_FILE)"                     >> $(APP_CFG_FILE); \
+	 echo "export P4_EGR_FILE        := $(P4_EGR_FILE)"                     >> $(APP_CFG_FILE); \
      echo "P4_OPTS        := $(P4_OPTS)"                     >> $(APP_CFG_FILE); \
      echo ""                                                 >> $(APP_CFG_FILE); \
 	 echo "\# Standard application parameters"               >> $(APP_CFG_FILE); \

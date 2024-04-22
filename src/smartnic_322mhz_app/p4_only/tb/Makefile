@@ -23,16 +23,16 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_322mhz_app.p4_only.verif \
-    smartnic_322mhz.rtl \
-    std.rtl@common \
-    std.verif@common \
-    axi3.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
-    axi4l.verif@common \
-    axi4s.verif@common \
-    xilinx.hbm.verif@common
+    smartnic_322mhz_app.p4_only.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_322mhz.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    std.rtl@$(COMMON_LIB_NAME) \
+    std.verif@$(COMMON_LIB_NAME) \
+    axi3.rtl@$(COMMON_LIB_NAME) \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    xilinx.hbm.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
