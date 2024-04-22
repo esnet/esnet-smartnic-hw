@@ -1,4 +1,5 @@
 import smartnic_322mhz_pkg::*;
+import p4_proc_pkg::*;
 
 class tb_env extends std_verif_pkg::base;
 
@@ -25,9 +26,9 @@ class tb_env extends std_verif_pkg::base;
     virtual axi4l_intf axil_sdnet_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    virtual axi4s_intf #(.TUSER_T(tuser_t),
                          .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_in_vif  [2];
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    virtual axi4s_intf #(.TUSER_T(tuser_t),
                          .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [2];
 
     // AXI3 interfaces to HBM
@@ -35,11 +36,11 @@ class tb_env extends std_verif_pkg::base;
 
     // Drivers/Monitors
     axi4s_driver #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
     ) axis_driver  [2];
 
     axi4s_monitor #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
     ) axis_monitor [2];
 
     // AXI-L agent

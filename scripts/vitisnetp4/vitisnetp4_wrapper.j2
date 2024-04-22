@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 module {{ props.name }}_wrapper
-    import sdnet_0_pkg::*;
+    import {{ props.name }}_pkg::*;
 (
     // Clock/reset
     input logic           core_clk,
@@ -42,7 +42,7 @@ module {{ props.name }}_wrapper
     USER_EXTERN_IN_T     user_extern_in;
     USER_EXTERN_VALID_T  user_extern_in_valid;
 
-    smartnic_extern smartnic_extern_0 (
+    {{ props.name }}_extern smartnic_extern_0 (
       .clk                     ( core_clk ),
       .rstn                    ( core_rstn ),
       .extern_from_sdnet       ( user_extern_out ),
@@ -52,7 +52,7 @@ module {{ props.name }}_wrapper
     );
     {% endif %}
 
-    // --- sdnet_0 instance ---
+    // --- sdnet instance ---
     //   Generated using Xilinx VitisNet P4 from P4 file:
     //   {{ props.p4_file }}
     //
@@ -160,6 +160,9 @@ module {{ props.name }}_wrapper
         .m_axi_hbm{{ hbm_if_name }}_rready      (axi_to_hbm[{{ hbm_if_idx }}].rready){{ ',' if not loop.last }}{{ ' ' if loop.last }}   // output wire m_axi_hbm00_rready
         {%- endfor %}
     );
+
+    assign axis_tx.aclk = core_clk;
+    assign axis_tx.aresetn = core_rstn;
 
     generate
         // Assign all other HBM AXI signals

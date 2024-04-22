@@ -10,10 +10,13 @@ SMARTNIC_DIR := ../..
 # If NOT configured, each of these variables gets a default value (as specified below)
 
 # APP_NAME - Application name. Used for default naming conventions below.
-#export APP_NAME := $(notdir $(abspath $(CURDIR)))
+export APP_NAME := $(notdir $(abspath $(CURDIR)))
 
-# P4_FILE - Full pathname of application p4 file.
-#export P4_FILE := $(CURDIR)/p4/$(APP_NAME).p4
+# P4_IGR_FILE - Full pathname of application ingress p4 file.
+#export P4_IGR_FILE := $(CURDIR)/p4/$(APP_NAME)_igr.p4
+
+# P4_EGR_FILE - Full pathname of application egress p4 file.
+#export P4_EGR_FILE := $(CURDIR)/p4/$(APP_NAME)_egr.p4
 
 # ARTIFACTS_DIR - Full pathname of root artifacts directory.
 #export ARTIFACTS_DIR := $(CURDIR)/artifacts
@@ -25,8 +28,14 @@ SMARTNIC_DIR := ../..
 # Supports 'au280', 'au250' and 'au55c'.  Default is 'au280'.
 #export BOARD := au280
 
+# AMD example design variables - used to generate the AMD example design (for xsim verilog simulation).
+# EXAMPLE_P4_FILE - Full pathname of p4 file used for example design generation (selects ingress or egress p4 program).
+# EXAMPLE_VITISNETP4_IP_NAME - Selects vitisnetp4 instance for example design.  Supports 'sdnet_igr' (default) or 'sdnet_egr'.
 # EXAMPLE_TEST_DIR - Full pathname of p4 test directory used for example design generation.
+export EXAMPLE_P4_FILE := $(CURDIR)/p4/$(APP_NAME).p4
+export EXAMPLE_VITISNETP4_IP_NAME := sdnet_igr
 export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim/test-fwd-p0
+
 
 #------- Targets -------
 build:

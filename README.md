@@ -1,6 +1,6 @@
 ## Copyright Notice
 
-ESnet SmartNIC Copyright (c) 2022, The Regents of the University of
+ESnet SmartNIC Copyright (c) 2024, The Regents of the University of
 California, through Lawrence Berkeley National Laboratory (subject to
 receipt of any required approvals from the U.S. Dept. of Energy),
 12574861 Canada Inc., Malleable Networks Inc., and Apical Networks, Inc.
@@ -288,6 +288,45 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 8. To simulate the P4 program, refer to the readme file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
 
 
+### Multi-Processor Support (Ingress and Egress P4 Programs)
+
+The ESnet SmartNIC Platform optionally supports capturing separate ingress and egress P4 programs for
+packet processing.  In the current release, the ingress and egress processors are simply instantiated
+back-to-back.  Application ingress traffic is processed first by the ingress P4 processor and then
+by the egress P4 processor, prior to being driven through the SmartNIC egress datapath.
+
+The P4 files to be used for building these separate processors are specified in the root-level application
+Makefile by the P4_IGR_FILE and P4_EGR_FILE variables.
+
+Applications that are implemented with a single P4 program should specify only the P4_IGR_FILE variable
+and leave the P4_EGR_FILE variable unspecified.  If the P4_EGR_FILE variable is unspecified, pass-through
+logic is implemented instead of	an egress processor.
+
+NOTE: By default, legacy designs implementing a single P4 program are automatically mapped onto the ingress
+processor and implement pass-through egress logic.
+
+In future (TBD), the SmartNIC platform may also incorporate additional support for optional RTL-customizable
+ingress and egress datapath functions, to augment the processing capabilities supported by the programmable
+P4 processors in this release.
+
+See the `p4_multi_proc` example design for reference.
+
+
+### User Extern Function Support
+
+The ESnet SmartNIC Platform optionally supports the integration of custom user extern function(s) that
+complement an application P4 program.  For such a design, in addition to the appliction P4 program, a
+user must provide a custom C++ (.cpp) model of the extern function(s) for behavioural simulation, as well
+as the custom system verilog RTL code that implements the function for synthesis (and RTL simulation,
+if desired).
+
+For compatibility with the automation scripts, the name of the extern top-level module MUST be
+`sdnet_igr_extern` or `sdnet_egr_extern`, depending on which P4 processor it is associated with.
+Also, the .cpp model MUST be located in a directory located beside the p4 test(s) directory called
+`user_externs/` and the extern Makefile and RTL code MUST be located in a directory called
+`src/sdnet_igr_extern` or `src/sdnet_egr_extern`, again depending on which P4 processor it connects to.
+
+See the `p4_with_extern` example design for reference.
 
 
 ## P4 Programming Requirements
@@ -350,22 +389,21 @@ define the User Metadata structure as follows:
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
         bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
         bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
-        bit<1>  truncate_enable; // reserved (tied to 0).
-        bit<16> truncate_length; // reserved (tied to 0).
-        bit<1>  rss_enable;      // reserved (tied to 0).
-        bit<12> rss_entropy;     // reserved (tied to 0).
+        bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
+        bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
+        bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
+        bit<12> rss_entropy;     // 12b set to rss_entropy hash value (used for open-nic-shell qdma qid selection).
         bit<4>  drop_reason;     // reserved (tied to 0).
         bit<32> scratch;         // reserved (tied to 0).
     }
 
-### Lookup Engines and Externs:
+### Lookup Engines:
 
 In order for the compiled VitisNetP4 core to match the SmartNIC application
 interface, a user Program **MUST** have:
 
 - One (or more) Look-up Engines.
 - No HBM BCAMs.
-- No Externs.
 
 Support for these features may be added in a future release.
 

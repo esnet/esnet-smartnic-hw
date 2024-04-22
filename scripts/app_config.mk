@@ -10,7 +10,7 @@
 # Application Verilog source root directory
 # ----------------------------------------------------
 # if APP_DIR contains app_if/ subdir i.e. APP contains P4 + verilog, set APP_ROOT to APP_DIR,
-# else APP is P4 file only, set APP_ROOT to p4_app (to get common P4 core verilog) and P4_FILE.
+# else APP is P4 file only, set APP_ROOT to smartnic_322mhz_app (to get common P4 application verilog) and P4 files.
 ifneq ($(wildcard $(APP_DIR)/app_if/.),)
 APP_TYPE := VERILOG
 else
@@ -32,21 +32,25 @@ endif
 APP_NAME_DEFAULT := $(notdir $(abspath $(APP_DIR)))
 APP_NAME ?= $(shell echo $(APP_NAME_DEFAULT) | tr '[:upper:]' '[:lower:]')
 
-# P4 file
+# P4 files
 # ----------------------------------------------------
-# Full pathname of application p4 file
+# Full pathname of application p4 files
 ifeq ($(APP_TYPE),P4)
-P4_FILE_DEFAULT := $(APP_DIR)/p4/$(APP_NAME).p4 
+P4_FILE ?= $(APP_DIR)/p4/$(APP_NAME).p4
+P4_IGR_FILE_DEFAULT := $(P4_FILE)
+P4_EGR_FILE_DEFAULT :=
 else
-P4_FILE_DEFAULT :=
+P4_IGR_FILE_DEFAULT :=
+P4_EGR_FILE_DEFAULT :=
 endif
-P4_FILE ?= $(P4_FILE_DEFAULT)
+P4_IGR_FILE ?= $(P4_IGR_FILE_DEFAULT)
+P4_EGR_FILE ?= $(P4_EGR_FILE_DEFAULT)
 
 
 # P4 options
 # ----------------------------------------------------
 # Options to pass to p4 compiler
-ifneq ($(P4_FILE),)
+ifneq ($(P4_IGR_FILE),)
 P4_OPTS_DEFAULT := CONFIG.PKT_RATE {150} \
                    CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 else
@@ -94,7 +98,8 @@ _print_app_config := \
      echo "BOARD        : $(BOARD)"; \
      echo "BUILD_NAME   : $(BUILD_NAME)"; \
      echo "ARTIFACTS_DIR: $(ARTIFACTS_DIR)"; \
-     echo "P4_FILE      : $(P4_FILE)"; \
+     echo "P4_IGR_FILE  : $(P4_IGR_FILE)"; \
+     echo "P4_EGR_FILE  : $(P4_EGR_FILE)"; \
      echo "P4_OPTS      : $(P4_OPTS)";
 else
 _print_app_config := \
@@ -148,7 +153,8 @@ _configure_app_common := \
      echo "BOARD          := $(BOARD)"                       >> $(APP_CFG_FILE); \
      echo "BUILD_NAME     := $(BUILD_NAME)"                  >> $(APP_CFG_FILE); \
      echo "ARTIFACTS_DIR  := $(ARTIFACTS_DIR)"               >> $(APP_CFG_FILE); \
-	 echo "P4_FILE        := $(P4_FILE)"                     >> $(APP_CFG_FILE); \
+	 echo "export P4_IGR_FILE        := $(P4_IGR_FILE)"                     >> $(APP_CFG_FILE); \
+	 echo "export P4_EGR_FILE        := $(P4_EGR_FILE)"                     >> $(APP_CFG_FILE); \
      echo "P4_OPTS        := $(P4_OPTS)"                     >> $(APP_CFG_FILE); \
      echo ""                                                 >> $(APP_CFG_FILE); \
 	 echo "\# Standard application parameters"               >> $(APP_CFG_FILE); \
@@ -156,18 +162,81 @@ _configure_app_common := \
 	 $(_configure_app_src_lib) \
 	 $(_configure_app_out_dir)
 
-_configure_app_p4 := \
-	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4 $(APP_PROJ_ROOT)/src/; \
-	 cp -r $(SMARTNIC_ROOT)/src/smartnic_322mhz_app $(APP_PROJ_ROOT)/src/; \
-	 mv $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
-	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
-	 cp $(APP_DIR)/extern/rtl/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/ 2>/dev/null || rm $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/smartnic_extern.sv; \
-	 make -s -C $(APP_ROOT)/app_if clean;
-
 _configure_app_verilog :=
 
-ifeq ($(APP_TYPE),P4)
+_configure_app_p4 := \
+	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4     $(APP_PROJ_ROOT)/src/; \
+	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4_igr $(APP_PROJ_ROOT)/src/; \
+	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4_egr $(APP_PROJ_ROOT)/src/; \
+	 cp $(APP_DIR)/src/sdnet_0_extern/rtl/src/*.sv   $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/     2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/sdnet_0_extern.sv; \
+	 cp $(APP_DIR)/src/sdnet_igr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/ 2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/sdnet_igr_extern.sv; \
+	 cp $(APP_DIR)/src/sdnet_egr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/ 2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/sdnet_egr_extern.sv; \
+	 cp -r $(SMARTNIC_ROOT)/src/smartnic_322mhz_app $(APP_PROJ_ROOT)/src/; \
+	 cp $(APP_DIR)/src/smartnic_app*/rtl/src/* $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src 2>/dev/null; \
+	 mv $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
+	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
+	 make -s -C $(APP_ROOT)/app_if clean;
+
+_instantiate_p4_igr := \
+         sed -i 's:localparam logic P4_PROC_IGR_MODE = 0:localparam logic P4_PROC_IGR_MODE = 1:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+_instantiate_p4_egr := \
+         sed -i 's:localparam logic P4_PROC_EGR_MODE = 0:localparam logic P4_PROC_EGR_MODE = 1:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+_instantiate_p4_igr_passthru := \
+         sed -i 's:localparam logic P4_PROC_IGR_MODE = 1:localparam logic P4_PROC_IGR_MODE = 0:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv; \
+         sed -i 's:vitisnetp4_igr\.rtl::' $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/Makefile;
+
+_instantiate_p4_egr_passthru := \
+         sed -i 's:localparam logic P4_PROC_EGR_MODE = 1:localparam logic P4_PROC_EGR_MODE = 0:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv; \
+         sed -i 's:vitisnetp4_egr\.rtl::' $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/Makefile;
+
+_instantiate_smartnic_app_igr := \
+         sed -i 's:localparam logic SMARTNIC_APP_IGR_MODE = 0:localparam logic SMARTNIC_APP_IGR_MODE = 1:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+_instantiate_smartnic_app_egr := \
+         sed -i 's:localparam logic SMARTNIC_APP_EGR_MODE = 0:localparam logic SMARTNIC_APP_EGR_MODE = 1:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+_instantiate_smartnic_app_igr_passthru := \
+         sed -i 's:localparam logic SMARTNIC_APP_IGR_MODE = 1:localparam logic SMARTNIC_APP_IGR_MODE = 0:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+_instantiate_smartnic_app_egr_passthru := \
+         sed -i 's:localparam logic SMARTNIC_APP_EGR_MODE = 1:localparam logic SMARTNIC_APP_EGR_MODE = 0:' \
+                $(APP_PROJ_ROOT)/src/smartnic_322mhz_app/p4_only/rtl/src/smartnic_322mhz_app.sv;
+
+ifeq ($(APP_TYPE),P4) # configure p4 app
 _configure_app := $(_configure_app_common) $(_configure_app_p4)
+ifneq ($(P4_IGR_FILE),)
+_configure_app := $(_configure_app) $(_instantiate_p4_igr)
 else
+_configure_app := $(_configure_app) $(_instantiate_p4_igr_passthru)
+endif
+ifneq ($(P4_EGR_FILE),)
+_configure_app := $(_configure_app) $(_instantiate_p4_egr)
+else
+_configure_app := $(_configure_app) $(_instantiate_p4_egr_passthru)
+endif
+ifneq ($(wildcard $(APP_DIR)/src/smartnic_app_igr/rtl/src/smartnic_app_igr.sv),)
+_configure_app := $(_configure_app) $(_instantiate_smartnic_app_igr)
+else
+_configure_app := $(_configure_app) $(_instantiate_smartnic_app_igr_passthru)
+endif
+ifneq ($(wildcard $(APP_DIR)/src/smartnic_app_egr/rtl/src/smartnic_app_egr.sv),)
+_configure_app := $(_configure_app) $(_instantiate_smartnic_app_egr)
+else
+_configure_app := $(_configure_app) $(_instantiate_smartnic_app_egr_passthru)
+endif
+
+else # configure verilog app
 _configure_app := $(_configure_app_common) $(_configure_app_verilog)
 endif

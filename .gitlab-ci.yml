@@ -33,19 +33,21 @@ p4bm:
   tags:
     - ht-sim
   script:
-    - make -s -C src/p4_proc/p4/sim build sim-all
-    - make -s -C src/p4_app/p4/sim build sim-all
+    - make -s -C src/vitisnetp4/p4/sim build sim-all
     - make -s -C examples/p4_only/p4/sim sim-all
     - make -s -C examples/p4_and_verilog/p4/sim build sim-all
     - make -s -C examples/p4_with_extern/p4/sim sim-all
+    - make -s -C examples/p4_multi_proc/p4/sim_igr sim-all
+    - make -s -C examples/p4_multi_proc/p4/sim_egr sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
-      - src/p4_proc/p4/sim
-      - src/p4_app/p4/sim
+      - src/vitisnetp4/p4/sim
       - examples/p4_only/p4/sim
       - examples/p4_and_verilog/p4/sim
       - examples/p4_with_extern/p4/sim
+      - examples/p4_multi_proc/p4/sim_igr
+      - examples/p4_multi_proc/p4/sim_egr
   needs: []
 
 sim_p4_apps:
@@ -56,10 +58,10 @@ sim_p4_apps:
   script:
     - make -s -C src/p4_proc/tests/regression
     - grep 'PASSED.*suites passing' src/p4_proc/tests/regression/run_$SEED/sim.log
-    - make -s -C src/p4_app/tests/regression
-    - grep 'PASSED.*suites passing' src/p4_app/tests/regression/run_$SEED/sim.log
-    - make -s -C src/p4_app/tests.smartnic_322mhz/regression
-    - grep 'PASSED.*suites passing' src/p4_app/tests.smartnic_322mhz/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic_322mhz_app/p4_only/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic_322mhz_app/p4_only/tests/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression
+    - grep 'PASSED.*suites passing' src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
@@ -67,8 +69,8 @@ sim_p4_apps:
     reports:
       junit:
         - src/p4_proc/tests/regression/run_*/tests.xml
-        - src/p4_app/tests/regression/run_*/tests.xml
-        - src/p4_app/tests.smartnic_322mhz/regression/run_*/tests.xml
+        - src/smartnic_322mhz_app/p4_only/tests/regression/run_*/tests.xml
+        - src/smartnic_322mhz_app/p4_only/tests.smartnic_322mhz/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
@@ -237,8 +239,6 @@ smartnic_ip_au250:
         bitfile.env
     expire_in: 2 weeks
   timeout: 8h
-  except:
-      - schedules
 
 build_p4_and_verilog:
   extends: .bitfile
@@ -249,6 +249,9 @@ build_p4_and_verilog:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p2p:
   extends: .bitfile
@@ -259,6 +262,9 @@ build_p2p:
   needs:
     - ons_ip_au250
     - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_only_u280:
   extends: .bitfile
@@ -286,10 +292,35 @@ build_p4_with_extern:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_with_extern
+    SN_HW_BOARD: au250
+  needs:
+    - ons_ip_au250
+    - smartnic_ip_au250
+
+build_p4_multi_proc_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
+    SN_HW_BOARD: au280
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+
+build_p4_multi_proc_u55c:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
     SN_HW_BOARD: au55c
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_vanilla_ons:
   stage: bitfile
@@ -353,6 +384,16 @@ validate_p4_with_extern:
   needs:
     - build_p4_with_extern
 
+validate_p4_multi_proc_u280:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u280
+
+validate_p4_multi_proc_u55c:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u55c
+
 .hwapi:
   stage: package
   extends: .common
@@ -413,6 +454,16 @@ hwapi_p4_with_extern:
   needs:
     - build_p4_with_extern
 
+hwapi_p4_multi_proc_u280:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u280
+
+hwapi_p4_multi_proc_u55c:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u55c
+
 .trigger_fw:
   stage: trigger_downstream
   variables:
@@ -459,3 +510,17 @@ fw_p4_with_extern:
     SN_HW_API_JOB: hwapi_p4_with_extern
   needs:
     - hwapi_p4_with_extern
+
+fw_p4_multi_proc_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u280
+  needs:
+    - hwapi_p4_multi_proc_u280
+
+fw_p4_multi_proc_u55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u55c
+  needs:
+    - hwapi_p4_multi_proc_u55c

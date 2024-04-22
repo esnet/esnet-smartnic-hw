@@ -16,7 +16,7 @@ int rx_pkt_cnt  [NUM_PORTS-1:0];  // captures the rx pkt & byte counts from the 
 int rx_byte_cnt [NUM_PORTS-1:0];
 int rx_pkt_tot  = 0;
 int rx_byte_tot = 0;
-int exp_pkt_cnt [NUM_PORTS-1:0];  // vector specifies the expected number of pkts received for each stream.
+int exp_pkts    [NUM_PORTS-1:0];  // vector specifies the expected number of pkts received for each stream.
 
 typedef enum logic [31:0] {
     PROBE_FROM_CMAC_PORT0      = 'h8000,
@@ -223,25 +223,25 @@ task run_stream_test (input int tpause = 0, twait = 0);
        run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                         .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]), 
                         .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                        .exp_pkt_cnt(exp_pkt_cnt[0]),
+                        .exp_pkt_cnt(exp_pkts[0]),
                         .tpause(tpause), .twait(twait) );
 
        run_pkt_stream ( .in_port(1), .out_port(out_port_map[1]), .in_pcap(in_pcap[1]), .out_pcap(out_pcap[1]),
                         .tx_pkt_cnt(tx_pkt_cnt[1]), .tx_byte_cnt(tx_byte_cnt[1]), 
                         .rx_pkt_cnt(rx_pkt_cnt[1]), .rx_byte_cnt(rx_byte_cnt[1]),
-                        .exp_pkt_cnt(exp_pkt_cnt[1]),
+                        .exp_pkt_cnt(exp_pkts[1]),
                         .tpause(tpause), .twait(twait) );
 
        run_pkt_stream ( .in_port(2), .out_port(out_port_map[2]), .in_pcap(in_pcap[2]), .out_pcap(out_pcap[2]),
                         .tx_pkt_cnt(tx_pkt_cnt[2]), .tx_byte_cnt(tx_byte_cnt[2]), 
                         .rx_pkt_cnt(rx_pkt_cnt[2]), .rx_byte_cnt(rx_byte_cnt[2]),
-                        .exp_pkt_cnt(exp_pkt_cnt[2]),
+                        .exp_pkt_cnt(exp_pkts[2]),
                         .tpause(tpause), .twait(twait) );
 
        run_pkt_stream ( .in_port(3), .out_port(out_port_map[3]), .in_pcap(in_pcap[3]), .out_pcap(out_pcap[3]),
                         .tx_pkt_cnt(tx_pkt_cnt[3]), .tx_byte_cnt(tx_byte_cnt[3]), 
                         .rx_pkt_cnt(rx_pkt_cnt[3]), .rx_byte_cnt(rx_byte_cnt[3]),
-                        .exp_pkt_cnt(exp_pkt_cnt[3]),
+                        .exp_pkt_cnt(exp_pkts[3]),
                         .tpause(tpause), .twait(twait) );
 
     join

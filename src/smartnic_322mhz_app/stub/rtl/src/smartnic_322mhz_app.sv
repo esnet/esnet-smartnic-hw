@@ -1,7 +1,8 @@
-// smartnic_322mhz_app (empty) stub module. Used for platform level tests.
 module smartnic_322mhz_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16
+    parameter int AXI_HBM_NUM_IFS = 16,
+    parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
+    parameter int M = 2  // Number of vitisnetp4 processors.
 ) (
     input  logic         core_clk,
     input  logic         core_rstn,
@@ -40,83 +41,57 @@ module smartnic_322mhz_app
     // (SDNet) AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic         axil_sdnet_aresetn,
+    input  logic [(M*  1)-1:0] axil_sdnet_aresetn,
     // -- Write address
-    input  logic         axil_sdnet_awvalid,
-    output logic         axil_sdnet_awready,
-    input  logic [31:0]  axil_sdnet_awaddr,
-    input  logic [2:0]   axil_sdnet_awprot,
+    input  logic [(M*  1)-1:0] axil_sdnet_awvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_awready,
+    input  logic [(M* 32)-1:0] axil_sdnet_awaddr,
+    input  logic [(M*  3)-1:0] axil_sdnet_awprot,
     // -- Write data
-    input  logic         axil_sdnet_wvalid,
-    output logic         axil_sdnet_wready,
-    input  logic [31:0]  axil_sdnet_wdata,
-    input  logic [3:0]   axil_sdnet_wstrb,
+    input  logic [(M*  1)-1:0] axil_sdnet_wvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_wready,
+    input  logic [(M* 32)-1:0] axil_sdnet_wdata,
+    input  logic [(M*  4)-1:0] axil_sdnet_wstrb,
     // -- Write response
-    output logic         axil_sdnet_bvalid,
-    input  logic         axil_sdnet_bready,
-    output logic [1:0]   axil_sdnet_bresp,
+    output logic [(M*  1)-1:0] axil_sdnet_bvalid,
+    input  logic [(M*  1)-1:0] axil_sdnet_bready,
+    output logic [(M*  2)-1:0] axil_sdnet_bresp,
     // -- Read address
-    input  logic         axil_sdnet_arvalid,
-    output logic         axil_sdnet_arready,
-    input  logic [31:0]  axil_sdnet_araddr,
-    input  logic [2:0]   axil_sdnet_arprot,
+    input  logic [(M*  1)-1:0] axil_sdnet_arvalid,
+    output logic [(M*  1)-1:0] axil_sdnet_arready,
+    input  logic [(M* 32)-1:0] axil_sdnet_araddr,
+    input  logic [(M*  3)-1:0] axil_sdnet_arprot,
     // -- Read data
-    output logic         axil_sdnet_rvalid,
-    input  logic         axil_sdnet_rready,
-    output logic [31:0]  axil_sdnet_rdata,
-    output logic [1:0]   axil_sdnet_rresp,
+    output logic [(M*  1)-1:0] axil_sdnet_rvalid,
+    input  logic [(M*  1)-1:0] axil_sdnet_rready,
+    output logic [(M* 32)-1:0] axil_sdnet_rdata,
+    output logic [(M*  2)-1:0] axil_sdnet_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
-    input  logic         axis_from_switch_0_tvalid,
-    output logic         axis_from_switch_0_tready,
-    input  logic [511:0] axis_from_switch_0_tdata,
-    input  logic [63:0]  axis_from_switch_0_tkeep,
-    input  logic         axis_from_switch_0_tlast,
-    input  logic [1:0]   axis_from_switch_0_tid,
-    input  logic [1:0]   axis_from_switch_0_tdest,
-    input  logic [15:0]  axis_from_switch_0_tuser_pid,
+    input  logic [(M*N*  1)-1:0] axis_from_switch_tvalid,
+    output logic [(M*N*  1)-1:0] axis_from_switch_tready,
+    input  logic [(M*N*512)-1:0] axis_from_switch_tdata,
+    input  logic [(M*N* 64)-1:0] axis_from_switch_tkeep,
+    input  logic [(M*N*  1)-1:0] axis_from_switch_tlast,
+    input  logic [(M*N*  2)-1:0] axis_from_switch_tid,
+    input  logic [(M*N*  2)-1:0] axis_from_switch_tdest,
+    input  logic [(M*N* 16)-1:0] axis_from_switch_tuser_pid,
 
     // AXI-S data interface (to switch)
     // (synchronous to core_clk domain)
-    output logic         axis_to_switch_0_tvalid,
-    input  logic         axis_to_switch_0_tready,
-    output logic [511:0] axis_to_switch_0_tdata,
-    output logic [63:0]  axis_to_switch_0_tkeep,
-    output logic         axis_to_switch_0_tlast,
-    output logic [1:0]   axis_to_switch_0_tid,
-    output logic [2:0]   axis_to_switch_0_tdest,
-    output logic [15:0]  axis_to_switch_0_tuser_pid,
-    output logic         axis_to_switch_0_tuser_trunc_enable,
-    output logic [15:0]  axis_to_switch_0_tuser_trunc_length,
-    output logic         axis_to_switch_0_tuser_rss_enable,
-    output logic [11:0]  axis_to_switch_0_tuser_rss_entropy,
-
-    // AXI-S data interface (from host)
-    // (synchronous to core_clk domain)
-    input  logic         axis_from_switch_1_tvalid,
-    output logic         axis_from_switch_1_tready,
-    input  logic [511:0] axis_from_switch_1_tdata,
-    input  logic [63:0]  axis_from_switch_1_tkeep,
-    input  logic         axis_from_switch_1_tlast,
-    input  logic [1:0]   axis_from_switch_1_tid,
-    input  logic [1:0]   axis_from_switch_1_tdest,
-    input  logic [15:0]  axis_from_switch_1_tuser_pid,
-
-    // AXI-S data interface (to host)
-    // (synchronous to core_clk domain)
-    output logic         axis_to_switch_1_tvalid,
-    input  logic         axis_to_switch_1_tready,
-    output logic [511:0] axis_to_switch_1_tdata,
-    output logic [63:0]  axis_to_switch_1_tkeep,
-    output logic         axis_to_switch_1_tlast,
-    output logic [1:0]   axis_to_switch_1_tid,
-    output logic [2:0]   axis_to_switch_1_tdest,
-    output logic [15:0]  axis_to_switch_1_tuser_pid,
-    output logic         axis_to_switch_1_tuser_trunc_enable,
-    output logic [15:0]  axis_to_switch_1_tuser_trunc_length,
-    output logic         axis_to_switch_1_tuser_rss_enable,
-    output logic [11:0]  axis_to_switch_1_tuser_rss_entropy,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tvalid,
+    input  logic [(M*N*  1)-1:0] axis_to_switch_tready,
+    output logic [(M*N*512)-1:0] axis_to_switch_tdata,
+    output logic [(M*N* 64)-1:0] axis_to_switch_tkeep,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tlast,
+    output logic [(M*N*  2)-1:0] axis_to_switch_tid,
+    output logic [(M*N*  3)-1:0] axis_to_switch_tdest,
+    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_pid,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_trunc_enable,
+    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_trunc_length,
+    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_rss_enable,
+    output logic [(M*N* 12)-1:0] axis_to_switch_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl,
@@ -166,7 +141,7 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
-    import smartnic_322mhz_app__passthrough_pkg::*;
+    import smartnic_322mhz_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
@@ -177,41 +152,36 @@ module smartnic_322mhz_app
     localparam type AXI_HBM_ID_T = logic[5:0];
 
     // Interfaces
-    axi4l_intf #() axil_if       ();
-    axi4l_intf #() axil_sdnet_if ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [2] ();
+    axi4l_intf #() axil_if ();
+    axi4l_intf #() axil_to_sdnet[M] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_from_switch [2] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [M][N] ();
 
-    tuser_smartnic_meta_t  axis_to_switch_0_tuser;
-    assign axis_to_switch_0_tuser_pid         = axis_to_switch_0_tuser.pid;
-    assign axis_to_switch_0_tuser_trunc_enable = axis_to_switch_0_tuser.trunc_enable;
-    assign axis_to_switch_0_tuser_trunc_length = axis_to_switch_0_tuser.trunc_length;
-    assign axis_to_switch_0_tuser_rss_enable  = axis_to_switch_0_tuser.rss_enable;
-    assign axis_to_switch_0_tuser_rss_entropy = axis_to_switch_0_tuser.rss_entropy;
+    tuser_smartnic_meta_t  axis_to_switch_tuser[M][N];
 
-    tuser_smartnic_meta_t  axis_to_switch_1_tuser;
-    assign axis_to_switch_1_tuser_pid         = axis_to_switch_1_tuser.pid;
-    assign axis_to_switch_1_tuser_trunc_enable = axis_to_switch_1_tuser.trunc_enable;
-    assign axis_to_switch_1_tuser_trunc_length = axis_to_switch_1_tuser.trunc_length;
-    assign axis_to_switch_1_tuser_rss_enable  = axis_to_switch_1_tuser.rss_enable;
-    assign axis_to_switch_1_tuser_rss_entropy = axis_to_switch_1_tuser.rss_entropy;
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
+                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_from_switch [M][N] ();
 
-    tuser_smartnic_meta_t  axis_from_switch_0_tuser;
-    assign axis_from_switch_0_tuser.pid         = axis_from_switch_0_tuser_pid;
-    assign axis_from_switch_0_tuser.trunc_enable = '0;
-    assign axis_from_switch_0_tuser.trunc_length = '0;
-    assign axis_from_switch_0_tuser.rss_enable  = '0;
-    assign axis_from_switch_0_tuser.rss_entropy = '0;
+    tuser_smartnic_meta_t  axis_from_switch_tuser[M][N];
 
-    tuser_smartnic_meta_t  axis_from_switch_1_tuser;
-    assign axis_from_switch_1_tuser.pid         = axis_from_switch_1_tuser_pid;
-    assign axis_from_switch_1_tuser.trunc_enable = '0;
-    assign axis_from_switch_1_tuser.trunc_length = '0;
-    assign axis_from_switch_1_tuser.rss_enable  = '0;
-    assign axis_from_switch_1_tuser.rss_entropy = '0;
+    generate
+        for (genvar i = 0; i < M; i += 1) begin
+            for (genvar j = 0; j < N; j += 1) begin
+                assign axis_to_switch_tuser_pid          [(i*N+j)*16 +: 16] = axis_to_switch_tuser[i][j].pid;
+                assign axis_to_switch_tuser_trunc_enable [(i*N+j)* 1 +:  1] = axis_to_switch_tuser[i][j].trunc_enable;
+                assign axis_to_switch_tuser_trunc_length [(i*N+j)*16 +: 16] = axis_to_switch_tuser[i][j].trunc_length;
+                assign axis_to_switch_tuser_rss_enable   [(i*N+j)* 1 +:  1] = axis_to_switch_tuser[i][j].rss_enable;
+                assign axis_to_switch_tuser_rss_entropy  [(i*N+j)*12 +: 12] = axis_to_switch_tuser[i][j].rss_entropy;
+
+                assign axis_from_switch_tuser[i][j].pid          = axis_from_switch_tuser_pid[(i*N+j)*16 +: 16];
+                assign axis_from_switch_tuser[i][j].trunc_enable = '0;
+                assign axis_from_switch_tuser[i][j].trunc_length = '0;
+                assign axis_from_switch_tuser[i][j].rss_enable   = '0;
+                assign axis_from_switch_tuser[i][j].rss_entropy  = '0;
+            end
+        end
+    endgenerate
 
     axi3_intf  #(
         .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)
@@ -221,7 +191,7 @@ module smartnic_322mhz_app
     // MAP FROM 'FLAT' SIGNAL REPRESENTATION TO INTERFACE REPRESENTATION (COMMON TO ALL APPLICATIONS)
     // -------------------------------------------------------------------------------------------------------
     // -- AXI-L interface
-    axi4l_intf_from_signals i_axi4l_intf_from_signals (
+    axi4l_intf_from_signals axil_if_from_signals (
         .aclk     ( axil_aclk ),
         .aresetn  ( axil_aresetn ),
         .awvalid  ( axil_awvalid ),
@@ -245,95 +215,71 @@ module smartnic_322mhz_app
         .rresp    ( axil_rresp ),
         .axi4l_if ( axil_if )
     );
-    // -- AXI-L interface to SDNet
-    axi4l_intf_from_signals i_axi4l_intf_from_signals_sdnet (
-        .aclk     ( axil_aclk ),
-        .aresetn  ( axil_sdnet_aresetn ),
-        .awvalid  ( axil_sdnet_awvalid ),
-        .awready  ( axil_sdnet_awready ),
-        .awaddr   ( axil_sdnet_awaddr ),
-        .awprot   ( axil_sdnet_awprot ),
-        .wvalid   ( axil_sdnet_wvalid ),
-        .wready   ( axil_sdnet_wready ),
-        .wdata    ( axil_sdnet_wdata ),
-        .wstrb    ( axil_sdnet_wstrb ),
-        .bvalid   ( axil_sdnet_bvalid ),
-        .bready   ( axil_sdnet_bready ),
-        .bresp    ( axil_sdnet_bresp ),
-        .arvalid  ( axil_sdnet_arvalid ),
-        .arready  ( axil_sdnet_arready ),
-        .araddr   ( axil_sdnet_araddr ),
-        .arprot   ( axil_sdnet_arprot ),
-        .rvalid   ( axil_sdnet_rvalid ),
-        .rready   ( axil_sdnet_rready ),
-        .rdata    ( axil_sdnet_rdata ),
-        .rresp    ( axil_sdnet_rresp ),
-        .axi4l_if ( axil_sdnet_if )
-    );
-    // -- AXI-S interface from switch
-    axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_intf_from_signals_from_switch (
-        .aclk    ( core_clk ),
-        .aresetn ( core_rstn ),
-        .tvalid  ( axis_from_switch_0_tvalid ),
-        .tready  ( axis_from_switch_0_tready ),
-        .tdata   ( axis_from_switch_0_tdata ),
-        .tkeep   ( axis_from_switch_0_tkeep ),
-        .tlast   ( axis_from_switch_0_tlast ),
-        .tid     ( axis_from_switch_0_tid ),
-        .tdest   ( axis_from_switch_0_tdest ),
-        .tuser   ( axis_from_switch_0_tuser ),
-        .axi4s_if( axis_from_switch[0] )
-    );
-    // -- AXI-S interface to switch
-    axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_to_signals_to_switch (
-        .aclk    ( ), // Output
-        .aresetn ( ), // Output
-        .tvalid  ( axis_to_switch_0_tvalid ),
-        .tready  ( axis_to_switch_0_tready ),
-        .tdata   ( axis_to_switch_0_tdata ),
-        .tkeep   ( axis_to_switch_0_tkeep ),
-        .tlast   ( axis_to_switch_0_tlast ),
-        .tid     ( axis_to_switch_0_tid ),
-        .tdest   ( axis_to_switch_0_tdest ),
-        .tuser   ( axis_to_switch_0_tuser ),
-        .axi4s_if( axis_to_switch[0] )
-    );
-    // -- AXI-S interface from host
-    axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_from_signals_from_host (
-        .aclk    ( core_clk ),
-        .aresetn ( core_rstn ),
-        .tvalid  ( axis_from_switch_1_tvalid ),
-        .tready  ( axis_from_switch_1_tready ),
-        .tdata   ( axis_from_switch_1_tdata ),
-        .tkeep   ( axis_from_switch_1_tkeep ),
-        .tlast   ( axis_from_switch_1_tlast ),
-        .tid     ( axis_from_switch_1_tid ),
-        .tdest   ( axis_from_switch_1_tdest ),
-        .tuser   ( axis_from_switch_1_tuser ),
-        .axi4s_if( axis_from_switch[1] )
-    );
-    // -- AXI-S interface to host
-    axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-    ) i_axi4s_to_signals_to_host (
-        .aclk    ( ), // Output
-        .aresetn ( ), // Output
-        .tvalid  ( axis_to_switch_1_tvalid ),
-        .tready  ( axis_to_switch_1_tready ),
-        .tdata   ( axis_to_switch_1_tdata ),
-        .tkeep   ( axis_to_switch_1_tkeep ),
-        .tlast   ( axis_to_switch_1_tlast ),
-        .tid     ( axis_to_switch_1_tid ),
-        .tdest   ( axis_to_switch_1_tdest ),
-        .tuser   ( axis_to_switch_1_tuser ),
-        .axi4s_if( axis_to_switch[1] )
-    );
+
+    generate
+        for (genvar i = 0; i < M; i += 1) begin
+            // -- AXI-L to sdnet interface
+            axi4l_intf_from_signals axil_to_sdnet_from_signals (
+                .aclk     ( axil_aclk ),
+                .aresetn  ( axil_sdnet_aresetn [i* 1 +: 1]),
+                .awvalid  ( axil_sdnet_awvalid [i* 1 +: 1] ),
+                .awready  ( axil_sdnet_awready [i* 1 +: 1] ),
+                .awaddr   ( axil_sdnet_awaddr  [i*32 +: 32] ),
+                .awprot   ( axil_sdnet_awprot  [i* 3 +: 3] ),
+                .wvalid   ( axil_sdnet_wvalid  [i* 1 +: 1] ),
+                .wready   ( axil_sdnet_wready  [i* 1 +: 1] ),
+                .wdata    ( axil_sdnet_wdata   [i*32 +: 32] ),
+                .wstrb    ( axil_sdnet_wstrb   [i* 4 +: 4] ),
+                .bvalid   ( axil_sdnet_bvalid  [i* 1 +: 1] ),
+                .bready   ( axil_sdnet_bready  [i* 1 +: 1] ),
+                .bresp    ( axil_sdnet_bresp   [i* 2 +: 2] ),
+                .arvalid  ( axil_sdnet_arvalid [i* 1 +: 1] ),
+                .arready  ( axil_sdnet_arready [i* 1 +: 1] ),
+                .araddr   ( axil_sdnet_araddr  [i*32 +: 32] ),
+                .arprot   ( axil_sdnet_arprot  [i* 3 +: 3] ),
+                .rvalid   ( axil_sdnet_rvalid  [i* 1 +: 1] ),
+                .rready   ( axil_sdnet_rready  [i* 1 +: 1] ),
+                .rdata    ( axil_sdnet_rdata   [i*32 +: 32] ),
+                .rresp    ( axil_sdnet_rresp   [i* 2 +: 2] ),
+                .axi4l_if ( axil_to_sdnet[i] )
+            );
+
+            for (genvar j = 0; j < N; j += 1) begin
+                // -- AXI-S interface from switch
+                axi4s_intf_from_signals #(
+                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
+                ) i_axi4s_intf_from_signals_from_switch_0 (
+                    .aclk    ( core_clk ),
+                    .aresetn ( core_rstn ),
+                    .tvalid  ( axis_from_switch_tvalid [(i*N+j)*  1 +:   1] ),
+                    .tready  ( axis_from_switch_tready [(i*N+j)*  1 +:   1] ),
+                    .tdata   ( axis_from_switch_tdata  [(i*N+j)*512 +: 512] ),
+                    .tkeep   ( axis_from_switch_tkeep  [(i*N+j)* 64 +:  64] ),
+                    .tlast   ( axis_from_switch_tlast  [(i*N+j)*  1 +:   1] ),
+                    .tid     ( axis_from_switch_tid    [(i*N+j)*  2 +:   2] ),
+                    .tdest   ( axis_from_switch_tdest  [(i*N+j)*  2 +:   2] ),
+                    .tuser   ( axis_from_switch_tuser  [i][j] ),
+                    .axi4s_if( axis_from_switch[i][j] )
+                );
+                // -- AXI-S interface to switch
+                axi4s_intf_to_signals #(
+                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+                ) i_axi4s_to_signals_to_switch_0 (
+                    .aclk    ( ), // Output
+                    .aresetn ( ), // Output
+                    .tvalid  ( axis_to_switch_tvalid [(i*N+j)*  1 +:   1] ),
+                    .tready  ( axis_to_switch_tready [(i*N+j)*  1 +:   1] ),
+                    .tdata   ( axis_to_switch_tdata  [(i*N+j)*512 +: 512] ),
+                    .tkeep   ( axis_to_switch_tkeep  [(i*N+j)* 64 +:  64] ),
+                    .tlast   ( axis_to_switch_tlast  [(i*N+j)*  1 +:   1] ),
+                    .tid     ( axis_to_switch_tid    [(i*N+j)*  2 +:   2] ),
+                    .tdest   ( axis_to_switch_tdest  [(i*N+j)*  3 +:   3] ),
+                    .tuser   ( axis_to_switch_tuser  [i][j] ),
+                    .axi4s_if( axis_to_switch[i][j] )
+                );
+            end
+        end
+    endgenerate
 
     // -- AXI memory interfaces to HBM
     generate
@@ -398,16 +344,20 @@ module smartnic_322mhz_app
     // -------------------------------------------------------------------------------------------------------
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
-    // Terminate AXI-L interfaces (unused)
-    axi4l_intf_peripheral_term axi4l_intf_peripheral_term       (.axi4l_if(axil_if));
-    axi4l_intf_peripheral_term sdnet_axi4l_intf_peripheral_term (.axi4l_if(axil_sdnet_if));
 
-    // Terminate AXI4-S interfaces (unused)
-    axi4s_intf_tx_term axis_to_switch_0_tx_term   (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_to_switch[0]));
-    axi4s_intf_rx_sink axis_from_switch_0_rx_sink (.axi4s_if(axis_from_switch[0]));
+    // Terminate AXI-L and AXI4-S interfaces (unused)
+    axi4l_intf_peripheral_term axi4l_intf_peripheral_term       ( .axi4l_if(axil_if) );
 
-    axi4s_intf_tx_term axis_to_switch_1_tx_term   (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_to_switch[1]));
-    axi4s_intf_rx_sink axis_from_switch_1_rx_sink (.axi4s_if(axis_from_switch[1]));
+    generate
+        for (genvar i = 0; i < M; i += 1) begin
+            axi4l_intf_peripheral_term sdnet_axi4l_intf_peripheral_term ( .axi4l_if(axil_to_sdnet[i]) );
+
+            for (genvar j = 0; j < N; j += 1) begin
+                axi4s_intf_tx_term axis_to_switch_tx_term   (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_to_switch[i][j]));
+                axi4s_intf_rx_sink axis_from_switch_rx_sink (.axi4s_if(axis_from_switch[i][j]));
+            end
+        end
+    endgenerate
 
     // Terminate AXI HBM interfaces (unused)
     generate

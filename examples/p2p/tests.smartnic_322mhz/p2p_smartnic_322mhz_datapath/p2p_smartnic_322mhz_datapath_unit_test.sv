@@ -77,7 +77,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
         out_pcap[3] = "../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
 
         out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
-        exp_pkt_cnt  = {0, 0, 0, 0};  // if exp_pkt_cnt field is set 0, value is determined from pcap file.
+        exp_pkts  = {0, 0, 0, 0};  // if exp_pkts field is set 0, value is determined from pcap file.
 
         // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
@@ -145,13 +145,13 @@ module p2p_smartnic_322mhz_datapath_unit_test;
                run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                                 .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                                 .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                                .exp_pkt_cnt(exp_pkt_cnt[0]),
+                                .exp_pkt_cnt(exp_pkts[0]),
                                 .tpause(0), .twait(0) );
 
                run_pkt_stream ( .in_port(1), .out_port(out_port_map[1]), .in_pcap(in_pcap[1]), .out_pcap(out_pcap[1]),
                                 .tx_pkt_cnt(tx_pkt_cnt[1]), .tx_byte_cnt(tx_byte_cnt[1]),
                                 .rx_pkt_cnt(rx_pkt_cnt[1]), .rx_byte_cnt(rx_byte_cnt[1]),
-                                .exp_pkt_cnt(exp_pkt_cnt[1]),
+                                .exp_pkt_cnt(exp_pkts[1]),
                                 .tpause(0), .twait(0) );
             join
 
@@ -175,7 +175,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
             run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                              .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                              .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                             .exp_pkt_cnt(exp_pkt_cnt[0]),
+                             .exp_pkt_cnt(exp_pkts[0]),
                              .tpause(0), .twait(0) );
 
             begin

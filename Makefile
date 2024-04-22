@@ -43,23 +43,24 @@ proj_paths:
 	$(_proj_print_paths)
 
 example : config $(APP_DIR)/example
-ifneq ($(wildcard $(APP_DIR)/p4/sim/user_externs/smartnic_extern.cpp),)
-	@echo "Compiling smartnic_extern .cpp model..."
-	@$(MAKE) -s -C $(APP_DIR)/p4/sim/user_externs
+ifneq ($(wildcard $(EXAMPLE_TEST_DIR)/../user_externs/*.cpp),)
+	@echo "Compiling extern .cpp model..."
+	@$(MAKE) -s -C $(EXAMPLE_TEST_DIR)/../user_externs
 endif
 	@echo "Copying source files for example design generation into example/.src dir..."
-	cp $(P4_FILE) $(APP_DIR)/example/.src
+	cp $(EXAMPLE_P4_FILE) $(APP_DIR)/example/.src
 	cp $(EXAMPLE_TEST_DIR)/cli_commands.txt $(APP_DIR)/example/.src
 	-cp $(EXAMPLE_TEST_DIR)/*_in.pcap $(EXAMPLE_TEST_DIR)/*_in.user $(EXAMPLE_TEST_DIR)/*_in.meta $(APP_DIR)/example/.src 2> /dev/null
-	-cp $(EXAMPLE_TEST_DIR)/../user_externs/smartnic_extern.so $(APP_DIR)/example/.src 2> /dev/null
+	-cp $(EXAMPLE_TEST_DIR)/../user_externs/*.so $(APP_DIR)/example/.src 2> /dev/null
 	@echo "Generating vitisnetp4 ip in example/ subdirectory, using application p4 file..."
-	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(P4_FILE))
+	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(EXAMPLE_P4_FILE)) \
+	         VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
 	@echo "Cleaning up unused and unecessary files (vitisnetp4 design ip and log files)..."
-	rm -rf $(APP_DIR)/example/.ip* $(APP_DIR)/example/.Xil* $(APP_DIR)/example/vivado*.log
-	rm -rf $(APP_DIR)/example/sdnet_0.tcl $(APP_DIR)/example/sdnet_0
-ifneq ($(wildcard $(APP_DIR)/extern/rtl/smartnic_extern.sv),)
-	@echo "Stitching extern into examples design..."
-	@$(MAKE) -s -C $(APP_DIR)/extern
+	rm -rf $(APP_DIR)/example/ip_proj $(APP_DIR)/example/ip_user_files $(APP_DIR)/example/lib $(APP_DIR)/example/synth
+	rm -rf $(APP_DIR)/example/.Xil $(APP_DIR)/example/.xci $(APP_DIR)/example/*.tcl $(APP_DIR)/example/vivado*.log
+ifneq ($(wildcard $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)_extern),)
+	@echo "Stitching extern into example design..."
+	@$(MAKE) -s -C $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)_extern  VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
 endif
 
 $(APP_DIR)/example:

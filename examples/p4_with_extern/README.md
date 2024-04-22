@@ -23,7 +23,7 @@ latency.
 ## Development Flow
 
 The sections below direct the user to:
- 
+
 1. Install the SmartNIC platform design repositories.
 2. Execute a P4 behavioural simulation (to verify P4 program correctness ahead of building hardware).
 3. Generate and Simulate the AMD (Xilinx) Vitisnetp4 Example Design at the RTL-level (optional).
@@ -43,13 +43,18 @@ Refer to instructions in the `esnet-smartnic-hw/examples/p4_with_extern/p4/sim/R
 
 ### Generating and Simulating the AMD (Xilinx) Vitisnetp4 Example Design
 
-1. Prior to generating the AMD (Xilinx) vitisnetp4 example design, a user must specify the p4bm test directory
-that will be imported for simulation.  This is done by assigning the full directory pathname to the
-EXAMPLE_TEST_DIR variable in the application Makefile. For example:
+1. Prior to generating the AMD (Xilinx) vitisnetp4 example design, a user must set the following
+variables in the root-level application Makefile:
 
+`EXAMPLE_P4_FILE` specifies the full pathname of the P4 file,
+`EXAMPLE_VITISNETP4_IP_NAME` specifies the vitisnetp4 instance name for the example design, and
+`EXAMPLE_TEST_DIR` specifies the path to the test directory that will be imported for simulation.  For example:
+
+       export EXAMPLE_P4_FILE := $(CURDIR)/p4/p4_with_extern.p4
+       export EXAMPLE_VITISNETP4_IP_NAME := sdnet_igr
        export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim/test-fwd-p0
 
-   By setting the above Makefile variable, the example design will import all input stimulus, CLI programming,
+   By setting the above Makefile variables, the example design will import all input stimulus, CLI programming,
 and any (optional) extern behvioural models associated with the specified simulation testcase.
 
 
@@ -59,41 +64,39 @@ running the 'example' target of the root-level application Makefile, as follows:
        > make example
 
    Executing the above make command will generate the vitisnetp4 example design in a subdirectory
-called `example/sdnet_0_ex/`.
+called `example/sdnet_igr_ex/`.
 
 
-3. From the `example/sdnet_0_ex/` subdirectory, the AMD (Xilinx) Vivado tool can be invoked, the
+3. From the `example/sdnet_igr_ex/` subdirectory, the AMD (Xilinx) Vivado tool can be invoked, the
 example design project can be opened, and the p4 processor can be simulated, as follows:
 
-       > cd example/sdnet_0_ex
+       > cd example/sdnet_igr_ex
        > vivado
 
-       - From the `File->Project->Open...` menu, select 'sdnet_0_ex.xpr' and open the example design project.
+       - From the `File->Project->Open...` menu, select 'sdnet_igr_ex.xpr' and open the example design project.
        - From the `Flow Navigator` menu, select 'Simulation->Run Simulation->Run Behavioural Simulation'.
 
    For more information about how to simulate designs and evaluate results within the AMD (Xilinx) Vivado GUI,
 refer to the following document:
 
-   - *Vivado Design Suite User Guide - Logic Simulation, UG900 (v2023.1) May 10, 2023.*
+   - *Vivado Design Suite User Guide - Logic Simulation, UG900 (v2023.2) October 18, 2023.*
 
 
-4. Note that vitisnetp4 example design generation supports the optional instantiation of custom user extern
-function(s) by including the following design files:
+4. Note that vitisnetp4 example design generation also supports the optional instantiation of custom user extern
+function(s) by supplying the following additional file content:
 
-   - System Verilog RTL code for custom extern function(s) in the file `extern/rtl/smartnic_extern.sv`.
-  Furthermore, if a user captures extern function(s) in a design hierarchy comprised of multiple .sv files,
-  all of the .sv files located in the `extern/rtl` directory will be included in the example design project,
+   - C++ behavioural model for the custom extern function(s) in file `p4/sim/user_externs/sdnet_igr_extern.cpp`.
 
-   - C++ behavioural model(s) for custom extern function(s) in the file `p4/sim/user_externs/smartnic_extern.cpp`
+   - System verilog RTL code for the custom extern function(s) in file `src/sdnet_igr_extern/rtl/src/sdnet_igr_extern.sv`.
+   If a user wishes to captures extern function(s) in a design hierarchy comprised of multiple .sv files,
+   all of the .sv files located in the `src/sdnet_igr_extern/rtl/src/` directory will be included in the example
+   design project.
 
-   Furthermore, when simulating the vitisnetp4 example design with a user extern, the `smartnic_extern`
-instantiation is located within the `example_dut_wrapper` module (instance name `dut_inst/smartnic_extern_0`).
+   Finally, when simulating the vitisnetp4 example design with a user extern function, the `sdnet_igr_extern`
+instantiation can be found within the `example_dut_wrapper` module (instance name `dut_inst/sdnet_igr_extern_inst`).
 
 
 ### Building the SmartNIC hardware design
-
-When an application following a P4 design flow incorporates custom user extern code, all of the RTL (.sv) files
-included in subdirectory extern/rtl/ will be included in the hardware build accordingly.
 
 Refer to the `Getting Started` section of the `esnet-smartnic-hw/README.md` file:
 https://github.com/esnet/esnet-smartnic-hw#readme
