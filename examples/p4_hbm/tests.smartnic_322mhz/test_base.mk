@@ -21,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
+TOP = $(SVUNIT_TOP) smartnic__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -29,7 +29,7 @@ TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
 #   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
-SRC_FILES = $(APP_DIR)/.app/src/p4_app/app_if/src/smartnic_322mhz_app.sv
+SRC_FILES = $(APP_DIR)/.app/src/p4_app/app_if/src/smartnic_app.sv
 INC_DIRS =
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
@@ -48,8 +48,8 @@ SUBCOMPONENTS = \
     axi4l.verif@common@smartnic \
     axi4s.verif@common@smartnic \
     pcap.pkg@common@smartnic \
-    smartnic_322mhz.rtl@smartnic \
-    smartnic_322mhz.tb@smartnic
+    smartnic.rtl@smartnic \
+    smartnic.tb@smartnic
 
 EXT_LIBS =
 

@@ -21,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
+TOP = $(SVUNIT_TOP) smartnic__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -39,15 +39,15 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_322mhz_app.rtl \
+    smartnic_app.rtl \
     p2p.regio.verif \
     std.verif@common@smartnic \
     axi4l.rtl@common@smartnic \
     axi4s.rtl@common@smartnic \
     axi4l.verif@common@smartnic \
     axi4s.verif@common@smartnic \
-    smartnic_322mhz.rtl@smartnic \
-    smartnic_322mhz.tb@smartnic
+    smartnic.rtl@smartnic \
+    smartnic.tb@smartnic
 
 EXT_LIBS =
 
@@ -83,7 +83,7 @@ SIM_OPTS =
 all: build_test sim
 
 pcap:
-	cd $(SMARTNIC_ROOT)/src/smartnic_322mhz/tests/common/pcap; python3 gen_pcap.py;
+	cd $(SMARTNIC_ROOT)/src/smartnic/tests/common/pcap; python3 gen_pcap.py;
 
 build_test: _build_test
 sim:        _sim

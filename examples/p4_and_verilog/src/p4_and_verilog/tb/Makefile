@@ -25,7 +25,7 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     vitisnetp4.verif \
     p4_and_verilog.verif \
-    smartnic_322mhz.rtl@smartnic \
+    smartnic.rtl@smartnic \
     std.rtl@common@smartnic \
     std.verif@common@smartnic \
     axi4l.verif@common@smartnic \

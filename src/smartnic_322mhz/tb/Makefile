@@ -23,9 +23,9 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_322mhz.rtl \
-    smartnic_322mhz.ip \
-    smartnic_322mhz.regio.verif \
+    smartnic.rtl \
+    smartnic.ip \
+    smartnic.regio.verif \
     std.rtl@common \
     std.verif@common \
     reg.endian.regio.verif@common \

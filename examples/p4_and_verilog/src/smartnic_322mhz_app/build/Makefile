@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
-TOP = smartnic_322mhz_app
+TOP = smartnic_app
 
 # ----------------------------------------------------
 # Sources
@@ -28,7 +28,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_322mhz_app.rtl
+    smartnic_app.rtl
 
 # ----------------------------------------------------
 # Targets

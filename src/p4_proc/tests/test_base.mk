@@ -45,7 +45,7 @@ SUBCOMPONENTS = \
     p4_proc.tb \
     vitisnetp4.rtl \
     vitisnetp4.verif \
-    smartnic_322mhz.rtl \
+    smartnic.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \
     pcap.pkg@common

@@ -12,7 +12,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML =
 REG_DECODER_YAML = \
-    smartnic_322mhz_app_decoder.yaml
+    smartnic_app_decoder.yaml
 
 # ----------------------------------------------------
 # Options

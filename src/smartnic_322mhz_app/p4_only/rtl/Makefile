@@ -24,8 +24,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 
 SUBCOMPONENTS = \
-    smartnic_322mhz.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    smartnic_322mhz_app.p4_only.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.p4_only.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     p4_proc.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     vitisnetp4_igr.rtl \
     vitisnetp4_egr.rtl \
