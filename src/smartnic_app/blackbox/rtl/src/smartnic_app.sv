@@ -42,31 +42,31 @@
     // (SDNet) AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic [(M*  1)-1:0] axil_sdnet_aresetn,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_aresetn,
     // -- Write address
-    input  logic [(M*  1)-1:0] axil_sdnet_awvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_awready,
-    input  logic [(M* 32)-1:0] axil_sdnet_awaddr,
-    input  logic [(M*  3)-1:0] axil_sdnet_awprot,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_awvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_awready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_awaddr,
+    input  logic [(M*  3)-1:0] axil_vitisnetp4_awprot,
     // -- Write data
-    input  logic [(M*  1)-1:0] axil_sdnet_wvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_wready,
-    input  logic [(M* 32)-1:0] axil_sdnet_wdata,
-    input  logic [(M*  4)-1:0] axil_sdnet_wstrb,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_wvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_wready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_wdata,
+    input  logic [(M*  4)-1:0] axil_vitisnetp4_wstrb,
     // -- Write response
-    output logic [(M*  1)-1:0] axil_sdnet_bvalid,
-    input  logic [(M*  1)-1:0] axil_sdnet_bready,
-    output logic [(M*  2)-1:0] axil_sdnet_bresp,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_bvalid,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_bready,
+    output logic [(M*  2)-1:0] axil_vitisnetp4_bresp,
     // -- Read address
-    input  logic [(M*  1)-1:0] axil_sdnet_arvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_arready,
-    input  logic [(M* 32)-1:0] axil_sdnet_araddr,
-    input  logic [(M*  3)-1:0] axil_sdnet_arprot,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_arvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_arready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_araddr,
+    input  logic [(M*  3)-1:0] axil_vitisnetp4_arprot,
     // -- Read data
-    output logic [(M*  1)-1:0] axil_sdnet_rvalid,
-    input  logic [(M*  1)-1:0] axil_sdnet_rready,
-    output logic [(M* 32)-1:0] axil_sdnet_rdata,
-    output logic [(M*  2)-1:0] axil_sdnet_rresp,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_rvalid,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_rready,
+    output logic [(M* 32)-1:0] axil_vitisnetp4_rdata,
+    output logic [(M*  2)-1:0] axil_vitisnetp4_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)

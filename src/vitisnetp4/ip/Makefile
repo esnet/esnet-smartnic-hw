@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # VitisNetP4 IP config
 # -----------------------------------------------
-VITISNETP4_IP_NAME ?= sdnet_0
+VITISNETP4_IP_NAME ?= vitisnetp4_0
 
 P4_FILE ?= $(SMARTNIC_ROOT)/src/vitisnetp4/p4/p4_app.p4
 P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}

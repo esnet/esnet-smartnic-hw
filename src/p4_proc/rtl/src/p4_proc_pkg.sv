@@ -7,7 +7,7 @@ package p4_proc_pkg;
     // --------------------------------------------------------------
     // P4 metadata
     // - this should match the metadata defined by the p4 program,
-    //   i.e. in sdnet_0_pkg.sv
+    //   i.e. in vitisnetp4_0_pkg.sv
     typedef struct packed {
         logic [63:0] timestamp_ns;
         logic [15:0] pid;

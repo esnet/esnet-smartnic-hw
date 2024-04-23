@@ -290,12 +290,12 @@ module tb;
     // Export AXI-L accessors to VitisNetP4 shared library
     export "DPI-C" task axi_lite_wr;
     task axi_lite_wr(input int address, input int data);
-        env.sdnet_write(address, data);
+        env.vitisnetp4_write(address, data);
     endtask
 
     export "DPI-C" task axi_lite_rd;
     task axi_lite_rd(input int address, inout int data);
-        env.sdnet_read(address, data);
+        env.vitisnetp4_read(address, data);
     endtask
 
 endmodule : tb

@@ -19,8 +19,8 @@ package: build_package reg_package p4_package driver_package
 
 build_package:
 	@cp $(OUTPUT_ROOT)/smartnic_app/p4_only/build/$(BOARD)/proj/proj.runs/impl_1/smartnic_app_opt.dcp smartnic_app.dcp
-	@cp $(OUTPUT_ROOT)/vitisnetp4_igr/rtl/sdnet_igr_app_pkg.sv smartnic_app_pkg.sv
-	@sed -i 's/sdnet_igr/smartnic/g' smartnic_app_pkg.sv
+	@cp $(OUTPUT_ROOT)/vitisnetp4_igr/rtl/vitisnetp4_igr_app_pkg.sv smartnic_app_pkg.sv
+	@sed -i 's/vitisnetp4_igr/smartnic/g' smartnic_app_pkg.sv
 
 reg_package:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_app.p4_only.regio
@@ -39,11 +39,11 @@ p4_package:
 driver_package:
 	@if [ ! -z "$(strip $(P4_IGR_FILE))" ]; then \
 		$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_igr.ip; \
-		tar -cf smartnic_app_igr_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4_igr/ip/$(BOARD)/sdnet_igr/src/sw/drivers/install . ; \
+		tar -cf smartnic_app_igr_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4_igr/ip/$(BOARD)/vitisnetp4_igr/src/sw/drivers/install . ; \
 	fi
 	@if [ ! -z "$(strip $(P4_EGR_FILE))" ]; then \
 		$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_egr.ip; \
-		tar -cf smartnic_app_egr_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4_egr/ip/$(BOARD)/sdnet_egr/src/sw/drivers/install . ; \
+		tar -cf smartnic_app_egr_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4_egr/ip/$(BOARD)/vitisnetp4_egr/src/sw/drivers/install . ; \
 	fi
 
 clean:

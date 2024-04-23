@@ -3,7 +3,7 @@
 # ----------------------------------------------------
 APP_DIR = $(abspath ..)
 
-VITISNETP4_IP_NAME ?= sdnet_igr
+VITISNETP4_IP_NAME ?= vitisnetp4_igr
 
 # ----------------------------------------------------
 # Targets
@@ -28,13 +28,13 @@ add_extern_to_dut_wrapper:
    USER_EXTERN_IN_T     user_extern_in\;\
    USER_EXTERN_VALID_T  user_extern_in_valid\;\
    \
-   sdnet_igr_extern sdnet_igr_extern_inst (\
+   vitisnetp4_igr_extern vitisnetp4_igr_extern_inst (\
             .clk                     ( s_axis_aclk ),\
             .rstn                    ( s_axis_aresetn ),\
-            .extern_from_sdnet       ( user_extern_out ),\
-            .extern_from_sdnet_valid ( user_extern_out_valid ),\
-            .extern_to_sdnet         ( user_extern_in ),\
-            .extern_to_sdnet_valid   ( user_extern_in_valid )\
+            .extern_from_vitisnetp4       ( user_extern_out ),\
+            .extern_from_vitisnetp4_valid ( user_extern_out_valid ),\
+            .extern_to_vitisnetp4         ( user_extern_in ),\
+            .extern_to_vitisnetp4_valid   ( user_extern_in_valid )\
          )\;\
    :g' $(APP_DIR)/example/$(VITISNETP4_IP_NAME)_ex/imports/example_dut_wrapper.sv
 

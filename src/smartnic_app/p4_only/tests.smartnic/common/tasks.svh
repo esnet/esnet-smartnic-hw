@@ -38,11 +38,11 @@
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2'h2 );
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 2'h3 );
 
-        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to sdnet block.
+        // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to vitisnetp4 block.
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2'h0 );
 
-        // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to sdnet block.
+        // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to vitisnetp4 block.
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2'h1 );
 

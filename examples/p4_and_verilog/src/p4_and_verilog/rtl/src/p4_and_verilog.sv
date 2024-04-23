@@ -6,7 +6,7 @@ module p4_and_verilog
    input timestamp_t  timestamp,
 
    axi4l_intf.peripheral axil_if,
-   axi4l_intf.peripheral axil_to_sdnet,
+   axi4l_intf.peripheral axil_to_vitisnetp4,
 
    axi4s_intf.tx axis_to_switch_0,
    axi4s_intf.rx axis_from_switch_0,
@@ -112,14 +112,14 @@ module p4_and_verilog
                                                user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
 
 
-   // --- sdnet_0 instance (p4_and_verilog) ---
-   sdnet_0 sdnet_0_p4_and_verilog
+   // --- vitisnetp4_0 instance (p4_and_verilog) ---
+   vitisnetp4_0 vitisnetp4_0_p4_and_verilog
    (
     // Clocks & Resets
     .s_axis_aclk             (core_clk),
     .s_axis_aresetn          (core_rstn),
-    .s_axi_aclk              (axil_to_sdnet.aclk), 
-    .s_axi_aresetn           (axil_to_sdnet.aresetn),
+    .s_axi_aclk              (axil_to_vitisnetp4.aclk), 
+    .s_axi_aresetn           (axil_to_vitisnetp4.aresetn),
     .cam_mem_aclk            (core_clk),
     .cam_mem_aresetn         (core_rstn),
 
@@ -130,23 +130,23 @@ module p4_and_verilog
     .user_metadata_out_valid (user_metadata_out_valid),  
     
     // Slave AXI-lite interface
-    .s_axi_awaddr  (axil_to_sdnet.awaddr),
-    .s_axi_awvalid (axil_to_sdnet.awvalid),
-    .s_axi_awready (axil_to_sdnet.awready),
-    .s_axi_wdata   (axil_to_sdnet.wdata),
-    .s_axi_wstrb   (axil_to_sdnet.wstrb),
-    .s_axi_wvalid  (axil_to_sdnet.wvalid),
-    .s_axi_wready  (axil_to_sdnet.wready),
-    .s_axi_bresp   (axil_to_sdnet.bresp),
-    .s_axi_bvalid  (axil_to_sdnet.bvalid),
-    .s_axi_bready  (axil_to_sdnet.bready),
-    .s_axi_araddr  (axil_to_sdnet.araddr),
-    .s_axi_arvalid (axil_to_sdnet.arvalid),
-    .s_axi_arready (axil_to_sdnet.arready),
-    .s_axi_rdata   (axil_to_sdnet.rdata),
-    .s_axi_rvalid  (axil_to_sdnet.rvalid),
-    .s_axi_rready  (axil_to_sdnet.rready),
-    .s_axi_rresp   (axil_to_sdnet.rresp),
+    .s_axi_awaddr  (axil_to_vitisnetp4.awaddr),
+    .s_axi_awvalid (axil_to_vitisnetp4.awvalid),
+    .s_axi_awready (axil_to_vitisnetp4.awready),
+    .s_axi_wdata   (axil_to_vitisnetp4.wdata),
+    .s_axi_wstrb   (axil_to_vitisnetp4.wstrb),
+    .s_axi_wvalid  (axil_to_vitisnetp4.wvalid),
+    .s_axi_wready  (axil_to_vitisnetp4.wready),
+    .s_axi_bresp   (axil_to_vitisnetp4.bresp),
+    .s_axi_bvalid  (axil_to_vitisnetp4.bvalid),
+    .s_axi_bready  (axil_to_vitisnetp4.bready),
+    .s_axi_araddr  (axil_to_vitisnetp4.araddr),
+    .s_axi_arvalid (axil_to_vitisnetp4.arvalid),
+    .s_axi_arready (axil_to_vitisnetp4.arready),
+    .s_axi_rdata   (axil_to_vitisnetp4.rdata),
+    .s_axi_rvalid  (axil_to_vitisnetp4.rvalid),
+    .s_axi_rready  (axil_to_vitisnetp4.rready),
+    .s_axi_rresp   (axil_to_vitisnetp4.rresp),
     
     // AXI Master port
     .m_axis_tdata  (axis_to_switch_0.tdata),

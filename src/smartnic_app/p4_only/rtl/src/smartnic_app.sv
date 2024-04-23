@@ -41,31 +41,31 @@ module smartnic_app
     // (SDNet) AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic [(M*  1)-1:0] axil_sdnet_aresetn,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_aresetn,
     // -- Write address
-    input  logic [(M*  1)-1:0] axil_sdnet_awvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_awready,
-    input  logic [(M* 32)-1:0] axil_sdnet_awaddr,
-    input  logic [(M*  3)-1:0] axil_sdnet_awprot,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_awvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_awready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_awaddr,
+    input  logic [(M*  3)-1:0] axil_vitisnetp4_awprot,
     // -- Write data
-    input  logic [(M*  1)-1:0] axil_sdnet_wvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_wready,
-    input  logic [(M* 32)-1:0] axil_sdnet_wdata,
-    input  logic [(M*  4)-1:0] axil_sdnet_wstrb,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_wvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_wready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_wdata,
+    input  logic [(M*  4)-1:0] axil_vitisnetp4_wstrb,
     // -- Write response
-    output logic [(M*  1)-1:0] axil_sdnet_bvalid,
-    input  logic [(M*  1)-1:0] axil_sdnet_bready,
-    output logic [(M*  2)-1:0] axil_sdnet_bresp,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_bvalid,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_bready,
+    output logic [(M*  2)-1:0] axil_vitisnetp4_bresp,
     // -- Read address
-    input  logic [(M*  1)-1:0] axil_sdnet_arvalid,
-    output logic [(M*  1)-1:0] axil_sdnet_arready,
-    input  logic [(M* 32)-1:0] axil_sdnet_araddr,
-    input  logic [(M*  3)-1:0] axil_sdnet_arprot,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_arvalid,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_arready,
+    input  logic [(M* 32)-1:0] axil_vitisnetp4_araddr,
+    input  logic [(M*  3)-1:0] axil_vitisnetp4_arprot,
     // -- Read data
-    output logic [(M*  1)-1:0] axil_sdnet_rvalid,
-    input  logic [(M*  1)-1:0] axil_sdnet_rready,
-    output logic [(M* 32)-1:0] axil_sdnet_rdata,
-    output logic [(M*  2)-1:0] axil_sdnet_rresp,
+    output logic [(M*  1)-1:0] axil_vitisnetp4_rvalid,
+    input  logic [(M*  1)-1:0] axil_vitisnetp4_rready,
+    output logic [(M* 32)-1:0] axil_vitisnetp4_rdata,
+    output logic [(M*  2)-1:0] axil_vitisnetp4_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
@@ -154,7 +154,7 @@ module smartnic_app
 
     // Interfaces
     axi4l_intf #() axil_if ();
-    axi4l_intf #() axil_to_sdnet[M] ();
+    axi4l_intf #() axil_to_vitisnetp4[M] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
                  .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [M][N] ();
@@ -219,30 +219,30 @@ module smartnic_app
 
     generate
         for (genvar i = 0; i < M; i += 1) begin
-            // -- AXI-L to sdnet interface
-            axi4l_intf_from_signals axil_to_sdnet_from_signals (
+            // -- AXI-L to vitisnetp4 interface
+            axi4l_intf_from_signals axil_to_vitisnetp4_from_signals (
                 .aclk     ( axil_aclk ),
-                .aresetn  ( axil_sdnet_aresetn [i* 1 +: 1]),
-                .awvalid  ( axil_sdnet_awvalid [i* 1 +: 1] ),
-                .awready  ( axil_sdnet_awready [i* 1 +: 1] ),
-                .awaddr   ( axil_sdnet_awaddr  [i*32 +: 32] ),
-                .awprot   ( axil_sdnet_awprot  [i* 3 +: 3] ),
-                .wvalid   ( axil_sdnet_wvalid  [i* 1 +: 1] ),
-                .wready   ( axil_sdnet_wready  [i* 1 +: 1] ),
-                .wdata    ( axil_sdnet_wdata   [i*32 +: 32] ),
-                .wstrb    ( axil_sdnet_wstrb   [i* 4 +: 4] ),
-                .bvalid   ( axil_sdnet_bvalid  [i* 1 +: 1] ),
-                .bready   ( axil_sdnet_bready  [i* 1 +: 1] ),
-                .bresp    ( axil_sdnet_bresp   [i* 2 +: 2] ),
-                .arvalid  ( axil_sdnet_arvalid [i* 1 +: 1] ),
-                .arready  ( axil_sdnet_arready [i* 1 +: 1] ),
-                .araddr   ( axil_sdnet_araddr  [i*32 +: 32] ),
-                .arprot   ( axil_sdnet_arprot  [i* 3 +: 3] ),
-                .rvalid   ( axil_sdnet_rvalid  [i* 1 +: 1] ),
-                .rready   ( axil_sdnet_rready  [i* 1 +: 1] ),
-                .rdata    ( axil_sdnet_rdata   [i*32 +: 32] ),
-                .rresp    ( axil_sdnet_rresp   [i* 2 +: 2] ),
-                .axi4l_if ( axil_to_sdnet[i] )
+                .aresetn  ( axil_vitisnetp4_aresetn [i* 1 +: 1]),
+                .awvalid  ( axil_vitisnetp4_awvalid [i* 1 +: 1] ),
+                .awready  ( axil_vitisnetp4_awready [i* 1 +: 1] ),
+                .awaddr   ( axil_vitisnetp4_awaddr  [i*32 +: 32] ),
+                .awprot   ( axil_vitisnetp4_awprot  [i* 3 +: 3] ),
+                .wvalid   ( axil_vitisnetp4_wvalid  [i* 1 +: 1] ),
+                .wready   ( axil_vitisnetp4_wready  [i* 1 +: 1] ),
+                .wdata    ( axil_vitisnetp4_wdata   [i*32 +: 32] ),
+                .wstrb    ( axil_vitisnetp4_wstrb   [i* 4 +: 4] ),
+                .bvalid   ( axil_vitisnetp4_bvalid  [i* 1 +: 1] ),
+                .bready   ( axil_vitisnetp4_bready  [i* 1 +: 1] ),
+                .bresp    ( axil_vitisnetp4_bresp   [i* 2 +: 2] ),
+                .arvalid  ( axil_vitisnetp4_arvalid [i* 1 +: 1] ),
+                .arready  ( axil_vitisnetp4_arready [i* 1 +: 1] ),
+                .araddr   ( axil_vitisnetp4_araddr  [i*32 +: 32] ),
+                .arprot   ( axil_vitisnetp4_arprot  [i* 3 +: 3] ),
+                .rvalid   ( axil_vitisnetp4_rvalid  [i* 1 +: 1] ),
+                .rready   ( axil_vitisnetp4_rready  [i* 1 +: 1] ),
+                .rdata    ( axil_vitisnetp4_rdata   [i*32 +: 32] ),
+                .rresp    ( axil_vitisnetp4_rresp   [i* 2 +: 2] ),
+                .axi4l_if ( axil_to_vitisnetp4[i] )
             );
 
             for (genvar j = 0; j < N; j += 1) begin
@@ -385,10 +385,10 @@ module smartnic_app
     // p4 processor signals and interfaces.
     // ----------------------------------------------------------------------
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_sdnet[M] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_vitisnetp4[M] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_sdnet[M] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_vitisnetp4[M] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_demux[N] ();
@@ -418,7 +418,7 @@ module smartnic_app
     logic           user_metadata_out_valid[M];
 
     // ----------------------------------------------------------------------
-    // ingress p4 processor complex (p4_proc + sdnet_igr_wrapper)
+    // ingress p4 processor complex (p4_proc + vitisnetp4_igr_wrapper)
     // ----------------------------------------------------------------------
     localparam logic P4_PROC_IGR_MODE = 1;
 
@@ -431,20 +431,20 @@ module smartnic_app
                 .axil_if                        ( axil_to_p4_proc[0] ),
                 .axis_in                        ( axis_from_switch[0] ),
                 .axis_out                       ( axis_to_demux ),
-                .axis_to_sdnet                  ( axis_to_sdnet[0] ),
-                .axis_from_sdnet                ( axis_from_sdnet[0] ),
-                .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[0] ),
-                .user_metadata_to_sdnet         ( user_metadata_in[0] ),
-                .user_metadata_from_sdnet_valid ( user_metadata_out_valid[0] ),
-                .user_metadata_from_sdnet       ( user_metadata_out[0] )
+                .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[0] ),
+                .axis_from_vitisnetp4                ( axis_from_vitisnetp4[0] ),
+                .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid[0] ),
+                .user_metadata_to_vitisnetp4         ( user_metadata_in[0] ),
+                .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid[0] ),
+                .user_metadata_from_vitisnetp4       ( user_metadata_out[0] )
             );
 
-            sdnet_igr_wrapper sdnet_igr_wrapper_inst (
+            vitisnetp4_igr_wrapper vitisnetp4_igr_wrapper_inst (
                 .core_clk                ( core_clk ),
                 .core_rstn               ( core_rstn ),
-                .axil_if                 ( axil_to_sdnet[0] ),
-                .axis_rx                 ( axis_to_sdnet[0] ),
-                .axis_tx                 ( axis_from_sdnet[0] ),
+                .axil_if                 ( axil_to_vitisnetp4[0] ),
+                .axis_rx                 ( axis_to_vitisnetp4[0] ),
+                .axis_tx                 ( axis_from_vitisnetp4[0] ),
                 .user_metadata_in_valid  ( user_metadata_in_valid[0] ),
                 .user_metadata_in        ( user_metadata_in[0] ),
                 .user_metadata_out_valid ( user_metadata_out_valid[0] ),
@@ -452,12 +452,12 @@ module smartnic_app
                 .axi_to_hbm              ( axi_to_hbm )
             );
 
-        // axi4s_ila axi4s_ila_1 (.axis_in(axis_to_sdnet[0]));
-        // axi4s_ila axi4s_ila_2 (.axis_in(axis_from_sdnet[0]));
+        // axi4s_ila axi4s_ila_1 (.axis_in(axis_to_vitisnetp4[0]));
+        // axi4s_ila axi4s_ila_2 (.axis_in(axis_from_vitisnetp4[0]));
 
         end else begin  // P4_PROC_IGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
-            axi4l_intf_peripheral_term axil_to_sdnet_0_term ( .axi4l_if (axil_to_sdnet[0]) );
+            axi4l_intf_peripheral_term axil_to_vitisnetp4_0_term ( .axi4l_if (axil_to_vitisnetp4[0]) );
 
             for (genvar i = 0; i < N; i += 1) begin
                 // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
@@ -472,7 +472,7 @@ module smartnic_app
     endgenerate
 
     // ----------------------------------------------------------------------
-    // egress p4 processor complex (p4_proc + sdnet_igr_wrapper)
+    // egress p4 processor complex (p4_proc + vitisnetp4_igr_wrapper)
     // ----------------------------------------------------------------------
     localparam logic P4_PROC_EGR_MODE = 0;
 
@@ -480,7 +480,7 @@ module smartnic_app
 
     generate
         for (genvar g_hbm1_if = 0; g_hbm1_if < AXI_HBM_NUM_IFS; g_hbm1_if++) begin : g__hbm1_if
-            // For now, terminate sdnet_1 HBM memory interfaces (unused)
+            // For now, terminate vitisnetp4_1 HBM memory interfaces (unused)
             axi3_intf_controller_term axi_to_hbm_egr_term (.axi3_if(axi_to_hbm_egr[g_hbm1_if]));
         end : g__hbm1_if
 
@@ -492,20 +492,20 @@ module smartnic_app
                 .axil_if                        ( axil_to_p4_proc[1] ),
                 .axis_in                        ( axis_from_mux ),
                 .axis_out                       ( axis_to_switch[1] ),
-                .axis_to_sdnet                  ( axis_to_sdnet[1] ),
-                .axis_from_sdnet                ( axis_from_sdnet[1] ),
-                .user_metadata_to_sdnet_valid   ( user_metadata_in_valid[1] ),
-                .user_metadata_to_sdnet         ( user_metadata_in[1] ),
-                .user_metadata_from_sdnet_valid ( user_metadata_out_valid[1] ),
-                .user_metadata_from_sdnet       ( user_metadata_out[1] )
+                .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[1] ),
+                .axis_from_vitisnetp4                ( axis_from_vitisnetp4[1] ),
+                .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid[1] ),
+                .user_metadata_to_vitisnetp4         ( user_metadata_in[1] ),
+                .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid[1] ),
+                .user_metadata_from_vitisnetp4       ( user_metadata_out[1] )
             );
 
-            sdnet_egr_wrapper sdnet_egr_wrapper_inst (
+            vitisnetp4_egr_wrapper vitisnetp4_egr_wrapper_inst (
                 .core_clk                ( core_clk ),
                 .core_rstn               ( core_rstn ),
-                .axil_if                 ( axil_to_sdnet[1] ),
-                .axis_rx                 ( axis_to_sdnet[1] ),
-                .axis_tx                 ( axis_from_sdnet[1] ),
+                .axil_if                 ( axil_to_vitisnetp4[1] ),
+                .axis_rx                 ( axis_to_vitisnetp4[1] ),
+                .axis_tx                 ( axis_from_vitisnetp4[1] ),
                 .user_metadata_in_valid  ( user_metadata_in_valid[1] ),
                 .user_metadata_in        ( user_metadata_in[1] ),
                 .user_metadata_out_valid ( user_metadata_out_valid[1] ),
@@ -515,7 +515,7 @@ module smartnic_app
 
         end else begin  // P4_PROC_EGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc[1]) );
-            axi4l_intf_peripheral_term axil_to_sdnet_1_term   ( .axi4l_if (axil_to_sdnet[1]) );
+            axi4l_intf_peripheral_term axil_to_vitisnetp4_1_term   ( .axi4l_if (axil_to_vitisnetp4[1]) );
 
             for (genvar i = 0; i < N; i += 1) begin
                 // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );

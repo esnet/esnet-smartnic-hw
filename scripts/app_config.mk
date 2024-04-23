@@ -168,12 +168,12 @@ _configure_app_p4 := \
 	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4     $(APP_PROJ_ROOT)/src/; \
 	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4_igr $(APP_PROJ_ROOT)/src/; \
 	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4_egr $(APP_PROJ_ROOT)/src/; \
-	 cp $(APP_DIR)/src/sdnet_0_extern/rtl/src/*.sv   $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/     2>/dev/null || \
-            rm $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/sdnet_0_extern.sv; \
-	 cp $(APP_DIR)/src/sdnet_igr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/ 2>/dev/null || \
-            rm $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/sdnet_igr_extern.sv; \
-	 cp $(APP_DIR)/src/sdnet_egr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/ 2>/dev/null || \
-            rm $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/sdnet_egr_extern.sv; \
+	 cp $(APP_DIR)/src/vitisnetp4_0_extern/rtl/src/*.sv   $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/     2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4/rtl/src/vitisnetp4_0_extern.sv; \
+	 cp $(APP_DIR)/src/vitisnetp4_igr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/ 2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/src/vitisnetp4_igr_extern.sv; \
+	 cp $(APP_DIR)/src/vitisnetp4_egr_extern/rtl/src/*.sv $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/ 2>/dev/null || \
+            rm $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/vitisnetp4_egr_extern.sv; \
 	 cp -r $(SMARTNIC_ROOT)/src/smartnic_app $(APP_PROJ_ROOT)/src/; \
 	 cp $(APP_DIR)/src/smartnic_app*/rtl/src/* $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/rtl/src 2>/dev/null; \
 	 mv $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/app_if $(APP_PROJ_ROOT)/; \

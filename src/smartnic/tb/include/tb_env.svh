@@ -219,7 +219,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         end
     endtask
 
-    task sdnet_read(
+    task vitisnetp4_read(
             input  bit [31:0] addr,
             output bit [31:0] data
         );
@@ -228,7 +228,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         reg_agent.read_reg(_addr, data);
     endtask
 
-    task sdnet_write(
+    task vitisnetp4_write(
             input  bit [31:0] addr,
             input  bit [31:0] data
         );

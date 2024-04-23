@@ -29,7 +29,7 @@ p4_package:
 
 driver_package:
 	@$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4.ip
-	@tar -cf smartnic_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/ip/$(BOARD)/sdnet_0/src/sw/drivers/install .
+	@tar -cf smartnic_app_drv.tar -C $(OUTPUT_ROOT)/vitisnetp4/ip/$(BOARD)/vitisnetp4_0/src/sw/drivers/install .
 
 clean:
 	@$(MAKE) -s -C $(SRC_ROOT) clean COMPONENT=smartnic_app.build

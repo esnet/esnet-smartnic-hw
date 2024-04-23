@@ -1,10 +1,10 @@
-name: smartnic_app_sdnet
+name: smartnic_app_vitisnetp4
 
 blocks:
-  sdnet: &sdnet
-    name: sdnet
+  vitisnetp4: &vitisnetp4
+    name: vitisnetp4
     info: |
-      This block contains the registers for the xilinx sdnet IP.
+      This block contains the registers for the xilinx vitisnetp4 IP.
       The memory offsets into this block are unmanaged by this tool.
     regs: []
 
@@ -17,11 +17,11 @@ interfaces:
     address: 0x00000
     width: 18
     name: app
-  - block: *sdnet
+  - block: *vitisnetp4
     address: 0x40000
     width: 17
-    name: sdnet_igr
-  - block: *sdnet
+    name: vitisnetp4_igr
+  - block: *vitisnetp4
     address: 0x60000
     width: 17
-    name: sdnet_egr
+    name: vitisnetp4_egr

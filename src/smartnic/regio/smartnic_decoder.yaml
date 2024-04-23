@@ -10,7 +10,7 @@ blocks:
 
 decoders:
   smartnic_app_decoder: &smartnic_app_decoder
-    !include ../src/smartnic/regio/smartnic_app_sdnet_decoder.yaml
+    !include ../src/smartnic/regio/smartnic_app_vitisnetp4_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0

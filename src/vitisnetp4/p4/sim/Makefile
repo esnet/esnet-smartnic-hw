@@ -74,7 +74,7 @@ extern:
 	$(MAKE) -C $(EXTERN_DIR)
 
 sim:
-# Make sure that $(P4BM_DIR)/$(P4BM_SCRIPT) exists.  run-p4bm-sdnet
+# Make sure that $(P4BM_DIR)/$(P4BM_SCRIPT) exists.  run-p4bm-vitisnetp4
 # reacts badly if the script file doesn't exist.
 	(cd $(P4BM_DIR) && wc $(P4BM_SCRIPT) > /dev/null)
 	(cd $(P4BM_DIR) && $(RUN_P4BM_VITISNET) $(RUN_P4BM_OPTIONS) -l $(P4BM_LOGFILE_PREFIX) -j $(P4_OBJECT_TEST) -s $(P4BM_SCRIPT) -m $(EXTERN_SO_LIST_TEST))

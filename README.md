@@ -321,10 +321,10 @@ as the custom system verilog RTL code that implements the function for synthesis
 if desired).
 
 For compatibility with the automation scripts, the name of the extern top-level module MUST be
-`sdnet_igr_extern` or `sdnet_egr_extern`, depending on which P4 processor it is associated with.
+`vitisnetp4_igr_extern` or `vitisnetp4_egr_extern`, depending on which P4 processor it is associated with.
 Also, the .cpp model MUST be located in a directory located beside the p4 test(s) directory called
 `user_externs/` and the extern Makefile and RTL code MUST be located in a directory called
-`src/sdnet_igr_extern` or `src/sdnet_egr_extern`, again depending on which P4 processor it connects to.
+`src/vitisnetp4_igr_extern` or `src/vitisnetp4_egr_extern`, again depending on which P4 processor it connects to.
 
 See the `p4_with_extern` example design for reference.
 

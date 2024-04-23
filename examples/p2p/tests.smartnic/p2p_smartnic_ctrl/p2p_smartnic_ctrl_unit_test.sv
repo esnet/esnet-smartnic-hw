@@ -28,7 +28,7 @@ module p2p_smartnic_ctrl_unit_test;
     tb_pkg::tb_env env;
 
     p2p_reg_verif_pkg::p2p_reg_blk_agent #() p2p_reg_blk_agent;
-    p2p_reg_verif_pkg::p2p_reg_blk_agent #() sdnet_reg_blk_agent;
+    p2p_reg_verif_pkg::p2p_reg_blk_agent #() vitisnetp4_reg_blk_agent;
 
     //===================================
     // Import common testcase tasks
@@ -50,8 +50,8 @@ module p2p_smartnic_ctrl_unit_test;
         p2p_reg_blk_agent = new("p2p_reg_blk", env.AXIL_APP_OFFSET);
         p2p_reg_blk_agent.reg_agent = env.reg_agent;
 
-        sdnet_reg_blk_agent = new("sdnet_reg_blk", env.AXIL_VITISNET_OFFSET);
-        sdnet_reg_blk_agent.reg_agent = env.reg_agent;
+        vitisnetp4_reg_blk_agent = new("vitisnetp4_reg_blk", env.AXIL_VITISNET_OFFSET);
+        vitisnetp4_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 
     //===================================
@@ -106,11 +106,11 @@ module p2p_smartnic_ctrl_unit_test;
         p2p_reg_blk_agent.read_status_lower(rd_data);
         `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_LOWER);
 
-        // Read sdnet status registers
-        sdnet_reg_blk_agent.read_status_upper(rd_data);
+        // Read vitisnetp4 status registers
+        vitisnetp4_reg_blk_agent.read_status_upper(rd_data);
         `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_UPPER);
 
-        sdnet_reg_blk_agent.read_status_lower(rd_data);
+        vitisnetp4_reg_blk_agent.read_status_lower(rd_data);
         `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_LOWER);
 
     `SVTEST_END
@@ -132,13 +132,13 @@ module p2p_smartnic_ctrl_unit_test;
         `FAIL_UNLESS( rd_data == {wr_data_upper, wr_data_lower} );
 
         // latch timestamp value received by p2p block
-        sdnet_reg_blk_agent.write_timestamp_rd_latch( 0 );
+        vitisnetp4_reg_blk_agent.write_timestamp_rd_latch( 0 );
 
-        // Read sdnet status registers
-        sdnet_reg_blk_agent.read_status_upper(rd_data);
+        // Read vitisnetp4 status registers
+        vitisnetp4_reg_blk_agent.read_status_upper(rd_data);
         `FAIL_UNLESS(rd_data == wr_data_upper);
 
-        sdnet_reg_blk_agent.read_status_lower(rd_data);
+        vitisnetp4_reg_blk_agent.read_status_lower(rd_data);
         // validate upper bits only, since timestamp counter is free-running.
         `FAIL_UNLESS(rd_data[31:14] == wr_data_lower[31:14]);
 
