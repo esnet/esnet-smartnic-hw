@@ -1,4 +1,4 @@
-module smartnic_322mhz_reset #(
+module smartnic_reset #(
     parameter int NUM_CMAC = 1
 ) (
     input  logic                mod_rstn,     // Module reset pair from open-nic-shell
@@ -124,4 +124,4 @@ module smartnic_322mhz_reset #(
         .hbm_ref_clk( hbm_ref_clk )
     );
 
-endmodule: smartnic_322mhz_reset
+endmodule: smartnic_reset

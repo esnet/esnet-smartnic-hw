@@ -1,4 +1,4 @@
-module smartnic_322mhz_hbm #(
+module smartnic_hbm #(
     parameter bit HBM_STACK = 1'b0// 0: Left stack (4GB); 1: Right stack (4GB)
 ) (
     // Clock/reset
@@ -644,4 +644,4 @@ module smartnic_322mhz_hbm #(
     endgenerate
 `endif
 
-endmodule : smartnic_322mhz_hbm
+endmodule : smartnic_hbm

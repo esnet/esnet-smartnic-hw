@@ -1,6 +1,6 @@
 module tb;
     import tb_pkg::*;
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
 
     // (Local) parameters
     localparam int AXIS_DATA_WID = 512;
@@ -242,7 +242,7 @@ module tb;
     endgenerate
 
     // DUT instance
-    smartnic_322mhz_app DUT (
+    smartnic_app DUT (
         .core_clk     (clk),
         .core_rstn    (rstn),
         .timestamp    (timestamp),

@@ -1,28 +1,28 @@
-name: smartnic_322mhz
+name: smartnic
 
 blocks:
-  smartnic_322mhz: &smartnic_322mhz
-    !include ../src/smartnic_322mhz/regio/smartnic_322mhz.yaml
+  smartnic: &smartnic
+    !include ../src/smartnic/regio/smartnic.yaml
   reg_endian_check: &reg_endian_check
     !include src/reg/endian/regio/reg_endian_check.yaml
   axi4s_probe: &axi4s_probe
     !include src/axi4s/regio/axi4s_probe.yaml 
 
 decoders:
-  smartnic_322mhz_app_decoder: &smartnic_322mhz_app_decoder
-    !include ../src/smartnic_322mhz/regio/smartnic_322mhz_app_sdnet_decoder.yaml
+  smartnic_app_decoder: &smartnic_app_decoder
+    !include ../src/smartnic/regio/smartnic_app_sdnet_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
-    !include ../src/smartnic_322mhz/regio/xilinx_hbm_0_decoder.yaml
+    !include ../src/smartnic/regio/xilinx_hbm_0_decoder.yaml
   xilinx_hbm_1: &xilinx_hbm_1
-    !include ../src/smartnic_322mhz/regio/xilinx_hbm_1_decoder.yaml
+    !include ../src/smartnic/regio/xilinx_hbm_1_decoder.yaml
 
 interfaces:
-  - block: *smartnic_322mhz
+  - block: *smartnic
     address: 0x00000
     width: 10
-    name: smartnic_322mhz_regs
+    name: smartnic_regs
 
   - block: *reg_endian_check
     address: 0x00400
@@ -160,7 +160,7 @@ interfaces:
     width: 12
     name: hbm_1
 
-  - decoder: *smartnic_322mhz_app_decoder
+  - decoder: *smartnic_app_decoder
     address: 0x80000
     width: 19
-    name: smartnic_322mhz_app
+    name: smartnic_app

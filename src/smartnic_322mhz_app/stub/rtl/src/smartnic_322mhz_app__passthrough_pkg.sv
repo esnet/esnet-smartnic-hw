@@ -1,4 +1,4 @@
-package smartnic_322mhz_app__passthrough_pkg;
+package smartnic_app__passthrough_pkg;
 
     // --------------------------------------------------------------
     // Imports
@@ -46,4 +46,4 @@ package smartnic_322mhz_app__passthrough_pkg;
         logic        hdr_tlast;
     } tuser_smartnic_meta_t;
 
-endpackage : smartnic_322mhz_app__passthrough_pkg
+endpackage : smartnic_app__passthrough_pkg

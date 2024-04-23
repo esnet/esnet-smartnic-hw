@@ -1,4 +1,4 @@
-module smartnic_322mhz_app
+module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16,
     parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
@@ -141,7 +141,7 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
     import p4_proc_pkg::*;
     import axi4s_pkg::*;
 
@@ -357,7 +357,7 @@ module smartnic_322mhz_app
 
     p4_app_reg_intf  p4_app_regs ();
 
-    // smartnic_322mhz_app register decoder
+    // smartnic_app register decoder
     p4_app_decoder p4_app_decoder_inst (
        .axil_if              ( axil_if ),
        .p4_app_axil_if       ( axil_to_p4_app ),
@@ -374,7 +374,7 @@ module smartnic_322mhz_app
         .axi4l_if_to_peripheral    ( axil_to_p4_app__core_clk )
     );
 
-    // smartnic_322mhz_app register block
+    // smartnic_app register block
     p4_app_reg_blk p4_app_reg_blk (
         .axil_if    ( axil_to_p4_app__core_clk ),
         .reg_blk_if ( p4_app_regs )
@@ -608,4 +608,4 @@ module smartnic_322mhz_app
 
     // axi4s_ila axi4s_ila_5 (.axis_in(axis_from_mux[0]));
 
-endmodule: smartnic_322mhz_app
+endmodule: smartnic_app

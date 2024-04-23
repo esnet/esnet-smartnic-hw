@@ -1,5 +1,5 @@
 module p4_and_verilog
-   import smartnic_322mhz_pkg::*;
+   import smartnic_pkg::*;
 (
    input logic        core_clk,
    input logic        core_rstn,

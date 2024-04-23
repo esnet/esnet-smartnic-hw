@@ -5,10 +5,10 @@
 //===================================
 `define SVUNIT_TIMEOUT 500us
 
-module smartnic_322mhz_timestamp_unit_test;
+module smartnic_timestamp_unit_test;
 
     // Testcase name
-    string name = "smartnic_322mhz_timestamp_ut";
+    string name = "smartnic_timestamp_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -16,7 +16,7 @@ module smartnic_322mhz_timestamp_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -73,7 +73,7 @@ module smartnic_322mhz_timestamp_unit_test;
 
     // variables for timestamp testing
     logic [63:0] rd_data;
-    smartnic_322mhz_reg_pkg::reg_timestamp_incr_t   rd_incr, new_incr;
+    smartnic_reg_pkg::reg_timestamp_incr_t   rd_incr, new_incr;
 
     int period_ns = 5000;
     int num_samples = 5;
@@ -97,16 +97,16 @@ module smartnic_322mhz_timestamp_unit_test;
     `SVTEST(timestamp_sanity)
         // --------------------------------------------------------------
         // validate default increment value
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_incr( rd_incr );
+        env.smartnic_reg_blk_agent.read_timestamp_incr( rd_incr );
        `INFO($sformatf("Read default timestamp increment: 0x%0h", rd_incr )); // expect 0x2e8ba3 (2.909091ns)
-       `FAIL_UNLESS( rd_incr == smartnic_322mhz_reg_pkg::INIT_TIMESTAMP_INCR );
+       `FAIL_UNLESS( rd_incr == smartnic_reg_pkg::INIT_TIMESTAMP_INCR );
 
         // --------------------------------------------------------------
         // check timestamp_wr access
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_upper( 32'h_8765_4321 );
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_lower( 32'h_1234_5678 );
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_wr_upper ( rd_data[63:32] );
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_wr_lower ( rd_data[31:0] );
+        env.smartnic_reg_blk_agent.write_timestamp_wr_upper( 32'h_8765_4321 );
+        env.smartnic_reg_blk_agent.write_timestamp_wr_lower( 32'h_1234_5678 );
+        env.smartnic_reg_blk_agent.read_timestamp_wr_upper ( rd_data[63:32] );
+        env.smartnic_reg_blk_agent.read_timestamp_wr_lower ( rd_data[31:0] );
        `FAIL_UNLESS( rd_data == 64'h_8765_4321_1234_5678 );  
 
         // --------------------------------------------------------------
@@ -118,8 +118,8 @@ module smartnic_322mhz_timestamp_unit_test;
 
         // --------------------------------------------------------------
         // check timestamp_incr access
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_incr( 32'h_8765_4321 );
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_incr( rd_incr );
+        env.smartnic_reg_blk_agent.write_timestamp_incr( 32'h_8765_4321 );
+        env.smartnic_reg_blk_agent.read_timestamp_incr( rd_incr );
        `FAIL_UNLESS( rd_incr == 32'h_8765_4321 );
 
    
@@ -127,7 +127,7 @@ module smartnic_322mhz_timestamp_unit_test;
        `INFO($sformatf("Adjust incr by +0.05ns.  Poll %0d timestamps (each %0d ns)...", num_samples, period_ns));
 
         new_incr = 32'h2_f586fce; // 2.909091ns + 0.05ns offset
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_incr( new_incr );
+        env.smartnic_reg_blk_agent.write_timestamp_incr( new_incr );
    
         // set initial value to just below 2^32 i.e. timestamp crosses 32b word boundary.
         poll_timestamp (
@@ -138,7 +138,7 @@ module smartnic_322mhz_timestamp_unit_test;
        `INFO($sformatf("Adjust incr by -0.05ns.  Poll %0d timestamps (each %0d ns)", num_samples, period_ns));
 
         new_incr = 32'h2_dbed634; // 2.909091ns - 0.05ns offset
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_incr( new_incr );
+        env.smartnic_reg_blk_agent.write_timestamp_incr( new_incr );
 
         // set initial value to just below 2^64 so that timestamp will wrap.
         poll_timestamp (
@@ -160,20 +160,20 @@ module smartnic_322mhz_timestamp_unit_test;
        expected = (period_ns / clk_period_ns) * increment_ns;  // calculate expected timestamp delta
 
        // write and check initialization of timestamp counter 
-       env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_upper( init[63:32] );
-       env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_lower( init[31:0]  );
+       env.smartnic_reg_blk_agent.write_timestamp_wr_upper( init[63:32] );
+       env.smartnic_reg_blk_agent.write_timestamp_wr_lower( init[31:0]  );
 
-       env.smartnic_322mhz_reg_blk_agent.write_timestamp_rd_latch( 0 );
+       env.smartnic_reg_blk_agent.write_timestamp_rd_latch( 0 );
 
-       env.smartnic_322mhz_reg_blk_agent.read_timestamp_rd_upper( rd_data[63:32] );
-       env.smartnic_322mhz_reg_blk_agent.read_timestamp_rd_lower( rd_data[31:0]  );
+       env.smartnic_reg_blk_agent.read_timestamp_rd_upper( rd_data[63:32] );
+       env.smartnic_reg_blk_agent.read_timestamp_rd_lower( rd_data[31:0]  );
 
       `INFO($sformatf("Timestamp reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
       `FAIL_UNLESS( rd_data < init + 'd150 );  // check within 150ns margin, since timestamp counter is free running.
 
-       env.smartnic_322mhz_reg_blk_agent.read_freerun_rd_upper( rd_data[63:32] );
-       env.smartnic_322mhz_reg_blk_agent.read_freerun_rd_lower( rd_data[31:0]  );
+       env.smartnic_reg_blk_agent.read_freerun_rd_upper( rd_data[63:32] );
+       env.smartnic_reg_blk_agent.read_freerun_rd_lower( rd_data[31:0]  );
 
       `INFO($sformatf("Freerun reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
@@ -187,9 +187,9 @@ module smartnic_322mhz_timestamp_unit_test;
           fork
              begin
                 // latch and read timestamp.
-                env.smartnic_322mhz_reg_blk_agent.write_timestamp_rd_latch( 0 );
-                env.smartnic_322mhz_reg_blk_agent.read_timestamp_rd_upper( rd_data[63:32] );
-                env.smartnic_322mhz_reg_blk_agent.read_timestamp_rd_lower( rd_data[31:0]  );
+                env.smartnic_reg_blk_agent.write_timestamp_rd_latch( 0 );
+                env.smartnic_reg_blk_agent.read_timestamp_rd_upper( rd_data[63:32] );
+                env.smartnic_reg_blk_agent.read_timestamp_rd_lower( rd_data[31:0]  );
 
                 // compare to expected.
                 if (prev_data != 0) begin

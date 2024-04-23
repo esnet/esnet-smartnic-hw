@@ -5,10 +5,10 @@
 //===================================
 `define SVUNIT_TIMEOUT 500us
 
-module p2p_smartnic_322mhz_ctrl_unit_test;
+module p2p_smartnic_ctrl_unit_test;
 
     // Testcase name
-    string name = "p2p_smartnic_322mhz_ctrl_ut";
+    string name = "p2p_smartnic_ctrl_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -16,7 +16,7 @@ module p2p_smartnic_322mhz_ctrl_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -33,7 +33,7 @@ module p2p_smartnic_322mhz_ctrl_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../../../../../src/smartnic/tests/common/tasks.svh"
 
     //===================================
     // Build
@@ -120,14 +120,14 @@ module p2p_smartnic_322mhz_ctrl_unit_test;
         logic [31:0] wr_data_upper, wr_data_lower;
         logic [63:0] rd_data;
 
-        // write and verify random value to smartnic_322mhz timestamp counter
+        // write and verify random value to smartnic timestamp counter
         wr_data_upper = $urandom(); wr_data_lower = $urandom();
 
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_upper( wr_data_upper );
-        env.smartnic_322mhz_reg_blk_agent.write_timestamp_wr_lower( wr_data_lower );
+        env.smartnic_reg_blk_agent.write_timestamp_wr_upper( wr_data_upper );
+        env.smartnic_reg_blk_agent.write_timestamp_wr_lower( wr_data_lower );
 
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_wr_upper ( rd_data[63:32] );
-        env.smartnic_322mhz_reg_blk_agent.read_timestamp_wr_lower ( rd_data[31:0] );
+        env.smartnic_reg_blk_agent.read_timestamp_wr_upper ( rd_data[63:32] );
+        env.smartnic_reg_blk_agent.read_timestamp_wr_lower ( rd_data[31:0] );
 
         `FAIL_UNLESS( rd_data == {wr_data_upper, wr_data_lower} );
 

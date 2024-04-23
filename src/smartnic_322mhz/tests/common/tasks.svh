@@ -3,7 +3,7 @@
 //=======================================================================
 localparam NUM_PORTS = 4;
 
-import smartnic_322mhz_pkg::*;
+import smartnic_pkg::*;
 port_t out_port_map [NUM_PORTS-1:0];  // vector specifies output port for each input stream.
 
 string in_pcap  [NUM_PORTS-1:0];  // vector specifies the in_pcap file for each input stream.
@@ -53,7 +53,7 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
-smartnic_322mhz_reg_pkg::reg_switch_config_t switch_config;
+smartnic_reg_pkg::reg_switch_config_t switch_config;
 
 
 //=======================================================================
@@ -125,38 +125,38 @@ endtask
 
 
 task init_sw_config_regs();
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 0 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 1 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 3 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], 0 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[1], 1 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[2], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[3], 3 );
 
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2 );
 
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], 3 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 0 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 1 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[1], 3 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[2], 0 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[3], 1 );
 
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 0 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[1], 1 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[2], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[3], 3 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[3], 3 );
 
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[0], 0 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2 );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 3 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[0], 0 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 3 );
 endtask
 
 
 task configure_port_map();
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], out_port_map[0] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], out_port_map[1] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], out_port_map[2] );
-   env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], out_port_map[3] );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], out_port_map[0] );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[1], out_port_map[1] );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[2], out_port_map[2] );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[3], out_port_map[3] );
 endtask
 
 

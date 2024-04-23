@@ -1,10 +1,10 @@
 // Tie off unused reset pair status
 assign mod_rst_done[7:1] = '1;
 
-smartnic_322mhz #(
+smartnic #(
   .NUM_CMAC (NUM_CMAC_PORT),
   .MAX_PKT_LEN (MAX_PKT_LEN)
-) smartnic_322mhz (
+) smartnic (
   .s_axil_awvalid                  (s_axil_awvalid),
   .s_axil_awaddr                   (s_axil_awaddr),
   .s_axil_awready                  (s_axil_awready),

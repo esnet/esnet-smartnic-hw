@@ -1,6 +1,6 @@
-name: smartnic_322mhz
+name: smartnic
 info: |
-  smartnic_322mhz is the top level module for the 322+ MHz
+  smartnic is the top level module for the 322+ MHz
   packet processing platform.
 
 regs:

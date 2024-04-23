@@ -5,10 +5,10 @@
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p2p_smartnic_322mhz_datapath_unit_test;
+module p2p_smartnic_datapath_unit_test;
 
     // Testcase name
-    string name = "p2p_smartnic_322mhz_datapath_ut";
+    string name = "p2p_smartnic_datapath_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -16,7 +16,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -30,7 +30,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //=================================== 
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"       
+    `include "../../../../../src/smartnic/tests/common/tasks.svh"       
 
     //===================================
     // Build
@@ -64,29 +64,29 @@ module p2p_smartnic_322mhz_datapath_unit_test;
         // initialize switch configuration registers.
         init_sw_config_regs;
 
-        switch_config = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+        switch_config = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
         // default variable configuration
-         in_pcap[0] = "../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
-        out_pcap[0] = "../../../../../src/smartnic_322mhz/tests/common/pcap/20xrandom_pkts.pcap";
-         in_pcap[1] = "../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
-        out_pcap[1] = "../../../../../src/smartnic_322mhz/tests/common/pcap/30xrandom_pkts.pcap";
-         in_pcap[2] = "../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
-        out_pcap[2] = "../../../../../src/smartnic_322mhz/tests/common/pcap/40xrandom_pkts.pcap";
-         in_pcap[3] = "../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
-        out_pcap[3] = "../../../../../src/smartnic_322mhz/tests/common/pcap/50xrandom_pkts.pcap";
+         in_pcap[0] = "../../../../../src/smartnic/tests/common/pcap/20xrandom_pkts.pcap";
+        out_pcap[0] = "../../../../../src/smartnic/tests/common/pcap/20xrandom_pkts.pcap";
+         in_pcap[1] = "../../../../../src/smartnic/tests/common/pcap/30xrandom_pkts.pcap";
+        out_pcap[1] = "../../../../../src/smartnic/tests/common/pcap/30xrandom_pkts.pcap";
+         in_pcap[2] = "../../../../../src/smartnic/tests/common/pcap/40xrandom_pkts.pcap";
+        out_pcap[2] = "../../../../../src/smartnic/tests/common/pcap/40xrandom_pkts.pcap";
+         in_pcap[3] = "../../../../../src/smartnic/tests/common/pcap/50xrandom_pkts.pcap";
+        out_pcap[3] = "../../../../../src/smartnic/tests/common/pcap/50xrandom_pkts.pcap";
 
         out_port_map = {2'h3, 2'h2, 2'h1, 2'h0};
         exp_pkts  = {0, 0, 0, 0};  // if exp_pkts field is set 0, value is determined from pcap file.
 
         // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[1], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0.
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -131,15 +131,15 @@ module p2p_smartnic_322mhz_datapath_unit_test;
 
       `SVTEST(basic_sanity)
          // Configure igr_sw tdest registers (CMAC_0 -> APP_0, CMAC_1 -> APP_1).
-         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
-         env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
+         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
 
          for (int i=0; i<NUM_PORTS; i++) begin
             out_port_map = {out_port_map[2:0], out_port_map[3]};
 
             // Configure egr_sw tdest (output port) registers (APP_0 CMAC_0 -> out_port_map[0], APP_1 CMAC_1 -> out_port_map[1]).
-            env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], out_port_map[0] );
-            env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], out_port_map[1] );
+            env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], out_port_map[0] );
+            env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], out_port_map[1] );
 
             fork
                run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
@@ -169,7 +169,7 @@ module p2p_smartnic_322mhz_datapath_unit_test;
 
 
       `SVTEST(app0_pkt_loop_drops)
-         switch_config.drop_pkt_loop = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+         switch_config.drop_pkt_loop = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
          fork
             run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
@@ -203,19 +203,19 @@ module p2p_smartnic_322mhz_datapath_unit_test;
             //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
 
                // Configure igr_sw tdest registers (CMAC_0 -> APP_0, CMAC_1 -> APP_1).
-               env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
-               env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
+               env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+               env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
 
                // Configure app tdest_remap registers (to direct traffic to egr_port).
-               env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], egr_port );
-               env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], egr_port );
+               env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], egr_port );
+               env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], egr_port );
 
                for (int i = 0; i < 4; i++) begin  // reconfigure egr_port iteratively.
                   fork
                     // Stream 2x9100B packets through active APP interface.  Monitoring output.
                     run_pkt_stream ( .in_port(app_if), .out_port(egr_port),
-                                     .in_pcap  ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
-                                     .out_pcap ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
+                                     .in_pcap  ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
+                                     .out_pcap ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
                                      .tx_pkt_cnt(tx_pkt_cnt[app_if]), .tx_byte_cnt(tx_byte_cnt[app_if]),
                                      .rx_pkt_cnt(rx_pkt_cnt[egr_port]), .rx_byte_cnt(rx_byte_cnt[egr_port]),
                                      .num_pkts(2), .exp_pkt_cnt(2),
@@ -227,11 +227,11 @@ module p2p_smartnic_322mhz_datapath_unit_test;
                        case (app_if)
                           0 : begin
                                 while (count < 2) @(negedge tb.DUT.axis_app_to_core[0].tlast) count++;
-                                env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], ~egr_port );
+                                env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], ~egr_port );
                               end
                           1 : begin
                                 while (count < 2) @(negedge tb.DUT.axis_app_to_core[1].tlast) count++;
-                                env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], ~egr_port );
+                                env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], ~egr_port );
                               end
                        endcase
                      end

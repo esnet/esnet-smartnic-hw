@@ -1,6 +1,6 @@
 package p4_proc_pkg;
 
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
 
     // --------------------------------------------------------------
     // Parameters & Typedefs
@@ -23,7 +23,7 @@ package p4_proc_pkg;
 
     // Metadata format within p4_proc
     // (needs to be a superset of the fields described
-    //  in smartnic_322mhz_pkg::tuser_smartnic_meta_t)
+    //  in smartnic_pkg::tuser_smartnic_meta_t)
     typedef struct packed {
         timestamp_t  timestamp;
         logic [15:0] pid;

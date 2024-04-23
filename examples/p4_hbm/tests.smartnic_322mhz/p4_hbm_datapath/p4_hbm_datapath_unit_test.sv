@@ -18,7 +18,7 @@ module p4_hbm_datapath_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -34,7 +34,7 @@ module p4_hbm_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../../../../src/smartnic/tests/common/tasks.svh"
 
     //===================================
     // Build
@@ -73,13 +73,13 @@ module p4_hbm_datapath_unit_test;
         vitisnetp4_agent.init();
 
         // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[1], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[1], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to VitisNetP4 block.
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
 
         // Put AXI-S interfaces into quiescent state
         env.axis_driver[0].idle();

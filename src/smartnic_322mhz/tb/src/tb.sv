@@ -1,6 +1,6 @@
 module tb;
     import tb_pkg::*;
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
     import pcap_pkg::*;
 
     // (Local) parameters
@@ -78,7 +78,7 @@ module tb;
     logic        [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
-    smartnic_322mhz #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
+    smartnic #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
 
     //===================================
     // Local signals

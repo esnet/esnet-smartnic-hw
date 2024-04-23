@@ -1,7 +1,7 @@
 `define getbit(width, index, offset)    ((index)*(width) + (offset))
 `define getvec(width, index)            ((index)*(width)) +: (width)
 
-module smartnic_322mhz
+module smartnic
 #(
   parameter int NUM_CMAC = 2,
   parameter int MAX_PKT_LEN = 9100,
@@ -9,7 +9,7 @@ module smartnic_322mhz
   parameter bit INCLUDE_HBM0 = 1'b1,
   parameter bit INCLUDE_HBM1 = 1'b1
 `else
-  parameter bit INCLUDE_HBM0 = smartnic_322mhz_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
+  parameter bit INCLUDE_HBM0 = smartnic_app_pkg::INCLUDE_HBM, // Application-specific HBM controller include/exclude
                                      // HBM0 controller is connected to application logic
                                      // (can be excluded for non-HBM applications to optimize resources/complexity)
   parameter bit INCLUDE_HBM1 = 1'b0  // HBM1 is connected to platform logic
@@ -77,8 +77,8 @@ module smartnic_322mhz
   localparam int M = 2; // Number of vitisnetp4 processors.
 
   // Imports
-  import smartnic_322mhz_pkg::*;
-  import smartnic_322mhz_reg_pkg::*;
+  import smartnic_pkg::*;
+  import smartnic_reg_pkg::*;
   import axi4s_pkg::*;
 
    // Signals
@@ -101,7 +101,7 @@ module smartnic_322mhz
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
-  smartnic_322mhz_reset #(
+  smartnic_reset #(
     .NUM_CMAC (NUM_CMAC)
   ) reset_inst (
     .mod_rstn     (mod_rstn),
@@ -160,7 +160,7 @@ module smartnic_322mhz
    axi4l_intf   axil_to_drops_from_igr_sw          ();
    axi4l_intf   axil_to_drops_from_bypass          ();
 
-   smartnic_322mhz_reg_intf   smartnic_322mhz_regs ();
+   smartnic_reg_intf   smartnic_regs ();
 
 
    // Convert Xilinx AXI-L signals to interface format
@@ -192,10 +192,10 @@ module smartnic_322mhz
       .axi4l_if (s_axil_if)
    );
 
-   // smartnic_322mhz top-level decoder
-   smartnic_322mhz_decoder smartnic_322mhz_axil_decoder_0 (
+   // smartnic top-level decoder
+   smartnic_decoder smartnic_axil_decoder_0 (
       .axil_if                         (s_axil_if),
-      .smartnic_322mhz_regs_axil_if    (axil_to_regs),
+      .smartnic_regs_axil_if    (axil_to_regs),
       .endian_check_axil_if            (axil_to_endian_check),
       .probe_from_cmac_0_axil_if       (axil_to_probe_from_cmac[0]),
       .drops_ovfl_from_cmac_0_axil_if  (axil_to_ovfl_from_cmac[0]),
@@ -223,7 +223,7 @@ module smartnic_322mhz
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
-      .smartnic_322mhz_app_axil_if     (axil_to_app_decoder__demarc)
+      .smartnic_app_axil_if     (axil_to_app_decoder__demarc)
    );
 
    // AXI-L interface synchronizer
@@ -235,11 +235,11 @@ module smartnic_322mhz
       .axi4l_if_to_peripheral    ( axil_to_regs__core_clk )
    );
 
-   // smartnic_322mhz register block
-   smartnic_322mhz_reg_blk     smartnic_322mhz_reg_blk_0
+   // smartnic register block
+   smartnic_reg_blk     smartnic_reg_blk_0
    (
     .axil_if    (axil_to_regs__core_clk),
-    .reg_blk_if (smartnic_322mhz_regs)
+    .reg_blk_if (smartnic_regs)
    );
 
    // Endian check reg block
@@ -250,11 +250,11 @@ module smartnic_322mhz
    // Timestamp counter and access logic
    logic [63:0] timestamp;
 
-   smartnic_322mhz_timestamp  smartnic_322mhz_timestamp_0 (
+   smartnic_timestamp  smartnic_timestamp_0 (
      .clk               (core_clk),
      .rstn              (core_rstn),
      .timestamp         (timestamp),
-     .smartnic_322mhz_regs (smartnic_322mhz_regs)
+     .smartnic_regs (smartnic_regs)
    );
 
    // axis_to_host_tpause synchronizers
@@ -264,7 +264,7 @@ module smartnic_322mhz
       .clk_in  ( core_clk ),
       .rst_in  ( 1'b0 ),
       .rdy_in  ( ),
-      .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_0_tpause ),
+      .lvl_in  ( smartnic_regs.switch_config.axis_to_host_0_tpause ),
       .clk_out ( cmac_clk[0] ),
       .rst_out ( 1'b0 ),
       .lvl_out ( axis_to_host_tpause[0] )
@@ -274,7 +274,7 @@ module smartnic_322mhz
       .clk_in  ( core_clk ),
       .rst_in  ( 1'b0 ),
       .rdy_in  ( ),
-      .lvl_in  ( smartnic_322mhz_regs.switch_config.axis_to_host_1_tpause ),
+      .lvl_in  ( smartnic_regs.switch_config.axis_to_host_1_tpause ),
       .clk_out ( cmac_clk[1] ),
       .rst_out ( 1'b0 ),
       .lvl_out ( axis_to_host_tpause[1] )
@@ -342,9 +342,9 @@ module smartnic_322mhz
            axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if_from_app [16] ();
 
            // HBM controller
-           smartnic_322mhz_hbm #(
+           smartnic_hbm #(
              .HBM_STACK   ( 0 )
-           ) smartnic_322mhz_hbm_0 (
+           ) smartnic_hbm_0 (
              .clk         ( core_clk ),
              .rstn        ( core_rstn ),
              .hbm_ref_clk ( hbm_ref_clk ),
@@ -464,9 +464,9 @@ module smartnic_322mhz
            axi3_intf   #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_if[16] ();
 
            // HBM controller
-           smartnic_322mhz_hbm #(
+           smartnic_hbm #(
              .HBM_STACK   (1)
-           ) smartnic_322mhz_hbm_1 (
+           ) smartnic_hbm_1 (
              .clk         (core_clk),
              .rstn        (core_rstn),
              .hbm_ref_clk (hbm_ref_clk),
@@ -586,7 +586,7 @@ module smartnic_322mhz
       ) i_sync_bus_sampled__cmac_igr_sw_tid (
         .clk_in   ( core_clk ),
         .rst_in   ( 1'b0 ),
-        .data_in  ( smartnic_322mhz_regs.igr_sw_tid[i]),
+        .data_in  ( smartnic_regs.igr_sw_tid[i]),
         .clk_out  ( cmac_clk[i] ),
         .rst_out  ( 1'b0 ),
         .data_out ( cmac_igr_sw_tid[i] )
@@ -632,7 +632,7 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_cmac[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_pad[i]),
-        .flow_ctl_thresh (smartnic_322mhz_regs.egr_fc_thresh[i][15:0]),
+        .flow_ctl_thresh (smartnic_regs.egr_fc_thresh[i][15:0]),
         .flow_ctl       (egr_flow_ctl[i]),
         .axil_to_probe  (axil_to_probe_to_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_cmac[i]),
@@ -685,7 +685,7 @@ module smartnic_322mhz
         .axi4s_in       (axis_core_to_host[i]),
         .clk_out        (cmac_clk[i]),
         .axi4s_out      (axis_to_host[i]),
-        .flow_ctl_thresh (smartnic_322mhz_regs.egr_fc_thresh[2+i][15:0]),
+        .flow_ctl_thresh (smartnic_regs.egr_fc_thresh[2+i][15:0]),
         .flow_ctl       (egr_flow_ctl[2+i]),
         .axil_to_probe  (axil_to_probe_to_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_to_host[i]),
@@ -734,7 +734,7 @@ module smartnic_322mhz
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
         .tid      (host_igr_sw_tid[i]),
         .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
-        .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic_322mhz.
+        .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic.
 
         .axi4s_if (axis_from_host[i])
       );
@@ -745,7 +745,7 @@ module smartnic_322mhz
       ) i_sync_bus_sampled__host_igr_sw_tid (
         .clk_in   ( core_clk ),
         .rst_in   ( 1'b0 ),
-        .data_in  ( smartnic_322mhz_regs.igr_sw_tid[2+i]),
+        .data_in  ( smartnic_regs.igr_sw_tid[2+i]),
         .clk_out  ( cmac_clk[i] ),
         .rst_out  ( 1'b0 ),
         .data_out ( host_igr_sw_tid[i] )
@@ -778,16 +778,16 @@ module smartnic_322mhz
 
    always @(posedge core_clk) begin
       if (axis_cmac_to_core[0].tready && axis_cmac_to_core[0].tvalid && axis_cmac_to_core[0].sop)
-         igr_sw_tdest[0] <= smartnic_322mhz_regs.igr_sw_tdest[0];
+         igr_sw_tdest[0] <= smartnic_regs.igr_sw_tdest[0];
 
       if (axis_cmac_to_core[1].tready && axis_cmac_to_core[1].tvalid && axis_cmac_to_core[1].sop)
-         igr_sw_tdest[1] <= smartnic_322mhz_regs.igr_sw_tdest[1];
+         igr_sw_tdest[1] <= smartnic_regs.igr_sw_tdest[1];
 
       if (axis_host_to_core[0].tready && axis_host_to_core[0].tvalid && axis_host_to_core[0].sop)
-         igr_sw_tdest[2] <= smartnic_322mhz_regs.igr_sw_tdest[2];
+         igr_sw_tdest[2] <= smartnic_regs.igr_sw_tdest[2];
 
       if (axis_host_to_core[1].tready && axis_host_to_core[1].tvalid && axis_host_to_core[1].sop)
-         igr_sw_tdest[3] <= smartnic_322mhz_regs.igr_sw_tdest[3];
+         igr_sw_tdest[3] <= smartnic_regs.igr_sw_tdest[3];
    end
 
    logic [1:0] tdest_no_connect [2];
@@ -837,8 +837,8 @@ module smartnic_322mhz
    // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
 
    // tpause logic for ingress switch (for test purposes).
-   assign axis_core_to_bypass.tvalid = axis_core_to_bypass_tvalid && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
-   assign axis_core_to_bypass_tready = axis_core_to_bypass.tready && !smartnic_322mhz_regs.switch_config.igr_sw_tpause;
+   assign axis_core_to_bypass.tvalid = axis_core_to_bypass_tvalid && !smartnic_regs.switch_config.igr_sw_tpause;
+   assign axis_core_to_bypass_tready = axis_core_to_bypass.tready && !smartnic_regs.switch_config.igr_sw_tpause;
 
    // ingress switch drop pkt logic.  deletes packets that have tdest == 3 (igr_sw DROP code point).
    logic  igr_sw_drop_pkt;
@@ -888,10 +888,10 @@ module smartnic_322mhz
    always @(posedge core_clk) begin
       if (axis_from_bypass_fifo.tready && axis_from_bypass_fifo.tvalid && axis_from_bypass_fifo.sop) begin
          case (axis_from_bypass_fifo.tid)
-            CMAC_PORT0 : axis_to_bypass_drop.tdest <= smartnic_322mhz_regs.bypass_tdest[0];
-            CMAC_PORT1 : axis_to_bypass_drop.tdest <= smartnic_322mhz_regs.bypass_tdest[1];
-            HOST_PORT0 : axis_to_bypass_drop.tdest <= smartnic_322mhz_regs.bypass_tdest[2];
-            HOST_PORT1 : axis_to_bypass_drop.tdest <= smartnic_322mhz_regs.bypass_tdest[3];
+            CMAC_PORT0 : axis_to_bypass_drop.tdest <= smartnic_regs.bypass_tdest[0];
+            CMAC_PORT1 : axis_to_bypass_drop.tdest <= smartnic_regs.bypass_tdest[1];
+            HOST_PORT0 : axis_to_bypass_drop.tdest <= smartnic_regs.bypass_tdest[2];
+            HOST_PORT1 : axis_to_bypass_drop.tdest <= smartnic_regs.bypass_tdest[3];
          endcase
       end
    end
@@ -899,7 +899,7 @@ module smartnic_322mhz
    // bypass packet drop logic.  deletes packets that have tdest == tid (to prevent switching loops).
    logic  bypass_drop_pkt;
 
-   assign bypass_drop_pkt = smartnic_322mhz_regs.switch_config.drop_pkt_loop &&
+   assign bypass_drop_pkt = smartnic_regs.switch_config.drop_pkt_loop &&
                             axis_to_bypass_drop.tvalid && axis_to_bypass_drop.sop &&
                             axis_to_bypass_drop.tdest == axis_to_bypass_drop.tid;
 
@@ -950,10 +950,10 @@ module smartnic_322mhz
    always @(posedge core_clk) begin
       if (__axis_app_to_core[0].tready && __axis_app_to_core[0].tvalid && __axis_app_to_core[0].sop) begin
          case (tdest_remap_mux_select[0])
-            CMAC_PORT0 : axis_app_to_core_tdest[0] = smartnic_322mhz_regs.app_0_tdest_remap[0];
-            CMAC_PORT1 : axis_app_to_core_tdest[0] = smartnic_322mhz_regs.app_0_tdest_remap[1];
-            HOST_PORT0 : axis_app_to_core_tdest[0] = smartnic_322mhz_regs.app_0_tdest_remap[2];
-            HOST_PORT1 : axis_app_to_core_tdest[0] = smartnic_322mhz_regs.app_0_tdest_remap[3];
+            CMAC_PORT0 : axis_app_to_core_tdest[0] = smartnic_regs.app_0_tdest_remap[0];
+            CMAC_PORT1 : axis_app_to_core_tdest[0] = smartnic_regs.app_0_tdest_remap[1];
+            HOST_PORT0 : axis_app_to_core_tdest[0] = smartnic_regs.app_0_tdest_remap[2];
+            HOST_PORT1 : axis_app_to_core_tdest[0] = smartnic_regs.app_0_tdest_remap[3];
          endcase
       end
    end
@@ -968,10 +968,10 @@ module smartnic_322mhz
    always @(posedge core_clk) begin
       if (__axis_app_to_core[1].tready && __axis_app_to_core[1].tvalid && __axis_app_to_core[1].sop) begin
          case (tdest_remap_mux_select[1])
-            CMAC_PORT0 : axis_app_to_core_tdest[1] = smartnic_322mhz_regs.app_1_tdest_remap[0];
-            CMAC_PORT1 : axis_app_to_core_tdest[1] = smartnic_322mhz_regs.app_1_tdest_remap[1];
-            HOST_PORT0 : axis_app_to_core_tdest[1] = smartnic_322mhz_regs.app_1_tdest_remap[2];
-            HOST_PORT1 : axis_app_to_core_tdest[1] = smartnic_322mhz_regs.app_1_tdest_remap[3];
+            CMAC_PORT0 : axis_app_to_core_tdest[1] = smartnic_regs.app_1_tdest_remap[0];
+            CMAC_PORT1 : axis_app_to_core_tdest[1] = smartnic_regs.app_1_tdest_remap[1];
+            HOST_PORT0 : axis_app_to_core_tdest[1] = smartnic_regs.app_1_tdest_remap[2];
+            HOST_PORT1 : axis_app_to_core_tdest[1] = smartnic_regs.app_1_tdest_remap[3];
          endcase
       end
    end
@@ -1200,14 +1200,14 @@ module smartnic_322mhz
 
 
    // Provide dedicated AXI-L interfaces for app and sdnet control
-   smartnic_322mhz_app_sdnet_decoder smartnic_322mhz_app_sdnet_decoder (
+   smartnic_app_sdnet_decoder smartnic_app_sdnet_decoder (
        .axil_if           (axil_to_app_decoder),
        .app_axil_if       (axil_to_app),
        .sdnet_igr_axil_if (axil_to_sdnet[0]),
        .sdnet_egr_axil_if (axil_to_sdnet[1])
    );
 
-   smartnic_322mhz_app smartnic_322mhz_app
+   smartnic_app smartnic_app
    (
     .core_clk     (core_clk),
     .core_rstn    (core_rstn),
@@ -1360,4 +1360,4 @@ module smartnic_322mhz
       .axi4s_if  (axis_core_to_app[1])
    );
 
-endmodule: smartnic_322mhz
+endmodule: smartnic

@@ -1,4 +1,4 @@
-name: smartnic_322mhz_app
+name: smartnic_app
 
 decoders:
   p4_and_verilog_decoder: &p4_and_verilog_decoder

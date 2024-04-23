@@ -1,14 +1,14 @@
-name: smartnic_322mhz_app
+name: smartnic_app
 
 blocks:
-  smartnic_322mhz_app: &smartnic_322mhz_app
-    name: smartnic_322mhz_app
+  smartnic_app: &smartnic_app
+    name: smartnic_app
     info: |
       This block is a placeholder for the registers in the smartnic application core.
     regs: []
 
 interfaces:
-  - block: *smartnic_322mhz_app
+  - block: *smartnic_app
     address: 0x00000
     width: 18
-    name: smartnic_322mhz_app
+    name: smartnic_app

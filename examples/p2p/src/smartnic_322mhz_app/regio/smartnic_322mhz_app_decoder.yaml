@@ -1,4 +1,4 @@
-name: smartnic_322mhz_app
+name: smartnic_app
 
 decoders:
   p2p_decoder: &p2p_decoder

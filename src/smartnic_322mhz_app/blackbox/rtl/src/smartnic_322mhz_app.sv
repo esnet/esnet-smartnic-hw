@@ -1,5 +1,5 @@
-// smartnic_322mhz_app (empty) stub module. Used for platform level tests.
-(*black_box*) module smartnic_322mhz_app
+// smartnic_app (empty) stub module. Used for platform level tests.
+(*black_box*) module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16,
     parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
@@ -143,4 +143,4 @@
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
 
-endmodule: smartnic_322mhz_app
+endmodule: smartnic_app

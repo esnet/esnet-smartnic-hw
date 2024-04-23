@@ -1,5 +1,5 @@
 module p4_proc
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
     import p4_proc_pkg::*;
 #(
     parameter int   N = 2  // Number of processor ports.

@@ -1,4 +1,4 @@
-name: smartnic_322mhz_app_sdnet
+name: smartnic_app_sdnet
 
 blocks:
   sdnet: &sdnet
@@ -9,11 +9,11 @@ blocks:
     regs: []
 
 decoders:
-  smartnic_322mhz_app_decoder: &smartnic_322mhz_app_decoder
-    !include ../src/smartnic_322mhz/regio/smartnic_322mhz_app_decoder.yaml
+  smartnic_app_decoder: &smartnic_app_decoder
+    !include ../src/smartnic/regio/smartnic_app_decoder.yaml
 
 interfaces:
-  - decoder: *smartnic_322mhz_app_decoder
+  - decoder: *smartnic_app_decoder
     address: 0x00000
     width: 18
     name: app

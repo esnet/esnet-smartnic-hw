@@ -2,7 +2,7 @@ name: p4_app
 
 blocks:
   p4_app: &p4_app
-    !include ../src/smartnic_322mhz_app/p4_only/regio/p4_app.yaml
+    !include ../src/smartnic_app/p4_only/regio/p4_app.yaml
 
 decoders:
   p4_proc_decoder: &p4_proc_decoder

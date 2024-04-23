@@ -1,4 +1,4 @@
-package smartnic_322mhz_pkg;
+package smartnic_pkg;
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
@@ -45,4 +45,4 @@ package smartnic_322mhz_pkg;
         logic        hdr_tlast;
     } tuser_smartnic_meta_t;
 
-endpackage : smartnic_322mhz_pkg
+endpackage : smartnic_pkg

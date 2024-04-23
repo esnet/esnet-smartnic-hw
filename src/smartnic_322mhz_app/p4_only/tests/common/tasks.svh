@@ -1,7 +1,7 @@
 //=======================================================================
 // Tasks
 //=======================================================================
-import smartnic_322mhz_pkg::*;
+import smartnic_pkg::*;
 
 // Execute block reset (dataplane + control plane)
 task reset();

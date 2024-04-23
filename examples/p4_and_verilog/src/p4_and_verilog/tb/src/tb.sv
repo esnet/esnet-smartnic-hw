@@ -1,6 +1,6 @@
 module tb;
     import tb_pkg::*;
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
 
     // (Local) parameters
     localparam int AXIS_DATA_WID = 512;

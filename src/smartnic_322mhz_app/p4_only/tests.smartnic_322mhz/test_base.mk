@@ -21,7 +21,7 @@ waves ?= OFF
 # Top
 #   Specify top module(s) for elaboration
 # ----------------------------------------------------
-TOP = $(SVUNIT_TOP) smartnic_322mhz__tb.tb
+TOP = $(SVUNIT_TOP) smartnic__tb.tb
 
 # ----------------------------------------------------
 # Sources
@@ -39,12 +39,12 @@ SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_322mhz_app.p4_only.rtl \
+    smartnic_app.p4_only.rtl \
     p4_proc.regio.rtl \
     p4_proc.verif \
     vitisnetp4.verif \
-    smartnic_322mhz.rtl \
-    smartnic_322mhz.tb \
+    smartnic.rtl \
+    smartnic.tb \
     std.verif@common \
     axi4l.rtl@common \
     axi4s.rtl@common \

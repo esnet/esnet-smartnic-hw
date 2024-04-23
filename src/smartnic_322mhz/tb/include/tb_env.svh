@@ -1,4 +1,4 @@
-import smartnic_322mhz_pkg::*;
+import smartnic_pkg::*;
 
 class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     // Parameters
@@ -46,7 +46,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     axi4l_reg_agent #() reg_agent;
 
     // Register block agents
-    smartnic_322mhz_reg_blk_agent #() smartnic_322mhz_reg_blk_agent;
+    smartnic_reg_blk_agent #() smartnic_reg_blk_agent;
     reg_endian_check_reg_blk_agent #() reg_endian_check_reg_blk_agent;
 
     axi4s_probe_reg_blk_agent #() probe_from_cmac_0_reg_blk_agent;
@@ -89,7 +89,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         axis_sample = new(.BIGENDIAN(bigendian));
         reg_agent = new("axi4l_reg_agent");
         ts_agent = new;
-        smartnic_322mhz_reg_blk_agent = new("smartnic_322mhz_reg_blk", 'h0000);
+        smartnic_reg_blk_agent = new("smartnic_reg_blk", 'h0000);
         reg_endian_check_reg_blk_agent = new("reg_endian_check_reg_blk", 'h0400);
 
         probe_from_cmac_0_reg_blk_agent  = new("probe_from_cmac_0_reg_blk",    'h8000);
@@ -125,7 +125,7 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         axis_sample.axis_vif = axis_sample_vif;
         ts_agent.timestamp_vif = timestamp_vif;
         reg_agent.axil_vif = axil_vif;
-        smartnic_322mhz_reg_blk_agent.reg_agent = reg_agent;
+        smartnic_reg_blk_agent.reg_agent = reg_agent;
         reg_endian_check_reg_blk_agent.reg_agent = reg_agent;
 
         probe_from_cmac_0_reg_blk_agent.reg_agent  = reg_agent;

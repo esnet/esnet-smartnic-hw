@@ -1,7 +1,7 @@
 package tb_pkg;
     import axi4l_verif_pkg::*;
     import axi4s_verif_pkg::*;
-    import smartnic_322mhz_reg_verif_pkg::*;
+    import smartnic_reg_verif_pkg::*;
     import axi4s_reg_verif_pkg::*;
     import reg_endian_reg_verif_pkg::*;
     import xilinx_hbm_verif_pkg::*;

@@ -87,7 +87,7 @@ module smartnic_250mhz_ctrl_unit_test;
     `SVTEST(reset)
     `SVTEST_END
 
-    // Test read access to smartnic_322mhz.status register
+    // Test read access to smartnic.status register
     // (currently a read-only register containing 32'hC0BEBEEF)
     `SVTEST(scratchpad)
         logic [31:0] exp_data;
@@ -97,7 +97,7 @@ module smartnic_250mhz_ctrl_unit_test;
         void'(std::randomize(exp_data));
         env.smartnic_250mhz_reg_blk_agent.write_scratchpad(exp_data);
 
-        // Read smartnic_322mhz status register
+        // Read smartnic status register
         env.smartnic_250mhz_reg_blk_agent.read_scratchpad(got_data);
         `FAIL_UNLESS_EQUAL(got_data, exp_data);
     `SVTEST_END

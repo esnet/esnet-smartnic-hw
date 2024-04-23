@@ -1,4 +1,4 @@
-module smartnic_322mhz_app
+module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16,
     parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
@@ -141,7 +141,7 @@ module smartnic_322mhz_app
     input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
     output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
@@ -368,4 +368,4 @@ module smartnic_322mhz_app
         end : g__axi_if_tieoff
     endgenerate
 
-endmodule: smartnic_322mhz_app
+endmodule: smartnic_app

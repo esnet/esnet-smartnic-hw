@@ -21,7 +21,7 @@ module p4_app_datapath_unit_test
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -50,7 +50,7 @@ module p4_app_datapath_unit_test
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic_322mhz/tests/common/tasks.svh"
+    `include "../../../../../src/smartnic/tests/common/tasks.svh"
     `include "../common/tasks.svh"
 
     //===================================
@@ -98,7 +98,7 @@ module p4_app_datapath_unit_test
 
     `SVUNIT_TESTS_BEGIN
 
-       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata through datapath to smartnic_322mhz ports.
+       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata through datapath to smartnic ports.
            port_t  src_port, dst_port;
 
            fork
@@ -106,24 +106,24 @@ module p4_app_datapath_unit_test
               begin
                  // relabel source traffic from src_port=HOST_0. direct traffic to dst_port=HOST_0.
                  src_port = 2'h2; dst_port = 2'h2;
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
                  run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
 
                  // redirect traffic to dst_port=HOST_1.
                  dst_port = 2'h3;
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
                  run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
 
                  // relabel source traffic from src_port=HOST_1.
                  src_port = 2'h3;
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
                  run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
 
                  // redirect traffic to dst_port=HOST_0.
                  dst_port = 2'h2;
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
                  run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
               end
 
@@ -159,7 +159,7 @@ module p4_app_datapath_unit_test
        `SVTEST_END
 
        `SVTEST(test_traffic_mux)
-           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
            //write_p4_tables ( .testdir("test-fwd-p1") );
            fork
               // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).

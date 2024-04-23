@@ -5,10 +5,10 @@
 //===================================
 `define SVUNIT_TIMEOUT 500us
 
-module smartnic_322mhz_datapath_unit_test;
+module smartnic_datapath_unit_test;
 
     // Testcase name
-    string name = "smartnic_322mhz_datapath_ut";
+    string name = "smartnic_datapath_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -16,7 +16,7 @@ module smartnic_322mhz_datapath_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -79,12 +79,12 @@ module smartnic_322mhz_datapath_unit_test;
         reset(); // Issue reset (both datapath and management domains)
 
         // write hdr_length register to enable split-join logic.
-        //env.smartnic_322mhz_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
+        //env.smartnic_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
 
         // initialize switch configuration registers.
         init_sw_config_regs;
 
-        switch_config = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+        switch_config = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
         // default variable configuration
          in_pcap[0] = "../../common/pcap/10xrandom_pkts.pcap";
@@ -183,10 +183,10 @@ module smartnic_322mhz_datapath_unit_test;
         out_port_map = {2'h0, 2'h3, 2'h2, 2'h1};
 
         // program tid regs instead of bypass map.  uses port_map configuration from setup i.e. {2'h3, 2'h2, 2'h1, 2'h0}
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[0], 2'h1 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[1], 2'h2 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[2], 2'h3 );
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TID[3], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], 2'h1 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[1], 2'h2 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[2], 2'h3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[3], 2'h0 );
 
         latch_probe_counters;
 
@@ -207,7 +207,7 @@ module smartnic_322mhz_datapath_unit_test;
           igr_sw_tdest   = 2; // select BYPASS interface to start.
           enable_monitor = 1; // enable output monitor when BYPASS is selected.  disable for APP0 interface (which sinks traffic).
 
-          env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+          env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
 
           for (int i = 0; i < 3; i++) begin  // reconfigure igr_sw_tdest iteratively.
              fork
@@ -226,7 +226,7 @@ module smartnic_322mhz_datapath_unit_test;
                  while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
                  igr_sw_tdest =   (igr_sw_tdest == 2) ? 0 : 2;  // alternate directing traffic to bypass and app0 interfaces.
                  enable_monitor = (igr_sw_tdest == 2) ? 1 : 0;  // disable output monitor when traffic flows to app0 interface.
-                 env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
                end
              join
           end
@@ -242,17 +242,17 @@ module smartnic_322mhz_datapath_unit_test;
         //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
 
            // Configure igr_sw tdest register (CMAC_0 -> BYPASS).
-           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h2 );
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h2 );
 
            // Configure bypass tdest register (to direct traffic to egr_port).
-           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], egr_port );
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], egr_port );
 
            for (int i = 0; i < 4; i++) begin  // reconfigure egr_port iteratively.
              fork
                 // Stream 2x9100B packets through BYPASS interface.  Monitoring output.
                 run_pkt_stream ( .in_port(0), .out_port(egr_port),
-                                 .in_pcap  ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
-                                 .out_pcap ("../../../../../src/smartnic_322mhz/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .in_pcap  ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .out_pcap ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
                                  .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
                                  .rx_pkt_cnt(rx_pkt_cnt[egr_port]), .rx_byte_cnt(rx_byte_cnt[egr_port]),
                                  .num_pkts(2), .exp_pkt_cnt(2),
@@ -262,7 +262,7 @@ module smartnic_322mhz_datapath_unit_test;
                 begin
                   count = 0;
                   while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
-                  env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port );
+                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port );
                 end
              join
 
@@ -284,8 +284,8 @@ module smartnic_322mhz_datapath_unit_test;
            exp_pkts[port] = (pkt_len[port]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[port]/64.0)+1;
 
            // set flow control threshold.
-           env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_EGR_FC_THRESH[0] + 4*port, 32'd1020);
-          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[0] + 4*port, 32'd1020);
+          `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[port] == 1'b0 );
 
            fork
               run_pkt_stream ( .in_port(port), .out_port(out_port_map[port]), .in_pcap(in_pcap[port]), .out_pcap(out_pcap[port]),
@@ -294,10 +294,10 @@ module smartnic_322mhz_datapath_unit_test;
                                .exp_pkt_cnt(exp_pkts[port]),
                                .init_pause(50000) );
 
-              #(50000) `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b1 );
+              #(50000) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[port] == 1'b1 );
            join
 
-          `FAIL_UNLESS( tb.DUT.smartnic_322mhz_app.egr_flow_ctl[port] == 1'b0 );
+          `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[port] == 1'b0 );
 
            check_stream_probes (
               .in_port         (port),
@@ -327,7 +327,7 @@ module smartnic_322mhz_datapath_unit_test;
            exp_pkts[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
-        switch_config.igr_sw_tpause = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+        switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
    
         fork
            run_stream_test();
@@ -335,7 +335,7 @@ module smartnic_322mhz_datapath_unit_test;
            begin
               #(50us);
               // release backpressure on ingress ports
-              switch_config.igr_sw_tpause = 0; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+              switch_config.igr_sw_tpause = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
            end
 	join
 
@@ -376,7 +376,7 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(bypass_drops)
-        switch_config.drop_pkt_loop = 1; env.smartnic_322mhz_reg_blk_agent.write_switch_config(switch_config);
+        switch_config.drop_pkt_loop = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
         fork
            run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
@@ -399,7 +399,7 @@ module smartnic_322mhz_datapath_unit_test;
 
 
     `SVTEST(igr_sw_drops)
-        env.reg_agent.write_reg( smartnic_322mhz_reg_pkg::OFFSET_IGR_SW_TDEST[0], 3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 3 );
 
         fork
            run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
