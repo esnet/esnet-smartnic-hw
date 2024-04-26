@@ -25,7 +25,7 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     p4_and_verilog.regio.rtl \
     vitisnetp4.ip \
-    smartnic_322mhz.pkg@smartnic \
+    smartnic.pkg@smartnic \
     util.rtl@common@smartnic \
     axi4l.rtl@common@smartnic \
     axi4s.rtl@common@smartnic

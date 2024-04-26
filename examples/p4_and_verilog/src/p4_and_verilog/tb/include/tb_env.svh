@@ -1,4 +1,4 @@
-import smartnic_322mhz_pkg::*;
+import smartnic_pkg::*;
 
 class tb_env extends std_verif_pkg::base;
 
@@ -22,7 +22,7 @@ class tb_env extends std_verif_pkg::base;
     virtual axi4l_intf axil_vif;
 
     // SDnet AXI-L management interface
-    virtual axi4l_intf axil_sdnet_vif;
+    virtual axi4l_intf axil_vitisnetp4_vif;
 
     // AXI-S input interface
     virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif;
@@ -50,7 +50,7 @@ class tb_env extends std_verif_pkg::base;
     axi4l_reg_agent #() reg_agent;
 
     // SDnet AXI-L agent
-    axi4l_reg_agent #() sdnet_reg_agent;
+    axi4l_reg_agent #() vitisnetp4_reg_agent;
 
     // Register agents
     p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
@@ -71,7 +71,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor         = new(.BIGENDIAN(bigendian));
         axis_to_adpt_monitor = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
-        sdnet_reg_agent      = new("axi4l_reg_agent");
+        vitisnetp4_reg_agent      = new("axi4l_reg_agent");
         p4_and_verilog_reg_agent = new("p4_and_verilog_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
@@ -82,18 +82,18 @@ class tb_env extends std_verif_pkg::base;
         axis_to_adpt_monitor.axis_vif = axis_to_adpt_vif;
         ts_agent.timestamp_vif        = timestamp_vif;
         reg_agent.axil_vif            = axil_vif;
-        sdnet_reg_agent.axil_vif      = axil_sdnet_vif;
+        vitisnetp4_reg_agent.axil_vif      = axil_vitisnetp4_vif;
     endfunction
 
     task reset();
         reg_agent.idle();
-        sdnet_reg_agent.idle();
+        vitisnetp4_reg_agent.idle();
         axis_driver.idle();
         axis_monitor.idle();
         axis_to_adpt_monitor.idle();
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
-        sdnet_reg_agent._wait(32);
+        vitisnetp4_reg_agent._wait(32);
     endtask
 
     task init_timestamp();
@@ -165,20 +165,20 @@ class tb_env extends std_verif_pkg::base;
     endtask
 
     // SDnet Tasks
-    task sdnet_read(
+    task vitisnetp4_read(
             input  bit [31:0] addr,
             output bit [31:0] data
         );
-        sdnet_reg_agent.set_rd_timeout(128);
-        sdnet_reg_agent.read_reg(addr, data);
+        vitisnetp4_reg_agent.set_rd_timeout(128);
+        vitisnetp4_reg_agent.read_reg(addr, data);
     endtask
 
-    task sdnet_write(
+    task vitisnetp4_write(
             input  bit [31:0] addr,
             input  bit [31:0] data
         );
-        sdnet_reg_agent.set_wr_timeout(128);
-        sdnet_reg_agent.write_reg(addr, data);
+        vitisnetp4_reg_agent.set_wr_timeout(128);
+        vitisnetp4_reg_agent.write_reg(addr, data);
     endtask
 
 endclass : tb_env

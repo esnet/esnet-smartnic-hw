@@ -45,14 +45,14 @@ module {{ props.name }}_wrapper
     {{ props.name }}_extern smartnic_extern_0 (
       .clk                     ( core_clk ),
       .rstn                    ( core_rstn ),
-      .extern_from_sdnet       ( user_extern_out ),
-      .extern_from_sdnet_valid ( user_extern_out_valid ),
-      .extern_to_sdnet         ( user_extern_in ),
-      .extern_to_sdnet_valid   ( user_extern_in_valid )
+      .extern_from_vitisnetp4       ( user_extern_out ),
+      .extern_from_vitisnetp4_valid ( user_extern_out_valid ),
+      .extern_to_vitisnetp4         ( user_extern_in ),
+      .extern_to_vitisnetp4_valid   ( user_extern_in_valid )
     );
     {% endif %}
 
-    // --- sdnet instance ---
+    // --- vitisnetp4 instance ---
     //   Generated using Xilinx VitisNet P4 from P4 file:
     //   {{ props.p4_file }}
     //

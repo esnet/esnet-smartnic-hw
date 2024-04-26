@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Quick script to generate a metadata file for p4bm-sdnet.
+# Quick script to generate a metadata file for p4bm-vitisnetp4.
 #
 # Invoke as:
 #   % ./genmeta.sh 100 > packets_in.meta

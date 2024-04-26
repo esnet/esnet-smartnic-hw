@@ -1,13 +1,13 @@
 package p4_proc_pkg;
 
-    import smartnic_322mhz_pkg::*;
+    import smartnic_pkg::*;
 
     // --------------------------------------------------------------
     // Parameters & Typedefs
     // --------------------------------------------------------------
     // P4 metadata
     // - this should match the metadata defined by the p4 program,
-    //   i.e. in sdnet_0_pkg.sv
+    //   i.e. in vitisnetp4_0_pkg.sv
     typedef struct packed {
         logic [63:0] timestamp_ns;
         logic [15:0] pid;
@@ -23,7 +23,7 @@ package p4_proc_pkg;
 
     // Metadata format within p4_proc
     // (needs to be a superset of the fields described
-    //  in smartnic_322mhz_pkg::tuser_smartnic_meta_t)
+    //  in smartnic_pkg::tuser_smartnic_meta_t)
     typedef struct packed {
         timestamp_t  timestamp;
         logic [15:0] pid;

@@ -24,7 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     p4_proc.regio.rtl \
-    smartnic_322mhz.pkg \
+    smartnic.pkg \
     util.rtl@common \
     arb.rtl@common \
     axi4l.rtl@common \

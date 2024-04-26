@@ -1,0 +1,14 @@
+blocks:
+  smartnic_app: &id001
+    info: 'This block is a placeholder for the registers in the smartnic application
+      core.
+
+      '
+    name: smartnic_app
+    regs: []
+interfaces:
+- address: 0
+  block: *id001
+  name: smartnic_app
+  width: 18
+name: smartnic_app

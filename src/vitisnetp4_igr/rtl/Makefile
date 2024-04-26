@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # VitisNetP4 wrapper config
 # -----------------------------------------------
-VITISNETP4_IP_NAME = sdnet_igr
+VITISNETP4_IP_NAME = vitisnetp4_igr
 VITISNETP4_XCI_FILE = $(call get_component_out_path_from_ref,vitisnetp4_igr.ip,$(OUTPUT_ROOT),$(IP_OUT_SUBDIR))/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME).xci
 VITISNETP4_WRAPPER_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_wrapper.sv
 VITISNETP4_APP_PKG_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_app_pkg.sv

@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # VitisNetP4 IP config
 # -----------------------------------------------
-VITISNETP4_IP_NAME = sdnet_igr
+VITISNETP4_IP_NAME = vitisnetp4_igr
 
 P4_IGR_FILE ?= $(SMARTNIC_ROOT)/src/vitisnetp4/p4/p4_app.p4
 P4_FILE = $(P4_IGR_FILE)

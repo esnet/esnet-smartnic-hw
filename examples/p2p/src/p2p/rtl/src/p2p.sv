@@ -5,7 +5,7 @@ module p2p #(
    input logic [63:0] timestamp,
 
    axi4l_intf.peripheral axil_if,
-   axi4l_intf.peripheral axil_to_sdnet,
+   axi4l_intf.peripheral axil_to_vitisnetp4,
 
    axi4s_intf.tx axis_to_switch_0,
    axi4s_intf.rx axis_from_switch_0,
@@ -18,11 +18,11 @@ module p2p #(
    // ----------------------------------------------------------------
 
    axi4l_intf  axil_to_p2p_regs ();
-   axi4l_intf  axil_to_sdnet_regs ();
-   axi4l_intf  axil_to_sdnet_regs__core_clk ();
+   axi4l_intf  axil_to_vitisnetp4_regs ();
+   axi4l_intf  axil_to_vitisnetp4_regs__core_clk ();
    
    p2p_reg_intf  p2p_regs();
-   p2p_reg_intf  sdnet_regs();
+   p2p_reg_intf  vitisnetp4_regs();
 
    logic tpause;
 
@@ -32,10 +32,10 @@ module p2p #(
       .p2p_axil_if   (axil_to_p2p_regs)
    );
 
-   // sdnet register decoder
-   p2p_decoder sdnet_decoder (
-      .axil_if       (axil_to_sdnet),
-      .p2p_axil_if   (axil_to_sdnet_regs)
+   // vitisnetp4 register decoder
+   p2p_decoder vitisnetp4_decoder (
+      .axil_if       (axil_to_vitisnetp4),
+      .p2p_axil_if   (axil_to_vitisnetp4_regs)
    );
    
    // p2p register block
@@ -58,17 +58,17 @@ module p2p #(
        .lvl_out (tpause)
    );
 
-   // sdnet register block
-   axi4l_intf_cdc axil_to_sdnet_cdc (
-      .axi4l_if_from_controller  ( axil_to_sdnet_regs ),
+   // vitisnetp4 register block
+   axi4l_intf_cdc axil_to_vitisnetp4_cdc (
+      .axi4l_if_from_controller  ( axil_to_vitisnetp4_regs ),
       .clk_to_peripheral         ( core_clk ),
-      .axi4l_if_to_peripheral    ( axil_to_sdnet_regs__core_clk )
+      .axi4l_if_to_peripheral    ( axil_to_vitisnetp4_regs__core_clk )
    );
 
-   p2p_reg_blk sdnet_reg_blk 
+   p2p_reg_blk vitisnetp4_reg_blk 
    (
-    .axil_if    (axil_to_sdnet_regs__core_clk),
-    .reg_blk_if (sdnet_regs)
+    .axil_if    (axil_to_vitisnetp4_regs__core_clk),
+    .reg_blk_if (vitisnetp4_regs)
    );
 
    // ----------------------------------------------------------------
@@ -78,15 +78,15 @@ module p2p #(
    logic [63:0] timestamp_latch;
    logic        timestamp_rd_latch_wr_evt_d1;
 
-   always @(posedge core_clk) if (sdnet_regs.timestamp_rd_latch_wr_evt) timestamp_latch <= timestamp;
+   always @(posedge core_clk) if (vitisnetp4_regs.timestamp_rd_latch_wr_evt) timestamp_latch <= timestamp;
 
-   assign sdnet_regs.status_upper_nxt = timestamp_latch[63:32];
-   assign sdnet_regs.status_lower_nxt = timestamp_latch[31:0];
+   assign vitisnetp4_regs.status_upper_nxt = timestamp_latch[63:32];
+   assign vitisnetp4_regs.status_lower_nxt = timestamp_latch[31:0];
 
-   always @(posedge core_clk) timestamp_rd_latch_wr_evt_d1  <= sdnet_regs.timestamp_rd_latch_wr_evt;
+   always @(posedge core_clk) timestamp_rd_latch_wr_evt_d1  <= vitisnetp4_regs.timestamp_rd_latch_wr_evt;
 
-   assign sdnet_regs.status_upper_nxt_v = timestamp_rd_latch_wr_evt_d1;
-   assign sdnet_regs.status_lower_nxt_v = timestamp_rd_latch_wr_evt_d1;
+   assign vitisnetp4_regs.status_upper_nxt_v = timestamp_rd_latch_wr_evt_d1;
+   assign vitisnetp4_regs.status_lower_nxt_v = timestamp_rd_latch_wr_evt_d1;
 
    // ----------------------------------------------------------------
    //  Datpath pass-through connections (hard-wired bypass)

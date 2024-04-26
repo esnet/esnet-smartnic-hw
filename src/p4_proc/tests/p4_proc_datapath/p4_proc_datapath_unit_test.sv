@@ -20,7 +20,7 @@ module p4_proc_datapath_unit_test
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_322mhz
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
