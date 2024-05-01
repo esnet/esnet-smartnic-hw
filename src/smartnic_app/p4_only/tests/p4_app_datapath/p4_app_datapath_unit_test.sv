@@ -7,10 +7,10 @@ import tb_pkg::*;
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_app_datapath_unit_test;
+module p4_only_datapath_unit_test;
 
     // Testcase name
-    string name = "p4_app_datapath_ut";
+    string name = "p4_only_datapath_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;

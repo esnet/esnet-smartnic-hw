@@ -49,7 +49,7 @@ class tb_env extends std_verif_pkg::base;
     axi4l_reg_agent #() vitisnetp4_reg_agent;
 
     // Register agents
-    p4_app_reg_agent p4_app_reg_agent;
+    p4_only_reg_agent p4_only_reg_agent;
 
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
@@ -69,7 +69,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor [1]     = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
         vitisnetp4_reg_agent      = new("axi4l_reg_agent");
-        p4_app_reg_agent     = new("p4_app_reg_agent", reg_agent, 'h0000);
+        p4_only_reg_agent     = new("p4_only_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
 
