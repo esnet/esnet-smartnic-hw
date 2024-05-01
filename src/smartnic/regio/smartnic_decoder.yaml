@@ -9,8 +9,8 @@ blocks:
     !include src/axi4s/regio/axi4s_probe.yaml 
 
 decoders:
-  smartnic_app_decoder: &smartnic_app_decoder
-    !include ../src/smartnic/regio/smartnic_app_vitisnetp4_decoder.yaml
+  smartnic_to_app_decoder: &smartnic_to_app_decoder
+    !include ../src/smartnic/regio/smartnic_to_app_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
   xilinx_hbm_0: &xilinx_hbm_0
@@ -160,7 +160,7 @@ interfaces:
     width: 12
     name: hbm_1
 
-  - decoder: *smartnic_app_decoder
+  - decoder: *smartnic_to_app_decoder
     address: 0x80000
     width: 19
-    name: smartnic_app
+    name: smartnic_to_app
