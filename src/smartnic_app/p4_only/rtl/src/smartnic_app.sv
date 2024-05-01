@@ -9,7 +9,7 @@ module smartnic_app
     input  logic         axil_aclk,
     input  logic [63:0]  timestamp,
 
-    // AXI-L control interface
+    // P4 AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
     input  logic         axil_aresetn,
@@ -38,34 +38,34 @@ module smartnic_app
     output logic [31:0]  axil_rdata,
     output logic [1:0]   axil_rresp,
 
-    // (SDNet) AXI-L control interface
+    // App AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_aresetn,
+    input  logic         app_axil_aresetn,
     // -- Write address
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_awvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_awready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_awaddr,
-    input  logic [(M*  3)-1:0] axil_vitisnetp4_awprot,
+    input  logic         app_axil_awvalid,
+    output logic         app_axil_awready,
+    input  logic [31:0]  app_axil_awaddr,
+    input  logic [2:0]   app_axil_awprot,
     // -- Write data
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_wvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_wready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_wdata,
-    input  logic [(M*  4)-1:0] axil_vitisnetp4_wstrb,
+    input  logic         app_axil_wvalid,
+    output logic         app_axil_wready,
+    input  logic [31:0]  app_axil_wdata,
+    input  logic [3:0]   app_axil_wstrb,
     // -- Write response
-    output logic [(M*  1)-1:0] axil_vitisnetp4_bvalid,
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_bready,
-    output logic [(M*  2)-1:0] axil_vitisnetp4_bresp,
+    output logic         app_axil_bvalid,
+    input  logic         app_axil_bready,
+    output logic [1:0]   app_axil_bresp,
     // -- Read address
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_arvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_arready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_araddr,
-    input  logic [(M*  3)-1:0] axil_vitisnetp4_arprot,
+    input  logic         app_axil_arvalid,
+    output logic         app_axil_arready,
+    input  logic [31:0]  app_axil_araddr,
+    input  logic [2:0]   app_axil_arprot,
     // -- Read data
-    output logic [(M*  1)-1:0] axil_vitisnetp4_rvalid,
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_rready,
-    output logic [(M* 32)-1:0] axil_vitisnetp4_rdata,
-    output logic [(M*  2)-1:0] axil_vitisnetp4_rresp,
+    output logic         app_axil_rvalid,
+    input  logic         app_axil_rready,
+    output logic [31:0]  app_axil_rdata,
+    output logic [1:0]   app_axil_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
@@ -154,6 +154,7 @@ module smartnic_app
 
     // Interfaces
     axi4l_intf #() axil_if ();
+    axi4l_intf #() app_axil_if ();
     axi4l_intf #() axil_to_vitisnetp4[M] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
@@ -191,7 +192,7 @@ module smartnic_app
     // -------------------------------------------------------------------------------------------------------
     // MAP FROM 'FLAT' SIGNAL REPRESENTATION TO INTERFACE REPRESENTATION (COMMON TO ALL APPLICATIONS)
     // -------------------------------------------------------------------------------------------------------
-    // -- AXI-L interface
+    // -- P4 AXI-L interface
     axi4l_intf_from_signals axil_if_from_signals (
         .aclk     ( axil_aclk ),
         .aresetn  ( axil_aresetn ),
@@ -217,34 +218,36 @@ module smartnic_app
         .axi4l_if ( axil_if )
     );
 
+    // -- App AXI-L interface
+    axi4l_intf_from_signals app_axil_if_from_signals (
+        .aclk     ( axil_aclk ),
+        .aresetn  ( app_axil_aresetn ),
+        .awvalid  ( app_axil_awvalid ),
+        .awready  ( app_axil_awready ),
+        .awaddr   ( app_axil_awaddr ),
+        .awprot   ( app_axil_awprot ),
+        .wvalid   ( app_axil_wvalid ),
+        .wready   ( app_axil_wready ),
+        .wdata    ( app_axil_wdata ),
+        .wstrb    ( app_axil_wstrb ),
+        .bvalid   ( app_axil_bvalid ),
+        .bready   ( app_axil_bready ),
+        .bresp    ( app_axil_bresp ),
+        .arvalid  ( app_axil_arvalid ),
+        .arready  ( app_axil_arready ),
+        .araddr   ( app_axil_araddr ),
+        .arprot   ( app_axil_arprot ),
+        .rvalid   ( app_axil_rvalid ),
+        .rready   ( app_axil_rready ),
+        .rdata    ( app_axil_rdata ),
+        .rresp    ( app_axil_rresp ),
+        .axi4l_if ( app_axil_if )
+    );
+
+
+
     generate
         for (genvar i = 0; i < M; i += 1) begin
-            // -- AXI-L to vitisnetp4 interface
-            axi4l_intf_from_signals axil_to_vitisnetp4_from_signals (
-                .aclk     ( axil_aclk ),
-                .aresetn  ( axil_vitisnetp4_aresetn [i* 1 +: 1]),
-                .awvalid  ( axil_vitisnetp4_awvalid [i* 1 +: 1] ),
-                .awready  ( axil_vitisnetp4_awready [i* 1 +: 1] ),
-                .awaddr   ( axil_vitisnetp4_awaddr  [i*32 +: 32] ),
-                .awprot   ( axil_vitisnetp4_awprot  [i* 3 +: 3] ),
-                .wvalid   ( axil_vitisnetp4_wvalid  [i* 1 +: 1] ),
-                .wready   ( axil_vitisnetp4_wready  [i* 1 +: 1] ),
-                .wdata    ( axil_vitisnetp4_wdata   [i*32 +: 32] ),
-                .wstrb    ( axil_vitisnetp4_wstrb   [i* 4 +: 4] ),
-                .bvalid   ( axil_vitisnetp4_bvalid  [i* 1 +: 1] ),
-                .bready   ( axil_vitisnetp4_bready  [i* 1 +: 1] ),
-                .bresp    ( axil_vitisnetp4_bresp   [i* 2 +: 2] ),
-                .arvalid  ( axil_vitisnetp4_arvalid [i* 1 +: 1] ),
-                .arready  ( axil_vitisnetp4_arready [i* 1 +: 1] ),
-                .araddr   ( axil_vitisnetp4_araddr  [i*32 +: 32] ),
-                .arprot   ( axil_vitisnetp4_arprot  [i* 3 +: 3] ),
-                .rvalid   ( axil_vitisnetp4_rvalid  [i* 1 +: 1] ),
-                .rready   ( axil_vitisnetp4_rready  [i* 1 +: 1] ),
-                .rdata    ( axil_vitisnetp4_rdata   [i*32 +: 32] ),
-                .rresp    ( axil_vitisnetp4_rresp   [i* 2 +: 2] ),
-                .axi4l_if ( axil_to_vitisnetp4[i] )
-            );
-
             for (genvar j = 0; j < N; j += 1) begin
                 // -- AXI-S interface from switch
                 axi4s_intf_from_signals #(
@@ -351,16 +354,16 @@ module smartnic_app
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
-    axi4l_intf  axil_to_p4_app ();
-    axi4l_intf  axil_to_p4_app__core_clk ();
+    axi4l_intf  axil_to_p4_only ();
+    axi4l_intf  axil_to_p4_only__core_clk ();
     axi4l_intf  axil_to_p4_proc[M] ();
 
-    p4_app_reg_intf  p4_app_regs ();
+    p4_only_reg_intf  p4_only_regs ();
 
     // smartnic_app register decoder
-    p4_app_decoder p4_app_decoder_inst (
-       .axil_if              ( axil_if ),
-       .p4_app_axil_if       ( axil_to_p4_app ),
+    p4_only_decoder p4_only_decoder_inst (
+       .axil_if              ( app_axil_if ),
+       .p4_only_axil_if      ( axil_to_p4_only ),
        .p4_proc_igr_axil_if  ( axil_to_p4_proc[0] )
 //       .p4_proc_egr_axil_if  ( axil_to_p4_proc[1] )  // temporarily commented out.
     );
@@ -369,17 +372,24 @@ module smartnic_app
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
-        .axi4l_if_from_controller  ( axil_to_p4_app ),
+        .axi4l_if_from_controller  ( axil_to_p4_only ),
         .clk_to_peripheral         ( core_clk ),
-        .axi4l_if_to_peripheral    ( axil_to_p4_app__core_clk )
+        .axi4l_if_to_peripheral    ( axil_to_p4_only__core_clk )
     );
 
     // smartnic_app register block
-    p4_app_reg_blk p4_app_reg_blk (
-        .axil_if    ( axil_to_p4_app__core_clk ),
-        .reg_blk_if ( p4_app_regs )
+    p4_only_reg_blk p4_only_reg_blk (
+        .axil_if    ( axil_to_p4_only__core_clk ),
+        .reg_blk_if ( p4_only_regs )
     );
 
+
+    // p4 register decoder
+    smartnic_p4_decoder smartnic_p4_decoder_inst (
+       .axil_if                 ( axil_if ),
+       .vitisnetp4_igr_axil_if  ( axil_to_vitisnetp4[0] ),
+       .vitisnetp4_egr_axil_if  ( axil_to_vitisnetp4[1] )
+    );
 
     // ----------------------------------------------------------------------
     // p4 processor signals and interfaces.

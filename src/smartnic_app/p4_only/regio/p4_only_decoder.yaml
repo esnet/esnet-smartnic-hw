@@ -1,18 +1,18 @@
-name: p4_app
+name: p4_only
 
 blocks:
-  p4_app: &p4_app
-    !include ../src/smartnic_app/p4_only/regio/p4_app.yaml
+  p4_only: &p4_only
+    !include ../src/smartnic_app/p4_only/regio/p4_only.yaml
 
 decoders:
   p4_proc_decoder: &p4_proc_decoder
     !include ../src/p4_proc/regio/p4_proc_decoder.yaml
 
 interfaces:
-  - block: *p4_app
+  - block: *p4_only
     address: 0x0000
     width: 10
-    name: p4_app
+    name: p4_only
 
   - decoder: *p4_proc_decoder
     address: 0x04000
