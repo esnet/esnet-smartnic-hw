@@ -25,7 +25,7 @@ module tb;
     logic [63:0] timestamp;
 
     axi4l_intf axil_if       ();
-    axi4l_intf axil_to_vitisnetp4[M] ();
+    axi4l_intf app_axil_if   ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [M][N] ();
@@ -33,50 +33,6 @@ module tb;
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [M][N] ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
-
-    logic [M-1:0]        axil_vitisnetp4_aresetn;
-    logic [M-1:0]        axil_vitisnetp4_awvalid;
-    logic [M-1:0]        axil_vitisnetp4_awready;
-    logic [M-1:0][31:0]  axil_vitisnetp4_awaddr;
-    logic [M-1:0][2:0]   axil_vitisnetp4_awprot;
-    logic [M-1:0]        axil_vitisnetp4_wvalid;
-    logic [M-1:0]        axil_vitisnetp4_wready;
-    logic [M-1:0][31:0]  axil_vitisnetp4_wdata;
-    logic [M-1:0][3:0]   axil_vitisnetp4_wstrb;
-    logic [M-1:0]        axil_vitisnetp4_bvalid;
-    logic [M-1:0]        axil_vitisnetp4_bready;
-    logic [M-1:0][1:0]   axil_vitisnetp4_bresp;
-    logic [M-1:0]        axil_vitisnetp4_arvalid;
-    logic [M-1:0]        axil_vitisnetp4_arready;
-    logic [M-1:0][31:0]  axil_vitisnetp4_araddr;
-    logic [M-1:0][2:0]   axil_vitisnetp4_arprot;
-    logic [M-1:0]        axil_vitisnetp4_rvalid;
-    logic [M-1:0]        axil_vitisnetp4_rready;
-    logic [M-1:0][31:0]  axil_vitisnetp4_rdata;
-    logic [M-1:0][1:0]   axil_vitisnetp4_rresp;
-
-    generate for (genvar i = 0; i < M; i += 1) begin
-        assign axil_vitisnetp4_aresetn[i] = axil_to_vitisnetp4[i].aresetn;
-        assign axil_vitisnetp4_awvalid[i] = axil_to_vitisnetp4[i].awvalid;
-        assign axil_to_vitisnetp4[i].awready = axil_vitisnetp4_awready[i];
-        assign axil_vitisnetp4_awaddr[i]  = axil_to_vitisnetp4[i].awaddr;
-        assign axil_vitisnetp4_awprot[i]  = axil_to_vitisnetp4[i].awprot;
-        assign axil_vitisnetp4_wvalid[i]  = axil_to_vitisnetp4[i].wvalid;
-        assign axil_to_vitisnetp4[i].wready = axil_vitisnetp4_wready[i];
-        assign axil_vitisnetp4_wdata[i]   = axil_to_vitisnetp4[i].wdata;
-        assign axil_vitisnetp4_wstrb[i]   = axil_to_vitisnetp4[i].wstrb;
-        assign axil_to_vitisnetp4[i].bvalid = axil_vitisnetp4_bvalid[i];
-        assign axil_vitisnetp4_bready[i]  = axil_to_vitisnetp4[i].bready;
-        assign axil_to_vitisnetp4[i].bresp = axil_vitisnetp4_bresp[i];
-        assign axil_vitisnetp4_arvalid[i] = axil_to_vitisnetp4[i].arvalid;
-        assign axil_to_vitisnetp4[i].arready = axil_vitisnetp4_arready[i];
-        assign axil_vitisnetp4_araddr[i]  = axil_to_vitisnetp4[i].araddr;
-        assign axil_vitisnetp4_arprot[i]  = axil_to_vitisnetp4[i].arprot;
-        assign axil_to_vitisnetp4[i].rvalid = axil_vitisnetp4_rvalid[i];
-        assign axil_vitisnetp4_rready[i]  = axil_to_vitisnetp4[i].rready;
-        assign axil_to_vitisnetp4[i].rdata = axil_vitisnetp4_rdata[i];
-        assign axil_to_vitisnetp4[i].rresp = axil_vitisnetp4_rresp[i];
-    end endgenerate
 
     logic [M-1:0][2-1:0]        axis_from_switch_tvalid;
     logic [M-1:0][2-1:0]        axis_from_switch_tready;
@@ -246,8 +202,8 @@ module tb;
         .core_clk     (clk),
         .core_rstn    (rstn),
         .timestamp    (timestamp),
-        .axil_aclk    (axil_if  .aclk),
-        // AXI-L control interface
+        .axil_aclk    (axil_if.aclk),
+        // P4 AXI-L control interface
         .axil_aresetn (axil_if.aresetn),
         .axil_awvalid (axil_if.awvalid),
         .axil_awready (axil_if.awready),
@@ -268,28 +224,28 @@ module tb;
         .axil_rready  (axil_if.rready),
         .axil_rdata   (axil_if.rdata),
         .axil_rresp   (axil_if.rresp),
-        // (SDNet) AXI-L control interface
-        .axil_vitisnetp4_aresetn (axil_vitisnetp4_aresetn),
-        .axil_vitisnetp4_awvalid (axil_vitisnetp4_awvalid),
-        .axil_vitisnetp4_awready (axil_vitisnetp4_awready),
-        .axil_vitisnetp4_awaddr  (axil_vitisnetp4_awaddr),
-        .axil_vitisnetp4_awprot  (axil_vitisnetp4_awprot),
-        .axil_vitisnetp4_wvalid  (axil_vitisnetp4_wvalid),
-        .axil_vitisnetp4_wready  (axil_vitisnetp4_wready),
-        .axil_vitisnetp4_wdata   (axil_vitisnetp4_wdata),
-        .axil_vitisnetp4_wstrb   (axil_vitisnetp4_wstrb),
-        .axil_vitisnetp4_bvalid  (axil_vitisnetp4_bvalid),
-        .axil_vitisnetp4_bready  (axil_vitisnetp4_bready),
-        .axil_vitisnetp4_bresp   (axil_vitisnetp4_bresp),
-        .axil_vitisnetp4_arvalid (axil_vitisnetp4_arvalid),
-        .axil_vitisnetp4_arready (axil_vitisnetp4_arready),
-        .axil_vitisnetp4_araddr  (axil_vitisnetp4_araddr),
-        .axil_vitisnetp4_arprot  (axil_vitisnetp4_arprot),
-        .axil_vitisnetp4_rvalid  (axil_vitisnetp4_rvalid),
-        .axil_vitisnetp4_rready  (axil_vitisnetp4_rready),
-        .axil_vitisnetp4_rdata   (axil_vitisnetp4_rdata),
-        .axil_vitisnetp4_rresp   (axil_vitisnetp4_rresp),
-        // AXI-S data interface (from switch output 0, to app)
+        // App AXI-L control interface
+        .app_axil_aresetn (app_axil_if.aresetn),
+        .app_axil_awvalid (app_axil_if.awvalid),
+        .app_axil_awready (app_axil_if.awready),
+        .app_axil_awaddr  (app_axil_if.awaddr),
+        .app_axil_awprot  (app_axil_if.awprot),
+        .app_axil_wvalid  (app_axil_if.wvalid),
+        .app_axil_wready  (app_axil_if.wready),
+        .app_axil_wdata   (app_axil_if.wdata),
+        .app_axil_wstrb   (app_axil_if.wstrb),
+        .app_axil_bvalid  (app_axil_if.bvalid),
+        .app_axil_bready  (app_axil_if.bready),
+        .app_axil_bresp   (app_axil_if.bresp),
+        .app_axil_arvalid (app_axil_if.arvalid),
+        .app_axil_arready (app_axil_if.arready),
+        .app_axil_araddr  (app_axil_if.araddr),
+        .app_axil_arprot  (app_axil_if.arprot),
+        .app_axil_rvalid  (app_axil_if.rvalid),
+        .app_axil_rready  (app_axil_if.rready),
+        .app_axil_rdata   (app_axil_if.rdata),
+        .app_axil_rresp   (app_axil_if.rresp),
+         // AXI-S data interface (from switch output 0, to app)
         .axis_from_switch_tvalid ( axis_from_switch_tvalid ),
         .axis_from_switch_tready ( axis_from_switch_tready ),
         .axis_from_switch_tdata  ( axis_from_switch_tdata ),
@@ -390,9 +346,9 @@ module tb;
 
     assign rst = ~rstn;
 
-    // SDNet AXI-L interface shares common AXI-L clock/reset
-    assign axil_to_vitisnetp4[0].aclk = axil_if.aclk;
-    assign axil_to_vitisnetp4[0].aresetn = axil_if.aresetn;
+    // App AXI-L interface shares common AXI-L clock/reset
+    assign app_axil_if.aclk    = axil_if.aclk;
+    assign app_axil_if.aresetn = axil_if.aresetn;
 
     // Timestamp
     assign timestamp = timestamp_if.timestamp;
@@ -422,8 +378,8 @@ module tb;
             env.reset_vif = reset_if;
             env.mgmt_reset_vif = mgmt_reset_if;
             env.timestamp_vif = timestamp_if;
-            env.axil_vif = axil_if;
-            env.axil_vitisnetp4_vif = axil_to_vitisnetp4[0];
+            env.axil_vif = app_axil_if;
+            env.axil_vitisnetp4_vif = axil_if;
             env.axis_in_vif[0]  = axis_in_if[0][0];
             env.axis_in_vif[1]  = axis_in_if[0][1];
             env.axis_out_vif[0] = axis_out_if[1][0]; // output from p4_egr processor.

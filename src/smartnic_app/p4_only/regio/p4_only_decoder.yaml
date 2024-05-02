@@ -5,21 +5,23 @@ blocks:
     !include ../src/smartnic_app/p4_only/regio/p4_only.yaml
 
 decoders:
-  p4_proc_decoder: &p4_proc_decoder
-    !include ../src/p4_proc/regio/p4_proc_decoder.yaml
+  smartnic_app_igr_decoder: &smartnic_app_igr_decoder
+    !include ../src/smartnic_app/p4_only/regio/smartnic_app_igr_decoder.yaml
+  smartnic_app_egr_decoder: &smartnic_app_egr_decoder
+    !include ../src/smartnic_app/p4_only/regio/smartnic_app_egr_decoder.yaml
 
 interfaces:
   - block: *p4_only
-    address: 0x0000
+    address: 0x00000
     width: 10
     name: p4_only
 
-  - decoder: *p4_proc_decoder
-    address: 0x04000
-    width: 14
-    name: p4_proc_igr
+  - decoder: *smartnic_app_igr_decoder
+    address: 0x10000
+    width: 16
+    name: smartnic_app_igr
 
-  #- decoder: *p4_proc_decoder
-  #  address: 0x08000
-  #  width: 14
-  #  name: p4_proc_egr
+  - decoder: *smartnic_app_egr_decoder
+    address: 0x20000
+    width: 16
+    name: smartnic_app_egr

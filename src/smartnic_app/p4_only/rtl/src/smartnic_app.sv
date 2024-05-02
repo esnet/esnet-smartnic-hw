@@ -356,16 +356,18 @@ module smartnic_app
     // ----------------------------------------------------------------------
     axi4l_intf  axil_to_p4_only ();
     axi4l_intf  axil_to_p4_only__core_clk ();
+    axi4l_intf  axil_to_smartnic_app_igr ();
+    axi4l_intf  axil_to_smartnic_app_egr ();
     axi4l_intf  axil_to_p4_proc[M] ();
 
     p4_only_reg_intf  p4_only_regs ();
 
     // smartnic_app register decoder
     p4_only_decoder p4_only_decoder_inst (
-       .axil_if              ( app_axil_if ),
-       .p4_only_axil_if      ( axil_to_p4_only ),
-       .p4_proc_igr_axil_if  ( axil_to_p4_proc[0] )
-//       .p4_proc_egr_axil_if  ( axil_to_p4_proc[1] )  // temporarily commented out.
+       .axil_if                   ( app_axil_if ),
+       .p4_only_axil_if           ( axil_to_p4_only ),
+       .smartnic_app_igr_axil_if  ( axil_to_smartnic_app_igr ),
+       .smartnic_app_egr_axil_if  ( axil_to_smartnic_app_egr )
     );
 
     axi4l_intf_controller_term axil_to_p4_proc_1_controller_term ( .axi4l_if (axil_to_p4_proc[1]) );
@@ -388,7 +390,9 @@ module smartnic_app
     smartnic_p4_decoder smartnic_p4_decoder_inst (
        .axil_if                 ( axil_if ),
        .vitisnetp4_igr_axil_if  ( axil_to_vitisnetp4[0] ),
-       .vitisnetp4_egr_axil_if  ( axil_to_vitisnetp4[1] )
+       .vitisnetp4_egr_axil_if  ( axil_to_vitisnetp4[1] ),
+       .p4_proc_igr_axil_if     ( axil_to_p4_proc[0] )
+//       .p4_proc_egr_axil_if     ( axil_to_p4_proc[1] )  // commented out until non-transparent decoder support.
     );
 
     // ----------------------------------------------------------------------
@@ -555,14 +559,12 @@ module smartnic_app
 
     // axi4s_ila axi4s_ila_3 (.axis_in(axis_to_demux[0]));
 
-    axi4l_intf  axil_to_smartnic_app_igr ();
-    axi4l_intf_controller_term axil_to_smartnic_app_igr_term (.axi4l_if (axil_to_smartnic_app_igr));
-
     localparam logic SMARTNIC_APP_IGR_MODE = 0;
-
     generate
         if (SMARTNIC_APP_IGR_MODE) begin
             smartnic_app_igr #(.N(N)) smartnic_app_igr_inst (
+                .core_clk   ( core_clk ),
+                .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_igr ),
                 .axi4s_out  ( axis_to_smartnic_app_egr ),
                 .axil_if    ( axil_to_smartnic_app_igr )
@@ -580,14 +582,12 @@ module smartnic_app
     endgenerate
 
 
-    axi4l_intf  axil_to_smartnic_app_egr ();
-    axi4l_intf_controller_term axil_to_smartnic_app_egr_term (.axi4l_if (axil_to_smartnic_app_egr));
-
     localparam logic SMARTNIC_APP_EGR_MODE = 0;
-
     generate
         if (SMARTNIC_APP_EGR_MODE) begin
             smartnic_app_egr #(.N(N)) smartnic_app_egr_inst (
+                .core_clk   ( core_clk ),
+                .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_egr ),
                 .axi4s_out  ( axis_to_mux ),
                 .axil_if    ( axil_to_smartnic_app_egr )
