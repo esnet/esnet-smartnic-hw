@@ -10,7 +10,7 @@
     input  logic         axil_aclk,
     input  logic [63:0]  timestamp,
 
-    // AXI-L control interface
+    // P4 AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
     input  logic         axil_aresetn,
@@ -39,34 +39,34 @@
     output logic [31:0]  axil_rdata,
     output logic [1:0]   axil_rresp,
 
-    // (SDNet) AXI-L control interface
+    // App AXI-L control interface
     // (synchronous to axil_aclk domain)
     // -- Reset
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_aresetn,
+    input  logic         app_axil_aresetn,
     // -- Write address
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_awvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_awready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_awaddr,
-    input  logic [(M*  3)-1:0] axil_vitisnetp4_awprot,
+    input  logic         app_axil_awvalid,
+    output logic         app_axil_awready,
+    input  logic [31:0]  app_axil_awaddr,
+    input  logic [2:0]   app_axil_awprot,
     // -- Write data
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_wvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_wready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_wdata,
-    input  logic [(M*  4)-1:0] axil_vitisnetp4_wstrb,
+    input  logic         app_axil_wvalid,
+    output logic         app_axil_wready,
+    input  logic [31:0]  app_axil_wdata,
+    input  logic [3:0]   app_axil_wstrb,
     // -- Write response
-    output logic [(M*  1)-1:0] axil_vitisnetp4_bvalid,
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_bready,
-    output logic [(M*  2)-1:0] axil_vitisnetp4_bresp,
+    output logic         app_axil_bvalid,
+    input  logic         app_axil_bready,
+    output logic [1:0]   app_axil_bresp,
     // -- Read address
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_arvalid,
-    output logic [(M*  1)-1:0] axil_vitisnetp4_arready,
-    input  logic [(M* 32)-1:0] axil_vitisnetp4_araddr,
-    input  logic [(M*  3)-1:0] axil_vitisnetp4_arprot,
+    input  logic         app_axil_arvalid,
+    output logic         app_axil_arready,
+    input  logic [31:0]  app_axil_araddr,
+    input  logic [2:0]   app_axil_arprot,
     // -- Read data
-    output logic [(M*  1)-1:0] axil_vitisnetp4_rvalid,
-    input  logic [(M*  1)-1:0] axil_vitisnetp4_rready,
-    output logic [(M* 32)-1:0] axil_vitisnetp4_rdata,
-    output logic [(M*  2)-1:0] axil_vitisnetp4_rresp,
+    output logic         app_axil_rvalid,
+    input  logic         app_axil_rready,
+    output logic [31:0]  app_axil_rdata,
+    output logic [1:0]   app_axil_rresp,
 
     // AXI-S data interface (from switch)
     // (synchronous to core_clk domain)
