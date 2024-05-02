@@ -62,6 +62,9 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' src/smartnic_app/p4_only/tests/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_app/p4_only/tests.smartnic/regression
     - grep 'PASSED.*suites passing' src/smartnic_app/p4_only/tests.smartnic/regression/run_$SEED/sim.log
+    - make -s -C examples/p4_multi_proc config
+    - make -s -C examples/p4_multi_proc/tests/regression
+    - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
   artifacts:
@@ -71,6 +74,7 @@ sim_p4_apps:
         - src/p4_proc/tests/regression/run_*/tests.xml
         - src/smartnic_app/p4_only/tests/regression/run_*/tests.xml
         - src/smartnic_app/p4_only/tests.smartnic/regression/run_*/tests.xml
+        - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
