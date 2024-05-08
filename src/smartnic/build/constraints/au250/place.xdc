@@ -17,6 +17,7 @@ resize_pblock       pblock_smartnic_platform -add {SLR2}
 # Smartnic app core
 create_pblock       pblock_smartnic_appcore
 add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_app*"]
+add_cells_to_pblock pblock_smartnic_appcore [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_to_app*"]
 resize_pblock       pblock_smartnic_appcore -add {SLR3}
 
 # Smartnic platform-to-app interfaces

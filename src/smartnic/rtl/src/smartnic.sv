@@ -132,7 +132,7 @@ module smartnic
    axi4l_intf   axil_to_app_decoder__demarc ();
    axi4l_intf   axil_to_app_decoder         ();
    axi4l_intf   axil_to_app                 ();
-   axi4l_intf   axil_to_vitisnetp4[M]            ();
+   axi4l_intf   axil_to_p4                  ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
    axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
@@ -223,7 +223,7 @@ module smartnic
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
       .hbm_0_axil_if                   (axil_to_hbm_0),
       .hbm_1_axil_if                   (axil_to_hbm_1),
-      .smartnic_app_axil_if     (axil_to_app_decoder__demarc)
+      .smartnic_to_app_axil_if         (axil_to_app_decoder__demarc)
    );
 
    // AXI-L interface synchronizer
@@ -1098,50 +1098,6 @@ module smartnic
       end
    end
 
-   logic [M-1:0]        axil_vitisnetp4_aresetn;
-   logic [M-1:0]        axil_vitisnetp4_awvalid;
-   logic [M-1:0]        axil_vitisnetp4_awready;
-   logic [M-1:0][31:0]  axil_vitisnetp4_awaddr;
-   logic [M-1:0][2:0]   axil_vitisnetp4_awprot;
-   logic [M-1:0]        axil_vitisnetp4_wvalid;
-   logic [M-1:0]        axil_vitisnetp4_wready;
-   logic [M-1:0][31:0]  axil_vitisnetp4_wdata;
-   logic [M-1:0][3:0]   axil_vitisnetp4_wstrb;
-   logic [M-1:0]        axil_vitisnetp4_bvalid;
-   logic [M-1:0]        axil_vitisnetp4_bready;
-   logic [M-1:0][1:0]   axil_vitisnetp4_bresp;
-   logic [M-1:0]        axil_vitisnetp4_arvalid;
-   logic [M-1:0]        axil_vitisnetp4_arready;
-   logic [M-1:0][31:0]  axil_vitisnetp4_araddr;
-   logic [M-1:0][2:0]   axil_vitisnetp4_arprot;
-   logic [M-1:0]        axil_vitisnetp4_rvalid;
-   logic [M-1:0]        axil_vitisnetp4_rready;
-   logic [M-1:0][31:0]  axil_vitisnetp4_rdata;
-   logic [M-1:0][1:0]   axil_vitisnetp4_rresp;
-
-   generate for (genvar i = 0; i < M; i += 1) begin
-       assign axil_vitisnetp4_aresetn[i] = axil_to_vitisnetp4[i].aresetn;
-       assign axil_vitisnetp4_awvalid[i] = axil_to_vitisnetp4[i].awvalid;
-       assign axil_to_vitisnetp4[i].awready = axil_vitisnetp4_awready[i];
-       assign axil_vitisnetp4_awaddr[i]  = axil_to_vitisnetp4[i].awaddr;
-       assign axil_vitisnetp4_awprot[i]  = axil_to_vitisnetp4[i].awprot;
-       assign axil_vitisnetp4_wvalid[i]  = axil_to_vitisnetp4[i].wvalid;
-       assign axil_to_vitisnetp4[i].wready = axil_vitisnetp4_wready[i];
-       assign axil_vitisnetp4_wdata[i]   = axil_to_vitisnetp4[i].wdata;
-       assign axil_vitisnetp4_wstrb[i]   = axil_to_vitisnetp4[i].wstrb;
-       assign axil_to_vitisnetp4[i].bvalid = axil_vitisnetp4_bvalid[i];
-       assign axil_vitisnetp4_bready[i]  = axil_to_vitisnetp4[i].bready;
-       assign axil_to_vitisnetp4[i].bresp = axil_vitisnetp4_bresp[i];
-       assign axil_vitisnetp4_arvalid[i] = axil_to_vitisnetp4[i].arvalid;
-       assign axil_to_vitisnetp4[i].arready = axil_vitisnetp4_arready[i];
-       assign axil_vitisnetp4_araddr[i]  = axil_to_vitisnetp4[i].araddr;
-       assign axil_vitisnetp4_arprot[i]  = axil_to_vitisnetp4[i].arprot;
-       assign axil_to_vitisnetp4[i].rvalid = axil_vitisnetp4_rvalid[i];
-       assign axil_vitisnetp4_rready[i]  = axil_to_vitisnetp4[i].rready;
-       assign axil_to_vitisnetp4[i].rdata = axil_vitisnetp4_rdata[i];
-       assign axil_to_vitisnetp4[i].rresp = axil_vitisnetp4_rresp[i];
-   end endgenerate
-
    logic [M-1:0][2-1:0]        axis_from_switch_tvalid;
    logic [M-1:0][2-1:0]        axis_from_switch_tready;
    logic [M-1:0][2-1:0][511:0] axis_from_switch_tdata;
@@ -1199,12 +1155,11 @@ module smartnic
    endgenerate
 
 
-   // Provide dedicated AXI-L interfaces for app and vitisnetp4 control
-   smartnic_app_vitisnetp4_decoder smartnic_app_vitisnetp4_decoder (
-       .axil_if           (axil_to_app_decoder),
-       .app_axil_if       (axil_to_app),
-       .vitisnetp4_igr_axil_if (axil_to_vitisnetp4[0]),
-       .vitisnetp4_egr_axil_if (axil_to_vitisnetp4[1])
+   // Provide dedicated AXI-L interfaces for app and p4 control
+   smartnic_to_app_decoder smartnic_to_app_decoder_inst (
+       .axil_if                  (axil_to_app_decoder),
+       .smartnic_app_axil_if     (axil_to_app),
+       .smartnic_p4_axil_if      (axil_to_p4)
    );
 
    smartnic_app smartnic_app
@@ -1213,48 +1168,48 @@ module smartnic
     .core_rstn    (core_rstn),
     .axil_aclk    (axil_aclk),
     .timestamp    (timestamp),
-    // AXI-L control interface
-    .axil_aresetn (axil_to_app.aresetn),
-    .axil_awvalid (axil_to_app.awvalid),
-    .axil_awready (axil_to_app.awready),
-    .axil_awaddr  (axil_to_app.awaddr),
-    .axil_awprot  (axil_to_app.awprot),
-    .axil_wvalid  (axil_to_app.wvalid),
-    .axil_wready  (axil_to_app.wready),
-    .axil_wdata   (axil_to_app.wdata),
-    .axil_wstrb   (axil_to_app.wstrb),
-    .axil_bvalid  (axil_to_app.bvalid),
-    .axil_bready  (axil_to_app.bready),
-    .axil_bresp   (axil_to_app.bresp),
-    .axil_arvalid (axil_to_app.arvalid),
-    .axil_arready (axil_to_app.arready),
-    .axil_araddr  (axil_to_app.araddr),
-    .axil_arprot  (axil_to_app.arprot),
-    .axil_rvalid  (axil_to_app.rvalid),
-    .axil_rready  (axil_to_app.rready),
-    .axil_rdata   (axil_to_app.rdata),
-    .axil_rresp   (axil_to_app.rresp),
-    // (SDNet) AXI-L control interface
-    .axil_vitisnetp4_aresetn (axil_vitisnetp4_aresetn),
-    .axil_vitisnetp4_awvalid (axil_vitisnetp4_awvalid),
-    .axil_vitisnetp4_awready (axil_vitisnetp4_awready),
-    .axil_vitisnetp4_awaddr  (axil_vitisnetp4_awaddr),
-    .axil_vitisnetp4_awprot  (axil_vitisnetp4_awprot),
-    .axil_vitisnetp4_wvalid  (axil_vitisnetp4_wvalid),
-    .axil_vitisnetp4_wready  (axil_vitisnetp4_wready),
-    .axil_vitisnetp4_wdata   (axil_vitisnetp4_wdata),
-    .axil_vitisnetp4_wstrb   (axil_vitisnetp4_wstrb),
-    .axil_vitisnetp4_bvalid  (axil_vitisnetp4_bvalid),
-    .axil_vitisnetp4_bready  (axil_vitisnetp4_bready),
-    .axil_vitisnetp4_bresp   (axil_vitisnetp4_bresp),
-    .axil_vitisnetp4_arvalid (axil_vitisnetp4_arvalid),
-    .axil_vitisnetp4_arready (axil_vitisnetp4_arready),
-    .axil_vitisnetp4_araddr  (axil_vitisnetp4_araddr),
-    .axil_vitisnetp4_arprot  (axil_vitisnetp4_arprot),
-    .axil_vitisnetp4_rvalid  (axil_vitisnetp4_rvalid),
-    .axil_vitisnetp4_rready  (axil_vitisnetp4_rready),
-    .axil_vitisnetp4_rdata   (axil_vitisnetp4_rdata),
-    .axil_vitisnetp4_rresp   (axil_vitisnetp4_rresp),
+    // P4 AXI-L control interface
+    .axil_aresetn (axil_to_p4.aresetn),
+    .axil_awvalid (axil_to_p4.awvalid),
+    .axil_awready (axil_to_p4.awready),
+    .axil_awaddr  (axil_to_p4.awaddr),
+    .axil_awprot  (axil_to_p4.awprot),
+    .axil_wvalid  (axil_to_p4.wvalid),
+    .axil_wready  (axil_to_p4.wready),
+    .axil_wdata   (axil_to_p4.wdata),
+    .axil_wstrb   (axil_to_p4.wstrb),
+    .axil_bvalid  (axil_to_p4.bvalid),
+    .axil_bready  (axil_to_p4.bready),
+    .axil_bresp   (axil_to_p4.bresp),
+    .axil_arvalid (axil_to_p4.arvalid),
+    .axil_arready (axil_to_p4.arready),
+    .axil_araddr  (axil_to_p4.araddr),
+    .axil_arprot  (axil_to_p4.arprot),
+    .axil_rvalid  (axil_to_p4.rvalid),
+    .axil_rready  (axil_to_p4.rready),
+    .axil_rdata   (axil_to_p4.rdata),
+    .axil_rresp   (axil_to_p4.rresp),
+    // App AXI-L control interface
+    .app_axil_aresetn (axil_to_app.aresetn),
+    .app_axil_awvalid (axil_to_app.awvalid),
+    .app_axil_awready (axil_to_app.awready),
+    .app_axil_awaddr  (axil_to_app.awaddr),
+    .app_axil_awprot  (axil_to_app.awprot),
+    .app_axil_wvalid  (axil_to_app.wvalid),
+    .app_axil_wready  (axil_to_app.wready),
+    .app_axil_wdata   (axil_to_app.wdata),
+    .app_axil_wstrb   (axil_to_app.wstrb),
+    .app_axil_bvalid  (axil_to_app.bvalid),
+    .app_axil_bready  (axil_to_app.bready),
+    .app_axil_bresp   (axil_to_app.bresp),
+    .app_axil_arvalid (axil_to_app.arvalid),
+    .app_axil_arready (axil_to_app.arready),
+    .app_axil_araddr  (axil_to_app.araddr),
+    .app_axil_arprot  (axil_to_app.arprot),
+    .app_axil_rvalid  (axil_to_app.rvalid),
+    .app_axil_rready  (axil_to_app.rready),
+    .app_axil_rdata   (axil_to_app.rdata),
+    .app_axil_rresp   (axil_to_app.rresp),
     // AXI-S data interface (from switch output 0, to app)
     .axis_from_switch_tvalid ( axis_from_switch_tvalid ),
     .axis_from_switch_tready ( axis_from_switch_tready ),

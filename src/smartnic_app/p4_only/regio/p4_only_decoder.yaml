@@ -1,0 +1,27 @@
+name: p4_only
+
+blocks:
+  p4_only: &p4_only
+    !include ../src/smartnic_app/p4_only/regio/p4_only.yaml
+
+decoders:
+  smartnic_app_igr_decoder: &smartnic_app_igr_decoder
+    !include ../src/smartnic_app/p4_only/regio/smartnic_app_igr_decoder.yaml
+  smartnic_app_egr_decoder: &smartnic_app_egr_decoder
+    !include ../src/smartnic_app/p4_only/regio/smartnic_app_egr_decoder.yaml
+
+interfaces:
+  - block: *p4_only
+    address: 0x00000
+    width: 10
+    name: p4_only
+
+  - decoder: *smartnic_app_igr_decoder
+    address: 0x10000
+    width: 16
+    name: smartnic_app_igr
+
+  - decoder: *smartnic_app_egr_decoder
+    address: 0x20000
+    width: 16
+    name: smartnic_app_egr

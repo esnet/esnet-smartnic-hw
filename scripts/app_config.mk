@@ -172,6 +172,7 @@ _configure_app_p4 := \
             rm $(APP_PROJ_ROOT)/src/vitisnetp4_egr/rtl/src/vitisnetp4_egr_extern.sv; \
 	 cp -r $(SMARTNIC_ROOT)/src/smartnic_app $(APP_PROJ_ROOT)/src/; \
 	 cp $(APP_DIR)/src/smartnic_app*/rtl/src/* $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/rtl/src 2>/dev/null; \
+	 cp $(APP_DIR)/src/smartnic_app*/regio/*.yaml $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/regio 2>/dev/null; \
 	 mv $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
 	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
 	 make -s -C $(APP_ROOT)/app_if clean;

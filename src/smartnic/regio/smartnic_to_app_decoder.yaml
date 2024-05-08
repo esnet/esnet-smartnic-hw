@@ -1,0 +1,17 @@
+name: smartnic_to_app
+
+decoders:
+  smartnic_app_decoder: &smartnic_app_decoder
+    !include ../src/smartnic/regio/smartnic_app_decoder.yaml
+  smartnic_p4_decoder: &smartnic_p4_decoder
+    !include ../src/smartnic_app/p4_only/regio/smartnic_p4_decoder.yaml
+
+interfaces:
+  - decoder: *smartnic_app_decoder
+    address: 0x00000
+    width: 18
+    name: smartnic_app
+  - decoder: *smartnic_p4_decoder
+    address: 0x40000
+    width: 18
+    name: smartnic_p4

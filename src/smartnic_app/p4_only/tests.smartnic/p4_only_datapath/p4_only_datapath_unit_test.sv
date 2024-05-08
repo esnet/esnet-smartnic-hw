@@ -8,12 +8,12 @@ import p4_proc_verif_pkg::*;
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_app_datapath_unit_test
+module p4_only_datapath_unit_test
 #(
     parameter int HDR_LENGTH = 0
  );
     // Testcase name
-    string name = $sformatf("p4_app_datapath_hdrlen_%0d_ut", HDR_LENGTH);
+    string name = $sformatf("p4_only_datapath_hdrlen_%0d_ut", HDR_LENGTH);
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -71,7 +71,7 @@ module p4_app_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agent
-        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'h84000);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'he0000);
     endfunction
 
     //===================================
@@ -184,10 +184,10 @@ endmodule
 //  Builds unit test for a specific axi4s_split_join configuration in a way
 //  that maintains SVUnit compatibility
 
-`define P4_APP_DATAPATH_UNIT_TEST(HDR_LENGTH)\
+`define P4_ONLY_DATAPATH_UNIT_TEST(HDR_LENGTH)\
   import svunit_pkg::svunit_testcase;\
   svunit_testcase svunit_ut;\
-  p4_app_datapath_unit_test #(HDR_LENGTH) test();\
+  p4_only_datapath_unit_test #(HDR_LENGTH) test();\
   function void build();\
     test.build();\
     svunit_ut = test.svunit_ut;\
@@ -197,15 +197,15 @@ endmodule
   endtask
 
 
-module p4_app_datapath_hdrlen_0_unit_test;
-`P4_APP_DATAPATH_UNIT_TEST(0)
+module p4_only_datapath_hdrlen_0_unit_test;
+`P4_ONLY_DATAPATH_UNIT_TEST(0)
 endmodule
 
-module p4_app_datapath_hdrlen_64_unit_test;
-`P4_APP_DATAPATH_UNIT_TEST(64)
+module p4_only_datapath_hdrlen_64_unit_test;
+`P4_ONLY_DATAPATH_UNIT_TEST(64)
 endmodule
 
-module p4_app_datapath_hdrlen_256_unit_test;
-`P4_APP_DATAPATH_UNIT_TEST(256)
+module p4_only_datapath_hdrlen_256_unit_test;
+`P4_ONLY_DATAPATH_UNIT_TEST(256)
 endmodule
 

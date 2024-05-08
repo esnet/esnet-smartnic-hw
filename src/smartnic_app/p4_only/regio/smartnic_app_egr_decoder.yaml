@@ -1,0 +1,11 @@
+name: smartnic_app_egr
+
+blocks:
+  smartnic_app_igr: &smartnic_app_egr
+    !include ../src/smartnic_app/p4_only/regio/smartnic_app_egr.yaml
+
+interfaces:
+  - block: *smartnic_app_egr
+    address: 0x0000
+    width: 16
+    name: smartnic_app_egr

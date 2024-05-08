@@ -1,0 +1,12 @@
+name: p4_only
+info: |
+  p4_only is the application regio block for the p4_only application core used on the esnet smart nic platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xcafebeef
