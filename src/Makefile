@@ -19,6 +19,7 @@ compile: _compile
 synth:   _synth
 opt:     _opt
 driver:  _driver
+build:   _build
 clean:   _clean
 
 .PHONY: reg ip info compile synth clean
