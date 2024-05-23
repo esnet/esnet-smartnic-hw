@@ -78,9 +78,6 @@ module smartnic_datapath_unit_test;
 
         reset(); // Issue reset (both datapath and management domains)
 
-        // write hdr_length register to enable split-join logic.
-        //env.smartnic_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
-
         // initialize switch configuration registers.
         init_sw_config_regs;
 

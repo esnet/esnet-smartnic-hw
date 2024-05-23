@@ -12,11 +12,6 @@ regs:
   - name: status
     init: 0xC0BEBEEF
 
-  - name: hdr_length
-    desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
-    access: rw
-    init: 0x0
-
   # ----- switch configuration registers. -----
   - name: igr_sw_tid
     access : rw
