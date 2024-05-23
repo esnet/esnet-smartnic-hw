@@ -6,6 +6,7 @@ module tb;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
+    localparam int HOST_NUM_IFS = 1;
     localparam int N = 2;  // Number of processor ports (per vitisnetp4 processor).
     localparam int M = 2;  // Number of vitisnetp4 processors.
 
@@ -28,66 +29,119 @@ module tb;
     axi4l_intf app_axil_if   ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [M][N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if[N] ();
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [M][N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if[N] ();
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_h2c_if[N * HOST_NUM_IFS] ();
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_c2h_if[N * HOST_NUM_IFS] ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
-    logic [M-1:0][2-1:0]        axis_from_switch_tvalid;
-    logic [M-1:0][2-1:0]        axis_from_switch_tready;
-    logic [M-1:0][2-1:0][511:0] axis_from_switch_tdata;
-    logic [M-1:0][2-1:0][63:0]  axis_from_switch_tkeep;
-    logic [M-1:0][2-1:0]        axis_from_switch_tlast;
-    logic [M-1:0][2-1:0][1:0]   axis_from_switch_tid;
-    logic [M-1:0][2-1:0][1:0]   axis_from_switch_tdest;
-    logic [M-1:0][2-1:0][15:0]  axis_from_switch_tuser_pid;
+    logic [N-1:0]        axis_app_igr_tvalid;
+    logic [N-1:0]        axis_app_igr_tready;
+    logic [N-1:0][511:0] axis_app_igr_tdata;
+    logic [N-1:0][63:0]  axis_app_igr_tkeep;
+    logic [N-1:0]        axis_app_igr_tlast;
+    logic [N-1:0][1:0]   axis_app_igr_tid;
+    logic [N-1:0][1:0]   axis_app_igr_tdest;
+    logic [N-1:0][15:0]  axis_app_igr_tuser_pid;
 
     generate
-       for (genvar i = 0; i < M; i += 1) begin
-           for (genvar j = 0; j < 2; j += 1) begin
-               assign axis_from_switch_tvalid[i][j]    = axis_in_if[i][j].tvalid;
-               assign axis_in_if[i][j].tready          = axis_from_switch_tready[i][j];
-               assign axis_from_switch_tdata[i][j]     = axis_in_if[i][j].tdata;
-               assign axis_from_switch_tkeep[i][j]     = axis_in_if[i][j].tkeep;
-               assign axis_from_switch_tlast[i][j]     = axis_in_if[i][j].tlast;
-               assign axis_from_switch_tid[i][j]       = axis_in_if[i][j].tid;
-               assign axis_from_switch_tdest[i][j]     = axis_in_if[i][j].tdest;
-               assign axis_from_switch_tuser_pid[i][j] = axis_in_if[i][j].tuser.pid;
-           end
-       end
+        for (genvar j = 0; j < N; j += 1) begin
+            assign axis_app_igr_tvalid[j]    = axis_in_if[j].tvalid; 
+            assign axis_in_if[j].tready      = axis_app_igr_tready[j];
+            assign axis_app_igr_tdata[j]     = axis_in_if[j].tdata;
+            assign axis_app_igr_tkeep[j]     = axis_in_if[j].tkeep;
+            assign axis_app_igr_tlast[j]     = axis_in_if[j].tlast;
+            assign axis_app_igr_tid[j]       = axis_in_if[j].tid;
+            assign axis_app_igr_tdest[j]     = axis_in_if[j].tdest;
+            assign axis_app_igr_tuser_pid[j] = axis_in_if[j].tuser.pid;
+        end
     endgenerate
 
-    logic [M-1:0][2-1:0]        axis_to_switch_tvalid;
-    logic [M-1:0][2-1:0]        axis_to_switch_tready;
-    logic [M-1:0][2-1:0][511:0] axis_to_switch_tdata;
-    logic [M-1:0][2-1:0][63:0]  axis_to_switch_tkeep;
-    logic [M-1:0][2-1:0]        axis_to_switch_tlast;
-    logic [M-1:0][2-1:0][1:0]   axis_to_switch_tid;
-    logic [M-1:0][2-1:0][2:0]   axis_to_switch_tdest;
-    logic [M-1:0][2-1:0][15:0]  axis_to_switch_tuser_pid;
-    logic [M-1:0][2-1:0]        axis_to_switch_tuser_trunc_enable;
-    logic [M-1:0][2-1:0][15:0]  axis_to_switch_tuser_trunc_length;
-    logic [M-1:0][2-1:0]        axis_to_switch_tuser_rss_enable;
-    logic [M-1:0][2-1:0][11:0]  axis_to_switch_tuser_rss_entropy;
+    logic [N-1:0]        axis_app_egr_tvalid;
+    logic [N-1:0]        axis_app_egr_tready;
+    logic [N-1:0][511:0] axis_app_egr_tdata;
+    logic [N-1:0][63:0]  axis_app_egr_tkeep;
+    logic [N-1:0]        axis_app_egr_tlast;
+    logic [N-1:0][1:0]   axis_app_egr_tid;
+    logic [N-1:0][2:0]   axis_app_egr_tdest;
+    logic [N-1:0][15:0]  axis_app_egr_tuser_pid;
+    logic [N-1:0]        axis_app_egr_tuser_trunc_enable;
+    logic [N-1:0][15:0]  axis_app_egr_tuser_trunc_length;
+    logic [N-1:0]        axis_app_egr_tuser_rss_enable;
+    logic [N-1:0][11:0]  axis_app_egr_tuser_rss_entropy;
 
     generate
-       for (genvar i = 0; i < M; i += 1) begin
-           for (genvar j = 0; j < 2; j += 1) begin
-               assign axis_out_if[i][j].tvalid             = axis_to_switch_tvalid[i][j];
-               assign axis_to_switch_tready[i][j]          = axis_out_if[i][j].tready;
-               assign axis_out_if[i][j].tdata              = axis_to_switch_tdata[i][j];
-               assign axis_out_if[i][j].tkeep              = axis_to_switch_tkeep[i][j];
-               assign axis_out_if[i][j].tlast              = axis_to_switch_tlast[i][j];
-               assign axis_out_if[i][j].tid                = axis_to_switch_tid[i][j];
-               assign axis_out_if[i][j].tdest              = axis_to_switch_tdest[i][j];
-               assign axis_out_if[i][j].tuser.pid          = axis_to_switch_tuser_pid[i][j];
-               assign axis_out_if[i][j].tuser.trunc_enable = axis_to_switch_tuser_trunc_enable[i][j];
-               assign axis_out_if[i][j].tuser.trunc_length = axis_to_switch_tuser_trunc_length[i][j];
-               assign axis_out_if[i][j].tuser.rss_enable   = axis_to_switch_tuser_rss_enable[i][j];
-               assign axis_out_if[i][j].tuser.rss_entropy  = axis_to_switch_tuser_rss_entropy[i][j];
-           end
-       end
+        for (genvar j = 0; j < N; j += 1) begin
+            assign axis_out_if[j].tvalid             = axis_app_egr_tvalid[j];
+            assign axis_app_egr_tready[j]            = axis_out_if[j].tready;
+            assign axis_out_if[j].tdata              = axis_app_egr_tdata[j];
+            assign axis_out_if[j].tkeep              = axis_app_egr_tkeep[j];
+            assign axis_out_if[j].tlast              = axis_app_egr_tlast[j];
+            assign axis_out_if[j].tid                = axis_app_egr_tid[j];
+            assign axis_out_if[j].tdest              = axis_app_egr_tdest[j];
+            assign axis_out_if[j].tuser.pid          = axis_app_egr_tuser_pid[j];
+            assign axis_out_if[j].tuser.trunc_enable = axis_app_egr_tuser_trunc_enable[j];
+            assign axis_out_if[j].tuser.trunc_length = axis_app_egr_tuser_trunc_length[j];
+            assign axis_out_if[j].tuser.rss_enable   = axis_app_egr_tuser_rss_enable[j];
+            assign axis_out_if[j].tuser.rss_entropy  = axis_app_egr_tuser_rss_entropy[j];
+        end
+    endgenerate
+
+    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tvalid;
+    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tready;
+    logic [N*HOST_NUM_IFS-1:0][511:0] axis_h2c_tdata;
+    logic [N*HOST_NUM_IFS-1:0][63:0]  axis_h2c_tkeep;
+    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tlast;
+    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tid;
+    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tdest;
+    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_h2c_tuser_pid;
+
+    generate
+        for (genvar j = 0; j < N*HOST_NUM_IFS; j += 1) begin
+            assign axis_h2c_tvalid[j]    = '0;
+//            assign axis_in_if[j].tready  = axis_h2c_tready[j];
+            assign axis_h2c_tdata[j]     = '0;
+            assign axis_h2c_tkeep[j]     = '0;
+            assign axis_h2c_tlast[j]     = '0;
+            assign axis_h2c_tid[j]       = '0;
+            assign axis_h2c_tdest[j]     = '0;
+            assign axis_h2c_tuser_pid[j] = '0;
+        end
+    endgenerate
+
+    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tvalid;
+    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tready;
+    logic [N*HOST_NUM_IFS-1:0][511:0] axis_c2h_tdata;
+    logic [N*HOST_NUM_IFS-1:0][63:0]  axis_c2h_tkeep;
+    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tlast;
+    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_c2h_tid;
+    logic [N*HOST_NUM_IFS-1:0][2:0]   axis_c2h_tdest;
+    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_pid;
+    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tuser_trunc_enable;
+    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_trunc_length;
+    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tuser_rss_enable;
+    logic [N*HOST_NUM_IFS-1:0][11:0]  axis_c2h_tuser_rss_entropy;
+
+    generate
+        for (genvar j = 0; j < N*HOST_NUM_IFS; j += 1) begin
+            assign axis_c2h_if[j].tvalid             = axis_c2h_tvalid[j];
+            assign axis_c2h_tready[j]                = axis_c2h_if[j].tready;
+            assign axis_c2h_if[j].tdata              = axis_c2h_tdata[j];
+            assign axis_c2h_if[j].tkeep              = axis_c2h_tkeep[j];
+            assign axis_c2h_if[j].tlast              = axis_c2h_tlast[j];
+            assign axis_c2h_if[j].tid                = axis_c2h_tid[j];
+            assign axis_c2h_if[j].tdest              = axis_c2h_tdest[j];
+            assign axis_c2h_if[j].tuser.pid          = axis_c2h_tuser_pid[j];
+            assign axis_c2h_if[j].tuser.trunc_enable = axis_c2h_tuser_trunc_enable[j];
+            assign axis_c2h_if[j].tuser.trunc_length = axis_c2h_tuser_trunc_length[j];
+            assign axis_c2h_if[j].tuser.rss_enable   = axis_c2h_tuser_rss_enable[j];
+            assign axis_c2h_if[j].tuser.rss_entropy  = axis_c2h_tuser_rss_entropy[j];
+        end
     endgenerate
 
     logic [15:0]        axi_to_hbm_aclk;
@@ -246,25 +300,45 @@ module tb;
         .app_axil_rdata   (app_axil_if.rdata),
         .app_axil_rresp   (app_axil_if.rresp),
          // AXI-S data interface (from switch output 0, to app)
-        .axis_from_switch_tvalid ( axis_from_switch_tvalid ),
-        .axis_from_switch_tready ( axis_from_switch_tready ),
-        .axis_from_switch_tdata  ( axis_from_switch_tdata ),
-        .axis_from_switch_tkeep  ( axis_from_switch_tkeep ),
-        .axis_from_switch_tlast  ( axis_from_switch_tlast ),
-        .axis_from_switch_tid    ( axis_from_switch_tid ),
-        .axis_from_switch_tdest  ( axis_from_switch_tdest ),
-        .axis_from_switch_tuser_pid ( axis_from_switch_tuser_pid ),
+        .axis_app_igr_tvalid    ( axis_app_igr_tvalid ),
+        .axis_app_igr_tready    ( axis_app_igr_tready ),
+        .axis_app_igr_tdata     ( axis_app_igr_tdata ),
+        .axis_app_igr_tkeep     ( axis_app_igr_tkeep ),
+        .axis_app_igr_tlast     ( axis_app_igr_tlast ),
+        .axis_app_igr_tid       ( axis_app_igr_tid ),
+        .axis_app_igr_tdest     ( axis_app_igr_tdest ),
+        .axis_app_igr_tuser_pid ( axis_app_igr_tuser_pid ),
         // AXI-S data interface (from app, to switch input 0)
-        .axis_to_switch_tvalid ( axis_to_switch_tvalid ),
-        .axis_to_switch_tready ( axis_to_switch_tready ),
-        .axis_to_switch_tdata  ( axis_to_switch_tdata ),
-        .axis_to_switch_tkeep  ( axis_to_switch_tkeep ),
-        .axis_to_switch_tlast  ( axis_to_switch_tlast ),
-        .axis_to_switch_tid    ( axis_to_switch_tid ),
-        .axis_to_switch_tdest  ( axis_to_switch_tdest ),
-        .axis_to_switch_tuser_pid ( axis_to_switch_tuser_pid ),
-        .axis_to_switch_tuser_rss_enable  ( axis_to_switch_tuser_rss_enable ),
-        .axis_to_switch_tuser_rss_entropy ( axis_to_switch_tuser_rss_entropy ),
+        .axis_app_egr_tvalid            ( axis_app_egr_tvalid ),
+        .axis_app_egr_tready            ( axis_app_egr_tready ),
+        .axis_app_egr_tdata             ( axis_app_egr_tdata ),
+        .axis_app_egr_tkeep             ( axis_app_egr_tkeep ),
+        .axis_app_egr_tlast             ( axis_app_egr_tlast ),
+        .axis_app_egr_tid               ( axis_app_egr_tid ),
+        .axis_app_egr_tdest             ( axis_app_egr_tdest ),
+        .axis_app_egr_tuser_pid         ( axis_app_egr_tuser_pid ),
+        .axis_app_egr_tuser_rss_enable  ( axis_app_egr_tuser_rss_enable ),
+        .axis_app_egr_tuser_rss_entropy ( axis_app_egr_tuser_rss_entropy ),
+         // AXI-S data interface (from switch output 0, to app)
+        .axis_h2c_tvalid    ( axis_h2c_tvalid ),
+        .axis_h2c_tready    ( axis_h2c_tready ),
+        .axis_h2c_tdata     ( axis_h2c_tdata ),
+        .axis_h2c_tkeep     ( axis_h2c_tkeep ),
+        .axis_h2c_tlast     ( axis_h2c_tlast ),
+        .axis_h2c_tid       ( axis_h2c_tid ),
+        .axis_h2c_tdest     ( axis_h2c_tdest ),
+        .axis_h2c_tuser_pid ( axis_h2c_tuser_pid ),
+        // AXI-S data interface (from app, to switch input 0)
+        .axis_c2h_tvalid            ( axis_c2h_tvalid ),
+        .axis_c2h_tready            ( axis_c2h_tready ),
+        .axis_c2h_tdata             ( axis_c2h_tdata ),
+        .axis_c2h_tkeep             ( axis_c2h_tkeep ),
+        .axis_c2h_tlast             ( axis_c2h_tlast ),
+        .axis_c2h_tid               ( axis_c2h_tid ),
+        .axis_c2h_tdest             ( axis_c2h_tdest ),
+        .axis_c2h_tuser_pid         ( axis_c2h_tuser_pid ),
+        .axis_c2h_tuser_rss_enable  ( axis_c2h_tuser_rss_enable ),
+        .axis_c2h_tuser_rss_entropy ( axis_c2h_tuser_rss_entropy ),
         // egress flow control interface
         .egr_flow_ctl            ( '0 ),
         // AXI3 interfaces to HBM
@@ -354,17 +428,23 @@ module tb;
     assign timestamp = timestamp_if.timestamp;
 
     // Assign AXI-S input clock/reset
-    assign axis_in_if[0][0].aclk = clk;
-    assign axis_in_if[0][0].aresetn = rstn;
+    assign axis_in_if[0].aclk = clk;
+    assign axis_in_if[0].aresetn = rstn;
 
-    assign axis_in_if[0][1].aclk = clk;
-    assign axis_in_if[0][1].aresetn = rstn;
+    assign axis_in_if[1].aclk = clk;
+    assign axis_in_if[1].aresetn = rstn;
 
-    assign axis_out_if[1][0].aclk = clk;
-    assign axis_out_if[1][0].aresetn = rstn;
+    assign axis_out_if[0].aclk = clk;
+    assign axis_out_if[0].aresetn = rstn;
 
-    assign axis_out_if[1][1].aclk = clk;
-    assign axis_out_if[1][1].aresetn = rstn;
+    assign axis_out_if[1].aclk = clk;
+    assign axis_out_if[1].aresetn = rstn;
+
+    assign axis_c2h_if[0].aclk = clk;
+    assign axis_c2h_if[0].aresetn = rstn;
+
+    assign axis_c2h_if[1].aclk = clk;
+    assign axis_c2h_if[1].aresetn = rstn;
 
     //===================================
     // Build
@@ -380,10 +460,12 @@ module tb;
             env.timestamp_vif = timestamp_if;
             env.axil_vif = app_axil_if;
             env.axil_vitisnetp4_vif = axil_if;
-            env.axis_in_vif[0]  = axis_in_if[0][0];
-            env.axis_in_vif[1]  = axis_in_if[0][1];
-            env.axis_out_vif[0] = axis_out_if[1][0]; // output from p4_egr processor.
-            env.axis_out_vif[1] = axis_out_if[1][1];
+            env.axis_in_vif[0]  = axis_in_if[0];
+            env.axis_in_vif[1]  = axis_in_if[1];
+            env.axis_out_vif[0] = axis_out_if[0];
+            env.axis_out_vif[1] = axis_out_if[1];
+            env.axis_c2h_vif[0] = axis_c2h_if[0];
+            env.axis_c2h_vif[1] = axis_c2h_if[1];
 
             env.axi_to_hbm_vif = axi_to_hbm;
 
