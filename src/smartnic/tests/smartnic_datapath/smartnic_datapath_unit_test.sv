@@ -224,7 +224,7 @@ module smartnic_datapath_unit_test;
                begin
                  count = 0;
                  while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
-                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 0 : 2;  // alternate directing traffic to bypass and app0 interfaces.
+                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 3 : 2;  // alternate directing traffic to bypass interface and igr_sw_drop.
                  enable_monitor = (igr_sw_tdest == 2) ? 1 : 0;  // disable output monitor when traffic flows to app0 interface.
                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
                end
