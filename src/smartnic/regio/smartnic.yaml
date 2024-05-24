@@ -28,7 +28,7 @@ regs:
                 igr_sw_tid[0]=1 sets 'tid' from CMAC_0 to CMAC_1.
           width: 2
           init: 0
-          enum_hex:
+          enum:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
@@ -44,7 +44,7 @@ regs:
                 igr_sw_dest[0]=1 sends pkts from CMAC_0 to APP_1.
           width: 2
           init: 3
-          enum_hex:
+          enum:
               0 : APP_0
               1 : APP_1
               2 : APP_BYPASS
@@ -60,7 +60,7 @@ regs:
                 bypass_tdest[0]=1 sends pkts from CMAC_0 to CMAC_1.
           width: 2
           init: 0
-          enum_hex:
+          enum:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
@@ -97,7 +97,7 @@ regs:
                 app_0_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
           width: 3
           init: 0
-          enum_hex:
+          enum:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
@@ -114,7 +114,7 @@ regs:
                 app_1_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
           width: 3
           init: 0
-          enum_hex:
+          enum:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
