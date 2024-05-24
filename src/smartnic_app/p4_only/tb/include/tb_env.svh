@@ -7,9 +7,8 @@ class tb_env extends std_verif_pkg::base;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
-    localparam int HOST_NUM_IFS = 1;
-    localparam int N = 2;  // Number of processor ports (per vitisnetp4 processor).
-    localparam int M = 2;  // Number of vitisnetp4 processors.
+    localparam int HOST_NUM_IFS = 1;   // Number of HOST interfaces.
+    localparam int NUM_PORTS = 2;      // Number of processor ports (per vitisnetp4 processor).
 
     // -- Timeouts
     localparam int RESET_TIMEOUT = 1024;     // In clk cycles
@@ -31,11 +30,11 @@ class tb_env extends std_verif_pkg::base;
 
     // AXI-S interfaces
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_in_vif  [N];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_in_vif  [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [N];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_c2h_vif [N * HOST_NUM_IFS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_c2h_vif [NUM_PORTS * HOST_NUM_IFS];
 
     // AXI3 interfaces to HBM
     virtual axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_vif [16];
@@ -43,15 +42,15 @@ class tb_env extends std_verif_pkg::base;
     // Drivers/Monitors
     axi4s_driver #(
         .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
-    ) axis_driver  [N];
+    ) axis_driver  [NUM_PORTS];
 
     axi4s_monitor #(
         .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
-    ) axis_monitor [N * (HOST_NUM_IFS + 1)];
+    ) axis_monitor [NUM_PORTS * (HOST_NUM_IFS + 1)];
 
 //    axi4s_monitor #(
 //        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
-//    ) c2h_monitor [HOST_NUM_IFS*N];
+//    ) c2h_monitor [HOST_NUM_IFS * NUM_PORTS];
 
     // AXI-L agent
     axi4l_reg_agent #() reg_agent;
@@ -81,8 +80,8 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor [2]     = new(.BIGENDIAN(bigendian));
         axis_monitor [3]     = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent      = new("axi4l_reg_agent");
-        p4_only_reg_agent     = new("p4_only_reg_agent", reg_agent, 'h0000);
+        vitisnetp4_reg_agent = new("axi4l_reg_agent");
+        p4_only_reg_agent    = new("p4_only_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
 
@@ -95,7 +94,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor[3].axis_vif      = axis_c2h_vif[1];
         ts_agent.timestamp_vif        = timestamp_vif;
         reg_agent.axil_vif            = axil_vif;
-        vitisnetp4_reg_agent.axil_vif      = axil_vitisnetp4_vif;
+        vitisnetp4_reg_agent.axil_vif = axil_vitisnetp4_vif;
     endfunction
 
     task reset();

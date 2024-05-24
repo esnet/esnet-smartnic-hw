@@ -1,12 +1,12 @@
 module smartnic_app_egr
 #(
-    parameter int N = 2  // Number of ingress/egress axi4s ports.
+    parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic      core_clk,
     input  logic      core_rstn,
 
-    axi4s_intf.rx     axi4s_in[N],
-    axi4s_intf.tx     axi4s_out[N],
+    axi4s_intf.rx     axi4s_in  [NUM_PORTS],
+    axi4s_intf.tx     axi4s_out [NUM_PORTS],
 
     axi4l_intf.peripheral axil_if
 );
@@ -43,7 +43,7 @@ module smartnic_app_egr
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
 
-    generate for (genvar i = 0; i < N; i += 1) begin
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         axi4s_full_pipe axis4s_full_pipe_inst (.axi4s_if_from_tx(axi4s_in[i]), .axi4s_if_to_rx(axi4s_out[i]));
     end endgenerate
 

@@ -1,10 +1,10 @@
 // smartnic_app (empty) stub module. Used for platform level tests.
 (*black_box*) module smartnic_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16,
-    parameter int HOST_NUM_IFS = 1,
-    parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
-    parameter int M = 2  // Number of vitisnetp4 processors.
+    parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
+    parameter int HOST_NUM_IFS = 1,     // Number of HOST interfaces.
+    parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
+    parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
     input  logic         core_clk,
     input  logic         core_rstn,
@@ -71,55 +71,55 @@
 
     // AXI-S app_igr interface
     // (synchronous to core_clk domain)
-    input  logic [(N*  1)-1:0] axis_app_igr_tvalid,
-    output logic [(N*  1)-1:0] axis_app_igr_tready,
-    input  logic [(N*512)-1:0] axis_app_igr_tdata,
-    input  logic [(N* 64)-1:0] axis_app_igr_tkeep,
-    input  logic [(N*  1)-1:0] axis_app_igr_tlast,
-    input  logic [(N*  2)-1:0] axis_app_igr_tid,
-    input  logic [(N*  2)-1:0] axis_app_igr_tdest,
-    input  logic [(N* 16)-1:0] axis_app_igr_tuser_pid,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tvalid,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tready,
+    input  logic [(NUM_PORTS*512)-1:0] axis_app_igr_tdata,
+    input  logic [(NUM_PORTS* 64)-1:0] axis_app_igr_tkeep,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tlast,
+    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tid,
+    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tdest,
+    input  logic [(NUM_PORTS* 16)-1:0] axis_app_igr_tuser_pid,
 
     // AXI-S app_egr interface
     // (synchronous to core_clk domain)
-    output logic [(N*  1)-1:0] axis_app_egr_tvalid,
-    input  logic [(N*  1)-1:0] axis_app_egr_tready,
-    output logic [(N*512)-1:0] axis_app_egr_tdata,
-    output logic [(N* 64)-1:0] axis_app_egr_tkeep,
-    output logic [(N*  1)-1:0] axis_app_egr_tlast,
-    output logic [(N*  2)-1:0] axis_app_egr_tid,
-    output logic [(N*  3)-1:0] axis_app_egr_tdest,
-    output logic [(N* 16)-1:0] axis_app_egr_tuser_pid,
-    output logic [(N*  1)-1:0] axis_app_egr_tuser_trunc_enable,
-    output logic [(N* 16)-1:0] axis_app_egr_tuser_trunc_length,
-    output logic [(N*  1)-1:0] axis_app_egr_tuser_rss_enable,
-    output logic [(N* 12)-1:0] axis_app_egr_tuser_rss_entropy,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tvalid,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tready,
+    output logic [(NUM_PORTS*512)-1:0] axis_app_egr_tdata,
+    output logic [(NUM_PORTS* 64)-1:0] axis_app_egr_tkeep,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tlast,
+    output logic [(NUM_PORTS*  2)-1:0] axis_app_egr_tid,
+    output logic [(NUM_PORTS*  3)-1:0] axis_app_egr_tdest,
+    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_pid,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_trunc_enable,
+    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_trunc_length,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_rss_enable,
+    output logic [(NUM_PORTS* 12)-1:0] axis_app_egr_tuser_rss_entropy,
 
     // AXI-S c2h interface
     // (synchronous to core_clk domain)
-    input  logic [(HOST_NUM_IFS*N*  1)-1:0] axis_h2c_tvalid,
-    output logic [(HOST_NUM_IFS*N*  1)-1:0] axis_h2c_tready,
-    input  logic [(HOST_NUM_IFS*N*512)-1:0] axis_h2c_tdata,
-    input  logic [(HOST_NUM_IFS*N* 64)-1:0] axis_h2c_tkeep,
-    input  logic [(HOST_NUM_IFS*N*  1)-1:0] axis_h2c_tlast,
-    input  logic [(HOST_NUM_IFS*N*  2)-1:0] axis_h2c_tid,
-    input  logic [(HOST_NUM_IFS*N*  2)-1:0] axis_h2c_tdest,
-    input  logic [(HOST_NUM_IFS*N* 16)-1:0] axis_h2c_tuser_pid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tvalid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tready,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_h2c_tdata,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_h2c_tkeep,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tlast,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tdest,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_h2c_tuser_pid,
 
     // AXI-S h2c interface
     // (synchronous to core_clk domain)
-    output logic [(HOST_NUM_IFS*N*  1)-1:0] axis_c2h_tvalid,
-    input  logic [(HOST_NUM_IFS*N*  1)-1:0] axis_c2h_tready,
-    output logic [(HOST_NUM_IFS*N*512)-1:0] axis_c2h_tdata,
-    output logic [(HOST_NUM_IFS*N* 64)-1:0] axis_c2h_tkeep,
-    output logic [(HOST_NUM_IFS*N*  1)-1:0] axis_c2h_tlast,
-    output logic [(HOST_NUM_IFS*N*  2)-1:0] axis_c2h_tid,
-    output logic [(HOST_NUM_IFS*N*  3)-1:0] axis_c2h_tdest,
-    output logic [(HOST_NUM_IFS*N* 16)-1:0] axis_c2h_tuser_pid,
-    output logic [(HOST_NUM_IFS*N*  1)-1:0] axis_c2h_tuser_trunc_enable,
-    output logic [(HOST_NUM_IFS*N* 16)-1:0] axis_c2h_tuser_trunc_length,
-    output logic [(HOST_NUM_IFS*N*  1)-1:0] axis_c2h_tuser_rss_enable,
-    output logic [(HOST_NUM_IFS*N* 12)-1:0] axis_c2h_tuser_rss_entropy,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tvalid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tready,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_c2h_tdata,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_c2h_tkeep,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tlast,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_c2h_tid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  3)-1:0] axis_c2h_tdest,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_pid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_trunc_enable,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_trunc_length,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_rss_enable,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 12)-1:0] axis_c2h_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl,

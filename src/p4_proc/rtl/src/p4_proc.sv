@@ -2,7 +2,7 @@ module p4_proc
     import smartnic_pkg::*;
     import p4_proc_pkg::*;
 #(
-    parameter int   N = 2  // Number of processor ports.
+    parameter int   NUM_PORTS = 2  // Number of processor ports.
 ) (
     input logic        core_clk,
     input logic        core_rstn,
@@ -10,8 +10,8 @@ module p4_proc
 
     axi4l_intf.peripheral axil_if,
 
-    axi4s_intf.rx axis_in[N],
-    axi4s_intf.tx axis_out[N],
+    axi4s_intf.rx axis_in  [NUM_PORTS],
+    axi4s_intf.tx axis_out [NUM_PORTS],
 
     axi4s_intf.tx axis_to_vitisnetp4,
     axi4s_intf.rx axis_from_vitisnetp4,
@@ -26,8 +26,8 @@ module p4_proc
     // -------------------------------------------------
     // Parameter checking
     // -------------------------------------------------
-    initial std_pkg::param_check_gt(N, 1, "N");
-    initial std_pkg::param_check_lt(N, 2, "N");
+    initial std_pkg::param_check_gt(NUM_PORTS, 1, "NUM_PORTS");
+    initial std_pkg::param_check_lt(NUM_PORTS, 2, "NUM_PORTS");
 
     // -------------------------------------------------
     // Typedefs
@@ -79,27 +79,27 @@ module p4_proc
     // ----------------------------------------------------------------
     //  local signals and axi4s intf instantiations.
     // ----------------------------------------------------------------
-    logic zero_length[N];
-    logic loop_detect[N];
-    logic drop_pkt[N];
+    logic zero_length [NUM_PORTS];
+    logic loop_detect [NUM_PORTS];
+    logic drop_pkt    [NUM_PORTS];
 
     logic axis_from_vitisnetp4_proc_port;
 
-    logic [15:0] trunc_length[N];
+    logic [15:0] trunc_length [NUM_PORTS];
 
-    tuser_t  _axis_in_tuser[N];
-    tuser_t  _axis_from_split_join_tuser[N];
+    tuser_t  _axis_in_tuser [NUM_PORTS];
+    tuser_t  _axis_from_split_join_tuser [NUM_PORTS];
     tuser_t  axis_to_vitisnetp4_tuser;
     tuser_t  _axis_from_vitisnetp4_tuser;
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_in[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_in [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_split_join[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        _axis_to_vitisnetp4 ();
@@ -108,19 +108,19 @@ module p4_proc
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_vitisnetp4 ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_split_join[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_drop[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_drop [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_trunc[N] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_trunc [NUM_PORTS] ();
 
 
     // --------------------------------------------------------------------
     //  per port functionality.  pkt split-join, drop and truncation logic.
     // --------------------------------------------------------------------
-    generate for (genvar i = 0; i < N; i += 1) begin : g__proc_port
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__proc_port
         // add timestamp to tuser signal.
         assign _axis_in[i].aclk         = axis_in[i].aclk;
         assign _axis_in[i].aresetn      = axis_in[i].aresetn;
@@ -211,12 +211,12 @@ module p4_proc
 
 
     // ----------------------------------------------------------------
-    // axi4s mux and demux logic for N > 1, or connection logic for N = 1.
+    // axi4s mux and demux logic for NUM_PORTS > 1, or connection logic for NUM_PORTS = 1.
     // ----------------------------------------------------------------
     generate
-    if (N > 1) begin
+    if (NUM_PORTS > 1) begin
         // --- hdr if muxing logic ---
-        axi4s_mux #(.N(N)) axi4s_mux_0 (
+        axi4s_mux #(.N(NUM_PORTS)) axi4s_mux_0 (
             .axi4s_in (_axis_from_split_join),
             .axi4s_out(_axis_to_vitisnetp4)
         );
@@ -242,7 +242,7 @@ module p4_proc
             .axi4s_out1 (axis_to_split_join[1]),
             .output_sel (axis_from_vitisnetp4_proc_port)
         );
-    end else begin // N <= 1
+    end else begin // NUM_PORTS <= 1
         // gate tready and tvalid with tpause register (used for test purposes).
         assign axis_to_vitisnetp4.aclk    = axis_from_split_join[0].aclk;
         assign axis_to_vitisnetp4.aresetn = axis_from_split_join[0].aresetn;

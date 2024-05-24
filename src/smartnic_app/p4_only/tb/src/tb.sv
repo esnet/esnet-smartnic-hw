@@ -6,9 +6,8 @@ module tb;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
-    localparam int HOST_NUM_IFS = 1;
-    localparam int N = 2;  // Number of processor ports (per vitisnetp4 processor).
-    localparam int M = 2;  // Number of vitisnetp4 processors.
+    localparam int HOST_NUM_IFS = 1;  // Number of HOST interfaces.
+    localparam int NUM_PORTS = 2;     // Number of processor ports (per vitisnetp4 processor).
 
     //===================================
     // (Common) test environment
@@ -29,28 +28,28 @@ module tb;
     axi4l_intf app_axil_if   ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if[NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if[NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_h2c_if[N * HOST_NUM_IFS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_h2c_if[NUM_PORTS * HOST_NUM_IFS] ();
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_c2h_if[N * HOST_NUM_IFS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_c2h_if[NUM_PORTS * HOST_NUM_IFS] ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
-    logic [N-1:0]        axis_app_igr_tvalid;
-    logic [N-1:0]        axis_app_igr_tready;
-    logic [N-1:0][511:0] axis_app_igr_tdata;
-    logic [N-1:0][63:0]  axis_app_igr_tkeep;
-    logic [N-1:0]        axis_app_igr_tlast;
-    logic [N-1:0][1:0]   axis_app_igr_tid;
-    logic [N-1:0][1:0]   axis_app_igr_tdest;
-    logic [N-1:0][15:0]  axis_app_igr_tuser_pid;
+    logic [NUM_PORTS-1:0]        axis_app_igr_tvalid;
+    logic [NUM_PORTS-1:0]        axis_app_igr_tready;
+    logic [NUM_PORTS-1:0][511:0] axis_app_igr_tdata;
+    logic [NUM_PORTS-1:0][63:0]  axis_app_igr_tkeep;
+    logic [NUM_PORTS-1:0]        axis_app_igr_tlast;
+    logic [NUM_PORTS-1:0][1:0]   axis_app_igr_tid;
+    logic [NUM_PORTS-1:0][1:0]   axis_app_igr_tdest;
+    logic [NUM_PORTS-1:0][15:0]  axis_app_igr_tuser_pid;
 
     generate
-        for (genvar j = 0; j < N; j += 1) begin
+        for (genvar j = 0; j < NUM_PORTS; j += 1) begin
             assign axis_app_igr_tvalid[j]    = axis_in_if[j].tvalid; 
             assign axis_in_if[j].tready      = axis_app_igr_tready[j];
             assign axis_app_igr_tdata[j]     = axis_in_if[j].tdata;
@@ -62,21 +61,21 @@ module tb;
         end
     endgenerate
 
-    logic [N-1:0]        axis_app_egr_tvalid;
-    logic [N-1:0]        axis_app_egr_tready;
-    logic [N-1:0][511:0] axis_app_egr_tdata;
-    logic [N-1:0][63:0]  axis_app_egr_tkeep;
-    logic [N-1:0]        axis_app_egr_tlast;
-    logic [N-1:0][1:0]   axis_app_egr_tid;
-    logic [N-1:0][2:0]   axis_app_egr_tdest;
-    logic [N-1:0][15:0]  axis_app_egr_tuser_pid;
-    logic [N-1:0]        axis_app_egr_tuser_trunc_enable;
-    logic [N-1:0][15:0]  axis_app_egr_tuser_trunc_length;
-    logic [N-1:0]        axis_app_egr_tuser_rss_enable;
-    logic [N-1:0][11:0]  axis_app_egr_tuser_rss_entropy;
+    logic [NUM_PORTS-1:0]        axis_app_egr_tvalid;
+    logic [NUM_PORTS-1:0]        axis_app_egr_tready;
+    logic [NUM_PORTS-1:0][511:0] axis_app_egr_tdata;
+    logic [NUM_PORTS-1:0][63:0]  axis_app_egr_tkeep;
+    logic [NUM_PORTS-1:0]        axis_app_egr_tlast;
+    logic [NUM_PORTS-1:0][1:0]   axis_app_egr_tid;
+    logic [NUM_PORTS-1:0][2:0]   axis_app_egr_tdest;
+    logic [NUM_PORTS-1:0][15:0]  axis_app_egr_tuser_pid;
+    logic [NUM_PORTS-1:0]        axis_app_egr_tuser_trunc_enable;
+    logic [NUM_PORTS-1:0][15:0]  axis_app_egr_tuser_trunc_length;
+    logic [NUM_PORTS-1:0]        axis_app_egr_tuser_rss_enable;
+    logic [NUM_PORTS-1:0][11:0]  axis_app_egr_tuser_rss_entropy;
 
     generate
-        for (genvar j = 0; j < N; j += 1) begin
+        for (genvar j = 0; j < NUM_PORTS; j += 1) begin
             assign axis_out_if[j].tvalid             = axis_app_egr_tvalid[j];
             assign axis_app_egr_tready[j]            = axis_out_if[j].tready;
             assign axis_out_if[j].tdata              = axis_app_egr_tdata[j];
@@ -92,17 +91,17 @@ module tb;
         end
     endgenerate
 
-    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tvalid;
-    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tready;
-    logic [N*HOST_NUM_IFS-1:0][511:0] axis_h2c_tdata;
-    logic [N*HOST_NUM_IFS-1:0][63:0]  axis_h2c_tkeep;
-    logic [N*HOST_NUM_IFS-1:0]        axis_h2c_tlast;
-    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tid;
-    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tdest;
-    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_h2c_tuser_pid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_h2c_tvalid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_h2c_tready;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][511:0] axis_h2c_tdata;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][63:0]  axis_h2c_tkeep;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_h2c_tlast;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][1:0]   axis_h2c_tdest;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][15:0]  axis_h2c_tuser_pid;
 
     generate
-        for (genvar j = 0; j < N*HOST_NUM_IFS; j += 1) begin
+        for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
             assign axis_h2c_tvalid[j]    = '0;
 //            assign axis_in_if[j].tready  = axis_h2c_tready[j];
             assign axis_h2c_tdata[j]     = '0;
@@ -114,21 +113,21 @@ module tb;
         end
     endgenerate
 
-    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tvalid;
-    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tready;
-    logic [N*HOST_NUM_IFS-1:0][511:0] axis_c2h_tdata;
-    logic [N*HOST_NUM_IFS-1:0][63:0]  axis_c2h_tkeep;
-    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tlast;
-    logic [N*HOST_NUM_IFS-1:0][1:0]   axis_c2h_tid;
-    logic [N*HOST_NUM_IFS-1:0][2:0]   axis_c2h_tdest;
-    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_pid;
-    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tuser_trunc_enable;
-    logic [N*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_trunc_length;
-    logic [N*HOST_NUM_IFS-1:0]        axis_c2h_tuser_rss_enable;
-    logic [N*HOST_NUM_IFS-1:0][11:0]  axis_c2h_tuser_rss_entropy;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_c2h_tvalid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_c2h_tready;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][511:0] axis_c2h_tdata;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][63:0]  axis_c2h_tkeep;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_c2h_tlast;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][1:0]   axis_c2h_tid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][2:0]   axis_c2h_tdest;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_pid;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_c2h_tuser_trunc_enable;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][15:0]  axis_c2h_tuser_trunc_length;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0]        axis_c2h_tuser_rss_enable;
+    logic [NUM_PORTS*HOST_NUM_IFS-1:0][11:0]  axis_c2h_tuser_rss_entropy;
 
     generate
-        for (genvar j = 0; j < N*HOST_NUM_IFS; j += 1) begin
+        for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
             assign axis_c2h_if[j].tvalid             = axis_c2h_tvalid[j];
             assign axis_c2h_tready[j]                = axis_c2h_if[j].tready;
             assign axis_c2h_if[j].tdata              = axis_c2h_tdata[j];
