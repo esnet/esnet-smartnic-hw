@@ -1,0 +1,49 @@
+name: syscfg
+info: |
+  System config registers
+regs:
+  - default:
+      width: 32
+
+  - name: build_status
+    access: ro
+  - name: system_reset
+    access: wo
+    info: Write 1 to trigger the corresponding reset
+    fields:
+      - name: system_reset
+        width: 1
+  - name: system_status
+    access: ro
+    fields:
+      - name: system_reset_done
+        width: 1
+  - name: shell_reset
+    access: wo
+    info: Write 1 to trigger the corresponding reset
+    fields:
+      - name: qdma_reset
+        width: 1
+      - name: cmac0_reset
+        width: 1
+      - name: cmac1_reset
+        width: 1
+  - name: shell_status
+    access: ro
+    fields:
+      - name: qdma_reset_done
+        width: 1
+      - name: cmac0_reset_done
+        width: 1
+      - name: cmac1_reset_done
+        width: 1
+  - name: user_reset
+    access: wo
+    info: Write 1 to trigger the corresponding reset
+  - name: user_status
+    access: ro
+  - name: usr_access
+    access: ro
+  - name: dna
+    access: ro
+    count: 3

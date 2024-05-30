@@ -1,0 +1,144 @@
+name: qspi
+info: |
+  Xilinx Quad SPI
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  - meta:
+      pad_until: 0x1c
+  - name: dgier
+    fields:
+      - meta:
+          pad_until: 31
+      - name: gie
+        width: 1
+  - name: ipisr
+    fields:
+      - name: modf
+        width: 1
+      - name: slv_modf
+        width: 1
+      - name: dtr_empty
+        width: 1
+      - name: dtr_underrun
+        width: 1
+      - name: drr_full
+        width: 1
+      - name: drr_overrun
+        width: 1
+      - name: tx_fifo_half_empty
+        width: 1
+      - name: slv_sel_mode
+        width: 1
+      - name: drr_not_empty
+        width: 1
+      - name: cpol_cpha_err
+        width: 1
+      - name: slv_mode_err
+        width: 1
+      - name: msb_err
+        width: 1
+      - name: loopback_err
+        width: 1
+      - name: cmd_err
+        width: 1
+
+  - meta:
+      pad_until: 0x28
+  - name: ipier
+    fields:
+      - name: modf
+        width: 1
+      - name: slv_modf
+        width: 1
+      - name: dtr_empty
+        width: 1
+      - name: dtr_underrun
+        width: 1
+      - name: drr_full
+        width: 1
+      - name: drr_overrun
+        width: 1
+      - name: tx_fifo_half_empty
+        width: 1
+      - name: slv_sel_mode
+        width: 1
+      - name: drr_not_empty
+        width: 1
+      - name: cpol_cpha_err
+        width: 1
+      - name: slv_mode_err
+        width: 1
+      - name: msb_err
+        width: 1
+      - name: loopback_err
+        width: 1
+      - name: cmd_err
+        width: 1
+
+  - meta:
+      pad_until: 0x40
+  - name: srr
+    access: wo
+
+  - meta:
+      pad_until: 0x60
+  - name: spicr
+    fields:
+      - name: loop
+        width: 1
+      - name: spe
+        width: 1
+      - name: master
+        width: 1
+      - name: cpol
+        width: 1
+      - name: cpha
+        width: 1
+      - name: tx_fifo_reset
+        width: 1
+      - name: rx_fifo_reset
+        width: 1
+      - name: man_slv_sel_assrt_en
+        width: 1
+      - name: mstr_trans_inhib
+        width: 1
+      - name: lsb_first
+        width: 1
+  - name: spisr
+    access: ro
+    fields:
+      - name: rx_empty
+        width: 1
+      - name: rx_full
+        width: 1
+      - name: tx_empty
+        width: 1
+      - name: tx_full
+        width: 1
+      - name: modf
+        width: 1
+      - name: slv_mode_sel
+        width: 1
+      - name: cpol_cpha_err
+        width: 1
+      - name: slv_mode_err
+        width: 1
+      - name: msb_err
+        width: 1
+      - name: loopback_err
+        width: 1
+      - name: cmd_err
+        width: 1
+
+  - name: spi_dtr
+    access: wo
+  - name: spi_drr
+    access: ro
+  - name: spissr
+  - name: spi_tx_fifo_occ
+    access: ro
+  - name: spi_rx_fifo_occ
+    access: ro

@@ -128,3 +128,50 @@ $(ARTIFACTS_DIR) :
 build_smartnic :
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/build all
 
+SHELL_BUILD_OUT_DIR = $(OUTPUT_ROOT)/smartnic/xilinx/alveo/build/$(BOARD)/proj/proj.runs/impl_1
+SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
+
+SHELL_REG_ARTIFACT = $(OUTPUT_ROOT)/smartnic/xilinx/alveo/regio/ir/esnet-smartnic-top-ir.yaml
+SHELL_VITISNETP4_DRV_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar
+SHELL_P4_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr.p4
+
+BUILD_ID ?= $(shell date +"%s")
+
+shell: shell_bitfile shell_package
+
+shell_bitfile: config config_check
+	@echo "Building ESnet shell bitfile ($(BUILD_ID))..."
+	@$(MAKE) -s -C $(APP_ROOT)/src build COMPONENT=xilinx.alveo.build@smartnic BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
+	@test -e $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.bit || (echo ERROR: bitfile not produced. && false)
+	@test -e $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs || (echo ERROR: flash image not produced. && false)
+	@echo "Done."
+
+$(SHELL_REG_ARTIFACT):
+	@echo "Generating regmap artifact for ESnet shell build..."
+	@$(MAKE) -s -C $(APP_ROOT)/src reg COMPONENT=xilinx.alveo.regio@smartnic
+	@echo "Done."
+
+$(SHELL_VITISNETP4_DRV_ARTIFACT): config
+	@$(MAKE) -s -C $(APP_ROOT)/app_if BOARD=$(BOARD)
+
+shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
+	@echo "Packaging ESnet shell build..."
+	@mkdir -p $(ARTIFACTS_BUILD_DIR)
+	@mkdir -p $(SHELL_HWAPI_DIR)
+	@mkdir -p $(SHELL_HWAPI_DIR)/firmware
+	@cp $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.bit $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.bit
+	@cp $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.mcs
+	@-cp $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.ltx $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.ltx
+	@mkdir -p $(SHELL_HWAPI_DIR)/libvitisnetp4drv
+	@mkdir -p $(SHELL_HWAPI_DIR)/libvitisnetp4drv/vitisnetp4_igr
+	@-tar xf $(SHELL_VITISNETP4_DRV_ARTIFACT) -C $(SHELL_HWAPI_DIR)/libvitisnetp4drv/vitisnetp4_igr
+	@-cp $(SHELL_P4_ARTIFACT) $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic-igr.p4
+	@mkdir -p $(SHELL_HWAPI_DIR)/regmap
+	@cp $(SHELL_REG_ARTIFACT) $(SHELL_HWAPI_DIR)/regmap
+	@mkdir -p $(SHELL_HWAPI_DIR)/wireshark/plugins
+	@(cd $(ARTIFACTS_BUILD_DIR) && \
+		zip -r artifacts.$(BOARD).$(BUILD_NAME).0.zip esnet-smartnic-hwapi \
+	)
+	@echo "Done."
+
+.PHONY: shell shell_bitfile shell_package shell_clean_artifacts

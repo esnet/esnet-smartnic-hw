@@ -1,0 +1,1 @@
+../../../../../open-nic-shell/constr/au250/general.xdc

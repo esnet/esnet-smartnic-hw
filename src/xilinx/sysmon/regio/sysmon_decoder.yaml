@@ -1,0 +1,21 @@
+name: sysmon
+
+blocks:
+  sysmon: &sysmon
+    !include ../src/xilinx/sysmon/regio/sysmon.yaml
+
+interfaces:
+  - name: sysmon0
+    block: *sysmon
+    address: 0x00000
+    width: 11
+
+  - name: sysmon1
+    block: *sysmon
+    address: 0x00800
+    width: 11
+
+  - name: sysmon2
+    block: *sysmon
+    address: 0x01000
+    width: 11
