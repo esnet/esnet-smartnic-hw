@@ -61,6 +61,19 @@ regs:
               2 : HOST_0
               3 : HOST_1
 
+  - name: h2c_demux_sel
+    access : rw
+    fields:
+        - name: value
+          desc: steers h2c traffic to the selected ingress function.
+          width: 2
+          init: 0
+          enum:
+              0 : HOST_F0
+              1 : HOST_F1
+              2 : HOST_F2
+              3 : HOST_F3
+
   - name: switch_config
     access: rw
     fields:
