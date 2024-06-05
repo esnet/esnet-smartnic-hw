@@ -74,8 +74,7 @@ module smartnic
   input [NUM_CMAC-1:0]        cmac_clk
 );
 
-  localparam int HOST_NUM_IFS = 1;
-  localparam int M = 2; // Number of vitisnetp4 processors.
+  localparam int HOST_NUM_IFS = 2;
 
   // Imports
   import smartnic_pkg::*;

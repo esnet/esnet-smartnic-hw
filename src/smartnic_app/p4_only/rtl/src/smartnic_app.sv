@@ -1,7 +1,7 @@
 module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
-    parameter int HOST_NUM_IFS = 1,     // Number of HOST interfaces.
+    parameter int HOST_NUM_IFS = 2,     // Number of HOST interfaces.
     parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
@@ -637,12 +637,14 @@ module smartnic_app
     always_comb begin
         case (axis_to_demux[0].tdest)
             HOST0:   igr_demux_sel[0] = 1'b1;
+            HOST1:   igr_demux_sel[0] = 1'b1;
             default: igr_demux_sel[0] = 1'b0;
         endcase
     end
 
     always_comb begin
         case (axis_to_demux[1].tdest)
+            HOST0:   igr_demux_sel[1] = 1'b1;
             HOST1:   igr_demux_sel[1] = 1'b1;
             default: igr_demux_sel[1] = 1'b0;
         endcase
@@ -660,6 +662,8 @@ module smartnic_app
 
         axi4s_intf_connector axis4s_intf_connector_0 ( .axi4s_from_tx(axis_demux_out[i][0]), .axi4s_to_rx(axis_to_smartnic_app_igr[i]) );
         axi4s_intf_connector axis4s_intf_connector_1 ( .axi4s_from_tx(axis_demux_out[i][1]), .axi4s_to_rx(axis_c2h[0][i]) );
+
+        //axi4s_intf_tx_term   axis_c2h_2_tx_term      (.axi4s_if(axis_c2h[2][i]));   // temporarily unused c2h[2] i/f (p4 extern).
     end endgenerate
 
     // axi4s_ila axi4s_ila_3 (.axis_in(axis_to_demux[0]));
@@ -672,6 +676,7 @@ module smartnic_app
                 .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_igr ),
                 .axi4s_out  ( axis_to_smartnic_app_egr ),
+                .axi4s_c2h  ( axis_c2h[1] ),
                 .axil_if    ( axil_to_smartnic_app_igr )
             );
 
@@ -694,6 +699,7 @@ module smartnic_app
                 .core_clk   ( core_clk ),
                 .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_egr ),
+                .axi4s_h2c  ( axis_h2c[1] ),
                 .axi4s_out  ( axis_to_mux ),
                 .axil_if    ( axil_to_smartnic_app_egr )
             );
@@ -715,10 +721,12 @@ module smartnic_app
         axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]), .axi4s_to_rx(axi4s_mux_in[i][0]) );
         axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axis_h2c[0][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
 
-        axi4s_mux axi4s_mux_inst (
+        axi4s_mux #(.N(2)) axi4s_mux_inst (
             .axi4s_in   ( axi4s_mux_in[i] ),
             .axi4s_out  ( axis_from_mux[i] )
         );
+
+        //axi4s_intf_rx_sink  axis_h2c_2_rx_sink_inst  (.axi4s_if(axis_h2c[2][i]));  // temporarily unused h2c[2] i/f (p4 extern).
     end endgenerate
 
     // axi4s_ila axi4s_ila_5 (.axis_in(axis_from_mux[0]));
