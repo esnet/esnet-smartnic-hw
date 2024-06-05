@@ -10,3 +10,11 @@ regs:
 
   - name: status
     init: 0xdeafcafe
+
+  - name: app_igr_config
+    access: rw
+    fields:
+      - name: demux_sel
+        desc: directs ingress traffic to selected egress port. 0=axi4s_out, 1=axi4s_c2h.
+        width: 1
+        init : 0

@@ -15,7 +15,6 @@ REG_BLOCK_YAML   = p4_only.yaml \
                    smartnic_app_egr.yaml
 
 REG_DECODER_YAML = smartnic_app_decoder.yaml \
-                   smartnic_p4_decoder.yaml \
                    p4_only_decoder.yaml \
                    smartnic_app_igr_decoder.yaml \
                    smartnic_app_egr_decoder.yaml
