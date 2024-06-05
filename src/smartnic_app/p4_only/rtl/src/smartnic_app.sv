@@ -190,7 +190,7 @@ module smartnic_app
     tuser_smartnic_meta_t  axis_app_egr_tuser [NUM_PORTS];
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_igr [NUM_PORTS] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_igr [NUM_PORTS] ();
 
     tuser_smartnic_meta_t  axis_app_igr_tuser [NUM_PORTS];
 
@@ -211,12 +211,12 @@ module smartnic_app
     endgenerate
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_h2c [HOST_NUM_IFS][NUM_PORTS] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_h2c [HOST_NUM_IFS][NUM_PORTS] ();
 
     tuser_smartnic_meta_t  axis_h2c_tuser [HOST_NUM_IFS][NUM_PORTS];
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_c2h [HOST_NUM_IFS][NUM_PORTS] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_c2h [HOST_NUM_IFS][NUM_PORTS] ();
 
     tuser_smartnic_meta_t  axis_c2h_tuser [HOST_NUM_IFS][NUM_PORTS];
 
@@ -304,7 +304,7 @@ module smartnic_app
         for (genvar j = 0; j < NUM_PORTS; j += 1) begin
             // AXI-S app_igr interface
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
             ) axis_app_igr_from_signals (
                 .aclk    ( core_clk ),
                 .aresetn ( core_rstn ),
@@ -335,11 +335,10 @@ module smartnic_app
                 .axi4s_if( axis_app_egr[j] )
             );
 
-// TODO - Validate tuser fields.
             for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin
                 // AXI-S h2c interface
                 axi4s_intf_from_signals #(
-                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
+                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
                 ) axis_h2c_from_signals (
                     .aclk    ( core_clk ),
                     .aresetn ( core_rstn ),
@@ -349,7 +348,7 @@ module smartnic_app
                     .tkeep   ( axis_h2c_tkeep  [(i*NUM_PORTS+j)* 64 +:  64] ),
                     .tlast   ( axis_h2c_tlast  [(i*NUM_PORTS+j)*  1 +:   1] ),
                     .tid     ( axis_h2c_tid    [(i*NUM_PORTS+j)*  2 +:   2] ),
-                    .tdest   ( axis_h2c_tdest  [(i*NUM_PORTS+j)*  2 +:   2] ),
+                    .tdest   ( {1'b0, axis_h2c_tdest  [(i*NUM_PORTS+j)*  2 +:   2]} ),
                     .tuser   ( axis_h2c_tuser  [i][j] ),
                     .axi4s_if( axis_h2c[i][j] )
                 );

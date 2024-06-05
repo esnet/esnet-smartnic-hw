@@ -235,7 +235,8 @@ module smartnic_datapath_unit_test;
         int count = 0;
 
         // assign egr_port to random value for regression.  uncomment 'for' loop below to test all egress ports.
-        int egr_port = $urandom % NUM_PORTS;
+        //egr_tdest_t egr_port = $urandom % NUM_PORTS;
+        logic [1:0] egr_port = $urandom % NUM_PORTS;
         //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
 
            // Configure igr_sw tdest register (CMAC_0 -> BYPASS).
@@ -259,11 +260,11 @@ module smartnic_datapath_unit_test;
                 begin
                   count = 0;
                   while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
-                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port );
+                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port % NUM_PORTS);
                 end
              join
 
-             egr_port = ~egr_port;  // invert egress port for next iteration (tracks reconfiguration in above iteration).
+             egr_port = ~egr_port % NUM_PORTS;  // invert egress port for next iteration (tracks reconfiguration in above iteration).
            end
         //end
     `SVTEST_END

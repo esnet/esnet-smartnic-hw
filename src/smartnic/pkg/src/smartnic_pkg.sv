@@ -23,6 +23,18 @@ package smartnic_pkg;
         bit [1:0]       raw;
     } port_t;
 
+    typedef enum logic [1:0] {
+        APP_P0 = 2'h0,
+        APP_P1 = 2'h1,
+        BYPASS = 2'h2,
+        DROP   = 2'h3
+    } igr_tdest_encoding_t;
+
+    typedef union packed {
+        port_encoding_t encoded;
+        bit [1:0]       raw;
+    } igr_tdest_t;
+
     typedef enum logic [2:0] {
         CMAC0 = 3'h0,
         CMAC1 = 3'h1,

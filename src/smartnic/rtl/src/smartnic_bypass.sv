@@ -21,11 +21,11 @@ module smartnic_bypass #(
     axi4l_intf  axil_to_ovfl_to_bypass ();
     axi4l_intf  axil_to_fifo_to_bypass ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_igr_sw_drop ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_to_bypass_fifo ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_from_bypass_fifo ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_from_bypass_fifo_p ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_to_bypass_drop ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_igr_sw_drop ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_bypass_fifo ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_bypass_fifo ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_bypass_fifo_p ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_bypass_drop ();
 
 
     // ingress switch drop pkt logic.  deletes packets that have tdest == 3 (igr_sw DROP code point).

@@ -17,23 +17,23 @@ module smartnic_mux
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_cmac_to_core_p [NUM_CMAC]    ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_cmac_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))   axis_cmac_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_cmac_to_core_p [NUM_CMAC]    ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_host_to_core_p [NUM_CMAC]    ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_host_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))   axis_host_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_host_to_core_p [NUM_CMAC]    ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_core_to_app    [NUM_CMAC]    ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_core_to_bypass               ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_mux_in           [NUM_CMAC][2] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_mux_out          [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_demux_out        [NUM_CMAC][2] ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  igr_mux_in           [NUM_CMAC][2] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  igr_mux_out          [NUM_CMAC]    ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  igr_demux_out        [NUM_CMAC][2] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  bypass_mux_in        [2]           ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  bypass_mux_in        [2]           ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_core_to_app    [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_core_to_bypass               ();
 
 
-    port_t igr_sw_tdest [2*NUM_CMAC];  // TODO: rename
+    igr_tdest_t igr_sw_tdest [2*NUM_CMAC];
 
     logic  igr_demux_sel  [NUM_CMAC];
 
@@ -137,6 +137,6 @@ module smartnic_mux
     assign axis_core_to_bypass.tlast   = _axis_core_to_bypass.tlast;
     assign axis_core_to_bypass.tid     = _axis_core_to_bypass.tid;
     assign axis_core_to_bypass.tuser   = '0;
-    assign axis_core_to_bypass.tdest   = _axis_core_to_bypass.tdest;
+    assign axis_core_to_bypass.tdest   = '0; //_axis_core_to_bypass.tdest;
 
 endmodule // smartnic_mux

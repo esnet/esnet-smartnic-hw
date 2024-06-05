@@ -37,7 +37,7 @@ module smartnic
   input [(512*NUM_CMAC)-1:0]  s_axis_adpt_tx_322mhz_tdata,
   input [(64*NUM_CMAC)-1:0]   s_axis_adpt_tx_322mhz_tkeep,
   input [NUM_CMAC-1:0]        s_axis_adpt_tx_322mhz_tlast,
-  input [(2*NUM_CMAC)-1:0]    s_axis_adpt_tx_322mhz_tdest,
+  input [(3*NUM_CMAC)-1:0]    s_axis_adpt_tx_322mhz_tdest,
   input [NUM_CMAC-1:0]        s_axis_adpt_tx_322mhz_tuser_err,
   output [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tready,
 
@@ -55,7 +55,7 @@ module smartnic
   output [(512*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tdata,
   output [(64*NUM_CMAC)-1:0]  m_axis_cmac_tx_322mhz_tkeep,
   output [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tlast,
-  output [(2*NUM_CMAC)-1:0]   m_axis_cmac_tx_322mhz_tdest,
+  output [(3*NUM_CMAC)-1:0]   m_axis_cmac_tx_322mhz_tdest,
   output [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tuser_err,
   input [NUM_CMAC-1:0]        m_axis_cmac_tx_322mhz_tready,
 
@@ -487,28 +487,30 @@ module smartnic
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
+   // interfaces with default TUSER_T and igr_tdest_t
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_from_cmac    [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         _axis_from_cmac    [NUM_CMAC] ();
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_cmac      [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_host      [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_to_core   [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_host_to_core   [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_from_cmac      [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_from_host      [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_to_core   [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_to_core   [NUM_CMAC] ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_bypass ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_bypass_to_core ();
+
+   // interfaces with egr_tdest_t
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_core_to_bypass ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_bypass_to_core ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_core_to_app [NUM_CMAC] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_to_app__demarc [NUM_CMAC] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_to_app [NUM_CMAC] ();
 
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_core_to_app [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_h2c [HOST_NUM_IFS][NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_app__demarc [NUM_CMAC] ();
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_app [NUM_CMAC] ();
-
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_h2c [HOST_NUM_IFS][NUM_CMAC] ();
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_c2h [HOST_NUM_IFS][NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_c2h [HOST_NUM_IFS][NUM_CMAC] ();
 
    tuser_smartnic_meta_t axis_to_app_tuser [NUM_CMAC];
    assign axis_to_app_tuser[0] = axis_to_app[0].tuser;
@@ -519,22 +521,22 @@ module smartnic
    assign axis_from_app[1].tuser = axis_from_app_tuser[1];
 
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_app [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_from_app [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_from_app__demarc [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_from_app__demarc [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))    axis_app_to_core [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_app_to_core [NUM_CMAC] ();
 
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_host [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_core_to_host [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_host [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_to_host [NUM_CMAC] ();
 
    axi4s_intf  #(.MODE(IGNORES_TREADY),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_cmac [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_pad       [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_to_cmac    [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_cmac      [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_core_to_cmac [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_to_pad       [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         _axis_to_cmac    [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))         axis_to_cmac      [NUM_CMAC] ();
 
 
    // ----------------------------------------------------------------
@@ -549,7 +551,7 @@ module smartnic
 
       //------------------------ from cmac to core --------------
       axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t)
       ) axis_from_cmac_from_signals (
         .aclk     (cmac_clk[i]),
         .aresetn  (cmac_rstn[i]),
@@ -562,7 +564,7 @@ module smartnic
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
-        .axi4s_if (__axis_from_cmac[i])
+        .axi4s_if (_axis_from_cmac[i])
       );
 
       // Cross CMAC ingress switch port selection to cmac_clk domain
@@ -580,10 +582,10 @@ module smartnic
       // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
 
       axi4s_reg_slice #(
-          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t),
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(igr_tdest_t),
           .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
       ) axi4s_reg_slice_from_cmac (
-          .axi4s_from_tx (__axis_from_cmac[i]),
+          .axi4s_from_tx (_axis_from_cmac[i]),
           .axi4s_to_rx   (axis_from_cmac[i])
       );
 
@@ -627,14 +629,14 @@ module smartnic
       // axi4s pad instantiation.
       axi4s_pad axi4s_pad_0 (
         .axi4s_in    (axis_to_pad[i]),
-        .axi4s_out   (__axis_to_cmac[i])
+        .axi4s_out   (_axis_to_cmac[i])
       );
 
       axi4s_reg_slice #(
-          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t),
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(egr_tdest_t),
           .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
       ) axi4s_reg_slice_to_cmac (
-          .axi4s_from_tx (__axis_to_cmac[i]),
+          .axi4s_from_tx (_axis_to_cmac[i]),
           .axi4s_to_rx   (axis_to_cmac[i])
       );
 
@@ -645,7 +647,7 @@ module smartnic
       axi4l_intf_controller_term axi4l_fifo_to_cmac_term (.axi4l_if (axil_to_fifo_to_cmac[i]));
 
       axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t)
       ) axis_to_cmac_to_signals (
         .aclk     (),
         .aresetn  (),
@@ -655,7 +657,7 @@ module smartnic
         .tkeep    (m_axis_cmac_tx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (m_axis_cmac_tx_322mhz_tlast[i]),
         .tid      (),
-        .tdest    (m_axis_cmac_tx_322mhz_tdest[`getvec(2, i)]),
+        .tdest    (m_axis_cmac_tx_322mhz_tdest[`getvec(3, i)]),
         .tuser    (m_axis_cmac_tx_322mhz_tuser_err[i]),
 
         .axi4s_if (axis_to_cmac[i])
@@ -683,7 +685,7 @@ module smartnic
       if (i != 0) axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
 
       axi4s_intf_to_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
       ) axis_to_host_to_signals (
         .aclk     (),
         .aresetn  (),
@@ -708,7 +710,7 @@ module smartnic
 
       //------------------------ from host to core --------------
       axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t)
       ) axis_from_host_from_signals (
         .aclk     (cmac_clk[i]),
         .aresetn  (cmac_rstn[i]),
@@ -718,7 +720,7 @@ module smartnic
         .tkeep    (s_axis_adpt_tx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
         .tid      (host_igr_sw_tid[i]),
-        .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
+        .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(3, i)]),
         .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic.
 
         .axi4s_if (axis_from_host[i])
@@ -827,7 +829,7 @@ module smartnic
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__reg_slice
        // AXI-S interfaces
        axi4s_reg_slice #(
-           .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t),
+           .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
            .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
        ) i_axi4s_reg_slice__core_to_app (
            .axi4s_from_tx (axis_to_app__demarc[i]),
@@ -863,7 +865,7 @@ module smartnic
    logic [NUM_CMAC-1:0][63:0]  axis_app_igr_tkeep;
    logic [NUM_CMAC-1:0]        axis_app_igr_tlast;
    logic [NUM_CMAC-1:0][1:0]   axis_app_igr_tid;
-   logic [NUM_CMAC-1:0][1:0]   axis_app_igr_tdest;
+   logic [NUM_CMAC-1:0][1:0]   axis_app_igr_tdest;   // TODO: adapt i/f to 3b
    logic [NUM_CMAC-1:0][15:0]  axis_app_igr_tuser_pid;
 
    logic [NUM_CMAC-1:0]        axis_app_egr_tvalid;
@@ -885,7 +887,7 @@ module smartnic
            assign axis_app_igr_tkeep[j]     = axis_to_app[j].tkeep;
            assign axis_app_igr_tlast[j]     = axis_to_app[j].tlast;
            assign axis_app_igr_tid[j]       = axis_to_app[j].tid;
-           assign axis_app_igr_tdest[j]     = axis_to_app[j].tdest;
+           assign axis_app_igr_tdest[j]     = axis_to_app[j].tdest[1:0];  // TODO: adapt i/f to 3b
            assign axis_app_igr_tuser_pid[j] = axis_to_app_tuser[j].pid;
 
            assign axis_from_app[j].aclk                = core_clk;
@@ -904,8 +906,6 @@ module smartnic
        end : g__app_igr_egr
    endgenerate
 
-//   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-//                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c [HOST_NUM_IFS][NUM_CMAC] ();
 
    tuser_smartnic_meta_t axis_h2c_tuser [HOST_NUM_IFS][NUM_CMAC];
    assign axis_h2c_tuser[0][0] = axis_h2c[0][0].tuser;
@@ -917,11 +917,8 @@ module smartnic
    logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0][63:0]  axis_h2c_tkeep;
    logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0]        axis_h2c_tlast;
    logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0][1:0]   axis_h2c_tid;
-   logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0][1:0]   axis_h2c_tdest;
+   logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0][1:0]   axis_h2c_tdest;   // TODO: adapt i/f to 3b
    logic [HOST_NUM_IFS-1:0][NUM_CMAC-1:0][15:0]  axis_h2c_tuser_pid;
-
-//   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-//                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_c2h [HOST_NUM_IFS][NUM_CMAC] ();
 
    tuser_smartnic_meta_t axis_c2h_tuser [HOST_NUM_IFS][NUM_CMAC];
    assign axis_c2h[0][0].tuser = axis_c2h_tuser[0][0];
@@ -949,7 +946,7 @@ module smartnic
                assign axis_h2c_tkeep[i][j]     = axis_h2c[i][j].tkeep;
                assign axis_h2c_tlast[i][j]     = axis_h2c[i][j].tlast;
                assign axis_h2c_tid[i][j]       = axis_h2c[i][j].tid;
-               assign axis_h2c_tdest[i][j]     = axis_h2c[i][j].tdest;
+               assign axis_h2c_tdest[i][j]     = axis_h2c[i][j].tdest[1:0];  // TODO: adapt i/f to 3b
                assign axis_h2c_tuser_pid[i][j] = axis_h2c_tuser[i][j].pid;
 
                axi4s_intf_tx_term  axi4s_intf_tx_term_inst  (.axi4s_if(axis_h2c[i][j]));

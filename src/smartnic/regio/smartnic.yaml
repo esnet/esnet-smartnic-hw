@@ -53,7 +53,7 @@ regs:
           desc: sets the bypass axi4s 'tdest' signal (egress switch output port) for the specified ingress port.
                 indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
                 bypass_tdest[0]=1 sends pkts from CMAC_0 to CMAC_1.
-          width: 2
+          width: 3
           init: 0
           enum:
               0 : CMAC_0

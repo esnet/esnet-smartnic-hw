@@ -17,34 +17,34 @@ module smartnic_demux
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  bypass_demux_out [2] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  bypass_demux_out [2] ();
 
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_app_to_core_p [NUM_CMAC] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_app_to_core_p [NUM_CMAC] ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_app_to_core_p [NUM_CMAC] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  _axis_app_to_core_p [NUM_CMAC] ();
 
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  egr_mux_in    [NUM_CMAC][2] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  egr_mux_in    [NUM_CMAC][2] ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  egr_mux_out   [NUM_CMAC]    ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  egr_mux_out   [NUM_CMAC]    ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  egr_demux_out [NUM_CMAC][2] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  egr_demux_out [NUM_CMAC][2] ();
 
 // TODO: check TUSER type below
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_core_to_cmac [NUM_CMAC] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  _axis_core_to_cmac [NUM_CMAC] ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_core_to_host [NUM_CMAC] ();
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  _axis_core_to_host [NUM_CMAC] ();
 
 
 
     // muxing logic for tdest-to-tdest re-mapping.
-    port_t  axis_app_to_core_p_tdest [NUM_CMAC];
-    port_t  tdest_remap_mux_select   [NUM_CMAC];
+    egr_tdest_t  axis_app_to_core_p_tdest [NUM_CMAC];
+    egr_tdest_t  tdest_remap_mux_select   [NUM_CMAC];
 
     // tdest-to-tdest re-mapping for app_to_core[0].
-    assign tdest_remap_mux_select[0] = (axis_app_to_core[0].tdest == LOOPBACK) ? axis_app_to_core[0].tid : axis_app_to_core[0].tdest.raw[1:0];
+    assign tdest_remap_mux_select[0] = (axis_app_to_core[0].tdest == LOOPBACK) ? {1'b0, axis_app_to_core[0].tid} : axis_app_to_core[0].tdest.raw;
 
     always @(posedge core_clk) begin
        if (axis_app_to_core[0].tready && axis_app_to_core[0].tvalid && axis_app_to_core[0].sop) begin
@@ -58,7 +58,7 @@ module smartnic_demux
     end
 
     // tdest-to-tdest re-mapping for app_to_core[1].
-    assign tdest_remap_mux_select[1] = (axis_app_to_core[1].tdest == LOOPBACK) ? axis_app_to_core[1].tid : axis_app_to_core[1].tdest.raw[1:0];
+    assign tdest_remap_mux_select[1] = (axis_app_to_core[1].tdest == LOOPBACK) ? {1'b0, axis_app_to_core[1].tid} : axis_app_to_core[1].tdest.raw[1:0];
 
     always @(posedge core_clk) begin
        if (axis_app_to_core[1].tready && axis_app_to_core[1].tvalid && axis_app_to_core[1].sop) begin
@@ -75,7 +75,7 @@ module smartnic_demux
 // TODO: establish enum type and recode .raw comparison?
     // bypass demux logic.
     logic  bypass_demux_sel;
-    assign bypass_demux_sel = (axis_bypass_to_core.tdest.raw == 2'h1) || (axis_bypass_to_core.tdest.raw == 2'h3);   // select CMAC1 and HOST1 pkts.
+    assign bypass_demux_sel = (axis_bypass_to_core.tdest.raw == 3'h1) || (axis_bypass_to_core.tdest.raw == 3'h3);   // select CMAC1 and HOST1 pkts.
 //   assign bypass_demux_sel = (axis_bypass_to_core.tdest == CMAC_PORT1) || (axis_bypass_to_core.tdest == HOST_PORT1);   // select CMAC1 and HOST1 pkts.
 
     axi4s_intf_demux #(.N(2)) axi4s_bypass_demux (
@@ -87,8 +87,8 @@ module smartnic_demux
 
     // egress mux/demux logic.
     logic [NUM_CMAC-1:0] egr_demux_sel;
-    assign egr_demux_sel[0] = (egr_mux_out[0].tdest.raw == 2'h2);
-    assign egr_demux_sel[1] = (egr_mux_out[1].tdest.raw == 2'h3);
+    assign egr_demux_sel[0] = (egr_mux_out[0].tdest.raw == 3'h2);   // select HOST_PORT0 pkts.
+    assign egr_demux_sel[1] = (egr_mux_out[1].tdest.raw == 3'h3);   // select HOST_PORT1 pkts.
 //   assign egr_demux_sel[0] = (egr_mux_out[0].tdest == HOST_PORT0);
 //   assign egr_demux_sel[1] = (egr_mux_out[1].tdest == HOST_PORT1);
 
