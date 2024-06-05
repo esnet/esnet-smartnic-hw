@@ -6,7 +6,7 @@ module tb;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
-    localparam int HOST_NUM_IFS = 1;  // Number of HOST interfaces.
+    localparam int HOST_NUM_IFS = 2;  // Number of HOST interfaces.
     localparam int NUM_PORTS = 2;     // Number of processor ports (per vitisnetp4 processor).
 
     //===================================
@@ -102,14 +102,14 @@ module tb;
 
     generate
         for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
-            assign axis_h2c_tvalid[j]    = '0;
-//            assign axis_in_if[j].tready  = axis_h2c_tready[j];
-            assign axis_h2c_tdata[j]     = '0;
-            assign axis_h2c_tkeep[j]     = '0;
-            assign axis_h2c_tlast[j]     = '0;
-            assign axis_h2c_tid[j]       = '0;
-            assign axis_h2c_tdest[j]     = '0;
-            assign axis_h2c_tuser_pid[j] = '0;
+            assign axis_h2c_tvalid[j]    = axis_h2c_if[j].tvalid;
+            assign axis_h2c_if[j].tready = axis_h2c_tready[j];
+            assign axis_h2c_tdata[j]     = axis_h2c_if[j].tdata;
+            assign axis_h2c_tkeep[j]     = axis_h2c_if[j].tkeep;
+            assign axis_h2c_tlast[j]     = axis_h2c_if[j].tlast;
+            assign axis_h2c_tid[j]       = axis_h2c_if[j].tid;
+            assign axis_h2c_tdest[j]     = axis_h2c_if[j].tdest;
+            assign axis_h2c_tuser_pid[j] = axis_h2c_if[j].tuser.pid;
         end
     endgenerate
 
@@ -128,6 +128,8 @@ module tb;
 
     generate
         for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
+            assign axis_c2h_if[j].aclk               = clk;
+            assign axis_c2h_if[j].aresetn            = rstn;
             assign axis_c2h_if[j].tvalid             = axis_c2h_tvalid[j];
             assign axis_c2h_tready[j]                = axis_c2h_if[j].tready;
             assign axis_c2h_if[j].tdata              = axis_c2h_tdata[j];
@@ -439,12 +441,6 @@ module tb;
     assign axis_out_if[1].aclk = clk;
     assign axis_out_if[1].aresetn = rstn;
 
-    assign axis_c2h_if[0].aclk = clk;
-    assign axis_c2h_if[0].aresetn = rstn;
-
-    assign axis_c2h_if[1].aclk = clk;
-    assign axis_c2h_if[1].aresetn = rstn;
-
     //===================================
     // Build
     //===================================
@@ -461,10 +457,16 @@ module tb;
             env.axil_vitisnetp4_vif = axil_if;
             env.axis_in_vif[0]  = axis_in_if[0];
             env.axis_in_vif[1]  = axis_in_if[1];
+            env.axis_h2c_vif[0] = axis_h2c_if[0];
+            env.axis_h2c_vif[1] = axis_h2c_if[1];
+            env.axis_h2c_vif[2] = axis_h2c_if[2];
+            env.axis_h2c_vif[3] = axis_h2c_if[3];
             env.axis_out_vif[0] = axis_out_if[0];
             env.axis_out_vif[1] = axis_out_if[1];
             env.axis_c2h_vif[0] = axis_c2h_if[0];
             env.axis_c2h_vif[1] = axis_c2h_if[1];
+            env.axis_c2h_vif[2] = axis_c2h_if[2];
+            env.axis_c2h_vif[3] = axis_c2h_if[3];
 
             env.axi_to_hbm_vif = axi_to_hbm;
 
