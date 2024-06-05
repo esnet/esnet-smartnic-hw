@@ -121,7 +121,7 @@ module p4_proc
     //  per port functionality.  pkt split-join, drop and truncation logic.
     // --------------------------------------------------------------------
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__proc_port
-        // add timestamp to tuser signal.
+        // add timestamp to tuser signal (for consistent pipelining with pkt data destined to axis_to_vitisnetp4).
         assign _axis_in[i].aclk         = axis_in[i].aclk;
         assign _axis_in[i].aresetn      = axis_in[i].aresetn;
         assign _axis_in[i].tvalid       = axis_in[i].tvalid;
