@@ -558,7 +558,6 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_vitisnetp4_0_term ( .axi4l_if (axil_to_vitisnetp4[0]) );
 
             for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
                 axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(axis_app_igr[i]), .axi4s_if_to_rx(axis_to_demux[i]) );
             end
 
@@ -616,7 +615,6 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_vitisnetp4_1_term   ( .axi4l_if (axil_to_vitisnetp4[1]) );
 
             for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
                 axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(axis_app_egr[i]) );
             end
 
@@ -660,8 +658,8 @@ module smartnic_app
                 .sel        ( igr_demux_sel[i] )
             );
 
-            axi4s_intf_connector axis4s_intf_connector_0 ( .axi4s_from_tx(axis_demux_out[i][0]), .axi4s_to_rx(axis_to_smartnic_app_igr[i]) );
-            axi4s_intf_connector axis4s_intf_connector_1 ( .axi4s_from_tx(axis_demux_out[i][1]), .axi4s_to_rx(axis_c2h[0][i]) );
+            axi4s_intf_pipe axis_demux_out_pipe_0 ( .axi4s_if_from_tx(axis_demux_out[i][0]), .axi4s_if_to_rx(axis_to_smartnic_app_igr[i]) );
+            axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(axis_c2h[0][i]) );
 
             //axi4s_intf_tx_term   axis_c2h_2_tx_term      (.axi4s_if(axis_c2h[2][i]));   // temporarily unused c2h[2] i/f (p4 extern).
         end
@@ -685,7 +683,6 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_smartnic_app_igr_term ( .axi4l_if (axil_to_smartnic_app_igr) );
 
             for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
                 axi4s_full_pipe smartnic_app_igr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_igr[i]), .axi4s_if_to_rx(axis_to_smartnic_app_egr[i]) );
             end
 
@@ -709,7 +706,6 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_smartnic_app_egr_term ( .axi4l_if (axil_to_smartnic_app_egr) );
 
             for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
                 axi4s_full_pipe smartnic_app_egr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_egr[i]), .axi4s_if_to_rx(axis_to_mux[i]) );
             end
 
@@ -720,8 +716,8 @@ module smartnic_app
 
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-            axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]), .axi4s_to_rx(axi4s_mux_in[i][0]) );
-            axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axis_h2c[0][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
+            axi4s_intf_pipe axis_mux_in_pipe_0 ( .axi4s_if_from_tx(axis_to_mux[i]), .axi4s_if_to_rx(axi4s_mux_in[i][0]) );
+            axi4s_intf_pipe axis_mux_in_pipe_1 ( .axi4s_if_from_tx(axis_h2c[0][i]), .axi4s_if_to_rx(axi4s_mux_in[i][1]) );
 
             axi4s_mux #(.N(2)) axi4s_mux_inst (
                 .axi4s_in   ( axi4s_mux_in[i] ),

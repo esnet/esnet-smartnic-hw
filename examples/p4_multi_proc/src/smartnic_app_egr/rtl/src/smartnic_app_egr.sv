@@ -55,8 +55,8 @@ module smartnic_app_egr
                   .TUSER_T(TUSER_T), .TID_T(TID_T), .TDEST_T(TDEST_T))  mux_out [NUM_PORTS]    ();
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-        axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axi4s_in[i]),  .axi4s_to_rx(mux_in[i][0]) );
-        axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axi4s_h2c[i]), .axi4s_to_rx(mux_in[i][1]) );
+        axi4s_intf_pipe axi4s_mux_in_pipe_0 ( .axi4s_if_from_tx(axi4s_in[i]),  .axi4s_if_to_rx(mux_in[i][0]) );
+        axi4s_intf_pipe axi4s_mux_in_pipe_1 ( .axi4s_if_from_tx(axi4s_h2c[i]), .axi4s_if_to_rx(mux_in[i][1]) );
 
         axi4s_mux #(.N(2)) axi4s_mux_inst (
             .axi4s_in  (mux_in[i]),

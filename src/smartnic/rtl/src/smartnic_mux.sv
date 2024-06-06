@@ -79,9 +79,6 @@ module smartnic_mux
         axi4s_intf_pipe axi4s_igr_mux_in_pipe_0 (.axi4s_if_from_tx(_axis_cmac_to_core_p[i]), .axi4s_if_to_rx(igr_mux_in[i][0]));
         axi4s_intf_pipe axi4s_igr_mux_in_pipe_1 (.axi4s_if_from_tx(_axis_host_to_core_p[i]), .axi4s_if_to_rx(igr_mux_in[i][1]));
 
-        //axi4s_intf_connector axi4s_igr_mux_in_connector_0 ( .axi4s_from_tx(_axis_cmac_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][0]) );
-        //axi4s_intf_connector axi4s_igr_mux_in_connector_1 ( .axi4s_from_tx(_axis_host_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][1]) );
-
         axi4s_mux #(.N(2)) axi4s_igr_mux (
             .axi4s_in  (igr_mux_in[i]),
             .axi4s_out (igr_mux_out[i])
@@ -98,7 +95,6 @@ module smartnic_mux
 
         axi4s_intf_pipe axis_core_to_app_pipe (.axi4s_if_from_tx(igr_demux_out[i][0]), .axi4s_if_to_rx(_axis_core_to_app[i]));
 
-        //axi4s_intf_connector axis_core_to_app_connector ( .axi4s_from_tx(igr_demux_out[i][0]), .axi4s_to_rx(_axis_core_to_app[i]) );
 
         assign _axis_core_to_app[i].tready = axis_core_to_app[i].tready;
 
@@ -117,9 +113,6 @@ module smartnic_mux
     
     axi4s_intf_pipe axi4s_bypass_mux_in_pipe_0 (.axi4s_if_from_tx(igr_demux_out[0][1]), .axi4s_if_to_rx(bypass_mux_in[0]));
     axi4s_intf_pipe axi4s_bypass_mux_in_pipe_1 (.axi4s_if_from_tx(igr_demux_out[1][1]), .axi4s_if_to_rx(bypass_mux_in[1]));
-
-    //axi4s_intf_connector axi4s_bypass_mux_in_connector_0 ( .axi4s_from_tx(igr_demux_out[0][1]), .axi4s_to_rx(bypass_mux_in[0]) );
-    //axi4s_intf_connector axi4s_bypass_mux_in_connector_1 ( .axi4s_from_tx(igr_demux_out[1][1]), .axi4s_to_rx(bypass_mux_in[1]) );
 
     axi4s_mux #(.N(2)) axi4s_bypass_mux (
         .axi4s_in  (bypass_mux_in),

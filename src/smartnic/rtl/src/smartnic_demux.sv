@@ -31,7 +31,6 @@ module smartnic_demux
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  egr_demux_out [NUM_CMAC][2] ();
 
-// TODO: check TUSER type below
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))  _axis_core_to_cmac [NUM_CMAC] ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
@@ -110,9 +109,6 @@ module smartnic_demux
         axi4s_intf_pipe axi4s_egr_mux_in_pipe_0 (.axi4s_if_from_tx(bypass_demux_out[i]),    .axi4s_if_to_rx(egr_mux_in[i][0]));
         axi4s_intf_pipe axi4s_egr_mux_in_pipe_1 (.axi4s_if_from_tx(_axis_app_to_core_p[i]), .axi4s_if_to_rx(egr_mux_in[i][1]));
 
-        //axi4s_intf_connector axi4s_egr_mux_in_connector_0 ( .axi4s_from_tx(bypass_demux_out[i]),    .axi4s_to_rx(egr_mux_in[i][0]) );
-        //axi4s_intf_connector axi4s_egr_mux_in_connector_1 ( .axi4s_from_tx(_axis_app_to_core_p[i]), .axi4s_to_rx(egr_mux_in[i][1]) );
-
         axi4s_mux #(.N(2)) axi4s_egr_mux (
             .axi4s_in  (egr_mux_in[i]),
             .axi4s_out (egr_mux_out[i])
@@ -126,9 +122,6 @@ module smartnic_demux
 
         axi4s_intf_pipe axi4s_egr_demux_out_pipe_0 (.axi4s_if_from_tx(egr_demux_out[i][0]), .axi4s_if_to_rx(_axis_core_to_cmac[i]));
         axi4s_intf_pipe axi4s_egr_demux_out_pipe_1 (.axi4s_if_from_tx(egr_demux_out[i][1]), .axi4s_if_to_rx(_axis_core_to_host[i]));
-
-        //axi4s_intf_connector axi4s_egr_demux_out_connector_0 ( .axi4s_from_tx(egr_demux_out[i][0]), .axi4s_to_rx(_axis_core_to_cmac[i]) );
-        //axi4s_intf_connector axi4s_egr_demux_out_connector_1 ( .axi4s_from_tx(egr_demux_out[i][1]), .axi4s_to_rx(_axis_core_to_host[i]) );
 
         assign _axis_core_to_cmac[i].tready = axis_core_to_cmac[i].tready;
 
