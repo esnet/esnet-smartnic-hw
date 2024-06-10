@@ -102,29 +102,15 @@ module p4_only_datapath_unit_test
            port_t  src_port, dst_port;
 
            fork
-              // --- run traffic from both HOST ports, and to both HOST ports ---
+              // --- run traffic from/to both HOST ports ---
               begin
-                 // relabel source traffic from src_port=HOST_0. direct traffic to dst_port=HOST_0.
+                 // source traffic from src_port=HOST_0. direct traffic to dst_port=HOST_0.
                  src_port = 2'h2; dst_port = 2'h2;
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
+                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(src_port), .out_port(dst_port) );
 
-                 // redirect traffic to dst_port=HOST_1.
-                 dst_port = 2'h3;
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
-
-                 // relabel source traffic from src_port=HOST_1.
-                 src_port = 2'h3;
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], src_port );
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
-
-                 // redirect traffic to dst_port=HOST_0.
-                 dst_port = 2'h2;
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[src_port], dst_port );
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .out_port(dst_port) );
+                 // source traffic from src_port=HOST_1. direct traffic to dst_port=HOST_1.
+                 src_port = 2'h3; dst_port = 2'h3;
+                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(src_port), .out_port(dst_port) );
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
