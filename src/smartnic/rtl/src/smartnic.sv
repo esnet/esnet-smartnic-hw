@@ -777,7 +777,8 @@ module smartnic
 
 
    // smartnic_mux instantiation.
-   smartnic_mux #(
+//   smartnic_mux #(
+   smartnic_sw_igr #(
        .NUM_CMAC (NUM_CMAC)
    ) smartnic_mux_inst ( 
        .core_clk            (core_clk),
@@ -809,7 +810,8 @@ module smartnic
    );
 
    // smartnic_demux instantiation.
-   smartnic_demux #(
+//   smartnic_demux #(
+   smartnic_sw_egr #(
        .NUM_CMAC (NUM_CMAC)
    ) smartnic_demux_inst ( 
        .core_clk            (core_clk),
