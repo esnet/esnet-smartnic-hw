@@ -406,16 +406,15 @@ module smartnic_datapath_unit_test;
                          .exp_pkt_cnt(exp_pkts[0]),
                          .tpause(0), .twait(0) );
 
-           begin 
-              #10us
-              check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
-              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
-                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
-                                   .ovfl_mode(2) );
-           end
+           #10us;
+
         join_any
 
+        check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+        check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
+        check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                             .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                             .ovfl_mode(2) );
     `SVTEST_END
 
 

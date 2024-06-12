@@ -130,6 +130,6 @@ module smartnic_mux
     assign axis_core_to_bypass.tlast   = _axis_core_to_bypass.tlast;
     assign axis_core_to_bypass.tid     = _axis_core_to_bypass.tid;
     assign axis_core_to_bypass.tuser   = '0;
-    assign axis_core_to_bypass.tdest   = '0; //_axis_core_to_bypass.tdest;
+    assign axis_core_to_bypass.tdest   = _axis_core_to_bypass.tdest;
 
 endmodule // smartnic_mux
