@@ -633,16 +633,16 @@ module smartnic_app
 
     always_comb begin
         case (axis_to_demux[0].tdest)
-            HOST0:   igr_demux_sel[0] = 1'b1;
-            HOST1:   igr_demux_sel[0] = 1'b1;
+//            HOST0:   igr_demux_sel[0] = 1'b1;  // temporary comments (until VF interfaces are fully supported).
+//            HOST1:   igr_demux_sel[0] = 1'b1;
             default: igr_demux_sel[0] = 1'b0;
         endcase
     end
 
     always_comb begin
         case (axis_to_demux[1].tdest)
-            HOST0:   igr_demux_sel[1] = 1'b1;
-            HOST1:   igr_demux_sel[1] = 1'b1;
+//            HOST0:   igr_demux_sel[1] = 1'b1;
+//            HOST1:   igr_demux_sel[1] = 1'b1;
             default: igr_demux_sel[1] = 1'b0;
         endcase
     end
