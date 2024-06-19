@@ -175,8 +175,8 @@ module p4_multi_proc_datapath_unit_test;
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
                  while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if[0][0].tlast or posedge rx_done) begin
-                       if (tb.axis_in_if[0][0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
+                    @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
+                       if (tb.axis_in_if[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
                     end
                  end
              end

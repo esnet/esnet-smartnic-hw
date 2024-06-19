@@ -25,21 +25,21 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     virtual axi4l_intf axil_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif [2*NUM_CMAC];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2*NUM_CMAC];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_sample_vif;
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_in_vif [2*NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [2*NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_vif;
 
     // Drivers/Monitors
     axi4s_driver #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
     ) axis_driver [2*NUM_CMAC];
 
     axi4s_monitor #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
     ) axis_monitor [2*NUM_CMAC];
 
     axi4s_sample #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
     ) axis_sample;
 
     // AXI-L agent

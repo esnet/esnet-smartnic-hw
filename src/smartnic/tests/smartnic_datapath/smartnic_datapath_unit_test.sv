@@ -78,9 +78,6 @@ module smartnic_datapath_unit_test;
 
         reset(); // Issue reset (both datapath and management domains)
 
-        // write hdr_length register to enable split-join logic.
-        //env.smartnic_reg_blk_agent.write_hdr_length(64);  // configured header slice to be 64B.
-
         // initialize switch configuration registers.
         init_sw_config_regs;
 
@@ -224,7 +221,7 @@ module smartnic_datapath_unit_test;
                begin
                  count = 0;
                  while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
-                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 0 : 2;  // alternate directing traffic to bypass and app0 interfaces.
+                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 3 : 2;  // alternate directing traffic to bypass interface and igr_sw_drop.
                  enable_monitor = (igr_sw_tdest == 2) ? 1 : 0;  // disable output monitor when traffic flows to app0 interface.
                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
                end
@@ -238,7 +235,8 @@ module smartnic_datapath_unit_test;
         int count = 0;
 
         // assign egr_port to random value for regression.  uncomment 'for' loop below to test all egress ports.
-        int egr_port = $urandom % NUM_PORTS;
+        //egr_tdest_t egr_port = $urandom % NUM_PORTS;
+        logic [1:0] egr_port = $urandom % NUM_PORTS;
         //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
 
            // Configure igr_sw tdest register (CMAC_0 -> BYPASS).
@@ -262,11 +260,11 @@ module smartnic_datapath_unit_test;
                 begin
                   count = 0;
                   while (count < 2) @(negedge tb.DUT.axis_core_to_bypass.tlast) count++;
-                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port );
+                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], ~egr_port % NUM_PORTS);
                 end
              join
 
-             egr_port = ~egr_port;  // invert egress port for next iteration (tracks reconfiguration in above iteration).
+             egr_port = ~egr_port % NUM_PORTS;  // invert egress port for next iteration (tracks reconfiguration in above iteration).
            end
         //end
     `SVTEST_END
@@ -408,16 +406,15 @@ module smartnic_datapath_unit_test;
                          .exp_pkt_cnt(exp_pkts[0]),
                          .tpause(0), .twait(0) );
 
-           begin 
-              #10us
-              check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
-              check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-              check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
-                                   .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
-                                   .ovfl_mode(2) );
-           end
+           #10us;
+
         join_any
 
+        check_probe (.base_addr(DROPS_FROM_IGR_SW), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
+        check_probe (.base_addr(PROBE_TO_BYPASS), .exp_pkt_cnt(0), .exp_byte_cnt(0));
+        check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
+                             .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
+                             .ovfl_mode(2) );
     `SVTEST_END
 
 

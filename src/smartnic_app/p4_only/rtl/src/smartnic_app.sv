@@ -1,8 +1,9 @@
 module smartnic_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16,
-    parameter int N = 2, // Number of processor ports (per vitisnetp4 processor).
-    parameter int M = 2  // Number of vitisnetp4 processors.
+    parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
+    parameter int HOST_NUM_IFS = 2,     // Number of HOST interfaces.
+    parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
+    parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
     input  logic         core_clk,
     input  logic         core_rstn,
@@ -67,31 +68,57 @@ module smartnic_app
     output logic [31:0]  app_axil_rdata,
     output logic [1:0]   app_axil_rresp,
 
-    // AXI-S data interface (from switch)
+    // AXI-S app_igr interface
     // (synchronous to core_clk domain)
-    input  logic [(M*N*  1)-1:0] axis_from_switch_tvalid,
-    output logic [(M*N*  1)-1:0] axis_from_switch_tready,
-    input  logic [(M*N*512)-1:0] axis_from_switch_tdata,
-    input  logic [(M*N* 64)-1:0] axis_from_switch_tkeep,
-    input  logic [(M*N*  1)-1:0] axis_from_switch_tlast,
-    input  logic [(M*N*  2)-1:0] axis_from_switch_tid,
-    input  logic [(M*N*  2)-1:0] axis_from_switch_tdest,
-    input  logic [(M*N* 16)-1:0] axis_from_switch_tuser_pid,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tvalid,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tready,
+    input  logic [(NUM_PORTS*512)-1:0] axis_app_igr_tdata,
+    input  logic [(NUM_PORTS* 64)-1:0] axis_app_igr_tkeep,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tlast,
+    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tid,
+    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tdest,
+    input  logic [(NUM_PORTS* 16)-1:0] axis_app_igr_tuser_pid,
 
-    // AXI-S data interface (to switch)
+    // AXI-S app_egr interface
     // (synchronous to core_clk domain)
-    output logic [(M*N*  1)-1:0] axis_to_switch_tvalid,
-    input  logic [(M*N*  1)-1:0] axis_to_switch_tready,
-    output logic [(M*N*512)-1:0] axis_to_switch_tdata,
-    output logic [(M*N* 64)-1:0] axis_to_switch_tkeep,
-    output logic [(M*N*  1)-1:0] axis_to_switch_tlast,
-    output logic [(M*N*  2)-1:0] axis_to_switch_tid,
-    output logic [(M*N*  3)-1:0] axis_to_switch_tdest,
-    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_pid,
-    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_trunc_enable,
-    output logic [(M*N* 16)-1:0] axis_to_switch_tuser_trunc_length,
-    output logic [(M*N*  1)-1:0] axis_to_switch_tuser_rss_enable,
-    output logic [(M*N* 12)-1:0] axis_to_switch_tuser_rss_entropy,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tvalid,
+    input  logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tready,
+    output logic [(NUM_PORTS*512)-1:0] axis_app_egr_tdata,
+    output logic [(NUM_PORTS* 64)-1:0] axis_app_egr_tkeep,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tlast,
+    output logic [(NUM_PORTS*  2)-1:0] axis_app_egr_tid,
+    output logic [(NUM_PORTS*  3)-1:0] axis_app_egr_tdest,
+    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_pid,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_trunc_enable,
+    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_trunc_length,
+    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_rss_enable,
+    output logic [(NUM_PORTS* 12)-1:0] axis_app_egr_tuser_rss_entropy,
+
+    // AXI-S c2h interface
+    // (synchronous to core_clk domain)
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tvalid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tready,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_h2c_tdata,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_h2c_tkeep,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tlast,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tdest,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_h2c_tuser_pid,
+
+    // AXI-S h2c interface
+    // (synchronous to core_clk domain)
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tvalid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tready,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_c2h_tdata,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_c2h_tkeep,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tlast,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_c2h_tid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  3)-1:0] axis_c2h_tdest,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_pid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_trunc_enable,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_trunc_length,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_rss_enable,
+    output logic [(HOST_NUM_IFS*NUM_PORTS* 12)-1:0] axis_c2h_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl,
@@ -155,35 +182,62 @@ module smartnic_app
     // Interfaces
     axi4l_intf #() axil_if ();
     axi4l_intf #() app_axil_if ();
-    axi4l_intf #() axil_to_vitisnetp4[M] ();
+    axi4l_intf #() axil_to_vitisnetp4 [NUM_P4_PROC] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_to_switch [M][N] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_egr [NUM_PORTS] ();
 
-    tuser_smartnic_meta_t  axis_to_switch_tuser[M][N];
+    tuser_smartnic_meta_t  axis_app_egr_tuser [NUM_PORTS];
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_from_switch [M][N] ();
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_igr [NUM_PORTS] ();
 
-    tuser_smartnic_meta_t  axis_from_switch_tuser[M][N];
+    tuser_smartnic_meta_t  axis_app_igr_tuser [NUM_PORTS];
 
     generate
-        for (genvar i = 0; i < M; i += 1) begin
-            for (genvar j = 0; j < N; j += 1) begin
-                assign axis_to_switch_tuser_pid          [(i*N+j)*16 +: 16] = axis_to_switch_tuser[i][j].pid;
-                assign axis_to_switch_tuser_trunc_enable [(i*N+j)* 1 +:  1] = axis_to_switch_tuser[i][j].trunc_enable;
-                assign axis_to_switch_tuser_trunc_length [(i*N+j)*16 +: 16] = axis_to_switch_tuser[i][j].trunc_length;
-                assign axis_to_switch_tuser_rss_enable   [(i*N+j)* 1 +:  1] = axis_to_switch_tuser[i][j].rss_enable;
-                assign axis_to_switch_tuser_rss_entropy  [(i*N+j)*12 +: 12] = axis_to_switch_tuser[i][j].rss_entropy;
+        for (genvar j = 0; j < NUM_PORTS; j += 1) begin
+            assign axis_app_egr_tuser_pid          [(j)*16 +: 16] = axis_app_egr_tuser[j].pid;
+            assign axis_app_egr_tuser_trunc_enable [(j)* 1 +:  1] = axis_app_egr_tuser[j].trunc_enable;
+            assign axis_app_egr_tuser_trunc_length [(j)*16 +: 16] = axis_app_egr_tuser[j].trunc_length;
+            assign axis_app_egr_tuser_rss_enable   [(j)* 1 +:  1] = axis_app_egr_tuser[j].rss_enable;
+            assign axis_app_egr_tuser_rss_entropy  [(j)*12 +: 12] = axis_app_egr_tuser[j].rss_entropy;
 
-                assign axis_from_switch_tuser[i][j].pid          = axis_from_switch_tuser_pid[(i*N+j)*16 +: 16];
-                assign axis_from_switch_tuser[i][j].trunc_enable = '0;
-                assign axis_from_switch_tuser[i][j].trunc_length = '0;
-                assign axis_from_switch_tuser[i][j].rss_enable   = '0;
-                assign axis_from_switch_tuser[i][j].rss_entropy  = '0;
+            assign axis_app_igr_tuser[j].pid          = axis_app_igr_tuser_pid[(j)*16 +: 16];
+            assign axis_app_igr_tuser[j].trunc_enable = '0;
+            assign axis_app_igr_tuser[j].trunc_length = '0;
+            assign axis_app_igr_tuser[j].rss_enable   = '0;
+            assign axis_app_igr_tuser[j].rss_entropy  = '0;
+        end
+    endgenerate
+
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_h2c [HOST_NUM_IFS][NUM_PORTS] ();
+
+    tuser_smartnic_meta_t  axis_h2c_tuser [HOST_NUM_IFS][NUM_PORTS];
+
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
+                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_c2h [HOST_NUM_IFS][NUM_PORTS] ();
+
+    tuser_smartnic_meta_t  axis_c2h_tuser [HOST_NUM_IFS][NUM_PORTS];
+
+    generate
+        for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin
+            for (genvar j = 0; j < NUM_PORTS; j += 1) begin
+                assign axis_c2h_tuser_pid          [(i*NUM_PORTS+j)*16 +: 16] = axis_c2h_tuser[i][j].pid;
+                assign axis_c2h_tuser_trunc_enable [(i*NUM_PORTS+j)* 1 +:  1] = axis_c2h_tuser[i][j].trunc_enable;
+                assign axis_c2h_tuser_trunc_length [(i*NUM_PORTS+j)*16 +: 16] = axis_c2h_tuser[i][j].trunc_length;
+                assign axis_c2h_tuser_rss_enable   [(i*NUM_PORTS+j)* 1 +:  1] = axis_c2h_tuser[i][j].rss_enable;
+                assign axis_c2h_tuser_rss_entropy  [(i*NUM_PORTS+j)*12 +: 12] = axis_c2h_tuser[i][j].rss_entropy;
+
+                assign axis_h2c_tuser[i][j].pid          = axis_h2c_tuser_pid[(i*NUM_PORTS+j)*16 +: 16];
+                assign axis_h2c_tuser[i][j].trunc_enable = '0;
+                assign axis_h2c_tuser[i][j].trunc_length = '0;
+                assign axis_h2c_tuser[i][j].rss_enable   = '0;
+                assign axis_h2c_tuser[i][j].rss_entropy  = '0;
             end
         end
     endgenerate
+
 
     axi3_intf  #(
         .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)
@@ -247,45 +301,78 @@ module smartnic_app
 
 
     generate
-        for (genvar i = 0; i < M; i += 1) begin
-            for (genvar j = 0; j < N; j += 1) begin
-                // -- AXI-S interface from switch
+        for (genvar j = 0; j < NUM_PORTS; j += 1) begin
+            // AXI-S app_igr interface
+            axi4s_intf_from_signals #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+            ) axis_app_igr_from_signals (
+                .aclk    ( core_clk ),
+                .aresetn ( core_rstn ),
+                .tvalid  ( axis_app_igr_tvalid [(j)*  1 +:   1] ),
+                .tready  ( axis_app_igr_tready [(j)*  1 +:   1] ),
+                .tdata   ( axis_app_igr_tdata  [(j)*512 +: 512] ),
+                .tkeep   ( axis_app_igr_tkeep  [(j)* 64 +:  64] ),
+                .tlast   ( axis_app_igr_tlast  [(j)*  1 +:   1] ),
+                .tid     ( axis_app_igr_tid    [(j)*  2 +:   2] ),
+                .tdest   ( axis_app_igr_tdest  [(j)*  2 +:   2] ),
+                .tuser   ( axis_app_igr_tuser  [j] ),
+                .axi4s_if( axis_app_igr[j] )
+            );
+            // AXI-S app_egr interface
+            axi4s_intf_to_signals #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+            ) axis_app_egr_to_signals (
+                .aclk    ( ), // Output
+                .aresetn ( ), // Output
+                .tvalid  ( axis_app_egr_tvalid [(j)*  1 +:   1] ),
+                .tready  ( axis_app_egr_tready [(j)*  1 +:   1] ),
+                .tdata   ( axis_app_egr_tdata  [(j)*512 +: 512] ),
+                .tkeep   ( axis_app_egr_tkeep  [(j)* 64 +:  64] ),
+                .tlast   ( axis_app_egr_tlast  [(j)*  1 +:   1] ),
+                .tid     ( axis_app_egr_tid    [(j)*  2 +:   2] ),
+                .tdest   ( axis_app_egr_tdest  [(j)*  3 +:   3] ),
+                .tuser   ( axis_app_egr_tuser  [j] ),
+                .axi4s_if( axis_app_egr[j] )
+            );
+
+            for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin
+                // AXI-S h2c interface
                 axi4s_intf_from_signals #(
-                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-                ) i_axi4s_intf_from_signals_from_switch (
+                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+                ) axis_h2c_from_signals (
                     .aclk    ( core_clk ),
                     .aresetn ( core_rstn ),
-                    .tvalid  ( axis_from_switch_tvalid [(i*N+j)*  1 +:   1] ),
-                    .tready  ( axis_from_switch_tready [(i*N+j)*  1 +:   1] ),
-                    .tdata   ( axis_from_switch_tdata  [(i*N+j)*512 +: 512] ),
-                    .tkeep   ( axis_from_switch_tkeep  [(i*N+j)* 64 +:  64] ),
-                    .tlast   ( axis_from_switch_tlast  [(i*N+j)*  1 +:   1] ),
-                    .tid     ( axis_from_switch_tid    [(i*N+j)*  2 +:   2] ),
-                    .tdest   ( axis_from_switch_tdest  [(i*N+j)*  2 +:   2] ),
-                    .tuser   ( axis_from_switch_tuser  [i][j] ),
-                    .axi4s_if( axis_from_switch[i][j] )
+                    .tvalid  ( axis_h2c_tvalid [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tready  ( axis_h2c_tready [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tdata   ( axis_h2c_tdata  [(i*NUM_PORTS+j)*512 +: 512] ),
+                    .tkeep   ( axis_h2c_tkeep  [(i*NUM_PORTS+j)* 64 +:  64] ),
+                    .tlast   ( axis_h2c_tlast  [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tid     ( axis_h2c_tid    [(i*NUM_PORTS+j)*  2 +:   2] ),
+                    .tdest   ( {1'b0, axis_h2c_tdest  [(i*NUM_PORTS+j)*  2 +:   2]} ),
+                    .tuser   ( axis_h2c_tuser  [i][j] ),
+                    .axi4s_if( axis_h2c[i][j] )
                 );
-                // -- AXI-S interface to switch
+                // AXI-S c2h interface
                 axi4s_intf_to_signals #(
                     .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
-                ) i_axi4s_to_signals_to_switch (
+                ) axis_c2h_to_signals (
                     .aclk    ( ), // Output
                     .aresetn ( ), // Output
-                    .tvalid  ( axis_to_switch_tvalid [(i*N+j)*  1 +:   1] ),
-                    .tready  ( axis_to_switch_tready [(i*N+j)*  1 +:   1] ),
-                    .tdata   ( axis_to_switch_tdata  [(i*N+j)*512 +: 512] ),
-                    .tkeep   ( axis_to_switch_tkeep  [(i*N+j)* 64 +:  64] ),
-                    .tlast   ( axis_to_switch_tlast  [(i*N+j)*  1 +:   1] ),
-                    .tid     ( axis_to_switch_tid    [(i*N+j)*  2 +:   2] ),
-                    .tdest   ( axis_to_switch_tdest  [(i*N+j)*  3 +:   3] ),
-                    .tuser   ( axis_to_switch_tuser  [i][j] ),
-                    .axi4s_if( axis_to_switch[i][j] )
+                    .tvalid  ( axis_c2h_tvalid [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tready  ( axis_c2h_tready [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tdata   ( axis_c2h_tdata  [(i*NUM_PORTS+j)*512 +: 512] ),
+                    .tkeep   ( axis_c2h_tkeep  [(i*NUM_PORTS+j)* 64 +:  64] ),
+                    .tlast   ( axis_c2h_tlast  [(i*NUM_PORTS+j)*  1 +:   1] ),
+                    .tid     ( axis_c2h_tid    [(i*NUM_PORTS+j)*  2 +:   2] ),
+                    .tdest   ( axis_c2h_tdest  [(i*NUM_PORTS+j)*  3 +:   3] ),
+                    .tuser   ( axis_c2h_tuser  [i][j] ),
+                    .axi4s_if( axis_c2h[i][j] )
                 );
             end
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_switch[0][0]));
+    // axi4s_ila axi4s_ila_0 (.axis_in(axis_app_igr[0]));
 
     // -- AXI memory interfaces to HBM
     generate
@@ -358,7 +445,7 @@ module smartnic_app
     axi4l_intf  axil_to_p4_only__core_clk ();
     axi4l_intf  axil_to_smartnic_app_igr ();
     axi4l_intf  axil_to_smartnic_app_egr ();
-    axi4l_intf  axil_to_p4_proc[M] ();
+    axi4l_intf  axil_to_p4_proc [NUM_P4_PROC] ();
 
     p4_only_reg_intf  p4_only_regs ();
 
@@ -399,37 +486,34 @@ module smartnic_app
     // p4 processor signals and interfaces.
     // ----------------------------------------------------------------------
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_vitisnetp4[M] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_vitisnetp4 [NUM_P4_PROC] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_vitisnetp4[M] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_vitisnetp4 [NUM_P4_PROC] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_demux[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_demux [NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_igr[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_igr [NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  float[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_egr [NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_smartnic_app_egr[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_mux [NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_mux[N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axi4s_mux_in [NUM_PORTS][2] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axi4s_mux_in[N][2] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_mux [NUM_PORTS] ();
 
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_mux[N] ();
+    user_metadata_t user_metadata_in [NUM_P4_PROC];
+    logic           user_metadata_in_valid [NUM_P4_PROC];
 
-    user_metadata_t user_metadata_in[M];
-    logic           user_metadata_in_valid[M];
-
-    user_metadata_t user_metadata_out[M];
-    logic           user_metadata_out_valid[M];
+    user_metadata_t user_metadata_out [NUM_P4_PROC];
+    logic           user_metadata_out_valid [NUM_P4_PROC];
 
     // ----------------------------------------------------------------------
     // ingress p4 processor complex (p4_proc + vitisnetp4_igr_wrapper)
@@ -438,12 +522,12 @@ module smartnic_app
 
     generate
         if (P4_PROC_IGR_MODE) begin
-            p4_proc #(.N(N)) p4_proc_igr (
+            p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_igr (
                 .core_clk                       ( core_clk ),
                 .core_rstn                      ( core_rstn ),
                 .timestamp                      ( timestamp ),
                 .axil_if                        ( axil_to_p4_proc[0] ),
-                .axis_in                        ( axis_from_switch[0] ),
+                .axis_in                        ( axis_app_igr ),
                 .axis_out                       ( axis_to_demux ),
                 .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[0] ),
                 .axis_from_vitisnetp4                ( axis_from_vitisnetp4[0] ),
@@ -473,9 +557,8 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
             axi4l_intf_peripheral_term axil_to_vitisnetp4_0_term ( .axi4l_if (axil_to_vitisnetp4[0]) );
 
-            for (genvar i = 0; i < N; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
-                axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_switch[0][i]), .axi4s_if_to_rx(axis_to_demux[i]) );
+            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+                axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(axis_app_igr[i]), .axi4s_if_to_rx(axis_to_demux[i]) );
             end
 
             for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
@@ -499,13 +582,13 @@ module smartnic_app
         end : g__hbm1_if
 
         if (P4_PROC_EGR_MODE) begin
-            p4_proc #(.N(N)) p4_proc_egr (
+            p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_egr (
                 .core_clk                       ( core_clk ),
                 .core_rstn                      ( core_rstn ),
                 .timestamp                      ( timestamp ),
                 .axil_if                        ( axil_to_p4_proc[1] ),
                 .axis_in                        ( axis_from_mux ),
-                .axis_out                       ( axis_to_switch[1] ),
+                .axis_out                       ( axis_app_egr ),
                 .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[1] ),
                 .axis_from_vitisnetp4                ( axis_from_vitisnetp4[1] ),
                 .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid[1] ),
@@ -531,9 +614,8 @@ module smartnic_app
             axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc[1]) );
             axi4l_intf_peripheral_term axil_to_vitisnetp4_1_term   ( .axi4l_if (axil_to_vitisnetp4[1]) );
 
-            for (genvar i = 0; i < N; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
-                axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(axis_to_switch[1][i]) );
+            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+                axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(axis_app_egr[i]) );
             end
 
             for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
@@ -547,34 +629,60 @@ module smartnic_app
     // ----------------------------------------------------------------------
     // smartnic app datapath logic (mux/demux and ingress/egress blocks).
     // ----------------------------------------------------------------------
-    generate for (genvar i = 0; i < N; i += 1) begin
-        axi4s_intf_1to2_demux axi4s_intf_1to2_demux_inst (
-            .axi4s_in   ( axis_to_demux[i] ),
-            .axi4s_out0 ( axis_to_smartnic_app_igr[i] ),
-            .axi4s_out1 ( float[i] ),
-//            .output_sel ( axis_to_demux[i].tdest[1] )
-            .output_sel ( 1'b0 )
-        );
-    end endgenerate
+    logic [NUM_PORTS-1:0] igr_demux_sel;  // each sel signal has wordlength $clog2(2)
+
+    always_comb begin
+        case (axis_to_demux[0].tdest)
+//            HOST0:   igr_demux_sel[0] = 1'b1;  // temporary comments (until VF interfaces are fully supported).
+//            HOST1:   igr_demux_sel[0] = 1'b1;
+            default: igr_demux_sel[0] = 1'b0;
+        endcase
+    end
+
+    always_comb begin
+        case (axis_to_demux[1].tdest)
+//            HOST0:   igr_demux_sel[1] = 1'b1;
+//            HOST1:   igr_demux_sel[1] = 1'b1;
+            default: igr_demux_sel[1] = 1'b0;
+        endcase
+    end
+
+    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_demux_out [NUM_PORTS][2] ();
+
+    generate
+        for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            axi4s_intf_demux #(.N(2)) axi4s_intf_demux_inst (
+                .axi4s_in   ( axis_to_demux[i] ),
+                .axi4s_out  ( axis_demux_out[i] ),
+                .sel        ( igr_demux_sel[i] )
+            );
+
+            axi4s_intf_pipe axis_demux_out_pipe_0 ( .axi4s_if_from_tx(axis_demux_out[i][0]), .axi4s_if_to_rx(axis_to_smartnic_app_igr[i]) );
+            axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(axis_c2h[0][i]) );
+
+            //axi4s_intf_tx_term   axis_c2h_2_tx_term      (.axi4s_if(axis_c2h[2][i]));   // temporarily unused c2h[2] i/f (p4 extern).
+        end
+    endgenerate
 
     // axi4s_ila axi4s_ila_3 (.axis_in(axis_to_demux[0]));
 
     localparam logic SMARTNIC_APP_IGR_MODE = 0;
     generate
         if (SMARTNIC_APP_IGR_MODE) begin
-            smartnic_app_igr #(.N(N)) smartnic_app_igr_inst (
+            smartnic_app_igr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_igr_inst (
                 .core_clk   ( core_clk ),
                 .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_igr ),
                 .axi4s_out  ( axis_to_smartnic_app_egr ),
+                .axi4s_c2h  ( axis_c2h[1] ),
                 .axil_if    ( axil_to_smartnic_app_igr )
             );
 
         end else begin  // SMARTNIC_APP_IGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_smartnic_app_igr_term ( .axi4l_if (axil_to_smartnic_app_igr) );
 
-            for (genvar i = 0; i < N; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
                 axi4s_full_pipe smartnic_app_igr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_igr[i]), .axi4s_if_to_rx(axis_to_smartnic_app_egr[i]) );
             end
 
@@ -585,10 +693,11 @@ module smartnic_app
     localparam logic SMARTNIC_APP_EGR_MODE = 0;
     generate
         if (SMARTNIC_APP_EGR_MODE) begin
-            smartnic_app_egr #(.N(N)) smartnic_app_egr_inst (
+            smartnic_app_egr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_egr_inst (
                 .core_clk   ( core_clk ),
                 .core_rstn  ( core_rstn ),
                 .axi4s_in   ( axis_to_smartnic_app_egr ),
+                .axi4s_h2c  ( axis_h2c[1] ),
                 .axi4s_out  ( axis_to_mux ),
                 .axil_if    ( axil_to_smartnic_app_egr )
             );
@@ -596,8 +705,7 @@ module smartnic_app
         end else begin  // SMARTNIC_APP_EGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_smartnic_app_egr_term ( .axi4l_if (axil_to_smartnic_app_egr) );
 
-            for (genvar i = 0; i < N; i += 1) begin
-                // axi4s_intf_connector axis4s_intf_connector_inst ( .axi4s_from_tx(), .axi4s_to_rx() );
+            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
                 axi4s_full_pipe smartnic_app_egr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_egr[i]), .axi4s_if_to_rx(axis_to_mux[i]) );
             end
 
@@ -606,15 +714,20 @@ module smartnic_app
 
     // axi4s_ila axi4s_ila_4 (.axis_in(axis_to_mux[0]));
 
-    generate for (genvar i = 0; i < N; i += 1) begin
-        axi4s_intf_connector axi4s_mux_in_connector_0 ( .axi4s_from_tx(axis_to_mux[i]),         .axi4s_to_rx(axi4s_mux_in[i][0]) );
-        axi4s_intf_connector axi4s_mux_in_connector_1 ( .axi4s_from_tx(axis_from_switch[1][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
+    generate
+        for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            axi4s_intf_pipe axis_mux_in_pipe_0 ( .axi4s_if_from_tx(axis_to_mux[i]), .axi4s_if_to_rx(axi4s_mux_in[i][0]) );
+            axi4s_intf_pipe axis_mux_in_pipe_1 ( .axi4s_if_from_tx(axis_h2c[0][i]), .axi4s_if_to_rx(axi4s_mux_in[i][1]) );
 
-        axi4s_mux axi4s_mux_inst (
-            .axi4s_in   ( axi4s_mux_in[i] ),
-            .axi4s_out  ( axis_from_mux[i] )
-        );
-    end endgenerate
+            axi4s_mux #(.N(2)) axi4s_mux_inst (
+                .axi4s_in   ( axi4s_mux_in[i] ),
+                .axi4s_out  ( axis_from_mux[i] )
+            );
+
+            //axi4s_intf_rx_sink  axis_h2c_2_rx_sink_inst  (.axi4s_if(axis_h2c[2][i]));  // temporarily unused h2c[2] i/f (p4 extern).
+
+        end
+    endgenerate
 
     // axi4s_ila axi4s_ila_5 (.axis_in(axis_from_mux[0]));
 

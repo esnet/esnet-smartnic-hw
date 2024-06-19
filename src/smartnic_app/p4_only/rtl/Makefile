@@ -25,6 +25,7 @@ SRC_LIST_FILES =
 
 SUBCOMPONENTS = \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic_app.p4_only.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     p4_proc.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     vitisnetp4_igr.rtl \

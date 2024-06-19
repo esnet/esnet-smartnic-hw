@@ -66,6 +66,8 @@ module p4_only_datapath_unit_test;
         // Flush packets from pipeline
         env.axis_monitor[0].flush();
         env.axis_monitor[1].flush();
+        env.axis_monitor[2].flush();
+        env.axis_monitor[3].flush();
 
         // Issue reset (both datapath and management domains)
         reset();
@@ -75,6 +77,8 @@ module p4_only_datapath_unit_test;
         env.axis_driver[1].idle();
         env.axis_monitor[0].idle();
         env.axis_monitor[1].idle();
+        env.axis_monitor[2].idle();
+        env.axis_monitor[3].idle();
 
     endtask
 
@@ -93,6 +97,8 @@ module p4_only_datapath_unit_test;
         // Flush remaining packets
         env.axis_monitor[0].flush();
         env.axis_monitor[1].flush();
+        env.axis_monitor[2].flush();
+        env.axis_monitor[3].flush();
         #10us;
 
     endtask
@@ -130,7 +136,7 @@ module p4_only_datapath_unit_test;
 
      task automatic run_pkt_test (
         input string testdir, output int exp_pkt_cnt, exp_byte_cnt,
-        input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
+        input logic[63:0] init_timestamp=0, input port_t in_if=0, out_if=0, input egr_tdest_t dest_port=0,
         input write_p4_tables=1, VERBOSE=1 );
 	
         string filename;
@@ -178,8 +184,8 @@ module p4_only_datapath_unit_test;
              begin
                  // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
                  while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if[0][0].tlast or posedge rx_done) begin
-                       if (tb.axis_in_if[0][0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
+                    @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
+                       if (tb.axis_in_if[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
                     end
                  end
              end

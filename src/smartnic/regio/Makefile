@@ -18,6 +18,7 @@ REG_BLOCK_YAML = \
 REG_DECODER_YAML = \
     smartnic_app_decoder.yaml \
     smartnic_to_app_decoder.yaml \
+    smartnic_p4_decoder.yaml \
     xilinx_hbm_0_decoder.yaml \
     xilinx_hbm_1_decoder.yaml \
     smartnic_decoder.yaml

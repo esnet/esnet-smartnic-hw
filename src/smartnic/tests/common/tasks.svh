@@ -70,20 +70,6 @@ task reset();
 endtask
 
 
-// Force loopback
-task force_loopback();
-    `INFO("Forcing loopback from ingress switch to egress switch.");
-    force tb.DUT.axis_switch_egress.s_axis_tvalid = tb.DUT.axis_switch_ingress.m_axis_tvalid;
-    force tb.DUT.axis_switch_egress.s_axis_tdata  = tb.DUT.axis_switch_ingress.m_axis_tdata;
-    force tb.DUT.axis_switch_egress.s_axis_tkeep  = tb.DUT.axis_switch_ingress.m_axis_tkeep;
-    force tb.DUT.axis_switch_egress.s_axis_tlast  = tb.DUT.axis_switch_ingress.m_axis_tlast;
-    force tb.DUT.axis_switch_egress.s_axis_tid    = tb.DUT.axis_switch_ingress.m_axis_tid;
-    force tb.DUT.axis_switch_egress.s_axis_tdest  = tb.DUT.axis_switch_ingress.m_axis_tdest;
-
-    force tb.DUT.axis_switch_ingress.m_axis_tready = tb.DUT.axis_switch_egress.s_axis_tready;
-endtask // force_loopback
-
-
 // Send packets described in PCAP file on AXI-S input interface
 task send_pcap (
     input string  pcap_filename,

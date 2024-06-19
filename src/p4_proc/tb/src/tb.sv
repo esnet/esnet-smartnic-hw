@@ -6,7 +6,7 @@ module tb;
     // (Local) parameters
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
-    localparam int N = 2;
+    localparam int NUM_PORTS = 2;
 
     //===================================
     // (Common) test environment
@@ -27,9 +27,9 @@ module tb;
     axi4l_intf axil_to_vitisnetp4 ();
 
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [N] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_vitisnetp4 ();
     axi4s_intf #(.TUSER_T(tuser_t),
@@ -43,7 +43,7 @@ module tb;
     logic           user_metadata_out_valid;
 
     // DUT instance
-    p4_proc #(.N(N)) DUT (
+    p4_proc #(.NUM_PORTS(NUM_PORTS)) DUT (
         .core_clk                ( clk ),
         .core_rstn               ( rstn ),
         .timestamp               ( timestamp ),

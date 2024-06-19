@@ -12,11 +12,6 @@ regs:
   - name: status
     init: 0xC0BEBEEF
 
-  - name: hdr_length
-    desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
-    access: rw
-    init: 0x0
-
   # ----- switch configuration registers. -----
   - name: igr_sw_tid
     access : rw
@@ -58,13 +53,26 @@ regs:
           desc: sets the bypass axi4s 'tdest' signal (egress switch output port) for the specified ingress port.
                 indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
                 bypass_tdest[0]=1 sends pkts from CMAC_0 to CMAC_1.
-          width: 2
+          width: 3
           init: 0
           enum:
               0 : CMAC_0
               1 : CMAC_1
               2 : HOST_0
               3 : HOST_1
+
+  - name: h2c_demux_sel
+    access : rw
+    fields:
+        - name: value
+          desc: steers h2c traffic to the selected ingress function.
+          width: 2
+          init: 0
+          enum:
+              0 : HOST_F0
+              1 : HOST_F1
+              2 : HOST_F2
+              3 : HOST_F3
 
   - name: switch_config
     access: rw
