@@ -427,6 +427,8 @@ module xilinx_cmac_wrapper #(
     assign __axis_rx_tid.port_id = port_id_t'(PORT_ID);
     assign axis_rx.tid = __axis_rx_tid;
 
+    assign axis_rx.tdest = '0;
+
     // =========================================================================
     // AXI-S Tx
     // =========================================================================

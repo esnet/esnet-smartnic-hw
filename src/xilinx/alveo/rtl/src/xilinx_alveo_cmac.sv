@@ -73,8 +73,9 @@ module xilinx_alveo_cmac #(
     assign __axis_tx.tlast = axis_tx.tlast;
     assign __axis_tx.tkeep = axis_tx.tkeep;
     assign __axis_tx.tdata = axis_tx.tdata;
-    assign __axis_tx.tuser = axis_tx.tuser;
     assign __axis_tx.tid = axis_tx.tid;
     assign __axis_tx.tdest = axis_tx.tdest;
+    assign __axis_tx.tuser = axis_tx.tuser;
+    assign axis_tx.tready = __axis_tx.tready;
 
 endmodule : xilinx_alveo_cmac

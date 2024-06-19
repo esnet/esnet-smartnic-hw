@@ -69,7 +69,7 @@ module xilinx_alveo_host
     assign __axis_qdma_c2h.tvalid = 1'b0;
     assign __axis_qdma_c2h.tlast = 1'b0;
     assign __axis_qdma_c2h.tdata = '0;
-    assign __axis_qdma_c2h.tdata = '0;
+    assign __axis_qdma_c2h.tkeep = '0;
     assign __axis_qdma_c2h.tid = '0;
     assign __axis_qdma_c2h.tdest = '0;
     assign __axis_qdma_c2h.tuser = '0;
