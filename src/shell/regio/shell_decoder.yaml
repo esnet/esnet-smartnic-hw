@@ -1,0 +1,21 @@
+name: shell
+
+blocks:
+  hw: &hw
+    name: hw
+    info: Hardware (i.e. physical layer) registers.
+    regs: []
+  core: &core
+    name: core
+    info: Core (i.e. user/application) registers.
+    regs: []
+
+interfaces:
+  - block: *hw
+    address: 0x000000
+    width: 20
+    name: hw
+  - block: *core
+    address: 0x200000
+    width: 21
+    name: core
