@@ -1,1 +1,0 @@
-../../../../../open-nic-shell/constr/au280/pins.xdc

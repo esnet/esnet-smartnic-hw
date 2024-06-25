@@ -3,7 +3,7 @@ module xilinx_alveo_cmac #(
 ) (
     // Clock/reset
     input  logic           clk,
-    input  logic           srstn,
+    input  logic           srst,
 
     // From/to pins
     // -- QSFPs
@@ -41,7 +41,7 @@ module xilinx_alveo_cmac #(
         .PORT_ID ( PORT_ID )
     ) i_xilinx_cmac_wrapper (
         .clk,
-        .srstn,
+        .srst,
         .qsfp_refclk_p,
         .qsfp_refclk_n,
         .qsfp_rxp,

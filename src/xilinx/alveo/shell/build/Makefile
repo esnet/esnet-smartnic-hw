@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -34,7 +34,7 @@ CONSTRAINTS_XDC_USER = $(abspath $(wildcard $(BOARD)/*.xdc))
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS =
+INC_DIRS = ../../rtl/include
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -43,7 +43,12 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.alveo.rtl
+    shell.pkg \
+    shell.rtl \
+    xilinx.alveo.pkg \
+    xilinx.alveo.rtl \
+    xilinx.alveo.shell.rtl \
+    core.blackbox
 
 # ----------------------------------------------------
 # Targets

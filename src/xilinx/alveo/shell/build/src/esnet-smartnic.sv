@@ -17,16 +17,35 @@ module esnet_smartnic
     `include "xilinx_alveo_au55c_io.svh"
 `endif
 );
+    // Imports
+    import xilinx_alveo_pkg::*;
+    import shell_pkg::*;
 
+    // Interfaces
+    xilinx_alveo_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
+
+    shell_intf shell_if ();
+
+    // Physical (hardware) layer
 `ifdef __au280__
-    xilinx_alveo_au280 #(
+    xilinx_alveo_au280 i_xilinx_au280 (
 `elsif __au250__
-    xilinx_alveo_au250 #(
+    xilinx_alveo_au250 i_xilinx_au250 (
 `elsif __au55c__
-    xilinx_alveo_au55c #(
+    xilinx_alveo_au55c i_xilinx_au55c (
 `endif
+        .*
+    );
+
+    // (Common) shell layer
+    xilinx_alveo_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
-    ) i_xilinx_alveo_auxxx (
+    ) i_xilinx_alveo_shell (
+        .*
+    );
+
+    // Application core
+    core #() i_core (
         .*
     );
 

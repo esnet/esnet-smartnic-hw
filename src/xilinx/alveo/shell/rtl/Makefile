@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -23,8 +23,11 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    shell.pkg \
-    xilinx.cmac.pkg
+    axi4l.rtl@common \
+    axi4s.rtl@common \
+    shell.rtl \
+    shell.regio.rtl \
+    xilinx.alveo.rtl
 
 EXT_LIBS =
 

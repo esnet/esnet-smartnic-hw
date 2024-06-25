@@ -39,7 +39,7 @@ EXT_LIBS =
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES = __$(BOARD)__ BOARD=$(BOARD)
+DEFINES =
 
 # ----------------------------------------------------
 # Options
