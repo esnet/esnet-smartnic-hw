@@ -1,0 +1,87 @@
+name: xilinx_hbm
+visible: true
+
+blocks:
+  xilinx_hbm: &xilinx_hbm
+    !include ../src/xilinx/hbm/regio/xilinx_hbm.yaml
+  proxy_reg: &proxy_reg
+    !include src/reg/proxy/regio/reg_proxy.yaml
+  mem_proxy: &mem_proxy
+    !include src/mem/proxy/regio/mem_proxy.yaml
+
+interfaces:
+  - block: *xilinx_hbm
+    address: 0x000
+    width: 11
+    name: xilinx_hbm
+  - block: *proxy_reg
+    address: 0x800
+    width: 11
+    name: xilinx_hbm_apb_proxy
+    # Provides register-indirect access to register space
+    # described in xilinx_hbm_apb.yaml
+  - block: *mem_proxy
+    address: 0x10000
+    width: 12
+    name: ch0
+  - block: *mem_proxy
+    address: 0x11000
+    width: 12
+    name: ch1
+  - block: *mem_proxy
+    address: 0x12000
+    width: 12
+    name: ch2
+  - block: *mem_proxy
+    address: 0x13000
+    width: 12
+    name: ch3
+  - block: *mem_proxy
+    address: 0x14000
+    width: 12
+    name: ch4
+  - block: *mem_proxy
+    address: 0x15000
+    width: 12
+    name: ch5
+  - block: *mem_proxy
+    address: 0x16000
+    width: 12
+    name: ch6
+  - block: *mem_proxy
+    address: 0x17000
+    width: 12
+    name: ch7
+  - block: *mem_proxy
+    address: 0x18000
+    width: 12
+    name: ch8
+  - block: *mem_proxy
+    address: 0x19000
+    width: 12
+    name: ch9
+  - block: *mem_proxy
+    address: 0x1A000
+    width: 12
+    name: ch10
+  - block: *mem_proxy
+    address: 0x1B000
+    width: 12
+    name: ch11
+  - block: *mem_proxy
+    address: 0x1C000
+    width: 12
+    name: ch12
+  - block: *mem_proxy
+    address: 0x1D000
+    width: 12
+    name: ch13
+  - block: *mem_proxy
+    address: 0x1E000
+    width: 12
+    name: ch14
+  - block: *mem_proxy
+    address: 0x1F000
+    width: 12
+    name: ch15
+

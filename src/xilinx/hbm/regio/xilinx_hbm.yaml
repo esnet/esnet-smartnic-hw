@@ -1,0 +1,39 @@
+name: xilinx_hbm
+info: |
+    Register map for control and register access to HBM.
+regs:
+  - default:
+      width: 32
+      access: rw
+      init: 0
+
+  - name: control
+    desc: Control register.
+    access: rw
+    fields:
+        - name: reset
+          desc: soft reset
+          width: 1
+          init: 0
+
+  - name: status
+    desc: Status register
+    access: ro
+    fields:
+        - name: reset
+          desc: reset status
+          width: 1
+        - name: init_done
+          desc: memory init done
+          width: 1
+
+  - name: dram_status
+    desc: DRAM status
+    access: ro
+    fields:
+        - name: temp
+          desc: temperature in Celsius
+          width: 8
+        - name: cattrip
+          desc: catastrophic temperature tripped flag
+          width: 1

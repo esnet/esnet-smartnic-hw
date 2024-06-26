@@ -1,0 +1,3097 @@
+name: xilinx_hbm_apb
+info: |
+  This register map describes the register map for the Xilinx
+  AXI HBM Memory Controller (v1.0).
+regs:
+  - default:
+      width: 32
+      access: rw
+      init: 0
+
+  # --------------------------------------------------------
+  # Memory channel 0
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0x05800
+
+  - name: mc0_cfg_ecc_correction_en
+    desc: (Memory channel 0) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc0_init_ecc_scrub_en
+    desc: (Memory channel 0) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc0_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0x05810
+
+  - name: mc0_cfg_ecc_scrub_period
+    desc: (Memory channel 0) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0x05818
+
+  - name: mc0_init_ecc_error_clr
+    desc: (Memory channel 0) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0x05828
+
+  - name: mc0_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 0, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc0_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 0, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x05834
+
+  - name: mc0_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 0, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc0_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 0, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x0584c
+
+  - name: mc0_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc0_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc0_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc0_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc0_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 0) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0x05864
+
+  - name: mc0_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 0, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc0_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 0, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x10034
+
+  - name: mc0_stat_dfi_init_complete
+    desc: (Memory channel 0) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x1004c
+
+  - name: mc0_stat_dfi_cattrip
+    desc: (Memory channel 0) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x13800
+
+  - name: mc0_init_am_repeat
+    desc: (Memory channel 0) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc0_init_am_single_en
+    desc: (Memory channel 0) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc0_cfg_am_interval
+    desc: (Memory channel 0) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc0_stat_am_complete
+    desc: (Memory channel 0) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0x13814
+
+  - name: mc0_am_wr_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc0_am_wr_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x13820
+
+  - name: mc0_am_wr_ap_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_wr_ap_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x1382c
+
+  - name: mc0_am_rd_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc0_am_rd_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x13838
+
+  - name: mc0_am_rd_ap_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc0_am_rd_ap_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x13844
+
+  - name: mc0_am_refresh_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_refresh_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x13850
+
+  - name: mc0_am_act_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_act_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x1385c
+
+  - name: mc0_am_precharge_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc0_am_precharge_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x13868
+
+  - name: mc0_am_precharge_all_cmd_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_precharge_all_cmd_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_power_down
+    desc: (Memory channel 0) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_self_refresh
+    desc: (Memory channel 0) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x1387c
+
+  - name: mc0_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x13888
+
+  - name: mc0_am_ro_age_limit_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_ro_age_limit_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x13894
+
+  - name: mc0_am_rmw_cycle_ps0
+    desc: (Memory channel 0, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc0_am_rmw_cycle_ps1
+    desc: (Memory channel 0, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 2
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0x25800
+
+  - name: mc2_cfg_ecc_correction_en
+    desc: (Memory channel 2) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc2_init_ecc_scrub_en
+    desc: (Memory channel 2) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc2_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0x25810
+
+  - name: mc2_cfg_ecc_scrub_period
+    desc: (Memory channel 2) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0x25818
+
+  - name: mc2_init_ecc_error_clr
+    desc: (Memory channel 2) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0x25828
+
+  - name: mc2_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 2, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc2_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 2, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x25834
+
+  - name: mc2_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 2, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc2_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 2, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x2584c
+
+  - name: mc2_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc2_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc2_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc2_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc2_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 2) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0x25864
+
+  - name: mc2_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 2, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc2_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 2, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x30034
+
+  - name: mc2_stat_dfi_init_complete
+    desc: (Memory channel 2) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x3004c
+
+  - name: mc2_stat_dfi_cattrip
+    desc: (Memory channel 2) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x33800
+
+  - name: mc2_init_am_repeat
+    desc: (Memory channel 2) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc2_init_am_single_en
+    desc: (Memory channel 2) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc2_cfg_am_interval
+    desc: (Memory channel 2) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc2_stat_am_complete
+    desc: (Memory channel 2) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0x33814
+
+  - name: mc2_am_wr_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc2_am_wr_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x33820
+
+  - name: mc2_am_wr_ap_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_wr_ap_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x3382c
+
+  - name: mc2_am_rd_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc2_am_rd_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x33838
+
+  - name: mc2_am_rd_ap_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc2_am_rd_ap_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x33844
+
+  - name: mc2_am_refresh_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_refresh_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x33850
+
+  - name: mc2_am_act_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_act_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x3385c
+
+  - name: mc2_am_precharge_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc2_am_precharge_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x33868
+
+  - name: mc2_am_precharge_all_cmd_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_precharge_all_cmd_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_power_down
+    desc: (Memory channel 2) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_self_refresh
+    desc: (Memory channel 2) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x3387c
+
+  - name: mc2_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x33888
+
+  - name: mc2_am_ro_age_limit_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_ro_age_limit_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x33894
+
+  - name: mc2_am_rmw_cycle_ps0
+    desc: (Memory channel 2, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc2_am_rmw_cycle_ps1
+    desc: (Memory channel 2, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 4
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0x45800
+
+  - name: mc4_cfg_ecc_correction_en
+    desc: (Memory channel 4) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc4_init_ecc_scrub_en
+    desc: (Memory channel 4) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc4_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0x45810
+
+  - name: mc4_cfg_ecc_scrub_period
+    desc: (Memory channel 4) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0x45818
+
+  - name: mc4_init_ecc_error_clr
+    desc: (Memory channel 4) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0x45828
+
+  - name: mc4_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 4, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc4_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 4, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x45834
+
+  - name: mc4_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 4, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc4_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 4, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x4584c
+
+  - name: mc4_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc4_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc4_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc4_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc4_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 4) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0x45864
+
+  - name: mc4_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 4, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc4_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 4, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x50034
+
+  - name: mc4_stat_dfi_init_complete
+    desc: (Memory channel 4) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x5004c
+
+  - name: mc4_stat_dfi_cattrip
+    desc: (Memory channel 4) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x53800
+
+  - name: mc4_init_am_repeat
+    desc: (Memory channel 4) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc4_init_am_single_en
+    desc: (Memory channel 4) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc4_cfg_am_interval
+    desc: (Memory channel 4) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc4_stat_am_complete
+    desc: (Memory channel 4) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0x53814
+
+  - name: mc4_am_wr_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc4_am_wr_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x53820
+
+  - name: mc4_am_wr_ap_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_wr_ap_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x5382c
+
+  - name: mc4_am_rd_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc4_am_rd_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x53838
+
+  - name: mc4_am_rd_ap_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc4_am_rd_ap_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x53844
+
+  - name: mc4_am_refresh_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_refresh_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x53850
+
+  - name: mc4_am_act_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_act_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x5385c
+
+  - name: mc4_am_precharge_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc4_am_precharge_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x53868
+
+  - name: mc4_am_precharge_all_cmd_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_precharge_all_cmd_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_power_down
+    desc: (Memory channel 4) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_self_refresh
+    desc: (Memory channel 4) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x5387c
+
+  - name: mc4_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x53888
+
+  - name: mc4_am_ro_age_limit_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_ro_age_limit_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x53894
+
+  - name: mc4_am_rmw_cycle_ps0
+    desc: (Memory channel 4, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc4_am_rmw_cycle_ps1
+    desc: (Memory channel 4, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 6
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0x65800
+
+  - name: mc6_cfg_ecc_correction_en
+    desc: (Memory channel 6) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc6_init_ecc_scrub_en
+    desc: (Memory channel 6) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc6_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0x65810
+
+  - name: mc6_cfg_ecc_scrub_period
+    desc: (Memory channel 6) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0x65818
+
+  - name: mc6_init_ecc_error_clr
+    desc: (Memory channel 6) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0x65828
+
+  - name: mc6_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 6, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc6_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 6, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x65834
+
+  - name: mc6_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 6, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc6_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 6, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x6584c
+
+  - name: mc6_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc6_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc6_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc6_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc6_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 6) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0x65864
+
+  - name: mc6_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 6, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc6_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 6, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x70034
+
+  - name: mc6_stat_dfi_init_complete
+    desc: (Memory channel 6) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x7004c
+
+  - name: mc6_stat_dfi_cattrip
+    desc: (Memory channel 6) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x73800
+
+  - name: mc6_init_am_repeat
+    desc: (Memory channel 6) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc6_init_am_single_en
+    desc: (Memory channel 6) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc6_cfg_am_interval
+    desc: (Memory channel 6) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc6_stat_am_complete
+    desc: (Memory channel 6) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0x73814
+
+  - name: mc6_am_wr_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc6_am_wr_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x73820
+
+  - name: mc6_am_wr_ap_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_wr_ap_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x7382c
+
+  - name: mc6_am_rd_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc6_am_rd_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x73838
+
+  - name: mc6_am_rd_ap_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc6_am_rd_ap_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x73844
+
+  - name: mc6_am_refresh_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_refresh_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x73850
+
+  - name: mc6_am_act_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_act_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x7385c
+
+  - name: mc6_am_precharge_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc6_am_precharge_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x73868
+
+  - name: mc6_am_precharge_all_cmd_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_precharge_all_cmd_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_power_down
+    desc: (Memory channel 6) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_self_refresh
+    desc: (Memory channel 6) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x7387c
+
+  - name: mc6_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x73888
+
+  - name: mc6_am_ro_age_limit_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_ro_age_limit_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x73894
+
+  - name: mc6_am_rmw_cycle_ps0
+    desc: (Memory channel 6, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc6_am_rmw_cycle_ps1
+    desc: (Memory channel 6, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 1
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0x85800
+
+  - name: mc1_cfg_ecc_correction_en
+    desc: (Memory channel 1) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc1_init_ecc_scrub_en
+    desc: (Memory channel 1) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc1_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0x85810
+
+  - name: mc1_cfg_ecc_scrub_period
+    desc: (Memory channel 1) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0x85818
+
+  - name: mc1_init_ecc_error_clr
+    desc: (Memory channel 1) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0x85828
+
+  - name: mc1_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 1, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc1_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 1, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x85834
+
+  - name: mc1_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 1, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc1_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 1, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0x8584c
+
+  - name: mc1_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc1_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc1_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc1_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc1_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 1) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0x85864
+
+  - name: mc1_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 1, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc1_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 1, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x90034
+
+  - name: mc1_stat_dfi_init_complete
+    desc: (Memory channel 1) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x9004c
+
+  - name: mc1_stat_dfi_cattrip
+    desc: (Memory channel 1) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0x93800
+
+  - name: mc1_init_am_repeat
+    desc: (Memory channel 1) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc1_init_am_single_en
+    desc: (Memory channel 1) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc1_cfg_am_interval
+    desc: (Memory channel 1) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc1_stat_am_complete
+    desc: (Memory channel 1) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0x93814
+
+  - name: mc1_am_wr_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc1_am_wr_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x93820
+
+  - name: mc1_am_wr_ap_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_wr_ap_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x9382c
+
+  - name: mc1_am_rd_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc1_am_rd_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0x93838
+
+  - name: mc1_am_rd_ap_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc1_am_rd_ap_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x93844
+
+  - name: mc1_am_refresh_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_refresh_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x93850
+
+  - name: mc1_am_act_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_act_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x9385c
+
+  - name: mc1_am_precharge_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc1_am_precharge_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x93868
+
+  - name: mc1_am_precharge_all_cmd_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_precharge_all_cmd_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_power_down
+    desc: (Memory channel 1) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_self_refresh
+    desc: (Memory channel 1) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x9387c
+
+  - name: mc1_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x93888
+
+  - name: mc1_am_ro_age_limit_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_ro_age_limit_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0x93894
+
+  - name: mc1_am_rmw_cycle_ps0
+    desc: (Memory channel 1, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc1_am_rmw_cycle_ps1
+    desc: (Memory channel 1, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 3
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0xa5800
+
+  - name: mc3_cfg_ecc_correction_en
+    desc: (Memory channel 3) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc3_init_ecc_scrub_en
+    desc: (Memory channel 3) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc3_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0xa5810
+
+  - name: mc3_cfg_ecc_scrub_period
+    desc: (Memory channel 3) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0xa5818
+
+  - name: mc3_init_ecc_error_clr
+    desc: (Memory channel 3) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0xa5828
+
+  - name: mc3_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 3, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc3_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 3, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xa5834
+
+  - name: mc3_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 3, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc3_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 3, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xa584c
+
+  - name: mc3_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc3_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc3_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc3_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc3_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 3) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0xa5864
+
+  - name: mc3_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 3, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc3_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 3, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xb0034
+
+  - name: mc3_stat_dfi_init_complete
+    desc: (Memory channel 3) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xb004c
+
+  - name: mc3_stat_dfi_cattrip
+    desc: (Memory channel 3) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xb3800
+
+  - name: mc3_init_am_repeat
+    desc: (Memory channel 3) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc3_init_am_single_en
+    desc: (Memory channel 3) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc3_cfg_am_interval
+    desc: (Memory channel 3) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc3_stat_am_complete
+    desc: (Memory channel 3) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0xb3814
+
+  - name: mc3_am_wr_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc3_am_wr_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3820
+
+  - name: mc3_am_wr_ap_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_wr_ap_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb382c
+
+  - name: mc3_am_rd_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc3_am_rd_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3838
+
+  - name: mc3_am_rd_ap_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc3_am_rd_ap_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3844
+
+  - name: mc3_am_refresh_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_refresh_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3850
+
+  - name: mc3_am_act_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_act_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb385c
+
+  - name: mc3_am_precharge_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc3_am_precharge_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3868
+
+  - name: mc3_am_precharge_all_cmd_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_precharge_all_cmd_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_power_down
+    desc: (Memory channel 3) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_self_refresh
+    desc: (Memory channel 3) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb387c
+
+  - name: mc3_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3888
+
+  - name: mc3_am_ro_age_limit_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_ro_age_limit_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xb3894
+
+  - name: mc3_am_rmw_cycle_ps0
+    desc: (Memory channel 3, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc3_am_rmw_cycle_ps1
+    desc: (Memory channel 3, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 5
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0xc5800
+
+  - name: mc5_cfg_ecc_correction_en
+    desc: (Memory channel 5) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc5_init_ecc_scrub_en
+    desc: (Memory channel 5) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc5_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0xc5810
+
+  - name: mc5_cfg_ecc_scrub_period
+    desc: (Memory channel 5) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0xc5818
+
+  - name: mc5_init_ecc_error_clr
+    desc: (Memory channel 5) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0xc5828
+
+  - name: mc5_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 5, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc5_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 5, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xc5834
+
+  - name: mc5_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 5, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc5_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 5, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xc584c
+
+  - name: mc5_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc5_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc5_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc5_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc5_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 5) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0xc5864
+
+  - name: mc5_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 5, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc5_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 5, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xd0034
+
+  - name: mc5_stat_dfi_init_complete
+    desc: (Memory channel 5) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xd004c
+
+  - name: mc5_stat_dfi_cattrip
+    desc: (Memory channel 5) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xd3800
+
+  - name: mc5_init_am_repeat
+    desc: (Memory channel 5) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc5_init_am_single_en
+    desc: (Memory channel 5) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc5_cfg_am_interval
+    desc: (Memory channel 5) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc5_stat_am_complete
+    desc: (Memory channel 5) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0xd3814
+
+  - name: mc5_am_wr_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc5_am_wr_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3820
+
+  - name: mc5_am_wr_ap_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_wr_ap_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd382c
+
+  - name: mc5_am_rd_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc5_am_rd_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3838
+
+  - name: mc5_am_rd_ap_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc5_am_rd_ap_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3844
+
+  - name: mc5_am_refresh_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_refresh_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3850
+
+  - name: mc5_am_act_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_act_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd385c
+
+  - name: mc5_am_precharge_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc5_am_precharge_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3868
+
+  - name: mc5_am_precharge_all_cmd_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_precharge_all_cmd_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_power_down
+    desc: (Memory channel 5) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_self_refresh
+    desc: (Memory channel 5) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd387c
+
+  - name: mc5_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3888
+
+  - name: mc5_am_ro_age_limit_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_ro_age_limit_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xd3894
+
+  - name: mc5_am_rmw_cycle_ps0
+    desc: (Memory channel 5, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc5_am_rmw_cycle_ps1
+    desc: (Memory channel 5, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  # --------------------------------------------------------
+  # Memory channel 7
+  # --------------------------------------------------------
+  - meta:
+        pad_until: 0xe5800
+
+  - name: mc7_cfg_ecc_correction_en
+    desc: (Memory channel 7) Error correction enable register.
+    access: rw
+    fields:
+        - name: en
+          desc: Set this bit to correct 1-bit errors and detect 2-bit errors. Reset value is 1'b1.
+          width: 1
+          init: 1
+
+  - name: mc7_init_ecc_scrub_en
+    desc: (Memory channel 7) ECC scrubbing.
+    access: rw
+    fields:
+        - name: en
+          desc: If this bit is set, and if mc7_CFG_ECC_CORRECTION_EN is also set,
+                then ECC scrubbing is enabled for all addresses in this memory controller.
+                Single bit errors will be detected and corrected. Double bit errors will be
+                detected.
+          width: 1
+          init: 1
+
+  - meta:
+        pad_until: 0xe5810
+
+  - name: mc7_cfg_ecc_scrub_period
+    desc: (Memory channel 7) Period between read operations for ECC scrubbing.
+    access: rw
+    fields:
+        - name: value
+          desc: Period between read operations for ECC scrubbing.
+                This value is in units of 256 memory clock periods. A value of 0x02 means 512
+                memory clock periods between each read. Reset value is 13'h02.
+          width: 13
+          init: 2
+
+  - meta:
+        pad_until: 0xe5818
+
+  - name: mc7_init_ecc_error_clr
+    desc: (Memory channel 7) Clear ECC error counts.
+    access: rw
+    fields:
+        - name: en
+          desc: When set to 1 this will reset the STAT_ECC_ERR_1BIT_CNT_PSx registers.
+                When set to 0 the counters will resume. Reset value 1’b0.
+                detected.
+          width: 1
+          init: 0
+
+  - meta:
+        pad_until: 0xe5828
+
+  - name: mc7_stat_ecc_error_1bit_cnt_ps0
+    desc: (Memory channel 7, pseudo-channel 0) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc7_stat_ecc_error_2bit_cnt_ps0
+    desc: (Memory channel 7, pseudo-channel 0) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xe5834
+
+  - name: mc7_stat_ecc_error_1bit_cnt_ps1
+    desc: (Memory channel 7, pseudo-channel 1) 1-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 1-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - name: mc7_stat_ecc_error_2bit_cnt_ps1
+    desc: (Memory channel 7, pseudo-channel 1) 2-bit ECC error count.
+    access: ro
+    fields:
+        - name: value
+          desc: A counter that increments whenever 2-bit ECC errors have been detected. Holds the value when
+                maximum count has been reached (255) or until reset by INIT_ECC_ERROR_CLR. Reset value 8’b0.
+          width: 8
+
+  - meta:
+        pad_until: 0xe584c
+
+  - name: mc7_init_write_data_1b_ecc_error_gen_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc7_init_write_data_2b_ecc_error_gen_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc7_init_write_data_1b_ecc_error_gen_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Insert 2-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                1-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc7_init_write_data_2b_ecc_error_gen_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Insert 1-bit ECC error.
+    access: rw
+    fields:
+        - name: burst_word_sel
+          desc: Setting one of these bits will instruct the Memory Controller to insert a single
+                2-bit ECC error on the next cycle of write data. The enabled bit selects which write of
+                the BL4 has the error. For additional error generation, the bit must be reset then
+                set again. Reset value is 4'h0.
+          width: 4
+          init: 0
+
+  - name: mc7_cfg_ecc_1bit_int_thresh
+    desc: (Memory channel 7) 1-bit error interrupt threshold.
+    access: rw
+    fields:
+        - name: value
+          desc: This register configures a count threshold that must be exceeded before STAT_INT_ECC_1BIT_THRESH
+                is asserted and STAT_ECC_ERROR_1BIT_CNT_PSx begin to count. Reset value 8'b0.
+          width: 8
+          init: 0
+
+  - meta:
+      pad_until: 0xe5864
+
+  - name: mc7_stat_int_ecc_1bit_thresh_ps0
+    desc: (Memory channel 7, pseudo-channel 0) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - name: mc7_stat_int_ecc_1bit_thresh_ps1
+    desc: (Memory channel 7, pseudo-channel 1) 1-bit ECC error interrupt.
+    access: ro
+    fields:
+        - name: value
+          desc: This bit is set when the number of 1-bit ECC errors exceeds the threshold defined in
+                CFG_ECC_1BIT_INT_THRESH. Reading this register automatically clears it. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xf0034
+
+  - name: mc7_stat_dfi_init_complete
+    desc: (Memory channel 7) PHY initialization status.
+    access: ro
+    fields:
+        - name: value
+          desc: This value is set to ‘1’ when PHY initialization has completed. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xf004c
+
+  - name: mc7_stat_dfi_cattrip
+    desc: (Memory channel 7) Catastrophic temperature exceeded status.
+    access: ro
+    fields:
+        - name: value
+          desc: This register will be set if the temperature ever exceeds the catastrophic value per HBM2 Jedec
+                specification. Reset value 1’b0.
+          width: 1
+
+  - meta:
+      pad_until: 0xf3800
+
+  - name: mc7_init_am_repeat
+    desc: (Memory channel 7) Initiate repeating interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate the repeating interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc7_init_am_single_en
+    desc: (Memory channel 7) Initiate single interval data collection.
+    access: rw
+    fields:
+        - name: value
+          desc: Set to 1 to initiate a single interval data collection.
+          width: 1
+          init: 0
+
+  - name: mc7_cfg_am_interval
+    desc: (Memory channel 7) Activity monitor interval. D[31..0] Set the activity monitor interval, in memory clocks.
+    access: rw
+    init: 0
+
+  - name: mc7_stat_am_complete
+    desc: (Memory channel 7) Activity monitor interval completed status.
+    access: ro
+    fields:
+        - name: value
+          desc: This is set to 1 when the interval has completed. This register is cleared
+                on Auto-Precharge.
+          width: 1
+
+  - meta:
+      pad_until: 0xf3814
+
+  - name: mc7_am_wr_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - name: mc7_am_wr_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of cmd=Write commands captured in the last monitoring
+          interval. Note that this counts writes without Auto-Precharge, since writes with Auto-Precharge
+          are a different command. For total Write commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3820
+
+  - name: mc7_am_wr_ap_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_wr_ap_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of cmd=Write-with-Auto-Precharge commands
+          captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf382c
+
+  - name: mc7_am_rd_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - name: mc7_am_rd_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of cmd=Read commands captured in the last monitoring
+          interval. Note that this counts reads without Auto-Precharge, since reads with Auto-
+          Precharge are a different command. For total Read commands, sum the two counts.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3838
+
+  - name: mc7_am_rd_ap_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+  
+  - name: mc7_am_rd_ap_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of Read with Auto-Precharge commands captured in the
+          last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3844
+
+  - name: mc7_am_refresh_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_refresh_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of Refresh commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3850
+
+  - name: mc7_am_act_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_act_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of Activate commands captured in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf385c
+
+  - name: mc7_am_precharge_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - name: mc7_am_precharge_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of Precharge (single-bank) commands captured in the last
+          monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3868
+
+  - name: mc7_am_precharge_all_cmd_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_precharge_all_cmd_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_power_down
+    desc: (Memory channel 7) Number of clock cycles the memory is in power-down in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_self_refresh
+    desc: (Memory channel 7) Number of clock cycles the memory is in self-refresh in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf387c
+
+  - name: mc7_am_rd_to_wr_switch_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_rd_to_wr_switch_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of times any Read command (Read or Read with Auto-Precharge)
+          is followed by any Write command (Write or Write with Auto-Precharge) in the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3888
+
+  - name: mc7_am_ro_age_limit_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_ro_age_limit_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of times the reorder queue entry reaches its age limit in
+          the last monitoring interval.
+    access: ro
+
+  - meta:
+      pad_until: 0xf3894
+
+  - name: mc7_am_rmw_cycle_ps0
+    desc: (Memory channel 7, pseudo-channel 0) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
+
+  - name: mc7_am_rmw_cycle_ps1
+    desc: (Memory channel 7, pseudo-channel 1) Number of Read Modify Write cycles in the last monitoring interval.
+    access: ro
