@@ -48,7 +48,7 @@ SUBCOMPONENTS = \
     xilinx.alveo.pkg \
     xilinx.alveo.rtl \
     xilinx.alveo.shell.rtl \
-    core.blackbox
+    core.hbmtest.rtl
 
 # ----------------------------------------------------
 # Targets
