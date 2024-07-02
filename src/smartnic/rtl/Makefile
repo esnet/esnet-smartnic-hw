@@ -28,11 +28,11 @@ SUBCOMPONENTS = \
     smartnic.regio.rtl \
     reg.endian.rtl@common \
     reg.proxy.rtl@common \
-    xilinx.hbm.rtl@common \
     xilinx.axi.rtl@common \
     xilinx.axis.rtl@common \
     axi4l.rtl@common \
-    axi4s.rtl@common
+    axi4s.rtl@common \
+    axi3.rtl@common
 
 EXT_LIBS =
 

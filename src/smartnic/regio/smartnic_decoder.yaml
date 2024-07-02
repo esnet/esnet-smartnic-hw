@@ -13,10 +13,6 @@ decoders:
     !include ../src/smartnic/regio/smartnic_to_app_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
-  xilinx_hbm_0: &xilinx_hbm_0
-    !include ../src/smartnic/regio/xilinx_hbm_0_decoder.yaml
-  xilinx_hbm_1: &xilinx_hbm_1
-    !include ../src/smartnic/regio/xilinx_hbm_1_decoder.yaml
 
 interfaces:
   - block: *smartnic
@@ -149,16 +145,6 @@ interfaces:
     address: 0x0e000
     width: 10
     name: fifo_to_host_0
-
-  - decoder: *xilinx_hbm_0
-    address: 0x10000
-    width: 12
-    name: hbm_0
-
-  - decoder: *xilinx_hbm_1
-    address: 0x11000
-    width: 12
-    name: hbm_1
 
   - decoder: *smartnic_to_app_decoder
     address: 0x80000

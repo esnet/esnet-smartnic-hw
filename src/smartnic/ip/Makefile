@@ -30,10 +30,6 @@ IP_LIST = \
     clk_wiz_0 \
     clk_wiz_1
 
-ifneq ($(BOARD), au250)
-    IP_LIST += hbm_4g_left hbm_4g_right
-endif
-
 # ----------------------------------------------------
 # Simulation sources
 #

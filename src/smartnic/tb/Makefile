@@ -31,8 +31,7 @@ SUBCOMPONENTS = \
     reg.endian.regio.verif@common \
     axi4l.verif@common \
     axi4s.verif@common \
-    axi4s.regio.verif@common \
-    xilinx.hbm.verif@common
+    axi4s.regio.verif@common
 
 EXT_LIBS =
 
