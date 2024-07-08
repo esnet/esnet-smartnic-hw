@@ -19,8 +19,8 @@ module xilinx_alveo
     axi4s_intf.tx         axis_cmac_rx [NUM_CMAC],
     axi4s_intf.rx         axis_cmac_tx [NUM_CMAC],
     // -- DMA (streaming)
-    axi4s_intf.tx         axis_h2c [NUM_DMA_ST],
-    axi4s_intf.rx         axis_c2h [NUM_DMA_ST],
+    axi4s_intf.tx         axis_h2c,
+    axi4s_intf.rx         axis_c2h,
     // -- AXI-L (Controller, to top-level regmap)
     axi4l_intf.controller axil_top,
     // -- AXI-L (Peripheral, from top-level regmap, to h/w layer decoder)
@@ -58,8 +58,8 @@ module xilinx_alveo
     axi4l_intf #() axil_sysmon ();
     axi4l_intf #() axil_qspi ();
 
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_h2c_axis_tuser_t)) __axis_h2c [NUM_CMAC] ();
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_c2h_axis_tuser_t)) __axis_c2h [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_h2c_axis_tuser_t)) __axis_h2c ();
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_c2h_axis_tuser_t)) __axis_c2h ();
 
     // =========================================================================
     // Host
@@ -82,41 +82,36 @@ module xilinx_alveo
         .axis_c2h      ( __axis_c2h )
     );
 
-    generate
-        for (genvar g_dma_st = 0; g_dma_st < NUM_DMA_ST; g_dma_st++) begin : g__dma_st
-            // (Local) interfaces
-            axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_h2c_axis_tuser_t)) __axis_h2c__async ();
+    // (Local) interfaces
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_T(dma_st_qid_t), .TUSER_T(dma_st_h2c_axis_tuser_t)) __axis_h2c__async ();
 
-            // AXI-S CDC
-            axi4s_fifo_async #(
-                .DEPTH        ( 32 )
-            ) i_axi4s_fifo_async__h2c (
-                .axi4s_in     ( __axis_h2c[g_dma_st] ),
-                .axi4s_out    ( __axis_h2c__async )
-            );
-            assign __axis_h2c__async.aclk = core_clk;
-            assign __axis_h2c__async.aresetn = !core_srst;
+    // AXI-S CDC
+    axi4s_fifo_async #(
+        .DEPTH        ( 32 )
+    ) i_axi4s_fifo_async__h2c (
+        .axi4s_in     ( __axis_h2c ),
+        .axi4s_out    ( __axis_h2c__async )
+    );
+    assign __axis_h2c__async.aclk = core_clk;
+    assign __axis_h2c__async.aresetn = !core_srst;
 
-            assign axis_h2c[g_dma_st].aclk    = __axis_h2c__async.aclk;
-            assign axis_h2c[g_dma_st].aresetn = __axis_h2c__async.aresetn;
-            assign axis_h2c[g_dma_st].tvalid  = __axis_h2c__async.tvalid;
-            assign axis_h2c[g_dma_st].tlast   = __axis_h2c__async.tlast;
-            assign axis_h2c[g_dma_st].tkeep   = __axis_h2c__async.tkeep;
-            assign axis_h2c[g_dma_st].tdata   = __axis_h2c__async.tdata;
-            assign axis_h2c[g_dma_st].tid     = __axis_h2c__async.tid;
-            assign axis_h2c[g_dma_st].tdest   = __axis_h2c__async.tdest;
-            assign axis_h2c[g_dma_st].tuser   = __axis_h2c__async.tuser;
-            assign __axis_h2c__async.tready = axis_h2c[g_dma_st].tready;
+    assign axis_h2c.aclk    = __axis_h2c__async.aclk;
+    assign axis_h2c.aresetn = __axis_h2c__async.aresetn;
+    assign axis_h2c.tvalid  = __axis_h2c__async.tvalid;
+    assign axis_h2c.tlast   = __axis_h2c__async.tlast;
+    assign axis_h2c.tkeep   = __axis_h2c__async.tkeep;
+    assign axis_h2c.tdata   = __axis_h2c__async.tdata;
+    assign axis_h2c.tid     = __axis_h2c__async.tid;
+    assign axis_h2c.tdest   = __axis_h2c__async.tdest;
+    assign axis_h2c.tuser   = __axis_h2c__async.tuser;
+    assign __axis_h2c__async.tready = axis_h2c.tready;
 
-            axi4s_fifo_async #(
-                .DEPTH        ( 32 )
-            ) i_axi4s_fifo_async__c2h (
-                .axi4s_in     ( axis_c2h  [g_dma_st] ),
-                .axi4s_out    ( __axis_c2h[g_dma_st] )
-            );
-
-        end : g__dma_st
-    endgenerate
+    axi4s_fifo_async #(
+        .DEPTH        ( 32 )
+    ) i_axi4s_fifo_async__c2h (
+        .axi4s_in     ( axis_c2h ),
+        .axi4s_out    ( __axis_c2h )
+    );
 
     // =========================================================================
     // Clock/reset generators

@@ -1,22 +1,38 @@
 `include "svunit_defines.svh"
 
-module shell_intf_unit_test;
+module shell_intf_to_signals_unit_test;
     import svunit_pkg::svunit_testcase;
+    import shell_pkg::*;
 
-    string name = "shell_intf_ut";
+    string name = "shell_intf_to_signals_ut";
     svunit_testcase svunit_ut;
     
     //===================================
     // DUT
     //===================================
-    shell_intf DUT ();
+    shell_intf shell_if__in ();
+    shell_intf shell_if__out ();
+
+    shell_intf_to_signals DUT_to_signals (
+        .shell_if (shell_if__in),
+        .*
+    );
+
+    shell_intf_from_signals DUT_from_signals (
+        .shell_if (shell_if__out),
+        .*
+    );
+
+    `include "shell_if__signals__flattened.svh"
+
 
     //===================================
     // Testbench
     //===================================
-    logic clk;
+    reg __clk;
+    `SVUNIT_CLK_GEN(__clk, 5ns);
 
-    `SVUNIT_CLK_GEN(clk, 5ns);
+    assign clk = __clk;
 
     //===================================
     // Build
@@ -31,7 +47,6 @@ module shell_intf_unit_test;
     //===================================
     task setup();
         svunit_ut.setup();
-        assign DUT.axis_cmac0_rx.tvalid = 1'b1;
     endtask
 
 

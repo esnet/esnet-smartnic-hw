@@ -5,7 +5,6 @@ package xilinx_alveo_pkg;
     // Parameters
     // --------------------------------------------------------------
     export shell_pkg::NUM_CMAC;
-    export shell_pkg::NUM_DMA_ST;
 
     localparam int NUM_CMAC_REGMAP = 2;
 

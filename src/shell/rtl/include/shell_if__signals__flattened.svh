@@ -2,6 +2,9 @@
     wire logic clk;
     wire logic srst;
 
+    // Aux clocks
+    wire logic clk_100mhz;
+
     // CMAC
     // -- RX
     wire logic                              axis_cmac_rx__aclk    [NUM_CMAC];
@@ -28,27 +31,27 @@
 
     // DMA
     // -- H2C
-    wire logic                                 axis_h2c__aclk    [NUM_DMA_ST];
-    wire logic                                 axis_h2c__aresetn [NUM_DMA_ST];
-    wire logic                                 axis_h2c__tvalid  [NUM_DMA_ST];
-    wire logic                                 axis_h2c__tready  [NUM_DMA_ST];
-    wire logic [DMA_ST_DATA_BYTE_WID-1:0][7:0] axis_h2c__tdata   [NUM_DMA_ST];
-    wire logic [DMA_ST_DATA_BYTE_WID-1:0]      axis_h2c__tkeep   [NUM_DMA_ST];
-    wire logic                                 axis_h2c__tlast   [NUM_DMA_ST];
-    wire dma_st_h2c_axis_tid_t                 axis_h2c__tid     [NUM_DMA_ST];
-    wire dma_st_h2c_axis_tdest_t               axis_h2c__tdest   [NUM_DMA_ST];
-    wire dma_st_h2c_axis_tuser_t               axis_h2c__tuser   [NUM_DMA_ST];
-    // -- C2H
-    wire logic                                 axis_c2h__aclk    [NUM_DMA_ST];
-    wire logic                                 axis_c2h__aresetn [NUM_DMA_ST];
-    wire logic                                 axis_c2h__tvalid  [NUM_DMA_ST];
-    wire logic                                 axis_c2h__tready  [NUM_DMA_ST];
-    wire logic [DMA_ST_DATA_BYTE_WID-1:0][7:0] axis_c2h__tdata   [NUM_DMA_ST];
-    wire logic [DMA_ST_DATA_BYTE_WID-1:0]      axis_c2h__tkeep   [NUM_DMA_ST];
-    wire logic                                 axis_c2h__tlast   [NUM_DMA_ST];
-    wire dma_st_c2h_axis_tid_t                 axis_c2h__tid     [NUM_DMA_ST];
-    wire dma_st_c2h_axis_tdest_t               axis_c2h__tdest   [NUM_DMA_ST];
-    wire dma_st_c2h_axis_tuser_t               axis_c2h__tuser   [NUM_DMA_ST];
+    wire logic                                 axis_h2c__aclk;
+    wire logic                                 axis_h2c__aresetn;
+    wire logic                                 axis_h2c__tvalid;
+    wire logic                                 axis_h2c__tready;
+    wire logic [DMA_ST_DATA_BYTE_WID-1:0][7:0] axis_h2c__tdata;
+    wire logic [DMA_ST_DATA_BYTE_WID-1:0]      axis_h2c__tkeep;
+    wire logic                                 axis_h2c__tlast;
+    wire dma_st_h2c_axis_tid_t                 axis_h2c__tid;
+    wire dma_st_h2c_axis_tdest_t               axis_h2c__tdest;
+    wire dma_st_h2c_axis_tuser_t               axis_h2c__tuser;
+        // -- C2H
+    wire logic                                 axis_c2h__aclk;
+    wire logic                                 axis_c2h__aresetn;
+    wire logic                                 axis_c2h__tvalid;
+    wire logic                                 axis_c2h__tready;
+    wire logic [DMA_ST_DATA_BYTE_WID-1:0][7:0] axis_c2h__tdata;
+    wire logic [DMA_ST_DATA_BYTE_WID-1:0]      axis_c2h__tkeep;
+    wire logic                                 axis_c2h__tlast;
+    wire dma_st_c2h_axis_tid_t                 axis_c2h__tid;
+    wire dma_st_c2h_axis_tdest_t               axis_c2h__tdest;
+    wire dma_st_c2h_axis_tuser_t               axis_c2h__tuser;
  
     // AXI-L (control)
     wire logic                           axil__aclk; 

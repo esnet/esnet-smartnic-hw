@@ -30,7 +30,7 @@ TOP = $(SVUNIT_TOP)
 #   NOTE: SVUnit sources are automatically included
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS =
+INC_DIRS = ../../rtl/include
 SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
 
 # ----------------------------------------------------

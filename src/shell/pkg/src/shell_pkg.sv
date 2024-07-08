@@ -8,7 +8,6 @@ package shell_pkg;
     localparam int CMAC_DATA_BYTE_WID = 64;
 
     // DMA (streaming)
-    localparam int NUM_DMA_ST = 2;
     localparam int DMA_ST_DATA_BYTE_WID = 64;
     localparam int DMA_ST_QUEUES = 2048;
     localparam int DMA_ST_QID_WID = $clog2(DMA_ST_QUEUES);

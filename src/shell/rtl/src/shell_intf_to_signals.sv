@@ -16,27 +16,27 @@ module shell_intf_to_signals
 
     // CMAC
     // -- RX
-    output wire logic                               axis_cmac_rx__aclk,
-    output wire logic                               axis_cmac_rx__aresetn,
-    output wire logic                               axis_cmac_rx__tvalid,
-    input  wire logic                               axis_cmac_rx__tready,
-    output wire logic [CMAC_DATA_BYTE_WID-1:0][7:0] axis_cmac_rx__tdata,
-    output wire logic [CMAC_DATA_BYTE_WID-1:0]      axis_cmac_rx__tkeep,
-    output wire logic                               axis_cmac_rx__tlast,
-    output wire cmac_rx_axis_tid_t                  axis_cmac_rx__tid,
-    output wire cmac_rx_axis_tdest_t                axis_cmac_rx__tdest,
-    output wire cmac_rx_axis_tuser_t                axis_cmac_rx__tuser,
+    output wire logic                               axis_cmac_rx__aclk   [NUM_CMAC],
+    output wire logic                               axis_cmac_rx__aresetn[NUM_CMAC],
+    output wire logic                               axis_cmac_rx__tvalid [NUM_CMAC],
+    input  wire logic                               axis_cmac_rx__tready [NUM_CMAC],
+    output wire logic [CMAC_DATA_BYTE_WID-1:0][7:0] axis_cmac_rx__tdata  [NUM_CMAC],
+    output wire logic [CMAC_DATA_BYTE_WID-1:0]      axis_cmac_rx__tkeep  [NUM_CMAC],
+    output wire logic                               axis_cmac_rx__tlast  [NUM_CMAC],
+    output wire cmac_rx_axis_tid_t                  axis_cmac_rx__tid    [NUM_CMAC],
+    output wire cmac_rx_axis_tdest_t                axis_cmac_rx__tdest  [NUM_CMAC],
+    output wire cmac_rx_axis_tuser_t                axis_cmac_rx__tuser  [NUM_CMAC],
     // -- TX
-    input  wire logic                               axis_cmac_tx__aclk,
-    input  wire logic                               axis_cmac_tx__aresetn,
-    input  wire logic                               axis_cmac_tx__tvalid,
-    output wire logic                               axis_cmac_tx__tready,
-    input  wire logic [CMAC_DATA_BYTE_WID-1:0][7:0] axis_cmac_tx__tdata,
-    input  wire logic [CMAC_DATA_BYTE_WID-1:0]      axis_cmac_tx__tkeep,
-    input  wire logic                               axis_cmac_tx__tlast,
-    input  wire cmac_tx_axis_tid_t                  axis_cmac_tx__tid,
-    input  wire cmac_tx_axis_tdest_t                axis_cmac_tx__tdest,
-    input  wire cmac_tx_axis_tuser_t                axis_cmac_tx__tuser,
+    input  wire logic                               axis_cmac_tx__aclk   [NUM_CMAC],
+    input  wire logic                               axis_cmac_tx__aresetn[NUM_CMAC],
+    input  wire logic                               axis_cmac_tx__tvalid [NUM_CMAC],
+    output wire logic                               axis_cmac_tx__tready [NUM_CMAC],
+    input  wire logic [CMAC_DATA_BYTE_WID-1:0][7:0] axis_cmac_tx__tdata  [NUM_CMAC],
+    input  wire logic [CMAC_DATA_BYTE_WID-1:0]      axis_cmac_tx__tkeep  [NUM_CMAC],
+    input  wire logic                               axis_cmac_tx__tlast  [NUM_CMAC],
+    input  wire cmac_tx_axis_tid_t                  axis_cmac_tx__tid    [NUM_CMAC],
+    input  wire cmac_tx_axis_tdest_t                axis_cmac_tx__tdest  [NUM_CMAC],
+    input  wire cmac_tx_axis_tuser_t                axis_cmac_tx__tuser  [NUM_CMAC],
 
     // DMA (streaming)
     // -- H2C
@@ -86,6 +86,10 @@ module shell_intf_to_signals
     input  wire logic                           axil__rresp
 );
 
+    // Interfaces
+    axi4s_intf #(.DATA_BYTE_WID (CMAC_DATA_BYTE_WID), .TID_T (cmac_rx_axis_tid_t), .TDEST_T (cmac_rx_axis_tdest_t), .TUSER_T (cmac_rx_axis_tuser_t)) __axis_cmac_rx [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID (CMAC_DATA_BYTE_WID), .TID_T (cmac_tx_axis_tid_t), .TDEST_T (cmac_tx_axis_tdest_t), .TUSER_T (cmac_tx_axis_tuser_t)) __axis_cmac_tx [NUM_CMAC] ();
+
     // Clock/reset
     assign clk = shell_if.clk;
     assign srst = shell_if.srst;
@@ -94,57 +98,90 @@ module shell_intf_to_signals
     assign clk_100mhz = shell_if.clk_100mhz;
 
     // CMACs
+    // -- Pack interfaces into arrays
+    axi4s_intf_connector i_axi4s_intf_connector_rx_0 (
+        .axi4s_from_tx ( shell_if.axis_cmac0_rx ),
+        .axi4s_to_rx   ( __axis_cmac_rx[0] )
+    );
+    axi4s_intf_connector i_axi4s_intf_connector_tx_0 (
+        .axi4s_from_tx ( __axis_cmac_tx[0] ),
+        .axi4s_to_rx   ( shell_if.axis_cmac0_tx )
+    );
+    axi4s_intf_connector i_axi4s_intf_connector_rx_1 (
+        .axi4s_from_tx ( shell_if.axis_cmac1_rx ),
+        .axi4s_to_rx   ( __axis_cmac_rx[1] )
+    );
+    axi4s_intf_connector i_axi4s_intf_connector_tx_1 (
+        .axi4s_from_tx ( __axis_cmac_tx[1] ),
+        .axi4s_to_rx   ( shell_if.axis_cmac1_tx )
+    );
+
+    // Convert to signals
     generate
         for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
             // -- Rx
-            assign axis_cmac_rx__aclk    = shell_if.axis_cmac_rx[g_cmac].aclk;
-            assign axis_cmac_rx__aresetn = shell_if.axis_cmac_rx[g_cmac].aresetn;
-            assign axis_cmac_rx__tvalid  = shell_if.axis_cmac_rx[g_cmac].tvalid;
-            assign axis_cmac_rx__tdata   = shell_if.axis_cmac_rx[g_cmac].tdata;
-            assign axis_cmac_rx__tkeep   = shell_if.axis_cmac_rx[g_cmac].tkeep;
-            assign axis_cmac_rx__tlast   = shell_if.axis_cmac_rx[g_cmac].tlast;
-            assign axis_cmac_rx__tuser   = shell_if.axis_cmac_rx[g_cmac].tuser;
-            assign shell_if.axis_cmac_rx[g_cmac].tready = axis_cmac_rx__tready;
+            axi4s_intf_to_signals #(
+                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
+                .TID_T         ( cmac_rx_axis_tid_t ),
+                .TDEST_T       ( cmac_rx_axis_tdest_t ),
+                .TUSER_T       ( cmac_rx_axis_tuser_t )
+            ) i_axi4s_intf_to_signals (
+                .aclk     ( axis_cmac_rx__aclk   [g_cmac] ),
+                .aresetn  ( axis_cmac_rx__aresetn[g_cmac] ),
+                .tvalid   ( axis_cmac_rx__tvalid [g_cmac] ),
+                .tready   ( axis_cmac_rx__tready [g_cmac] ),
+                .tdata    ( axis_cmac_rx__tdata  [g_cmac] ),
+                .tkeep    ( axis_cmac_rx__tkeep  [g_cmac] ),
+                .tlast    ( axis_cmac_rx__tlast  [g_cmac] ),
+                .tid      ( axis_cmac_rx__tid    [g_cmac] ),
+                .tdest    ( axis_cmac_rx__tdest  [g_cmac] ),
+                .tuser    ( axis_cmac_rx__tuser  [g_cmac] ),
+                .axi4s_if ( __axis_cmac_rx[g_cmac] )
+            );
             // -- Tx
-            assign shell_if.axis_cmac_tx[g_cmac].aclk    = axis_cmac_tx__aclk;
-            assign shell_if.axis_cmac_tx[g_cmac].aresetn = axis_cmac_tx__aresetn;
-            assign shell_if.axis_cmac_tx[g_cmac].tvalid  = axis_cmac_tx__tvalid;
-            assign shell_if.axis_cmac_tx[g_cmac].tdata   = axis_cmac_tx__tdata;
-            assign shell_if.axis_cmac_tx[g_cmac].tkeep   = axis_cmac_tx__tkeep;
-            assign shell_if.axis_cmac_tx[g_cmac].tlast   = axis_cmac_tx__tlast;
-            assign shell_if.axis_cmac_tx[g_cmac].tid     = '0;
-            assign shell_if.axis_cmac_tx[g_cmac].tdest   = '0;
-            assign shell_if.axis_cmac_tx[g_cmac].tuser   = axis_cmac_tx__tuser;
-            assign shell_if.axis_cmac_tx__tready = shell_if.axis_cmac_tx[g_cmac].tready;
+            axi4s_intf_from_signals #(
+                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
+                .TID_T         ( cmac_tx_axis_tid_t ),
+                .TDEST_T       ( cmac_tx_axis_tdest_t ),
+                .TUSER_T       ( cmac_tx_axis_tuser_t )
+            ) i_axi4s_intf_from_signals (
+                .aclk     ( axis_cmac_tx__aclk   [g_cmac] ),
+                .aresetn  ( axis_cmac_tx__aresetn[g_cmac] ),
+                .tvalid   ( axis_cmac_tx__tvalid [g_cmac] ),
+                .tready   ( axis_cmac_tx__tready [g_cmac] ),
+                .tdata    ( axis_cmac_tx__tdata  [g_cmac] ),
+                .tkeep    ( axis_cmac_tx__tkeep  [g_cmac] ),
+                .tlast    ( axis_cmac_tx__tlast  [g_cmac] ),
+                .tid      ( axis_cmac_tx__tid    [g_cmac] ),
+                .tdest    ( axis_cmac_tx__tdest  [g_cmac] ),
+                .tuser    ( axis_cmac_tx__tuser  [g_cmac] ),
+                .axi4s_if ( __axis_cmac_tx[g_cmac] )
+            );
         end
     endgenerate
 
-    // DMA (streaming) channels
-    generate
-        for (genvar g_ch = 0; g_ch < NUM_DMA_ST; g_ch++) begin : g__ch
-            // -- H2C
-            assign axis_h2c__aclk    = shell_if.axis_h2c[g_cmac].aclk;
-            assign axis_h2c__aresetn = shell_if.axis_h2c[g_cmac].aresetn;
-            assign axis_h2c__tvalid  = shell_if.axis_h2c[g_cmac].tvalid;
-            assign axis_h2c__tdata   = shell_if.axis_h2c[g_cmac].tdata;
-            assign axis_h2c__tkeep   = shell_if.axis_h2c[g_cmac].tkeep;
-            assign axis_h2c__tlast   = shell_if.axis_h2c[g_cmac].tlast;
-            assign axis_h2c__tid     = shell_if.axis_h2c[g_cmac].tid;
-            assign axis_h2c__tuser   = shell_if.axis_h2c[g_cmac].tuser;
-            assign shell_if.axis_h2c[g_cmac].tready = axis_h2c__tready;
-            // -- C2H
-            assign shell_if.axis_c2h[g_cmac].aclk    = axis_c2h__aclk;
-            assign shell_if.axis_c2h[g_cmac].aresetn = axis_c2h__aresetn;
-            assign shell_if.axis_c2h[g_cmac].tvalid  = axis_c2h__tvalid;
-            assign shell_if.axis_c2h[g_cmac].tdata   = axis_c2h__tdata;
-            assign shell_if.axis_c2h[g_cmac].tkeep   = axis_c2h__tkeep;
-            assign shell_if.axis_c2h[g_cmac].tlast   = axis_c2h__tlast;
-            assign shell_if.axis_c2h[g_cmac].tdest   = axis_c2h__tdest;
-            assign shell_if.axis_c2h[g_cmac].tid     = '0;
-            assign shell_if.axis_c2h[g_cmac].tuser   = axis_c2h__tuser;
-            assign axis_c2h__tready = shell_if.axis_c2h[g_cmac].tready;
-        end
-    endgenerate
+    // DMA (streaming) channel
+    // -- H2C
+    assign axis_h2c__aclk    = shell_if.axis_h2c.aclk;
+    assign axis_h2c__aresetn = shell_if.axis_h2c.aresetn;
+    assign axis_h2c__tvalid  = shell_if.axis_h2c.tvalid;
+    assign axis_h2c__tdata   = shell_if.axis_h2c.tdata;
+    assign axis_h2c__tkeep   = shell_if.axis_h2c.tkeep;
+    assign axis_h2c__tlast   = shell_if.axis_h2c.tlast;
+    assign axis_h2c__tid     = shell_if.axis_h2c.tid;
+    assign axis_h2c__tuser   = shell_if.axis_h2c.tuser;
+    assign shell_if.axis_h2c.tready = axis_h2c__tready;
+    // -- C2H
+    assign shell_if.axis_c2h.aclk    = axis_c2h__aclk;
+    assign shell_if.axis_c2h.aresetn = axis_c2h__aresetn;
+    assign shell_if.axis_c2h.tvalid  = axis_c2h__tvalid;
+    assign shell_if.axis_c2h.tdata   = axis_c2h__tdata;
+    assign shell_if.axis_c2h.tkeep   = axis_c2h__tkeep;
+    assign shell_if.axis_c2h.tlast   = axis_c2h__tlast;
+    assign shell_if.axis_c2h.tdest   = axis_c2h__tdest;
+    assign shell_if.axis_c2h.tid     = '0;
+    assign shell_if.axis_c2h.tuser   = axis_c2h__tuser;
+    assign axis_c2h__tready = shell_if.axis_c2h.tready;
 
     // AXI-L control
     assign axil__aclk    = shell_if.axil_if.aclk;
