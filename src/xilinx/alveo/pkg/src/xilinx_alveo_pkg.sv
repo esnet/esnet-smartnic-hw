@@ -1,26 +1,24 @@
 package xilinx_alveo_pkg;
+    import shell_pkg::*;
 
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
-    localparam int NUM_DMA_ST = 2;
+    export shell_pkg::NUM_CMAC;
+
     localparam int NUM_CMAC_REGMAP = 2;
 
-    localparam int DMA_ST_DATA_BYTE_WID = 64;
-    localparam int DMA_ST_QUEUES = 2048;
+    export shell_pkg::DMA_ST_DATA_BYTE_WID;
+    export shell_pkg::DMA_ST_QUEUES;
     
-    localparam int DMA_ST_Q_WID = $clog2(DMA_ST_QUEUES);
-
-    localparam int CMAC_DATA_BYTE_WID = 64;
+    export shell_pkg::CMAC_DATA_BYTE_WID;
 
     // --------------------------------------------------------------
     // Typedefs
     // --------------------------------------------------------------
-    typedef logic [DMA_ST_Q_WID-1:0] dma_st_qid_t;
-
-    typedef struct packed {
-        logic err;
-    } dma_st_axis_tuser_t;
+    export shell_pkg::dma_st_qid_t;
+    export shell_pkg::dma_st_h2c_axis_tuser_t;
+    export shell_pkg::dma_st_c2h_axis_tuser_t;
 
     typedef xilinx_cmac_pkg::axis_tuser_t cmac_axis_tuser_t;
 

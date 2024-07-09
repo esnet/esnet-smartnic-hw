@@ -4,9 +4,9 @@
 module xilinx_cmac_wrapper #(
     parameter int PORT_ID = 0
 ) (
-    // Board reset
+    // Clock/reset
     input  logic          clk,
-    input  logic          srstn, // Async deassert, sync assert (synchronized to clk)
+    input  logic          srst,
 
     // From/to pins
     // -- QSFP
@@ -331,9 +331,11 @@ module xilinx_cmac_wrapper #(
     // =========================================================================
     // Resets
     // =========================================================================
-    sync_reset i_sync_reset__sys_reset (
+    sync_reset #(
+        .INPUT_ACTIVE_HIGH ( 1 )
+    ) i_sync_reset__sys_reset (
         .clk_in ( clk ),
-        .rst_in ( srstn ),
+        .rst_in ( srst ),
         .clk_out ( __cmac_clk ),
         .rst_out ( sys_reset )
     );
@@ -426,6 +428,8 @@ module xilinx_cmac_wrapper #(
 
     assign __axis_rx_tid.port_id = port_id_t'(PORT_ID);
     assign axis_rx.tid = __axis_rx_tid;
+
+    assign axis_rx.tdest = '0;
 
     // =========================================================================
     // AXI-S Tx

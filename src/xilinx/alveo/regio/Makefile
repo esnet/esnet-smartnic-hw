@@ -18,8 +18,7 @@ REG_BLOCK_YAML = \
 REG_DECODER_YAML = \
     cmac_decoder.yaml \
     qdma_decoder.yaml \
-    xilinx_alveo_decoder.yaml \
-    bar2_decoder.yaml
+    xilinx_alveo_decoder.yaml
 
 # ----------------------------------------------------
 # Options
@@ -32,19 +31,13 @@ REGIO_GENERATE_OPTS :=
 # ----------------------------------------------------
 all: reg compile synth
 
-reg:     _reg app_decoder-ir.yaml
-	@$(REGIO_ELABORATE_CMD) -f top -o $(REGIO_IR_OUTPUT_DIR)/esnet-smartnic-top-ir.yaml esnet-smartnic-top.yaml
-
+reg:     _reg
 compile: _reg_compile
 synth:   _reg_synth
 info:    _reg_info
 clean:   _reg_clean
 
 .PHONY: all reg compile synth info clean
-
-app_decoder-ir.yaml:
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic.regio
-	@cp $(OUTPUT_ROOT)/smartnic/regio/ir/smartnic_decoder-ir.yaml app_decoder-ir.yaml
 
 # -----------------------------------------------
 # Include regio targets

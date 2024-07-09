@@ -1,0 +1,17 @@
+name: bar2
+
+decoders:
+  hw_decoder: &hw_decoder
+    !include ../src/xilinx/alveo/regio/xilinx_alveo_decoder.yaml
+  core_decoder: &core_decoder
+    !include core_decoder-ir.yaml
+
+interfaces:
+  - decoder: *hw_decoder
+    address: 0x000000
+    width: 20
+    name: hw
+  - decoder: *core_decoder
+    address: 0x200000
+    width: 21
+    name: core

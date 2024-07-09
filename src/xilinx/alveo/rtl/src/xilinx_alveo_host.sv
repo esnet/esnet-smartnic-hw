@@ -20,8 +20,8 @@ module xilinx_alveo_host
     // -- AXI-L (Peripheral)
     axi4l_intf.peripheral            axil_qdma,
     // -- DMA (streaming)
-    axi4s_intf.tx                    axis_h2c [NUM_DMA_ST],
-    axi4s_intf.rx_async              axis_c2h [NUM_DMA_ST]
+    axi4s_intf.tx                    axis_h2c,
+    axi4s_intf.rx_async              axis_c2h
 );
 
     // =========================================================================
@@ -38,9 +38,6 @@ module xilinx_alveo_host
     // Interfaces
     // =========================================================================
     axi4l_intf #() __axil_if__250mhz ();
-
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(qid_t), .TDEST_T(port_id_t), .TUSER_T(axis_h2c_tuser_t)) __axis_qdma_h2c ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_id_t), .TDEST_T(qid_t), .TUSER_T(axis_c2h_tuser_t)) __axis_qdma_c2h ();
 
     // =========================================================================
     // PCIe reset input buffer
@@ -61,19 +58,10 @@ module xilinx_alveo_host
         .pcie_txp,
         .pcie_txn,
         .axil_if ( __axil_if__250mhz ),
-        .axis_h2c ( __axis_qdma_h2c ),
-        .axis_c2h ( __axis_qdma_c2h )
+        .axis_h2c,
+        .axis_c2h
     );
-    // TEMP: terminate H2C/C2H interfaces
-    axi4s_intf_rx_sink i_axi4s_rx_sink__qdma_h2c (.axi4s_if (__axis_qdma_h2c ));
-    assign __axis_qdma_c2h.tvalid = 1'b0;
-    assign __axis_qdma_c2h.tlast = 1'b0;
-    assign __axis_qdma_c2h.tdata = '0;
-    assign __axis_qdma_c2h.tdata = '0;
-    assign __axis_qdma_c2h.tid = '0;
-    assign __axis_qdma_c2h.tdest = '0;
-    assign __axis_qdma_c2h.tuser = '0;
-    
+     
     // =========================================================================
     // AXI-L ILA (250MHz domain)
     // =========================================================================
@@ -118,19 +106,6 @@ module xilinx_alveo_host
         .clk_to_peripheral        ( clk_125mhz ),
         .axi4l_if_to_peripheral   ( axil_if )
     );
-
-    // =========================================================================
-    // DMA channels (streaming)
-    // =========================================================================
-    // TEMP: Tie off DMA stream channels
-    generate
-        for (genvar g_ch = 0; g_ch < NUM_DMA_ST; g_ch++) begin : g__dma_st_ch
-            axi4s_intf_tx_term i_axi4s_intf_tx_term (.axi4s_if (axis_h2c [g_ch]));
-            assign axis_c2h[g_ch].aclk = __axis_qdma_c2h.aclk;
-            assign axis_c2h[g_ch].aresetn = __axis_qdma_c2h.aresetn;
-            assign axis_c2h[g_ch].tready = 1'b1;
-        end : g__dma_st_ch
-    endgenerate
 
     // TEMP: Tie off unused AXI-L interface
     axi4l_intf_peripheral_term (.axi4l_if(axil_qdma));

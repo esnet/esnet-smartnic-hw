@@ -50,7 +50,7 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    xilinx_sysmon/xilinx_sysmon_sim_netlist.v
+    xilinx_sysmon/xilinx_sysmon.v
 
 IP_SIM_INC_DIRS =
 

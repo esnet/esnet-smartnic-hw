@@ -23,6 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    shell.pkg \
     xilinx.cmac.pkg
 
 EXT_LIBS =
