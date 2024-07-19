@@ -491,7 +491,8 @@ module smartnic
       //------------------------ from core to cmac --------------
       axi4s_pkt_fifo_async #(
         .FIFO_DEPTH     (1024),
-        .MAX_PKT_LEN    (MAX_PKT_LEN)
+        .MAX_PKT_LEN    (MAX_PKT_LEN),
+        .TX_THRESHOLD   (4)
       ) fifo_to_cmac (
         .axi4s_in       (axis_core_to_cmac[i]),
         .clk_out        (cmac_clk[i]),
