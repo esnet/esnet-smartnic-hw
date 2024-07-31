@@ -42,7 +42,6 @@ SUBCOMPONENTS = \
     smartnic_250mhz.rtl \
     smartnic_250mhz.tb \
     std.verif@common \
-    packet.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \
     axi4s.rtl@common \
