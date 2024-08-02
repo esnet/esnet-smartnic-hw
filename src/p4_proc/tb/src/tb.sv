@@ -71,7 +71,7 @@ module tb;
         .axi_to_hbm              ( axi_to_hbm )
     );
 
-    hbm_bfm #(.PSEUDO_CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
+    mem_axi3_bfm #(.CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
 
     //===================================
     // Local signals
