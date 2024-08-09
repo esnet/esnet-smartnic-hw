@@ -84,7 +84,7 @@ module smartnic_250mhz_ctrl_unit_test;
     //===================================
     `SVUNIT_TESTS_BEGIN
 
-    `SVTEST(reset)
+    `SVTEST(hard_reset)
     `SVTEST_END
 
     // Test read access to smartnic.status register

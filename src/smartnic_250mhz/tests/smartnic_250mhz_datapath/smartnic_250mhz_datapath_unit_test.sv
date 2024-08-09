@@ -111,7 +111,7 @@ module smartnic_250mhz_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
-    `SVTEST(reset)
+    `SVTEST(hard_reset)
     `SVTEST_END
 
     `SVTEST(h2c_one_packet)

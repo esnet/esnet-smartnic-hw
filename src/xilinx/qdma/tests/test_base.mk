@@ -18,22 +18,6 @@ SEED ?= 0
 waves ?= OFF
 
 # ----------------------------------------------------
-# Top
-#   Specify top module(s) for elaboration
-# ----------------------------------------------------
-TOP = $(SVUNIT_TOP)
-
-# ----------------------------------------------------
-# Sources
-#   List source files and include directories for test
-#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
-#   NOTE: SVUnit sources are automatically included
-# ----------------------------------------------------
-SRC_FILES =
-INC_DIRS =
-SRC_LIST_FILES = $(SVUNIT_SRC_LIST_FILE)
-
-# ----------------------------------------------------
 # Dependencies
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
@@ -85,19 +69,9 @@ clean:      _clean_test _clean_sim
 .PHONY: all build_test sim info clean
 
 # ----------------------------------------------------
-# Test configuration
-# ----------------------------------------------------
-SRC_DIR = .
-INC_DIR = .
-
-# ----------------------------------------------------
 # Import SVUNIT build targets/configuration
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
-
-# Export SVUNIT configuration
-SVUNIT_TOP = $(COMPONENT_NAME).$(SVUNIT_TOP_MODULE)
-SVUNIT_SRC_LIST_FILE = $(SVUNIT_FILE_LIST)
 
 # ----------------------------------------------------
 # Import Vivado sim targets
