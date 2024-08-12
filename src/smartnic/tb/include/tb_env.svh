@@ -25,17 +25,17 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     virtual axi4l_intf axil_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_in_vif [2*NUM_CMAC];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [2*NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_in_vif [2*NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2*NUM_CMAC];
     virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_vif;
 
     // Drivers/Monitors
     axi4s_driver #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)
     ) axis_driver [2*NUM_CMAC];
 
     axi4s_monitor #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
     ) axis_monitor [2*NUM_CMAC];
 
     axi4s_sample #(
@@ -47,6 +47,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
 
     // Register block agents
     smartnic_reg_blk_agent #() smartnic_reg_blk_agent;
+    smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_0_reg_blk_agent;
+    smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_1_reg_blk_agent;
     reg_endian_check_reg_blk_agent #() reg_endian_check_reg_blk_agent;
 
     axi4s_probe_reg_blk_agent #() probe_from_cmac_0_reg_blk_agent;
@@ -61,7 +63,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_cmac_1_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_host_0_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_host_1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_bypass_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_bypass_0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_bypass_1_reg_blk_agent;
 
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
@@ -87,21 +90,27 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         reg_agent = new("axi4l_reg_agent");
         ts_agent = new;
         smartnic_reg_blk_agent = new("smartnic_reg_blk", 'h0000);
+        smartnic_hash2qid_0_reg_blk_agent = new("smartnic_hash2qid_0_reg_blk", 'h12000);
+        smartnic_hash2qid_1_reg_blk_agent = new("smartnic_hash2qid_1_reg_blk", 'h13000);
         reg_endian_check_reg_blk_agent = new("reg_endian_check_reg_blk", 'h0400);
 
-        probe_from_cmac_0_reg_blk_agent  = new("probe_from_cmac_0_reg_blk",    'h8000);
-        probe_from_cmac_1_reg_blk_agent  = new("probe_from_cmac_1_reg_blk",    'h8c00);
-        probe_from_host_0_reg_blk_agent  = new("probe_from_host_0_reg_blk",    'h9800);
-        probe_from_host_1_reg_blk_agent  = new("probe_from_host_1_reg_blk",    'h9c00);
-        probe_core_to_app0_reg_blk_agent = new("probe_core_to_app0_reg_blk",   'ha000);
-        probe_core_to_app1_reg_blk_agent = new("probe_core_to_app1_reg_blk",   'ha400);
-        probe_app0_to_core_reg_blk_agent = new("probe_app0_to_core_reg_blk",   'ha800);
-        probe_app1_to_core_reg_blk_agent = new("probe_app1_to_core_reg_blk",   'hac00);
-        probe_to_cmac_0_reg_blk_agent    = new("probe_core_to_cmac_0_reg_blk", 'hb000);
-        probe_to_cmac_1_reg_blk_agent    = new("probe_core_to_cmac_1_reg_blk", 'hb800);
-        probe_to_host_0_reg_blk_agent    = new("probe_core_to_host_0_reg_blk", 'hc000);
-        probe_to_host_1_reg_blk_agent    = new("probe_core_to_host_1_reg_blk", 'hc800);
-        probe_to_bypass_reg_blk_agent    = new("probe_to_bypass_reg_blk",      'hd000);
+        probe_from_cmac_0_reg_blk_agent  = new("probe_from_cmac_0_reg_blk",    'h2000);
+        probe_from_cmac_1_reg_blk_agent  = new("probe_from_cmac_1_reg_blk",    'h2300);
+        probe_to_cmac_0_reg_blk_agent    = new("probe_core_to_cmac_0_reg_blk", 'h2600);
+        probe_to_cmac_1_reg_blk_agent    = new("probe_core_to_cmac_1_reg_blk", 'h2800);
+
+        probe_from_host_0_reg_blk_agent  = new("probe_from_host_0_reg_blk",    'h3000);
+        probe_from_host_1_reg_blk_agent  = new("probe_from_host_1_reg_blk",    'h3100);
+        probe_to_host_0_reg_blk_agent    = new("probe_core_to_host_0_reg_blk", 'h3200);
+        probe_to_host_1_reg_blk_agent    = new("probe_core_to_host_1_reg_blk", 'h3400);
+
+        probe_to_bypass_0_reg_blk_agent  = new("probe_to_bypass_0_reg_blk",    'h4000);
+        probe_to_bypass_1_reg_blk_agent  = new("probe_to_bypass_1_reg_blk",    'h4300);
+
+        probe_core_to_app0_reg_blk_agent = new("probe_core_to_app0_reg_blk",   'h0c00);
+        probe_core_to_app1_reg_blk_agent = new("probe_core_to_app1_reg_blk",   'h0d00);
+        probe_app0_to_core_reg_blk_agent = new("probe_app0_to_core_reg_blk",   'h0e00);
+        probe_app1_to_core_reg_blk_agent = new("probe_app1_to_core_reg_blk",   'h0f00);
 
     endfunction
 
@@ -121,6 +130,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         ts_agent.timestamp_vif = timestamp_vif;
         reg_agent.axil_vif = axil_vif;
         smartnic_reg_blk_agent.reg_agent = reg_agent;
+        smartnic_hash2qid_0_reg_blk_agent.reg_agent = reg_agent;
+        smartnic_hash2qid_1_reg_blk_agent.reg_agent = reg_agent;
         reg_endian_check_reg_blk_agent.reg_agent = reg_agent;
 
         probe_from_cmac_0_reg_blk_agent.reg_agent  = reg_agent;
@@ -135,7 +146,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         probe_to_cmac_1_reg_blk_agent.reg_agent    = reg_agent;
         probe_to_host_0_reg_blk_agent.reg_agent    = reg_agent;
         probe_to_host_1_reg_blk_agent.reg_agent    = reg_agent;
-        probe_to_bypass_reg_blk_agent.reg_agent    = reg_agent;
+        probe_to_bypass_0_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_bypass_1_reg_blk_agent.reg_agent  = reg_agent;
     endfunction
 
     task reset();
