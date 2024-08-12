@@ -79,10 +79,10 @@ module smartnic_mux
         assign _axis_host_to_core_p[i].tuser   = axis_host_to_core_p[i].tuser;
         assign _axis_host_to_core_p[i].tdest   = igr_sw_tdest[2+i];
 
-        axi4s_intf_pipe axi4s_igr_mux_in_pipe_0 (.axi4s_if_from_tx(_axis_cmac_to_core_p[i]), .axi4s_if_to_rx(igr_mux_in[i][0]));
-        axi4s_intf_pipe axi4s_igr_mux_in_pipe_1 (.axi4s_if_from_tx(_axis_host_to_core_p[i]), .axi4s_if_to_rx(igr_mux_in[i][1]));
+        axi4s_intf_connector axi4s_igr_mux_in_pipe_0 (.axi4s_from_tx(_axis_cmac_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][0]));
+        axi4s_intf_connector axi4s_igr_mux_in_pipe_1 (.axi4s_from_tx(_axis_host_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][1]));
 
-        axi4s_mux #(.N(2), .OUT_PIPE(1)) axi4s_igr_mux (
+        axi4s_mux #(.N(2)) axi4s_igr_mux (
             .axi4s_in  (igr_mux_in[i]),
             .axi4s_out (igr_mux_out[i])
         ); 
@@ -96,7 +96,7 @@ module smartnic_mux
             .sel       (igr_demux_sel[i])
         ); 
 
-        axi4s_intf_pipe axis_core_to_app_pipe (.axi4s_if_from_tx(igr_demux_out[i][0]), .axi4s_if_to_rx(_axis_core_to_app[i]));
+        axi4s_intf_connector axis_core_to_app_pipe (.axi4s_from_tx(igr_demux_out[i][0]), .axi4s_to_rx(_axis_core_to_app[i]));
 
         assign _axis_core_to_app[i].tready = axis_core_to_app[i].tready;
 
@@ -110,7 +110,7 @@ module smartnic_mux
         assign axis_core_to_app[i].tuser   = '0;
         assign axis_core_to_app[i].tdest   = _axis_core_to_app[i].tid;
 
-        axi4s_intf_pipe axis_core_to_bypass_pipe (.axi4s_if_from_tx(igr_demux_out[i][1]), .axi4s_if_to_rx(_axis_core_to_bypass[i]));
+        axi4s_intf_connector axis_core_to_bypass_pipe (.axi4s_from_tx(igr_demux_out[i][1]), .axi4s_to_rx(_axis_core_to_bypass[i]));
 
         // tpause logic for bypass ingress traffic (for test purposes).
         assign _axis_core_to_bypass[i].tready = axis_core_to_bypass[i].tready && !smartnic_regs.switch_config.igr_sw_tpause;

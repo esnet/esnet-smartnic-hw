@@ -411,6 +411,8 @@ module smartnic
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_h2c_demux__demarc   [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_h2c_demux           [NUM_CMAC] ();
+   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_h2c_demux_p         [NUM_CMAC] ();
 
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_c2h                 [NUM_CMAC][HOST_NUM_IFS] ();
@@ -637,7 +639,7 @@ module smartnic
       );
 
       axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH     (128),
+        .FIFO_DEPTH     (512),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_from_host (
         .axi4s_in       (axis_from_host[i]),
@@ -808,10 +810,10 @@ module smartnic
            __axis_hash2qid[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with host VF id.
        end
 
-       axi4s_intf_pipe core_to_host_mux_pipe_0 (.axi4s_if_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_if_to_rx(core_to_host_mux[i][0]));
-       axi4s_intf_pipe core_to_host_mux_pipe_1 (.axi4s_if_from_tx(__axis_hash2qid[i]),          .axi4s_if_to_rx(core_to_host_mux[i][1]));
+       axi4s_intf_connector core_to_host_mux_pipe_0 (.axi4s_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_to_rx(core_to_host_mux[i][0]));
+       axi4s_intf_connector core_to_host_mux_pipe_1 (.axi4s_from_tx(__axis_hash2qid[i]),          .axi4s_to_rx(core_to_host_mux[i][1]));
 
-       axi4s_mux #(.N(2), .OUT_PIPE(1)) core_to_host_mux_inst (
+       axi4s_mux #(.N(2)) core_to_host_mux_inst (
            .axi4s_in   ( core_to_host_mux[i] ),
            .axi4s_out  ( axis_hash2qid[i] )
        );
@@ -820,16 +822,23 @@ module smartnic
    endgenerate
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_app  // app-side host mux logic
-       axi4s_mux #(.N(HOST_NUM_IFS), .OUT_PIPE(1)) axis_c2h_mux (
+       axi4s_mux #(.N(HOST_NUM_IFS)) axis_c2h_mux (
            .axi4s_in   ( axis_c2h[i] ),
            .axi4s_out  ( axis_c2h_mux_out[i] )
        );
 
-       assign h2c_demux_sel[i] = ((axis_h2c_demux[i].tid == PF0)     || (axis_h2c_demux[i].tid == PF1))     ? 2'h0 :
-                                 ((axis_h2c_demux[i].tid == PF0_VF0) || (axis_h2c_demux[i].tid == PF1_VF0)) ? 2'h1 : 2'h2;
+
+       axi4s_intf_pipe axis_h2c_demux_pipe (.axi4s_if_from_tx(axis_h2c_demux[i]), .axi4s_if_to_rx(axis_h2c_demux_p[i]));
+
+       always @(posedge core_clk)
+            if (!core_rstn)
+                h2c_demux_sel[i] <= 0;
+            else if (axis_h2c_demux[i].tready && axis_h2c_demux[i].tvalid && axis_h2c_demux[i].sop)
+                h2c_demux_sel[i] <= ((axis_h2c_demux[i].tid == PF0)     || (axis_h2c_demux[i].tid == PF1))     ? 2'h0 :
+                                    ((axis_h2c_demux[i].tid == PF0_VF0) || (axis_h2c_demux[i].tid == PF1_VF0)) ? 2'h1 : 2'h2;
 
        axi4s_intf_demux #(.N(HOST_NUM_IFS)) axis_h2c_demux_inst (
-           .axi4s_in   ( axis_h2c_demux[i] ),
+           .axi4s_in   ( axis_h2c_demux_p[i] ),
            .axi4s_out  ( axis_h2c[i] ),
            .sel        ( h2c_demux_sel[i] )
         );
@@ -1007,7 +1016,6 @@ module smartnic
                assign axis_c2h_tuser[i][j].trunc_enable  = axis_c2h_tuser_trunc_enable[i][j];
                assign axis_c2h_tuser[i][j].trunc_length  = axis_c2h_tuser_trunc_length[i][j];
                assign axis_c2h_tuser[i][j].rss_enable    = axis_c2h_tuser_rss_enable[i][j];
-//               assign axis_c2h_tuser[i][j].rss_entropy   = axis_c2h_tuser_rss_entropy[i][j];
                assign axis_c2h_tuser[i][j].rss_entropy   = {host_if_id[i], axis_c2h_tuser_rss_entropy[i][j][9:0]};
                assign axis_c2h_tuser[i][j].hdr_tlast     = '0;
                assign axis_c2h[j][i].tuser               = axis_c2h_tuser[i][j];

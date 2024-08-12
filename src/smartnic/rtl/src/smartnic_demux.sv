@@ -45,7 +45,7 @@ module smartnic_demux
 
 
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__mux_demux
-        axi4s_intf_pipe axis_app_to_core_pipe (.axi4s_if_from_tx(axis_app_to_core[i]), .axi4s_if_to_rx(axis_app_to_core_p[i]));
+        axi4s_intf_connector axis_app_to_core_pipe (.axi4s_from_tx(axis_app_to_core[i]), .axi4s_to_rx(axis_app_to_core_p[i]));
 
         assign axis_app_to_core_p[i].tready   = _axis_app_to_core_p[i].tready;
 
@@ -67,11 +67,11 @@ module smartnic_demux
             .sel       (_axis_app_to_core_p[i].tdest[0])  // LSB of tdest determines destination port (0:CMAC0/PF0, 1:CMAC1/PF1).
         );
 
-        axi4s_intf_pipe axi4s_egr_mux_in_pipe_0 (.axi4s_if_from_tx(axis_bypass_to_core[i]), .axi4s_if_to_rx(egr_mux_in[i][0]));
-        axi4s_intf_pipe axi4s_egr_mux_in_pipe_1 (.axi4s_if_from_tx(port_demux_out[0][i]),   .axi4s_if_to_rx(egr_mux_in[i][1]));
-        axi4s_intf_pipe axi4s_egr_mux_in_pipe_2 (.axi4s_if_from_tx(port_demux_out[1][i]),   .axi4s_if_to_rx(egr_mux_in[i][2]));
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_0 (.axi4s_from_tx(axis_bypass_to_core[i]), .axi4s_to_rx(egr_mux_in[i][0]));
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_1 (.axi4s_from_tx(port_demux_out[0][i]),   .axi4s_to_rx(egr_mux_in[i][1]));
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_2 (.axi4s_from_tx(port_demux_out[1][i]),   .axi4s_to_rx(egr_mux_in[i][2]));
 
-        axi4s_mux #(.N(3), .OUT_PIPE(1)) axi4s_egr_mux (
+        axi4s_mux #(.N(3)) axi4s_egr_mux (
             .axi4s_in  (egr_mux_in[i]),
             .axi4s_out (egr_mux_out[i])
         ); 
@@ -79,8 +79,10 @@ module smartnic_demux
         axi4s_intf_pipe axi4s_egr_mux_out_pipe (.axi4s_if_from_tx(egr_mux_out[i]), .axi4s_if_to_rx(egr_mux_out_p[i]));
 
         always @(posedge core_clk)
-	    if (egr_mux_out[i].tready && egr_mux_out[i].tvalid && egr_mux_out[i].sop)
-               egr_demux_sel[i] <= smartnic_regs.egr_demux_sel[i];
+            if (!core_rstn)
+                egr_demux_sel[i] <= 0;
+	    else if (egr_mux_out[i].tready && egr_mux_out[i].tvalid && egr_mux_out[i].sop)
+                egr_demux_sel[i] <= smartnic_regs.egr_demux_sel[i];
 
         axi4s_intf_demux #(.N(2)) axi4s_egr_demux (
             .axi4s_in  (egr_mux_out_p[i]),
@@ -88,8 +90,8 @@ module smartnic_demux
             .sel       (egr_demux_sel[i])
         ); 
 
-        axi4s_intf_pipe axi4s_egr_demux_out_pipe_0 (.axi4s_if_from_tx(egr_demux_out[i][0]), .axi4s_if_to_rx(_axis_core_to_cmac[i]));
-        axi4s_intf_pipe axi4s_egr_demux_out_pipe_1 (.axi4s_if_from_tx(egr_demux_out[i][1]), .axi4s_if_to_rx(_axis_core_to_host[i]));
+        axi4s_intf_connector axi4s_egr_demux_out_pipe_0 (.axi4s_from_tx(egr_demux_out[i][0]), .axi4s_to_rx(_axis_core_to_cmac[i]));
+        axi4s_intf_connector axi4s_egr_demux_out_pipe_1 (.axi4s_from_tx(egr_demux_out[i][1]), .axi4s_to_rx(_axis_core_to_host[i]));
 
         assign _axis_core_to_cmac[i].tready = axis_core_to_cmac[i].tready;
 

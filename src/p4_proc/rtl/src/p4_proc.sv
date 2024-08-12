@@ -114,6 +114,9 @@ module p4_proc
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_drop [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_drop_p [NUM_PORTS] ();
+
+    axi4s_intf  #( .TUSER_T(tuser_t),
                    .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_trunc [NUM_PORTS] ();
 
 
@@ -147,7 +150,7 @@ module p4_proc
             .FIFO_DEPTH (512)
         ) axi4s_split_join_inst (
             .axi4s_in      (_axis_in[i]),
-            .axi4s_out     (axis_to_drop[i]),
+            .axi4s_out     (axis_to_drop_p[i]),
             .axi4s_hdr_out (axis_from_split_join[i]),
             .axi4s_hdr_in  (axis_to_split_join[i]),
             .axil_if       (axil_to_split_join[i]),
@@ -173,6 +176,8 @@ module p4_proc
         assign axis_from_split_join[i].tready = _axis_from_split_join[i].tready;
  
         // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(_axis_from_split_join[0]));
+
+        axi4s_tready_pipe axis_to_drop_pipe (.axi4s_if_from_tx(axis_to_drop_p[i]), .axi4s_if_to_rx(axis_to_drop[i]));
 
         // packet drop logic.  deletes zero-length packets, and packets with tdest == tid i.e. switching loops.
         assign zero_length[i] = axis_to_drop[i].tvalid && axis_to_drop[i].sop && axis_to_drop[i].tlast &&
