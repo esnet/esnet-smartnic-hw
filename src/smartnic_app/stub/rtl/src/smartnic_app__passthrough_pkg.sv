@@ -12,30 +12,25 @@ package smartnic_app__passthrough_pkg;
     // Typedefs
     // --------------------------------------------------------------
 
-    typedef enum logic [1:0] {
-        CMAC_PORT0 = 2'h0,
-        CMAC_PORT1 = 2'h1,
-        HOST_PORT0 = 2'h2,
-        HOST_PORT1 = 2'h3
+    typedef enum logic [3:0] {
+        CMAC0    = 4'h0,
+        CMAC1    = 4'h1,
+        PF0      = 4'h2,
+        PF1      = 4'h3,
+        PF0_VF0  = 4'h4,
+        PF1_VF0  = 4'h5,
+        PF0_VF1  = 4'h6,
+        PF1_VF1  = 4'h7,
+        PF0_VF2  = 4'h8,
+        PF1_VF2  = 4'h9,
+     // RESERVED = 4'he, also used for LOOPBACK
+        LOOPBACK = 4'hf
     } port_encoding_t;
 
     typedef union packed {
         port_encoding_t encoded;
-        bit [1:0]       raw;
+        bit [3:0]       raw;
     } port_t;
-
-    typedef enum logic [2:0] {
-        CMAC0 = 3'h0,
-        CMAC1 = 3'h1,
-        HOST0 = 3'h2,
-        HOST1 = 3'h3,
-        LOOPBACK = 3'h7
-    } egr_tdest_encoding_t;
-
-    typedef union packed {
-        egr_tdest_encoding_t encoded;
-        bit [2:0]       raw;
-    } egr_tdest_t;
 
     typedef struct packed {
         logic [15:0] pid;
