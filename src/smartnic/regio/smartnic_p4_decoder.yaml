@@ -28,7 +28,7 @@ interfaces:
     width: 12
     name: p4_proc_igr
 
- #- decoder: *p4_proc_decoder
- #  address: 0x22000
- #  width: 12
- #  name: p4_proc_egr
+  - decoder: *p4_proc_decoder
+    address: 0x22000
+    width: 12
+    name: p4_proc_egr

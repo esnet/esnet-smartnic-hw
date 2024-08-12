@@ -1,4 +1,5 @@
 name: p4_proc
+visible: true
 
 blocks:
   p4_proc: &p4_proc

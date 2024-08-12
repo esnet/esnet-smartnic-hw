@@ -1,0 +1,36 @@
+name: smartnic_bypass
+
+blocks:
+  axi4s_probe: &axi4s_probe
+    !include src/axi4s/regio/axi4s_probe.yaml 
+
+interfaces:
+  - block: *axi4s_probe
+    address: 0x0000
+    width: 8
+    name: probe_to_bypass_0
+
+  - block: *axi4s_probe
+    address: 0x0100
+    width: 8
+    name: drops_to_bypass_0
+
+  - block: *axi4s_probe
+    address: 0x0200
+    width: 8
+    name: drops_from_bypass_0
+
+  - block: *axi4s_probe
+    address: 0x0300
+    width: 8
+    name: probe_to_bypass_1
+
+  - block: *axi4s_probe
+    address: 0x0400
+    width: 8
+    name: drops_to_bypass_1
+
+  - block: *axi4s_probe
+    address: 0x0500
+    width: 8
+    name: drops_from_bypass_1

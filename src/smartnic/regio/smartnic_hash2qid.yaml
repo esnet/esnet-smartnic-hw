@@ -1,0 +1,60 @@
+name: smartnic_hash2qid
+info: |
+  smartnic_hash2qid is the register block that controls the smartnic_hash2qid function,
+  which determines the egress QDMA queue for HOST C2H packets.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: q_config
+    access : rw
+    count: 4
+    fields:
+        - name: base
+          desc: sets the base qid for the specified h2c interface.
+                indexed by interface number
+                   0 PF  IGR_P4
+                   1 VF0 IGR_APP
+                   2 VF1 EXTERN
+                   3 VF2 EGR_APP
+          width: 12
+          init: 0
+
+  - name: pf_table
+    access : rw
+    count: 128
+    fields:
+        - name: value
+          desc: qid lookup table for the PF interface, indexed by rss_entropy value.
+          width: 12
+          init: 0
+
+  - name: vf0_table
+    access : rw
+    count: 128
+    fields:
+        - name: value
+          desc: qid lookup table for the VF0 interface, indexed by rss_entropy value.
+          width: 12
+          init: 0
+
+  - name: vf1_table
+    access : rw
+    count: 128
+    fields:
+        - name: value
+          desc: qid lookup table for the VF1 interface, indexed by rss_entropy value.
+          width: 12
+          init: 0
+
+  - name: vf2_table
+    access : rw
+    count: 128
+    fields:
+        - name: value
+          desc: qid lookup table for the VF2 interface, indexed by rss_entropy value.
+          width: 12
+          init: 0
