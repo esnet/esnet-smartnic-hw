@@ -125,9 +125,6 @@ $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
 $(ARTIFACTS_DIR) :
 	@mkdir $(ARTIFACTS_DIR)
 
-build_smartnic :
-	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/build all
-
 SHELL_BUILD_OUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/smartnic/xilinx/alveo/shell/build/proj/proj.runs/impl_1
 SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
 
@@ -146,13 +143,13 @@ shell_bitfile: config config_check
 	@test -e $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs || (echo ERROR: flash image not produced. && false)
 	@echo "Done."
 
-$(SHELL_REG_ARTIFACT):
+$(SHELL_REG_ARTIFACT): config
 	@echo "Generating regmap artifact for ESnet shell build..."
-	@$(MAKE) -s -C $(APP_ROOT)/src reg COMPONENT=xilinx.alveo.shell.regio@smartnic
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.alveo.shell.regio@$(SMARTNIC_LIB_NAME) BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) OUTPUT_ROOT=$(OUTPUT_ROOT) SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME)
 	@echo "Done."
 
 $(SHELL_VITISNETP4_DRV_ARTIFACT): config
-	@$(MAKE) -s -C $(APP_ROOT)/app_if BOARD=$(BOARD)
+	@$(MAKE) -s -C $(APP_ROOT)/app_if BOARD=$(BOARD) OUTPUT_ROOT=$(OUTPUT_ROOT)
 
 shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 	@echo "Packaging ESnet shell build..."
@@ -175,3 +172,12 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 	@echo "Done."
 
 .PHONY: shell shell_bitfile shell_package shell_clean_artifacts
+
+versal_shell: versal_shell_bitfile
+
+versal_shell_bitfile:
+	@echo "Building ESnet Versal shell bitfile ($(BUILD_ID))..."
+	@cd $(AVED_ROOT)/hw/amd_v80_gen5x8_23.2_exdes_2 && ./build_all.sh
+
+.PHONY: versal_shell versal_shell_bitfile
+
