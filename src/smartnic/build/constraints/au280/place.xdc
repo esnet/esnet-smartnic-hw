@@ -4,13 +4,18 @@ add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "N
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_demux_inst"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_bypass_inst"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/g__fifo*"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/g__host_if_sel*"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/g__tid*"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/g__host_mux_core*"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_axil_decoder_0"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_cmac_decoder_0"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_host_decoder_0"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_bypass_decoder_0"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/axil_to_regs_cdc"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_reg_blk_0"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/reg_endian_check_0"]
 add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/smartnic_timestamp_0"]
-add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/axis_probe_app_to_core_*"]
-add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/axis_probe_core_to_app_*"]
+add_cells_to_pblock pblock_smartnic_platform [get_cells -hierarchical -filter "NAME=~*/smartnic/g__probe*"]
 resize_pblock       pblock_smartnic_platform -add {SLR2}
 
 # Smartnic app core
@@ -28,7 +33,7 @@ add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical 
 add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__h2c_demux_out*slr_source*"]
 add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_dest*"]
 add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__c2h_mux_out*slr_dest*"]
-resize_pblock       pblock_smartnic_platform_to_app_if -add {CLOCKREGION_X2Y8:CLOCKREGION_X5Y8}
+resize_pblock       pblock_smartnic_platform_to_app_if -add {CLOCKREGION_X3Y8:CLOCKREGION_X6Y8}
 set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_platform_to_app_if]
 
 # Smartnic app-to-platform interfaces
@@ -38,6 +43,6 @@ add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical 
 add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__c2h_mux_out*slr_source*"]
 add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_dest*"]
 add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__h2c_demux_out*slr_dest*"]
-resize_pblock       pblock_smartnic_app_to_platform_if -add {CLOCKREGION_X2Y7:CLOCKREGION_X5Y7}
+resize_pblock       pblock_smartnic_app_to_platform_if -add {CLOCKREGION_X3Y7:CLOCKREGION_X6Y7}
 set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_app_to_platform_if]
 
