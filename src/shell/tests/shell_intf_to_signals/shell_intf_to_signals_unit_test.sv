@@ -23,7 +23,7 @@ module shell_intf_to_signals_unit_test;
         .*
     );
 
-    `include "shell_if__signals__flattened.svh"
+    `include "../../rtl/include/shell_if__signals__flattened.svh"
 
 
     //===================================
