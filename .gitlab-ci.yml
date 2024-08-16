@@ -562,7 +562,7 @@ hwapi_shell_au280:
     ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
     project: ht/esnet-smartnic-fw
-    branch: main
+    branch: dev/jranger/qid-mapping-and-regio-consolidation
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
