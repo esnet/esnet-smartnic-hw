@@ -89,7 +89,7 @@ bitfile : config config_check
 	@echo "----------------------------------------------------------"
 	@echo "Building OpenNIC shell ..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
 	@echo
 	@echo "Done."
 
@@ -98,7 +98,7 @@ package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "Packaging build $(BUILD_NAME) ..."
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/regio reg APP_ROOT=$(APP_ROOT)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) OUTPUT_ROOT=$(OUTPUT_ROOT)/smartnic
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
 	@echo
 	@echo "Done."
 
@@ -128,10 +128,10 @@ $(ARTIFACTS_DIR) :
 build_smartnic :
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/build all
 
-SHELL_BUILD_OUT_DIR = $(OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/build/$(BOARD)/proj/proj.runs/impl_1
+SHELL_BUILD_OUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/smartnic/xilinx/alveo/shell/build/proj/proj.runs/impl_1
 SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
 
-SHELL_REG_ARTIFACT = $(OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
+SHELL_REG_ARTIFACT = $(OUTPUT_ROOT)/$(BOARD)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
 SHELL_VITISNETP4_DRV_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar
 SHELL_P4_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr.p4
 

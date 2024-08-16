@@ -3,10 +3,10 @@
 # -----------------------------------------------
 # Set relative to component root directory
 # Note: COMPONENT_ROOT is configured in calling (parent) Makefile
-APP_DIR := $(abspath $(COMPONENT_ROOT)/..)
+SRC_ROOT := $(abspath $(COMPONENT_ROOT)/../src)
 
 # All other project paths can be derived
-include $(APP_DIR)/config.mk
+include $(SRC_ROOT)/config.mk
 
 # -----------------------------------------------
 # Import default component config

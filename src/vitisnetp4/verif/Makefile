@@ -15,7 +15,7 @@ include $(COMPONENT_ROOT)/config.mk
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/$(BOARD)/vitisnetp4_0_ex/imports
+    $(COMPONENT_OUT_PATH)/../ip/vitisnetp4_0_ex/imports
 
 SRC_LIST_FILES =
 

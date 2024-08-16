@@ -43,5 +43,5 @@ $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic.regio APP_ROOT=$(SRC_ROOT)/core/hbmtest
 	@mkdir -p $(REGIO_IR_OUTPUT_DIR)
 	@echo $(REGIO_IR_OUTPUT_DIR)
-	@cp $(OUTPUT_ROOT)/smartnic/regio/ir/smartnic_decoder-ir.yaml $@
+	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic/regio/ir/smartnic_decoder-ir.yaml $@
 
