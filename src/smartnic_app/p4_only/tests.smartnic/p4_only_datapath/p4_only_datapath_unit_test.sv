@@ -98,31 +98,38 @@ module p4_only_datapath_unit_test
 
     `SVUNIT_TESTS_BEGIN
 
-       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata through datapath to smartnic ports.
-           port_t  src_port, dst_port;
+       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata and qid selection through datapath to smartnic ports.
+           port_t  src_vf[2];
+
+           env.smartnic_reg_blk_agent.write_egr_demux_sel('1);  // demux egr traffic to host ports.
+
+           env.smartnic_hash2qid_0_reg_blk_agent.write_q_config (3, 1);  // write PF0_VF2 base address = 1.
+           env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 16); // write PF1_VF2 base address = 16.
 
            fork
               // --- run traffic from/to both HOST ports ---
               begin
-                 // source traffic from src_port=HOST_0. direct traffic to dst_port=HOST_0.
-                 src_port = 2'h2; dst_port = 2'h2;
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(src_port), .out_port(dst_port) );
+                 // source traffic from/to PF0_VF2. direct traffic to qid PF0_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
+                 src_vf[0] = PF0_VF2;
+                 env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table ({'0, src_vf[0]}, {'0, src_vf[0]});
+                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(PF0_VF2), .out_port(PF0_VF2) );
 
-                 // source traffic from src_port=HOST_1. direct traffic to dst_port=HOST_1.
-                 src_port = 2'h3; dst_port = 2'h3;
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(src_port), .out_port(dst_port) );
+                 // source traffic from/to PF1_VF2. direct traffic to qid PF1_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
+                 src_vf[1] = PF1_VF2;
+                 env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table ({'0, src_vf[1]}, {'0, src_vf[1]});
+                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(PF1_VF2), .out_port(PF1_VF2) );
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
-              while (1) @(posedge tb.axis_out_if[2].aclk) if (tb.axis_out_if[2].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[dst_port[0]] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[dst_port[0]] == src_port );
+              while (1) @(posedge tb.axis_out_if[PF0_VF2].aclk) if (tb.axis_out_if[PF0_VF2].tvalid) begin
+                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[0][0]] == 1'b1 );
+                 `FAIL_UNLESS( rss_entropy[src_vf[0][0]] == src_vf[0]+1 );
               end
 
               // --- compare rss metadata to expected on HOST_1 port ---
-              while (1) @(posedge tb.axis_out_if[3].aclk) if (tb.axis_out_if[3].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[dst_port[0]] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[dst_port[0]] == src_port );
+              while (1) @(posedge tb.axis_out_if[PF1_VF2].aclk) if (tb.axis_out_if[PF1_VF2].tvalid) begin
+                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[1][0]] == 1'b1 );
+                 `FAIL_UNLESS( rss_entropy[src_vf[1][0]] == src_vf[1]+16 );
               end
            join_any
 
@@ -145,7 +152,6 @@ module p4_only_datapath_unit_test
        `SVTEST_END
 
        `SVTEST(test_traffic_mux)
-           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 1 );
            //write_p4_tables ( .testdir("test-fwd-p1") );
            fork
               // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
