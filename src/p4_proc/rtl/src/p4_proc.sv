@@ -139,7 +139,7 @@ module p4_proc
 
         assign axis_in[i].tready = _axis_in[i].tready;
 
-        // axi4s_ila axi4s_ila_0 (.axis_in(_axis_in[0]));
+        // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(_axis_in[0]));
 
         // axi4s_split_join instantiation (separates and recombines packet headers).
         axi4s_split_join #(
@@ -172,7 +172,7 @@ module p4_proc
 
         assign axis_from_split_join[i].tready = _axis_from_split_join[i].tready;
  
-        // axi4s_ila axi4s_ila_1 (.axis_in(_axis_from_split_join[0]));
+        // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(_axis_from_split_join[0]));
 
         // packet drop logic.  deletes zero-length packets, and packets with tdest == tid i.e. switching loops.
         assign zero_length[i] = axis_to_drop[i].tvalid && axis_to_drop[i].sop && axis_to_drop[i].tlast &&

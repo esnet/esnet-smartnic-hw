@@ -293,43 +293,43 @@ module smartnic_250mhz #(
             axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_c2h_t)) axis_if__c2h ();
 
             // H2C register slices (bridge between SLRs)
-            axi4s_reg_slice #(
+            xilinx_axi4s_reg_slice #(
                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-            ) i_axi4s_reg_slice__qdma_h2c (
+            ) i_xilinx_axi4s_reg_slice__qdma_h2c (
                 .axi4s_from_tx ( axis_if__qdma_h2c[g_if] ),
                 .axi4s_to_rx   ( axis_if__h2c )
             );
 
-            axi4s_reg_slice #(
+            xilinx_axi4s_reg_slice #(
                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
             `ifdef __au280__
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
-            ) i_axi4s_reg_slice__adap_tx (
+            ) i_xilinx_axi4s_reg_slice__adap_tx (
                 .axi4s_from_tx ( axis_if__h2c ),
                 .axi4s_to_rx   ( axis_if__adap_tx_250mhz[g_if] )
             );
 
             // C2H register slices (bridge between SLRs)
-            axi4s_reg_slice #(
+            xilinx_axi4s_reg_slice #(
                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
             `ifdef __au280__
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
-            ) i_axi4s_reg_slice__adap_rx (
+            ) i_xilinx_axi4s_reg_slice__adap_rx (
                 .axi4s_from_tx ( axis_if__adap_rx_250mhz[g_if] ),
                 .axi4s_to_rx   ( axis_if__c2h )
             );
 
-            axi4s_reg_slice #(
+            xilinx_axi4s_reg_slice #(
                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-            ) i_axi4s_reg_slice__qdma_c2h (
+            ) i_xilinx_axi4s_reg_slice__qdma_c2h (
                 .axi4s_from_tx ( axis_if__c2h ),
                 .axi4s_to_rx   ( axis_if__qdma_c2h[g_if] )
             );

@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -13,8 +13,13 @@ include $(COMPONENT_ROOT)/config.mk
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
-SRC_FILES =
-INC_DIRS =
+SRC_FILES = \
+    $(XILINX_VIVADO)/data/ip/xilinx/axis_infrastructure_v1_1/hdl/axis_infrastructure_v1_1_vl_rfs.v \
+    $(XILINX_VIVADO)/data/ip/xilinx/axis_register_slice_v1_1/hdl/axis_register_slice_v1_1_vl_rfs.v
+
+INC_DIRS = \
+    $(XILINX_VIVADO)/data/ip/xilinx/axis_infrastructure_v1_1/hdl
+
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -23,16 +28,9 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic.pkg \
-    smartnic.ip \
-    smartnic.regio.rtl \
-    reg.endian.rtl@common \
-    reg.proxy.rtl@common \
-    xilinx.axi.rtl \
-    xilinx.axis.rtl \
-    axi4l.rtl@common \
     axi4s.rtl@common \
-    axi3.rtl@common
+    util.rtl@common \
+    xilinx.axis.ip
 
 EXT_LIBS =
 
