@@ -2,6 +2,8 @@
 
 import tb_pkg::*;
 import p4_proc_verif_pkg::*;
+import smartnic_app_verif_pkg::*;
+import p4_only_reg_pkg::*;
 
 //===================================
 // (Failsafe) timeout
@@ -34,6 +36,9 @@ module p4_only_datapath_unit_test
 
     // VitisNetP4 table agent
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+
+    // p4_only register agent
+    p4_only_reg_agent  p4_only_reg_agent;
 
     // p4_proc register agent and variables
     p4_proc_reg_agent  p4_proc_reg_agent;
@@ -70,8 +75,9 @@ module p4_only_datapath_unit_test
         vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
                                        // path to AXI-L write/read tasks
 
-        // Create P4 reg agent
+        // Create P4 reg agents
         p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'he0000);
+        p4_only_reg_agent = new("p4_only_reg_agent", env.reg_agent, 'h80000);
     endfunction
 
     //===================================

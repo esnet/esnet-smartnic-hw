@@ -28,6 +28,9 @@
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2'h1 );
 
+        // Configure igr_demux_sel to steer traffic to datapath (app_igr).
+        //p4_only_reg_agent.write_igr_demux_sel({1'b1, IGR_DEMUX_SEL_VALUE_APP_IGR});
+
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
           @(posedge tb.clk);
@@ -127,7 +130,7 @@
                                                  out_port, rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
                             debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                             compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
-                           `FAIL_IF_LOG( dest != out_port,
+                           `FAIL_IF_LOG( dest[0] != out_port[0],
                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, out_port) )
                         end
                     join_any

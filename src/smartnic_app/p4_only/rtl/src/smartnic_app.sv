@@ -629,27 +629,13 @@ module smartnic_app
     // ----------------------------------------------------------------------
     logic [NUM_PORTS-1:0] igr_demux_sel;  // each sel signal has wordlength $clog2(2)
 
-    always_comb begin
-        case (axis_to_demux[0].tdest)
-            PF0: igr_demux_sel[0] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b1;
-            PF1: igr_demux_sel[0] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b1;
-            default: igr_demux_sel[0] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b0;
-        endcase
-    end
-
-    always_comb begin
-        case (axis_to_demux[1].tdest)
-            PF0: igr_demux_sel[1] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b1;
-            PF1: igr_demux_sel[1] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b1;
-            default: igr_demux_sel[1] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : 1'b0;
-        endcase
-    end
-
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_demux_out [NUM_PORTS][2] ();
 
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            assign igr_demux_sel[i] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : axis_to_demux[i].tdest[0];
+
             axi4s_intf_demux #(.N(2)) axi4s_intf_demux_inst (
                 .axi4s_in   ( axis_to_demux[i] ),
                 .axi4s_out  ( axis_demux_out[i] ),

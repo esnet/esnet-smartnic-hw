@@ -24,6 +24,7 @@ waves ?= OFF
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     smartnic_app.p4_only.rtl \
+    smartnic_app.p4_only.verif \
     p4_proc.regio.rtl \
     p4_proc.verif \
     vitisnetp4.verif \
