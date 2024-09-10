@@ -36,12 +36,13 @@ clean:   _reg_clean
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/regio.mk
 
-reg:     _reg $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml
+reg: _reg $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml
 	@$(REGIO_ELABORATE_CMD) -f top -i $(REGIO_IR_OUTPUT_DIR) -o $(REGIO_IR_OUTPUT_DIR)/esnet-smartnic-top-ir.yaml esnet-smartnic-top.yaml
 
 $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml:
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic.regio APP_ROOT=$(SRC_ROOT)/core/hbmtest
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic.regio APP_ROOT=$(SRC_ROOT)/core/hbmtest OUTPUT_ROOT=$(OUTPUT_ROOT)/$(BOARD)$(if $(SMARTNIC_LIB_NAME),/$(SMARTNIC_LIB_NAME),)
 	@mkdir -p $(REGIO_IR_OUTPUT_DIR)
-	@echo $(REGIO_IR_OUTPUT_DIR)
-	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic/regio/ir/smartnic_decoder-ir.yaml $@
+	@cp $(OUTPUT_ROOT)/$(BOARD)$(if $(SMARTNIC_LIB_NAME),/$(SMARTNIC_LIB_NAME),)/smartnic/regio/ir/smartnic_decoder-ir.yaml $@
+
+.PHONY: $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml
 
