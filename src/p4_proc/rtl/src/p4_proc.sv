@@ -278,7 +278,7 @@ module p4_proc
         user_metadata_to_vitisnetp4.timestamp_ns      =      axis_to_vitisnetp4_tuser.timestamp;
         user_metadata_to_vitisnetp4.pid               = {'0, axis_to_vitisnetp4_tuser.pid[9:0]};
         user_metadata_to_vitisnetp4.ingress_port      =      axis_to_vitisnetp4.tid;
-        user_metadata_to_vitisnetp4.egress_port       =      axis_to_vitisnetp4.tdest;
+        user_metadata_to_vitisnetp4.egress_port       = {'0, axis_to_vitisnetp4.tdest[0]};  // p4 core only passes 1b egress_port (and loopback control bit).
         user_metadata_to_vitisnetp4.truncate_enable   =      axis_to_vitisnetp4_tuser.trunc_enable;
         user_metadata_to_vitisnetp4.truncate_length   =      axis_to_vitisnetp4_tuser.trunc_length;
         user_metadata_to_vitisnetp4.rss_enable        =      axis_to_vitisnetp4_tuser.rss_enable;
@@ -291,7 +291,6 @@ module p4_proc
 
     // --- metadata_from_vitisnetp4 ---
     user_metadata_t user_metadata_from_vitisnetp4_latch;
-
     always @(posedge core_clk) if (user_metadata_from_vitisnetp4_valid) user_metadata_from_vitisnetp4_latch <= user_metadata_from_vitisnetp4;
    
     assign axis_from_vitisnetp4_proc_port = user_metadata_from_vitisnetp4_valid ?
@@ -301,7 +300,8 @@ module p4_proc
                                          user_metadata_from_vitisnetp4.ingress_port : user_metadata_from_vitisnetp4_latch.ingress_port;
 
     assign _axis_from_vitisnetp4.tdest = user_metadata_from_vitisnetp4_valid ?
-                                         user_metadata_from_vitisnetp4.egress_port  : user_metadata_from_vitisnetp4_latch.egress_port;
+                                        (user_metadata_from_vitisnetp4.egress_port[1] ? LOOPBACK : {'0, user_metadata_from_vitisnetp4.egress_port[0]}) :
+                                        (user_metadata_from_vitisnetp4_latch.egress_port[1] ? LOOPBACK : {'0, user_metadata_from_vitisnetp4_latch.egress_port[0]}) ;
 
     assign _axis_from_vitisnetp4_tuser.pid = user_metadata_from_vitisnetp4_valid ?
                                             {7'd0, user_metadata_from_vitisnetp4.pid[8:0]} : {7'd0, user_metadata_from_vitisnetp4_latch.pid[8:0]};

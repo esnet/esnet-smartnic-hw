@@ -282,7 +282,7 @@ module p4_proc_datapath_unit_test
 
                           debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                           compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
-                          `FAIL_IF_LOG( dest != dest_port,
+                          `FAIL_IF_LOG( dest[0] != dest_port[0],  // compare LSB of dest_port (p4 egress_port is only 1b)
                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
                       end
                  end
