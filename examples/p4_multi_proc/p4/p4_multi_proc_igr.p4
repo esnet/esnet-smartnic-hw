@@ -23,8 +23,9 @@ struct headers {
 struct smartnic_metadata {
     bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
     bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
-    bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
-    bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+    bit<4>  ingress_port;    // 4b ingress port
+                             // (0:CMAC0, 1:CMAC1, 2:PF0_VF2, 3:PF1_VF2, 4:PF0_VF1, 5:PF1_VF1, 6:PF0_VF0, 7:PF1_VF0, 8:PF0, 9:PF1)
+    bit<2>  egress_port;     // 2b egress port (0:IGR_CORE, 1:HOST, 2:RESERVED, 3:LOOPBACK).
     bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
     bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
     bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
@@ -64,10 +65,10 @@ control MatchActionImpl( inout headers hdr,
     bit<12> extern_in;
     bit<12> extern_out;
 
-    action forwardPacket(bit<3> dest_port) {
-        extern_in = 9w0 ++ dest_port;
+    action forwardPacket(bit<2> dest_port) {
+        extern_in = 10w0 ++ dest_port;
         minimal_user_extern_example.apply(extern_in, extern_out);
-        sn_meta.egress_port = (bit<3>) (extern_out);
+        sn_meta.egress_port = (bit<2>) (extern_out);
     }
     
     action dropPacket() {
@@ -91,7 +92,7 @@ control MatchActionImpl( inout headers hdr,
         }
         
         if (hdr.ethernet.isValid()) {
-            sn_meta.rss_entropy = 9w0 ++ sn_meta.ingress_port;
+            sn_meta.rss_entropy = 8w0 ++ sn_meta.ingress_port;
             sn_meta.rss_enable = 1w1;
             forward.apply();
         }
