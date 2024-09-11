@@ -4,3 +4,6 @@
 [submodule "open-nic-shell"]
 	path = open-nic-shell
 	url = ../open-nic-shell
+[submodule "AVED"]
+	path = src/xilinx/aved/hw
+	url = https://github.com/Xilinx/AVED.git

@@ -372,7 +372,7 @@ module smartnic_app
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_0 (.axis_in(axis_app_igr[0]));
+    // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_app_igr[0]));
 
     // -- AXI memory interfaces to HBM
     generate

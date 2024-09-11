@@ -56,6 +56,13 @@ COMMON_LIB_NAME = common
 # ----------------------------------------------------
 BOARD ?= au280
 
+# Maintain separate output products per board
+OUTPUT_SUBDIR = $(BOARD)
+
 LIB_ENV = \
-    BOARD=$(BOARD) \
-    IP_OUT_SUBDIR=$(BOARD)
+    BOARD=$(BOARD)
+
+# ----------------------------------------------------
+# Import base library config
+# ----------------------------------------------------
+include $(SCRIPTS_ROOT)/Makefiles/lib_config_base.mk

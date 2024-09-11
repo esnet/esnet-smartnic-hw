@@ -456,12 +456,12 @@ module smartnic
         .data_out ( cmac_igr_sw_tid[i] )
       );
 
-      // axi4s_ila axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
+      // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
 
-      axi4s_reg_slice #(
+      xilinx_axi4s_reg_slice #(
           .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(igr_tdest_t),
           .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
-      ) axi4s_reg_slice_from_cmac (
+      ) xilinx_axi4s_reg_slice_from_cmac (
           .axi4s_from_tx (_axis_from_cmac[i]),
           .axi4s_to_rx   (axis_from_cmac[i])
       );
@@ -510,16 +510,16 @@ module smartnic
         .axi4s_out   (_axis_to_cmac[i])
       );
 
-      axi4s_reg_slice #(
+      xilinx_axi4s_reg_slice #(
           .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(egr_tdest_t),
           .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
-      ) axi4s_reg_slice_to_cmac (
+      ) xilinx_axi4s_reg_slice_to_cmac (
           .axi4s_from_tx (_axis_to_cmac[i]),
           .axi4s_to_rx   (axis_to_cmac[i])
       );
 
-      // axi4s_ila axi4s_ila_1 (.axis_in(axis_core_to_cmac[i]));
-      // axi4s_ila axi4s_ila_2 (.axis_in(axis_to_cmac[i]));
+      // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(axis_core_to_cmac[i]));
+      // xilinx_axi4s_ila xilinx_axi4s_ila_2 (.axis_in(axis_to_cmac[i]));
 
       // Terminate unused AXI-L interface
       axi4l_intf_controller_term axi4l_fifo_to_cmac_term (.axi4l_if (axil_to_fifo_to_cmac[i]));
@@ -557,7 +557,7 @@ module smartnic
         .axil_if        (axil_to_fifo_to_host[i])
       );
 
-      // axi4s_ila axi4s_ila_to_host (.axis_in(axis_to_host[i]));
+      // xilinx_axi4s_ila xilinx_axi4s_ila_to_host (.axis_in(axis_to_host[i]));
 
       // Terminate unused AXI-L interface
       if (i != 0) axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
@@ -651,10 +651,10 @@ module smartnic
        .smartnic_regs       (smartnic_regs)
    );
 
-   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
-   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_app_to_core  (.axis_in(axis_app_to_core[0]));
-   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
-   // axi4s_ila #(.PIPE_STAGES(2)) axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
+   // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
+   // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_app_to_core  (.axis_in(axis_app_to_core[0]));
+   // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_hdr_to_app   (.axis_in(axis_to_app__demarc[0]));
+   // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_hdr_from_app (.axis_in(axis_from_app__demarc[0]));
 
    // smartnic_mux instantiation.
    smartnic_bypass #(
@@ -751,43 +751,43 @@ module smartnic
    //   and support efficient pipelining between SLRs
 
    // AXI-L interface
-   axi4l_reg_slice #(
+   xilinx_axi4l_reg_slice #(
        .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
-   ) i_axi4l_reg_slice__core_to_app_0 (
+   ) i_xilinx_axi4l_reg_slice__core_to_app_0 (
        .axi4l_if_from_controller ( axil_to_app_decoder__demarc ),
        .axi4l_if_to_peripheral   ( axil_to_app_decoder )
    );
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__reg_slice
        // AXI-S interfaces
-       axi4s_reg_slice #(
+       xilinx_axi4s_reg_slice #(
            .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
            .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_axi4s_reg_slice__core_to_app (
+       ) i_xilinx_axi4s_reg_slice__core_to_app (
            .axi4s_from_tx (axis_to_app__demarc[i]),
            .axi4s_to_rx   (axis_to_app[i])
        );
 
-       axi4s_reg_slice #(
+       xilinx_axi4s_reg_slice #(
            .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
            .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_axi4s_reg_slice__app_to_core (
+       ) i_xilinx_axi4s_reg_slice__app_to_core (
            .axi4s_from_tx (axis_from_app[i]),
            .axi4s_to_rx   (axis_from_app__demarc[i])
        );
 
-       axi4s_reg_slice #(
+       xilinx_axi4s_reg_slice #(
            .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
            .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_axi4s_reg_slice__c2h_mux_out (
+       ) i_xilinx_axi4s_reg_slice__c2h_mux_out (
            .axi4s_from_tx (axis_c2h_mux_out[i]),
            .axi4s_to_rx   (axis_c2h_mux_out__demarc[i])
        );
 
-       axi4s_reg_slice #(
+       xilinx_axi4s_reg_slice #(
            .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t),
            .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_axi4s_reg_slice__h2c_demux_out (
+       ) i_xilinx_axi4s_reg_slice__h2c_demux_out (
            .axi4s_from_tx (axis_h2c_demux__demarc[i]),
            .axi4s_to_rx   (axis_h2c_demux[i])
        );

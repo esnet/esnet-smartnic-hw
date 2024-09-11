@@ -372,7 +372,7 @@ module smartnic_app
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_0 (.axis_in(axis_app_igr[0]));
+    // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_app_igr[0]));
 
     // -- AXI memory interfaces to HBM
     generate
@@ -550,8 +550,8 @@ module smartnic_app
                 .axi_to_hbm              ( axi_to_hbm )
             );
 
-        // axi4s_ila axi4s_ila_1 (.axis_in(axis_to_vitisnetp4[0]));
-        // axi4s_ila axi4s_ila_2 (.axis_in(axis_from_vitisnetp4[0]));
+        // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(axis_to_vitisnetp4[0]));
+        // xilinx_axi4s_ila xilinx_axi4s_ila_2 (.axis_in(axis_from_vitisnetp4[0]));
 
         end else begin  // P4_PROC_IGR_MODE == 0
             axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
@@ -665,7 +665,7 @@ module smartnic_app
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_3 (.axis_in(axis_to_demux[0]));
+    // xilinx_axi4s_ila xilinx_axi4s_ila_3 (.axis_in(axis_to_demux[0]));
 
     localparam logic SMARTNIC_APP_IGR_MODE = 0;
     generate
@@ -712,7 +712,7 @@ module smartnic_app
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_4 (.axis_in(axis_to_mux[0]));
+    // xilinx_axi4s_ila xilinx_axi4s_ila_4 (.axis_in(axis_to_mux[0]));
 
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
@@ -729,6 +729,6 @@ module smartnic_app
         end
     endgenerate
 
-    // axi4s_ila axi4s_ila_5 (.axis_in(axis_from_mux[0]));
+    // xilinx_axi4s_ila xilinx_axi4s_ila_5 (.axis_in(axis_from_mux[0]));
 
 endmodule: smartnic_app

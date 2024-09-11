@@ -28,8 +28,8 @@ SUBCOMPONENTS = \
     smartnic.regio.rtl \
     reg.endian.rtl@common \
     reg.proxy.rtl@common \
-    xilinx.axi.rtl@common \
-    xilinx.axis.rtl@common \
+    xilinx.axi.rtl \
+    xilinx.axis.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \
     axi3.rtl@common

@@ -25,8 +25,8 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     smartnic_250mhz.regio.rtl \
     sync.rtl@common \
-    xilinx.axi.rtl@common \
-    xilinx.axis.rtl@common \
+    xilinx.axi.rtl \
+    xilinx.axis.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common
 

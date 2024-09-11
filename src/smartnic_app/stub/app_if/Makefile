@@ -16,12 +16,12 @@ build:
 package: build_package reg_package p4_package driver_package
 
 build_package:
-	@cp $(OUTPUT_ROOT)/smartnic_app/stub/build/$(BOARD)/proj/proj.runs/opt_1/smartnic_app_opt.dcp smartnic_app.dcp
+	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic_app/stub/build/proj/proj.runs/opt_1/smartnic_app_opt.dcp smartnic_app.dcp
 	@cp $(SRC_ROOT)/smartnic_app/stub/rtl/src/smartnic_app_pkg.sv smartnic_app_pkg.sv
 
 reg_package:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_app.stub.regio
-	@cp $(OUTPUT_ROOT)/smartnic_app/stub/regio/ir/smartnic_app_decoder-ir.yaml smartnic_app_decoder.yaml
+	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic_app/stub/regio/ir/smartnic_app_decoder-ir.yaml smartnic_app_decoder.yaml
 
 p4_package:
 

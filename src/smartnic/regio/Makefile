@@ -32,7 +32,7 @@ REGIO_GENERATE_OPTS :=
 # ----------------------------------------------------
 all: reg compile synth
 
-reg:     cp_app_dec _reg
+reg:     smartnic_app_decoder.yaml _reg
 compile: _reg_compile
 synth:   _reg_synth
 info:    _reg_info
@@ -40,14 +40,16 @@ clean:   _reg_clean
 
 .PHONY: all reg compile synth info clean
 
-cp_app_dec:
-	@$(MAKE) -s -C $(APP_ROOT)/app_if reg_package
+smartnic_app_decoder.yaml:
+ifeq ($(abspath $(APP_ROOT)),$(abspath $(PROJ_ROOT)/src/smartnic_app/blackbox))
+	@cp $(PROJ_ROOT)/src/smartnic_app/blackbox/regio/smartnic_app_decoder.yaml ./
+else
+	@$(MAKE) -s -C $(APP_ROOT)/app_if reg_package OUTPUT_ROOT=$(OUTPUT_ROOT)
 	@cp $(APP_ROOT)/app_if/smartnic_app_decoder.yaml ./
+endif
 	@touch smartnic_decoder.yaml
 
-smartnic_app_decoder.yaml: cp_app_dec
-
-.PHONY: cp_app_dec
+.PHONY: smartnic_app_decoder.yaml
 
 # -----------------------------------------------
 # Include regio targets
