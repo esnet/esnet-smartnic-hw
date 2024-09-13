@@ -33,7 +33,8 @@ SUBCOMPONENTS = \
     util.rtl@common
 
 EXT_LIBS = \
-    unisims_ver
+    unisims_ver \
+    axi_register_slice_v2_1_30
 
 # ----------------------------------------------------
 # Defines

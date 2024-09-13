@@ -66,12 +66,12 @@ IP_SIM_INC_DIRS =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
            axi_infrastructure_v1_1_0 \
-           axi_clock_converter_v2_1_28 \
-           axi_register_slice_v2_1_29 \
+           axi_clock_converter_v2_1_29 \
+           axi_register_slice_v2_1_30 \
            axi_crossbar_v2_1_30 \
-           axis_register_slice_v1_1_29 \
+           axis_register_slice_v1_1_30 \
            axis_infrastructure_v1_1_1 \
-           axis_switch_v1_1_29 \
+           axis_switch_v1_1_30 \
            generic_baseblocks_v2_1_0 \
            unisims_ver \
            unimacro_ver \

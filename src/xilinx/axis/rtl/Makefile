@@ -32,7 +32,8 @@ SUBCOMPONENTS = \
     util.rtl@common \
     xilinx.axis.ip
 
-EXT_LIBS =
+EXT_LIBS = \
+    axis_register_slice_v1_1_30
 
 # ----------------------------------------------------
 # Defines
