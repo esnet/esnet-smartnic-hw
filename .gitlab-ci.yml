@@ -17,7 +17,7 @@ variables:
   BUILD_ID: $CI_PIPELINE_ID
 
 .common:
-  image: $CI_REGISTRY/ht/xilinx-tools-docker:43194-gd5ce900f
+  image: $CI_REGISTRY/ht/xilinx-tools-docker:57417-g8408f7c3
   before_script:
     - if [ $RANDOMIZE_SEED -gt 0 ]; then export SEED=$RANDOM; fi
     - echo "Running pipeline with SEED $SEED..."
