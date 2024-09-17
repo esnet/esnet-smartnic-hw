@@ -184,9 +184,7 @@ module p4_proc
         assign drop_pkt[i] = zero_length[i] || loop_detect[i];
 
         // axi4s pkt drop instantiation.
-        axi4s_drop #(
-            .OUT_PIPE(1)
-        ) axi4s_drop_inst (
+        axi4s_drop axi4s_drop_inst (
             .axi4s_in    (axis_to_drop[i]),
             .axi4s_out   (axis_to_trunc[i]),
             .axil_if     (axil_to_drops[i]),
