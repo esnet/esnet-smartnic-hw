@@ -40,7 +40,8 @@ module tb;
     logic [(512*NUM_CMAC)-1:0] s_axis_adpt_tx_322mhz_tdata;
     logic  [(64*NUM_CMAC)-1:0] s_axis_adpt_tx_322mhz_tkeep;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tlast;
-    logic     [3*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tdest;
+    logic    [16*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tid;
+    logic     [2*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tready;
 
@@ -48,7 +49,7 @@ module tb;
     logic [(512*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tdata;
     logic  [(64*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tkeep;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tlast;
-    logic   [(2*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tdest;
+    logic   [(4*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] m_axis_adpt_rx_322mhz_tuser_rss_enable;
     logic  [(12*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tuser_rss_entropy;
@@ -58,7 +59,7 @@ module tb;
     logic [(512*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tdata;
     logic  [(64*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tkeep;
     logic       [NUM_CMAC-1:0] m_axis_cmac_tx_322mhz_tlast;
-    logic   [(3*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tdest;
+    logic   [(4*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] m_axis_cmac_tx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] m_axis_cmac_tx_322mhz_tready;
 
@@ -97,9 +98,9 @@ module tb;
 
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_in_if [2*NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_in_if [2*NUM_CMAC] ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_if [2*NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_if [2*NUM_CMAC] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_if ();
 
@@ -182,7 +183,7 @@ module tb;
     assign axis_out_if[0].aresetn= ~rst;
     assign axis_out_if[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0];
     assign axis_out_if[0].tlast  = m_axis_cmac_tx_322mhz_tlast[0];
-    assign axis_out_if[0].tdest  = m_axis_cmac_tx_322mhz_tdest[2:0];
+    assign axis_out_if[0].tdest  = m_axis_cmac_tx_322mhz_tdest[3:0];
     assign axis_out_if[0].tdata  = m_axis_cmac_tx_322mhz_tdata[511:0];
     assign axis_out_if[0].tkeep  = m_axis_cmac_tx_322mhz_tkeep[63:0];
     assign axis_out_if[0].tuser  = m_axis_cmac_tx_322mhz_tuser_err[0];
@@ -192,7 +193,7 @@ module tb;
     assign axis_out_if[1].aresetn= ~rst;
     assign axis_out_if[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1];
     assign axis_out_if[1].tlast  = m_axis_cmac_tx_322mhz_tlast[1];
-    assign axis_out_if[1].tdest  = m_axis_cmac_tx_322mhz_tdest[5:3];
+    assign axis_out_if[1].tdest  = m_axis_cmac_tx_322mhz_tdest[7:4];
     assign axis_out_if[1].tdata  = m_axis_cmac_tx_322mhz_tdata[1023:512];
     assign axis_out_if[1].tkeep  = m_axis_cmac_tx_322mhz_tkeep[127:64];
     assign axis_out_if[1].tuser  = m_axis_cmac_tx_322mhz_tuser_err[1];
@@ -201,7 +202,8 @@ module tb;
     // Assign AXI-S ADPT input interfaces
     assign s_axis_adpt_tx_322mhz_tvalid[0]    = axis_in_if[2].tvalid;
     assign s_axis_adpt_tx_322mhz_tlast[0]     = axis_in_if[2].tlast;
-    assign s_axis_adpt_tx_322mhz_tdest[2:0]   = axis_in_if[2].tdest;
+    assign s_axis_adpt_tx_322mhz_tid[15:0]    = axis_in_if[2].tid;
+    assign s_axis_adpt_tx_322mhz_tdest[1:0]   = axis_in_if[2].tdest;
     assign s_axis_adpt_tx_322mhz_tdata[511:0] = axis_in_if[2].tdata;
     assign s_axis_adpt_tx_322mhz_tkeep[63:0]  = axis_in_if[2].tkeep;
     assign s_axis_adpt_tx_322mhz_tuser_err[0] = axis_in_if[2].tuser;
@@ -209,7 +211,8 @@ module tb;
 
     assign s_axis_adpt_tx_322mhz_tvalid[1]    = axis_in_if[3].tvalid;
     assign s_axis_adpt_tx_322mhz_tlast[1]     = axis_in_if[3].tlast;
-    assign s_axis_adpt_tx_322mhz_tdest[5:3]   = axis_in_if[3].tdest;
+    assign s_axis_adpt_tx_322mhz_tid[31:16]   = axis_in_if[3].tid;
+    assign s_axis_adpt_tx_322mhz_tdest[3:2]   = axis_in_if[3].tdest;
     assign s_axis_adpt_tx_322mhz_tdata[1023:512] = axis_in_if[3].tdata;
     assign s_axis_adpt_tx_322mhz_tkeep[127:64]  = axis_in_if[3].tkeep;
     assign s_axis_adpt_tx_322mhz_tuser_err[1] = axis_in_if[3].tuser;
@@ -220,7 +223,7 @@ module tb;
     assign axis_out_if[2].aresetn= ~rst;
     assign axis_out_if[2].tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
     assign axis_out_if[2].tlast  = m_axis_adpt_rx_322mhz_tlast[0];
-    assign axis_out_if[2].tdest  = m_axis_adpt_rx_322mhz_tdest[1:0];
+    assign axis_out_if[2].tdest  = m_axis_adpt_rx_322mhz_tdest[3:0];
     assign axis_out_if[2].tdata  = m_axis_adpt_rx_322mhz_tdata[511:0];
     assign axis_out_if[2].tkeep  = m_axis_adpt_rx_322mhz_tkeep[63:0];
     assign axis_out_if[2].tuser  = m_axis_adpt_rx_322mhz_tuser_err[0];
@@ -230,7 +233,7 @@ module tb;
     assign axis_out_if[3].aresetn= ~rst;
     assign axis_out_if[3].tvalid = m_axis_adpt_rx_322mhz_tvalid[1];
     assign axis_out_if[3].tlast  = m_axis_adpt_rx_322mhz_tlast[1];
-    assign axis_out_if[3].tdest  = m_axis_adpt_rx_322mhz_tdest[3:2];
+    assign axis_out_if[3].tdest  = m_axis_adpt_rx_322mhz_tdest[7:4];
     assign axis_out_if[3].tdata  = m_axis_adpt_rx_322mhz_tdata[1023:512];
     assign axis_out_if[3].tkeep  = m_axis_adpt_rx_322mhz_tkeep[127:64];
     assign axis_out_if[3].tuser  = m_axis_adpt_rx_322mhz_tuser_err[1];

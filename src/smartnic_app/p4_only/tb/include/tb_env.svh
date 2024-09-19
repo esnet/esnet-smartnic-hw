@@ -30,24 +30,24 @@ class tb_env extends std_verif_pkg::base;
 
     // AXI-S interfaces
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_in_vif  [NUM_PORTS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [NUM_PORTS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_c2h_vif [NUM_PORTS * HOST_NUM_IFS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif [NUM_PORTS * HOST_NUM_IFS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_h2c_vif [NUM_PORTS * HOST_NUM_IFS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_vif [NUM_PORTS * HOST_NUM_IFS];
 
     // AXI3 interfaces to HBM
     virtual axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_vif [16];
 
     // Drivers/Monitors
     axi4s_driver #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
     ) axis_driver  [NUM_PORTS * (HOST_NUM_IFS + 1)];
 
     axi4s_monitor #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
     ) axis_monitor [NUM_PORTS * (HOST_NUM_IFS + 1)];
 
     // AXI-L agent

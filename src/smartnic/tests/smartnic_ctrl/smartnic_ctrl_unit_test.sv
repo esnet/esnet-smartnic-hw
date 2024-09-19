@@ -162,6 +162,96 @@ module smartnic_ctrl_unit_test;
         `FAIL_UNLESS(got_data == exp_data);
     `SVTEST_END
 
+    // Test hash2qid access
+    `SVTEST(hash2qid)
+        logic [47:0] exp_data;
+        logic [47:0] got_data;
+
+        exp_data = 48'h123_456_789_abc;
+
+        env.smartnic_hash2qid_0_reg_blk_agent.write_q_config  (0, exp_data[11:0]);
+        env.smartnic_hash2qid_0_reg_blk_agent.write_q_config  (1, exp_data[23:12]);
+        env.smartnic_hash2qid_0_reg_blk_agent.write_q_config  (2, exp_data[35:24]);
+        env.smartnic_hash2qid_0_reg_blk_agent.write_q_config  (3, exp_data[47:36]);
+
+        env.smartnic_hash2qid_0_reg_blk_agent.read_q_config   (0, got_data[11:0]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_q_config   (1, got_data[23:12]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_q_config   (2, got_data[35:24]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_q_config   (3, got_data[47:36]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 48'hcba_987_654_321;
+
+        env.smartnic_hash2qid_0_reg_blk_agent.write_pf_table  (0, exp_data[11:0]);
+        env.smartnic_hash2qid_0_reg_blk_agent.write_vf0_table (0, exp_data[23:12]);
+	env.smartnic_hash2qid_0_reg_blk_agent.write_vf1_table (0, exp_data[35:24]);
+        env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table (0, exp_data[47:36]);
+
+        env.smartnic_hash2qid_0_reg_blk_agent.read_pf_table   (0, got_data[11:0]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_vf0_table  (0, got_data[23:12]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_vf1_table  (0, got_data[35:24]);
+        env.smartnic_hash2qid_0_reg_blk_agent.read_vf2_table  (0, got_data[47:36]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+    `SVTEST_END
+
+    // Test igr_q_config_0 access
+    `SVTEST(igr_q_config_0)
+        logic [47:0] exp_data;
+        logic [47:0] got_data;
+
+        exp_data = 48'h123_456_789_abc;
+
+        env.smartnic_reg_blk_agent.write_igr_q_config_0 (0, exp_data[23:0]);
+        env.smartnic_reg_blk_agent.write_igr_q_config_0 (1, exp_data[47:24]);
+
+        env.smartnic_reg_blk_agent.read_igr_q_config_0  (0, got_data[23:0]);
+        env.smartnic_reg_blk_agent.read_igr_q_config_0  (1, got_data[47:24]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 48'hcba_987_654_321;
+
+        env.smartnic_reg_blk_agent.write_igr_q_config_0 (2, exp_data[23:0]);
+        env.smartnic_reg_blk_agent.write_igr_q_config_0 (3, exp_data[47:24]);
+
+        env.smartnic_reg_blk_agent.read_igr_q_config_0  (2, got_data[23:0]);
+        env.smartnic_reg_blk_agent.read_igr_q_config_0  (3, got_data[47:24]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+    `SVTEST_END
+
+    // Test igr_q_config_1 access
+    `SVTEST(igr_q_config_1)
+        logic [47:0] exp_data;
+        logic [47:0] got_data;
+
+        exp_data = 48'h123_456_789_abc;
+
+        env.smartnic_reg_blk_agent.write_igr_q_config_1 (0, exp_data[23:0]);
+        env.smartnic_reg_blk_agent.write_igr_q_config_1 (1, exp_data[47:24]);
+
+        env.smartnic_reg_blk_agent.read_igr_q_config_1  (0, got_data[23:0]);
+        env.smartnic_reg_blk_agent.read_igr_q_config_1  (1, got_data[47:24]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+        exp_data = 48'hcba_987_654_321;
+
+        env.smartnic_reg_blk_agent.write_igr_q_config_1 (2, exp_data[23:0]);
+        env.smartnic_reg_blk_agent.write_igr_q_config_1 (3, exp_data[47:24]);
+
+        env.smartnic_reg_blk_agent.read_igr_q_config_1  (2, got_data[23:0]);
+        env.smartnic_reg_blk_agent.read_igr_q_config_1  (3, got_data[47:24]);
+
+        `FAIL_UNLESS(got_data == exp_data);
+
+    `SVTEST_END
+
+
     `SVUNIT_TESTS_END
 
 endmodule

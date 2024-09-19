@@ -16,27 +16,9 @@
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();
 
-        // Configure bypass path to send all traffic to port 3 (i.e. HOST_1, not CMAC_0).
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[0], 2'h3 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[1], 2'h3 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[2], 2'h3 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_BYPASS_TDEST[3], 2'h3 );
-
-        // Configure tid for all ports.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[0], 2'h0 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[1], 2'h1 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[2], 2'h2 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TID[3], 2'h3 );
-
-        // Configure tdest remap for all ports.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[0], 2'h0 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[1], 2'h1 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[2], 2'h2 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_0_TDEST_REMAP[3], 2'h3 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[0], 2'h0 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[1], 2'h1 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[2], 2'h2 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_APP_1_TDEST_REMAP[3], 2'h3 );
+        // Configure ingress queue assignment (all ingress host traffic is for VF2. base=0, num_q=1).
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h0});
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h0});
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to vitisnetp4 block.
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
@@ -45,6 +27,9 @@
         // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to vitisnetp4 block.
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2'h1 );
+
+        // Configure igr_demux_sel to steer traffic to datapath (app_igr).
+        //p4_only_reg_agent.write_igr_demux_sel({1'b1, IGR_DEMUX_SEL_VALUE_APP_IGR});
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -145,7 +130,7 @@
                                                  out_port, rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
                             debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                             compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
-                           `FAIL_IF_LOG( dest != out_port,
+                           `FAIL_IF_LOG( dest[0] != out_port[0],
                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, out_port) )
                         end
                     join_any

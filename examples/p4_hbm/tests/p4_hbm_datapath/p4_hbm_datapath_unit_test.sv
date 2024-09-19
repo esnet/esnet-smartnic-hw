@@ -127,7 +127,7 @@ module p4_hbm_datapath_unit_test;
 
 
      task automatic run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
+        input string testdir, input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input port_t dest_port=0,
         input write_p4_tables=1, VERBOSE=1 );
 
         string filename;
@@ -146,7 +146,7 @@ module p4_hbm_datapath_unit_test;
         automatic bit rx_done = 0;
         byte          rx_data[$];
         port_t        id;
-        egr_tdest_t   dest;
+        port_t        dest;
         bit           user;
 
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);

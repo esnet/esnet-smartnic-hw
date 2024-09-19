@@ -12,6 +12,7 @@ module smartnic_timestamp
     logic [91:0] timestamp_cntr,  freerun_cntr;
     logic [63:0] timestamp_latch, freerun_latch;
     logic        timestamp_rd_latch_wr_evt_d1;
+    logic [63:0] timestamp_p;
 
     // Timestamp counter and access logic.
     always @(posedge clk) begin
@@ -39,7 +40,10 @@ module smartnic_timestamp
        end
     end
 
-    assign timestamp = timestamp_cntr[91:28];
+    always @(posedge clk) begin
+        timestamp_p <= timestamp_cntr[91:28];
+        timestamp   <= timestamp_p;
+    end
 
     always @(posedge clk)
        if (smartnic_regs.timestamp_rd_latch_wr_evt) begin

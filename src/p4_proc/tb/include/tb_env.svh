@@ -27,20 +27,20 @@ class tb_env extends std_verif_pkg::base;
 
     // AXI-S input interface
     virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_in_vif  [2];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [2];
     virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [2];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2];
 
     // AXI3 interfaces to HBM
     virtual axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_vif [16];
 
     // Drivers/Monitors
     axi4s_driver #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
     ) axis_driver  [2];
 
     axi4s_monitor #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
     ) axis_monitor [2];
 
     // AXI-L agent
@@ -69,7 +69,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor [0]     = new(.BIGENDIAN(bigendian));
         axis_monitor [1]     = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent      = new("axi4l_reg_agent");
+        vitisnetp4_reg_agent = new("axi4l_reg_agent");
         p4_proc_reg_agent    = new("p4_proc_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction

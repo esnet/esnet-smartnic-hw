@@ -75,8 +75,8 @@ module smartnic_app
     input  logic [(NUM_PORTS*512)-1:0] axis_app_igr_tdata,
     input  logic [(NUM_PORTS* 64)-1:0] axis_app_igr_tkeep,
     input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tlast,
-    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tid,
-    input  logic [(NUM_PORTS*  2)-1:0] axis_app_igr_tdest,
+    input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tid,
+    input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tdest,
     input  logic [(NUM_PORTS* 16)-1:0] axis_app_igr_tuser_pid,
 
     // AXI-S app_egr interface
@@ -86,8 +86,8 @@ module smartnic_app
     output logic [(NUM_PORTS*512)-1:0] axis_app_egr_tdata,
     output logic [(NUM_PORTS* 64)-1:0] axis_app_egr_tkeep,
     output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tlast,
-    output logic [(NUM_PORTS*  2)-1:0] axis_app_egr_tid,
-    output logic [(NUM_PORTS*  3)-1:0] axis_app_egr_tdest,
+    output logic [(NUM_PORTS*  4)-1:0] axis_app_egr_tid,
+    output logic [(NUM_PORTS*  4)-1:0] axis_app_egr_tdest,
     output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_pid,
     output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_trunc_enable,
     output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_trunc_length,
@@ -101,8 +101,8 @@ module smartnic_app
     input  logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_h2c_tdata,
     input  logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_h2c_tkeep,
     input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tlast,
-    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tid,
-    input  logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_h2c_tdest,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_h2c_tid,
+    input  logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_h2c_tdest,
     input  logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_h2c_tuser_pid,
 
     // AXI-S h2c interface
@@ -112,8 +112,8 @@ module smartnic_app
     output logic [(HOST_NUM_IFS*NUM_PORTS*512)-1:0] axis_c2h_tdata,
     output logic [(HOST_NUM_IFS*NUM_PORTS* 64)-1:0] axis_c2h_tkeep,
     output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tlast,
-    output logic [(HOST_NUM_IFS*NUM_PORTS*  2)-1:0] axis_c2h_tid,
-    output logic [(HOST_NUM_IFS*NUM_PORTS*  3)-1:0] axis_c2h_tdest,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_c2h_tid,
+    output logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_c2h_tdest,
     output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_pid,
     output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_trunc_enable,
     output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_trunc_length,
@@ -183,7 +183,7 @@ module smartnic_app
     axi4l_intf #() app_axil_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
-                 .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_egr [NUM_PORTS] ();
+                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_egr [NUM_PORTS] ();
 
     tuser_smartnic_meta_t  axis_app_egr_tuser[NUM_PORTS];
 
@@ -308,14 +308,14 @@ module smartnic_app
                 .tdata   ( axis_app_igr_tdata  [j*512 +: 512] ),
                 .tkeep   ( axis_app_igr_tkeep  [j* 64 +:  64] ),
                 .tlast   ( axis_app_igr_tlast  [j*  1 +:   1] ),
-                .tid     ( axis_app_igr_tid    [j*  2 +:   2] ),
-                .tdest   ( axis_app_igr_tdest  [j*  2 +:   2] ),
+                .tid     ( axis_app_igr_tid    [j*  4 +:   4] ),
+                .tdest   ( axis_app_igr_tdest  [j*  4 +:   4] ),
                 .tuser   ( axis_app_igr_tuser  [j] ),
                 .axi4s_if( axis_app_igr[j] )
             );
             // -- AXI-S interface to switch
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
             ) i_axi4s_to_signals_to_switch (
                 .aclk    ( ), // Output
                 .aresetn ( ), // Output
@@ -324,8 +324,8 @@ module smartnic_app
                 .tdata   ( axis_app_egr_tdata  [j*512 +: 512] ),
                 .tkeep   ( axis_app_egr_tkeep  [j* 64 +:  64] ),
                 .tlast   ( axis_app_egr_tlast  [j*  1 +:   1] ),
-                .tid     ( axis_app_egr_tid    [j*  2 +:   2] ),
-                .tdest   ( axis_app_egr_tdest  [j*  3 +:   3] ),
+                .tid     ( axis_app_egr_tid    [j*  4 +:   4] ),
+                .tdest   ( axis_app_egr_tdest  [j*  4 +:   4] ),
                 .tuser   ( axis_app_egr_tuser  [j] ),
                 .axi4s_if( axis_app_egr[j] )
             );
@@ -342,14 +342,14 @@ module smartnic_app
                     .tdata   ( axis_h2c_tdata  [(i*NUM_PORTS+j)*512 +: 512] ),
                     .tkeep   ( axis_h2c_tkeep  [(i*NUM_PORTS+j)* 64 +:  64] ),
                     .tlast   ( axis_h2c_tlast  [(i*NUM_PORTS+j)*  1 +:   1] ),
-                    .tid     ( axis_h2c_tid    [(i*NUM_PORTS+j)*  2 +:   2] ),
-                    .tdest   ( axis_h2c_tdest  [(i*NUM_PORTS+j)*  2 +:   2] ),
+                    .tid     ( axis_h2c_tid    [(i*NUM_PORTS+j)*  4 +:   4] ),
+                    .tdest   ( axis_h2c_tdest  [(i*NUM_PORTS+j)*  4 +:   4] ),
                     .tuser   ( axis_h2c_tuser  [i][j] ),
                     .axi4s_if( axis_h2c[i][j] )
                 );
                 // AXI-S c2h interface
                 axi4s_intf_to_signals #(
-                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t), .TUSER_T(tuser_smartnic_meta_t)
+                    .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
                 ) axis_c2h_to_signals (
                     .aclk    ( ), // Output
                     .aresetn ( ), // Output
@@ -358,8 +358,8 @@ module smartnic_app
                     .tdata   ( axis_c2h_tdata  [(i*NUM_PORTS+j)*512 +: 512] ),
                     .tkeep   ( axis_c2h_tkeep  [(i*NUM_PORTS+j)* 64 +:  64] ),
                     .tlast   ( axis_c2h_tlast  [(i*NUM_PORTS+j)*  1 +:   1] ),
-                    .tid     ( axis_c2h_tid    [(i*NUM_PORTS+j)*  2 +:   2] ),
-                    .tdest   ( axis_c2h_tdest  [(i*NUM_PORTS+j)*  3 +:   3] ),
+                    .tid     ( axis_c2h_tid    [(i*NUM_PORTS+j)*  4 +:   4] ),
+                    .tdest   ( axis_c2h_tdest  [(i*NUM_PORTS+j)*  4 +:   4] ),
                     .tuser   ( axis_c2h_tuser  [i][j] ),
                     .axi4s_if( axis_c2h[i][j] )
                 );
