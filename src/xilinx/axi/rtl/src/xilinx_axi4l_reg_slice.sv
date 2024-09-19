@@ -25,7 +25,7 @@ module xilinx_axi4l_reg_slice
     localparam int DATA_WID = 8*get_axi4l_bus_width_in_bytes(BUS_WIDTH);
 
     // Xilinx AXI-L register slice IP
-    axi_register_slice_v2_1_29_axi_register_slice #(
+    axi_register_slice_v2_1_30_axi_register_slice #(
         .C_FAMILY              ( DEVICE_FAMILY ),
         .C_AXI_PROTOCOL        ( XILINX_AXI_PROTOCOL_AXI4L ),
         .C_AXI_ID_WIDTH        ( 1 ),

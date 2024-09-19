@@ -22,7 +22,7 @@ module xilinx_axi4s_reg_slice
     endfunction
 
     // Xilinx AXI-S register slice
-    axis_register_slice_v1_1_29_axis_register_slice #(
+    axis_register_slice_v1_1_30_axis_register_slice #(
         .C_FAMILY            ( DEVICE_FAMILY ),
         .C_AXIS_TDATA_WIDTH  ( DATA_BYTE_WID*8 ),
         .C_AXIS_TID_WIDTH    ( $bits(TID_T) ),

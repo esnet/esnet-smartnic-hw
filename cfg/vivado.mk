@@ -13,7 +13,7 @@ VIVADO_VERSION = 2023.2
 # 'Patched' release version
 # - e.g. 2022.1, 2022.1.1, 2022.1.1_AR88888
 # - matches output of `vivado -version`, e.g. Vivado v2022.1.1 (64-bit)
-VIVADO_VERSION__WITH_PATCHES = 2023.2
+VIVADO_VERSION__WITH_PATCHES = 2023.2.2
 
 # ------------------------------------------------------------------
 # Vivado IP configuration
