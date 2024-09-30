@@ -75,7 +75,7 @@ module smartnic
   input [NUM_CMAC-1:0]        cmac_clk
 );
 
-  localparam int HOST_NUM_IFS = 2;
+  localparam int HOST_NUM_IFS = 3;
 
   // Imports
   import smartnic_pkg::*;
@@ -659,10 +659,10 @@ module smartnic
 
 
    //------------------------ tid assignment logic --------------
-   logic host_if_sel [NUM_CMAC][3];  // TODO - parameterize when HOST_NUM_IF is increased to 3.
+   logic host_if_sel [NUM_CMAC][HOST_NUM_IFS];
 
    generate
-       for (genvar i = 0; i < 3; i += 1) begin : g__host_if_sel
+       for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin : g__host_if_sel
            always @(posedge core_clk) begin
                host_if_sel[0][i] <= ( axis_host_to_core[0].tid[11:0] >=  smartnic_regs.igr_q_config_0[i].base) &&
                                     ( axis_host_to_core[0].tid[11:0] <  (smartnic_regs.igr_q_config_0[i].base + smartnic_regs.igr_q_config_0[i].num_q) );
@@ -807,7 +807,7 @@ module smartnic
 
        always_comb begin
            __axis_hash2qid[i].tuser = _axis_hash2qid[i].tuser;
-           __axis_hash2qid[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with host VF id.
+           __axis_hash2qid[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with PF VF2 id.
        end
 
        axi4s_intf_connector core_to_host_mux_pipe_0 (.axi4s_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_to_rx(core_to_host_mux[i][0]));

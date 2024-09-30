@@ -7,7 +7,7 @@ class tb_env extends std_verif_pkg::base;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
-    localparam int HOST_NUM_IFS = 2;   // Number of HOST interfaces.
+    localparam int HOST_NUM_IFS = 3;   // Number of HOST interfaces.
     localparam int NUM_PORTS = 2;      // Number of processor ports (per vitisnetp4 processor).
 
     // -- Timeouts
@@ -77,12 +77,16 @@ class tb_env extends std_verif_pkg::base;
         axis_driver  [3]     = new(.BIGENDIAN(bigendian));
         axis_driver  [4]     = new(.BIGENDIAN(bigendian));
         axis_driver  [5]     = new(.BIGENDIAN(bigendian));
+        axis_driver  [6]     = new(.BIGENDIAN(bigendian));
+        axis_driver  [7]     = new(.BIGENDIAN(bigendian));
         axis_monitor [0]     = new(.BIGENDIAN(bigendian));
         axis_monitor [1]     = new(.BIGENDIAN(bigendian));
         axis_monitor [2]     = new(.BIGENDIAN(bigendian));
         axis_monitor [3]     = new(.BIGENDIAN(bigendian));
         axis_monitor [4]     = new(.BIGENDIAN(bigendian));
         axis_monitor [5]     = new(.BIGENDIAN(bigendian));
+        axis_monitor [6]     = new(.BIGENDIAN(bigendian));
+        axis_monitor [7]     = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
         vitisnetp4_reg_agent = new("axi4l_reg_agent");
         p4_only_reg_agent    = new("p4_only_reg_agent", reg_agent, 'h0000);
@@ -96,12 +100,16 @@ class tb_env extends std_verif_pkg::base;
         axis_driver[3].axis_vif       = axis_h2c_vif[1];
         axis_driver[4].axis_vif       = axis_h2c_vif[2];
         axis_driver[5].axis_vif       = axis_h2c_vif[3];
+        axis_driver[6].axis_vif       = axis_h2c_vif[4];
+        axis_driver[7].axis_vif       = axis_h2c_vif[5];
         axis_monitor[0].axis_vif      = axis_out_vif[0];
         axis_monitor[1].axis_vif      = axis_out_vif[1];
         axis_monitor[2].axis_vif      = axis_c2h_vif[0];
         axis_monitor[3].axis_vif      = axis_c2h_vif[1];
         axis_monitor[4].axis_vif      = axis_c2h_vif[2];
         axis_monitor[5].axis_vif      = axis_c2h_vif[3];
+        axis_monitor[6].axis_vif      = axis_c2h_vif[4];
+        axis_monitor[7].axis_vif      = axis_c2h_vif[5];
         ts_agent.timestamp_vif        = timestamp_vif;
         reg_agent.axil_vif            = axil_vif;
         vitisnetp4_reg_agent.axil_vif = axil_vitisnetp4_vif;
@@ -116,12 +124,16 @@ class tb_env extends std_verif_pkg::base;
         axis_driver[3].idle();
         axis_driver[4].idle();
         axis_driver[5].idle();
+        axis_driver[6].idle();
+        axis_driver[7].idle();
         axis_monitor[0].idle();
         axis_monitor[1].idle();
         axis_monitor[2].idle();
         axis_monitor[3].idle();
         axis_monitor[4].idle();
         axis_monitor[5].idle();
+        axis_monitor[6].idle();
+        axis_monitor[7].idle();
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
         vitisnetp4_reg_agent._wait(32);
