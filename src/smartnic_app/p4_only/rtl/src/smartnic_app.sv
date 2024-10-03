@@ -1,7 +1,7 @@
 module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
-    parameter int HOST_NUM_IFS = 2,     // Number of HOST interfaces.
+    parameter int HOST_NUM_IFS = 3,     // Number of HOST interfaces.
     parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
@@ -645,7 +645,7 @@ module smartnic_app
             axi4s_intf_pipe axis_demux_out_pipe_0 ( .axi4s_if_from_tx(axis_demux_out[i][0]), .axi4s_if_to_rx(axis_to_smartnic_app_igr[i]) );
             axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(axis_c2h[0][i]) );
 
-            //axi4s_intf_tx_term   axis_c2h_2_tx_term      (.axi4s_if(axis_c2h[2][i]));   // temporarily unused c2h[2] i/f (p4 extern).
+            axi4s_intf_tx_term  axis_c2h_2_tx_term  (.axi4s_if(axis_c2h[2][i]));  // temporarily unused c2h[2] i/f (p4 extern).
         end
     endgenerate
 
@@ -708,7 +708,7 @@ module smartnic_app
                 .axi4s_out  ( axis_from_mux[i] )
             );
 
-            //axi4s_intf_rx_sink  axis_h2c_2_rx_sink_inst  (.axi4s_if(axis_h2c[2][i]));  // temporarily unused h2c[2] i/f (p4 extern).
+            axi4s_intf_rx_sink  axis_h2c_2_rx_sink_inst  (.axi4s_if(axis_h2c[2][i]));  // temporarily unused h2c[2] i/f (p4 extern).
 
         end
     endgenerate

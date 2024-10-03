@@ -6,7 +6,7 @@ module tb;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
 
-    localparam int HOST_NUM_IFS = 2;  // Number of HOST interfaces.
+    localparam int HOST_NUM_IFS = 3;  // Number of HOST interfaces.
     localparam int NUM_PORTS = 2;     // Number of processor ports (per vitisnetp4 processor).
 
     //===================================
@@ -461,12 +461,16 @@ module tb;
             env.axis_h2c_vif[1] = axis_h2c_if[1];
             env.axis_h2c_vif[2] = axis_h2c_if[2];
             env.axis_h2c_vif[3] = axis_h2c_if[3];
+            env.axis_h2c_vif[4] = axis_h2c_if[4];
+            env.axis_h2c_vif[5] = axis_h2c_if[5];
             env.axis_out_vif[0] = axis_out_if[0];
             env.axis_out_vif[1] = axis_out_if[1];
             env.axis_c2h_vif[0] = axis_c2h_if[0];
             env.axis_c2h_vif[1] = axis_c2h_if[1];
             env.axis_c2h_vif[2] = axis_c2h_if[2];
             env.axis_c2h_vif[3] = axis_c2h_if[3];
+            env.axis_c2h_vif[4] = axis_c2h_if[4];
+            env.axis_c2h_vif[5] = axis_c2h_if[5];
 
             env.axi_to_hbm_vif = axi_to_hbm;
 

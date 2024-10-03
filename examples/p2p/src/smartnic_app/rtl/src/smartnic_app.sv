@@ -1,7 +1,7 @@
 module smartnic_app
 #(
     parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
-    parameter int HOST_NUM_IFS = 2,     // Number of HOST interfaces.
+    parameter int HOST_NUM_IFS = 3,     // Number of HOST interfaces.
     parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
