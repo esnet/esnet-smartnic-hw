@@ -25,6 +25,7 @@ module tb;
 
     axi4l_intf axil_if       ();
     axi4l_intf axil_to_vitisnetp4 ();
+    axi4l_intf axil_to_extern ();
 
     axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_in_if  [NUM_PORTS] ();
@@ -34,6 +35,10 @@ module tb;
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_vitisnetp4 ();
     axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_vitisnetp4 ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_extern ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_extern ();
 
     axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
 
@@ -68,8 +73,17 @@ module tb;
         .user_metadata_in        ( user_metadata_in ),
         .user_metadata_out_valid ( user_metadata_out_valid ),
         .user_metadata_out       ( user_metadata_out ),
+        .timestamp               ( timestamp ),
+        .egr_flow_ctl            ( '0 ),
+        .axil_to_extern          ( axil_to_extern ),
+        .axis_to_extern          ( axis_to_extern ),
+        .axis_from_extern        ( axis_from_extern ),
         .axi_to_hbm              ( axi_to_hbm )
     );
+
+    axi4l_intf_controller_term   axil_term     ( .axi4l_if(axil_to_extern) );
+    axi4s_intf_rx_sink   axis_from_extern_sink ( .axi4s_if(axis_from_extern) );
+    axi4s_intf_tx_term   axis_to_extern_term ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_to_extern) );
 
     mem_axi3_bfm #(.CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
 
