@@ -1,4 +1,4 @@
-// smartnic_app (empty) stub module. Used for platform level tests.
+// smartnic_app module black box. Used for platform level builds.
 (*black_box*) module smartnic_app
 #(
     parameter int HOST_NUM_IFS = 3,     // Number of HOST interfaces.
