@@ -19,8 +19,6 @@ package: build_package reg_package p4_package driver_package
 
 build_package:
 	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic_app/p4_only/build/proj/proj.runs/impl_1/smartnic_app_opt.dcp smartnic_app.dcp
-	@cp $(OUTPUT_ROOT)/$(BOARD)/vitisnetp4_igr/rtl/vitisnetp4_igr_app_pkg.sv smartnic_app_pkg.sv
-	@sed -i 's/vitisnetp4_igr/smartnic/g' smartnic_app_pkg.sv
 
 reg_package:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_app.p4_only.regio BOARD=$(BOARD)
