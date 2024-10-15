@@ -1,6 +1,5 @@
 module smartnic_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
     parameter int HOST_NUM_IFS = 3,     // Number of HOST interfaces.
     parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
@@ -121,52 +120,8 @@ module smartnic_app
     output logic [(HOST_NUM_IFS*NUM_PORTS* 12)-1:0] axis_c2h_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
-    input logic [3:0]    egr_flow_ctl,
+    input logic [3:0]    egr_flow_ctl
 
-    // AXI3 interfaces to HBM
-    // (synchronous to core clock domain)
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_aclk,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_aresetn,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_awid,
-    output logic [(AXI_HBM_NUM_IFS* 33)-1:0] axi_to_hbm_awaddr,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awlen,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_awsize,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_awburst,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_awlock,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awcache,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_awprot,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awqos,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awregion,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_awvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_awready,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_wid,
-    output logic [(AXI_HBM_NUM_IFS*256)-1:0] axi_to_hbm_wdata,
-    output logic [(AXI_HBM_NUM_IFS* 32)-1:0] axi_to_hbm_wstrb,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wlast,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wready,
-    input  logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_bid,
-    input  logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_bresp,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_bvalid,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_bready,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_arid,
-    output logic [(AXI_HBM_NUM_IFS* 33)-1:0] axi_to_hbm_araddr,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arlen,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_arsize,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_arburst,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_arlock,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arcache,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_arprot,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arqos,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arregion,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_arvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_arready,
-    input  logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_rid,
-    input  logic [(AXI_HBM_NUM_IFS*256)-1:0] axi_to_hbm_rdata,
-    input  logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_rresp,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rlast,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
 );
     import smartnic_pkg::*;
     import p4_proc_pkg::*;
@@ -174,10 +129,6 @@ module smartnic_app
 
     // Parameters
     localparam int  AXIS_DATA_BYTE_WID = 64;
-
-    localparam int  AXI_HBM_DATA_BYTE_WID = 32;
-    localparam int  AXI_HBM_ADDR_WID = 33;
-    localparam type AXI_HBM_ID_T = logic[5:0];
 
     // Interfaces
     axi4l_intf #() axil_if ();
@@ -246,11 +197,6 @@ module smartnic_app
             end
         end
     endgenerate
-
-
-    axi3_intf  #(
-        .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID), .ADDR_WID(AXI_HBM_ADDR_WID), .ID_T(AXI_HBM_ID_T)
-    ) axi_to_hbm [AXI_HBM_NUM_IFS] ();
 
     // -------------------------------------------------------------------------------------------------------
     // MAP FROM 'FLAT' SIGNAL REPRESENTATION TO INTERFACE REPRESENTATION (COMMON TO ALL APPLICATIONS)
@@ -382,66 +328,6 @@ module smartnic_app
     endgenerate
 
     // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_app_igr[0]));
-
-    // -- AXI memory interfaces to HBM
-    generate
-        for (genvar g_hbm_if = 0; g_hbm_if < AXI_HBM_NUM_IFS; g_hbm_if++) begin : g__hbm_if
-            axi3_intf_to_signals #(
-                .DATA_BYTE_WID(AXI_HBM_DATA_BYTE_WID),
-                .ADDR_WID     (AXI_HBM_ADDR_WID),
-                .ID_T         (AXI_HBM_ID_T)
-            ) i_axi3_intf_to_signals__hbm (
-                .axi3_if  ( axi_to_hbm [g_hbm_if] ),
-                .aclk     ( axi_to_hbm_aclk    [g_hbm_if*  1 +:   1] ),
-                .aresetn  ( axi_to_hbm_aresetn [g_hbm_if*  1 +:   1] ),
-                .awid     ( axi_to_hbm_awid    [g_hbm_if*  6 +:   6] ),
-                .awaddr   ( axi_to_hbm_awaddr  [g_hbm_if* 33 +:  33] ),
-                .awlen    ( axi_to_hbm_awlen   [g_hbm_if*  4 +:   4] ),
-                .awsize   ( axi_to_hbm_awsize  [g_hbm_if*  3 +:   3] ),
-                .awburst  ( axi_to_hbm_awburst [g_hbm_if*  2 +:   2] ),
-                .awlock   ( axi_to_hbm_awlock  [g_hbm_if*  2 +:   2] ),
-                .awcache  ( axi_to_hbm_awcache [g_hbm_if*  4 +:   4] ),
-                .awprot   ( axi_to_hbm_awprot  [g_hbm_if*  3 +:   3] ),
-                .awqos    ( axi_to_hbm_awqos   [g_hbm_if*  4 +:   4] ),
-                .awregion ( axi_to_hbm_awregion[g_hbm_if*  4 +:   4] ),
-                .awuser   (                                          ), // Unused
-                .awvalid  ( axi_to_hbm_awvalid [g_hbm_if*  1 +:   1] ),
-                .awready  ( axi_to_hbm_awready [g_hbm_if*  1 +:   1] ),
-                .wid      ( axi_to_hbm_wid     [g_hbm_if*  6 +:   6] ),
-                .wdata    ( axi_to_hbm_wdata   [g_hbm_if*256 +: 256] ),
-                .wstrb    ( axi_to_hbm_wstrb   [g_hbm_if* 32 +:  32] ),
-                .wlast    ( axi_to_hbm_wlast   [g_hbm_if*  1 +:   1] ),
-                .wuser    (                                          ), // Unused
-                .wvalid   ( axi_to_hbm_wvalid  [g_hbm_if*  1 +:   1] ),
-                .wready   ( axi_to_hbm_wready  [g_hbm_if*  1 +:   1] ),
-                .bid      ( axi_to_hbm_bid     [g_hbm_if*  6 +:   6] ),
-                .bresp    ( axi_to_hbm_bresp   [g_hbm_if*  2 +:   2] ),
-                .buser    ( '0                                       ), // Unused
-                .bvalid   ( axi_to_hbm_bvalid  [g_hbm_if*  1 +:   1] ),
-                .bready   ( axi_to_hbm_bready  [g_hbm_if*  1 +:   1] ),
-                .arid     ( axi_to_hbm_arid    [g_hbm_if*  6 +:   6] ),
-                .araddr   ( axi_to_hbm_araddr  [g_hbm_if* 33 +:  33] ),
-                .arlen    ( axi_to_hbm_arlen   [g_hbm_if*  4 +:   4] ),
-                .arsize   ( axi_to_hbm_arsize  [g_hbm_if*  3 +:   3] ),
-                .arburst  ( axi_to_hbm_arburst [g_hbm_if*  2 +:   2] ),
-                .arlock   ( axi_to_hbm_arlock  [g_hbm_if*  2 +:   2] ),
-                .arcache  ( axi_to_hbm_arcache [g_hbm_if*  4 +:   4] ),
-                .arprot   ( axi_to_hbm_arprot  [g_hbm_if*  3 +:   3] ),
-                .arqos    ( axi_to_hbm_arqos   [g_hbm_if*  4 +:   4] ),
-                .arregion ( axi_to_hbm_arregion[g_hbm_if*  4 +:   4] ),
-                .aruser   (                                          ), // Unused
-                .arvalid  ( axi_to_hbm_arvalid [g_hbm_if*  1 +:   1] ),
-                .arready  ( axi_to_hbm_arready [g_hbm_if*  1 +:   1] ),
-                .rid      ( axi_to_hbm_rid     [g_hbm_if*  6 +:   6] ),
-                .rdata    ( axi_to_hbm_rdata   [g_hbm_if*256 +: 256] ),
-                .rresp    ( axi_to_hbm_rresp   [g_hbm_if*  2 +:   2] ),
-                .rlast    ( axi_to_hbm_rlast   [g_hbm_if*  1 +:   1] ),
-                .ruser    ( '0                                       ), // Unused
-                .rvalid   ( axi_to_hbm_rvalid  [g_hbm_if*  1 +:   1] ),
-                .rready   ( axi_to_hbm_rready  [g_hbm_if*  1 +:   1] )
-            );
-        end : g__hbm_if
-    endgenerate
 
     // -------------------------------------------------------------------------------------------------------
     // Input/Output Pipelining
@@ -599,8 +485,7 @@ module smartnic_app
                 .egr_flow_ctl            ( egr_flow_ctl ),
                 .axil_to_extern          ( axil_to_extern[0] ),
                 .axis_to_extern          ( _axis_h2c[2][0] ),
-                .axis_from_extern        ( _axis_c2h[2][0] ),
-                .axi_to_hbm              ( axi_to_hbm )
+                .axis_from_extern        ( _axis_c2h[2][0] )
             );
 
         // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(axis_to_vitisnetp4[0]));
@@ -614,10 +499,6 @@ module smartnic_app
                 axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(_axis_app_igr[i]), .axi4s_if_to_rx(axis_to_demux[i]) );
             end
 
-            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-                axi3_intf_controller_term axi_to_hbm_term (.axi3_if(axi_to_hbm[g_hbm_if]));
-            end : g__hbm_if
-
         end
     endgenerate
 
@@ -626,14 +507,7 @@ module smartnic_app
     // ----------------------------------------------------------------------
     localparam logic P4_PROC_EGR_MODE = 0;
 
-    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_egr[AXI_HBM_NUM_IFS] ();
-
     generate
-        for (genvar g_hbm1_if = 0; g_hbm1_if < AXI_HBM_NUM_IFS; g_hbm1_if++) begin : g__hbm1_if
-            // For now, terminate vitisnetp4_1 HBM memory interfaces (unused)
-            axi3_intf_controller_term axi_to_hbm_egr_term (.axi3_if(axi_to_hbm_egr[g_hbm1_if]));
-        end : g__hbm1_if
-
         if (P4_PROC_EGR_MODE) begin
             p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_egr (
                 .core_clk                       ( core_clk ),
@@ -664,8 +538,7 @@ module smartnic_app
                 .egr_flow_ctl            ( egr_flow_ctl ),
                 .axil_to_extern          ( axil_to_extern[1] ),
                 .axis_to_extern          ( _axis_h2c[2][1] ),
-                .axis_from_extern        ( _axis_c2h[2][1] ),
-                .axi_to_hbm              ( axi_to_hbm_egr )
+                .axis_from_extern        ( _axis_c2h[2][1] )
             );
 
         end else begin  // P4_PROC_EGR_MODE == 0
@@ -675,10 +548,6 @@ module smartnic_app
             for (genvar i = 0; i < NUM_PORTS; i += 1) begin
                 axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(_axis_app_egr[i]) );
             end
-
-            for (genvar g_hbm_if = 0; g_hbm_if < 16; g_hbm_if++) begin : g__hbm_if
-                axi3_intf_controller_term axi_to_hbm_egr_term (.axi3_if(axi_to_hbm_egr[g_hbm_if]));
-            end : g__hbm_if
         end
 
     endgenerate

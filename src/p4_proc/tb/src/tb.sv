@@ -40,8 +40,6 @@ module tb;
     axi4s_intf #(.TUSER_T(tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_extern ();
 
-    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
-
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;
     user_metadata_t user_metadata_out, user_metadata_out_latch;
@@ -77,15 +75,12 @@ module tb;
         .egr_flow_ctl            ( '0 ),
         .axil_to_extern          ( axil_to_extern ),
         .axis_to_extern          ( axis_to_extern ),
-        .axis_from_extern        ( axis_from_extern ),
-        .axi_to_hbm              ( axi_to_hbm )
+        .axis_from_extern        ( axis_from_extern )
     );
 
     axi4l_intf_controller_term   axil_term     ( .axi4l_if(axil_to_extern) );
     axi4s_intf_rx_sink   axis_from_extern_sink ( .axi4s_if(axis_from_extern) );
     axi4s_intf_tx_term   axis_to_extern_term ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_to_extern) );
-
-    mem_axi3_bfm #(.CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
 
     //===================================
     // Local signals
@@ -150,8 +145,6 @@ module tb;
             env.axis_out_vif[0] = axis_out_if[0];
             env.axis_in_vif[1]  = axis_in_if[1];
             env.axis_out_vif[1] = axis_out_if[1];
-
-            env.axi_to_hbm_vif = axi_to_hbm;
 
             env.connect();
         end

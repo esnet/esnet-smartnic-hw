@@ -31,7 +31,6 @@ SUBCOMPONENTS = \
     vitisnetp4_igr.rtl \
     vitisnetp4_egr.rtl \
     axi4l.rtl@$(COMMON_LIB_NAME) \
-    axi3.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
