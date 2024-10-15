@@ -1,6 +1,6 @@
-name: p4_only
+name: smartnic_app
 info: |
-  p4_only is the application regio block for the p4_only application core used on the esnet smart nic platform.
+  smartnic_app is the application regio block for the application core used on the esnet smart nic platform.
 
 regs:
   - default:

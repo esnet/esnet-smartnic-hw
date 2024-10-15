@@ -2,9 +2,9 @@ name: smartnic_to_app
 
 decoders:
   smartnic_app_decoder: &smartnic_app_decoder
-    !include ../src/smartnic/regio/smartnic_app_decoder.yaml
+    !include ../src/smartnic_app/regio/smartnic_app_decoder.yaml
   smartnic_p4_decoder: &smartnic_p4_decoder
-    !include ../src/smartnic/regio/smartnic_p4_decoder.yaml
+    !include ../src/smartnic_app/regio/smartnic_p4_decoder.yaml
 
 interfaces:
   - decoder: *smartnic_app_decoder

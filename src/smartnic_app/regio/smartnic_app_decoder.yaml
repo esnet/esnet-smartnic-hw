@@ -1,0 +1,39 @@
+name: smartnic_app
+
+blocks:
+  smartnic_app: &smartnic_app
+    !include ../src/smartnic_app/regio/smartnic_app.yaml
+
+  function: &function
+    name: function
+    info: |
+      This block is a placeholder for the registers in each of the
+      smartnic_app functional components - igr, egr, igr_intern and egr_extern
+    regs: []
+
+interfaces:
+  - block: *smartnic_app
+    address: 0x00000
+    width: 10
+    name: smartnic_app
+
+  - block: *function
+    address: 0x00000
+    width: 16
+    name: igr_extern
+
+  - block: *function
+    address: 0x10000
+    width: 16
+    name: egr_extern
+
+  - block: *function
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+
+  - block: *function
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr
+
