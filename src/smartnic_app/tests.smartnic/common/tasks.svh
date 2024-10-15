@@ -88,17 +88,17 @@
 
         if (write_p4_tables==1) begin
           debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-          filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
+          filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
           vitisnetp4_agent.table_init_from_file(filename);
           debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
         end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
         exp_pcap = pcap_pkg::read_pcap(filename);
 
         debug_msg("Starting simulation...", VERBOSE);
-        filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
         rx_pkt_cnt = 0;
         fork
             begin

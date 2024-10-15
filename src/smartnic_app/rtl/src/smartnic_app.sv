@@ -121,7 +121,6 @@ module smartnic_app
 
     // flow control signals (one from each egress FIFO).
     input logic [3:0]    egr_flow_ctl
-
 );
     import smartnic_pkg::*;
     import p4_proc_pkg::*;
@@ -375,18 +374,18 @@ module smartnic_app
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
-    axi4l_intf  axil_to_p4_only ();
-    axi4l_intf  axil_to_p4_only__core_clk ();
+    axi4l_intf  axil_to_smartnic_app ();
+    axi4l_intf  axil_to_smartnic_app__core_clk ();
     axi4l_intf  axil_to_smartnic_app_igr ();
     axi4l_intf  axil_to_smartnic_app_egr ();
     axi4l_intf  axil_to_p4_proc [NUM_P4_PROC] ();
 
-    p4_only_reg_intf  p4_only_regs ();
+    smartnic_app_reg_intf  smartnic_app_regs ();
 
     // smartnic_app register decoder
-    p4_only_decoder p4_only_decoder_inst (
+    smartnic_app_decoder smartnic_app_decoder_inst (
        .axil_if                   ( app_axil_if ),
-       .p4_only_axil_if           ( axil_to_p4_only ),
+       .smartnic_app_axil_if      ( axil_to_smartnic_app ),
        .igr_extern_axil_if        ( axil_to_extern[0] ),
        .egr_extern_axil_if        ( axil_to_extern[1] ),
        .smartnic_app_igr_axil_if  ( axil_to_smartnic_app_igr ),
@@ -395,15 +394,15 @@ module smartnic_app
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
-        .axi4l_if_from_controller  ( axil_to_p4_only ),
+        .axi4l_if_from_controller  ( axil_to_smartnic_app ),
         .clk_to_peripheral         ( core_clk ),
-        .axi4l_if_to_peripheral    ( axil_to_p4_only__core_clk )
+        .axi4l_if_to_peripheral    ( axil_to_smartnic_app__core_clk )
     );
 
     // smartnic_app register block
-    p4_only_reg_blk p4_only_reg_blk (
-        .axil_if    ( axil_to_p4_only__core_clk ),
-        .reg_blk_if ( p4_only_regs )
+    smartnic_app_reg_blk smartnic_app_reg_blk (
+        .axil_if    ( axil_to_smartnic_app__core_clk ),
+        .reg_blk_if ( smartnic_app_regs )
     );
 
 
@@ -563,7 +562,7 @@ module smartnic_app
 
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-            assign igr_demux_sel[i] = p4_only_regs.igr_demux_sel.enable ? p4_only_regs.igr_demux_sel.value : axis_to_demux[i].tdest[0];
+            assign igr_demux_sel[i] = smartnic_app_regs.igr_demux_sel.enable ? smartnic_app_regs.igr_demux_sel.value : axis_to_demux[i].tdest[0];
 
             axi4s_intf_demux #(.N(2)) axi4s_intf_demux_inst (
                 .axi4s_in   ( axis_to_demux[i] ),

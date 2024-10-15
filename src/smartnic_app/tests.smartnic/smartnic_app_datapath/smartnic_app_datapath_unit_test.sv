@@ -3,19 +3,19 @@
 import tb_pkg::*;
 import p4_proc_verif_pkg::*;
 import smartnic_app_verif_pkg::*;
-import p4_only_reg_pkg::*;
+import smartnic_app_reg_pkg::*;
 
 //===================================
 // (Failsafe) timeout
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_only_datapath_unit_test
+module smartnic_app_datapath_unit_test
 #(
     parameter int HDR_LENGTH = 0
  );
     // Testcase name
-    string name = $sformatf("p4_only_datapath_hdrlen_%0d_ut", HDR_LENGTH);
+    string name = $sformatf("smartnic_app_datapath_hdrlen_%0d_ut", HDR_LENGTH);
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -35,10 +35,10 @@ module p4_only_datapath_unit_test
     tb_pkg::tb_env env;
 
     // VitisNetP4 table agent
-    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
+    vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 
-    // p4_only register agent
-    p4_only_reg_agent  p4_only_reg_agent;
+    // smartnic_app register agent
+    smartnic_app_reg_agent  smartnic_app_reg_agent;
 
     // p4_proc register agent and variables
     p4_proc_reg_agent  p4_proc_reg_agent;
@@ -77,7 +77,7 @@ module p4_only_datapath_unit_test
 
         // Create P4 reg agents
         p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'he0000);
-        p4_only_reg_agent = new("p4_only_reg_agent", env.reg_agent, 'h80000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", env.reg_agent, 'h80000);
     endfunction
 
     //===================================
@@ -170,7 +170,7 @@ module p4_only_datapath_unit_test
            join
        `SVTEST_END
 
-       `include "../../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
+       `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
     `SVUNIT_TESTS_END
 
@@ -185,7 +185,7 @@ endmodule
 `define P4_ONLY_DATAPATH_UNIT_TEST(HDR_LENGTH)\
   import svunit_pkg::svunit_testcase;\
   svunit_testcase svunit_ut;\
-  p4_only_datapath_unit_test #(HDR_LENGTH) test();\
+  smartnic_app_datapath_unit_test #(HDR_LENGTH) test();\
   function void build();\
     test.build();\
     svunit_ut = test.svunit_ut;\
@@ -198,15 +198,15 @@ endmodule
   endtask
 
 
-module p4_only_datapath_hdrlen_0_unit_test;
+module smartnic_app_datapath_hdrlen_0_unit_test;
 `P4_ONLY_DATAPATH_UNIT_TEST(0)
 endmodule
 
-module p4_only_datapath_hdrlen_64_unit_test;
+module smartnic_app_datapath_hdrlen_64_unit_test;
 `P4_ONLY_DATAPATH_UNIT_TEST(64)
 endmodule
 
-module p4_only_datapath_hdrlen_256_unit_test;
+module smartnic_app_datapath_hdrlen_256_unit_test;
 `P4_ONLY_DATAPATH_UNIT_TEST(256)
 endmodule
 

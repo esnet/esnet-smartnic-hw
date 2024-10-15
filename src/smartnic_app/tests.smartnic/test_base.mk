@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -23,15 +23,24 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_app.p4_only.rtl \
-    smartnic_app.p4_only.verif \
-    smartnic_app.p4_only.tb \
+    smartnic_app.rtl \
+    smartnic_app.verif \
     vitisnetp4_igr.rtl \
     vitisnetp4_igr.verif \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
-    axi4l.verif@common \
-    axi4s.verif@common
+    vitisnetp4_igr.extern.default.rtl \
+    smartnic_app.igr.passthru.rtl \
+    smartnic_app.egr.passthru.rtl \
+    p4_proc.regio.rtl \
+    p4_proc.verif \
+    smartnic.rtl \
+    smartnic.tb \
+    std.verif@$(COMMON_LIB_NAME) \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    packet.verif@$(COMMON_LIB_NAME) \
+    pcap.pkg@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
@@ -67,6 +76,7 @@ SIM_OPTS =
 all: p4bm build_test sim
 
 p4bm:
+	$(MAKE) sim-all     P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/vitisnetp4/p4/sim
 	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/vitisnetp4/p4/sim
 
 build_test: _build_test
@@ -74,7 +84,7 @@ sim:        _sim
 info:       _sim_info
 clean:      _clean_test _clean_sim
 
-.PHONY: all p4bm build_test sim info clean
+.PHONY: all build_test sim info clean
 
 # ----------------------------------------------------
 # Import SVUNIT build targets/configuration
@@ -82,7 +92,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += smartnic_app__p4_only__tb.tb
+TOP += smartnic__tb.tb
 
 # ----------------------------------------------------
 # Import VitisNetP4 IP simulation configuration

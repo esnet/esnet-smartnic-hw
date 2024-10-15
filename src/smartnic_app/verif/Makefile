@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -22,15 +22,12 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-
 SUBCOMPONENTS = \
-    smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic_app.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    p4_proc.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    vitisnetp4_igr.rtl \
-    vitisnetp4_egr.rtl \
-    axi4l.rtl@$(COMMON_LIB_NAME) \
-    axi4s.rtl@$(COMMON_LIB_NAME)
+    smartnic_app.regio.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    std.verif@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
@@ -48,14 +45,13 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile synth
+all: compile
 
 compile: _compile_sim
-synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile synth info clean
+.PHONY: all compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

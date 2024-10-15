@@ -7,10 +7,10 @@ import tb_pkg::*;
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
-module p4_only_datapath_unit_test;
+module smartnic_app_datapath_unit_test;
 
     // Testcase name
-    string name = "p4_only_datapath_ut";
+    string name = "smartnic_app_datapath_ut";
 
     // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
@@ -129,7 +129,7 @@ module p4_only_datapath_unit_test;
         vitisnetp4_agent.init();
     `SVTEST_END
 
-    `include "../../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
+    `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
     `SVUNIT_TESTS_END
 
@@ -163,17 +163,17 @@ module p4_only_datapath_unit_test;
 
         if (write_p4_tables==1) begin
            debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-           filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
+           filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
            vitisnetp4_agent.table_init_from_file(filename);
            debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
         end
 
         debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/expected/packets_out.pcap"};
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/expected/packets_out.pcap"};
         exp_pcap = pcap_pkg::read_pcap(filename);
 
         debug_msg("Starting simulation...", VERBOSE);
-         filename = {"../../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
+         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
          rx_pkt_cnt = 0;
          fork
              begin

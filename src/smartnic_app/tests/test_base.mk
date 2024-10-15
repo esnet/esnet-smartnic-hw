@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -23,20 +23,18 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_app.p4_only.rtl \
-    smartnic_app.p4_only.verif \
-    p4_proc.regio.rtl \
-    p4_proc.verif \
-    vitisnetp4.verif \
-    smartnic.rtl \
-    smartnic.tb \
-    std.verif@common \
+    smartnic_app.rtl \
+    smartnic_app.verif \
+    smartnic_app.tb \
+    vitisnetp4_igr.rtl \
+    vitisnetp4_igr.verif \
+    vitisnetp4_igr.extern.default.rtl \
+	smartnic_app.igr.passthru.rtl \
+	smartnic_app.egr.passthru.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \
     axi4l.verif@common \
-    axi4s.verif@common \
-    packet.verif@common \
-    pcap.pkg@common
+    axi4s.verif@common
 
 EXT_LIBS =
 
@@ -72,7 +70,6 @@ SIM_OPTS =
 all: p4bm build_test sim
 
 p4bm:
-	$(MAKE) sim-all     P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/vitisnetp4/p4/sim
 	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/vitisnetp4/p4/sim
 
 build_test: _build_test
@@ -80,7 +77,7 @@ sim:        _sim
 info:       _sim_info
 clean:      _clean_test _clean_sim
 
-.PHONY: all build_test sim info clean
+.PHONY: all p4bm build_test sim info clean
 
 # ----------------------------------------------------
 # Import SVUNIT build targets/configuration
@@ -88,7 +85,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += smartnic__tb.tb
+TOP += smartnic_app__tb.tb
 
 # ----------------------------------------------------
 # Import VitisNetP4 IP simulation configuration

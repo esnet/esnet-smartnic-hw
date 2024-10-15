@@ -5,15 +5,15 @@
 //===================================
 `define SVUNIT_TIMEOUT 100us
 
-module p4_only_ctrl_unit_test;
+module smartnic_app_ctrl_unit_test;
 
-    string name = "p4_only_ctrl_ut";
+    string name = "smartnic_app_ctrl_ut";
     svunit_pkg::svunit_testcase svunit_ut;
 
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common p4_only
+    // This test suite references the common smartnic_app
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -84,26 +84,26 @@ module p4_only_ctrl_unit_test;
     //===================================
     `SVUNIT_TESTS_BEGIN
 
-    // Verify expected p4_only status register value
+    // Verify expected smartnic_app status register value
     `SVTEST(check_status)
         bit error;
         string msg;
 
-        // Check p4_only status register
-        env.p4_only_reg_agent.check_status(error, msg);
+        // Check smartnic_app status register
+        env.smartnic_app_reg_agent.check_status(error, msg);
         `FAIL_IF_LOG(
             error == 1,
             msg
         );
     `SVTEST_END
 
-    // Test read access to p4_only.status register
-    `SVTEST(read_p4_only_status)
+    // Test read access to smartnic_app.status register
+    `SVTEST(read_smartnic_app_status)
         logic [31:0] got_data;
 
-        // Read p4_only status register
-        env.p4_only_reg_agent.read_status(got_data);
-        `FAIL_UNLESS(got_data == p4_only_reg_pkg::INIT_STATUS);
+        // Read smartnic_app status register
+        env.smartnic_app_reg_agent.read_status(got_data);
+        `FAIL_UNLESS(got_data == smartnic_app_reg_pkg::INIT_STATUS);
     `SVTEST_END
       
     `SVUNIT_TESTS_END
