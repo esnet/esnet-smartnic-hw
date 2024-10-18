@@ -14,8 +14,6 @@ P4_IGR_FILE ?= $(SMARTNIC_ROOT)/src/vitisnetp4/p4/p4_app.p4
 P4_FILE = $(P4_IGR_FILE)
 P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 
-EXTERN_PORTS ?= False
-
 # ----------------------------------------------------
 # Defines
 #   List macro definitions.

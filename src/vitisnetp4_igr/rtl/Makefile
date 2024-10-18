@@ -13,8 +13,6 @@ VITISNETP4_XCI_FILE = $(call get_component_out_path_from_ref,vitisnetp4_igr.ip,$
 VITISNETP4_WRAPPER_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_wrapper.sv
 VITISNETP4_APP_PKG_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_app_pkg.sv
 
-EXTERN_PORTS ?= False
-
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
@@ -33,6 +31,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    p4_proc.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     vitisnetp4_igr.ip
 
@@ -67,7 +66,7 @@ clean:   _compile_clean
 include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 
 $(VITISNETP4_WRAPPER_FILE) $(VITISNETP4_APP_PKG_FILE): $(VITISNETP4_XCI_FILE) | $(COMPONENT_OUT_PATH)
-	@$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $< --out_dir $(COMPONENT_OUT_PATH) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4 --extern_ports $(EXTERN_PORTS)
+	@$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $< --out_dir $(COMPONENT_OUT_PATH) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
 
 $(COMPONENT_OUT_PATH):
 	@mkdir -p $@

@@ -1,14 +1,17 @@
 module vitisnetp4_0_extern
-    import vitisnetp4_0_pkg::*;
     import smartnic_pkg::*;
-(
+#(
+    parameter type EXTERN_VALID_T = logic,
+    parameter type EXTERN_OUT_T = logic[1:0],
+    parameter type EXTERN_IN_T = logic[1:0]
+) (
     input   logic clk,
     input   logic rstn,
 
-    input   USER_EXTERN_OUT_T    extern_from_vitisnetp4,
-    input   USER_EXTERN_VALID_T  extern_from_vitisnetp4_valid,
-    output  USER_EXTERN_IN_T     extern_to_vitisnetp4,
-    output  USER_EXTERN_VALID_T  extern_to_vitisnetp4_valid,
+    input   EXTERN_OUT_T   extern_from_vitisnetp4,
+    input   EXTERN_VALID_T extern_from_vitisnetp4_valid,
+    output  EXTERN_IN_T    extern_to_vitisnetp4,
+    output  EXTERN_VALID_T extern_to_vitisnetp4_valid,
 
     input   timestamp_t    timestamp,
     input   logic [3:0]    egr_flow_ctl,
@@ -18,11 +21,11 @@ module vitisnetp4_0_extern
     axi4s_intf.tx          axis_from_extern
 );
 
-    USER_EXTERN_IN_T     in_pipe;
-    USER_EXTERN_VALID_T  in_valid_pipe;
+    EXTERN_OUT_T    in_pipe;
+    EXTERN_VALID_T  in_valid_pipe;
 
-    USER_EXTERN_OUT_T    out_pipe;
-    USER_EXTERN_VALID_T  out_valid_pipe;
+    EXTERN_IN_T     out_pipe;
+    EXTERN_VALID_T  out_valid_pipe;
    
     always_ff @(posedge clk) begin
       in_pipe        <= extern_from_vitisnetp4;
