@@ -28,7 +28,11 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_app.p4_only.rtl
+    vitisnetp4_igr.rtl \
+    smartnic_app.igr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.egr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
+
 
 # ----------------------------------------------------
 # Targets
