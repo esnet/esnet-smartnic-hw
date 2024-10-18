@@ -22,15 +22,7 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    p4_proc.pkg \
-    p4_proc.regio.rtl \
-    smartnic.pkg \
-    util.rtl@common \
-    arb.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common
-
+SUBCOMPONENTS = smartnic.pkg
 EXT_LIBS =
 
 # ----------------------------------------------------
