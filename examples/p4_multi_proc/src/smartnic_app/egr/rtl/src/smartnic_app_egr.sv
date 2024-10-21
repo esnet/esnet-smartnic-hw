@@ -20,27 +20,20 @@ module smartnic_app_egr
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
-    axi4l_intf  axil_to_smartnic_app_egr ();
-    axi4l_intf  axil_to_smartnic_app_egr__core_clk ();
+    axi4l_intf  axil_if__core_clk ();
 
     smartnic_app_egr_reg_intf  smartnic_app_egr_regs ();
 
-    // smartnic_app_egr register decoder
-    smartnic_app_egr_decoder smartnic_app_egr_decoder_inst (
-       .axil_if                   ( axil_if ),
-       .smartnic_app_egr_axil_if  ( axil_to_smartnic_app_egr )
-    );
-
     // pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
-        .axi4l_if_from_controller  ( axil_to_smartnic_app_egr ),
+        .axi4l_if_from_controller  ( axil_if ),
         .clk_to_peripheral         ( core_clk ),
-        .axi4l_if_to_peripheral    ( axil_to_smartnic_app_egr__core_clk )
+        .axi4l_if_to_peripheral    ( axil_if__core_clk )
     );
 
     // smartnic_app_egr register block
     smartnic_app_egr_reg_blk smartnic_app_egr_reg_blk (
-        .axil_if    ( axil_to_smartnic_app_egr__core_clk ),
+        .axil_if    ( axil_if__core_clk ),
         .reg_blk_if ( smartnic_app_egr_regs )
     );
 

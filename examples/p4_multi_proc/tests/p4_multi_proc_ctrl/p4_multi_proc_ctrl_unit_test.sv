@@ -27,7 +27,7 @@ module p4_multi_proc_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../src/smartnic_app/p4_only/tests/common/tasks.svh"
+    `include "../../../../src/smartnic_app/tests/common/tasks.svh"
 
     //===================================
     // Build
@@ -89,21 +89,21 @@ module p4_multi_proc_unit_test;
         bit error;
         string msg;
 
-        // Check p4_only status register
-        env.p4_only_reg_agent.check_status(error, msg);
+        // Check smartnic_app status register
+        env.smartnic_app_reg_agent.check_status(error, msg);
         `FAIL_IF_LOG(
             error == 1,
             msg
         );
     `SVTEST_END
 
-    // Test read access to p4_only.status register
-    `SVTEST(read_p4_only_status)
+    // Test read access to smartnic_app.status register
+    `SVTEST(read_smartnic_app_status)
         logic [31:0] got_data;
 
-        // Read p4_only status register
-        env.p4_only_reg_agent.read_status(got_data);
-        `FAIL_UNLESS(got_data == p4_only_reg_pkg::INIT_STATUS);
+        // Read smartnic_app status register
+        env.smartnic_app_reg_agent.read_status(got_data);
+        `FAIL_UNLESS(got_data == smartnic_app_reg_pkg::INIT_STATUS);
     `SVTEST_END
       
     `SVUNIT_TESTS_END

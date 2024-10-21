@@ -20,27 +20,20 @@ module smartnic_app_igr
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
-    axi4l_intf  axil_to_smartnic_app_igr ();
-    axi4l_intf  axil_to_smartnic_app_igr__core_clk ();
+    axi4l_intf  axil_if__core_clk ();
 
     smartnic_app_igr_reg_intf  smartnic_app_igr_regs ();
 
-    // smartnic_app_igr register decoder
-    smartnic_app_igr_decoder smartnic_app_igr_decoder_inst (
-       .axil_if                   ( axil_if ),
-       .smartnic_app_igr_axil_if  ( axil_to_smartnic_app_igr )
-    );
-
     // pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
-        .axi4l_if_from_controller  ( axil_to_smartnic_app_igr ),
+        .axi4l_if_from_controller  ( axil_if ),
         .clk_to_peripheral         ( core_clk ),
-        .axi4l_if_to_peripheral    ( axil_to_smartnic_app_igr__core_clk )
+        .axi4l_if_to_peripheral    ( axil_if__core_clk )
     );
 
     // smartnic_app_igr register block
     smartnic_app_igr_reg_blk smartnic_app_igr_reg_blk (
-        .axil_if    ( axil_to_smartnic_app_igr__core_clk ),
+        .axil_if    ( axil_if__core_clk ),
         .reg_blk_if ( smartnic_app_igr_regs )
     );
 
@@ -56,10 +49,10 @@ module smartnic_app_igr
             .axi4s_in  (axi4s_in[i]),
             .axi4s_out (demux_out[i]),
             .sel       (smartnic_app_igr_regs.app_igr_config.demux_sel)
-	);
+        );
 
-        axi4s_full_pipe axis4s_full_pipe_0 (.axi4s_if_from_tx(demux_out[i][0]), .axi4s_if_to_rx(axi4s_out[i]));
-        axi4s_full_pipe axis4s_full_pipe_1 (.axi4s_if_from_tx(demux_out[i][1]), .axi4s_if_to_rx(axi4s_c2h[i]));
+        axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(demux_out[i][0]), .axi4s_if_to_rx(axi4s_out[i]));
+        axi4s_full_pipe axi4s_full_pipe_1 (.axi4s_if_from_tx(demux_out[i][1]), .axi4s_if_to_rx(axi4s_c2h[i]));
 
     end endgenerate
 
