@@ -187,8 +187,8 @@ smartnic_ip_cache_key:
   script:
     - make -s -C src refresh
     - make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
-    - make -s -C src/smartnic_app/blackbox/app_if BOARD=$SN_HW_BOARD
     - make -s -C src synth COMPONENT=smartnic.build BOARD=$SN_HW_BOARD
+    - make -s -C src synth COMPONENT=smartnic_app.build BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
