@@ -385,7 +385,6 @@ module smartnic_app
     // smartnic_app register decoder
     smartnic_app_decoder smartnic_app_decoder_inst (
        .axil_if                   ( app_axil_if ),
-       .smartnic_app_axil_if      ( axil_to_smartnic_app ),
        .igr_extern_axil_if        ( axil_to_extern[0] ),
        .egr_extern_axil_if        ( axil_to_extern[1] ),
        .smartnic_app_igr_axil_if  ( axil_to_smartnic_app_igr ),
@@ -409,6 +408,7 @@ module smartnic_app
     // p4 register decoder
     smartnic_p4_decoder smartnic_p4_decoder_inst (
        .axil_if                 ( axil_if ),
+       .app_common_axil_if      ( axil_to_smartnic_app ),
        .vitisnetp4_igr_axil_if  ( axil_to_vitisnetp4[0] ),
        .vitisnetp4_egr_axil_if  ( axil_to_vitisnetp4[1] ),
        .p4_proc_igr_axil_if     ( axil_to_p4_proc[0] ),

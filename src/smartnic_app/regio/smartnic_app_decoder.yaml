@@ -1,9 +1,6 @@
 name: smartnic_app
 
 blocks:
-  smartnic_app: &smartnic_app
-    !include ../src/smartnic_app/regio/smartnic_app.yaml
-
   function: &function
     name: function
     info: |
@@ -12,11 +9,6 @@ blocks:
     regs: []
 
 interfaces:
-  - block: *smartnic_app
-    address: 0x00000
-    width: 10
-    name: smartnic_app
-
   - block: *function
     address: 0x00000
     width: 16

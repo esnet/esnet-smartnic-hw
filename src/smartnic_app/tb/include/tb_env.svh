@@ -86,7 +86,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor [7]     = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
         vitisnetp4_reg_agent = new("axi4l_reg_agent");
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h0000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", vitisnetp4_reg_agent, 'h23000);
         ts_agent             = new;
     endfunction
 

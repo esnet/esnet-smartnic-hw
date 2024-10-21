@@ -8,6 +8,9 @@ blocks:
       The memory offsets into this block are unmanaged by this tool.
     regs: []
 
+  smartnic_app: &smartnic_app
+    !include ../src/smartnic_app/regio/smartnic_app.yaml
+
 decoders:
   p4_proc_decoder: &p4_proc_decoder
     !include ../src/p4_proc/regio/p4_proc_decoder.yaml
@@ -32,3 +35,9 @@ interfaces:
     address: 0x22000
     width: 12
     name: p4_proc_egr
+
+  - block: *smartnic_app
+    address: 0x23000
+    width: 10
+    name: app_common
+
