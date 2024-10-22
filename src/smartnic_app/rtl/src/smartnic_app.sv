@@ -123,7 +123,6 @@ module smartnic_app
     input logic [3:0]    egr_flow_ctl
 );
     import smartnic_pkg::*;
-    import p4_proc_pkg::*;
     import axi4s_pkg::*;
 
     // Parameters
@@ -419,12 +418,6 @@ module smartnic_app
     // p4 processor signals and interfaces.
     // ----------------------------------------------------------------------
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_vitisnetp4 [NUM_P4_PROC] ();
-
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_vitisnetp4 [NUM_P4_PROC] ();
-
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_demux [NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
@@ -442,115 +435,39 @@ module smartnic_app
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_mux [NUM_PORTS] ();
 
-    user_metadata_t user_metadata_in [NUM_P4_PROC];
-    logic           user_metadata_in_valid [NUM_P4_PROC];
-
-    user_metadata_t user_metadata_out [NUM_P4_PROC];
-    logic           user_metadata_out_valid [NUM_P4_PROC];
-
     // ----------------------------------------------------------------------
     // ingress p4 processor complex (p4_proc + vitisnetp4_igr_wrapper)
     // ----------------------------------------------------------------------
-    localparam logic P4_PROC_IGR_MODE = 1;
-
-    generate
-        if (P4_PROC_IGR_MODE) begin
-            p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_igr (
-                .core_clk                       ( core_clk ),
-                .core_rstn                      ( core_rstn ),
-                .timestamp                      ( timestamp ),
-                .axil_if                        ( axil_to_p4_proc[0] ),
-                .axis_in                        ( _axis_app_igr ),
-                .axis_out                       ( axis_to_demux ),
-                .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[0] ),
-                .axis_from_vitisnetp4                ( axis_from_vitisnetp4[0] ),
-                .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid[0] ),
-                .user_metadata_to_vitisnetp4         ( user_metadata_in[0] ),
-                .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid[0] ),
-                .user_metadata_from_vitisnetp4       ( user_metadata_out[0] )
-            );
-
-            vitisnetp4_igr_wrapper vitisnetp4_igr_wrapper_inst (
-                .core_clk                ( core_clk ),
-                .core_rstn               ( core_rstn ),
-                .axil_if                 ( axil_to_vitisnetp4[0] ),
-                .axis_rx                 ( axis_to_vitisnetp4[0] ),
-                .axis_tx                 ( axis_from_vitisnetp4[0] ),
-                .user_metadata_in_valid  ( user_metadata_in_valid[0] ),
-                .user_metadata_in        ( user_metadata_in[0] ),
-                .user_metadata_out_valid ( user_metadata_out_valid[0] ),
-                .user_metadata_out       ( user_metadata_out[0] ),
-                .timestamp               ( timestamp ),
-                .egr_flow_ctl            ( egr_flow_ctl ),
-                .axil_to_extern          ( axil_to_extern[0] ),
-                .axis_to_extern          ( _axis_h2c[2][0] ),
-                .axis_from_extern        ( _axis_c2h[2][0] )
-            );
-
-        // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(axis_to_vitisnetp4[0]));
-        // xilinx_axi4s_ila xilinx_axi4s_ila_2 (.axis_in(axis_from_vitisnetp4[0]));
-
-        end else begin  // P4_PROC_IGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_p4_proc_term ( .axi4l_if (axil_to_p4_proc[0]) );
-            axi4l_intf_peripheral_term axil_to_vitisnetp4_0_term ( .axi4l_if (axil_to_vitisnetp4[0]) );
-
-            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                axi4s_full_pipe p4_proc_igr_axis_full_pipe ( .axi4s_if_from_tx(_axis_app_igr[i]), .axi4s_if_to_rx(axis_to_demux[i]) );
-            end
-
-        end
-    endgenerate
+    smartnic_app_igr_p4 #(.NUM_PORTS(NUM_PORTS)) smartnic_app_igr_p4_inst (
+        .core_clk,
+        .core_rstn,
+        .timestamp,
+        .axil_to_p4_proc    ( axil_to_p4_proc[0] ),
+        .axil_to_vitisnetp4 ( axil_to_vitisnetp4[0] ),
+        .axil_to_extern     ( axil_to_extern[0] ),
+        .egr_flow_ctl       ( egr_flow_ctl ),
+        .axis_in            ( _axis_app_igr ),
+        .axis_out           ( axis_to_demux ),
+        .axis_to_extern     ( _axis_h2c[2][0] ),
+        .axis_from_extern   ( _axis_c2h[2][0] )
+    );
 
     // ----------------------------------------------------------------------
     // egress p4 processor complex (p4_proc + vitisnetp4_igr_wrapper)
     // ----------------------------------------------------------------------
-    localparam logic P4_PROC_EGR_MODE = 0;
-
-    generate
-        if (P4_PROC_EGR_MODE) begin
-            p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_egr (
-                .core_clk                       ( core_clk ),
-                .core_rstn                      ( core_rstn ),
-                .timestamp                      ( timestamp ),
-                .axil_if                        ( axil_to_p4_proc[1] ),
-                .axis_in                        ( axis_from_mux ),
-                .axis_out                       ( _axis_app_egr ),
-                .axis_to_vitisnetp4                  ( axis_to_vitisnetp4[1] ),
-                .axis_from_vitisnetp4                ( axis_from_vitisnetp4[1] ),
-                .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid[1] ),
-                .user_metadata_to_vitisnetp4         ( user_metadata_in[1] ),
-                .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid[1] ),
-                .user_metadata_from_vitisnetp4       ( user_metadata_out[1] )
-            );
-
-            vitisnetp4_egr_wrapper vitisnetp4_egr_wrapper_inst (
-                .core_clk                ( core_clk ),
-                .core_rstn               ( core_rstn ),
-                .axil_if                 ( axil_to_vitisnetp4[1] ),
-                .axis_rx                 ( axis_to_vitisnetp4[1] ),
-                .axis_tx                 ( axis_from_vitisnetp4[1] ),
-                .user_metadata_in_valid  ( user_metadata_in_valid[1] ),
-                .user_metadata_in        ( user_metadata_in[1] ),
-                .user_metadata_out_valid ( user_metadata_out_valid[1] ),
-                .user_metadata_out       ( user_metadata_out[1] ),
-                .timestamp               ( timestamp ),
-                .egr_flow_ctl            ( egr_flow_ctl ),
-                .axil_to_extern          ( axil_to_extern[1] ),
-                .axis_to_extern          ( _axis_h2c[2][1] ),
-                .axis_from_extern        ( _axis_c2h[2][1] )
-            );
-
-        end else begin  // P4_PROC_EGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_p4_proc_1_term ( .axi4l_if (axil_to_p4_proc[1]) );
-            axi4l_intf_peripheral_term axil_to_vitisnetp4_1_term   ( .axi4l_if (axil_to_vitisnetp4[1]) );
-
-            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                axi4s_full_pipe p4_proc_egr_axis_full_pipe ( .axi4s_if_from_tx(axis_from_mux[i]), .axi4s_if_to_rx(_axis_app_egr[i]) );
-            end
-        end
-
-    endgenerate
-
+    smartnic_app_egr_p4 #(.NUM_PORTS(NUM_PORTS)) smartnic_app_egr_p4_inst (
+        .core_clk,
+        .core_rstn,
+        .timestamp,
+        .axil_to_p4_proc    ( axil_to_p4_proc[1] ),
+        .axil_to_vitisnetp4 ( axil_to_vitisnetp4[1] ),
+        .axil_to_extern     ( axil_to_extern[1] ),
+        .egr_flow_ctl       ( egr_flow_ctl ),
+        .axis_in            ( axis_from_mux ),
+        .axis_out           ( _axis_app_egr ),
+        .axis_to_extern     ( _axis_h2c[2][1] ),
+        .axis_from_extern   ( _axis_c2h[2][1] )
+    );
 
     // ----------------------------------------------------------------------
     // smartnic app datapath logic (mux/demux and ingress/egress blocks).

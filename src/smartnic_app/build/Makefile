@@ -29,9 +29,9 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     smartnic_app.rtl \
-    smartnic_app.vitisnetp4_igr_wrapper.blackbox.rtl \
-    smartnic_app.vitisnetp4_egr_wrapper.blackbox.rtl \
+    smartnic_app.igr_p4.blackbox.rtl \
     smartnic_app.igr.blackbox.rtl \
+    smartnic_app.egr_p4.blackbox.rtl \
     smartnic_app.egr.blackbox.rtl
 
 # ----------------------------------------------------

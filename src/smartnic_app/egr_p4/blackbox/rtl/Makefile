@@ -24,7 +24,6 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 
 SUBCOMPONENTS = \
-    p4_proc.pkg \
     smartnic.pkg \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)

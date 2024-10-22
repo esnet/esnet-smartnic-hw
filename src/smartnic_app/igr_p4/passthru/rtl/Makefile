@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -24,8 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 
 SUBCOMPONENTS = \
-    smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    smartnic_app.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic.pkg \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)
 
