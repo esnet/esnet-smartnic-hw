@@ -61,7 +61,7 @@ module tb;
         .user_metadata_from_vitisnetp4       ( user_metadata_out )
     );
 
-    vitisnetp4_0_wrapper vitisnetp4_0_wrapper_inst (
+    vitisnetp4_wrapper vitisnetp4_wrapper_inst (
         .core_clk                ( clk ),
         .core_rstn               ( rstn ),
         .axil_if                 ( axil_to_vitisnetp4 ),

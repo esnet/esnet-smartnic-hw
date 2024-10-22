@@ -25,11 +25,11 @@ waves ?= OFF
 SUBCOMPONENTS = \
     smartnic_app.rtl \
     smartnic_app.verif \
-    vitisnetp4_igr.rtl \
-    vitisnetp4_igr.verif \
-    vitisnetp4_igr.extern.default.rtl \
+    smartnic_app.igr_p4.default.rtl \
+    smartnic_app.egr_p4.passthru.rtl \
     smartnic_app.igr.passthru.rtl \
     smartnic_app.egr.passthru.rtl \
+    smartnic_app.igr_p4.default.vitisnetp4_igr.verif \
     p4_proc.regio.rtl \
     p4_proc.verif \
     smartnic.rtl \

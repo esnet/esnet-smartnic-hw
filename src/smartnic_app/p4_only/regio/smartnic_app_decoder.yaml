@@ -1,39 +1,14 @@
 name: smartnic_app
 
 blocks:
-  smartnic_app: &smartnic_app
-    !include ../src/smartnic_app/regio/smartnic_app.yaml
-
-  function: &function
-    name: function
+  empty: &empty
+    name: empty
     info: |
-      This block is a placeholder for the registers in each of the
-      smartnic_app functional components - igr, egr, igr_intern and egr_extern
+      No custom registers included in p4-only flow.
     regs: []
 
 interfaces:
-  - block: *smartnic_app
+  - block: *empty
     address: 0x00000
-    width: 10
-    name: smartnic_app
-
-  - block: *function
-    address: 0x08000
-    width: 15
-    name: igr_extern
-
-  - block: *function
-    address: 0x10000
-    width: 15
-    name: egr_extern
-
-  - block: *function
-    address: 0x20000
-    width: 16
-    name: smartnic_app_igr
-
-  - block: *function
-    address: 0x30000
-    width: 16
-    name: smartnic_app_egr
-
+    width: 18
+    name: empty

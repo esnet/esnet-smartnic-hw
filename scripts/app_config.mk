@@ -35,7 +35,8 @@ APP_NAME ?= $(shell echo $(APP_NAME_DEFAULT) | tr '[:upper:]' '[:lower:]')
 # P4 files
 # ----------------------------------------------------
 # Full pathname of application p4 files
-P4_FILE ?= $(APP_DIR)/p4/$(APP_NAME).p4
+P4_FILE_DEFAULT = $(APP_DIR)/p4/$(APP_NAME).p4
+P4_FILE ?= $(if $(wildcard $(P4_FILE_DEFAULT)),$(P4_FILE_DEFAULT),)
 P4_IGR_FILE_DEFAULT := $(P4_FILE)
 P4_EGR_FILE_DEFAULT :=
 
@@ -157,10 +158,24 @@ _configure_app_custom :=
 
 _configure_app_p4 := \
 	 $(_configure_app_src_lib) \
-	 cp -r $(SMARTNIC_ROOT)/src/vitisnetp4_igr $(APP_PROJ_ROOT)/src/; \
 	 mkdir $(APP_PROJ_ROOT)/src/smartnic_app; \
 	 cp $(SMARTNIC_ROOT)/src/smartnic_app/config.mk $(APP_PROJ_ROOT)/src/smartnic_app/; \
 	 cp -r $(SMARTNIC_ROOT)/src/smartnic_app/p4_only $(APP_PROJ_ROOT)/src/smartnic_app/; \
+	 mkdir $(APP_PROJ_ROOT)/src/vitisnetp4_igr; \
+	 cp $(SMARTNIC_ROOT)/src/vitisnetp4/config.mk $(APP_PROJ_ROOT)/src/vitisnetp4_igr/;\
+	 sed -i 's/P4_FILE.*=.*/P4_FILE := $$(P4_IGR_FILE)/' $(APP_PROJ_ROOT)/src/vitisnetp4_igr/config.mk; \
+	 sed -i 's/VITISNETP4_IP_NAME.*=.*/VITISNETP4_IP_NAME := vitisnetp4_igr/' $(APP_PROJ_ROOT)/src/vitisnetp4_igr/config.mk; \
+	 mkdir $(APP_PROJ_ROOT)/src/vitisnetp4_igr/ip; \
+	 ln -s $(SMARTNIC_ROOT)/src/vitisnetp4/ip/Makefile $(APP_PROJ_ROOT)/src/vitisnetp4_igr/ip/Makefile; \
+	 mkdir $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl; \
+	 ln -s $(SMARTNIC_ROOT)/src/vitisnetp4/rtl/Makefile $(APP_PROJ_ROOT)/src/vitisnetp4_igr/rtl/Makefile; \
+	 mkdir $(APP_PROJ_ROOT)/src/vitisnetp4_igr/verif; \
+	 ln -s $(SMARTNIC_ROOT)/src/vitisnetp4/verif/Makefile $(APP_PROJ_ROOT)/src/vitisnetp4_igr/verif/Makefile; \
+	 ln -s $(SMARTNIC_ROOT)/src/vitisnetp4/verif/src $(APP_PROJ_ROOT)/src/vitisnetp4_igr/verif/src; \
+	 ln -s $(SMARTNIC_ROOT)/src/vitisnetp4/verif/include $(APP_PROJ_ROOT)/src/vitisnetp4_igr/verif/include; \
+	 cp -r $(APP_PROJ_ROOT)/src/vitisnetp4_igr $(APP_PROJ_ROOT)/src/vitisnetp4_egr; \
+	 sed -i 's/P4_FILE.*=.*/P4_FILE := $$(P4_EGR_FILE)/' $(APP_PROJ_ROOT)/src/vitisnetp4_egr/config.mk; \
+	 sed -i 's/VITISNETP4_IP_NAME.*=.*/VITISNETP4_IP_NAME := vitisnetp4_egr/' $(APP_PROJ_ROOT)/src/vitisnetp4_egr/config.mk; \
 	 mv $(APP_PROJ_ROOT)/src/smartnic_app/p4_only/app_if $(APP_PROJ_ROOT)/; \
 	 sed -i 's:COMPONENT_ROOT.*=.*:COMPONENT_ROOT = \.\.:' $(APP_PROJ_ROOT)/app_if/Makefile; \
 	 make -s -C $(APP_ROOT)/app_if clean;

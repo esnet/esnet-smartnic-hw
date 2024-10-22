@@ -1,15 +1,14 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+VITISNETP4_COMPONENT_ROOT := ..
 
-include $(COMPONENT_ROOT)/config.mk
+include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # VitisNetP4 wrapper config
 # -----------------------------------------------
-VITISNETP4_IP_NAME ?= vitisnetp4_0
-VITISNETP4_XCI_FILE = $(call get_component_out_path_from_ref,vitisnetp4.ip,$(LIB_OUTPUT_ROOT))/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME).xci
+VITISNETP4_XCI_FILE = $(call get_component_out_path_from_ref,$(COMPONENT_BASE).ip,$(LIB_OUTPUT_ROOT))/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME).xci
 VITISNETP4_WRAPPER_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_wrapper.sv
 VITISNETP4_APP_PKG_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_app_pkg.sv
 
@@ -31,10 +30,9 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    $(COMPONENT_BASE).ip \
     p4_proc.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    vitisnetp4.ip \
-    vitisnetp4.extern.rtl \
     axi4s.rtl@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME)
 

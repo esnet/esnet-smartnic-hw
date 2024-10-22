@@ -1,9 +1,9 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+VITISNETP4_COMPONENT_ROOT := ../..
 
-include $(COMPONENT_ROOT)/config.mk
+include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -34,7 +34,7 @@ EXT_LIBS =
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = VITISNETP4_EXTERN_NAME=$(VITISNETP4_IP_NAME)_extern
 
 # ----------------------------------------------------
 # Options

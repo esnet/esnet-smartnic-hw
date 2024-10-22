@@ -28,6 +28,7 @@ SUBCOMPONENTS = \
     p4_proc.verif \
     p4_proc.tb \
     vitisnetp4.rtl \
+    vitisnetp4.extern.rtl \
     vitisnetp4.verif \
     smartnic.rtl \
     axi4l.rtl@common \
