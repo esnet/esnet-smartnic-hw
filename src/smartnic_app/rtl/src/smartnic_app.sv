@@ -496,50 +496,24 @@ module smartnic_app
 
     // xilinx_axi4s_ila xilinx_axi4s_ila_3 (.axis_in(axis_to_demux[0]));
 
-    localparam logic SMARTNIC_APP_IGR_MODE = 1;
-    generate
-        if (SMARTNIC_APP_IGR_MODE) begin
-            smartnic_app_igr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_igr_inst (
-                .core_clk   ( core_clk ),
-                .core_rstn  ( core_rstn ),
-                .axi4s_in   ( axis_to_smartnic_app_igr ),
-                .axi4s_out  ( axis_to_smartnic_app_egr ),
-                .axi4s_c2h  ( _axis_c2h[1] ),
-                .axil_if    ( axil_to_smartnic_app_igr )
-            );
-
-        end else begin  // SMARTNIC_APP_IGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_smartnic_app_igr_term ( .axi4l_if (axil_to_smartnic_app_igr) );
-
-            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                axi4s_full_pipe smartnic_app_igr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_igr[i]), .axi4s_if_to_rx(axis_to_smartnic_app_egr[i]) );
-            end
-
-        end
-    endgenerate
+    smartnic_app_igr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_igr_inst (
+        .core_clk   ( core_clk ),
+        .core_rstn  ( core_rstn ),
+        .axi4s_in   ( axis_to_smartnic_app_igr ),
+        .axi4s_out  ( axis_to_smartnic_app_egr ),
+        .axi4s_c2h  ( _axis_c2h[1] ),
+        .axil_if    ( axil_to_smartnic_app_igr )
+    );
 
 
-    localparam logic SMARTNIC_APP_EGR_MODE = 1;
-    generate
-        if (SMARTNIC_APP_EGR_MODE) begin
-            smartnic_app_egr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_egr_inst (
-                .core_clk   ( core_clk ),
-                .core_rstn  ( core_rstn ),
-                .axi4s_in   ( axis_to_smartnic_app_egr ),
-                .axi4s_h2c  ( _axis_h2c[1] ),
-                .axi4s_out  ( axis_to_mux ),
-                .axil_if    ( axil_to_smartnic_app_egr )
-            );
-
-        end else begin  // SMARTNIC_APP_EGR_MODE == 0
-            axi4l_intf_peripheral_term axil_to_smartnic_app_egr_term ( .axi4l_if (axil_to_smartnic_app_egr) );
-
-            for (genvar i = 0; i < NUM_PORTS; i += 1) begin
-                axi4s_full_pipe smartnic_app_egr_full_pipe ( .axi4s_if_from_tx(axis_to_smartnic_app_egr[i]), .axi4s_if_to_rx(axis_to_mux[i]) );
-            end
-
-        end
-    endgenerate
+    smartnic_app_egr #(.NUM_PORTS(NUM_PORTS)) smartnic_app_egr_inst (
+        .core_clk   ( core_clk ),
+        .core_rstn  ( core_rstn ),
+        .axi4s_in   ( axis_to_smartnic_app_egr ),
+        .axi4s_h2c  ( _axis_h2c[1] ),
+        .axi4s_out  ( axis_to_mux ),
+        .axil_if    ( axil_to_smartnic_app_egr )
+    );
 
     // xilinx_axi4s_ila xilinx_axi4s_ila_4 (.axis_in(axis_to_mux[0]));
 
