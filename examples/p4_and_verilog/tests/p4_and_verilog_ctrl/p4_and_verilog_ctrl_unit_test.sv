@@ -24,6 +24,8 @@ module p4_and_verilog_ctrl_unit_test;
     // here for convenience.
     tb_pkg::tb_env env;
 
+    p4_and_verilog_verif_pkg::p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
+
     //===================================
     // Import common testcase tasks
     //===================================
@@ -40,6 +42,8 @@ module p4_and_verilog_ctrl_unit_test;
 
         // Retrieve reference to testbench environment class
         env = tb.env;
+
+        p4_and_verilog_reg_agent = new("p4_and_verilog_reg_agent", env.reg_agent, 'h20000);
 
     endfunction
 
@@ -90,7 +94,7 @@ module p4_and_verilog_ctrl_unit_test;
         string msg;
 
         // Check p4_and_verilog status register
-        env.p4_and_verilog_reg_agent.check_status(error, msg);
+        p4_and_verilog_reg_agent.check_status(error, msg);
         `FAIL_IF_LOG(
             error == 1,
             msg
@@ -102,7 +106,7 @@ module p4_and_verilog_ctrl_unit_test;
         logic [31:0] got_data;
 
         // Read p4_and_verilog status register
-        env.p4_and_verilog_reg_agent.read_status(got_data);
+        p4_and_verilog_reg_agent.read_status(got_data);
         `FAIL_UNLESS(got_data == p4_and_verilog_reg_pkg::INIT_STATUS);
     `SVTEST_END
       
