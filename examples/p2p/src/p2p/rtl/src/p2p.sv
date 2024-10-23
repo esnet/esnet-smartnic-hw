@@ -1,49 +1,26 @@
 module p2p #(
 ) (
-   input logic        core_clk,
-   input logic        core_rstn,
-   input logic [63:0] timestamp,
+    input logic           core_clk,
+    input logic           core_rstn,
 
-   axi4l_intf.peripheral axil_if,
-   axi4l_intf.peripheral axil_to_vitisnetp4,
+    axi4l_intf.peripheral axil_if,
 
-   axi4s_intf.tx axis_to_switch_0,
-   axi4s_intf.rx axis_from_switch_0,
-   axi4s_intf.tx axis_to_switch_1,
-   axi4s_intf.rx axis_from_switch_1
+    axi4s_intf.rx         axis_in,
+    axi4s_intf.tx         axis_out
 );
 
-   // ----------------------------------------------------------------
-   //  Register map block and decoder instantiations
-   // ----------------------------------------------------------------
+    // ----------------------------------------------------------------
+    //  Register map block instantiations
+    // ----------------------------------------------------------------
+    p2p_reg_intf  p2p_regs ();
 
-   axi4l_intf  axil_to_p2p_regs ();
-   axi4l_intf  axil_to_vitisnetp4_regs ();
-   axi4l_intf  axil_to_vitisnetp4_regs__core_clk ();
-   
-   p2p_reg_intf  p2p_regs();
-   p2p_reg_intf  vitisnetp4_regs();
+    logic tpause;
 
-   logic tpause;
-
-   // p2p register decoder
-   p2p_decoder p2p_decoder (
-      .axil_if       (axil_if),
-      .p2p_axil_if   (axil_to_p2p_regs)
-   );
-
-   // vitisnetp4 register decoder
-   p2p_decoder vitisnetp4_decoder (
-      .axil_if       (axil_to_vitisnetp4),
-      .p2p_axil_if   (axil_to_vitisnetp4_regs)
-   );
-   
-   // p2p register block
-   p2p_reg_blk p2p_reg_blk
-   (
-    .axil_if    (axil_to_p2p_regs),
-    .reg_blk_if (p2p_regs)
-   );
+    // p2p register block
+    p2p_reg_blk p2p_reg_blk (
+        .axil_if    ( axil_if ),
+        .reg_blk_if ( p2p_regs )
+    );
 
    // Synchronize tpause
    sync_level #(
@@ -58,60 +35,20 @@ module p2p #(
        .lvl_out (tpause)
    );
 
-   // vitisnetp4 register block
-   axi4l_intf_cdc axil_to_vitisnetp4_cdc (
-      .axi4l_if_from_controller  ( axil_to_vitisnetp4_regs ),
-      .clk_to_peripheral         ( core_clk ),
-      .axi4l_if_to_peripheral    ( axil_to_vitisnetp4_regs__core_clk )
-   );
-
-   p2p_reg_blk vitisnetp4_reg_blk 
-   (
-    .axil_if    (axil_to_vitisnetp4_regs__core_clk),
-    .reg_blk_if (vitisnetp4_regs)
-   );
-
-   // ----------------------------------------------------------------
-   //  Timestamp to regmap connections (for test purposes)
-   // ----------------------------------------------------------------
-
-   logic [63:0] timestamp_latch;
-   logic        timestamp_rd_latch_wr_evt_d1;
-
-   always @(posedge core_clk) if (vitisnetp4_regs.timestamp_rd_latch_wr_evt) timestamp_latch <= timestamp;
-
-   assign vitisnetp4_regs.status_upper_nxt = timestamp_latch[63:32];
-   assign vitisnetp4_regs.status_lower_nxt = timestamp_latch[31:0];
-
-   always @(posedge core_clk) timestamp_rd_latch_wr_evt_d1  <= vitisnetp4_regs.timestamp_rd_latch_wr_evt;
-
-   assign vitisnetp4_regs.status_upper_nxt_v = timestamp_rd_latch_wr_evt_d1;
-   assign vitisnetp4_regs.status_lower_nxt_v = timestamp_rd_latch_wr_evt_d1;
-
    // ----------------------------------------------------------------
    //  Datpath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
-   
-   assign axis_to_switch_0.tvalid = axis_from_switch_0.tvalid && !tpause;
-   assign axis_to_switch_0.tdata  = axis_from_switch_0.tdata;
-   assign axis_to_switch_0.tkeep  = axis_from_switch_0.tkeep;
-   assign axis_to_switch_0.tlast  = axis_from_switch_0.tlast;
-   assign axis_to_switch_0.tid    = axis_from_switch_0.tid;
-   assign axis_to_switch_0.tdest  = {'0, axis_from_switch_0.tdest};
-   assign axis_to_switch_0.tuser  = axis_from_switch_0.tuser;
+   assign axis_out.aclk = axis_in.aclk;
+   assign axis_out.aresetn = axis_in.aresetn;
 
-   assign axis_from_switch_0.tready = axis_to_switch_0.tready && !tpause;
+   assign axis_out.tvalid = axis_in.tvalid && !tpause;
+   assign axis_out.tdata  = axis_in.tdata;
+   assign axis_out.tkeep  = axis_in.tkeep;
+   assign axis_out.tlast  = axis_in.tlast;
+   assign axis_out.tid    = axis_in.tid;
+   assign axis_out.tdest  = {'0, axis_in.tdest};
+   assign axis_out.tuser  = axis_in.tuser;
 
-
-   assign axis_to_switch_1.tvalid = axis_from_switch_1.tvalid;
-   assign axis_to_switch_1.tdata  = axis_from_switch_1.tdata;
-   assign axis_to_switch_1.tkeep  = axis_from_switch_1.tkeep;
-   assign axis_to_switch_1.tlast  = axis_from_switch_1.tlast;
-   assign axis_to_switch_1.tid    = axis_from_switch_1.tid;
-   assign axis_to_switch_1.tdest  = {'0, axis_from_switch_1.tdest};
-   assign axis_to_switch_1.tuser  = axis_from_switch_1.tuser;
-
-   assign axis_from_switch_1.tready = axis_to_switch_1.tready;
-
+   assign axis_in.tready = axis_out.tready && !tpause;
 
 endmodule: p2p

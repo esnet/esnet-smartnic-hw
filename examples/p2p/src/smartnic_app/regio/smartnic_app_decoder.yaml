@@ -1,11 +1,32 @@
 name: smartnic_app
 
-decoders:
-  p2p_decoder: &p2p_decoder
-    !include ../examples/p2p/src/p2p/regio/p2p_decoder.yaml
+blocks:
+  p2p: &p2p
+    !include ../examples/p2p/src/p2p/regio/p2p.yaml
+  empty: &empty
+    name: empty
+    info: Empty register block. Used only as placeholder.
+    regs: []
 
 interfaces:
-  - decoder: *p2p_decoder
+
+  - block: *empty
     address: 0x00000
-    width: 18
-    name: p2p
+    width: 16
+    name: igr_extern
+
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+
+  - block: *p2p
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+
+  - block: *empty
+    address: 0x30000
+    width: 16
+    name: empty
+

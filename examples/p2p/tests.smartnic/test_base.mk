@@ -23,15 +23,19 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic_app.rtl \
     p2p.regio.verif \
-    std.verif@common@smartnic \
-    axi4l.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic \
-    axi4l.verif@common@smartnic \
-    axi4s.verif@common@smartnic \
-    smartnic.rtl@smartnic \
-    smartnic.tb@smartnic
+    smartnic_app.igr.rtl \
+    smartnic_app.egr.passthru.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.igr_p4.passthru.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.egr_p4.passthru.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.rtl@$(SMARTNIC_LIB_NAME) \
+    std.verif@$(COMMON_LIB_NAME) \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    smartnic.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic.tb@$(SMARTNIC_LIB_NAME)
 
 EXT_LIBS =
 
