@@ -1,10 +1,10 @@
-name: smartnic_to_app
+name: box_322mhz
 
 decoders:
   smartnic_decoder: &smartnic
     !include ../src/smartnic/regio/smartnic_decoder.yaml
   smartnic_app_decoder: &smartnic_app
-    !include ../src/smartnic_app/regio/smartnic_app_decoder.yaml
+    !include smartnic_app_decoder.yaml
 
 interfaces:
   - decoder: *smartnic

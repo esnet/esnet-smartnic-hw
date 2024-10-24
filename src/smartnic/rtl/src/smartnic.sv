@@ -115,11 +115,12 @@ module smartnic
    // ----------------------------------------------------------------
 
    axi4l_intf   s_axil_if                   ();
+   axi4l_intf   axil_to_platform            ();
    axi4l_intf   axil_to_regs                ();
    axi4l_intf   axil_to_endian_check        ();
-   axi4l_intf   axil_to_app_decoder__demarc ();
-   axi4l_intf   axil_to_app_decoder         ();
+   axi4l_intf   axil_to_app__demarc         ();
    axi4l_intf   axil_to_app                 ();
+   axi4l_intf   axil_to_p4__demarc          ();
    axi4l_intf   axil_to_p4                  ();
 
    axi4l_intf   axil_to_cmac                ();
@@ -183,9 +184,16 @@ module smartnic
       .axi4l_if (s_axil_if)
    );
 
-   // smartnic top-level decoder
+   // smartnic top-level (platform/app) decoder
+   smartnic_to_app_decoder smartnic_to_app_decoder_0 (
+      .axil_if              (s_axil_if),
+      .smartnic_axil_if     (axil_to_platform),
+      .smartnic_app_axil_if (axil_to_app__demarc)
+   );
+
+   // smartnic platform decoder
    smartnic_decoder smartnic_axil_decoder_0 (
-      .axil_if                         (s_axil_if),
+      .axil_if                         (axil_to_platform),
       .smartnic_regs_axil_if           (axil_to_regs),
       .endian_check_axil_if            (axil_to_endian_check),
       .fifo_to_host_0_axil_if          (axil_to_fifo_to_host[0]),
@@ -198,7 +206,7 @@ module smartnic
       .smartnic_bypass_axil_if         (axil_to_bypass),
       .smartnic_hash2qid_0_axil_if     (axil_to_hash2qid[0]),
       .smartnic_hash2qid_1_axil_if     (axil_to_hash2qid[1]),
-      .smartnic_to_app_axil_if         (axil_to_app_decoder__demarc)
+      .smartnic_p4_axil_if             (axil_to_p4__demarc)
    );
 
    // smartnic cmac decoder
@@ -777,9 +785,17 @@ module smartnic
    // AXI-L interface
    xilinx_axi4l_reg_slice #(
        .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
-   ) i_xilinx_axi4l_reg_slice__core_to_app_0 (
-       .axi4l_if_from_controller ( axil_to_app_decoder__demarc ),
-       .axi4l_if_to_peripheral   ( axil_to_app_decoder )
+   ) i_xilinx_axi4l_reg_slice__core_to_p4 (
+       .axi4l_if_from_controller ( axil_to_p4__demarc ),
+       .axi4l_if_to_peripheral   ( axil_to_p4 )
+   );
+
+   // AXI-L interface
+   xilinx_axi4l_reg_slice #(
+       .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
+   ) i_xilinx_axi4l_reg_slice__core_to_app (
+       .axi4l_if_from_controller ( axil_to_app__demarc ),
+       .axi4l_if_to_peripheral   ( axil_to_app )
    );
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__reg_slice
@@ -943,14 +959,6 @@ module smartnic
            end : g__cmac_idx
        end : g__h2c_c2h
    endgenerate
-
-
-   // Provide dedicated AXI-L interfaces for app and p4 control
-   smartnic_to_app_decoder smartnic_to_app_decoder_inst (
-       .axil_if                  (axil_to_app_decoder),
-       .smartnic_app_axil_if     (axil_to_app),
-       .smartnic_p4_axil_if      (axil_to_p4)
-   );
 
    smartnic_app smartnic_app (
     .core_clk            (core_clk),

@@ -76,8 +76,8 @@ module smartnic_app_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agents
-        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'he0000);
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", env.reg_agent, 'h80000);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, env.AXIL_VITISNET_OFFSET + 'h20000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", env.reg_agent, env.AXIL_APP_OFFSET);
     endfunction
 
     //===================================
