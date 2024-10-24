@@ -10,7 +10,6 @@ include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 VITISNETP4_XCI_FILE = $(call get_component_out_path_from_ref,$(COMPONENT_BASE).ip,$(LIB_OUTPUT_ROOT))/$(VITISNETP4_IP_NAME)/$(VITISNETP4_IP_NAME).xci
 VITISNETP4_WRAPPER_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_wrapper.sv
-VITISNETP4_APP_PKG_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_app_pkg.sv
 
 # ----------------------------------------------------
 # Sources
@@ -20,7 +19,7 @@ VITISNETP4_APP_PKG_FILE = $(COMPONENT_OUT_PATH)/$(VITISNETP4_IP_NAME)_app_pkg.sv
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
-SRC_FILES = $(VITISNETP4_WRAPPER_FILE) $(VITISNETP4_APP_PKG_FILE)
+SRC_FILES = $(VITISNETP4_WRAPPER_FILE)
 INC_DIRS =
 SRC_LIST_FILES =
 
@@ -66,7 +65,7 @@ clean:   _compile_clean
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 
-$(VITISNETP4_WRAPPER_FILE) $(VITISNETP4_APP_PKG_FILE): $(VITISNETP4_XCI_FILE) | $(COMPONENT_OUT_PATH)
+$(VITISNETP4_WRAPPER_FILE): $(VITISNETP4_XCI_FILE) | $(COMPONENT_OUT_PATH)
 	@$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $< --out_dir $(COMPONENT_OUT_PATH) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
 
 $(COMPONENT_OUT_PATH):

@@ -73,8 +73,3 @@ t = env.get_template('vitisnetp4_wrapper.j2')
 wrapper_filename = props['name'] + '_wrapper.sv'
 with open(os.path.join(args.out_dir, wrapper_filename), 'w') as f:
     t.stream(props = props).dump(f)
-
-t = env.get_template('vitisnetp4_app_pkg.j2')
-app_pkg_filename = props['name'] + '_app_pkg.sv'
-with open(os.path.join(args.out_dir, app_pkg_filename), 'w') as f:
-    t.stream(props = props).dump(f)
