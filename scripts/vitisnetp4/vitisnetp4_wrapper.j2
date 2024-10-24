@@ -31,18 +31,12 @@ module {{ props.name }}_wrapper
     input logic [3:0]      egr_flow_ctl,
 
     // Extern ports
-    {%- if props.num_user_externs > 0 and props.extern_ports %},
-    output USER_EXTERN_OUT_T    user_extern_out,
-    output USER_EXTERN_VALID_T  user_extern_out_valid,
-    input  USER_EXTERN_IN_T     user_extern_in,
-    input  USER_EXTERN_VALID_T  user_extern_in_valid
-    {% endif %}
     axi4l_intf.peripheral  axil_to_extern,
     axi4s_intf.rx          axis_to_extern,
     axi4s_intf.tx          axis_from_extern
 );
 
-    {%- if props.num_user_externs > 0 and not props.extern_ports %}
+    {%- if props.num_user_externs > 0 %}
     USER_EXTERN_OUT_T    user_extern_out;
     USER_EXTERN_VALID_T  user_extern_out_valid;
     USER_EXTERN_IN_T     user_extern_in;
