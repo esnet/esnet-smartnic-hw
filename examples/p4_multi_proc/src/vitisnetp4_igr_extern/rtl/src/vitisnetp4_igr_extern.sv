@@ -1,5 +1,6 @@
 module vitisnetp4_igr_extern
     import vitisnetp4_igr_pkg::*;
+    import smartnic_pkg::*;
 (
     input   logic clk,
     input   logic rstn,
@@ -7,7 +8,14 @@ module vitisnetp4_igr_extern
     input   USER_EXTERN_OUT_T    extern_from_vitisnetp4,
     input   USER_EXTERN_VALID_T  extern_from_vitisnetp4_valid,
     output  USER_EXTERN_IN_T     extern_to_vitisnetp4,
-    output  USER_EXTERN_VALID_T  extern_to_vitisnetp4_valid
+    output  USER_EXTERN_VALID_T  extern_to_vitisnetp4_valid,
+
+    input   timestamp_t    timestamp,
+    input   logic [3:0]    egr_flow_ctl,
+
+    axi4l_intf.peripheral  axil_to_extern,
+    axi4s_intf.rx          axis_to_extern,
+    axi4s_intf.tx          axis_from_extern
 );
 
     USER_EXTERN_IN_T     data_pipe  [16];
@@ -25,5 +33,12 @@ module vitisnetp4_igr_extern
 
     assign extern_to_vitisnetp4       = data_pipe[0];
     assign extern_to_vitisnetp4_valid = valid_pipe[0];
+
+
+    axi4l_intf_peripheral_term axil_term ( .axi4l_if(axil_to_extern) );
+
+    axi4s_intf_tx_term axis_from_extern_term ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_from_extern) );
+
+    axi4s_intf_rx_sink axis_to_extern_sink ( .axi4s_if(axis_to_extern) );
 
 endmodule: vitisnetp4_igr_extern

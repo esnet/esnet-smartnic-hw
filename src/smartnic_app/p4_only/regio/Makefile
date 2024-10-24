@@ -12,12 +12,16 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML   = p4_only.yaml \
                    smartnic_app_igr.yaml \
-                   smartnic_app_egr.yaml
+                   smartnic_app_egr.yaml \
+                   igr_extern.yaml \
+                   egr_extern.yaml
 
 REG_DECODER_YAML = smartnic_app_decoder.yaml \
                    p4_only_decoder.yaml \
                    smartnic_app_igr_decoder.yaml \
-                   smartnic_app_egr_decoder.yaml
+                   smartnic_app_egr_decoder.yaml \
+                   igr_extern_decoder.yaml \
+                   egr_extern_decoder.yaml
 
 # ----------------------------------------------------
 # Options
