@@ -1,9 +1,9 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+VITISNETP4_COMPONENT_ROOT := ..
 
-include $(COMPONENT_ROOT)/config.mk
+include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
@@ -15,7 +15,7 @@ include $(COMPONENT_ROOT)/config.mk
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/vitisnetp4_0_ex/imports
+    $(COMPONENT_OUT_PATH)/../ip/$(VITISNETP4_IP_NAME)_ex/imports
 
 SRC_LIST_FILES =
 
@@ -25,7 +25,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    vitisnetp4.ip \
+    $(COMPONENT_BASE).ip \
     std.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
@@ -34,7 +34,10 @@ EXT_LIBS =
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = \
+    VITISNETP4_AGENT_NAME=$(VITISNETP4_IP_NAME)_agent \
+    VITISNETP4_PKG_NAME=$(VITISNETP4_IP_NAME)_pkg \
+    VITISNETP4_VERIF_PKG_NAME=$(VITISNETP4_IP_NAME)_verif_pkg
 
 # ----------------------------------------------------
 # Options

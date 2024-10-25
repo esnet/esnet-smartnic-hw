@@ -1,1 +1,0 @@
-../check_drop_all.sh

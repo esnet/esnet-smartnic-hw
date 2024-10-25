@@ -34,7 +34,7 @@ module p4_multi_proc_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../src/smartnic_app/p4_only/tests/common/tasks.svh"
+    `include "../../../../src/smartnic_app/tests/common/tasks.svh"
 
     //===================================
     // Build

@@ -1,7 +1,6 @@
-// smartnic_app (empty) stub module. Used for platform level tests.
+// smartnic_app module black box. Used for platform level builds.
 (*black_box*) module smartnic_app
 #(
-    parameter int AXI_HBM_NUM_IFS = 16, // Number of HBM AXI interfaces.
     parameter int HOST_NUM_IFS = 3,     // Number of HOST interfaces.
     parameter int NUM_PORTS = 2,        // Number of processor ports (per vitisnetp4 processor).
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
@@ -122,52 +121,7 @@
     output logic [(HOST_NUM_IFS*NUM_PORTS* 12)-1:0] axis_c2h_tuser_rss_entropy,
 
     // flow control signals (one from each egress FIFO).
-    input logic [3:0]    egr_flow_ctl,
-
-    // AXI3 interfaces to HBM
-    // (synchronous to core clock domain)
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_aclk,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_aresetn,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_awid,
-    output logic [(AXI_HBM_NUM_IFS* 33)-1:0] axi_to_hbm_awaddr,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awlen,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_awsize,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_awburst,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_awlock,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awcache,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_awprot,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awqos,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_awregion,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_awvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_awready,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_wid,
-    output logic [(AXI_HBM_NUM_IFS*256)-1:0] axi_to_hbm_wdata,
-    output logic [(AXI_HBM_NUM_IFS* 32)-1:0] axi_to_hbm_wstrb,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wlast,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_wready,
-    input  logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_bid,
-    input  logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_bresp,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_bvalid,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_bready,
-    output logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_arid,
-    output logic [(AXI_HBM_NUM_IFS* 33)-1:0] axi_to_hbm_araddr,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arlen,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_arsize,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_arburst,
-    output logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_arlock,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arcache,
-    output logic [(AXI_HBM_NUM_IFS*  3)-1:0] axi_to_hbm_arprot,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arqos,
-    output logic [(AXI_HBM_NUM_IFS*  4)-1:0] axi_to_hbm_arregion,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_arvalid,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_arready,
-    input  logic [(AXI_HBM_NUM_IFS*  6)-1:0] axi_to_hbm_rid,
-    input  logic [(AXI_HBM_NUM_IFS*256)-1:0] axi_to_hbm_rdata,
-    input  logic [(AXI_HBM_NUM_IFS*  2)-1:0] axi_to_hbm_rresp,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rlast,
-    input  logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rvalid,
-    output logic [(AXI_HBM_NUM_IFS*  1)-1:0] axi_to_hbm_rready
+    input logic [3:0]    egr_flow_ctl
 );
 
 endmodule: smartnic_app

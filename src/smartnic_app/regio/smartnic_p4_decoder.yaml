@@ -1,0 +1,43 @@
+name: smartnic_p4
+
+blocks:
+  vitisnetp4: &vitisnetp4
+    name: vitisnetp4
+    info: |
+      This block contains the registers for the xilinx vitisnetp4 IP.
+      The memory offsets into this block are unmanaged by this tool.
+    regs: []
+
+  smartnic_app: &smartnic_app
+    !include ../src/smartnic_app/regio/smartnic_app.yaml
+
+decoders:
+  p4_proc_decoder: &p4_proc_decoder
+    !include ../src/p4_proc/regio/p4_proc_decoder.yaml
+
+interfaces:
+  - block: *vitisnetp4
+    address: 0x00000
+    width: 16
+    name: vitisnetp4_igr
+
+  - block: *vitisnetp4
+    address: 0x10000
+    width: 16
+    name: vitisnetp4_egr
+
+  - decoder: *p4_proc_decoder
+    address: 0x20000
+    width: 12
+    name: p4_proc_igr
+
+  - decoder: *p4_proc_decoder
+    address: 0x22000
+    width: 12
+    name: p4_proc_egr
+
+  - block: *smartnic_app
+    address: 0x23000
+    width: 10
+    name: app_common
+

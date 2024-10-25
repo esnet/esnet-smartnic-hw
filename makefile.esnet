@@ -9,7 +9,7 @@ vanilla_build_name = vanilla
 open_nic_build = $(ONS_ROOT)/build/$(BOARD)_$(BUILD_NAME)
 plugin_dir = ../../src/open-nic-plugin
 
-APP_ROOT            ?= $(PROJ_ROOT)/src/p4_app
+export APP_ROOT     ?= $(PROJ_ROOT)/src/p4_app
 ARTIFACTS_DIR       ?= $(APP_ROOT)/artifacts
 ARTIFACTS_BUILD_DIR ?= $(ARTIFACTS_DIR)/$(BUILD_NAME)
 
@@ -104,7 +104,11 @@ package :
 	@echo "The wireshark/plugins directory is a placeholder for wireshark .lua files,"    > $(artifact_dir)/wireshark/plugins/README.md
 	@echo "which can be used to decode custom protocol headers defined in the .p4 file." >> $(artifact_dir)/wireshark/plugins/README.md
 	@cp -r $(ONS_ROOT)/regmap/spec/* $(artifact_dir)/regmap/spec
-	@cp .out/$(BOARD)/smartnic/regio/ir/smartnic_decoder-ir.yaml $(artifact_dir)/regmap/spec/box1_322mhz_decoder.yaml
+	@$(REGIO_ROOT)/regio-flatten \
+		--include-dir $(APP_ROOT)/app_if \
+		--include-dir $(LIB_ROOT) \
+		--output-file $(artifact_dir)/regmap/spec/box1_322mhz_decoder.yaml \
+		$(PROJ_ROOT)/src/open-nic-plugin/box_322mhz/box_322mhz_decoder.yaml
 	@cp .out/$(BOARD)/smartnic_250mhz/regio/ir/smartnic_250mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box0_250mhz_decoder.yaml
 	@$(REGIO_ROOT)/regio-elaborate \
 	   --file-type top \

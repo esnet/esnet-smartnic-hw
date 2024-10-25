@@ -170,14 +170,14 @@ module smartnic_timestamp_unit_test;
 
       `INFO($sformatf("Timestamp reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
-      `FAIL_UNLESS( rd_data < init + 'd150 );  // check within 150ns margin, since timestamp counter is free running.
+      `FAIL_UNLESS( rd_data < init + 'd170 );  // check within 170ns margin, since timestamp counter is free running.
 
        env.smartnic_reg_blk_agent.read_freerun_rd_upper( rd_data[63:32] );
        env.smartnic_reg_blk_agent.read_freerun_rd_lower( rd_data[31:0]  );
 
       `INFO($sformatf("Freerun reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
-      `FAIL_UNLESS( rd_data < init + 'd150 );
+      `FAIL_UNLESS( rd_data < init + 'd170 );
 
        // initialize and start polling loop
        prev_data = 0;

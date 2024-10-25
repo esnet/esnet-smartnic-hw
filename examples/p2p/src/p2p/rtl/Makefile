@@ -24,9 +24,9 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     p2p.regio.rtl \
-    util.rtl@common@smartnic \
-    axi4l.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic
+    util.rtl@$(COMMON_LIB_NAME) \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

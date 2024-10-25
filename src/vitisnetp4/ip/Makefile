@@ -1,16 +1,14 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+VITISNETP4_COMPONENT_ROOT := ..
 
-include $(COMPONENT_ROOT)/config.mk
+include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # VitisNetP4 IP config
+# (additional options specified in $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
-VITISNETP4_IP_NAME ?= vitisnetp4_0
-
-P4_FILE ?= $(SMARTNIC_ROOT)/src/vitisnetp4/p4/p4_app.p4
 P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
 
 # ----------------------------------------------------
@@ -27,11 +25,14 @@ COMPILE_OPTS=
 # ----------------------------------------------------
 # Compile Targets
 # ----------------------------------------------------
-ifneq ($(P4_FILE),)
-all: synth compile
-endif
 
+all: synth compile
+
+ifeq ($(P4_FILE),)
+$(error No P4 file specified)
+else
 ip:      _vitisnetp4_ip
+endif
 compile: _vitisnetp4_compile
 synth:   _vitisnetp4_synth
 driver:  _vitisnetp4_driver

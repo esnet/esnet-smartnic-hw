@@ -28,7 +28,6 @@ module p2p_smartnic_ctrl_unit_test;
     tb_pkg::tb_env env;
 
     p2p_reg_verif_pkg::p2p_reg_blk_agent #() p2p_reg_blk_agent;
-    p2p_reg_verif_pkg::p2p_reg_blk_agent #() vitisnetp4_reg_blk_agent;
 
     //===================================
     // Import common testcase tasks
@@ -47,11 +46,8 @@ module p2p_smartnic_ctrl_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
-        p2p_reg_blk_agent = new("p2p_reg_blk", env.AXIL_APP_OFFSET);
+        p2p_reg_blk_agent = new("p2p_reg_blk", env.AXIL_APP_OFFSET + 'h20000);
         p2p_reg_blk_agent.reg_agent = env.reg_agent;
-
-        vitisnetp4_reg_blk_agent = new("vitisnetp4_reg_blk", env.AXIL_VITISNET_OFFSET);
-        vitisnetp4_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 
     //===================================
@@ -105,14 +101,6 @@ module p2p_smartnic_ctrl_unit_test;
 
         p2p_reg_blk_agent.read_status_lower(rd_data);
         `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_LOWER);
-
-        // Read vitisnetp4 status registers
-        vitisnetp4_reg_blk_agent.read_status_upper(rd_data);
-        `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_UPPER);
-
-        vitisnetp4_reg_blk_agent.read_status_lower(rd_data);
-        `FAIL_UNLESS(rd_data == p2p_reg_pkg::INIT_STATUS_LOWER);
-
     `SVTEST_END
 
     // Test timestamp access
@@ -130,17 +118,6 @@ module p2p_smartnic_ctrl_unit_test;
         env.smartnic_reg_blk_agent.read_timestamp_wr_lower ( rd_data[31:0] );
 
         `FAIL_UNLESS( rd_data == {wr_data_upper, wr_data_lower} );
-
-        // latch timestamp value received by p2p block
-        vitisnetp4_reg_blk_agent.write_timestamp_rd_latch( 0 );
-
-        // Read vitisnetp4 status registers
-        vitisnetp4_reg_blk_agent.read_status_upper(rd_data);
-        `FAIL_UNLESS(rd_data == wr_data_upper);
-
-        vitisnetp4_reg_blk_agent.read_status_lower(rd_data);
-        // validate upper bits only, since timestamp counter is free-running.
-        `FAIL_UNLESS(rd_data[31:14] == wr_data_lower[31:14]);
 
     `SVTEST_END
 

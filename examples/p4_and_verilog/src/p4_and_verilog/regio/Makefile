@@ -12,9 +12,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML = \
     p4_and_verilog.yaml
-
-REG_DECODER_YAML = \
-    p4_and_verilog_decoder.yaml
+REG_DECODER_YAML =
 
 # ----------------------------------------------------
 # Options
