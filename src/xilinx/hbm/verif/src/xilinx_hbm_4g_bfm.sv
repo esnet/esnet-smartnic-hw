@@ -624,10 +624,10 @@ module xilinx_hbm_4g_bfm #(
     `axi3_intf_from_signals_inst(15,15);
 
     // HBM model
-    mem_axi3_bfm #(
+    axi3_mem_bfm #(
         .CHANNELS ( 16 ),
         .DEBUG    ( DEBUG )
-    ) i_mem_axi3_bfm  (
+    ) i_axi3_mem_bfm  (
         .axi3_if  ( axi_if )
     );
 

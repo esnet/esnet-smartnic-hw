@@ -29,7 +29,7 @@ SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi3.rtl@common \
     mem.proxy.rtl@common \
-    mem.axi3.rtl@common
+    axi3.rtl@common
 
 EXT_LIBS =
 

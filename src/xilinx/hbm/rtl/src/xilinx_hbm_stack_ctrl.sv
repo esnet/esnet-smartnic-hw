@@ -175,11 +175,11 @@ module xilinx_hbm_stack_ctrl
                 .mem_rd_if   ( __mem_rd_if )
             );
 
-            mem_axi3_proxy #(
+            axi3_mem_adapter #(
                 .SIZE ( axi3_pkg::SIZE_32BYTES ),
                 .WR_TIMEOUT ( 0 ),
                 .RD_TIMEOUT ( 0 )
-            ) i_mem_axi3_proxy (
+            ) i_axi3_mem_adapter (
                 .clk           ( clk ),
                 .srst          ( local_srst ),
                 .init_done     ( ),
