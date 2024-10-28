@@ -32,7 +32,7 @@ SUBCOMPONENTS = \
     axi4s.rtl@common \
     axi4l.verif@common \
     axi4s.verif@common \
-    mem.axi3.verif@common
+    axi3.verif@common
 
 EXT_LIBS =
 
