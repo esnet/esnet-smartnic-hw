@@ -32,9 +32,9 @@ export P4_EGR_FILE := $(CURDIR)/p4/$(APP_NAME)_egr.p4
 # EXAMPLE_P4_FILE - Full pathname of p4 file used for example design generation (selects ingress or egress p4 program).
 # EXAMPLE_VITISNETP4_IP_NAME - Selects vitisnetp4 instance for example design.  Supports 'vitisnetp4_igr' (default) or 'vitisnetp4_egr'.
 # EXAMPLE_TEST_DIR - Full pathname of p4 test directory used for example design generation.
-export EXAMPLE_P4_FILE := $(P4_IGR_FILE)
-export EXAMPLE_VITISNETP4_IP_NAME := vitisnetp4_igr
-export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim_igr/test-fwd-p0
+export EXAMPLE_P4_FILE := $(P4_EGR_FILE)
+export EXAMPLE_VITISNETP4_IP_NAME := vitisnetp4_egr
+export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim_egr/test-fwd-p0
 
 
 #------- Targets -------

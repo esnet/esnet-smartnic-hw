@@ -81,16 +81,19 @@ refer to the following document:
 
    - *Vivado Design Suite User Guide - Logic Simulation, UG900 (v2023.2) October 18, 2023.*
 
+   Note that in the current Vivado release, simulating stimulus captured in .pcap format seems to hang simulation
+   indefinitely.  To avoid this issue, input stimulus should be captured using the .user file format instead.
 
 4. Note that vitisnetp4 example design generation also supports the optional instantiation of custom user extern
 function(s) by supplying the following additional file content:
 
    - C++ behavioural model for the custom extern function(s) in file `p4/sim/user_externs/vitisnetp4_igr_extern.cpp`.
 
-   - System verilog RTL code for the custom extern function(s) in file `src/vitisnetp4_igr_extern/rtl/src/vitisnetp4_igr_extern.sv`.
+   - System verilog RTL code for the custom extern function(s) in file `src/vitisnetp4_igr/rtl/src/vitisnetp4_igr_extern.sv`.
    If a user wishes to captures extern function(s) in a design hierarchy comprised of multiple .sv files,
-   all of the .sv files located in the `src/vitisnetp4_igr_extern/rtl/src/` directory will be included in the example
-   design project.
+   all of the .sv files located in the `src/vitisnetp4_igr/rtl/src/` directory will be included in the example
+   design project.  Furthmore, .sv files from multiple source directories can be included by listing all source directories
+   in the SRC_DIRS makefile variable assignment (see `src/vitisnetp4_igr/rtl/src/Makefile`).
 
    Finally, when simulating the vitisnetp4 example design with a user extern function, the `vitisnetp4_igr_extern`
 instantiation can be found within the `example_dut_wrapper` module (instance name `dut_inst/vitisnetp4_igr_extern_inst`).
