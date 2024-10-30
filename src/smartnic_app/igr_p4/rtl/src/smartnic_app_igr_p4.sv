@@ -34,9 +34,9 @@ module smartnic_app_igr_p4
     logic           user_metadata_out_valid;
 
     // Interfaces
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf #(.TUSER_T(p4_proc_pkg::tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_vitisnetp4 ();
-    axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+    axi4s_intf #(.TUSER_T(p4_proc_pkg::tuser_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_vitisnetp4 ();
 
     // P4 processor complex
