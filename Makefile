@@ -53,14 +53,14 @@ endif
 	-cp $(EXAMPLE_TEST_DIR)/*_in.pcap $(EXAMPLE_TEST_DIR)/*_in.user $(EXAMPLE_TEST_DIR)/*_in.meta $(APP_DIR)/example/.src 2> /dev/null
 	-cp $(EXAMPLE_TEST_DIR)/../user_externs/*.so $(APP_DIR)/example/.src 2> /dev/null
 	@echo "Generating vitisnetp4 ip in example/ subdirectory, using application p4 file..."
-	@$(MAKE) -s -C $(APP_DIR)/.app/src/vitisnetp4/ip   COMPONENT_OUT_PATH=$(APP_DIR)/example   P4_FILE=$(APP_DIR)/example/.src/$(notdir $(EXAMPLE_P4_FILE)) \
-	         VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
+	@$(MAKE) -s -C $(APP_ROOT)/src/$(EXAMPLE_VITISNETP4_IP_NAME)/ip  COMPONENT_OUT_PATH=$(APP_DIR)/example \
+	         P4_FILE=$(APP_DIR)/example/.src/$(notdir $(EXAMPLE_P4_FILE))  VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
 	@echo "Cleaning up unused and unecessary files (vitisnetp4 design ip and log files)..."
 	rm -rf $(APP_DIR)/example/ip_proj $(APP_DIR)/example/ip_user_files $(APP_DIR)/example/lib $(APP_DIR)/example/synth
 	rm -rf $(APP_DIR)/example/.Xil $(APP_DIR)/example/.xci $(APP_DIR)/example/*.tcl $(APP_DIR)/example/vivado*.log
-ifneq ($(wildcard $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)_extern),)
+ifneq ($(wildcard $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)/rtl/src/$(EXAMPLE_VITISNETP4_IP_NAME)_extern.sv),)
 	@echo "Stitching extern into example design..."
-	@$(MAKE) -s -C $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)_extern  VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
+	@$(MAKE) -s -C $(APP_DIR)/src/$(EXAMPLE_VITISNETP4_IP_NAME)/rtl/src  VITISNETP4_IP_NAME=$(EXAMPLE_VITISNETP4_IP_NAME)
 endif
 
 $(APP_DIR)/example:
