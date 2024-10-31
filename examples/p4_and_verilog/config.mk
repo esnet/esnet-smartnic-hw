@@ -9,7 +9,7 @@ SMARTNIC_ROOT = $(abspath $(APP_DIR)/../..)
 # -----------------------------------------------
 SRC_ROOT := $(abspath $(APP_DIR)/src)
 
-P4_FILE = $(abspath $(APP_DIR)/p4/p4_and_verilog.p4)
+P4_IGR_FILE = $(abspath $(APP_DIR)/p4/p4_and_verilog.p4)
 
 # -----------------------------------------------
 # Standard application config
