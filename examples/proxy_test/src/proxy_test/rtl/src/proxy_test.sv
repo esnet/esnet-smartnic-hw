@@ -263,8 +263,8 @@ module proxy_test
                                                 user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
 
 
-    // --- vitisnetp4_0 instance (proxy_test) ---
-    vitisnetp4_0 vitisnetp4_0_proxy_test
+    // --- vitisnetp4_igr instance (proxy_test) ---
+    vitisnetp4_igr vitisnetp4_igr_proxy_test
     (
         // Clocks & Resets
         .s_axis_aclk             (clk),

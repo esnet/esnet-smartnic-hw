@@ -1,1 +1,6 @@
-../../../../../../src/vitisnetp4/verif/src/vitisnetp4_verif_pkg.sv
+package vitisnetp4_verif_pkg;
+
+   `include "vitisnetp4_agent.svh"
+
+endpackage : vitisnetp4_verif_pkg
+
