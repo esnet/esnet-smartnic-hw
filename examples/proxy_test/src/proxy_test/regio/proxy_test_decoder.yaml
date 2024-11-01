@@ -9,6 +9,10 @@ blocks:
     !include src/reg/proxy/regio/reg_proxy.yaml
   mem_proxy: &mem_proxy
     !include src/mem/proxy/regio/mem_proxy.yaml
+  mem_proxy_4b: &mem_proxy_4b
+    !include ../examples/proxy_test/src/proxy_test/regio/mem_proxy_4b.yaml
+  mem_proxy_64b: &mem_proxy_64b
+    !include ../examples/proxy_test/src/proxy_test/regio/mem_proxy_64b.yaml
 
 interfaces:
   - block: *proxy_test
@@ -26,7 +30,13 @@ interfaces:
     address: 0x2000
     width: 12
     name: mem_proxy_4b
+    view:
+      name: mem_view_4b
+      block: *mem_proxy_4b
   - block: *mem_proxy
     address: 0x3000
     width: 12
     name: mem_proxy_64b
+    view:
+      name: mem_view_64b
+      block: *mem_proxy_64b
