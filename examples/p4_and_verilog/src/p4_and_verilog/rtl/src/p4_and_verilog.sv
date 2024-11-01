@@ -112,8 +112,8 @@ module p4_and_verilog
                                                user_metadata_out.rss_entropy : user_metadata_out_latch.rss_entropy;
 
 
-   // --- vitisnetp4_0 instance (p4_and_verilog) ---
-   vitisnetp4_0 vitisnetp4_0_p4_and_verilog
+   // --- vitisnetp4_igr instance (p4_and_verilog) ---
+   vitisnetp4_igr vitisnetp4_igr_p4_and_verilog
    (
     // Clocks & Resets
     .s_axis_aclk             (core_clk),

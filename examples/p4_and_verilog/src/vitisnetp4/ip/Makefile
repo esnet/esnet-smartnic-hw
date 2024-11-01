@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # VitisNetP4 IP config
 # -----------------------------------------------
-VITISNETP4_IP_NAME = vitisnetp4_0
+VITISNETP4_IP_NAME = vitisnetp4_igr
 
 P4_FILE = $(APP_DIR)/p4/p4_and_verilog.p4
 P4_OPTS = CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
