@@ -639,6 +639,13 @@ fw_p4_multi_proc_u55c:
   needs:
     - hwapi_p4_multi_proc_u55c
 
+fw_proxy_test_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_proxy_test_u280
+  needs:
+    - hwapi_proxy_test_u280
+
 fw_shell_au55c:
   extends: .trigger_fw
   variables:
