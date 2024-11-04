@@ -14,9 +14,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/vitisnetp4_igr_ex/imports
-
+INC_DIRS =
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -25,8 +23,10 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    vitisnetp4.ip \
-    std.verif@$(COMMON_LIB_NAME)
+    proxy_test.rtl \
+    axi4l.rtl@common@smartnic \
+    axi3.rtl@common@smartnic \
+    axi4s.rtl@common@smartnic
 
 EXT_LIBS =
 
@@ -44,13 +44,14 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile
+all: compile synth
 
 compile: _compile_sim
+synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile info clean
+.PHONY: all compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

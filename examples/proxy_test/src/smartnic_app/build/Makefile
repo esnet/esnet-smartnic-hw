@@ -5,6 +5,11 @@ COMPONENT_ROOT := ..
 
 include $(COMPONENT_ROOT)/config.mk
 
+# -----------------------------------------------
+# Specify top-level module
+# -----------------------------------------------
+TOP = smartnic_app
+
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
@@ -14,9 +19,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/vitisnetp4_igr_ex/imports
-
+INC_DIRS =
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -25,34 +28,32 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    vitisnetp4.ip \
-    std.verif@$(COMMON_LIB_NAME)
-
-EXT_LIBS =
-
-# ----------------------------------------------------
-# Defines
-#   List macro definitions.
-# ----------------------------------------------------
-DEFINES =
-
-# ----------------------------------------------------
-# Options
-# ----------------------------------------------------
-COMPILE_OPTS =
+    smartnic_app.rtl
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile
+all: opt validate
 
-compile: _compile_sim
-info:    _compile_info
-clean:   _compile_clean
+pre_synth: _pre_synth
+synth:     _build_core_synth
+opt:       _build_core_opt
+place:     _build_core_place
+validate:  _build_core_validate
+info:      _build_core_info
+clean:     _build_clean
 
-.PHONY: all compile info clean
+.PHONY: pre_synth synth opt validate info clean
 
 # ----------------------------------------------------
-# Import Vivado compile targets
+# Project management targets
 # ----------------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
+proj       : _proj
+proj_clean : _proj_clean
+
+.PHONY: proj proj_clean
+
+# -----------------------------------------------
+# Include Vivado definitions/targets
+# -----------------------------------------------
+include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk

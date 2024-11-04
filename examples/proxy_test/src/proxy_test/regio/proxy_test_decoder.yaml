@@ -1,0 +1,27 @@
+name: proxy_test
+
+blocks:
+  proxy_test: &proxy_test
+    !include ../examples/proxy_test/src/proxy_test/regio/proxy_test.yaml
+  reg_proxy: &reg_proxy
+    !include src/reg/proxy/regio/reg_proxy.yaml
+  mem_proxy: &mem_proxy
+    !include src/mem/proxy/regio/mem_proxy.yaml
+
+interfaces:
+  - block: *proxy_test
+    address: 0x0000
+    width: 12
+    name: proxy_test
+  - block: *reg_proxy
+    address: 0x1000
+    width: 12
+    name: reg_proxy
+  - block: *mem_proxy
+    address: 0x2000
+    width: 12
+    name: mem_proxy_4b
+  - block: *mem_proxy
+    address: 0x3000
+    width: 12
+    name: mem_proxy_64b

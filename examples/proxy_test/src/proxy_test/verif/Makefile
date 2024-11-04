@@ -14,9 +14,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/vitisnetp4_igr_ex/imports
-
+INC_DIRS =
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -25,8 +23,10 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    vitisnetp4.ip \
-    std.verif@$(COMMON_LIB_NAME)
+    proxy_test.regio.verif \
+    std.verif@common@smartnic \
+    axi4l.verif@common@smartnic \
+    axi4s.verif@common@smartnic
 
 EXT_LIBS =
 

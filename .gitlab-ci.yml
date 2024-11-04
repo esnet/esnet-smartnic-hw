@@ -40,6 +40,7 @@ p4bm:
     - make -s -C examples/p4_with_extern/p4/sim sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_igr sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_egr sim-all
+    - make -s -C examples/proxy_test/p4/sim build sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -49,6 +50,7 @@ p4bm:
       - examples/p4_with_extern/p4/sim
       - examples/p4_multi_proc/p4/sim_igr
       - examples/p4_multi_proc/p4/sim_egr
+      - examples/proxy_test/p4/sim
   needs: []
 
 sim_p4_apps:
@@ -68,6 +70,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
+    - make -s -C examples/proxy_test/tests/regression
+    - grep 'PASSED.*suites passing' examples/proxy_test/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
@@ -77,6 +81,7 @@ sim_p4_apps:
         - src/smartnic_app/p4_only/tests.smartnic/regression/run_*/tests.xml
         - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
+        - examples/proxy_test/tests/regression/run_*/tests.xml
     when: always
   timeout: 2h
   needs: []
@@ -378,6 +383,19 @@ build_p4_multi_proc_u55c:
     - when: manual
       allow_failure: true
 
+build_proxy_test_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: proxy_test
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
+
 build_shell_au55c:
   extends: .bitfile
   variables:
@@ -470,6 +488,11 @@ validate_p4_multi_proc_u55c:
   needs:
     - build_p4_multi_proc_u55c
 
+validate_proxy_test_u280:
+  extends: .validate
+  needs:
+    - build_proxy_test_u280
+
 .hwapi:
   stage: package
   extends: .common
@@ -539,6 +562,11 @@ hwapi_p4_multi_proc_u55c:
   extends: .hwapi
   needs:
     - build_p4_multi_proc_u55c
+
+hwapi_proxy_test_u280:
+  extends: .hwapi
+  needs:
+    - build_proxy_test_u280
 
 hwapi_shell_au55c:
   extends: .hwapi
@@ -610,6 +638,13 @@ fw_p4_multi_proc_u55c:
     SN_HW_API_JOB: hwapi_p4_multi_proc_u55c
   needs:
     - hwapi_p4_multi_proc_u55c
+
+fw_proxy_test_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_proxy_test_u280
+  needs:
+    - hwapi_proxy_test_u280
 
 fw_shell_au55c:
   extends: .trigger_fw

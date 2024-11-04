@@ -1,4 +1,4 @@
-package p4_and_verilog_pkg;
+package proxy_test_pkg;
     // --------------------------------------------------------------
     // Imports
     // --------------------------------------------------------------
@@ -10,4 +10,4 @@ package p4_and_verilog_pkg;
     // User metadata
     typedef USER_META_DATA_T user_metadata_t;
 
-endpackage : p4_and_verilog_pkg
+endpackage : proxy_test_pkg
