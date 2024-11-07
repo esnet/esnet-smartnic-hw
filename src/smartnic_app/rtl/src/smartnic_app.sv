@@ -133,6 +133,8 @@ module smartnic_app
     axi4l_intf #() app_axil_if ();
     axi4l_intf #() axil_to_extern [NUM_P4_PROC] ();
     axi4l_intf #() axil_to_vitisnetp4 [NUM_P4_PROC] ();
+    axi4l_intf     axil_c2h [HOST_NUM_IFS][NUM_PORTS] ();
+    axi4l_intf     axil_h2c [HOST_NUM_IFS][NUM_PORTS] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID),
                  .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_app_egr [NUM_PORTS] ();
@@ -305,6 +307,12 @@ module smartnic_app
                     .tuser   ( axis_h2c_tuser  [i][j] ),
                     .axi4s_if( axis_h2c[i][j] )
                 );
+
+                axi4s_probe axis_probe_h2c (
+                    .axi4l_if ( axil_h2c[i][j] ),
+                    .axi4s_if ( axis_h2c[i][j] )
+                );
+
                 // AXI-S c2h interface
                 axi4s_intf_to_signals #(
                     .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
@@ -320,6 +328,11 @@ module smartnic_app
                     .tdest   ( axis_c2h_tdest  [(i*NUM_PORTS+j)*  4 +:   4] ),
                     .tuser   ( axis_c2h_tuser  [i][j] ),
                     .axi4s_if( axis_c2h[i][j] )
+                );
+
+                axi4s_probe axis_probe_c2h (
+                    .axi4l_if ( axil_c2h[i][j] ),
+                    .axi4s_if ( axis_c2h[i][j] )
                 );
             end
         end
@@ -390,6 +403,29 @@ module smartnic_app
        .smartnic_app_egr_axil_if  ( axil_to_smartnic_app_egr )
     );
 
+    // p4 register decoder
+    smartnic_p4_decoder smartnic_p4_decoder_inst (
+       .axil_if                     ( axil_if ),
+       .app_common_axil_if          ( axil_to_smartnic_app ),
+       .vitisnetp4_igr_axil_if      ( axil_to_vitisnetp4[0] ),
+       .vitisnetp4_egr_axil_if      ( axil_to_vitisnetp4[1] ),
+       .p4_proc_igr_axil_if         ( axil_to_p4_proc[0] ),
+       .p4_proc_egr_axil_if         ( axil_to_p4_proc[1] ),
+
+       .probe_from_pf0_axil_if      ( axil_h2c[0][0] ),
+       .probe_from_pf1_axil_if      ( axil_h2c[0][1] ),
+       .probe_from_pf0_vf0_axil_if  ( axil_h2c[1][0] ),
+       .probe_from_pf1_vf0_axil_if  ( axil_h2c[1][1] ),
+       .probe_from_pf0_vf1_axil_if  ( axil_h2c[2][0] ),
+       .probe_from_pf1_vf1_axil_if  ( axil_h2c[2][1] ),
+       .probe_to_pf0_axil_if        ( axil_c2h[0][0] ),
+       .probe_to_pf1_axil_if        ( axil_c2h[0][1] ),
+       .probe_to_pf0_vf0_axil_if    ( axil_c2h[1][0] ),
+       .probe_to_pf1_vf0_axil_if    ( axil_c2h[1][1] ),
+       .probe_to_pf0_vf1_axil_if    ( axil_c2h[2][0] ),
+       .probe_to_pf1_vf1_axil_if    ( axil_c2h[2][1] )
+    );
+
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
         .axi4l_if_from_controller  ( axil_to_smartnic_app ),
@@ -401,17 +437,6 @@ module smartnic_app
     smartnic_app_reg_blk smartnic_app_reg_blk (
         .axil_if    ( axil_to_smartnic_app__core_clk ),
         .reg_blk_if ( smartnic_app_regs )
-    );
-
-
-    // p4 register decoder
-    smartnic_p4_decoder smartnic_p4_decoder_inst (
-       .axil_if                 ( axil_if ),
-       .app_common_axil_if      ( axil_to_smartnic_app ),
-       .vitisnetp4_igr_axil_if  ( axil_to_vitisnetp4[0] ),
-       .vitisnetp4_egr_axil_if  ( axil_to_vitisnetp4[1] ),
-       .p4_proc_igr_axil_if     ( axil_to_p4_proc[0] ),
-       .p4_proc_egr_axil_if     ( axil_to_p4_proc[1] )
     );
 
     // ----------------------------------------------------------------------
