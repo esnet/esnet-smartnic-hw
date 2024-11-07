@@ -152,6 +152,9 @@ module smartnic
    axi4l_intf   axil_to_drops_to_bypass [NUM_CMAC] ();
    axi4l_intf   axil_to_drops_from_bypass [NUM_CMAC] ();
 
+   axi4l_intf   axil_from_vf2           [NUM_CMAC] ();
+   axi4l_intf   axil_to_vf2             [NUM_CMAC] ();
+
    smartnic_reg_intf   smartnic_regs ();
 
 
@@ -232,7 +235,11 @@ module smartnic
       .probe_to_host_0_axil_if         (axil_to_probe_to_host[0]),
       .drops_ovfl_to_host_0_axil_if    (axil_to_ovfl_to_host[0]),
       .probe_to_host_1_axil_if         (axil_to_probe_to_host[1]),
-      .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1])
+      .drops_ovfl_to_host_1_axil_if    (axil_to_ovfl_to_host[1]),
+      .probe_from_pf0_vf2_axil_if      (axil_from_vf2[0]),
+      .probe_from_pf1_vf2_axil_if      (axil_from_vf2[1]),
+      .probe_to_pf0_vf2_axil_if        (axil_to_vf2[0]),
+      .probe_to_pf1_vf2_axil_if        (axil_to_vf2[1])
    );
 
    // smartnic bypass decoder
@@ -717,10 +724,13 @@ module smartnic
        axi4s_intf_connector host_to_core_demux_pipe_0 (.axi4s_from_tx(axis_host_to_core_demux[i][0]), .axi4s_to_rx(_axis_host_to_core[i]));
        axi4s_intf_connector host_to_core_demux_pipe_1 (.axi4s_from_tx(axis_host_to_core_demux[i][1]), .axi4s_to_rx(axis_h2c_demux__demarc[i]));
 
+       axi4s_probe axis_probe_from_vf2 (.axi4l_if(axil_from_vf2[i]), .axi4s_if(_axis_host_to_core[i]));
 
 
        axi4s_intf_pipe axis_core_to_app_pipe   (.axi4s_if_from_tx(axis_core_to_app[i]),         .axi4s_if_to_rx(axis_to_app__demarc[i]));
        axi4s_intf_pipe axis_app_to_core_pipe   (.axi4s_if_from_tx(axis_from_app__demarc[i]),    .axi4s_if_to_rx(axis_app_to_core[i]));
+
+       axi4s_probe axis_probe_to_vf2 (.axi4l_if(axil_to_vf2[i]), .axi4s_if(_axis_hash2qid[i]));
 
        assign _axis_hash2qid[i].tready = __axis_hash2qid[i].tready;
 
