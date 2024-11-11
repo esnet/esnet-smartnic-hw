@@ -11,6 +11,9 @@ blocks:
   smartnic_app: &smartnic_app
     !include ../src/smartnic_app/regio/smartnic_app.yaml
 
+  axi4s_probe: &axi4s_probe
+    !include src/axi4s/regio/axi4s_probe.yaml
+
 decoders:
   p4_proc_decoder: &p4_proc_decoder
     !include ../src/p4_proc/regio/p4_proc_decoder.yaml
@@ -41,3 +44,63 @@ interfaces:
     width: 10
     name: app_common
 
+
+  - block: *axi4s_probe
+    address: 0x24000
+    width: 8
+    name: probe_from_pf0
+
+  - block: *axi4s_probe
+    address: 0x24100
+    width: 8
+    name: probe_from_pf1
+
+  - block: *axi4s_probe
+    address: 0x24200
+    width: 8
+    name: probe_from_pf0_vf0
+
+  - block: *axi4s_probe
+    address: 0x24300
+    width: 8
+    name: probe_from_pf1_vf0
+
+  - block: *axi4s_probe
+    address: 0x24400
+    width: 8
+    name: probe_from_pf0_vf1
+
+  - block: *axi4s_probe
+    address: 0x24500
+    width: 8
+    name: probe_from_pf1_vf1
+
+  - block: *axi4s_probe
+    address: 0x24600
+    width: 8
+    name: probe_to_pf0
+
+  - block: *axi4s_probe
+    address: 0x24700
+    width: 8
+    name: probe_to_pf1
+
+  - block: *axi4s_probe
+    address: 0x24800
+    width: 8
+    name: probe_to_pf0_vf0
+
+  - block: *axi4s_probe
+    address: 0x24900
+    width: 8
+    name: probe_to_pf1_vf0
+
+  - block: *axi4s_probe
+    address: 0x24a00
+    width: 8
+    name: probe_to_pf0_vf1
+
+  - block: *axi4s_probe
+    address: 0x24b00
+    width: 8
+    name: probe_to_pf1_vf1
