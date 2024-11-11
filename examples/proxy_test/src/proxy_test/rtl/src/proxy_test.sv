@@ -27,16 +27,20 @@ module proxy_test
     axi4l_intf axil_to_reg_proxy ();
     axi4l_intf axil_to_mem_proxy_4b ();
     axi4l_intf axil_to_mem_proxy_64b ();
+    axi4l_intf axil_to_packet_playback ();
+    axi4l_intf axil_to_packet_capture ();
 
     proxy_test_reg_intf  proxy_test_regs();
 
     // proxy_test register decoder
     proxy_test_decoder proxy_test_decoder (
-        .axil_if               ( axil_if ),					
-        .proxy_test_axil_if    ( axil_to_proxy_test ),
-        .reg_proxy_axil_if     ( axil_to_reg_proxy ),
-        .mem_proxy_4b_axil_if  ( axil_to_mem_proxy_4b ),
-        .mem_proxy_64b_axil_if ( axil_to_mem_proxy_64b )
+        .axil_if                 ( axil_if ),
+        .proxy_test_axil_if      ( axil_to_proxy_test ),
+        .reg_proxy_axil_if       ( axil_to_reg_proxy ),
+        .mem_proxy_4b_axil_if    ( axil_to_mem_proxy_4b ),
+        .mem_proxy_64b_axil_if   ( axil_to_mem_proxy_64b ),
+        .packet_playback_axil_if ( axil_to_packet_playback ),
+        .packet_capture_axil_if  ( axil_to_packet_capture )
     );
 
     // proxy_test register block
@@ -193,6 +197,36 @@ module proxy_test
         .SPEC ( SPEC_64B )
     ) i_mem_ram_sdp_64b (
         .mem_if ( mem_64b_if )
+    );
+
+    // ----------------------------------------------------------------
+    // Packet proxy
+    // ----------------------------------------------------------------
+    packet_intf #(.DATA_BYTE_WID(32), .META_T(logic[63:0])) packet_if__playback (.clk, .srst);
+    packet_intf #(.DATA_BYTE_WID(32), .META_T(logic[63:0])) packet_if__capture (.clk, .srst);
+
+    packet_playback i_packet_playback (
+        .clk,
+        .srst,
+        .en (),
+        .axil_if ( axil_to_packet_playback ),
+        .packet_if ( packet_if__playback )
+    );
+
+    packet_fifo #(
+      .MIN_PKT_SIZE ( 40 ),
+      .MAX_PKT_SIZE ( 9200 )
+    ) i_packet_fifo (
+        .packet_in_if ( packet_if__playback ),
+        .packet_out_if ( packet_if__capture )
+    );
+
+    packet_capture i_packet_capture (
+        .clk,
+        .srst,
+        .en (),
+        .axil_if ( axil_to_packet_capture ),
+        .packet_if ( packet_if__capture )
     );
 
     // ----------------------------------------------------------------
