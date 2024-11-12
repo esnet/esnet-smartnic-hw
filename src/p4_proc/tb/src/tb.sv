@@ -45,35 +45,17 @@ module tb;
     user_metadata_t user_metadata_out, user_metadata_out_latch;
     logic           user_metadata_out_valid;
 
-    // DUT instance
-    p4_proc #(.NUM_PORTS(NUM_PORTS)) DUT (
+    // DUT instance - 'smartnic_app_igr_p4' instantiates the 'p4_proc' and 'vitisnetp4_wrapper' complex.
+    smartnic_app_igr_p4 #(.NUM_PORTS(NUM_PORTS)) DUT (
         .core_clk                ( clk ),
         .core_rstn               ( rstn ),
         .timestamp               ( timestamp ),
-        .axil_if                 ( axil_if ),
+        .axil_to_p4_proc         ( axil_if ),
+        .axil_to_vitisnetp4      ( axil_to_vitisnetp4 ),
+        .axil_to_extern          ( axil_to_extern ),
+        .egr_flow_ctl            ( '0 ),
         .axis_in                 ( axis_in_if ),
         .axis_out                ( axis_out_if ),
-        .axis_from_vitisnetp4         ( axis_from_vitisnetp4 ),
-        .axis_to_vitisnetp4           ( axis_to_vitisnetp4 ),
-        .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid ),
-        .user_metadata_to_vitisnetp4         ( user_metadata_in ),
-        .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid ),
-        .user_metadata_from_vitisnetp4       ( user_metadata_out )
-    );
-
-    vitisnetp4_wrapper vitisnetp4_wrapper_inst (
-        .core_clk                ( clk ),
-        .core_rstn               ( rstn ),
-        .axil_if                 ( axil_to_vitisnetp4 ),
-        .axis_rx                 ( axis_to_vitisnetp4 ),
-        .axis_tx                 ( axis_from_vitisnetp4 ),
-        .user_metadata_in_valid  ( user_metadata_in_valid ),
-        .user_metadata_in        ( user_metadata_in ),
-        .user_metadata_out_valid ( user_metadata_out_valid ),
-        .user_metadata_out       ( user_metadata_out ),
-        .timestamp               ( timestamp ),
-        .egr_flow_ctl            ( '0 ),
-        .axil_to_extern          ( axil_to_extern ),
         .axis_to_extern          ( axis_to_extern ),
         .axis_from_extern        ( axis_from_extern )
     );
