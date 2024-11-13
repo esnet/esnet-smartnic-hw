@@ -64,21 +64,17 @@ module smartnic_app_datapath_unit_test;
         svunit_ut.setup();
 
         // Flush packets from pipeline
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-        env.axis_monitor[2].flush();
-        env.axis_monitor[3].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
 
         // Issue reset (both datapath and management domains)
         reset();
 
         // Put AXI-S interfaces into quiescent state
-        env.axis_driver[0].idle();
-        env.axis_driver[1].idle();
-        env.axis_monitor[0].idle();
-        env.axis_monitor[1].idle();
-        env.axis_monitor[2].idle();
-        env.axis_monitor[3].idle();
+        env.axis_in_driver[0].idle();
+        env.axis_in_driver[1].idle();
+        env.axis_out_monitor[0].idle();
+        env.axis_out_monitor[1].idle();
 
     endtask
 
@@ -95,10 +91,8 @@ module smartnic_app_datapath_unit_test;
         svunit_ut.teardown();
 
         // Flush remaining packets
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-        env.axis_monitor[2].flush();
-        env.axis_monitor[3].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
         #10us;
 
     endtask
@@ -192,7 +186,7 @@ module smartnic_app_datapath_unit_test;
              begin
                  // Monitor output packets
                  while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                     env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
+                     env.axis_out_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
                      rx_pkt_cnt++;
                      debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...", 
                                            rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );

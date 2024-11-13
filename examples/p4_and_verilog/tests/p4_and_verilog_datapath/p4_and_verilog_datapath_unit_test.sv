@@ -63,21 +63,17 @@ module p4_and_verilog_datapath_unit_test;
         svunit_ut.setup();
 
         // Flush packets from pipeline
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-        env.axis_monitor[2].flush();
-        env.axis_monitor[3].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
 
         // Issue reset (both datapath and management domains)
         reset();
 
         // Put AXI-S interfaces into quiescent state
-        env.axis_driver[0].idle();
-        env.axis_driver[1].idle();
-        env.axis_monitor[0].idle();
-        env.axis_monitor[1].idle();
-        env.axis_monitor[2].idle();
-        env.axis_monitor[3].idle();
+        env.axis_in_driver[0].idle();
+        env.axis_in_driver[1].idle();
+        env.axis_out_monitor[0].idle();
+        env.axis_out_monitor[1].idle();
 
     endtask
 
@@ -94,10 +90,8 @@ module p4_and_verilog_datapath_unit_test;
         svunit_ut.teardown();
 
         // Flush remaining packets
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-        env.axis_monitor[2].flush();
-        env.axis_monitor[3].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
         #10us;
 
     endtask
@@ -192,7 +186,7 @@ module p4_and_verilog_datapath_unit_test;
              begin
                  // Monitor output packets
                  while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                     env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
+                     env.axis_out_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
                      rx_pkt_cnt++;
                      debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...", 
                                            rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
@@ -206,74 +200,7 @@ module p4_and_verilog_datapath_unit_test;
              end
          join
      endtask
-/*
-     task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
-	
-        string filename;
 
-        // expected pcap data
-        pcap_pkg::pcap_t exp_pcap;
-
-        // variables for sending packet data
-        automatic logic [63:0] timestamp = init_timestamp;
-        automatic int          num_pkts  = 0;
-        automatic int          start_idx = 0;
-
-        // variables for receiving (monitoring) packet data
-        automatic int rx_pkt_cnt = 0;    
-        automatic bit rx_done = 0;
-        byte          rx_data[$];
-        port_t        id;
-        port_t        dest;
-        bit           user;
-
-        debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
-        env.ts_agent.set_static(timestamp);
-
-        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
-        vitisnetp4_agent.table_init_from_file(filename);
-        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
-
-        debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/expected/packets_out.pcap"};
-        exp_pcap = pcap_pkg::read_pcap(filename);
-
-        debug_msg("Starting simulation...", VERBOSE);
-         filename = {"../../../p4/sim/", testdir, "/packets_in.pcap"};
-         rx_pkt_cnt = 0;
-         fork
-             begin
-                 // Send packets
-                 send_pcap(filename, num_pkts, start_idx);
-             end
-             begin
-                 // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
-                 while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if.tlast or posedge rx_done) begin
-                       if (tb.axis_in_if.tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
-                    end
-                 end
-             end
-             begin
-                 // Monitor output packets
-                 while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                     env.axis_monitor.receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
-                     rx_pkt_cnt++;
-                     debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...", 
-                                           rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
-
-                     debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                     compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data);
-                    `FAIL_IF_LOG( dest != dest_port, 
-                                  $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
-                 end
-                 rx_done = 1;
-             end
-         join
-     endtask
-*/
      task debug_msg(input string msg, input bit VERBOSE=0);
          if (VERBOSE) `INFO(msg);
      endtask

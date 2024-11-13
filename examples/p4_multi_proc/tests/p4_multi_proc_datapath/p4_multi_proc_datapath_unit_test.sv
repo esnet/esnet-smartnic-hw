@@ -61,8 +61,8 @@ module p4_multi_proc_datapath_unit_test;
         svunit_ut.setup();
 
         // Flush packets from pipeline
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
 
         // Issue reset (both datapath and management domains)
         reset();
@@ -71,10 +71,10 @@ module p4_multi_proc_datapath_unit_test;
         vitisnetp4_agent.init();
 
         // Put AXI-S interfaces into quiescent state
-        env.axis_driver[0].idle();
-        env.axis_driver[1].idle();
-        env.axis_monitor[0].idle();
-        env.axis_monitor[1].idle();
+        env.axis_in_driver[0].idle();
+        env.axis_in_driver[1].idle();
+        env.axis_out_monitor[0].idle();
+        env.axis_out_monitor[1].idle();
 
     endtask
 
@@ -91,8 +91,8 @@ module p4_multi_proc_datapath_unit_test;
         svunit_ut.teardown();
 
         // Flush remaining packets
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
+        env.axis_out_monitor[0].flush();
+        env.axis_out_monitor[1].flush();
         #10us;
 
         // Clean up vitisnetp4 tables
@@ -131,6 +131,7 @@ module p4_multi_proc_datapath_unit_test;
     //=======================================================================
     // TASKS
     //=======================================================================
+
      task run_pkt_test (
         input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
 	
@@ -191,7 +192,7 @@ module p4_multi_proc_datapath_unit_test;
                          end
                          begin
                              // Monitor received packets
-                             env.axis_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                             env.axis_out_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
                              rx_pkt_cnt++;
                              debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
                                                   rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
