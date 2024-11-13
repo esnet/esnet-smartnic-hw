@@ -12,6 +12,7 @@ module smartnic_hash2qid #(
 
     axi4l_intf.peripheral  axil_if
 );
+    import smartnic_pkg::*;
 
     // ----------------------------------------------------------------
     //  axi4l interface instantiations
@@ -54,7 +55,7 @@ module smartnic_hash2qid #(
 
     // -- pipe stage 2 --
     // extract host_if_id from top bits of tuser.rss_entropy.
-    logic [1:0] host_if_id;
+    h2c_t host_if_id;
     assign host_if_id = axi4s_in_p1.tuser.rss_entropy[11:10];
 
     logic [11:0] qid, base;
@@ -63,10 +64,10 @@ module smartnic_hash2qid #(
         if (!axi4s_in_p1.tuser.rss_enable)
             qid <=  '0;
         else case (host_if_id)
-            0 : qid <=  pf_table_qid;
-            1 : qid <= vf0_table_qid;
-            2 : qid <= vf1_table_qid;
-            3 : qid <= vf2_table_qid;
+            PF  : qid <=  pf_table_qid;
+            VF0 : qid <= vf0_table_qid;
+            VF1 : qid <= vf1_table_qid;
+            VF2 : qid <= vf2_table_qid;
         endcase
 
         base <= smartnic_hash2qid_regs.q_config[host_if_id];

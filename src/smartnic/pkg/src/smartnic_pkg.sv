@@ -33,6 +33,18 @@ package smartnic_pkg;
     } port_t;
 
     typedef enum logic [1:0] {
+        PF   = 2'h0,
+        VF0  = 2'h1,
+        VF1  = 2'h2,
+        VF2  = 2'h3
+    } h2c_encoding_t;
+
+    typedef union packed {
+        h2c_encoding_t encoded;
+        bit [1:0]       raw;
+    } h2c_t;
+
+    typedef enum logic [1:0] {
         APP    = 2'h0,
         BYPASS = 2'h2,
         DROP   = 2'h3

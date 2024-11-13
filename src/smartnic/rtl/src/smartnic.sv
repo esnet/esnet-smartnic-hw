@@ -607,8 +607,8 @@ module smartnic
        end : g__host_if_sel
    endgenerate
 
-   assign axis_host_tid[0].tid = (host_if_sel[0][0] ? PF0 : (host_if_sel[0][1] ? PF0_VF0 : (host_if_sel[0][2] ? PF0_VF1 : PF0_VF2)));
-   assign axis_host_tid[1].tid = (host_if_sel[1][0] ? PF1 : (host_if_sel[1][1] ? PF1_VF0 : (host_if_sel[1][2] ? PF1_VF1 : PF1_VF2)));
+   assign axis_host_tid[0].tid = (host_if_sel[0][PF] ? PF0 : (host_if_sel[0][VF0] ? PF0_VF0 : (host_if_sel[0][VF1] ? PF0_VF1 : PF0_VF2)));
+   assign axis_host_tid[1].tid = (host_if_sel[1][PF] ? PF1 : (host_if_sel[1][VF0] ? PF1_VF0 : (host_if_sel[1][VF1] ? PF1_VF1 : PF1_VF2)));
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__tid
        axi4s_intf_pipe axi4s_host_to_core_pipe (.axi4s_if_from_tx(axis_host_to_core[i]),    .axi4s_if_to_rx(axis_host_to_core_p[i]));
@@ -706,14 +706,14 @@ module smartnic
 
    logic host_to_core_demux_sel [NUM_CMAC];
 
-   logic [1:0] h2c_demux_sel [NUM_CMAC];
+   h2c_t h2c_demux_sel [NUM_CMAC];
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
        always @(posedge core_clk)
             if (!core_rstn)
                 host_to_core_demux_sel[i] <= 0;
             else if (axis_host_tid[i].tready && axis_host_tid[i].tvalid && axis_host_tid[i].sop)
-                host_to_core_demux_sel[i] <= host_if_sel[i][0] || host_if_sel[i][1] || host_if_sel[i][2];
+                host_to_core_demux_sel[i] <= host_if_sel[i][PF] || host_if_sel[i][VF0] || host_if_sel[i][VF1];
 
        axi4s_intf_demux #(.N(2)) host_to_core_demux_inst (
            .axi4s_in   ( axis_host_tid_p[i] ),
@@ -745,7 +745,7 @@ module smartnic
 
        always_comb begin
            __axis_hash2qid[i].tuser = _axis_hash2qid[i].tuser;
-           __axis_hash2qid[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with PF VF2 id.
+           __axis_hash2qid[i].tuser.rss_entropy[11:10] = VF2;  // overwrite top bits with PF VF2 id.
        end
 
        axi4s_intf_connector core_to_host_mux_pipe_0 (.axi4s_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_to_rx(core_to_host_mux[i][0]));
@@ -770,10 +770,10 @@ module smartnic
 
        always @(posedge core_clk)
             if (!core_rstn)
-                h2c_demux_sel[i] <= 0;
+                h2c_demux_sel[i] <= PF;
             else if (axis_h2c_demux[i].tready && axis_h2c_demux[i].tvalid && axis_h2c_demux[i].sop)
-                h2c_demux_sel[i] <= ((axis_h2c_demux[i].tid == PF0)     || (axis_h2c_demux[i].tid == PF1))     ? 2'h0 :
-                                    ((axis_h2c_demux[i].tid == PF0_VF0) || (axis_h2c_demux[i].tid == PF1_VF0)) ? 2'h1 : 2'h2;
+                h2c_demux_sel[i] <= ((axis_h2c_demux[i].tid == PF0)     || (axis_h2c_demux[i].tid == PF1))     ? PF  :
+                                    ((axis_h2c_demux[i].tid == PF0_VF0) || (axis_h2c_demux[i].tid == PF1_VF0)) ? VF0 : VF1;
 
        axi4s_intf_demux #(.N(HOST_NUM_IFS)) axis_h2c_demux_inst (
            .axi4s_in   ( axis_h2c_demux_p[i] ),
