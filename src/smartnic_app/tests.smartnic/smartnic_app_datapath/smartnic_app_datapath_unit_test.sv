@@ -50,8 +50,6 @@ module smartnic_app_datapath_unit_test
     assign rss_entropy[0] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
     assign rss_entropy[1] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[23:12];
 
-    int exp_pkt_cnt, exp_byte_cnt;
-
     //===================================
     // Import common testcase tasks
     //===================================
@@ -118,12 +116,12 @@ module smartnic_app_datapath_unit_test
                  // source traffic from/to PF0_VF2. direct traffic to qid PF0_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
                  src_vf[0] = PF0_VF2;
                  env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table ({'0, src_vf[0]}, {'0, src_vf[0]});
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(PF0_VF2), .out_port(PF0_VF2) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF0_VF2), .out_port(PF0_VF2) );
 
                  // source traffic from/to PF1_VF2. direct traffic to qid PF1_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
                  src_vf[1] = PF1_VF2;
                  env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table ({'0, src_vf[1]}, {'0, src_vf[1]});
-                 run_pkt_test ( .testdir( "test-default" ), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(PF1_VF2), .out_port(PF1_VF2) );
+                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF1_VF2), .out_port(PF1_VF2) );
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
@@ -142,7 +140,7 @@ module smartnic_app_datapath_unit_test
        `SVTEST_END
 
        `SVTEST(test_pkt_loopback)
-           run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .out_port(0) );
+           run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0) );
        `SVTEST_END
 
        `SVTEST(test_egr_pkt_trunc)
@@ -153,7 +151,7 @@ module smartnic_app_datapath_unit_test
               trunc_config.trunc_length = $urandom_range(65,500);
               p4_proc_reg_agent.write_trunc_config(trunc_config);
 
-              run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .out_port(0), .max_pkt_size(trunc_config.trunc_length) );
+              run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0), .max_pkt_size(trunc_config.trunc_length) );
            end
        `SVTEST_END
 
@@ -161,12 +159,12 @@ module smartnic_app_datapath_unit_test
            //write_p4_tables ( .testdir("test-fwd-p1") );
            fork
               // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-              run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(1), .out_port(1) );
+              run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(1), .out_port(1) );
 
               // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
               // (without re-programming the p4 tables).
               @(posedge tb.axis_in_if[1].tvalid)
-                run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp(1), .in_port(0), .out_port(0), .write_p4_tables(0) );
+                run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_port(0), .out_port(0), .write_p4_tables(0) );
            join
        `SVTEST_END
 

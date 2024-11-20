@@ -27,10 +27,11 @@ SUBCOMPONENTS = \
     smartnic_app.verif \
     smartnic_app.tb \
     smartnic_app.igr_p4.default.rtl \
-    smartnic_app.egr_p4.passthru.rtl \
-    smartnic_app.igr.passthru.rtl \
-    smartnic_app.egr.passthru.rtl \
+    smartnic_app.egr_p4.vf_loopback.rtl \
+    smartnic_app.igr.demux.rtl \
+    smartnic_app.egr.mux.rtl \
     smartnic_app.igr_p4.default.vitisnetp4_igr.verif \
+    smartnic_app.igr.demux.regio.verif \
     axi4l.rtl@common \
     axi4s.rtl@common \
     axi4l.verif@common \
@@ -70,7 +71,7 @@ SIM_OPTS =
 all: p4bm build_test sim
 
 p4bm:
-	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/vitisnetp4/p4/sim
+	$(MAKE) sim-all-svh P4BM_LOGFILE="-l log" -C $(SMARTNIC_ROOT)/src/smartnic_app/p4/sim
 
 build_test: _build_test
 sim:        _sim
