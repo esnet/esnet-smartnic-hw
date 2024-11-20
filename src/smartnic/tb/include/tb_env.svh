@@ -105,6 +105,12 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
 
     endfunction
 
+    // Destructor
+    // [[ implements std_verif_pkg::base.destroy() ]]
+    function automatic void destroy();
+        // TODO
+    endfunction
+
     function void set_debug(input bit debug);
         this.DEBUG = debug;
     endfunction

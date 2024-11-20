@@ -89,6 +89,12 @@ class tb_env extends std_verif_pkg::base;
         ts_agent             = new;
     endfunction
 
+    // Destructor
+    // [[ implements std_verif_pkg::base.destroy() ]]
+    function automatic void destroy();
+        // TODO
+    endfunction
+
     function void connect();
         axis_driver[0].axis_vif       = axis_in_vif[0];
         axis_driver[1].axis_vif       = axis_in_vif[1];
@@ -124,7 +130,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor[5].idle();
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
-        vitisnetp4_reg_agent._wait(32);
+        #100ns;
     endtask
 
     task init_timestamp();
