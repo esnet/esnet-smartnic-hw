@@ -22,14 +22,13 @@ module p4_and_verilog_ctrl_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
 
     p4_and_verilog_verif_pkg::p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
 
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../common/tasks.svh"
+    `include "../../../../src/smartnic_app/tests/common/tasks.svh"
 
     //===================================
     // Build
