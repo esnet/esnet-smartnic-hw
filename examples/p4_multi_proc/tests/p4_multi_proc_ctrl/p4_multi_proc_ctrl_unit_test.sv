@@ -22,7 +22,6 @@ module p4_multi_proc_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
 
     //===================================
     // Import common testcase tasks

@@ -33,9 +33,9 @@ module tb;
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_out_if[NUM_PORTS] ();
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_h2c_if[NUM_PORTS * HOST_NUM_IFS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_h2c_if[HOST_NUM_IFS][NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_c2h_if[NUM_PORTS * HOST_NUM_IFS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_c2h_if[HOST_NUM_IFS][NUM_PORTS] ();
 
     logic [NUM_PORTS-1:0]        axis_app_igr_tvalid;
     logic [NUM_PORTS-1:0]        axis_app_igr_tready;
@@ -99,15 +99,18 @@ module tb;
     logic [NUM_PORTS*HOST_NUM_IFS-1:0][15:0]  axis_h2c_tuser_pid;
 
     generate
-        for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
-            assign axis_h2c_tvalid[j]    = axis_h2c_if[j].tvalid;
-            assign axis_h2c_if[j].tready = axis_h2c_tready[j];
-            assign axis_h2c_tdata[j]     = axis_h2c_if[j].tdata;
-            assign axis_h2c_tkeep[j]     = axis_h2c_if[j].tkeep;
-            assign axis_h2c_tlast[j]     = axis_h2c_if[j].tlast;
-            assign axis_h2c_tid[j]       = axis_h2c_if[j].tid;
-            assign axis_h2c_tdest[j]     = axis_h2c_if[j].tdest;
-            assign axis_h2c_tuser_pid[j] = axis_h2c_if[j].tuser.pid;
+        for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin
+                assign axis_h2c_tvalid[j*NUM_PORTS+i]    = axis_h2c_if[j][i].tvalid;
+                assign axis_h2c_tdata[j*NUM_PORTS+i]     = axis_h2c_if[j][i].tdata;
+                assign axis_h2c_tkeep[j*NUM_PORTS+i]     = axis_h2c_if[j][i].tkeep;
+                assign axis_h2c_tlast[j*NUM_PORTS+i]     = axis_h2c_if[j][i].tlast;
+                assign axis_h2c_tid[j*NUM_PORTS+i]       = axis_h2c_if[j][i].tid;
+                assign axis_h2c_tdest[j*NUM_PORTS+i]     = axis_h2c_if[j][i].tdest;
+                assign axis_h2c_tuser_pid[j*NUM_PORTS+i] = axis_h2c_if[j][i].tuser.pid;
+
+                assign axis_h2c_if[j][i].tready          = axis_h2c_tready[j*NUM_PORTS+i];
+            end
         end
     endgenerate
 
@@ -125,81 +128,84 @@ module tb;
     logic [NUM_PORTS*HOST_NUM_IFS-1:0][11:0]  axis_c2h_tuser_rss_entropy;
 
     generate
-        for (genvar j = 0; j < NUM_PORTS*HOST_NUM_IFS; j += 1) begin
-            assign axis_c2h_if[j].aclk               = clk;
-            assign axis_c2h_if[j].aresetn            = rstn;
-            assign axis_c2h_if[j].tvalid             = axis_c2h_tvalid[j];
-            assign axis_c2h_tready[j]                = axis_c2h_if[j].tready;
-            assign axis_c2h_if[j].tdata              = axis_c2h_tdata[j];
-            assign axis_c2h_if[j].tkeep              = axis_c2h_tkeep[j];
-            assign axis_c2h_if[j].tlast              = axis_c2h_tlast[j];
-            assign axis_c2h_if[j].tid                = axis_c2h_tid[j];
-            assign axis_c2h_if[j].tdest              = axis_c2h_tdest[j];
-            assign axis_c2h_if[j].tuser.pid          = axis_c2h_tuser_pid[j];
-            assign axis_c2h_if[j].tuser.trunc_enable = axis_c2h_tuser_trunc_enable[j];
-            assign axis_c2h_if[j].tuser.trunc_length = axis_c2h_tuser_trunc_length[j];
-            assign axis_c2h_if[j].tuser.rss_enable   = axis_c2h_tuser_rss_enable[j];
-            assign axis_c2h_if[j].tuser.rss_entropy  = axis_c2h_tuser_rss_entropy[j];
+        for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin
+                assign axis_c2h_if[j][i].aclk               = clk;
+                assign axis_c2h_if[j][i].aresetn            = rstn;
+                assign axis_c2h_if[j][i].tvalid             = axis_c2h_tvalid[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tdata              = axis_c2h_tdata[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tkeep              = axis_c2h_tkeep[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tlast              = axis_c2h_tlast[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tid                = axis_c2h_tid[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tdest              = axis_c2h_tdest[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tuser.pid          = axis_c2h_tuser_pid[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tuser.trunc_enable = axis_c2h_tuser_trunc_enable[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tuser.trunc_length = axis_c2h_tuser_trunc_length[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tuser.rss_enable   = axis_c2h_tuser_rss_enable[j*NUM_PORTS+i];
+                assign axis_c2h_if[j][i].tuser.rss_entropy  = axis_c2h_tuser_rss_entropy[j*NUM_PORTS+i];
+
+                assign axis_c2h_tready[j*NUM_PORTS+i]       = axis_c2h_if[j][i].tready;
+            end
         end
     endgenerate
 
     // DUT instance
     smartnic_app DUT (
-        .core_clk     (clk),
-        .core_rstn    (rstn),
-        .timestamp    (timestamp),
-        .axil_aclk    (axil_if.aclk),
+        .core_clk                       (clk),
+        .core_rstn                      (rstn),
+        .timestamp                      (timestamp),
+        .axil_aclk                      (axil_if.aclk),
         // P4 AXI-L control interface
-        .axil_aresetn (axil_if.aresetn),
-        .axil_awvalid (axil_if.awvalid),
-        .axil_awready (axil_if.awready),
-        .axil_awaddr  (axil_if.awaddr),
-        .axil_awprot  (axil_if.awprot),
-        .axil_wvalid  (axil_if.wvalid),
-        .axil_wready  (axil_if.wready),
-        .axil_wdata   (axil_if.wdata),
-        .axil_wstrb   (axil_if.wstrb),
-        .axil_bvalid  (axil_if.bvalid),
-        .axil_bready  (axil_if.bready),
-        .axil_bresp   (axil_if.bresp),
-        .axil_arvalid (axil_if.arvalid),
-        .axil_arready (axil_if.arready),
-        .axil_araddr  (axil_if.araddr),
-        .axil_arprot  (axil_if.arprot),
-        .axil_rvalid  (axil_if.rvalid),
-        .axil_rready  (axil_if.rready),
-        .axil_rdata   (axil_if.rdata),
-        .axil_rresp   (axil_if.rresp),
+        .axil_aresetn                   (axil_if.aresetn),
+        .axil_awvalid                   (axil_if.awvalid),
+        .axil_awready                   (axil_if.awready),
+        .axil_awaddr                    (axil_if.awaddr),
+        .axil_awprot                    (axil_if.awprot),
+        .axil_wvalid                    (axil_if.wvalid),
+        .axil_wready                    (axil_if.wready),
+        .axil_wdata                     (axil_if.wdata),
+        .axil_wstrb                     (axil_if.wstrb),
+        .axil_bvalid                    (axil_if.bvalid),
+        .axil_bready                    (axil_if.bready),
+        .axil_bresp                     (axil_if.bresp),
+        .axil_arvalid                   (axil_if.arvalid),
+        .axil_arready                   (axil_if.arready),
+        .axil_araddr                    (axil_if.araddr),
+        .axil_arprot                    (axil_if.arprot),
+        .axil_rvalid                    (axil_if.rvalid),
+        .axil_rready                    (axil_if.rready),
+        .axil_rdata                     (axil_if.rdata),
+        .axil_rresp                     (axil_if.rresp),
         // App AXI-L control interface
-        .app_axil_aresetn (app_axil_if.aresetn),
-        .app_axil_awvalid (app_axil_if.awvalid),
-        .app_axil_awready (app_axil_if.awready),
-        .app_axil_awaddr  (app_axil_if.awaddr),
-        .app_axil_awprot  (app_axil_if.awprot),
-        .app_axil_wvalid  (app_axil_if.wvalid),
-        .app_axil_wready  (app_axil_if.wready),
-        .app_axil_wdata   (app_axil_if.wdata),
-        .app_axil_wstrb   (app_axil_if.wstrb),
-        .app_axil_bvalid  (app_axil_if.bvalid),
-        .app_axil_bready  (app_axil_if.bready),
-        .app_axil_bresp   (app_axil_if.bresp),
-        .app_axil_arvalid (app_axil_if.arvalid),
-        .app_axil_arready (app_axil_if.arready),
-        .app_axil_araddr  (app_axil_if.araddr),
-        .app_axil_arprot  (app_axil_if.arprot),
-        .app_axil_rvalid  (app_axil_if.rvalid),
-        .app_axil_rready  (app_axil_if.rready),
-        .app_axil_rdata   (app_axil_if.rdata),
-        .app_axil_rresp   (app_axil_if.rresp),
+        .app_axil_aresetn               (app_axil_if.aresetn),
+        .app_axil_awvalid               (app_axil_if.awvalid),
+        .app_axil_awready               (app_axil_if.awready),
+        .app_axil_awaddr                (app_axil_if.awaddr),
+        .app_axil_awprot                (app_axil_if.awprot),
+        .app_axil_wvalid                (app_axil_if.wvalid),
+        .app_axil_wready                (app_axil_if.wready),
+        .app_axil_wdata                 (app_axil_if.wdata),
+        .app_axil_wstrb                 (app_axil_if.wstrb),
+        .app_axil_bvalid                (app_axil_if.bvalid),
+        .app_axil_bready                (app_axil_if.bready),
+        .app_axil_bresp                 (app_axil_if.bresp),
+        .app_axil_arvalid               (app_axil_if.arvalid),
+        .app_axil_arready               (app_axil_if.arready),
+        .app_axil_araddr                (app_axil_if.araddr),
+        .app_axil_arprot                (app_axil_if.arprot),
+        .app_axil_rvalid                (app_axil_if.rvalid),
+        .app_axil_rready                (app_axil_if.rready),
+        .app_axil_rdata                 (app_axil_if.rdata),
+        .app_axil_rresp                 (app_axil_if.rresp),
          // AXI-S data interface (from switch output 0, to app)
-        .axis_app_igr_tvalid    ( axis_app_igr_tvalid ),
-        .axis_app_igr_tready    ( axis_app_igr_tready ),
-        .axis_app_igr_tdata     ( axis_app_igr_tdata ),
-        .axis_app_igr_tkeep     ( axis_app_igr_tkeep ),
-        .axis_app_igr_tlast     ( axis_app_igr_tlast ),
-        .axis_app_igr_tid       ( axis_app_igr_tid ),
-        .axis_app_igr_tdest     ( axis_app_igr_tdest ),
-        .axis_app_igr_tuser_pid ( axis_app_igr_tuser_pid ),
+        .axis_app_igr_tvalid            ( axis_app_igr_tvalid ),
+        .axis_app_igr_tready            ( axis_app_igr_tready ),
+        .axis_app_igr_tdata             ( axis_app_igr_tdata ),
+        .axis_app_igr_tkeep             ( axis_app_igr_tkeep ),
+        .axis_app_igr_tlast             ( axis_app_igr_tlast ),
+        .axis_app_igr_tid               ( axis_app_igr_tid ),
+        .axis_app_igr_tdest             ( axis_app_igr_tdest ),
+        .axis_app_igr_tuser_pid         ( axis_app_igr_tuser_pid ),
         // AXI-S data interface (from app, to switch input 0)
         .axis_app_egr_tvalid            ( axis_app_egr_tvalid ),
         .axis_app_egr_tready            ( axis_app_egr_tready ),
@@ -212,27 +218,27 @@ module tb;
         .axis_app_egr_tuser_rss_enable  ( axis_app_egr_tuser_rss_enable ),
         .axis_app_egr_tuser_rss_entropy ( axis_app_egr_tuser_rss_entropy ),
          // AXI-S data interface (from switch output 0, to app)
-        .axis_h2c_tvalid    ( axis_h2c_tvalid ),
-        .axis_h2c_tready    ( axis_h2c_tready ),
-        .axis_h2c_tdata     ( axis_h2c_tdata ),
-        .axis_h2c_tkeep     ( axis_h2c_tkeep ),
-        .axis_h2c_tlast     ( axis_h2c_tlast ),
-        .axis_h2c_tid       ( axis_h2c_tid ),
-        .axis_h2c_tdest     ( axis_h2c_tdest ),
-        .axis_h2c_tuser_pid ( axis_h2c_tuser_pid ),
+        .axis_h2c_tvalid                ( axis_h2c_tvalid ),
+        .axis_h2c_tready                ( axis_h2c_tready ),
+        .axis_h2c_tdata                 ( axis_h2c_tdata ),
+        .axis_h2c_tkeep                 ( axis_h2c_tkeep ),
+        .axis_h2c_tlast                 ( axis_h2c_tlast ),
+        .axis_h2c_tid                   ( axis_h2c_tid ),
+        .axis_h2c_tdest                 ( axis_h2c_tdest ),
+        .axis_h2c_tuser_pid             ( axis_h2c_tuser_pid ),
         // AXI-S data interface (from app, to switch input 0)
-        .axis_c2h_tvalid            ( axis_c2h_tvalid ),
-        .axis_c2h_tready            ( axis_c2h_tready ),
-        .axis_c2h_tdata             ( axis_c2h_tdata ),
-        .axis_c2h_tkeep             ( axis_c2h_tkeep ),
-        .axis_c2h_tlast             ( axis_c2h_tlast ),
-        .axis_c2h_tid               ( axis_c2h_tid ),
-        .axis_c2h_tdest             ( axis_c2h_tdest ),
-        .axis_c2h_tuser_pid         ( axis_c2h_tuser_pid ),
-        .axis_c2h_tuser_rss_enable  ( axis_c2h_tuser_rss_enable ),
-        .axis_c2h_tuser_rss_entropy ( axis_c2h_tuser_rss_entropy ),
+        .axis_c2h_tvalid                ( axis_c2h_tvalid ),
+        .axis_c2h_tready                ( axis_c2h_tready ),
+        .axis_c2h_tdata                 ( axis_c2h_tdata ),
+        .axis_c2h_tkeep                 ( axis_c2h_tkeep ),
+        .axis_c2h_tlast                 ( axis_c2h_tlast ),
+        .axis_c2h_tid                   ( axis_c2h_tid ),
+        .axis_c2h_tdest                 ( axis_c2h_tdest ),
+        .axis_c2h_tuser_pid             ( axis_c2h_tuser_pid ),
+        .axis_c2h_tuser_rss_enable      ( axis_c2h_tuser_rss_enable ),
+        .axis_c2h_tuser_rss_entropy     ( axis_c2h_tuser_rss_entropy ),
         // egress flow control interface
-        .egr_flow_ctl            ( '0 )
+        .egr_flow_ctl                   ( '0 )
     );
 
     //===================================
@@ -273,18 +279,21 @@ module tb;
     // Timestamp
     assign timestamp = timestamp_if.timestamp;
 
-    // Assign AXI-S input clock/reset
-    assign axis_in_if[0].aclk = clk;
-    assign axis_in_if[0].aresetn = rstn;
-
-    assign axis_in_if[1].aclk = clk;
-    assign axis_in_if[1].aresetn = rstn;
-
-    assign axis_out_if[0].aclk = clk;
-    assign axis_out_if[0].aresetn = rstn;
-
-    assign axis_out_if[1].aclk = clk;
-    assign axis_out_if[1].aresetn = rstn;
+    // Assign AXI-S input clocks/resets
+    generate
+        for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin
+                assign axis_h2c_if[j][i].aclk = clk;
+                assign axis_h2c_if[j][i].aresetn = rstn;
+                assign axis_c2h_if[j][i].aclk = clk;
+                assign axis_c2h_if[j][i].aresetn = rstn;
+            end
+            assign axis_in_if[i].aclk = clk;
+            assign axis_in_if[i].aresetn = rstn;
+            assign axis_out_if[i].aclk = clk;
+            assign axis_out_if[i].aresetn = rstn;
+        end
+    endgenerate
 
     //===================================
     // Build
@@ -295,27 +304,27 @@ module tb;
             env = new("tb_env",0); // Configure for little-endian
 
             // Connect
-            env.reset_vif = reset_if;
-            env.mgmt_reset_vif = mgmt_reset_if;
-            env.timestamp_vif = timestamp_if;
-            env.axil_vif = app_axil_if;
-            env.axil_vitisnetp4_vif = axil_if;
-            env.axis_in_vif[0]  = axis_in_if[0];
-            env.axis_in_vif[1]  = axis_in_if[1];
-            env.axis_h2c_vif[0] = axis_h2c_if[0];
-            env.axis_h2c_vif[1] = axis_h2c_if[1];
-            env.axis_h2c_vif[2] = axis_h2c_if[2];
-            env.axis_h2c_vif[3] = axis_h2c_if[3];
-            env.axis_h2c_vif[4] = axis_h2c_if[4];
-            env.axis_h2c_vif[5] = axis_h2c_if[5];
-            env.axis_out_vif[0] = axis_out_if[0];
-            env.axis_out_vif[1] = axis_out_if[1];
-            env.axis_c2h_vif[0] = axis_c2h_if[0];
-            env.axis_c2h_vif[1] = axis_c2h_if[1];
-            env.axis_c2h_vif[2] = axis_c2h_if[2];
-            env.axis_c2h_vif[3] = axis_c2h_if[3];
-            env.axis_c2h_vif[4] = axis_c2h_if[4];
-            env.axis_c2h_vif[5] = axis_c2h_if[5];
+            env.reset_vif            = reset_if;
+            env.mgmt_reset_vif       = mgmt_reset_if;
+            env.timestamp_vif        = timestamp_if;
+            env.app_axil_vif         = app_axil_if;
+            env.axil_vif             = axil_if;
+            env.axis_in_vif[0]       = axis_in_if[0];
+            env.axis_in_vif[1]       = axis_in_if[1];
+            env.axis_h2c_vif[PF][0]  = axis_h2c_if[PF][0];
+            env.axis_h2c_vif[VF0][0] = axis_h2c_if[VF0][0];
+            env.axis_h2c_vif[VF1][0] = axis_h2c_if[VF1][0];
+            env.axis_h2c_vif[PF][1]  = axis_h2c_if[PF][1];
+            env.axis_h2c_vif[VF0][1] = axis_h2c_if[VF0][1];
+            env.axis_h2c_vif[VF1][1] = axis_h2c_if[VF1][1];
+            env.axis_out_vif[0]      = axis_out_if[0];
+            env.axis_out_vif[1]      = axis_out_if[1];
+            env.axis_c2h_vif[PF][0]  = axis_c2h_if[PF][0];
+            env.axis_c2h_vif[VF0][0] = axis_c2h_if[VF0][0];
+            env.axis_c2h_vif[VF1][0] = axis_c2h_if[VF1][0];
+            env.axis_c2h_vif[PF][1]  = axis_c2h_if[PF][1];
+            env.axis_c2h_vif[VF0][1] = axis_c2h_if[VF0][1];
+            env.axis_c2h_vif[VF1][1] = axis_c2h_if[VF1][1];
 
             env.connect();
         end

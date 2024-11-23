@@ -1,0 +1,21 @@
+# p4_multi_proc
+name: smartnic_app_igr
+info: |
+  smartnic_app_igr is the regio block for the customizable ingress datapath block used in p4_only application core for the Esnet SmartNIC platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xdeafcafe
+
+  - name: app_igr_config
+    access: rw
+    fields:
+      - name: demux_sel
+        desc: directs ingress traffic to selected egress port. 0=axi4s_out, 1=axi4s_c2h.
+        width: 1
+        init : 0

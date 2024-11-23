@@ -84,7 +84,7 @@ sim:
 
 sim-svh: sim
 	(echo \`SVTEST\( $(shell echo $(P4BM_DIR) | sed 's/\-/\_/g') \)                   >> $(P4BM_OUTPUT_SVH) )
-	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \)\, .exp_pkt_cnt\(exp_pkt_cnt\), .exp_byte_cnt\(exp_byte_cnt\), \.init_timestamp\(1\) \)\; >> $(P4BM_OUTPUT_SVH) )
+	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \)\, \.init_timestamp\(1\) \)\; >> $(P4BM_OUTPUT_SVH) )
 	(echo \`SVTEST_END                                                                >> $(P4BM_OUTPUT_SVH) )
 	(echo                                                                             >> $(P4BM_OUTPUT_SVH) )
 

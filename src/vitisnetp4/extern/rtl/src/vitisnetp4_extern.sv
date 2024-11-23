@@ -40,8 +40,6 @@ module `VITISNETP4_EXTERN_NAME
 
     axi4l_intf_peripheral_term axil_term ( .axi4l_if(axil_to_extern) );
 
-    axi4s_intf_tx_term axis_from_extern_term ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_from_extern) );
-
-    axi4s_intf_rx_sink axis_to_extern_sink ( .axi4s_if(axis_to_extern) );
+    axi4s_intf_connector axi4s_extern_connector (.axi4s_from_tx(axis_to_extern), .axi4s_to_rx(axis_from_extern));
 
 endmodule: `VITISNETP4_EXTERN_NAME

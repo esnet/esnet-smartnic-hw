@@ -1,4 +1,6 @@
 import smartnic_pkg::*;
+import axi4s_reg_verif_pkg::*;
+import smartnic_app_reg_verif_pkg::*;
 
 class tb_env extends std_verif_pkg::base;
 
@@ -23,38 +25,53 @@ class tb_env extends std_verif_pkg::base;
     virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
 
     // AXI-L management interface
-    virtual axi4l_intf axil_vif;
+    virtual axi4l_intf app_axil_vif;
 
     // SDnet AXI-L management interface
-    virtual axi4l_intf axil_vitisnetp4_vif;
+    virtual axi4l_intf axil_vif;
 
     // AXI-S interfaces
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                          .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_vif [HOST_NUM_IFS][NUM_PORTS];
+    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                          .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [NUM_PORTS];
     virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif [NUM_PORTS * HOST_NUM_IFS];
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_vif [NUM_PORTS * HOST_NUM_IFS];
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif [HOST_NUM_IFS][NUM_PORTS];
 
     // Drivers/Monitors
-    axi4s_driver #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_driver  [NUM_PORTS * (HOST_NUM_IFS + 1)];
-
-    axi4s_monitor #(
-        .TUSER_T(tuser_smartnic_meta_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_monitor [NUM_PORTS * (HOST_NUM_IFS + 1)];
+    axi4s_driver #(      .TUSER_T(tuser_smartnic_meta_t),
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_driver   [NUM_PORTS];
+    axi4s_driver #(      .TUSER_T(tuser_smartnic_meta_t),
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_driver  [HOST_NUM_IFS][NUM_PORTS];
+    axi4s_monitor #(     .TUSER_T(tuser_smartnic_meta_t),
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_monitor [NUM_PORTS];
+    axi4s_monitor #(     .TUSER_T(tuser_smartnic_meta_t),
+                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_monitor [HOST_NUM_IFS][NUM_PORTS];
 
     // AXI-L agent
-    axi4l_reg_agent #() reg_agent;
+    axi4l_reg_agent #() app_reg_agent;
 
     // SDnet AXI-L agent
-    axi4l_reg_agent #() vitisnetp4_reg_agent;
+    axi4l_reg_agent #() reg_agent;
 
     // Register agents
     smartnic_app_reg_agent smartnic_app_reg_agent;
+
+    axi4s_probe_reg_blk_agent #() probe_from_pf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_from_pf1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_from_pf0_vf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_from_pf1_vf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_from_pf0_vf1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_from_pf1_vf1_reg_blk_agent;
+
+    axi4s_probe_reg_blk_agent #() probe_to_pf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_pf1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_pf0_vf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_pf1_vf0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_pf0_vf1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_pf1_vf1_reg_blk_agent;
 
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
@@ -68,72 +85,109 @@ class tb_env extends std_verif_pkg::base;
     // Constructor
     function new(string name , bit bigendian = 1);
         super.new(name);
-        axis_driver  [0]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [1]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [2]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [3]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [4]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [5]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [6]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [7]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [0]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [1]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [2]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [3]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [4]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [5]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [6]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [7]     = new(.BIGENDIAN(bigendian));
-        reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent = new("axi4l_reg_agent");
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", vitisnetp4_reg_agent, 'h23000);
-        ts_agent             = new;
+        axis_in_driver[0]      = new(.BIGENDIAN(bigendian));
+        axis_in_driver[1]      = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[0][0]  = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[1][0]  = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[2][0]  = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[0][1]  = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[1][1]  = new(.BIGENDIAN(bigendian));
+        axis_h2c_driver[2][1]  = new(.BIGENDIAN(bigendian));
+
+        axis_out_monitor[0]    = new(.BIGENDIAN(bigendian));
+        axis_out_monitor[1]    = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[0][0] = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[1][0] = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[2][0] = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[0][1] = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[1][1] = new(.BIGENDIAN(bigendian));
+        axis_c2h_monitor[2][1] = new(.BIGENDIAN(bigendian));
+
+        app_reg_agent          = new("axi4l_reg_agent");
+        reg_agent              = new("axi4l_reg_agent");
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h23000);
+        ts_agent               = new;
+
+        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h24000);
+        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h24100);
+        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h24200);
+        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h24300);
+        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h24400);
+        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h24500);
+
+        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h24600);
+        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h24700);
+        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h24800);
+        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h24900);
+        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h24a00);
+        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h24b00);
+
     endfunction
 
     function void connect();
-        axis_driver[0].axis_vif       = axis_in_vif[0];
-        axis_driver[1].axis_vif       = axis_in_vif[1];
-        axis_driver[2].axis_vif       = axis_h2c_vif[0];
-        axis_driver[3].axis_vif       = axis_h2c_vif[1];
-        axis_driver[4].axis_vif       = axis_h2c_vif[2];
-        axis_driver[5].axis_vif       = axis_h2c_vif[3];
-        axis_driver[6].axis_vif       = axis_h2c_vif[4];
-        axis_driver[7].axis_vif       = axis_h2c_vif[5];
-        axis_monitor[0].axis_vif      = axis_out_vif[0];
-        axis_monitor[1].axis_vif      = axis_out_vif[1];
-        axis_monitor[2].axis_vif      = axis_c2h_vif[0];
-        axis_monitor[3].axis_vif      = axis_c2h_vif[1];
-        axis_monitor[4].axis_vif      = axis_c2h_vif[2];
-        axis_monitor[5].axis_vif      = axis_c2h_vif[3];
-        axis_monitor[6].axis_vif      = axis_c2h_vif[4];
-        axis_monitor[7].axis_vif      = axis_c2h_vif[5];
-        ts_agent.timestamp_vif        = timestamp_vif;
-        reg_agent.axil_vif            = axil_vif;
-        vitisnetp4_reg_agent.axil_vif = axil_vitisnetp4_vif;
+        axis_in_driver[0].axis_vif        = axis_in_vif[0];
+        axis_in_driver[1].axis_vif        = axis_in_vif[1];
+        axis_h2c_driver[PF][0].axis_vif   = axis_h2c_vif[PF][0];
+        axis_h2c_driver[PF][1].axis_vif   = axis_h2c_vif[PF][1];
+        axis_h2c_driver[VF0][0].axis_vif  = axis_h2c_vif[VF0][0];
+        axis_h2c_driver[VF0][1].axis_vif  = axis_h2c_vif[VF0][1];
+        axis_h2c_driver[VF1][0].axis_vif  = axis_h2c_vif[VF1][0];
+        axis_h2c_driver[VF1][1].axis_vif  = axis_h2c_vif[VF1][1];
+
+        axis_out_monitor[0].axis_vif      = axis_out_vif[0];
+        axis_out_monitor[1].axis_vif      = axis_out_vif[1];
+        axis_c2h_monitor[PF][0].axis_vif  = axis_c2h_vif[PF][0];
+        axis_c2h_monitor[PF][1].axis_vif  = axis_c2h_vif[PF][1];
+        axis_c2h_monitor[VF0][0].axis_vif = axis_c2h_vif[VF0][0];
+        axis_c2h_monitor[VF0][1].axis_vif = axis_c2h_vif[VF0][1];
+        axis_c2h_monitor[VF1][0].axis_vif = axis_c2h_vif[VF1][0];
+        axis_c2h_monitor[VF1][1].axis_vif = axis_c2h_vif[VF1][1];
+
+        ts_agent.timestamp_vif            = timestamp_vif;
+        app_reg_agent.axil_vif            = app_axil_vif;
+        reg_agent.axil_vif                = axil_vif;
+
+        probe_from_pf0_reg_blk_agent.reg_agent     = reg_agent;
+        probe_from_pf1_reg_blk_agent.reg_agent     = reg_agent;
+        probe_from_pf0_vf0_reg_blk_agent.reg_agent = reg_agent;
+        probe_from_pf1_vf0_reg_blk_agent.reg_agent = reg_agent;
+        probe_from_pf0_vf1_reg_blk_agent.reg_agent = reg_agent;
+        probe_from_pf1_vf1_reg_blk_agent.reg_agent = reg_agent;
+
+        probe_to_pf0_reg_blk_agent.reg_agent     = reg_agent;
+        probe_to_pf1_reg_blk_agent.reg_agent     = reg_agent;
+        probe_to_pf0_vf0_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_pf1_vf0_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_pf0_vf1_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_pf1_vf1_reg_blk_agent.reg_agent = reg_agent;
+
     endfunction
 
     task reset();
+        app_reg_agent.idle();
         reg_agent.idle();
-        vitisnetp4_reg_agent.idle();
-        axis_driver[0].idle();
-        axis_driver[1].idle();
-        axis_driver[2].idle();
-        axis_driver[3].idle();
-        axis_driver[4].idle();
-        axis_driver[5].idle();
-        axis_driver[6].idle();
-        axis_driver[7].idle();
-        axis_monitor[0].idle();
-        axis_monitor[1].idle();
-        axis_monitor[2].idle();
-        axis_monitor[3].idle();
-        axis_monitor[4].idle();
-        axis_monitor[5].idle();
-        axis_monitor[6].idle();
-        axis_monitor[7].idle();
+
+        axis_in_driver[0].idle();
+        axis_in_driver[1].idle();
+        axis_h2c_driver[PF][0].idle();
+        axis_h2c_driver[PF][1].idle();
+        axis_h2c_driver[VF0][0].idle();
+        axis_h2c_driver[VF0][1].idle();
+        axis_h2c_driver[VF1][0].idle();
+        axis_h2c_driver[VF1][1].idle();
+
+        axis_out_monitor[0].idle();
+        axis_out_monitor[1].idle();
+        axis_c2h_monitor[PF][0].idle();
+        axis_c2h_monitor[PF][1].idle();
+        axis_c2h_monitor[VF0][0].idle();
+        axis_c2h_monitor[VF0][1].idle();
+        axis_c2h_monitor[VF1][0].idle();
+        axis_c2h_monitor[VF1][1].idle();
+
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
-        vitisnetp4_reg_agent._wait(32);
+        reg_agent._wait(32);
     endtask
 
     task init_timestamp();
@@ -147,7 +201,7 @@ class tb_env extends std_verif_pkg::base;
             output bit timeout,
             input  int TIMEOUT=128
         );
-        axil_vif.read(addr, data, error, timeout, TIMEOUT);
+        app_axil_vif.read(addr, data, error, timeout, TIMEOUT);
     endtask
 
     task write(
@@ -157,7 +211,7 @@ class tb_env extends std_verif_pkg::base;
             output bit timeout,
             input  int TIMEOUT=32
         );
-        axil_vif.write(addr, data, error, timeout, TIMEOUT);
+        app_axil_vif.write(addr, data, error, timeout, TIMEOUT);
     endtask
 
     task wait_reset_done(
@@ -209,16 +263,16 @@ class tb_env extends std_verif_pkg::base;
             input  bit [31:0] addr,
             output bit [31:0] data
         );
-        vitisnetp4_reg_agent.set_rd_timeout(128);
-        vitisnetp4_reg_agent.read_reg(addr, data);
+        reg_agent.set_rd_timeout(128);
+        reg_agent.read_reg(addr, data);
     endtask
 
     task vitisnetp4_write(
             input  bit [31:0] addr,
             input  bit [31:0] data
         );
-        vitisnetp4_reg_agent.set_wr_timeout(128);
-        vitisnetp4_reg_agent.write_reg(addr, data);
+        reg_agent.set_wr_timeout(128);
+        reg_agent.write_reg(addr, data);
     endtask
 
 endclass : tb_env

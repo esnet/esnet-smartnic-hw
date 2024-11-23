@@ -59,8 +59,8 @@
     // Packet test sequence
     //=======================================================================
      task automatic run_pkt_test (
-        input string testdir, output int exp_pkt_cnt, exp_byte_cnt,
-        input logic[63:0] init_timestamp=0, input port_t in_port=0, out_port=0,
+        input string testdir, input logic[63:0] init_timestamp=0,
+        input port_t in_port=0, out_port=0,
         input int max_pkt_size = 0, input logic write_p4_tables=1, VERBOSE=1 );
 	
         string filename;

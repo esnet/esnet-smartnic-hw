@@ -25,13 +25,15 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     smartnic_app.rtl \
     smartnic_app.verif \
+    smartnic_app.regio.verif \
     smartnic.pkg \
     std.rtl@$(COMMON_LIB_NAME) \
     std.verif@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME) \
     axi4l.verif@$(COMMON_LIB_NAME) \
-    axi4s.verif@$(COMMON_LIB_NAME)
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    axi4s.regio.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
