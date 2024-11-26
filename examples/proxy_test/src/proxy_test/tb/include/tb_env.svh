@@ -1,5 +1,4 @@
 import smartnic_pkg::*;
-import p4_proc_pkg::*;
 
 class tb_env extends std_verif_pkg::base;
 
@@ -16,7 +15,7 @@ class tb_env extends std_verif_pkg::base;
     //===================================
 
     // Reset interfaces
-    virtual std_reset_intf #(.ACTIVE_LOW(1)) reset_vif;
+    virtual std_reset_intf #() reset_vif;
     virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
 
     // AXI-L management interface
@@ -26,22 +25,26 @@ class tb_env extends std_verif_pkg::base;
     virtual axi4l_intf axil_vitisnetp4_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [2];
-    virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif;
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif;
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_to_adpt_vif;
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_from_adpt_vif;
 
     // AXI3 interfaces to HBM
     virtual axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_vif [16];
 
     // Drivers/Monitors
     axi4s_driver #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_driver  [2];
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
+    ) axis_driver;
 
     axi4s_monitor #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_monitor [2];
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+    ) axis_monitor;
+
+    axi4s_monitor #(
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (egr_tdest_t)
+    ) axis_to_adpt_monitor;
 
     // AXI-L agent
     axi4l_reg_agent #() reg_agent;
@@ -50,7 +53,7 @@ class tb_env extends std_verif_pkg::base;
     axi4l_reg_agent #() vitisnetp4_reg_agent;
 
     // Register agents
-    p4_proc_reg_agent p4_proc_reg_agent;
+    proxy_test_reg_agent proxy_test_reg_agent;
 
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
@@ -64,13 +67,12 @@ class tb_env extends std_verif_pkg::base;
     // Constructor
     function new(string name , bit bigendian = 1);
         super.new(name);
-        axis_driver  [0]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [1]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [0]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [1]     = new(.BIGENDIAN(bigendian));
+        axis_driver          = new(.BIGENDIAN(bigendian));
+        axis_monitor         = new(.BIGENDIAN(bigendian));
+        axis_to_adpt_monitor = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent = new("axi4l_reg_agent");
-        p4_proc_reg_agent    = new("p4_proc_reg_agent", reg_agent, 'h0000);
+        vitisnetp4_reg_agent      = new("axi4l_reg_agent");
+        proxy_test_reg_agent = new("proxy_test_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
 
@@ -81,10 +83,9 @@ class tb_env extends std_verif_pkg::base;
     endfunction
 
     function void connect();
-        axis_driver[0].axis_vif       = axis_in_vif[0];
-        axis_driver[1].axis_vif       = axis_in_vif[1];
-        axis_monitor[0].axis_vif      = axis_out_vif[0];
-        axis_monitor[1].axis_vif      = axis_out_vif[1];
+        axis_driver.axis_vif          = axis_in_vif;
+        axis_monitor.axis_vif         = axis_out_vif;
+        axis_to_adpt_monitor.axis_vif = axis_to_adpt_vif;
         ts_agent.timestamp_vif        = timestamp_vif;
         reg_agent.axil_vif            = axil_vif;
         vitisnetp4_reg_agent.axil_vif      = axil_vitisnetp4_vif;
@@ -93,10 +94,9 @@ class tb_env extends std_verif_pkg::base;
     task reset();
         reg_agent.idle();
         vitisnetp4_reg_agent.idle();
-        axis_driver[0].idle();
-        axis_driver[1].idle();
-        axis_monitor[0].idle();
-        axis_monitor[1].idle();
+        axis_driver.idle();
+        axis_monitor.idle();
+        axis_to_adpt_monitor.idle();
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
         #100ns;

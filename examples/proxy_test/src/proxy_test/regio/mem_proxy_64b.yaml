@@ -1,0 +1,12 @@
+name: mem_proxy_64b
+data_width: 512
+info: |
+  This register map describes an indirect 32K-bit generic memory organized into an array
+  of 512-bit words. The memory is indirectly accessed with the mem_proxy controller block.
+regs:
+  - default:
+      access: rw
+      init: 0
+
+  - name: words
+    count: 64

@@ -1,0 +1,16 @@
+name: proxy_test
+info: |
+  proxy_test base registers.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: id
+    access: ro
+    init: 0x50524F58
+
+  - name: scratchpad
+    access: rw

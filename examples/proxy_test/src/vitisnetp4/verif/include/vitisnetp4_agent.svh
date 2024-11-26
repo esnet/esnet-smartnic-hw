@@ -1,4 +1,4 @@
-class `VITISNETP4_AGENT_NAME #(
+class vitisnetp4_agent #(
 ) extends std_verif_pkg::agent;
 
     // Pointer to VitisNetP4 driver
@@ -16,7 +16,7 @@ class `VITISNETP4_AGENT_NAME #(
     endfunction
 
     // Destructor
-    // [[ overrides std_verif_pkg::base.destroy() ]]
+    // [[ overrides std_verif_pkg::agent.destroy() ]]
     function automatic void destroy();
         debug_msg("---------------- VitisNetP4: Destroy. -------------");
         // Destroy VitisNetP4 driver instance
@@ -42,7 +42,7 @@ class `VITISNETP4_AGENT_NAME #(
     // Initialize VitisNetP4 tables
     // - needs to be performed before any table accesses/programming
     task init();
-        import `VITISNETP4_PKG_NAME::*;
+        import vitisnetp4_igr_pkg::*;
 
         debug_msg("---------------- VitisNetP4: Init tables. -------------");
         initialize(this._ctxPtr, this._drv);
@@ -52,7 +52,7 @@ class `VITISNETP4_AGENT_NAME #(
     // Reset VitisNetP4 tables
     // - reset VitisNetP4 IP to default state
     task reset_tables();
-        import `VITISNETP4_PKG_NAME::*;
+        import vitisnetp4_igr_pkg::*;
 
         debug_msg("---------------- VitisNetP4: Reset table state. -------------");
         reset_state(this._ctxPtr);
@@ -61,7 +61,7 @@ class `VITISNETP4_AGENT_NAME #(
 
     // Terminate VitisNetP4 drivers (tables, externs, etc.)
     task terminate();
-        import `VITISNETP4_PKG_NAME::*;
+        import vitisnetp4_igr_pkg::*;
 
         debug_msg("---------------- VitisNetP4: Terminate. -------------");
         if (this._drv == null) begin
@@ -72,7 +72,7 @@ class `VITISNETP4_AGENT_NAME #(
         end
     endtask
 
-    // vitisnetp4_table_init is based on the procedure described in the example_control.sv file of xilinx vitisnetp4_0 example design
+    // vitisnetp4_table_init is based on the procedure described in the example_control.sv file of xilinx vitisnetp4_igr example design
     task table_init_from_file(input string filename);
         const bit VERBOSE = (this.get_debug_level() > 1);
 
@@ -116,11 +116,11 @@ class `VITISNETP4_AGENT_NAME #(
            case (cli_cmd.cmd_op)
 
                TBL_ADD: begin
-                   table_format_str = `VITISNETP4_PKG_NAME::get_table_format_string(cli_cmd.table_name);
-                   table_is_ternary = `VITISNETP4_PKG_NAME::table_is_ternary(cli_cmd.table_name);
-                   action_id        = `VITISNETP4_PKG_NAME::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
-                   action_id_width  = `VITISNETP4_PKG_NAME::get_table_action_id_width(cli_cmd.table_name);
-                   `VITISNETP4_PKG_NAME::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   table_format_str = vitisnetp4_igr_pkg::get_table_format_string(cli_cmd.table_name);
+                   table_is_ternary = vitisnetp4_igr_pkg::table_is_ternary(cli_cmd.table_name);
+                   action_id        = vitisnetp4_igr_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
+                   action_id_width  = vitisnetp4_igr_pkg::get_table_action_id_width(cli_cmd.table_name);
+                   vitisnetp4_igr_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    split_action_params_and_prio(table_is_ternary, cli_cmd.action_params, action_params, entry_priority);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, action_params, response);
@@ -132,15 +132,15 @@ class `VITISNETP4_AGENT_NAME #(
                      $display("  - response:\t0x%0x", response);
                      $display("  - priority:\t%0d", entry_priority);
                    end
-                   `VITISNETP4_PKG_NAME::table_add(CtxPtr, cli_cmd.table_name, key, mask, response, entry_priority);
+                   vitisnetp4_igr_pkg::table_add(CtxPtr, cli_cmd.table_name, key, mask, response, entry_priority);
                    if (VERBOSE) $display("** Info: Entry has been added with handle %0d", cli_cmd.entry_id);
                end
 
                TBL_MODIFY : begin
-                   action_id        = `VITISNETP4_PKG_NAME::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
-                   action_id_width  = `VITISNETP4_PKG_NAME::get_table_action_id_width(cli_cmd.table_name);
-                   table_format_str = `VITISNETP4_PKG_NAME::get_table_format_string(cli_cmd.table_name);
-                   `VITISNETP4_PKG_NAME::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
+                   action_id        = vitisnetp4_igr_pkg::get_action_id(cli_cmd.table_name, cli_cmd.action_name);
+                   action_id_width  = vitisnetp4_igr_pkg::get_table_action_id_width(cli_cmd.table_name);
+                   table_format_str = vitisnetp4_igr_pkg::get_table_format_string(cli_cmd.table_name);
+                   vitisnetp4_igr_pkg::get_action_arg_widths(cli_cmd.table_name, cli_cmd.action_name, action_arg_widths);
                    parse_action_parameters(action_arg_widths, action_id, action_id_width, cli_cmd.action_params, response);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    if (VERBOSE) begin
@@ -148,30 +148,30 @@ class `VITISNETP4_AGENT_NAME #(
                      $display("  - acion:\t%0s", cli_cmd.action_name);
                      $display("  - response:\t0x%0x", response);
                    end
-                   `VITISNETP4_PKG_NAME::table_modify(CtxPtr, cli_cmd.table_name, key, mask, response);
+                   vitisnetp4_igr_pkg::table_modify(CtxPtr, cli_cmd.table_name, key, mask, response);
                    if (VERBOSE) $display("** Info: Entry has been modified with handle %0d", cli_cmd.entry_id);
                end
 
                TBL_DELETE : begin
-                   table_format_str = `VITISNETP4_PKG_NAME::get_table_format_string(cli_cmd.table_name);
+                   table_format_str = vitisnetp4_igr_pkg::get_table_format_string(cli_cmd.table_name);
                    parse_match_fields(table_format_str, cli_cmd.match_fields, key, mask);
                    if (VERBOSE) begin
                      $display("** Info: Deleting entry from table %0s", cli_cmd.table_name);
                      $display("  - match key:\t0x%0x", key);
                      $display("  - key mask:\t0x%0x", mask);
                    end
-                   `VITISNETP4_PKG_NAME::table_delete(CtxPtr, cli_cmd.table_name, key, mask);
+                   vitisnetp4_igr_pkg::table_delete(CtxPtr, cli_cmd.table_name, key, mask);
                    if (VERBOSE) $display("** Info: Entry has been deleted with handle %0d", cli_cmd.entry_id);
                end
 
                TBL_CLEAR : begin
                    if (VERBOSE) $display("** Info: Deleting all entries from table %0s", cli_cmd.table_name);
-                   `VITISNETP4_PKG_NAME::table_clear(CtxPtr, cli_cmd.table_name);
+                   vitisnetp4_igr_pkg::table_clear(CtxPtr, cli_cmd.table_name);
                end
 
                RST_STATE : begin
                    if (VERBOSE) $display("** Info: Reseting VitisNet IP instance to default state");
-                   `VITISNETP4_PKG_NAME::reset_state(CtxPtr);
+                   vitisnetp4_igr_pkg::reset_state(CtxPtr);
                end
 
            endcase
@@ -181,8 +181,8 @@ class `VITISNETP4_AGENT_NAME #(
 
     // Include Xilinx example design utilities for reading config file
     // Import into localparams here to avoid "package import cannot be inside a class" warning
-    localparam int TDATA_NUM_BYTES = `VITISNETP4_PKG_NAME::TDATA_NUM_BYTES;
-    localparam int USER_META_DATA_WIDTH = `VITISNETP4_PKG_NAME::USER_META_DATA_WIDTH;
+    localparam int TDATA_NUM_BYTES = vitisnetp4_igr_pkg::TDATA_NUM_BYTES;
+    localparam int USER_META_DATA_WIDTH = vitisnetp4_igr_pkg::USER_META_DATA_WIDTH;
     `include "example_design_pkg.sv"
 
-endclass : `VITISNETP4_AGENT_NAME
+endclass : vitisnetp4_agent
