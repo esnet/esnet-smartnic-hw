@@ -15,6 +15,16 @@ class vitisnetp4_agent #(
         super.new(name);
     endfunction
 
+    // Destructor
+    // [[ overrides std_verif_pkg::agent.destroy() ]]
+    function automatic void destroy();
+        debug_msg("---------------- VitisNetP4: Destroy. -------------");
+        // Destroy VitisNetP4 driver instance
+        vitis_net_p4_dpi_pkg::XilVitisNetP4DpiDestroyEnv(_drv);
+        super.destroy();
+        debug_msg("---------------- VitisNetP4: Driver destroyed. -------------");
+    endfunction
+
     // Create VitisNetP4 driver
     function void create(
             input string hier_path
@@ -60,13 +70,6 @@ class vitisnetp4_agent #(
             terminate(this._ctxPtr);
             debug_msg("---------------- VitisNetP4: Terminate done. -------------");
         end
-    endtask
-
-    // Destroy VitisNetP4 driver instance
-    task destroy();
-        debug_msg("---------------- VitisNetP4: Destroy. -------------");
-        vitis_net_p4_dpi_pkg::XilVitisNetP4DpiDestroyEnv(_drv);
-        debug_msg("---------------- VitisNetP4: Driver destroyed. -------------");
     endtask
 
     // vitisnetp4_table_init is based on the procedure described in the example_control.sv file of xilinx vitisnetp4_igr example design

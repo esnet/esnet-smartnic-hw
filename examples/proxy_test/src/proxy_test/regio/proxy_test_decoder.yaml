@@ -14,6 +14,12 @@ blocks:
   mem_proxy_64b: &mem_proxy_64b
     !include ../examples/proxy_test/src/proxy_test/regio/mem_proxy_64b.yaml
 
+decoders:
+  packet_playback: &packet_playback
+    !include src/packet/regio/packet_playback_decoder.yaml
+  packet_capture: &packet_capture
+    !include src/packet/regio/packet_capture_decoder.yaml
+
 interfaces:
   - block: *proxy_test
     address: 0x0000
@@ -40,3 +46,11 @@ interfaces:
     view:
       name: mem_view_64b
       block: *mem_proxy_64b
+  - decoder: *packet_playback
+    address: 0x4000
+    width: 12
+    name: packet_playback
+  - decoder: *packet_capture
+    address: 0x5000
+    width: 13
+    name: packet_capture
