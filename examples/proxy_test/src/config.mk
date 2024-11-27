@@ -43,6 +43,9 @@ LIBRARIES = smartnic=$(SMARTNIC_ROOT)/src
 # Specify name of 'common' library (for autogenerating register infrastructure from regio specifications)
 COMMON_LIB_NAME = common@smartnic
 
+# Specify name of 'SmartNIC' source library (for compatibility with standard component build scripts)
+SMARTNIC_LIB_NAME = smartnic
+
 # ----------------------------------------------------
 # Environment setup
 # - specify library-specific environment variables

@@ -14,8 +14,8 @@ endtask
 
 
 // Send packets described in PCAP file on AXI-S input interface
-task send_pcap(input string pcap_filename, input int num_pkts=0, start_idx=0, twait=0, input port_t id=0, dest=0);
-    env.axis_driver.send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+task send_pcap(input string pcap_filename, input int num_pkts=0, start_idx=0, twait=0, input in_if=0, input port_t id=0, dest=0);
+    env.axis_in_driver[in_if].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
 endtask
 
 

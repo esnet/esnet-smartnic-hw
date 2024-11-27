@@ -24,15 +24,12 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     proxy_test.regio.rtl \
-    vitisnetp4.ip \
-    smartnic.pkg@smartnic \
-    util.rtl@common@smartnic \
-    axi4l.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic \
-    mem.rtl@common@smartnic \
-    mem.proxy.rtl@common@smartnic \
-    reg.rtl@common@smartnic \
-    reg.proxy.rtl@common@smartnic \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME) \
+    mem.rtl@$(COMMON_LIB_NAME) \
+    mem.proxy.rtl@$(COMMON_LIB_NAME) \
+    reg.rtl@$(COMMON_LIB_NAME) \
+    reg.proxy.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

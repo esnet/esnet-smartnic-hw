@@ -25,12 +25,18 @@ waves ?= OFF
 SUBCOMPONENTS = \
     proxy_test.rtl \
     proxy_test.verif \
-    proxy_test.tb \
-    axi4l.rtl@common@smartnic \
-    axi4s.rtl@common@smartnic \
-    axi4l.verif@common@smartnic \
-    axi4s.verif@common@smartnic \
-    pcap.pkg@common@smartnic
+    vitisnetp4_igr.rtl \
+    vitisnetp4_igr.verif \
+    smartnic_app.igr_p4.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.igr.rtl \
+    smartnic_app.egr.passthru.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.egr_p4.vf_loopback.rtl@$(SMARTNIC_LIB_NAME) \
+    smartnic_app.tb@$(SMARTNIC_LIB_NAME) \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    pcap.pkg@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
@@ -83,7 +89,7 @@ p4bm:
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += proxy_test__tb.tb
+TOP += smartnic_app__tb.tb
 
 # ----------------------------------------------------
 # Import VitisNetP4 IP simulation configuration
