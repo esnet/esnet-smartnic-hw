@@ -9,7 +9,7 @@ regs:
       init   : 0
 
   - name: status
-    init: 0xcafebeef
+    init: 0xacdccafe
 
   - name: igr_demux_sel
     access : rw
