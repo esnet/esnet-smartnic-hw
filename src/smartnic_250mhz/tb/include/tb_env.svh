@@ -1,6 +1,6 @@
 import smartnic_250mhz_pkg::*;
 
-class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::env;
+class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     // Parameters
     // -- Datapath
     localparam int AXIS_DATA_WID = 512;
@@ -75,14 +75,14 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::env;
     endfunction
 
     function void connect();
-        super.connect();
+        super.build();
         for (int i=0; i < NUM_INTF; i++) begin
             env_h2c[i].axis_in_vif = axis_h2c_in_vif[i];
             env_h2c[i].axis_out_vif = axis_h2c_out_vif[i];
             env_c2h[i].axis_in_vif = axis_c2h_in_vif[i];
             env_c2h[i].axis_out_vif = axis_c2h_out_vif[i];
-            env_h2c[i].connect();
-            env_c2h[i].connect();
+            env_h2c[i].build();
+            env_c2h[i].build();
         end
         reg_agent.axil_vif = axil_vif;
         smartnic_250mhz_reg_blk_agent.reg_agent = reg_agent;

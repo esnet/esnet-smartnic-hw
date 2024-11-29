@@ -1,0 +1,75 @@
+name: proxy_test_indirect
+info: |
+  proxy_test register definition for registers accessed via proxy.
+
+regs:
+  - default:
+      width  : 32
+      access : rw
+      init   : 0
+
+  - name: pre
+    access: ro
+
+  - name: enums
+    access: rw
+    fields:
+      - name: fruit
+        width: 2
+        enum:
+          0 : APPLE
+          1 : ORANGE
+          2 : BANANA
+          3 : LEMON
+      - name: direction
+        width: 3
+        enum:
+          0 : NORTH
+          1 : NORTHEAST
+          2 : EAST
+          3 : SOUTHEAST
+          4 : SOUTH
+          5 : SOUTHWEST
+          6 : WEST
+          7 : NORTHWEST
+
+  - name: scratchpad
+    access: rw
+    fields:
+      - name: byte0
+        width: 8
+      - name: byte1
+        width: 8
+      - name: byte2
+        width: 8
+      - name: byte3
+        width: 8
+
+  - name: regs
+    access: rw
+    fields:
+      - name: byte0
+        width: 8
+      - name: byte1
+        width: 8
+      - name: byte2
+        width: 8
+      - name: byte3
+        width: 8
+    count: 64
+
+  - name: trigger
+    access: wr_evt
+    fields:
+      - name: value
+        width: 8
+        init: 0
+
+  - name: status
+    access: ro
+    fields:
+      - name: trigger_value
+        width: 8
+
+  - name: post
+    access: ro

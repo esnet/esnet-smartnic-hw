@@ -1,19 +1,24 @@
 `include "svunit_defines.svh"
 
+import tb_pkg::*;
+
 //===================================
 // (Failsafe) timeout
 //===================================
-`define SVUNIT_TIMEOUT 100us
+`define SVUNIT_TIMEOUT 200us
 
-module p4_and_verilog_ctrl_unit_test;
+module proxy_test_datapath_unit_test;
 
-    string name = "p4_and_verilog_ctrl_ut";
+    // Testcase name
+    string name = "proxy_test_datapath_ut";
+
+    // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
 
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common p4_and_verilog
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -23,11 +28,9 @@ module p4_and_verilog_ctrl_unit_test;
     // reference to the testbench environment is provided
     // here for convenience.
 
-    p4_and_verilog_verif_pkg::p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
-
     //===================================
     // Import common testcase tasks
-    //===================================
+    //=================================== 
     `include "../../../../src/smartnic_app/tests/common/tasks.svh"
 
     //===================================
@@ -38,12 +41,14 @@ module p4_and_verilog_ctrl_unit_test;
 
         // Build testbench
         tb.build();
-
+       
         // Retrieve reference to testbench environment class
         env = tb.env;
 
-        p4_and_verilog_reg_agent = new("p4_and_verilog_reg_agent", env.app_reg_agent, 'h20000);
-
+        // Create P4 table agent
+        vitisnetp4_agent = new;
+        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
+                                       // path to AXI-L write/read tasks
     endfunction
 
     //===================================
@@ -52,8 +57,26 @@ module p4_and_verilog_ctrl_unit_test;
     task setup();
         svunit_ut.setup();
 
+        // Flush packets from pipeline
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_out_monitor[i].flush();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_c2h_monitor[j][i].flush();
+            end
+        end
+
         // Issue reset (both datapath and management domains)
         reset();
+
+        // Put AXI-S interfaces into quiescent state
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_in_driver[i].idle();
+            env.axis_out_monitor[i].idle();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_h2c_driver[j][i].idle();
+                env.axis_c2h_monitor[j][i].idle();
+            end
+        end
 
     endtask
 
@@ -63,11 +86,24 @@ module p4_and_verilog_ctrl_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
+        `INFO("Waiting to end testcase...");
+        for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
+        `INFO("Ending testcase!");
+
         svunit_ut.teardown();
+
+        // Flush remaining packets
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_out_monitor[i].flush();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_c2h_monitor[j][i].flush();
+            end
+        end
+        #10us;
 
     endtask
 
-
+   
     //=======================================================================
     // TESTS
     //=======================================================================
@@ -85,30 +121,16 @@ module p4_and_verilog_ctrl_unit_test;
     //     <test code>
     //   `SVTEST_END
     //===================================
+
     `SVUNIT_TESTS_BEGIN
 
-    // Verify expected p4_and_verilog status register value
-    `SVTEST(check_status)
-        bit error;
-        string msg;
-
-        // Check p4_and_verilog status register
-        p4_and_verilog_reg_agent.check_status(error, msg);
-        `FAIL_IF_LOG(
-            error == 1,
-            msg
-        );
+    `SVTEST(init)
+        // Initialize VitisNetP4 tables
+        vitisnetp4_agent.init();
     `SVTEST_END
 
-    // Test read access to p4_and_verilog.status register
-    `SVTEST(read_p4_and_verilog_status)
-        logic [31:0] got_data;
+    `include "../../p4/sim/run_pkt_test_incl.svh"
 
-        // Read p4_and_verilog status register
-        p4_and_verilog_reg_agent.read_status(got_data);
-        `FAIL_UNLESS(got_data == p4_and_verilog_reg_pkg::INIT_STATUS);
-    `SVTEST_END
-      
     `SVUNIT_TESTS_END
 
 endmodule

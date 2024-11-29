@@ -1,0 +1,30 @@
+name: smartnic_app
+
+blocks:
+  empty: &empty
+    name: empty
+    info: |
+      Placeholder for empty block.
+    regs: []
+
+decoders:
+  proxy_test_decoder: &proxy_test_decoder
+    !include ../examples/proxy_test/src/proxy_test/regio/proxy_test_decoder.yaml
+  
+interfaces:
+  - block: *empty
+    address: 0x00000
+    width: 16
+    name: igr_extern
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+  - decoder: *proxy_test_decoder
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+  - block: *empty
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr

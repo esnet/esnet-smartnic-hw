@@ -5,15 +5,15 @@
 //===================================
 `define SVUNIT_TIMEOUT 100us
 
-module p4_and_verilog_ctrl_unit_test;
+module proxy_test_ctrl_unit_test;
 
-    string name = "p4_and_verilog_ctrl_ut";
+    string name = "proxy_test_ctrl_ut";
     svunit_pkg::svunit_testcase svunit_ut;
 
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common p4_and_verilog
+    // This test suite references the common proxy_test
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -23,7 +23,7 @@ module p4_and_verilog_ctrl_unit_test;
     // reference to the testbench environment is provided
     // here for convenience.
 
-    p4_and_verilog_verif_pkg::p4_and_verilog_reg_agent p4_and_verilog_reg_agent;
+    proxy_test_verif_pkg::proxy_test_reg_agent proxy_test_reg_agent;
 
     //===================================
     // Import common testcase tasks
@@ -42,7 +42,7 @@ module p4_and_verilog_ctrl_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
-        p4_and_verilog_reg_agent = new("p4_and_verilog_reg_agent", env.app_reg_agent, 'h20000);
+        proxy_test_reg_agent = new("proxy_test_reg_agent", env.app_reg_agent, 'h20000);
 
     endfunction
 
@@ -87,26 +87,26 @@ module p4_and_verilog_ctrl_unit_test;
     //===================================
     `SVUNIT_TESTS_BEGIN
 
-    // Verify expected p4_and_verilog status register value
-    `SVTEST(check_status)
+    // Verify expected proxy_test id register value
+    `SVTEST(check_id)
         bit error;
         string msg;
 
-        // Check p4_and_verilog status register
-        p4_and_verilog_reg_agent.check_status(error, msg);
+        // Check proxy_test id register
+        proxy_test_reg_agent.check_id(error, msg);
         `FAIL_IF_LOG(
             error == 1,
             msg
         );
     `SVTEST_END
 
-    // Test read access to p4_and_verilog.status register
-    `SVTEST(read_p4_and_verilog_status)
+    // Test read access to proxy_test.id register
+    `SVTEST(read_proxy_test_id)
         logic [31:0] got_data;
 
-        // Read p4_and_verilog status register
-        p4_and_verilog_reg_agent.read_status(got_data);
-        `FAIL_UNLESS(got_data == p4_and_verilog_reg_pkg::INIT_STATUS);
+        // Read proxy_test id register
+        proxy_test_reg_agent.read_id(got_data);
+        `FAIL_UNLESS(got_data == proxy_test_reg_pkg::INIT_ID);
     `SVTEST_END
       
     `SVUNIT_TESTS_END
