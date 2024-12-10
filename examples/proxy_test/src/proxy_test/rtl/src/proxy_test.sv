@@ -48,8 +48,8 @@ module proxy_test
     proxy_test_reg_intf  proxy_test_regs();
 
     axi4l_pipe_slr  i_axi4l_pipe_slr (
-        .axi4l_if_from_controller ( axil_if ),
-        .axi4l_if_to_peripheral   ( __axil_if )
+        .from_controller ( axil_if ),
+        .to_peripheral   ( __axil_if )
     );
 
     // proxy_test register decoder
