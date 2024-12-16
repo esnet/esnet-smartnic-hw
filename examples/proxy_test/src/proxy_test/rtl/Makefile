@@ -23,9 +23,11 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    proxy_test.ip \
     proxy_test.regio.rtl \
     vitisnetp4.ip \
     smartnic.pkg@smartnic \
+    xilinx.hbm.rtl@smartnic \
     util.rtl@common@smartnic \
     axi4l.rtl@common@smartnic \
     axi4s.rtl@common@smartnic \
