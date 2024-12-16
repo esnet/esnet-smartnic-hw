@@ -24,7 +24,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     xilinx.hbm.regio.verif \
-    axi3.rtl@$(COMMON_LIB_NAME)
+    axi3.rtl@$(COMMON_LIB_NAME) \
+    axi3.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
