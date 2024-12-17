@@ -26,7 +26,12 @@ SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic.rtl \
     smartnic.tb \
-    smartnic_app.stub.rtl \
+    smartnic_app.rtl \
+    smartnic_app.igr_p4.vf_loopback.rtl \
+    smartnic_app.egr_p4.vf_loopback.rtl \
+    smartnic_app.igr.demux.rtl \
+    smartnic_app.igr.demux.regio.verif \
+    smartnic_app.egr.mux.rtl \
     std.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \
