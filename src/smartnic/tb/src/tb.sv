@@ -75,7 +75,6 @@ module tb;
     logic                       mod_rst_done;
 
     logic                       axil_aclk;
-    logic                       axis_aclk;
     logic        [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
@@ -98,19 +97,17 @@ module tb;
 
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_in_if [2*NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t))      axis_cmac_egr [NUM_CMAC] ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_if [2*NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c      [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t))      axis_c2h      [NUM_CMAC] ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_if ();
 
-    // Generate datapath clock (340MHz)
+    // Generate datapath clock (322MHz)
     initial clk = 1'b0;
-    always #1455ps clk = ~clk; // 343.75MHz
-
-    // Generate axis_aclk (250MHz)
-    initial axis_aclk = 1'b0;
-    always #2000ps axis_aclk = ~axis_aclk; // 250 MHz
+    always #1553ps clk = ~clk; // 322MHz
 
     // Assign reset interfaces
     assign rst = reset_if.reset;
@@ -131,11 +128,11 @@ module tb;
     // Assign CMAC clocks/resets
     generate
         for (genvar g_cmac=0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac_clk
-            assign cmac_clk[g_cmac] = clk;
-            assign axis_in_if[g_cmac].aclk = clk;
-            assign axis_in_if[g_cmac+2].aclk = clk;
-            assign axis_in_if[g_cmac].aresetn = ~rst;
-            assign axis_in_if[g_cmac+2].aresetn = ~rst;
+            assign      cmac_clk[g_cmac]         =  clk;
+            assign      axis_h2c[g_cmac].aclk    =  clk;
+            assign      axis_h2c[g_cmac].aresetn = ~rst;
+            assign axis_cmac_igr[g_cmac].aclk    =  clk;
+            assign axis_cmac_igr[g_cmac].aresetn = ~rst;
         end : g__cmac_clk
     endgenerate
 
@@ -162,88 +159,88 @@ module tb;
     assign axil_if.rresp = s_axil_rresp;
 
     // Assign AXI-S CMAC input interfaces
-    assign s_axis_cmac_rx_322mhz_tvalid[0]    = axis_in_if[0].tvalid;
-    assign s_axis_cmac_rx_322mhz_tlast[0]     = axis_in_if[0].tlast;
-    assign s_axis_cmac_rx_322mhz_tdest[1:0]   = axis_in_if[0].tdest;
-    assign s_axis_cmac_rx_322mhz_tdata[511:0] = axis_in_if[0].tdata;
-    assign s_axis_cmac_rx_322mhz_tkeep[63:0]  = axis_in_if[0].tkeep;
-    assign s_axis_cmac_rx_322mhz_tuser_err[0] = axis_in_if[0].tuser;
-    assign axis_in_if[0].tready = s_axis_cmac_rx_322mhz_tready[0];
+    assign s_axis_cmac_rx_322mhz_tvalid[0]    = axis_cmac_igr[0].tvalid;
+    assign s_axis_cmac_rx_322mhz_tlast[0]     = axis_cmac_igr[0].tlast;
+    assign s_axis_cmac_rx_322mhz_tdest[1:0]   = axis_cmac_igr[0].tdest;
+    assign s_axis_cmac_rx_322mhz_tdata[511:0] = axis_cmac_igr[0].tdata;
+    assign s_axis_cmac_rx_322mhz_tkeep[63:0]  = axis_cmac_igr[0].tkeep;
+    assign s_axis_cmac_rx_322mhz_tuser_err[0] = axis_cmac_igr[0].tuser;
+    assign axis_cmac_igr[0].tready = s_axis_cmac_rx_322mhz_tready[0];
 
-    assign s_axis_cmac_rx_322mhz_tvalid[1]    = axis_in_if[1].tvalid;
-    assign s_axis_cmac_rx_322mhz_tlast[1]     = axis_in_if[1].tlast;
-    assign s_axis_cmac_rx_322mhz_tdest[3:2]   = axis_in_if[1].tdest;
-    assign s_axis_cmac_rx_322mhz_tdata[1023:512] = axis_in_if[1].tdata;
-    assign s_axis_cmac_rx_322mhz_tkeep[127:64]  = axis_in_if[1].tkeep;
-    assign s_axis_cmac_rx_322mhz_tuser_err[1] = axis_in_if[1].tuser;
-    assign axis_in_if[1].tready = s_axis_cmac_rx_322mhz_tready[1];
+    assign s_axis_cmac_rx_322mhz_tvalid[1]    = axis_cmac_igr[1].tvalid;
+    assign s_axis_cmac_rx_322mhz_tlast[1]     = axis_cmac_igr[1].tlast;
+    assign s_axis_cmac_rx_322mhz_tdest[3:2]   = axis_cmac_igr[1].tdest;
+    assign s_axis_cmac_rx_322mhz_tdata[1023:512] = axis_cmac_igr[1].tdata;
+    assign s_axis_cmac_rx_322mhz_tkeep[127:64]  = axis_cmac_igr[1].tkeep;
+    assign s_axis_cmac_rx_322mhz_tuser_err[1] = axis_cmac_igr[1].tuser;
+    assign axis_cmac_igr[1].tready = s_axis_cmac_rx_322mhz_tready[1];
 
     // Assign AXI-S CMAC output interfaces
-    assign axis_out_if[0].aclk   = clk;
-    assign axis_out_if[0].aresetn= ~rst;
-    assign axis_out_if[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0];
-    assign axis_out_if[0].tlast  = m_axis_cmac_tx_322mhz_tlast[0];
-    assign axis_out_if[0].tdest  = m_axis_cmac_tx_322mhz_tdest[3:0];
-    assign axis_out_if[0].tdata  = m_axis_cmac_tx_322mhz_tdata[511:0];
-    assign axis_out_if[0].tkeep  = m_axis_cmac_tx_322mhz_tkeep[63:0];
-    assign axis_out_if[0].tuser  = m_axis_cmac_tx_322mhz_tuser_err[0];
-    assign m_axis_cmac_tx_322mhz_tready[0] = axis_out_if[0].tready;
+    assign axis_cmac_egr[0].aclk   = clk;
+    assign axis_cmac_egr[0].aresetn= ~rst;
+    assign axis_cmac_egr[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0];
+    assign axis_cmac_egr[0].tlast  = m_axis_cmac_tx_322mhz_tlast[0];
+    assign axis_cmac_egr[0].tdest  = m_axis_cmac_tx_322mhz_tdest[3:0];
+    assign axis_cmac_egr[0].tdata  = m_axis_cmac_tx_322mhz_tdata[511:0];
+    assign axis_cmac_egr[0].tkeep  = m_axis_cmac_tx_322mhz_tkeep[63:0];
+    assign axis_cmac_egr[0].tuser  = m_axis_cmac_tx_322mhz_tuser_err[0];
+    assign m_axis_cmac_tx_322mhz_tready[0] = axis_cmac_egr[0].tready;
 
-    assign axis_out_if[1].aclk   = clk;
-    assign axis_out_if[1].aresetn= ~rst;
-    assign axis_out_if[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1];
-    assign axis_out_if[1].tlast  = m_axis_cmac_tx_322mhz_tlast[1];
-    assign axis_out_if[1].tdest  = m_axis_cmac_tx_322mhz_tdest[7:4];
-    assign axis_out_if[1].tdata  = m_axis_cmac_tx_322mhz_tdata[1023:512];
-    assign axis_out_if[1].tkeep  = m_axis_cmac_tx_322mhz_tkeep[127:64];
-    assign axis_out_if[1].tuser  = m_axis_cmac_tx_322mhz_tuser_err[1];
-    assign m_axis_cmac_tx_322mhz_tready[1] = axis_out_if[1].tready;
+    assign axis_cmac_egr[1].aclk   = clk;
+    assign axis_cmac_egr[1].aresetn= ~rst;
+    assign axis_cmac_egr[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1];
+    assign axis_cmac_egr[1].tlast  = m_axis_cmac_tx_322mhz_tlast[1];
+    assign axis_cmac_egr[1].tdest  = m_axis_cmac_tx_322mhz_tdest[7:4];
+    assign axis_cmac_egr[1].tdata  = m_axis_cmac_tx_322mhz_tdata[1023:512];
+    assign axis_cmac_egr[1].tkeep  = m_axis_cmac_tx_322mhz_tkeep[127:64];
+    assign axis_cmac_egr[1].tuser  = m_axis_cmac_tx_322mhz_tuser_err[1];
+    assign m_axis_cmac_tx_322mhz_tready[1] = axis_cmac_egr[1].tready;
 
     // Assign AXI-S ADPT input interfaces
-    assign s_axis_adpt_tx_322mhz_tvalid[0]    = axis_in_if[2].tvalid;
-    assign s_axis_adpt_tx_322mhz_tlast[0]     = axis_in_if[2].tlast;
-    assign s_axis_adpt_tx_322mhz_tid[15:0]    = axis_in_if[2].tid;
-    assign s_axis_adpt_tx_322mhz_tdest[1:0]   = axis_in_if[2].tdest;
-    assign s_axis_adpt_tx_322mhz_tdata[511:0] = axis_in_if[2].tdata;
-    assign s_axis_adpt_tx_322mhz_tkeep[63:0]  = axis_in_if[2].tkeep;
-    assign s_axis_adpt_tx_322mhz_tuser_err[0] = axis_in_if[2].tuser;
-    assign axis_in_if[2].tready = s_axis_adpt_tx_322mhz_tready[0];
+    assign s_axis_adpt_tx_322mhz_tvalid[0]    = axis_h2c[0].tvalid;
+    assign s_axis_adpt_tx_322mhz_tlast[0]     = axis_h2c[0].tlast;
+    assign s_axis_adpt_tx_322mhz_tid[15:0]    = axis_h2c[0].tid;
+    assign s_axis_adpt_tx_322mhz_tdest[1:0]   = axis_h2c[0].tdest;
+    assign s_axis_adpt_tx_322mhz_tdata[511:0] = axis_h2c[0].tdata;
+    assign s_axis_adpt_tx_322mhz_tkeep[63:0]  = axis_h2c[0].tkeep;
+    assign s_axis_adpt_tx_322mhz_tuser_err[0] = axis_h2c[0].tuser;
+    assign axis_h2c[0].tready = s_axis_adpt_tx_322mhz_tready[0];
 
-    assign s_axis_adpt_tx_322mhz_tvalid[1]    = axis_in_if[3].tvalid;
-    assign s_axis_adpt_tx_322mhz_tlast[1]     = axis_in_if[3].tlast;
-    assign s_axis_adpt_tx_322mhz_tid[31:16]   = axis_in_if[3].tid;
-    assign s_axis_adpt_tx_322mhz_tdest[3:2]   = axis_in_if[3].tdest;
-    assign s_axis_adpt_tx_322mhz_tdata[1023:512] = axis_in_if[3].tdata;
-    assign s_axis_adpt_tx_322mhz_tkeep[127:64]  = axis_in_if[3].tkeep;
-    assign s_axis_adpt_tx_322mhz_tuser_err[1] = axis_in_if[3].tuser;
-    assign axis_in_if[3].tready = s_axis_adpt_tx_322mhz_tready[1];
+    assign s_axis_adpt_tx_322mhz_tvalid[1]    = axis_h2c[1].tvalid;
+    assign s_axis_adpt_tx_322mhz_tlast[1]     = axis_h2c[1].tlast;
+    assign s_axis_adpt_tx_322mhz_tid[31:16]   = axis_h2c[1].tid;
+    assign s_axis_adpt_tx_322mhz_tdest[3:2]   = axis_h2c[1].tdest;
+    assign s_axis_adpt_tx_322mhz_tdata[1023:512] = axis_h2c[1].tdata;
+    assign s_axis_adpt_tx_322mhz_tkeep[127:64]  = axis_h2c[1].tkeep;
+    assign s_axis_adpt_tx_322mhz_tuser_err[1] = axis_h2c[1].tuser;
+    assign axis_h2c[1].tready = s_axis_adpt_tx_322mhz_tready[1];
 
     // Assign AXI-S ADPT output interfaces
-    assign axis_out_if[2].aclk   = clk;
-    assign axis_out_if[2].aresetn= ~rst;
-    assign axis_out_if[2].tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
-    assign axis_out_if[2].tlast  = m_axis_adpt_rx_322mhz_tlast[0];
-    assign axis_out_if[2].tdest  = m_axis_adpt_rx_322mhz_tdest[3:0];
-    assign axis_out_if[2].tdata  = m_axis_adpt_rx_322mhz_tdata[511:0];
-    assign axis_out_if[2].tkeep  = m_axis_adpt_rx_322mhz_tkeep[63:0];
-    assign axis_out_if[2].tuser  = m_axis_adpt_rx_322mhz_tuser_err[0];
-    assign m_axis_adpt_rx_322mhz_tready[0] = axis_out_if[2].tready;
+    assign axis_c2h[0].aclk   = clk;
+    assign axis_c2h[0].aresetn= ~rst;
+    assign axis_c2h[0].tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
+    assign axis_c2h[0].tlast  = m_axis_adpt_rx_322mhz_tlast[0];
+    assign axis_c2h[0].tdest  = m_axis_adpt_rx_322mhz_tdest[3:0];
+    assign axis_c2h[0].tdata  = m_axis_adpt_rx_322mhz_tdata[511:0];
+    assign axis_c2h[0].tkeep  = m_axis_adpt_rx_322mhz_tkeep[63:0];
+    assign axis_c2h[0].tuser  = m_axis_adpt_rx_322mhz_tuser_err[0];
+    assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h[0].tready;
 
-    assign axis_out_if[3].aclk   = clk;
-    assign axis_out_if[3].aresetn= ~rst;
-    assign axis_out_if[3].tvalid = m_axis_adpt_rx_322mhz_tvalid[1];
-    assign axis_out_if[3].tlast  = m_axis_adpt_rx_322mhz_tlast[1];
-    assign axis_out_if[3].tdest  = m_axis_adpt_rx_322mhz_tdest[7:4];
-    assign axis_out_if[3].tdata  = m_axis_adpt_rx_322mhz_tdata[1023:512];
-    assign axis_out_if[3].tkeep  = m_axis_adpt_rx_322mhz_tkeep[127:64];
-    assign axis_out_if[3].tuser  = m_axis_adpt_rx_322mhz_tuser_err[1];
-    assign m_axis_adpt_rx_322mhz_tready[1] = axis_out_if[3].tready;
+    assign axis_c2h[1].aclk   = clk;
+    assign axis_c2h[1].aresetn= ~rst;
+    assign axis_c2h[1].tvalid = m_axis_adpt_rx_322mhz_tvalid[1];
+    assign axis_c2h[1].tlast  = m_axis_adpt_rx_322mhz_tlast[1];
+    assign axis_c2h[1].tdest  = m_axis_adpt_rx_322mhz_tdest[7:4];
+    assign axis_c2h[1].tdata  = m_axis_adpt_rx_322mhz_tdata[1023:512];
+    assign axis_c2h[1].tkeep  = m_axis_adpt_rx_322mhz_tkeep[127:64];
+    assign axis_c2h[1].tuser  = m_axis_adpt_rx_322mhz_tuser_err[1];
+    assign m_axis_adpt_rx_322mhz_tready[1] = axis_c2h[1].tready;
 
     // axis_out tvalid monitors
-    always @(negedge axis_out_if[0].tvalid) if (axis_out_if[0].tready && !axis_out_if[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge axis_out_if[1].tvalid) if (axis_out_if[1].tready && !axis_out_if[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge axis_out_if[2].tvalid) if (axis_out_if[2].tready && !axis_out_if[2].tlast) $display ("Port2: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge axis_out_if[3].tvalid) if (axis_out_if[3].tready && !axis_out_if[3].tlast) $display ("Port3: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[0].tvalid) if (axis_cmac_egr[0].tready && !axis_cmac_egr[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[1].tvalid) if (axis_cmac_egr[1].tready && !axis_cmac_egr[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge      axis_c2h[0].tvalid) if (axis_c2h[0].tready && !axis_c2h[0].tlast)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge      axis_c2h[1].tvalid) if (axis_c2h[1].tready && !axis_c2h[1].tlast)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
 
     //===================================
     // Build
@@ -260,18 +257,18 @@ module tb;
             env.timestamp_vif = timestamp_if;
             env.axil_vif = axil_if;
 
-            env.axis_in_vif[0] = axis_in_if[0];
-            env.axis_in_vif[1] = axis_in_if[1];
-            env.axis_in_vif[2] = axis_in_if[2];
-            env.axis_in_vif[3] = axis_in_if[3];
-            env.axis_out_vif[0] = axis_out_if[0];
-            env.axis_out_vif[1] = axis_out_if[1];
-            env.axis_out_vif[2] = axis_out_if[2];
-            env.axis_out_vif[3] = axis_out_if[3];
+            env.axis_cmac_igr_vif[0] = axis_cmac_igr[0];
+            env.axis_cmac_igr_vif[1] = axis_cmac_igr[1];
+            env.axis_h2c_vif[0]      = axis_h2c[0];
+            env.axis_h2c_vif[1]      = axis_h2c[1];
+            env.axis_cmac_egr_vif[0] = axis_cmac_egr[0];
+            env.axis_cmac_egr_vif[1] = axis_cmac_egr[1];
+            env.axis_c2h_vif[0]      = axis_c2h[0];
+            env.axis_c2h_vif[1]      = axis_c2h[1];
 
             // temporarily replaced (dynamic) vif for loops below with (static) assignments above, due to errors.
-            // for (int i=0; i < 2*NUM_CMAC; i++) env.axis_in_vif[i] = axis_in_if[i];
-            // for (int i=0; i < 2*NUM_CMAC; i++) env.axis_out_vif[i] = axis_out_if[i];
+            // for (int i=0; i < NUM_CMAC; i++) env.axis_cmac_igr_vif[i] = axis_cmac_igr[i];
+            // for (int i=0; i < NUM_CMAC; i++) env.axis_cmac_egr_vif[i] = axis_cmac_egr[i];
 
             env.axis_sample_vif = axis_sample_if;
 

@@ -1,10 +1,12 @@
 import smartnic_pkg::*;
 
 class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
+
     // Parameters
     // -- Datapath
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
+
     // -- Timeouts
     localparam int RESET_TIMEOUT = 1024; // In clk cycles
     localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
@@ -21,26 +23,27 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     virtual std_reset_intf reset_vif;
     virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
 
-    // AXI-L management interface
+    // AXI-L interface
     virtual axi4l_intf axil_vif;
 
-    // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_in_vif [2*NUM_CMAC];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2*NUM_CMAC];
+    // AXI-S interfaces
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr_vif [NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c_vif      [NUM_CMAC];
+
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_egr_vif [NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif      [NUM_CMAC];
+
     virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_vif;
 
     // Drivers/Monitors
-    axi4s_driver #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)
-    ) axis_driver [2*NUM_CMAC];
+    axi4s_driver #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr_driver [NUM_CMAC];
+    axi4s_driver #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c_driver      [NUM_CMAC];
 
-    axi4s_monitor #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)
-    ) axis_monitor [2*NUM_CMAC];
+    axi4s_monitor #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_egr_monitor [NUM_CMAC];
+    axi4s_monitor #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_monitor      [NUM_CMAC];
 
-    axi4s_sample #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
-    ) axis_sample;
+    axi4s_sample #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample;
+
 
     // AXI-L agent
     axi4l_reg_agent #() reg_agent;
@@ -84,8 +87,11 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     // Constructor
     function new(string name , bit bigendian = 1);
         this.name = name;
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i] = new(.BIGENDIAN(bigendian));
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i] = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i]  = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i]       = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i] = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i]      = new(.BIGENDIAN(bigendian));
+
         axis_sample = new(.BIGENDIAN(bigendian));
         reg_agent = new("axi4l_reg_agent");
         ts_agent = new;
@@ -130,8 +136,11 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     endfunction
 
     function void connect();
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i].axis_vif = axis_in_vif[i];
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i].axis_vif = axis_out_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i].axis_vif  = axis_cmac_igr_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i].axis_vif = axis_cmac_egr_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i].axis_vif  = axis_h2c_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].axis_vif = axis_c2h_vif[i];
+
         axis_sample.axis_vif = axis_sample_vif;
         ts_agent.timestamp_vif = timestamp_vif;
         reg_agent.axil_vif = axil_vif;
@@ -160,8 +169,10 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
         axil_vif.idle_controller();
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i].idle();
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].idle();
     endtask
 
     task init_timestamp();

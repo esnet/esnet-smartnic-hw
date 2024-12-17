@@ -74,7 +74,8 @@ module smartnic_datapath_unit_test;
     task setup();
         svunit_ut.setup();
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(0);
 
         reset(); // Issue reset (both datapath and management domains)
 
@@ -325,7 +326,7 @@ module smartnic_datapath_unit_test;
 
             for (int cmac_port=0; cmac_port<2; cmac_port++) begin // foreach cmac port
 
-               env.axis_driver[cmac_port].set_min_gap(i); // set gap to i cycles.
+               env.axis_cmac_igr_driver[cmac_port].set_min_gap(i); // set gap to i cycles.
 
                // send 10 errored packets i.e. with tuser=1
                send_pcap(.pcap_filename ("../../common/pcap/64B_multiples_10pkts.pcap"),
@@ -394,7 +395,7 @@ module smartnic_datapath_unit_test;
 
 
     `SVTEST(single_packets)
-         env.axis_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
+         env.axis_cmac_igr_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
 
          run_pkt_stream ( .in_port(1), .out_port(1), 
                          .in_pcap  ("../../common/pcap/64B_multiples_10pkts.pcap"),
@@ -422,7 +423,8 @@ module smartnic_datapath_unit_test;
            out_pcap[i] = "../../common/pcap/128x1518B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*24);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -436,7 +438,8 @@ module smartnic_datapath_unit_test;
            out_pcap[i] = "../../common/pcap/32x9100B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*143);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -449,7 +452,8 @@ module smartnic_datapath_unit_test;
            out_pcap[i] = "../../common/pcap/64B_to_319B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5);  // set gap to 5 cycles.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(5);  // set gap to 5 cycles.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(5);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -462,7 +466,8 @@ module smartnic_datapath_unit_test;
            out_pcap[i] = "../../common/pcap/100xrandom_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(1*143);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -490,7 +495,8 @@ module smartnic_datapath_unit_test;
         force tb.axis_out_if[2].tready = 0;
         force tb.axis_out_if[3].tready = 0;
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0)); // set gap to 5 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0)); // set gap to 5 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0));
 
         fork
            run_stream_test();
@@ -526,7 +532,8 @@ module smartnic_datapath_unit_test;
         force tb.axis_out_if[2].tready = 0;
         force tb.axis_out_if[3].tready = 0;
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0));
 
         fork
            run_stream_test();

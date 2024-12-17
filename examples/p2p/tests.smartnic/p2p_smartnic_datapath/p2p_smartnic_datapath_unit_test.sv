@@ -57,7 +57,8 @@ module p2p_smartnic_datapath_unit_test;
     task setup();
         svunit_ut.setup();
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(0);
 
         reset(); // Issue reset (both datapath and management domains)
 

@@ -4,7 +4,8 @@
     task setup();
         svunit_ut.setup();
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(0);
 
         reset(); // Issue reset (both datapath and management domains)
 
@@ -108,8 +109,8 @@
             begin
                 // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
                 while ( (init_timestamp == 1) && !rx_done ) begin
-                   @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
-                      if (tb.axis_in_if[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
+                   @(posedge tb.axis_cmac_egr[0].tlast or posedge rx_done) begin
+                      if (tb.axis_cmac_egr[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
                    end
                 end
             end
@@ -124,7 +125,12 @@
                         end
                         begin
                             // Monitor received packets on port 0 (CMAC_0).
-                            env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                            case (out_port)
+                                0: env.axis_cmac_egr_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                                1: env.axis_cmac_egr_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                                2:      env.axis_c2h_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                                3:      env.axis_c2h_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
+                            endcase
                             rx_pkt_cnt++;
                             debug_msg( $sformatf( "      Port %0d. Receiving packet # %0d (of %0d)...",
                                                  out_port, rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
