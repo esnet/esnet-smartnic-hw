@@ -150,16 +150,15 @@ class smartnic_env extends std_verif_pkg::basic_env;
     // Start environment execution (run loop)
     // [[ implements std_verif_pkg::component._run() ]]
     protected task _run();
-        int dest_if [4];
+        TRANSACTION_IN_T transaction [4];
+        int              dest_if     [4];
 
         trace_msg("_run()");
         super._run();
+        trace_msg("Running...");
 
-        forever begin
-            TRANSACTION_IN_T transaction [4];
-            trace_msg("Running...");
-            fork 
-              begin
+        fork
+            forever begin
                 inbox[0].get(transaction[0]);
                 __drv_inbox[0].put(transaction[0]);
                 case (transaction[0].get_tdest())
@@ -168,8 +167,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     default dest_if[0]=0;
                 endcase
                 __model_inbox[dest_if[0]].put(transaction[0]);
-              end
-              begin
+            end
+            forever begin
                 inbox[1].get(transaction[1]);
                 __drv_inbox[1].put(transaction[1]);
                 case (transaction[1].get_tdest())
@@ -178,8 +177,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     default dest_if[1]=0;
                 endcase
                 __model_inbox[dest_if[1]].put(transaction[1]);
-              end
-              begin
+            end
+            forever begin
                 inbox[2].get(transaction[2]);
                 __drv_inbox[2].put(transaction[2]);
                 case (transaction[2].get_tdest())
@@ -188,8 +187,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     default dest_if[2]=0;
                 endcase
                 __model_inbox[dest_if[2]].put(transaction[2]);
-              end
-              begin
+            end
+            forever begin
                 inbox[3].get(transaction[3]);
                 __drv_inbox[3].put(transaction[3]);
                 case (transaction[3].get_tdest())
@@ -198,9 +197,9 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     default dest_if[3]=0;
                 endcase
                 __model_inbox[dest_if[3]].put(transaction[3]);
-              end
-            join_any
-        end
+            end
+        join_any
+
         trace_msg("_run() Done.");
     endtask
 
