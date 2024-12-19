@@ -125,13 +125,13 @@ module smartnic_app_datapath_unit_test
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
-              while (1) @(posedge tb.axis_out_if[PF0_VF2].aclk) if (tb.axis_out_if[PF0_VF2].tvalid) begin
+              while (1) @(posedge tb.axis_c2h[0].aclk) if (tb.axis_c2h[0].tvalid) begin
                  `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[0][0]] == 1'b1 );
                  `FAIL_UNLESS( rss_entropy[src_vf[0][0]] == src_vf[0]+1 );
               end
 
               // --- compare rss metadata to expected on HOST_1 port ---
-              while (1) @(posedge tb.axis_out_if[PF1_VF2].aclk) if (tb.axis_out_if[PF1_VF2].tvalid) begin
+              while (1) @(posedge tb.axis_c2h[1].aclk) if (tb.axis_c2h[1].tvalid) begin
                  `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[1][0]] == 1'b1 );
                  `FAIL_UNLESS( rss_entropy[src_vf[1][0]] == src_vf[1]+16 );
               end
@@ -163,7 +163,7 @@ module smartnic_app_datapath_unit_test
 
               // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
               // (without re-programming the p4 tables).
-              @(posedge tb.axis_in_if[1].tvalid)
+              @(posedge tb.axis_cmac_egr[1].tvalid)
                 run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_port(0), .out_port(0), .write_p4_tables(0) );
            join
        `SVTEST_END

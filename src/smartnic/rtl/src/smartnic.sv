@@ -311,7 +311,7 @@ module smartnic
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   // interfaces TDEST_T=igr_tdest_t
+   // interfaces with TDEST_T=igr_tdest_t
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_from_cmac      [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_MODE(PKT_ERROR),
@@ -597,12 +597,12 @@ module smartnic
    logic host_if_sel [NUM_CMAC][HOST_NUM_IFS];
 
    generate
-       for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin : g__host_if_sel
+       for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin : g__host_if_sel
            always @(posedge core_clk) begin
-               host_if_sel[0][i] <= ( axis_host_to_core[0].tid[11:0] >=  smartnic_regs.igr_q_config_0[i].base) &&
-                                    ( axis_host_to_core[0].tid[11:0] <  (smartnic_regs.igr_q_config_0[i].base + smartnic_regs.igr_q_config_0[i].num_q) );
-               host_if_sel[1][i] <= ( axis_host_to_core[1].tid[11:0] >=  smartnic_regs.igr_q_config_1[i].base) &&
-                                    ( axis_host_to_core[1].tid[11:0] <  (smartnic_regs.igr_q_config_1[i].base + smartnic_regs.igr_q_config_1[i].num_q) );
+               host_if_sel[0][j] <= ( axis_host_to_core[0].tid[11:0] >=  smartnic_regs.igr_q_config_0[j].base) &&
+                                    ( axis_host_to_core[0].tid[11:0] <  (smartnic_regs.igr_q_config_0[j].base + smartnic_regs.igr_q_config_0[j].num_q) );
+               host_if_sel[1][j] <= ( axis_host_to_core[1].tid[11:0] >=  smartnic_regs.igr_q_config_1[j].base) &&
+                                    ( axis_host_to_core[1].tid[11:0] <  (smartnic_regs.igr_q_config_1[j].base + smartnic_regs.igr_q_config_1[j].num_q) );
            end
        end : g__host_if_sel
    endgenerate
@@ -879,29 +879,29 @@ module smartnic
    logic [NUM_CMAC-1:0][11:0]  axis_app_egr_tuser_rss_entropy;
 
    generate
-       for (genvar j = 0; j < NUM_CMAC; j += 1) begin : g__app_igr_egr
-           assign axis_app_igr_tvalid[j]    = axis_to_app[j].tvalid;
-           assign axis_to_app[j].tready     = axis_app_igr_tready[j];
-           assign axis_app_igr_tdata[j]     = axis_to_app[j].tdata;
-           assign axis_app_igr_tkeep[j]     = axis_to_app[j].tkeep;
-           assign axis_app_igr_tlast[j]     = axis_to_app[j].tlast;
-           assign axis_app_igr_tid[j]       = axis_to_app[j].tid;
-           assign axis_app_igr_tdest[j]     = axis_to_app[j].tdest;
-           assign axis_app_igr_tuser_pid[j] = axis_to_app_tuser[j].pid;
+       for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__app_igr_egr
+           assign axis_app_igr_tvalid[i]    = axis_to_app[i].tvalid;
+           assign axis_to_app[i].tready     = axis_app_igr_tready[i];
+           assign axis_app_igr_tdata[i]     = axis_to_app[i].tdata;
+           assign axis_app_igr_tkeep[i]     = axis_to_app[i].tkeep;
+           assign axis_app_igr_tlast[i]     = axis_to_app[i].tlast;
+           assign axis_app_igr_tid[i]       = axis_to_app[i].tid;
+           assign axis_app_igr_tdest[i]     = axis_to_app[i].tdest;
+           assign axis_app_igr_tuser_pid[i] = axis_to_app_tuser[i].pid;
 
-           assign axis_from_app[j].aclk                = core_clk;
-           assign axis_from_app[j].aresetn             = core_rstn;
-           assign axis_from_app[j].tvalid              = axis_app_egr_tvalid[j];
-           assign axis_app_egr_tready[j]               = axis_from_app[j].tready;
-           assign axis_from_app[j].tdata               = axis_app_egr_tdata[j];
-           assign axis_from_app[j].tkeep               = axis_app_egr_tkeep[j];
-           assign axis_from_app[j].tlast               = axis_app_egr_tlast[j];
-           assign axis_from_app[j].tid                 = axis_app_egr_tid[j];
-           assign axis_from_app[j].tdest               = axis_app_egr_tdest[j];
-           assign axis_from_app_tuser[j].pid           = axis_app_egr_tuser_pid[j];
-           assign axis_from_app_tuser[j].rss_enable    = axis_app_egr_tuser_rss_enable[j];
-           assign axis_from_app_tuser[j].rss_entropy   = axis_app_egr_tuser_rss_entropy[j];
-           assign axis_from_app_tuser[j].hdr_tlast     = '0;
+           assign axis_from_app[i].aclk                = core_clk;
+           assign axis_from_app[i].aresetn             = core_rstn;
+           assign axis_from_app[i].tvalid              = axis_app_egr_tvalid[i];
+           assign axis_app_egr_tready[i]               = axis_from_app[i].tready;
+           assign axis_from_app[i].tdata               = axis_app_egr_tdata[i];
+           assign axis_from_app[i].tkeep               = axis_app_egr_tkeep[i];
+           assign axis_from_app[i].tlast               = axis_app_egr_tlast[i];
+           assign axis_from_app[i].tid                 = axis_app_egr_tid[i];
+           assign axis_from_app[i].tdest               = axis_app_egr_tdest[i];
+           assign axis_from_app_tuser[i].pid           = axis_app_egr_tuser_pid[i];
+           assign axis_from_app_tuser[i].rss_enable    = axis_app_egr_tuser_rss_enable[i];
+           assign axis_from_app_tuser[i].rss_entropy   = axis_app_egr_tuser_rss_entropy[i];
+           assign axis_from_app_tuser[i].hdr_tlast     = '0;
        end : g__app_igr_egr
    endgenerate
 
@@ -935,36 +935,36 @@ module smartnic
    logic [$clog2(HOST_NUM_IFS)-1:0] host_if_id [HOST_NUM_IFS];
 
    generate
-       for (genvar i = 0; i < HOST_NUM_IFS; i += 1) begin : g__h2c_c2h
-           for (genvar j = 0; j < NUM_CMAC; j += 1) begin : g__cmac_idx
-               assign host_if_id[i] = i;
+       for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin : g__h2c_c2h
+           for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__cmac_idx
+               assign host_if_id[j] = j;
 
-               assign axis_h2c_tvalid[i][j]    = axis_h2c[j][i].tvalid;
-               assign axis_h2c[j][i].tready    = axis_h2c_tready[i][j];
-               assign axis_h2c_tdata[i][j]     = axis_h2c[j][i].tdata;
-               assign axis_h2c_tkeep[i][j]     = axis_h2c[j][i].tkeep;
-               assign axis_h2c_tlast[i][j]     = axis_h2c[j][i].tlast;
-               assign axis_h2c_tid[i][j]       = axis_h2c[j][i].tid;
-               assign axis_h2c_tdest[i][j]     = axis_h2c[j][i].tdest;
-               assign axis_h2c_tuser[i][j]     = axis_h2c[j][i].tuser;
-               assign axis_h2c_tuser_pid[i][j] = axis_h2c_tuser[i][j].pid;
+               assign axis_h2c_tvalid[j][i]    = axis_h2c[i][j].tvalid;
+               assign axis_h2c[i][j].tready    = axis_h2c_tready[j][i];
+               assign axis_h2c_tdata[j][i]     = axis_h2c[i][j].tdata;
+               assign axis_h2c_tkeep[j][i]     = axis_h2c[i][j].tkeep;
+               assign axis_h2c_tlast[j][i]     = axis_h2c[i][j].tlast;
+               assign axis_h2c_tid[j][i]       = axis_h2c[i][j].tid;
+               assign axis_h2c_tdest[j][i]     = axis_h2c[i][j].tdest;
+               assign axis_h2c_tuser[i][j]     = axis_h2c[i][j].tuser;
+               assign axis_h2c_tuser_pid[j][i] = axis_h2c_tuser[i][j].pid;
 
-               assign axis_c2h[j][i].aclk                = core_clk;
-               assign axis_c2h[j][i].aresetn             = core_rstn;
-               assign axis_c2h[j][i].tvalid              = axis_c2h_tvalid[i][j];
-               assign axis_c2h_tready[i][j]              = axis_c2h[j][i].tready;
-               assign axis_c2h[j][i].tdata               = axis_c2h_tdata[i][j];
-               assign axis_c2h[j][i].tkeep               = axis_c2h_tkeep[i][j];
-               assign axis_c2h[j][i].tlast               = axis_c2h_tlast[i][j];
-               assign axis_c2h[j][i].tid                 = axis_c2h_tid[i][j];
-               assign axis_c2h[j][i].tdest               = axis_c2h_tdest[i][j];
-               assign axis_c2h_tuser[i][j].pid           = axis_c2h_tuser_pid[i][j];
-               assign axis_c2h_tuser[i][j].trunc_enable  = axis_c2h_tuser_trunc_enable[i][j];
-               assign axis_c2h_tuser[i][j].trunc_length  = axis_c2h_tuser_trunc_length[i][j];
-               assign axis_c2h_tuser[i][j].rss_enable    = axis_c2h_tuser_rss_enable[i][j];
-               assign axis_c2h_tuser[i][j].rss_entropy   = {host_if_id[i], axis_c2h_tuser_rss_entropy[i][j][9:0]};
+               assign axis_c2h[i][j].aclk                = core_clk;
+               assign axis_c2h[i][j].aresetn             = core_rstn;
+               assign axis_c2h[i][j].tvalid              = axis_c2h_tvalid[j][i];
+               assign axis_c2h_tready[j][i]              = axis_c2h[i][j].tready;
+               assign axis_c2h[i][j].tdata               = axis_c2h_tdata[j][i];
+               assign axis_c2h[i][j].tkeep               = axis_c2h_tkeep[j][i];
+               assign axis_c2h[i][j].tlast               = axis_c2h_tlast[j][i];
+               assign axis_c2h[i][j].tid                 = axis_c2h_tid[j][i];
+               assign axis_c2h[i][j].tdest               = axis_c2h_tdest[j][i];
+               assign axis_c2h_tuser[i][j].pid           = axis_c2h_tuser_pid[j][i];
+               assign axis_c2h_tuser[i][j].trunc_enable  = axis_c2h_tuser_trunc_enable[j][i];
+               assign axis_c2h_tuser[i][j].trunc_length  = axis_c2h_tuser_trunc_length[j][i];
+               assign axis_c2h_tuser[i][j].rss_enable    = axis_c2h_tuser_rss_enable[j][i];
+               assign axis_c2h_tuser[i][j].rss_entropy   = {host_if_id[j], axis_c2h_tuser_rss_entropy[j][i][9:0]};
                assign axis_c2h_tuser[i][j].hdr_tlast     = '0;
-               assign axis_c2h[j][i].tuser               = axis_c2h_tuser[i][j];
+               assign axis_c2h[i][j].tuser               = axis_c2h_tuser[i][j];
 
            end : g__cmac_idx
        end : g__h2c_c2h

@@ -1,18 +1,11 @@
-module tb;
     import tb_pkg::*;
     import smartnic_pkg::*;
     import pcap_pkg::*;
 
     // (Local) parameters
     localparam int NUM_CMAC = 2;
-
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
-
-    //===================================
-    // (Common) test environment
-    //===================================
-    tb_env #(.NUM_CMAC(NUM_CMAC)) env;
 
     //===================================
     // Device Under Test
@@ -71,11 +64,11 @@ module tb;
     logic       [NUM_CMAC-1:0] s_axis_cmac_rx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] s_axis_cmac_rx_322mhz_tready;
 
-    logic                       mod_rstn;
-    logic                       mod_rst_done;
+    logic                      mod_rstn;
+    logic                      mod_rst_done;
 
-    logic                       axil_aclk;
-    logic        [NUM_CMAC-1:0] cmac_clk;
+    logic                      axil_aclk;
+    logic       [NUM_CMAC-1:0] cmac_clk;
 
     // DUT instance
     smartnic #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
@@ -83,62 +76,15 @@ module tb;
     //===================================
     // Local signals
     //===================================
-    logic clk;
-    logic rst;
-
-    logic axis_sample_clk;
-    logic axis_sample_aresetn;
 
     // Interfaces
-    std_reset_intf #() reset_if (.clk(clk));
-    std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_if (.clk(axil_aclk));
-
-    timestamp_if #() timestamp_if (.clk(clk), .srst(rst));
-
-    axi4l_intf axil_if ();
+    axi4l_intf axil_if ();    
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr [NUM_CMAC] ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t))      axis_cmac_egr [NUM_CMAC] ();
-
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c      [NUM_CMAC] ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t))      axis_c2h      [NUM_CMAC] ();
-
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_if ();
-
-    // Generate datapath clock (322MHz)
-    initial clk = 1'b0;
-    always #1553ps clk = ~clk; // 322MHz
-
-    // Assign reset interfaces
-    assign rst = reset_if.reset;
-    assign reset_if.ready = mod_rst_done;
-
-    assign mod_rstn = ~rst;
-
-    // Generate AXI management clock (125MHz)
-    initial axil_if.aclk = 1'b0;
-    always #4ns axil_if.aclk = ~axil_if.aclk;
-
-    assign axil_aclk = axil_if.aclk;
-
-    // Assign AXI management reset
-    assign axil_if.aresetn = mgmt_reset_if.reset;
-    assign mgmt_reset_if.ready = mod_rst_done;
-
-    // Assign CMAC clocks/resets
-    generate
-        for (genvar g_cmac=0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac_clk
-            assign      cmac_clk[g_cmac]         =  clk;
-            assign      axis_h2c[g_cmac].aclk    =  clk;
-            assign      axis_h2c[g_cmac].aresetn = ~rst;
-            assign axis_cmac_igr[g_cmac].aclk    =  clk;
-            assign axis_cmac_igr[g_cmac].aresetn = ~rst;
-        end : g__cmac_clk
-    endgenerate
-
-    // AXI-S sample interface
-    assign axis_sample_if.aclk = axis_sample_clk;
-    assign axis_sample_if.aresetn = axis_sample_aresetn;
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t), 
+                 .TUSER_T(tuser_smartnic_meta_t))                                                  axis_c2h      [NUM_CMAC] ();
 
     // Assign AXI-L control interface
     assign s_axil_awvalid = axil_if.awvalid;
@@ -176,21 +122,17 @@ module tb;
     assign axis_cmac_igr[1].tready = s_axis_cmac_rx_322mhz_tready[1];
 
     // Assign AXI-S CMAC output interfaces
-    assign axis_cmac_egr[0].aclk   = clk;
-    assign axis_cmac_egr[0].aresetn= ~rst;
     assign axis_cmac_egr[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0];
     assign axis_cmac_egr[0].tlast  = m_axis_cmac_tx_322mhz_tlast[0];
-    assign axis_cmac_egr[0].tdest  = m_axis_cmac_tx_322mhz_tdest[3:0];
+    assign axis_cmac_egr[0].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_cmac_egr[0].tdata  = m_axis_cmac_tx_322mhz_tdata[511:0];
     assign axis_cmac_egr[0].tkeep  = m_axis_cmac_tx_322mhz_tkeep[63:0];
     assign axis_cmac_egr[0].tuser  = m_axis_cmac_tx_322mhz_tuser_err[0];
     assign m_axis_cmac_tx_322mhz_tready[0] = axis_cmac_egr[0].tready;
 
-    assign axis_cmac_egr[1].aclk   = clk;
-    assign axis_cmac_egr[1].aresetn= ~rst;
     assign axis_cmac_egr[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1];
     assign axis_cmac_egr[1].tlast  = m_axis_cmac_tx_322mhz_tlast[1];
-    assign axis_cmac_egr[1].tdest  = m_axis_cmac_tx_322mhz_tdest[7:4];
+    assign axis_cmac_egr[1].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_cmac_egr[1].tdata  = m_axis_cmac_tx_322mhz_tdata[1023:512];
     assign axis_cmac_egr[1].tkeep  = m_axis_cmac_tx_322mhz_tkeep[127:64];
     assign axis_cmac_egr[1].tuser  = m_axis_cmac_tx_322mhz_tuser_err[1];
@@ -216,86 +158,20 @@ module tb;
     assign axis_h2c[1].tready = s_axis_adpt_tx_322mhz_tready[1];
 
     // Assign AXI-S ADPT output interfaces
-    assign axis_c2h[0].aclk   = clk;
-    assign axis_c2h[0].aresetn= ~rst;
     assign axis_c2h[0].tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
     assign axis_c2h[0].tlast  = m_axis_adpt_rx_322mhz_tlast[0];
-    assign axis_c2h[0].tdest  = m_axis_adpt_rx_322mhz_tdest[3:0];
+    assign axis_c2h[0].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_c2h[0].tdata  = m_axis_adpt_rx_322mhz_tdata[511:0];
     assign axis_c2h[0].tkeep  = m_axis_adpt_rx_322mhz_tkeep[63:0];
-    assign axis_c2h[0].tuser  = m_axis_adpt_rx_322mhz_tuser_err[0];
+    assign axis_c2h[0].tuser.rss_enable  = m_axis_adpt_rx_322mhz_tuser_rss_enable[0];
+    assign axis_c2h[0].tuser.rss_entropy = m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
     assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h[0].tready;
 
-    assign axis_c2h[1].aclk   = clk;
-    assign axis_c2h[1].aresetn= ~rst;
     assign axis_c2h[1].tvalid = m_axis_adpt_rx_322mhz_tvalid[1];
     assign axis_c2h[1].tlast  = m_axis_adpt_rx_322mhz_tlast[1];
-    assign axis_c2h[1].tdest  = m_axis_adpt_rx_322mhz_tdest[7:4];
+    assign axis_c2h[1].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_c2h[1].tdata  = m_axis_adpt_rx_322mhz_tdata[1023:512];
     assign axis_c2h[1].tkeep  = m_axis_adpt_rx_322mhz_tkeep[127:64];
-    assign axis_c2h[1].tuser  = m_axis_adpt_rx_322mhz_tuser_err[1];
+    assign axis_c2h[1].tuser.rss_enable  = m_axis_adpt_rx_322mhz_tuser_rss_enable[1];
+    assign axis_c2h[1].tuser.rss_entropy = m_axis_adpt_rx_322mhz_tuser_rss_entropy[23:12];
     assign m_axis_adpt_rx_322mhz_tready[1] = axis_c2h[1].tready;
-
-    // axis_out tvalid monitors
-    always @(negedge axis_cmac_egr[0].tvalid) if (axis_cmac_egr[0].tready && !axis_cmac_egr[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge axis_cmac_egr[1].tvalid) if (axis_cmac_egr[1].tready && !axis_cmac_egr[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge      axis_c2h[0].tvalid) if (axis_c2h[0].tready && !axis_c2h[0].tlast)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge      axis_c2h[1].tvalid) if (axis_c2h[1].tready && !axis_c2h[1].tlast)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
-
-    //===================================
-    // Build
-    //===================================
-    function void build();
-
-        if (env == null) begin
-            // Instantiate environment
-            env = new("tb_env",0);   // bigendian=0 matches cmac's little endian axis
-
-            // Connect
-            env.reset_vif = reset_if;
-            env.mgmt_reset_vif = mgmt_reset_if;
-            env.timestamp_vif = timestamp_if;
-            env.axil_vif = axil_if;
-
-            env.axis_cmac_igr_vif[0] = axis_cmac_igr[0];
-            env.axis_cmac_igr_vif[1] = axis_cmac_igr[1];
-            env.axis_h2c_vif[0]      = axis_h2c[0];
-            env.axis_h2c_vif[1]      = axis_h2c[1];
-            env.axis_cmac_egr_vif[0] = axis_cmac_egr[0];
-            env.axis_cmac_egr_vif[1] = axis_cmac_egr[1];
-            env.axis_c2h_vif[0]      = axis_c2h[0];
-            env.axis_c2h_vif[1]      = axis_c2h[1];
-
-            // temporarily replaced (dynamic) vif for loops below with (static) assignments above, due to errors.
-            // for (int i=0; i < NUM_CMAC; i++) env.axis_cmac_igr_vif[i] = axis_cmac_igr[i];
-            // for (int i=0; i < NUM_CMAC; i++) env.axis_cmac_egr_vif[i] = axis_cmac_egr[i];
-
-            env.axis_sample_vif = axis_sample_if;
-
-            env.connect();
-
-        end
-    endfunction
-
-    // Monitor sample interface - count and display packets.
-    int sample_pkt_cnt;
-    byte sample_data[$];
-    always begin
-       env.axis_sample.capture_pkt_data(sample_data);
-       sample_pkt_cnt++;
-       $display($sformatf("Sample packet # %0d", sample_pkt_cnt));
-       pcap_pkg::print_pkt_data(sample_data);
-    end
-
-    // Export AXI-L accessors to VitisNetP4 shared library
-    export "DPI-C" task axi_lite_wr;
-    task axi_lite_wr(input int address, input int data);
-        env.vitisnetp4_write(address, data);
-    endtask
-
-    export "DPI-C" task axi_lite_rd;
-    task axi_lite_rd(input int address, inout int data);
-        env.vitisnetp4_read(address, data);
-    endtask
-
-endmodule : tb

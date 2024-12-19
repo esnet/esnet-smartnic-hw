@@ -30,7 +30,7 @@ module smartnic_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //=================================== 
-    `include "../common/tasks.svh"
+    `include "../../common/tasks.svh"
        
     //===================================
     // Connect AXI-S sample interface
@@ -74,7 +74,8 @@ module smartnic_datapath_unit_test;
     task setup();
         svunit_ut.setup();
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(0);
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(0);
 
         reset(); // Issue reset (both datapath and management domains)
 
@@ -84,14 +85,14 @@ module smartnic_datapath_unit_test;
         switch_config = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
         // default variable configuration
-         in_pcap[0] = "../../common/pcap/10xrandom_pkts.pcap";
-        out_pcap[0] = "../../common/pcap/10xrandom_pkts.pcap";
-         in_pcap[1] = "../../common/pcap/20xrandom_pkts.pcap";
-        out_pcap[1] = "../../common/pcap/20xrandom_pkts.pcap";
-         in_pcap[2] = "../../common/pcap/30xrandom_pkts.pcap";
-        out_pcap[2] = "../../common/pcap/30xrandom_pkts.pcap";
-         in_pcap[3] = "../../common/pcap/40xrandom_pkts.pcap";
-        out_pcap[3] = "../../common/pcap/40xrandom_pkts.pcap";
+         in_pcap[0] = "../../../common/pcap/10xrandom_pkts.pcap";
+        out_pcap[0] = "../../../common/pcap/10xrandom_pkts.pcap";
+         in_pcap[1] = "../../../common/pcap/20xrandom_pkts.pcap";
+        out_pcap[1] = "../../../common/pcap/20xrandom_pkts.pcap";
+         in_pcap[2] = "../../../common/pcap/30xrandom_pkts.pcap";
+        out_pcap[2] = "../../../common/pcap/30xrandom_pkts.pcap";
+         in_pcap[3] = "../../../common/pcap/40xrandom_pkts.pcap";
+        out_pcap[3] = "../../../common/pcap/40xrandom_pkts.pcap";
 
         out_port_map = {4'h3, 4'h2, 4'h1, 4'h0};
         pkt_len      = {0, 0, 0, 0};  
@@ -193,8 +194,8 @@ module smartnic_datapath_unit_test;
              fork
                // Stream 2x9100B packets from igr_port (through bypass path).  Monitoring output if enabled.
                run_pkt_stream ( .in_port(igr_port), .out_port(out_port_map[igr_port]),
-                                .in_pcap  ("../../common/pcap/32x9100B_pkts.pcap"),
-                                .out_pcap ("../../common/pcap/32x9100B_pkts.pcap"),
+                                .in_pcap  ("../../../common/pcap/32x9100B_pkts.pcap"),
+                                .out_pcap ("../../../common/pcap/32x9100B_pkts.pcap"),
                                 .tx_pkt_cnt(tx_pkt_cnt[igr_port]), .tx_byte_cnt(tx_byte_cnt[igr_port]),
                                 .rx_pkt_cnt(rx_pkt_cnt[igr_port]), .rx_byte_cnt(rx_byte_cnt[igr_port]),
                                 .num_pkts(2), .exp_pkt_cnt(2),
@@ -228,8 +229,8 @@ module smartnic_datapath_unit_test;
              fork
                 // Stream 2x9100B packets through BYPASS interface.  Monitoring output.
                 run_pkt_stream ( .in_port(egr_port[0]), .out_port(egr_port),
-                                 .in_pcap  ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
-                                 .out_pcap ("../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .in_pcap  ("../../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
+                                 .out_pcap ("../../../../../../src/smartnic/tests/common/pcap/32x9100B_pkts.pcap"),
                                  .tx_pkt_cnt(tx_pkt_cnt[egr_port[0]]), .tx_byte_cnt(tx_byte_cnt[egr_port[0]]),
                                  .rx_pkt_cnt(rx_pkt_cnt[egr_port[0]]), .rx_byte_cnt(rx_byte_cnt[egr_port[0]]),
                                  .num_pkts(2), .exp_pkt_cnt(2),
@@ -253,8 +254,8 @@ module smartnic_datapath_unit_test;
         //port_t port = $urandom % 2;
         for (int port = 0; port < 2; port++) begin
 
-            in_pcap[port] = "../../common/pcap/128x1518B_pkts.pcap";
-           out_pcap[port] = "../../common/pcap/128x1518B_pkts.pcap";
+            in_pcap[port] = "../../../common/pcap/128x1518B_pkts.pcap";
+           out_pcap[port] = "../../../common/pcap/128x1518B_pkts.pcap";
             pkt_len[port] = 1518;
 
            // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -292,11 +293,11 @@ module smartnic_datapath_unit_test;
 
 
     `SVTEST(discards_from_cmac)
-         in_pcap[0] = "../../common/pcap/32x9100B_pkts.pcap";
-        out_pcap[0] = "../../common/pcap/32x9100B_pkts.pcap";
+         in_pcap[0] = "../../../common/pcap/32x9100B_pkts.pcap";
+        out_pcap[0] = "../../../common/pcap/32x9100B_pkts.pcap";
          pkt_len[0] = 9100;
-         in_pcap[1] = "../../common/pcap/128x1518B_pkts.pcap";
-        out_pcap[1] = "../../common/pcap/128x1518B_pkts.pcap";
+         in_pcap[1] = "../../../common/pcap/128x1518B_pkts.pcap";
+        out_pcap[1] = "../../../common/pcap/128x1518B_pkts.pcap";
          pkt_len[1] = 1518;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -325,18 +326,18 @@ module smartnic_datapath_unit_test;
 
             for (int cmac_port=0; cmac_port<2; cmac_port++) begin // foreach cmac port
 
-               env.axis_driver[cmac_port].set_min_gap(i); // set gap to i cycles.
+               env.axis_cmac_igr_driver[cmac_port].set_min_gap(i); // set gap to i cycles.
 
                // send 10 errored packets i.e. with tuser=1
-               send_pcap(.pcap_filename ("../../common/pcap/64B_multiples_10pkts.pcap"),
+               send_pcap(.pcap_filename ("../../../common/pcap/64B_multiples_10pkts.pcap"),
                          .id(cmac_port), .dest(cmac_port), .user(1));
                // check error counts
                check_and_clear_err_probes (.in_port(cmac_port), .exp_err_pkts(10), .exp_err_bytes(3520));
 
                // send and check unerrored packet stream i.e. with tuser=0 (default)
                run_pkt_stream (.in_port(cmac_port), .out_port(cmac_port),
-                               .in_pcap  ("../../common/pcap/10xrandom_pkts.pcap"),
-                               .out_pcap ("../../common/pcap/10xrandom_pkts.pcap"),
+                               .in_pcap  ("../../../common/pcap/10xrandom_pkts.pcap"),
+                               .out_pcap ("../../../common/pcap/10xrandom_pkts.pcap"),
                                .tx_pkt_cnt(tx_pkt_cnt[cmac_port]), .tx_byte_cnt(tx_byte_cnt[cmac_port]),
                                .rx_pkt_cnt(rx_pkt_cnt[cmac_port]), .rx_byte_cnt(rx_byte_cnt[cmac_port]) );
 
@@ -394,11 +395,11 @@ module smartnic_datapath_unit_test;
 
 
     `SVTEST(single_packets)
-         env.axis_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
+         env.axis_cmac_igr_driver[1].set_min_gap(1000); // set gap to 1000 cycles.
 
          run_pkt_stream ( .in_port(1), .out_port(1), 
-                         .in_pcap  ("../../common/pcap/64B_multiples_10pkts.pcap"),
-                         .out_pcap ("../../common/pcap/64B_multiples_10pkts.pcap"),
+                         .in_pcap  ("../../../common/pcap/64B_multiples_10pkts.pcap"),
+                         .out_pcap ("../../../common/pcap/64B_multiples_10pkts.pcap"),
                          .tx_pkt_cnt(tx_pkt_cnt[1]), .tx_byte_cnt(tx_byte_cnt[1]),
                          .rx_pkt_cnt(rx_pkt_cnt[1]), .rx_byte_cnt(rx_byte_cnt[1]) );
     `SVTEST_END
@@ -406,8 +407,8 @@ module smartnic_datapath_unit_test;
 
     `SVTEST(min_size_stress)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/512x64B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/512x64B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/512x64B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/512x64B_pkts.pcap";
         end
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
@@ -418,11 +419,12 @@ module smartnic_datapath_unit_test;
 
     `SVTEST(max_size_stress)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/128x1518B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/128x1518B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/128x1518B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/128x1518B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*24);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -432,11 +434,12 @@ module smartnic_datapath_unit_test;
 
     `SVTEST(long_pkt)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/32x9100B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/32x9100B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/32x9100B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/32x9100B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*143);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -445,11 +448,12 @@ module smartnic_datapath_unit_test;
 
     `SVTEST(axi4s_tkeep_stress)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/64B_to_319B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/64B_to_319B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/64B_to_319B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/64B_to_319B_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5);  // set gap to 5 cycles.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(5);  // set gap to 5 cycles.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(5);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -458,11 +462,12 @@ module smartnic_datapath_unit_test;
       
     `SVTEST(random_pkt_size)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/100xrandom_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/100xrandom_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/100xrandom_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/100xrandom_pkts.pcap";
         end
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(1*143);
 
         if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
@@ -475,8 +480,8 @@ module smartnic_datapath_unit_test;
 /*
     `SVTEST(jumbo_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/32x9100B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/32x9100B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/32x9100B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/32x9100B_pkts.pcap";
         end
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -490,7 +495,8 @@ module smartnic_datapath_unit_test;
         force tb.axis_out_if[2].tready = 0;
         force tb.axis_out_if[3].tready = 0;
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0)); // set gap to 5 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0)); // set gap to 5 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(5*$ceil(pkt_len[i]/64.0));
 
         fork
            run_stream_test();
@@ -510,8 +516,8 @@ module smartnic_datapath_unit_test;
 
      `SVTEST(max_size_discards)
         for (int i=0; i<NUM_PORTS; i++) begin
-            in_pcap[i] = "../../common/pcap/128x1518B_pkts.pcap";
-           out_pcap[i] = "../../common/pcap/128x1518B_pkts.pcap";
+            in_pcap[i] = "../../../common/pcap/128x1518B_pkts.pcap";
+           out_pcap[i] = "../../../common/pcap/128x1518B_pkts.pcap";
         end
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
@@ -526,7 +532,8 @@ module smartnic_datapath_unit_test;
         force tb.axis_out_if[2].tready = 0;
         force tb.axis_out_if[3].tready = 0;
 
-        for (int i=0; i<NUM_PORTS; i++) env.axis_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0)); // set gap to 2 pkts.
+        for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*$ceil(pkt_len[i]/64.0));
 
         fork
            run_stream_test();

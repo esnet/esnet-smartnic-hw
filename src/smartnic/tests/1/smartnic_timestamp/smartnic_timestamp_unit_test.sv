@@ -30,7 +30,7 @@ module smartnic_timestamp_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../common/tasks.svh"
+    `include "../../common/tasks.svh"
 
     //===================================
     // Build

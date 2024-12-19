@@ -23,15 +23,9 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic.pkg \
     smartnic.rtl \
     smartnic.tb \
-    smartnic_app.rtl \
-    smartnic_app.igr_p4.vf_loopback.rtl \
-    smartnic_app.egr_p4.vf_loopback.rtl \
-    smartnic_app.igr.demux.rtl \
-    smartnic_app.igr.demux.regio.verif \
-    smartnic_app.egr.mux.rtl \
+    smartnic_app.stub.rtl \
     std.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \
@@ -70,7 +64,10 @@ SIM_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: build_test sim
+all: build_test pcap sim
+
+pcap:
+	cd $(PROJ_ROOT)/src/smartnic/tests/common/pcap; python3 gen_pcap.py;
 
 build_test: _build_test
 sim:        _sim
@@ -85,7 +82,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-#TOP += smartnic__tb.tb
+TOP += smartnic__tb.tb
 
 # ----------------------------------------------------
 # Import Vivado sim targets

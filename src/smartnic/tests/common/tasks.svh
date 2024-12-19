@@ -84,7 +84,12 @@ task send_pcap (
     input port_t  dest=0,
     input bit     user=0 );
 
-    env.axis_driver[id].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+    case (id)
+        0: env.axis_cmac_igr_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+        1: env.axis_cmac_igr_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+        2:      env.axis_h2c_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+        3:      env.axis_h2c_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+    endcase
 endtask
 
 
@@ -181,7 +186,13 @@ task automatic run_pkt_stream (
 
           #(init_pause);
           while (rx_pkt_cnt < exp_pkt_cnt) begin
-             env.axis_monitor[out_port].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
+             case (out_port)
+                 0: env.axis_cmac_egr_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
+                 1: env.axis_cmac_egr_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
+                 2:      env.axis_c2h_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
+                 3:      env.axis_c2h_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(tpause));
+             endcase
+
              rx_pkt_cnt++;
              rx_byte_cnt = rx_byte_cnt + rx_data.size();
             `INFO($sformatf("       Stream in_port %0d (out_port %0d): Receiving packet # %0d (of %0d)...", 
