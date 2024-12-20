@@ -67,19 +67,19 @@ class smartnic_env extends std_verif_pkg::basic_env;
         for (int i=0; i < 4; i++) __mon_outbox[i]   = new();
         for (int i=0; i < 4; i++) __model_inbox[i]  = new();
         for (int i=0; i < 4; i++) __model_outbox[i] = new();
-        for (int i=0; i < 4; i++) driver[i]  = new(.BIGENDIAN(1'b1));
-        for (int i=0; i < 4; i++) monitor[i] = new(.BIGENDIAN(1'b1));
+        for (int i=0; i < 4; i++) driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)), .BIGENDIAN(1'b1));
+        for (int i=0; i < 4; i++) monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(1'b1));
 
-        model[0] = new(.dest_if(CMAC0));
-        model[1] = new(.dest_if(CMAC1));
-        model[2] = new(.dest_if(PF0));
-        model[3] = new(.dest_if(PF1));
+        model[0] = new(.name("model[0]"), .dest_if(CMAC0));
+        model[1] = new(.name("model[1]"), .dest_if(CMAC1));
+        model[2] = new(.name("model[2]"), .dest_if(PF0));
+        model[3] = new(.name("model[3]"), .dest_if(PF1));
 
         //for (int i=0; i < 4; i++) scoreboard[i] = new();
-        scoreboard0 = new();
-        scoreboard1 = new();
-        scoreboard2 = new();
-        scoreboard3 = new();
+        scoreboard0 = new("scoreboard[0]");
+        scoreboard1 = new("scoreboard[1]");
+        scoreboard2 = new("scoreboard[2]");
+        scoreboard3 = new("scoreboard[3]");
 
     endfunction
 
