@@ -12,8 +12,8 @@ module xilinx_hbm_stack_ctrl
     // AXI-L control interface
     axi4l_intf.peripheral axil_if,
 
-    // AXI3 memory channel interfaces
-    axi3_intf.controller  axi_if [PSEUDO_CHANNELS_PER_STACK],
+    // AXI3 memory control channel interface
+    axi3_intf.controller  control_proxy_axi_if,
     
     // APB (management) interface
     input logic           apb_clk,
@@ -56,7 +56,7 @@ module xilinx_hbm_stack_ctrl
     axi4l_intf hbm_axil_if__clk ();
     axi4l_intf hbm_apb_proxy_axil_if ();
     axi4l_intf hbm_apb_proxy_axil_if__apb_clk ();
-    axi4l_intf ch_axil_if [PSEUDO_CHANNELS_PER_STACK] ();
+    axi4l_intf control_proxy_axil_if ();
 
     apb_intf hbm_channel_apb_if ();
 
@@ -70,22 +70,7 @@ module xilinx_hbm_stack_ctrl
         .axil_if                      ( axil_if ),
         .xilinx_hbm_axil_if           ( hbm_axil_if ),
         .xilinx_hbm_apb_proxy_axil_if ( hbm_apb_proxy_axil_if ),
-        .ch0_axil_if                  ( ch_axil_if[0] ),
-        .ch1_axil_if                  ( ch_axil_if[1] ),
-        .ch2_axil_if                  ( ch_axil_if[2] ),
-        .ch3_axil_if                  ( ch_axil_if[3] ),
-        .ch4_axil_if                  ( ch_axil_if[4] ),
-        .ch5_axil_if                  ( ch_axil_if[5] ),
-        .ch6_axil_if                  ( ch_axil_if[6] ),
-        .ch7_axil_if                  ( ch_axil_if[7] ),
-        .ch8_axil_if                  ( ch_axil_if[8] ),
-        .ch9_axil_if                  ( ch_axil_if[9] ),
-        .ch10_axil_if                 ( ch_axil_if[10] ),
-        .ch11_axil_if                 ( ch_axil_if[11] ),
-        .ch12_axil_if                 ( ch_axil_if[12] ),
-        .ch13_axil_if                 ( ch_axil_if[13] ),
-        .ch14_axil_if                 ( ch_axil_if[14] ),
-        .ch15_axil_if                 ( ch_axil_if[15] )
+        .control_proxy_axil_if        ( control_proxy_axil_if )
     );
 
     // CDC
@@ -150,44 +135,46 @@ module xilinx_hbm_stack_ctrl
     );
 
     // -----------------------------
-    // AXI-3 pseudo channels
+    // AXI-3 control proxy
     // -----------------------------
-    generate
-        for (genvar g_ch = 0; g_ch < PSEUDO_CHANNELS_PER_STACK; g_ch++) begin : g__ch
-            // (Local) Interfaces
-            mem_wr_intf #(.ADDR_WID(AXI_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_wr_if (.clk(clk));
-            mem_rd_intf #(.ADDR_WID(AXI_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_rd_if (.clk(clk));
+    // (Local) parameters
+    localparam int MEM_ADDR_WID = AXI_ADDR_WID - $clog2(AXI_DATA_BYTE_WID); // Memory interface uses row addressing
 
-            // Memory register proxy
-            // (drive AXI-3 memory interfaces from register proxy controller)
-            mem_proxy       #(
-                .ADDR_T      ( logic[AXI_ADDR_WID-1:0] ),
-                .DATA_T      ( logic[AXI_DATA_WID-1:0] ),
-                .BURST_LEN   ( 1 ),
-                .ACCESS_TYPE ( mem_pkg::ACCESS_READ_WRITE ),
-                .MEM_TYPE    ( mem_pkg::MEM_TYPE_HBM )
-            ) i_mem_proxy (
-                .clk         ( clk ),
-                .srst        ( local_srst ),
-                .init_done   ( ),
-                .axil_if     ( ch_axil_if [g_ch] ),
-                .mem_wr_if   ( __mem_wr_if ),
-                .mem_rd_if   ( __mem_rd_if )
-            );
+    // (Local) Interfaces
+    mem_intf #(.ADDR_T(logic[MEM_ADDR_WID-1:0]), .DATA_T(logic[AXI_DATA_WID-1:0])) __mem_if (.clk(clk));
+    mem_wr_intf #(.ADDR_WID(MEM_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_wr_if (.clk(clk));
+    mem_rd_intf #(.ADDR_WID(MEM_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_rd_if (.clk(clk));
 
-            axi3_mem_adapter #(
-                .SIZE ( axi3_pkg::SIZE_32BYTES ),
-                .WR_TIMEOUT ( 0 ),
-                .RD_TIMEOUT ( 0 )
-            ) i_axi3_mem_adapter (
-                .clk           ( clk ),
-                .srst          ( local_srst ),
-                .init_done     ( ),
-                .mem_wr_if     ( __mem_wr_if ),
-                .mem_rd_if     ( __mem_rd_if ),
-                .axi3_if       ( axi_if [g_ch ] )
-            );
-        end : g__ch
-    endgenerate
+    // Memory register proxy
+    // (drive AXI-3 memory interface from register proxy controller)
+    mem_proxy       #(
+        .ACCESS_TYPE ( mem_pkg::ACCESS_READ_WRITE ),
+        .MEM_TYPE    ( mem_pkg::MEM_TYPE_HBM )
+    ) i_mem_proxy__control (
+        .clk         ( clk ),
+        .srst        ( local_srst ),
+        .init_done   ( ),
+        .axil_if     ( control_proxy_axil_if ),
+        .mem_if      ( __mem_if )
+    );
+
+    mem_sp_to_sdp_adapter i_mem_sp_to_sdp_adapter__hbm (
+        .mem_if ( __mem_if ),
+        .mem_wr_if ( __mem_wr_if ),
+        .mem_rd_if ( __mem_rd_if )
+    );
+
+    axi3_from_mem_adapter #(
+        .SIZE ( axi3_pkg::SIZE_32BYTES ),
+        .WR_TIMEOUT ( 0 ),
+        .RD_TIMEOUT ( 0 )
+    ) i_axi3_from_mem_adapter (
+        .clk           ( clk ),
+        .srst          ( local_srst ),
+        .init_done     ( ),
+        .mem_wr_if     ( __mem_wr_if ),
+        .mem_rd_if     ( __mem_rd_if ),
+        .axi3_if       ( control_proxy_axi_if )
+    );
 
 endmodule : xilinx_hbm_stack_ctrl

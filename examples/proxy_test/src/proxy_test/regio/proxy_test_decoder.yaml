@@ -15,6 +15,8 @@ blocks:
     !include ../examples/proxy_test/src/proxy_test/regio/mem_proxy_64b.yaml
 
 decoders:
+  hbm_stack: &hbm_stack
+    !include ../src/xilinx/hbm/regio/xilinx_hbm_decoder.yaml
   packet_playback: &packet_playback
     !include src/packet/regio/packet_playback_decoder.yaml
   packet_capture: &packet_capture
@@ -52,5 +54,13 @@ interfaces:
     name: packet_playback
   - decoder: *packet_capture
     address: 0x5000
-    width: 13
+    width: 12
     name: packet_capture
+  - decoder: *hbm_stack
+    address: 0x6000
+    width: 13
+    name: hbm_left
+  - decoder: *hbm_stack
+    address: 0x8000
+    width: 13
+    name: hbm_right

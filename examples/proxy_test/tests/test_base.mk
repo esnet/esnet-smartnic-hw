@@ -26,6 +26,7 @@ SUBCOMPONENTS = \
     proxy_test.rtl \
     proxy_test.verif \
     proxy_test.tb \
+    xilinx.hbm.verif@smartnic \
     axi4l.rtl@common@smartnic \
     axi4s.rtl@common@smartnic \
     axi4l.verif@common@smartnic \

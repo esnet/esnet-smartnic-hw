@@ -6,7 +6,7 @@ module xilinx_hbm_stack
 ) (
     // Clock/reset
     input wire logic       clk,
-    input wire logic       rstn,
+    input wire logic       srst,
 
     // HBM reference clock
     input wire logic       hbm_ref_clk,
@@ -15,16 +15,15 @@ module xilinx_hbm_stack
     input wire logic       clk_100mhz,
 
     // AXI-L control interface
-    axi4l_intf.peripheral  axil_if
+    axi4l_intf.peripheral  axil_if,
 
     // AXI3 memory interfaces
-    // axi3_intf.peripheral   axi_if [PSEUDO_CHANNELS_PER_STACK] // TEMP: disable external AXI-3 interfaces (drive memory accesses from register proxy only)
+    axi3_intf.peripheral   axi_if [PSEUDO_CHANNELS_PER_STACK]
 );
     // Parameters
     localparam int ADDR_WID = get_addr_wid(DENSITY);
 
     // Signals
-    logic       srst;
     logic       init_done;
     logic       dram_status_cattrip;
     logic [6:0] dram_status_temp;
@@ -33,18 +32,9 @@ module xilinx_hbm_stack
     // Interfaces
     // -------------------------------------------
     apb_intf   apb_if ();
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) axi_if [PSEUDO_CHANNELS_PER_STACK] ();
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) axi_if__ctrl [PSEUDO_CHANNELS_PER_STACK] ();
+    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) __axi_if [PSEUDO_CHANNELS_PER_STACK] ();
+    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) axi_if__ctrl ();
 
-    // ----------------------------------------------------------------
-    // Reset synchronization
-    // ----------------------------------------------------------------
-    sync_reset i_sync_reset (
-        .clk_in  ( clk ),
-        .rst_in  ( rstn ),
-        .clk_out ( clk ),
-        .rst_out ( srst )
-    );
     // -------------------------------------------
     // Instantiations
     // -------------------------------------------
@@ -53,16 +43,21 @@ module xilinx_hbm_stack
         .DENSITY ( DENSITY )  
     ) i_xilinx_hbm_stack_ctrl (
         .apb_clk ( clk_100mhz ),
-        .axi_if  ( axi_if__ctrl ),
+        .control_proxy_axi_if  ( axi_if__ctrl ),
         .*
     );
 
-    // TEMP: drive memory accesses from register proxy directly
+    // Connect AXI-3 interfaces
     generate
-        for (genvar i = 0; i < PSEUDO_CHANNELS_PER_STACK; i++) begin : g__mc_ctrl
-            axi3_intf_connector i_axi3_connector (.axi3_if_from_controller(axi_if__ctrl[i]), .axi3_if_to_peripheral(axi_if[i]));
-        end : g__mc_ctrl
+        for (genvar g_ch = 0; g_ch < PSEUDO_CHANNELS_PER_STACK-1; g_ch++) begin : g__ps
+            // Connect external AXI-3 interface directly
+            axi3_intf_connector i_axi3_connector (.axi3_if_from_controller(axi_if[g_ch]), .axi3_if_to_peripheral(__axi_if[g_ch]));
+        end : g__ps
     endgenerate
+    // On channel N-1, isolate and tie off external interface
+    axi3_intf_peripheral_term i_axi3_peripheral_term__ctrl (.axi3_if (axi_if[PSEUDO_CHANNELS_PER_STACK-1]));
+    // .. and drive memory accesses from register proxy
+    axi3_intf_connector i_axi3_connector__ctrl (.axi3_if_from_controller(axi_if__ctrl), .axi3_if_to_peripheral(__axi_if[PSEUDO_CHANNELS_PER_STACK-1]));
 
     // Xilinx HBM IP (single stack) ports
     // -----------------------------------------
@@ -632,6 +627,7 @@ module xilinx_hbm_stack
     xilinx_hbm_stack_if #(
         .DENSITY ( DENSITY )
     ) i_xilinx_hbm_stack_if (
+        .axi_if ( __axi_if ),
         .*
     );
  
