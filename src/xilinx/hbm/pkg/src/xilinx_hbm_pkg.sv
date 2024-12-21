@@ -21,8 +21,16 @@ package xilinx_hbm_pkg;
     typedef logic [AXI_ID_WID-1:0] axi_id_t;
 
     // Functions
-    function automatic int get_addr_wid(input density_t _DENSITY);
-        case (_DENSITY)
+    function automatic int get_size(input density_t DENSITY);
+        case (DENSITY)
+            DENSITY_4G : return 4*1024**3;
+            DENSITY_8G : return 8*1024**3;
+            default    : return 4*1024**3;
+        endcase
+    endfunction
+
+    function automatic int get_addr_wid(input density_t DENSITY);
+        case (DENSITY)
             DENSITY_4G : return 33;
             DENSITY_8G : return 34;
             default    : return 33;

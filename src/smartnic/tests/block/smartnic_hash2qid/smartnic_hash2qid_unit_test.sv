@@ -76,7 +76,7 @@ module smartnic_hash2qid_unit_test;
 
             tuser_out.rss_enable=1'b1;
 
-            transaction_out = transaction_in.clone($sformatf("trans_%0d_out", num_output_transactions()));
+            transaction_out = transaction_in.dup($sformatf("trans_%0d_out", num_output_transactions()));
             transaction_out.set_tuser(tuser_out);
             _enqueue(transaction_out);
         endtask

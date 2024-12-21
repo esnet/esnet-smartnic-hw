@@ -67,19 +67,19 @@ class smartnic_env extends std_verif_pkg::basic_env;
         for (int i=0; i < 4; i++) __mon_outbox[i]   = new();
         for (int i=0; i < 4; i++) __model_inbox[i]  = new();
         for (int i=0; i < 4; i++) __model_outbox[i] = new();
-        for (int i=0; i < 4; i++) driver[i]  = new(.BIGENDIAN(1'b1));
-        for (int i=0; i < 4; i++) monitor[i] = new(.BIGENDIAN(1'b1));
+        for (int i=0; i < 4; i++) driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)), .BIGENDIAN(1'b1));
+        for (int i=0; i < 4; i++) monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(1'b1));
 
-        model[0] = new(.dest_if(CMAC0));
-        model[1] = new(.dest_if(CMAC1));
-        model[2] = new(.dest_if(PF0));
-        model[3] = new(.dest_if(PF1));
+        model[0] = new(.name("model[0]"), .dest_if(CMAC0));
+        model[1] = new(.name("model[1]"), .dest_if(CMAC1));
+        model[2] = new(.name("model[2]"), .dest_if(PF0));
+        model[3] = new(.name("model[3]"), .dest_if(PF1));
 
         //for (int i=0; i < 4; i++) scoreboard[i] = new();
-        scoreboard0 = new();
-        scoreboard1 = new();
-        scoreboard2 = new();
-        scoreboard3 = new();
+        scoreboard0 = new("scoreboard[0]");
+        scoreboard1 = new("scoreboard[1]");
+        scoreboard2 = new("scoreboard[2]");
+        scoreboard3 = new("scoreboard[3]");
 
     endfunction
 
@@ -216,7 +216,7 @@ class smartnic_model extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_ti
         this.dest_if = dest_if;
     endfunction
 
-    protected task _process(input axi4s_transaction#(adpt_tx_tid_t, port_t, tuser_smartnic_meta_t) transaction_in);
+    protected task _process(input axi4s_transaction#(adpt_tx_tid_t, port_t, tuser_smartnic_meta_t) transaction);
         axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t) transaction_out;
         port_t  tid_out;
         port_t  tdest_out;
@@ -230,7 +230,7 @@ class smartnic_model extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_ti
         end else begin
             tuser_out = 'x;
             tuser_out.rss_enable = 1'b1;
-            case (transaction_in.get_tdest())
+            case (transaction.get_tdest())
                 PF0:     tuser_out.rss_entropy = 12'd2048;  // set entropy=qid based on egr queue (hash2qid) config.
                 PF0_VF0: tuser_out.rss_entropy = 12'd2560;
                 PF0_VF1: tuser_out.rss_entropy = 12'd3072;
@@ -243,9 +243,9 @@ class smartnic_model extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_ti
             endcase
         end
 
-        transaction_out = new ($sformatf("trans_%0d_out", num_output_transactions()), transaction_in.payload().size(),
+        transaction_out = new ($sformatf("trans_%0d_out", num_output_transactions()), transaction.payload().size(),
                                tid_out, tdest_out, tuser_out);
-        transaction_out.set_from_bytes(transaction_in.payload());
+        transaction_out.from_bytes(transaction.payload());
         _enqueue(transaction_out);
     endtask
 
