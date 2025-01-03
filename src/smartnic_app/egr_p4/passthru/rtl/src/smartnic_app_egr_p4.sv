@@ -35,6 +35,6 @@ module smartnic_app_egr_p4
 
     // Terminate extern AXI-S interfaces
     axi4s_intf_rx_sink axi4s_intf_rx_sink_inst (.axi4s_if (axis_to_extern));
-    axi4s_intf_tx_term axi4s_intf_tx_term_inst (.axi4s_if (axis_from_extern));
+    axi4s_intf_tx_term axi4s_intf_tx_term_inst (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if (axis_from_extern));
 
 endmodule : smartnic_app_egr_p4
