@@ -163,9 +163,10 @@ endtask
 
 // Run packet test
 task automatic run_pkt_test (
-    input string testdir, input logic[63:0] init_timestamp=0,
+    input string testdir, expfile="/expected/packets_out.pcap",
+    input logic[63:0] init_timestamp=0,
     input port_t in_if=0, out_if=0, dest_port=0,
-    input write_p4_tables=1, VERBOSE=1 );
+    input write_p4_tables=1, check_tdest=1, VERBOSE=1 );
 
     string filename;
 
@@ -198,7 +199,7 @@ task automatic run_pkt_test (
     end
 
     debug_msg("Reading expected pcap file...", VERBOSE);
-    filename = {P4_SIM_PATH, testdir, "/expected/packets_out.pcap"};
+    filename = {P4_SIM_PATH, testdir, expfile};
     exp_pcap = pcap_pkg::read_pcap(filename);
 
     debug_msg("Starting simulation...", VERBOSE);
@@ -212,6 +213,16 @@ task automatic run_pkt_test (
             send_pcap(.pcap_filename(filename), .num_pkts(num_pkts), .start_idx(start_idx),
                       .twait(twait), .in_if(in_if), .id(in_if), .dest(dest_port));
         end
+
+        begin
+            // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
+            while ( (init_timestamp == 1) && (in_if==0) && !rx_done ) begin
+                @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
+                    if (tb.axis_in_if[0].tlast) begin tb.axis_in_if[0]._wait(50); timestamp++; env.ts_agent.set_static(timestamp); end
+                end
+            end
+        end
+
         begin
             // Monitor output packets
             while (rx_pkt_cnt < exp_pcap.records.size()) begin
@@ -234,8 +245,8 @@ task automatic run_pkt_test (
 
                 debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                 compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data);
-               `FAIL_IF_LOG( dest != dest_port,
-                             $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
+                if (check_tdest) `FAIL_IF_LOG( dest != dest_port,
+                                               $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
             end
 
             case (in_if)
@@ -256,7 +267,6 @@ task automatic run_pkt_test (
                 PF1_VF1:   begin check_probe (PROBE_TO_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
             endcase
 
-            check_cleared_probes;
             rx_done = 1;
         end
     join
