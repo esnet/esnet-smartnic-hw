@@ -33,6 +33,8 @@ module proxy_test
     // ----------------------------------------------------------------
     //  Interfaces
     // ----------------------------------------------------------------
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) app__axi_if__hbm_left  [HBM_NUM_AXI_CHANNELS] ();
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) app__axi_if__hbm_right [HBM_NUM_AXI_CHANNELS] ();
     axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) axi_if__hbm_left  [HBM_NUM_AXI_CHANNELS] ();
     axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) axi_if__hbm_right [HBM_NUM_AXI_CHANNELS] ();
 
@@ -241,11 +243,6 @@ module proxy_test
         .axi_if      ( axi_if__hbm_left )
     );
 
-    // Tie off all but 0th AXI3 interface for now
-    for (genvar g_ch = 1; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_ch_left
-        axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if (axi_if__hbm_left[g_ch]));
-    end : g__hbm_ch_left
-
     xilinx_hbm_stack #(
         .STACK   ( xilinx_hbm_pkg::STACK_RIGHT ),
         .DENSITY ( HBM_DENSITY )
@@ -258,10 +255,33 @@ module proxy_test
         .axi_if      ( axi_if__hbm_right )
     );
 
-    // Tie off AXI3 interfaces for now
-    for (genvar g_ch = 0; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_ch_right
-        axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if (axi_if__hbm_right[g_ch]));
-    end : g__hbm_ch_right
+    // Register slices
+    for (genvar g_ch = 0; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_ch_reg
+        xilinx_axi3_reg_slice #(
+            .ADDR_WID      ( HBM_AXI_ADDR_WID ),
+            .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
+            .ID_T          ( HBM_AXI_ID_T ),
+            .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
+        ) i_xilinx_axi3_reg_slice__left (
+            .axi3_if_from_controller ( app__axi_if__hbm_left[g_ch] ),
+            .axi3_if_to_peripheral   ( axi_if__hbm_left[g_ch] )
+        );
+        xilinx_axi3_reg_slice #(
+            .ADDR_WID      ( HBM_AXI_ADDR_WID ),
+            .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
+            .ID_T          ( HBM_AXI_ID_T ),
+            .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
+        ) i_xilinx_axi3_reg_slice__right (
+            .axi3_if_from_controller ( app__axi_if__hbm_right[g_ch] ),
+            .axi3_if_to_peripheral   ( axi_if__hbm_right[g_ch] )
+        );
+    end : g__hbm_ch_reg
+
+    // Tie off all but 0th AXI3 interface for now
+    for (genvar g_ch = 1; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_ch_app_term
+        axi3_intf_controller_term i_axi3_intf_controller_term__left (.axi3_if (app__axi_if__hbm_left[g_ch]));
+        axi3_intf_controller_term i_axi3_intf_controller_term__right (.axi3_if (app__axi_if__hbm_right[g_ch]));
+    end : g__hbm_ch_app_term
 
     // ----------------------------------------------------------------
     // Packet proxy
@@ -302,6 +322,14 @@ module proxy_test
         .mem_init_done ( 1'b1 )
     );
 
+    packet_capture i_packet_capture (
+        .clk,
+        .srst,
+        .en (),
+        .axil_if ( axil_to_packet_capture ),
+        .packet_if ( packet_if__capture )
+    );
+
     axi3_from_mem_adapter #(
         .SIZE ( axi3_pkg::SIZE_32BYTES ),
         .WR_TIMEOUT ( 0 ),
@@ -312,15 +340,7 @@ module proxy_test
         .init_done (),
         .mem_wr_if ( packet_mem_wr_if ),
         .mem_rd_if ( packet_mem_rd_if ),
-        .axi3_if   ( axi_if__hbm_left[0] )
-    );
-
-    packet_capture i_packet_capture (
-        .clk,
-        .srst,
-        .en (),
-        .axil_if ( axil_to_packet_capture ),
-        .packet_if ( packet_if__capture )
+        .axi3_if   ( app__axi_if__hbm_left[0] )
     );
 
     // ----------------------------------------------------------------
