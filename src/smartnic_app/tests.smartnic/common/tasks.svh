@@ -17,9 +17,9 @@
         // Initialize VitisNetP4 tables
         vitisnetp4_agent.init();
 
-        // Configure ingress queue assignment (all ingress host traffic is for VF2. base=0, num_q=1).
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h0});
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h0});
+        // Configure ingress queue assignment (all ingress host traffic is for VF2).
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h2});
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h3});
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to vitisnetp4 block.
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
