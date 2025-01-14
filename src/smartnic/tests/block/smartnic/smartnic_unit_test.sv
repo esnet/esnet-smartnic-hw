@@ -610,6 +610,28 @@ module smartnic_unit_test;
             `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
         `SVTEST_END
 
+        `SVTEST(PF0_out_of_range_test)
+            smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd0, 12'd0});
+
+            packet_stream(.tid(PF0), .tdest(CMAC0));
+            #2us;
+            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
+        `SVTEST_END
+
+        `SVTEST(PF1_out_of_range_test)
+            smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd0, 12'd0});
+
+            packet_stream(.tid(PF1), .tdest(CMAC1));
+            #2us;
+            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
+        `SVTEST_END
+
         `SVTEST(random_in_test)
             port_t   tid, tdest;
             int      num, exp_cnt[4];
