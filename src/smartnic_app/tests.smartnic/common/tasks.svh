@@ -22,15 +22,15 @@
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h3});
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0 is connected to vitisnetp4 block.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[2], 2'h0 );
 
         // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to vitisnetp4 block.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2'h1 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2'h1 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[3], 2'h1 );
 
-        // Configure igr_demux_sel to steer traffic to datapath (app_igr).
-        //p4_only_reg_agent.write_igr_demux_sel({1'b1, IGR_DEMUX_SEL_VALUE_APP_IGR});
+        // Configure smartnic_app_igr_p4_out_sel to steer traffic to datapath (app_igr).
+        //p4_only_reg_agent.write_smartnic_app_igr_p4_out_sel({1'b1, SMARTNIC_APP_IGR_P4_OUT_SEL_VALUE_SMARTNIC_APP_IGR});
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin

@@ -14,12 +14,12 @@ regs:
     count: 4
     fields:
         - name: base
-          desc: sets the base qid for the specified h2c interface.
+          desc: sets the base qid for the specified c2h interface.
                 indexed by interface number
-                   0 PF  IGR_P4
-                   1 VF0 IGR_APP
-                   2 VF1 EXTERN
-                   3 VF2 EGR_APP
+                   0 PF  <- SMARTNIC_APP_IGR_P4
+                   1 VF0 <- SMARTNIC_APP_IGR
+                   2 VF1 <- VITISNETP4_EGR_EXTERN
+                   3 VF2 <- SMARTNIC_DEMUX
           width: 12
           init: 0
 

@@ -31,7 +31,7 @@ module smartnic_mux
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_core_to_bypass [NUM_CMAC]    ();
 
 
-    igr_tdest_t igr_sw_tdest [2*NUM_CMAC];
+    igr_tdest_t smartnic_mux_out_sel [2*NUM_CMAC];
 
     logic  igr_demux_sel  [NUM_CMAC];
 
@@ -44,14 +44,14 @@ module smartnic_mux
         // ingress tdest configuration logic.
         always @(posedge core_clk) begin
             if (!core_rstn) begin
-                igr_sw_tdest[i]   <= DROP;
-                igr_sw_tdest[2+i] <= DROP;
+                smartnic_mux_out_sel[i]   <= DROP;
+                smartnic_mux_out_sel[2+i] <= DROP;
             end else begin
                 if (axis_cmac_to_core[i].tready && axis_cmac_to_core[i].tvalid && axis_cmac_to_core[i].sop)
-                    igr_sw_tdest[i] <= smartnic_regs.igr_sw_tdest[i];
+                    smartnic_mux_out_sel[i] <= smartnic_regs.smartnic_mux_out_sel[i];
 
                 if (axis_host_to_core[i].tready && axis_host_to_core[i].tvalid && axis_host_to_core[i].sop)
-                    igr_sw_tdest[2+i] <= smartnic_regs.igr_sw_tdest[2+i];
+                    smartnic_mux_out_sel[2+i] <= smartnic_regs.smartnic_mux_out_sel[2+i];
             end
         end
 
@@ -65,7 +65,7 @@ module smartnic_mux
         assign _axis_cmac_to_core_p[i].tlast   = axis_cmac_to_core_p[i].tlast;
         assign _axis_cmac_to_core_p[i].tid     = axis_cmac_to_core_p[i].tid;
         assign _axis_cmac_to_core_p[i].tuser   = axis_cmac_to_core_p[i].tuser;
-        assign _axis_cmac_to_core_p[i].tdest   = igr_sw_tdest[i];
+        assign _axis_cmac_to_core_p[i].tdest   = smartnic_mux_out_sel[i];
 
         assign axis_host_to_core_p[i].tready   = _axis_host_to_core_p[i].tready;
 
@@ -77,7 +77,7 @@ module smartnic_mux
         assign _axis_host_to_core_p[i].tlast   = axis_host_to_core_p[i].tlast;
         assign _axis_host_to_core_p[i].tid     = axis_host_to_core_p[i].tid;
         assign _axis_host_to_core_p[i].tuser   = axis_host_to_core_p[i].tuser;
-        assign _axis_host_to_core_p[i].tdest   = igr_sw_tdest[2+i];
+        assign _axis_host_to_core_p[i].tdest   = smartnic_mux_out_sel[2+i];
 
         axi4s_intf_connector axi4s_igr_mux_in_pipe_0 (.axi4s_from_tx(_axis_cmac_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][0]));
         axi4s_intf_connector axi4s_igr_mux_in_pipe_1 (.axi4s_from_tx(_axis_host_to_core_p[i]), .axi4s_to_rx(igr_mux_in[i][1]));

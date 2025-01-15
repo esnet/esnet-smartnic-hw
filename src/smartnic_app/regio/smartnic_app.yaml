@@ -11,18 +11,18 @@ regs:
   - name: status
     init: 0xacdccafe
 
-  - name: igr_demux_sel
+  - name: smartnic_app_igr_p4_out_sel
     access : rw
     fields:
         - name: value
-          desc: when activated, overrides the axi4s 'tdest' signal used to select the igr demux interface.
-                igr_demux_sel=1 directs traffic from the igr p4 processor to the host c2h interface.
+          desc: set enable (1) to  override the p4 'egress_port' signal used to direct 'smartnic_app_igr_p4' output. 
+                set value (1) to direct smartnic_app_igr_p4 output to the HOST.  default (0) directs to 'smartnic_app_igr'.
           width: 1
           init: 0
           enum:
-              0 : APP_IGR
-              1 : HOST_C2H
+              0 : SMARTNIC_APP_IGR
+              1 : HOST
         - name: enable
-          desc: activates 'igr_demux_sel' override value.
+          desc: activates the 'smartnic_app_igr_p4_out_sel' override value.
           width: 1
           init: 1

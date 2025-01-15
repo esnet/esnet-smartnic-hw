@@ -133,10 +133,10 @@ task init_sw_config_regs();
    env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[2], {12'h0, 12'h0});
    env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h3});
 
-   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2 );
-   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2 );
-   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2 );
-   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[2], 2 );
+   env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[3], 2 );
 
 endtask
 

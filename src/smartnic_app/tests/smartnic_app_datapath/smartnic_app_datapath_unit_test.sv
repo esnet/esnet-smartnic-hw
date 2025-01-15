@@ -152,7 +152,7 @@ module smartnic_app_datapath_unit_test;
             check_cleared_probes;
         end
 
-        env.smartnic_app_reg_agent.write_igr_demux_sel(2'b11);
+        env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
 
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b egr interface...", i), 1);

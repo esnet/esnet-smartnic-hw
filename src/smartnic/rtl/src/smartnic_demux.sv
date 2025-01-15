@@ -41,7 +41,7 @@ module smartnic_demux
                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  _axis_core_to_host [NUM_CMAC] ();
 
 
-    logic egr_demux_sel [NUM_CMAC];
+    logic smartnic_demux_out_sel [NUM_CMAC];
 
 
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__mux_demux
@@ -80,14 +80,14 @@ module smartnic_demux
 
         always @(posedge core_clk)
             if (!core_rstn)
-                egr_demux_sel[i] <= 0;
+                smartnic_demux_out_sel[i] <= 0;
 	    else if (egr_mux_out[i].tready && egr_mux_out[i].tvalid && egr_mux_out[i].sop)
-                egr_demux_sel[i] <= smartnic_regs.egr_demux_sel[i];
+                smartnic_demux_out_sel[i] <= smartnic_regs.smartnic_demux_out_sel[i];
 
         axi4s_intf_demux #(.N(2)) axi4s_egr_demux (
             .axi4s_in  (egr_mux_out_p[i]),
             .axi4s_out (egr_demux_out[i]),
-            .sel       (egr_demux_sel[i])
+            .sel       (smartnic_demux_out_sel[i])
         ); 
 
         axi4s_intf_connector axi4s_egr_demux_out_pipe_0 (.axi4s_from_tx(egr_demux_out[i][0]), .axi4s_to_rx(_axis_core_to_cmac[i]));
