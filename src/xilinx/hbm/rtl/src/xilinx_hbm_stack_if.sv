@@ -607,6 +607,7 @@ module xilinx_hbm_stack_if
         .pclk    ( APB_0_PCLK ),
         .presetn ( APB_0_PRESET_N ),
         .paddr   ( APB_0_PADDR ),
+        .pprot   ( ),
         .psel    ( APB_0_PSEL ),
         .penable ( APB_0_PENABLE ),
         .pwrite  ( APB_0_PWRITE ),
