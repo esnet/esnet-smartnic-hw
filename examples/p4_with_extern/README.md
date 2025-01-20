@@ -13,7 +13,7 @@ hardware.
 
 The p4_with_extern design is identical in function to the p4_only design (i.e. a simple table-based
 Layer-2 packet switch).  However, unlike p4_only, p4_with_extern also incorporates an instantiation of the
-AMD (Xilinx) minimal_user_extern_example (provided with the Vivado 2023.1 software release).
+AMD (Xilinx) minimal_user_extern_example (provided with the Vivado 2023.2 software release).
 
 The minimal_user_extern_example extern implements a simple pass-through delay line, with a 16-cycle
 latency.

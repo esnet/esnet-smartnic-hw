@@ -26,7 +26,7 @@ simulation, or simulation of the full testcase suite.
 To simulate a single testcase, execute make with the `P4BM_DIR=` argument
 set to the testcase subdirectory of interest.  For example:
 
-     > make P4BM_DIR=test-fwd-p0
+     > make P4BM_DIR=test-fwd-p0 sim
 
 Or to simulate all test cases:
 
@@ -55,11 +55,11 @@ character is used to start comments.
                         Alternative format to `packets_in.user` (optional).
 
 3. `packets_in.meta` - Input packet metadata.  Each line corresponds
-to a packet in the input PCAP file (in sequence).  The syntax of the metadata
+to a packet in the input PCAP or user file, in sequence.  The syntax of the metadata
 is described in the Xilinx VitisnetP4 documentation.  Note: Each metadata record
 must be terminated by a semicolon (;).
 
-For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2023.1) May 16, 2023*.
+For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2023.2) October 18, 2023*.
 
 
 ## Testcase Output Files
