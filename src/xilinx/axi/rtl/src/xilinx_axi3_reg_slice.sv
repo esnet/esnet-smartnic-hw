@@ -156,18 +156,4 @@ module xilinx_axi3_reg_slice
         .m_axi_rready   ( axi3_if_to_peripheral.rready )
     );
 
-    // Assign clock
-    assign axi3_if_to_peripheral.aclk = axi3_if_from_controller.aclk;
-
-    // Pipeline reset
-    util_pipe       #(
-        .DATA_T      ( logic ),
-        .PIPE_STAGES ( getResetPipeStages(CONFIG) )
-    ) i_util_pipe_aresetn (
-        .clk      ( axi3_if_to_peripheral.aclk ),
-        .srst     ( 1'b0 ),
-        .data_in  ( axi3_if_from_controller.aresetn ),
-        .data_out ( axi3_if_to_peripheral.aresetn )
-    );
-
 endmodule : xilinx_axi3_reg_slice

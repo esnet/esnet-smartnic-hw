@@ -32,8 +32,8 @@ module xilinx_hbm_stack
     // Interfaces
     // -------------------------------------------
     apb_intf   apb_if ();
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) __axi_if [PSEUDO_CHANNELS_PER_STACK] ();
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) axi_if__ctrl ();
+    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) __axi_if [PSEUDO_CHANNELS_PER_STACK] (.aclk(clk));
+    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_T(axi_id_t)) axi_if__ctrl (.aclk(clk));
 
     // -------------------------------------------
     // Instantiations

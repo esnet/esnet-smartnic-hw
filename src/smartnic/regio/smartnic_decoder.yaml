@@ -20,7 +20,7 @@ decoders:
   smartnic_p4: &smartnic_p4
     !include ../src/smartnic_app/regio/smartnic_p4_decoder.yaml
   fifo: &fifo
-    !include src/fifo/regio/fifo_core_decoder.yaml
+    !include src/fifo/regio/fifo_decoder.yaml
 
 interfaces:
   - block: *smartnic
