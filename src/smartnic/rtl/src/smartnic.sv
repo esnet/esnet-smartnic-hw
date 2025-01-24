@@ -594,21 +594,24 @@ module smartnic
 
 
    //------------------------ tid assignment logic --------------
-   logic host_if_sel [NUM_CMAC][HOST_NUM_IFS];
-
+   logic host_if_sel [NUM_CMAC][HOST_NUM_IFS+1];
    generate
-       for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin : g__host_if_sel
+       for (genvar j = 0; j < HOST_NUM_IFS+1; j += 1) begin : g__host_if_sel
            always @(posedge core_clk) begin
-               host_if_sel[0][j] <= ( axis_host_to_core[0].tid[11:0] >=  smartnic_regs.igr_q_config_0[j].base) &&
-                                    ( axis_host_to_core[0].tid[11:0] <  (smartnic_regs.igr_q_config_0[j].base + smartnic_regs.igr_q_config_0[j].num_q) );
-               host_if_sel[1][j] <= ( axis_host_to_core[1].tid[11:0] >=  smartnic_regs.igr_q_config_1[j].base) &&
-                                    ( axis_host_to_core[1].tid[11:0] <  (smartnic_regs.igr_q_config_1[j].base + smartnic_regs.igr_q_config_1[j].num_q) );
+               host_if_sel[0][j] <= (        axis_host_to_core[0].tid[11:0]  >=  smartnic_regs.igr_q_config_0[j].base ) &&
+                                    ( {1'b0, axis_host_to_core[0].tid[11:0]} <  (smartnic_regs.igr_q_config_0[j].base + smartnic_regs.igr_q_config_0[j].num_q) );
+               host_if_sel[1][j] <= (        axis_host_to_core[1].tid[11:0]  >=  smartnic_regs.igr_q_config_1[j].base ) &&
+                                    ( {1'b0, axis_host_to_core[1].tid[11:0]} <  (smartnic_regs.igr_q_config_1[j].base + smartnic_regs.igr_q_config_1[j].num_q) );
            end
        end : g__host_if_sel
    endgenerate
 
    assign axis_host_tid[0].tid = (host_if_sel[0][PF] ? PF0 : (host_if_sel[0][VF0] ? PF0_VF0 : (host_if_sel[0][VF1] ? PF0_VF1 : PF0_VF2)));
    assign axis_host_tid[1].tid = (host_if_sel[1][PF] ? PF1 : (host_if_sel[1][VF0] ? PF1_VF0 : (host_if_sel[1][VF1] ? PF1_VF1 : PF1_VF2)));
+
+   logic  host_q_in_range [NUM_CMAC];
+   assign host_q_in_range[0] = host_if_sel[0][PF] || host_if_sel[0][VF0] || host_if_sel[0][VF1] || host_if_sel[0][VF2];
+   assign host_q_in_range[1] = host_if_sel[1][PF] || host_if_sel[1][VF0] || host_if_sel[1][VF1] || host_if_sel[1][VF2];
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__tid
        axi4s_intf_pipe axi4s_host_to_core_pipe (.axi4s_if_from_tx(axis_host_to_core[i]),    .axi4s_if_to_rx(axis_host_to_core_p[i]));
@@ -618,7 +621,7 @@ module smartnic
 
        assign axis_host_tid[i].aclk    = axis_host_to_core_p[i].aclk;
        assign axis_host_tid[i].aresetn = axis_host_to_core_p[i].aresetn;
-       assign axis_host_tid[i].tvalid  = axis_host_to_core_p[i].tvalid;
+       assign axis_host_tid[i].tvalid  = axis_host_to_core_p[i].tvalid && host_q_in_range[i];
        assign axis_host_tid[i].tdata   = axis_host_to_core_p[i].tdata;
        assign axis_host_tid[i].tkeep   = axis_host_to_core_p[i].tkeep;
        assign axis_host_tid[i].tlast   = axis_host_to_core_p[i].tlast;

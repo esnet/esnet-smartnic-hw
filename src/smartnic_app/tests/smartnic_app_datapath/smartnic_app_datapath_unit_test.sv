@@ -140,6 +140,7 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing CMAC%0b igr and egr interfaces...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(CMAC0+i), .write_p4_tables(1));
+            check_cleared_probes;
         end
     `SVTEST_END
 
@@ -148,13 +149,15 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b igr interface...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0+i), .out_if(CMAC0+i), .write_p4_tables(0));
+            check_cleared_probes;
         end
 
-        env.smartnic_app_reg_agent.write_igr_demux_sel(2'b11);
+        env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
 
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b egr interface...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(PF0+i), .write_p4_tables(0));
+            check_cleared_probes;
         end
     `SVTEST_END
 
@@ -163,6 +166,7 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF0 igr interface...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0_VF0+i), .out_if(CMAC0+i), .write_p4_tables(0));
+            check_cleared_probes;
         end
 
         smartnic_app_igr_reg_blk_agent.write_app_igr_config(1'b1);
@@ -170,6 +174,7 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF0 egr interface...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(PF0_VF0+i), .write_p4_tables(0));
+            check_cleared_probes;
         end
     `SVTEST_END
 
@@ -178,6 +183,7 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF1 igr and egr interfaces...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0_VF1+i), .out_if(PF0_VF1+i), .write_p4_tables(0));
+            check_cleared_probes;
         end
     `SVTEST_END
 

@@ -103,7 +103,7 @@ module smartnic_bypass #(
             if (!core_rstn)
                 bypass_demux_sel[i] <= 0;
             else if (axis_bypass_demux_in[i].tready && axis_bypass_demux_in[i].tvalid && axis_bypass_demux_in[i].sop) 
-                bypass_demux_sel[i] <= smartnic_regs.bypass_config.switch_paths;
+                bypass_demux_sel[i] <= smartnic_regs.bypass_config.swap_paths;
 
         axi4s_intf_demux #(.N(2)) axi4s_bypass_demux (
             .axi4s_in  (axis_bypass_demux_in_p[i]),

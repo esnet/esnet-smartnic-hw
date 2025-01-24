@@ -105,7 +105,7 @@ module smartnic_app_datapath_unit_test
        `SVTEST(test_rss_metadata) // tests propagation of rss_metadata and qid selection through datapath to smartnic ports.
            port_t  src_vf[2];
 
-           env.smartnic_reg_blk_agent.write_egr_demux_sel('1);  // demux egr traffic to host ports.
+           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);  // demux egr traffic to host ports.
 
            env.smartnic_hash2qid_0_reg_blk_agent.write_q_config (3, 1);  // write PF0_VF2 base address = 1.
            env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 16); // write PF1_VF2 base address = 16.

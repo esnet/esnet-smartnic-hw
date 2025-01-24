@@ -18,7 +18,7 @@ module smartnic_app_igr
         // Connect AXI-S interfaces as passthrough
         axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(axi4s_in[i]), .axi4s_if_to_rx(axi4s_out[i]));
         // Terminate C2H interface
-        axi4s_intf_tx_term axi4s_intf_tx_term_0 (.axi4s_if(axi4s_c2h[i]));
+        axi4s_intf_tx_term axi4s_intf_tx_term_0 (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axi4s_c2h[i]));
     end endgenerate
 
 endmodule : smartnic_app_igr

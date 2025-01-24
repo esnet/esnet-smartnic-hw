@@ -168,6 +168,9 @@ ons_ip_au250:
   extends: .ons_ip
   variables:
     SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 smartnic_ip_cache_key:
   stage: ip
@@ -265,6 +268,9 @@ smartnic_ip_au250:
   extends: .smartnic_ip
   variables:
     SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 shell_ip_au280:
   extends: .shell_ip
@@ -363,6 +369,9 @@ build_p4_with_extern:
   needs:
     - ons_ip_au250
     - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_multi_proc_u280:
   extends: .bitfile
@@ -385,9 +394,6 @@ build_p4_multi_proc_u55c:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
-  rules:
-    - when: manual
-      allow_failure: true
 
 build_proxy_test_u280:
   extends: .bitfile

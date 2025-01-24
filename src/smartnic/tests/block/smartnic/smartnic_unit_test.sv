@@ -372,10 +372,10 @@ module smartnic_unit_test;
         env.run();
 
         // set igr switch destination to the BYPASS path for all igr ports.
-        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2 );
-        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2 );
-        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[2], 2 );
-        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[3], 2 );
+        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2 );
+        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2 );
+        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[2], 2 );
+        reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[3], 2 );
 
         // set igr queue configuration for all igr ports. 512 queues per if x 8 ifs.
         smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd512, 12'd0});
@@ -483,7 +483,7 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(CMAC0_to_PF0_VF2_test)
-            smartnic_reg_blk_agent.write_egr_demux_sel('1);
+            smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
             packet_stream(.tid(CMAC0), .tdest(PF0_VF2));
             #2us;
@@ -495,7 +495,7 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(CMAC1_to_PF1_VF2_test)
-            smartnic_reg_blk_agent.write_egr_demux_sel('1);
+            smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
             packet_stream(.tid(CMAC1), .tdest(PF1_VF2));
             #2us;
@@ -527,7 +527,7 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF0_VF2_passthru_test)
-            smartnic_reg_blk_agent.write_egr_demux_sel('1);
+            smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
             packet_stream(.tid(PF0_VF2));
             #2us
@@ -539,7 +539,7 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF1_VF2_passthru_test)
-            smartnic_reg_blk_agent.write_egr_demux_sel('1);
+            smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
             packet_stream(.tid(PF1_VF2));
             #2us
@@ -606,6 +606,28 @@ module smartnic_unit_test;
             `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), 10);
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
+        `SVTEST_END
+
+        `SVTEST(PF0_out_of_range_test)
+            smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd0, 12'd0});
+
+            packet_stream(.tid(PF0), .tdest(CMAC0));
+            #2us;
+            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
+        `SVTEST_END
+
+        `SVTEST(PF1_out_of_range_test)
+            smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd0, 12'd0});
+
+            packet_stream(.tid(PF1), .tdest(CMAC1));
+            #2us;
+            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
             `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
             `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
         `SVTEST_END

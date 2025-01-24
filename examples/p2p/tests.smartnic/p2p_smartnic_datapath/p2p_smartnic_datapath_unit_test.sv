@@ -81,7 +81,7 @@ module p2p_smartnic_datapath_unit_test;
         exp_pkts  = {0, 0, 0, 0};  // if exp_pkts field is set 0, value is determined from pcap file.
 
         // Configure tdest for CMAC_0 to APP_0 i.e. ingress switch port 0.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2'h0 );
 
         `INFO("Waiting to initialize axis fifos...");
         for (integer i = 0; i < 100 ; i=i+1 ) begin
@@ -126,8 +126,8 @@ module p2p_smartnic_datapath_unit_test;
 
       `SVTEST(basic_sanity)
          // Configure igr_sw tdest registers (CMAC_0 -> APP_0, CMAC_1 -> APP_1).
-         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h0 );
-         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[1], 2'h1 );
+         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2'h0 );
+         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2'h1 );
 
          for (int i=0; i<2; i++) begin
             fork

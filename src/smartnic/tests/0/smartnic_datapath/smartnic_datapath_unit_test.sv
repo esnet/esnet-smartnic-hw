@@ -153,7 +153,7 @@ module smartnic_datapath_unit_test;
         check_probe_control_defaults;
         latch_probe_counters;
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports), .tpause(0));
 
         latch_probe_counters;
@@ -166,7 +166,7 @@ module smartnic_datapath_unit_test;
     `SVTEST(switch_and_clear_probe_counts)
         latch_probe_counters;
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports));
 
         latch_and_clear_probe_counters;
@@ -178,19 +178,19 @@ module smartnic_datapath_unit_test;
 
     `SVTEST(igr_switch_reconfig)
         int count = 0;
-        int igr_sw_tdest;
+        int smartnic_mux_out_sel;
         int enable_monitor;
 
         out_port_map = {4'h1, 4'h0, 4'h1, 4'h0};
 
         //int igr_port = $urandom % NUM_PORTS;
         for (int igr_port = 0; igr_port < NUM_PORTS; igr_port++) begin
-          igr_sw_tdest   = 2; // select BYPASS interface to start.
-          enable_monitor = 1; // enable output monitor when BYPASS is selected.  disable for APP0 interface (which sinks traffic).
+          smartnic_mux_out_sel = 2; // select BYPASS interface to start.
+          enable_monitor = 1;       // enable output monitor when BYPASS is selected.  disable for APP0 interface (which sinks traffic).
 
-          env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+          env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[igr_port], smartnic_mux_out_sel );
 
-          for (int i = 0; i < 3; i++) begin  // reconfigure igr_sw_tdest iteratively.
+          for (int i = 0; i < 3; i++) begin  // reconfigure smartnic_mux_out_sel iteratively.
              fork
                // Stream 2x9100B packets from igr_port (through bypass path).  Monitoring output if enabled.
                run_pkt_stream ( .in_port(igr_port), .out_port(out_port_map[igr_port]),
@@ -201,13 +201,13 @@ module smartnic_datapath_unit_test;
                                 .num_pkts(2), .exp_pkt_cnt(2),
                                 .tpause(0), .twait(0), .enable_monitor(enable_monitor) );
 
-               // Reconfigure IGR_SW_TDEST (during 2nd packet).
+               // Reconfigure SMARTNIC_MUX_OUT_SEL (during 2nd packet).
                begin
                  count = 0;
                  while (count < 2) @(negedge tb.DUT.axis_core_to_bypass[0].tlast or negedge tb.DUT.axis_core_to_bypass[1].tlast) count++;
-                 igr_sw_tdest =   (igr_sw_tdest == 2) ? 3 : 2;  // alternate directing traffic to bypass interface and igr_sw_drop.
-                 enable_monitor = (igr_sw_tdest == 2) ? 1 : 0;  // disable output monitor when traffic flows to DROP interface.
-                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[igr_port], igr_sw_tdest );
+                 smartnic_mux_out_sel = (smartnic_mux_out_sel == 2) ? 3 : 2;  // alternate directing traffic to bypass interface and igr_sw_drop.
+                 enable_monitor = (smartnic_mux_out_sel == 2) ? 1 : 0;        // disable output monitor when traffic flows to DROP interface.
+                 env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[igr_port], smartnic_mux_out_sel );
                end
              join
           end
@@ -223,7 +223,7 @@ module smartnic_datapath_unit_test;
         //for (int egr_port = 0; egr_port < NUM_PORTS; egr_port++) begin
 
            // Configure igr_sw tdest register (CMAC_0 -> BYPASS).
-           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 2'h2 );
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 2'h2 );
 
            for (int i = 0; i < 4; i++) begin  // reconfigure egr_port iteratively.
              fork
@@ -240,7 +240,8 @@ module smartnic_datapath_unit_test;
                 begin
                   count = 0;
                   while (count < 2) @(negedge tb.DUT.axis_core_to_bypass[0].tlast or negedge tb.DUT.axis_core_to_bypass[1].tlast) count++;
-                    env.smartnic_reg_blk_agent.write_egr_demux_sel({egr_port<2, egr_port<2});  // alternates between emitting to CMAC and HOST.
+                    // alternate between emitting to CMAC and HOST.
+                    env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel({egr_port<2, egr_port<2});
                 end
              join
 
@@ -377,7 +378,7 @@ module smartnic_datapath_unit_test;
 
 
     `SVTEST(igr_sw_drops)
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_SW_TDEST[0], 3 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[0], 3 );
 
         run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
                          .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
@@ -411,7 +412,7 @@ module smartnic_datapath_unit_test;
            out_pcap[i] = "../../../common/pcap/512x64B_pkts.pcap";
         end
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
 
     `SVTEST_END
@@ -426,7 +427,7 @@ module smartnic_datapath_unit_test;
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*24);  // set gap to 2 pkts.
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*24);
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
 
     `SVTEST_END
@@ -441,7 +442,7 @@ module smartnic_datapath_unit_test;
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(2*143);  // set gap to 2 pkts.
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(2*143);
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
     `SVTEST_END
 
@@ -455,7 +456,7 @@ module smartnic_datapath_unit_test;
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(5);  // set gap to 5 cycles.
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(5);
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
     `SVTEST_END
 
@@ -469,7 +470,7 @@ module smartnic_datapath_unit_test;
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(1*143);  // set gap to 1 jumbo pkts.
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(1*143);
 
-        if (host_ports == 1) env.smartnic_reg_blk_agent.write_egr_demux_sel('1);
+        if (host_ports == 1) env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
         run_stream_test(.host_ports(host_ports)); check_stream_test_probes(.host_ports(host_ports));
     `SVTEST_END
 
