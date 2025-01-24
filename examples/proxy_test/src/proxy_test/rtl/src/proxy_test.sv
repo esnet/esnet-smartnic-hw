@@ -248,24 +248,15 @@ module proxy_test
 
     // Register slices
     for (genvar g_ch = 0; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_ch_reg
-        xilinx_axi3_reg_slice #(
-            .ADDR_WID      ( HBM_AXI_ADDR_WID ),
-            .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
-            .ID_T          ( HBM_AXI_ID_T ),
-            .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
-        ) i_xilinx_axi3_reg_slice__left (
+        axi3_pipe i_axi3_pipe__left (
             .axi3_if_from_controller ( app__axi_if__hbm_left[g_ch] ),
             .axi3_if_to_peripheral   ( axi_if__hbm_left[g_ch] )
         );
-        xilinx_axi3_reg_slice #(
-            .ADDR_WID      ( HBM_AXI_ADDR_WID ),
-            .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
-            .ID_T          ( HBM_AXI_ID_T ),
-            .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
-        ) i_xilinx_axi3_reg_slice__right (
+        axi3_pipe i_axi3_pipe__right (
             .axi3_if_from_controller ( app__axi_if__hbm_right[g_ch] ),
             .axi3_if_to_peripheral   ( axi_if__hbm_right[g_ch] )
         );
+
     end : g__hbm_ch_reg
 
     // Tie off all but 0th AXI3 interface for now

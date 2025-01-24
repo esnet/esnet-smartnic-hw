@@ -26,10 +26,9 @@ SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic.ip \
     smartnic.regio.rtl \
+    xilinx.axis.rtl \
     reg.endian.rtl@common \
     reg.proxy.rtl@common \
-    xilinx.axi.rtl \
-    xilinx.axis.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common
 
