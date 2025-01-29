@@ -695,7 +695,8 @@ module smartnic
 
    // smartnic_demux instantiation.
    smartnic_demux #(
-       .NUM_CMAC (NUM_CMAC)
+       .NUM_CMAC (NUM_CMAC),
+       .MAX_PKT_LEN (MAX_PKT_LEN)
    ) smartnic_demux_inst ( 
        .core_clk            (core_clk),
        .core_rstn           (core_rstn),

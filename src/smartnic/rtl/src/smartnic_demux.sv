@@ -1,6 +1,7 @@
 module smartnic_demux
 #(
-    parameter int  NUM_CMAC = 2
+    parameter int  NUM_CMAC = 2,
+    parameter int  MAX_PKT_LEN = 9100
 ) (
     input logic     core_clk,
     input logic     core_rstn,
@@ -14,6 +15,11 @@ module smartnic_demux
 );
     import smartnic_pkg::*;
 
+    //  axi4l interface instantiations
+    axi4l_intf  axil_probe_to_fifo [NUM_CMAC][2] ();
+    axi4l_intf  axil_ovfl_to_fifo  [NUM_CMAC][2] ();
+    axi4l_intf  axil_to_fifo       [NUM_CMAC][2] ();
+
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
@@ -26,6 +32,8 @@ module smartnic_demux
 
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  port_demux_out  [NUM_CMAC][2]  ();
+    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
+                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  port_demux_out_fifo  [NUM_CMAC][2]  ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  egr_mux_in    [NUM_CMAC][3] ();
     axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
@@ -67,9 +75,43 @@ module smartnic_demux
             .sel       (_axis_app_to_core_p[i].tdest[0])  // LSB of tdest determines destination port (0:CMAC0/PF0, 1:CMAC1/PF1).
         );
 
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_0 (.axi4s_from_tx(axis_bypass_to_core[i]), .axi4s_to_rx(egr_mux_in[i][0]));
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_1 (.axi4s_from_tx(port_demux_out[0][i]),   .axi4s_to_rx(egr_mux_in[i][1]));
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_2 (.axi4s_from_tx(port_demux_out[1][i]),   .axi4s_to_rx(egr_mux_in[i][2]));
+        axi4s_pkt_fifo_sync #(
+           .FIFO_DEPTH     (512),
+           .MAX_PKT_LEN    (MAX_PKT_LEN)
+        ) port_demux_out_fifo_0 (
+           .srst           (1'b0),
+           .axi4s_in       (port_demux_out[i][0]),
+           .axi4s_out      (port_demux_out_fifo[i][0]),
+           .axil_to_probe  (axil_probe_to_fifo[i][0]),
+           .axil_to_ovfl   (axil_ovfl_to_fifo[i][0]),
+           .axil_if        (axil_to_fifo[i][0])
+        );
+
+        axi4l_intf_controller_term axi4l_probe_to_fifo_term_0 (.axi4l_if (axil_probe_to_fifo[i][0]));
+        axi4l_intf_controller_term axi4l_ovfl_to_fifo_term_0  (.axi4l_if (axil_ovfl_to_fifo[i][0]));
+        axi4l_intf_controller_term axi4l_to_fifo_term_0       (.axi4l_if (axil_to_fifo[i][0]));
+
+        axi4s_pkt_fifo_sync #(
+           .FIFO_DEPTH     (512),
+           .MAX_PKT_LEN    (MAX_PKT_LEN)
+        ) port_demux_out_fifo_1 (
+           .srst           (1'b0),
+           .axi4s_in       (port_demux_out[i][1]),
+           .axi4s_out      (port_demux_out_fifo[i][1]),
+           .axil_to_probe  (axil_probe_to_fifo[i][1]),
+           .axil_to_ovfl   (axil_ovfl_to_fifo[i][1]),
+           .axil_if        (axil_to_fifo[i][1])
+        );
+
+        axi4l_intf_controller_term axi4l_probe_to_fifo_term_1 (.axi4l_if (axil_probe_to_fifo[i][1]));
+        axi4l_intf_controller_term axi4l_ovfl_to_fifo_term_1  (.axi4l_if (axil_ovfl_to_fifo[i][1]));
+        axi4l_intf_controller_term axi4l_to_fifo_term_1       (.axi4l_if (axil_to_fifo[i][1]));
+
+
+        // axi4s_egr_mux connections. Note crossed connections from each demux_out_fifo instance.
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_0 (.axi4s_from_tx(axis_bypass_to_core[i]),    .axi4s_to_rx(egr_mux_in[i][0]));
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_1 (.axi4s_from_tx(port_demux_out_fifo[0][i]), .axi4s_to_rx(egr_mux_in[i][1]));
+        axi4s_intf_connector axi4s_egr_mux_in_pipe_2 (.axi4s_from_tx(port_demux_out_fifo[1][i]), .axi4s_to_rx(egr_mux_in[i][2]));
 
         axi4s_mux #(.N(3)) axi4s_egr_mux (
             .axi4s_in  (egr_mux_in[i]),
