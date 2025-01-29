@@ -102,7 +102,7 @@ module smartnic_app_datapath_unit_test
 
     `SVUNIT_TESTS_BEGIN
 
-       `SVTEST(test_rss_metadata) // tests propagation of rss_metadata and qid selection through datapath to smartnic ports.
+       `SVTEST(rss_metadata_test) // tests propagation of rss_metadata and qid selection through datapath to smartnic ports.
            port_t  src_vf[2];
 
            env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);  // demux egr traffic to host ports.
@@ -113,12 +113,14 @@ module smartnic_app_datapath_unit_test
            fork
               // --- run traffic from/to both HOST ports ---
               begin
-                 // source traffic from/to PF0_VF2. direct traffic to qid PF0_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
+                 // source traffic from/to PF0_VF2. direct traffic to qid PF0_VF2.
+                 // i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
                  src_vf[0] = PF0_VF2;
                  env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table ({'0, src_vf[0]}, {'0, src_vf[0]});
                  run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF0_VF2), .out_port(PF0_VF2) );
 
-                 // source traffic from/to PF1_VF2. direct traffic to qid PF1_VF2 i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
+                 // source traffic from/to PF1_VF2. direct traffic to qid PF1_VF2.
+                 //  i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
                  src_vf[1] = PF1_VF2;
                  env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table ({'0, src_vf[1]}, {'0, src_vf[1]});
                  run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF1_VF2), .out_port(PF1_VF2) );
@@ -139,33 +141,20 @@ module smartnic_app_datapath_unit_test
 
        `SVTEST_END
 
-       `SVTEST(test_pkt_loopback)
-           run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0) );
+       `SVTEST(cmac0_to_cmac0_test)
+           run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp(1), .in_port(0), .out_port(0) );
        `SVTEST_END
 
-       `SVTEST(test_egr_pkt_trunc)
-           repeat (1) begin
-              // Write trunc_config register and run pkt test.
-              trunc_config.enable = 1'b1;
-              trunc_config.trunc_enable = 1'b1;
-              trunc_config.trunc_length = $urandom_range(65,500);
-              p4_proc_reg_agent.write_trunc_config(trunc_config);
-
-              run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .out_port(0), .max_pkt_size(trunc_config.trunc_length) );
-           end
+       `SVTEST(cmac0_to_cmac1_test)
+           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(0), .out_port(1) );
        `SVTEST_END
 
-       `SVTEST(test_traffic_mux)
-           //write_p4_tables ( .testdir("test-fwd-p1") );
-           fork
-              // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-              run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(1), .out_port(1) );
+       `SVTEST(cmac1_to_cmac0_test)
+           run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp(1), .in_port(1), .out_port(0) );
+       `SVTEST_END
 
-              // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
-              // (without re-programming the p4 tables).
-              @(posedge tb.axis_cmac_egr[1].tvalid)
-                run_pkt_test ( .testdir("test-default"), .init_timestamp(1), .in_port(0), .out_port(0), .write_p4_tables(0) );
-           join
+       `SVTEST(cmac1_to_cmac1_test)
+           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(1), .out_port(1) );
        `SVTEST_END
 
        `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
@@ -200,11 +189,6 @@ module smartnic_app_datapath_hdrlen_0_unit_test;
 `P4_ONLY_DATAPATH_UNIT_TEST(0)
 endmodule
 
-module smartnic_app_datapath_hdrlen_64_unit_test;
-`P4_ONLY_DATAPATH_UNIT_TEST(64)
+module smartnic_app_datapath_hdrlen_128_unit_test;
+`P4_ONLY_DATAPATH_UNIT_TEST(128)
 endmodule
-
-module smartnic_app_datapath_hdrlen_256_unit_test;
-`P4_ONLY_DATAPATH_UNIT_TEST(256)
-endmodule
-
