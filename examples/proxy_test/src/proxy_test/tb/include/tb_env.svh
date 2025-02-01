@@ -71,7 +71,7 @@ class tb_env extends std_verif_pkg::base;
         axis_monitor         = new(.BIGENDIAN(bigendian));
         axis_to_adpt_monitor = new(.BIGENDIAN(bigendian));
         reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent      = new("axi4l_reg_agent");
+        vitisnetp4_reg_agent = new("vitisnetp4_reg_agent");
         proxy_test_reg_agent = new("proxy_test_reg_agent", reg_agent, 'h0000);
         ts_agent             = new;
     endfunction
@@ -88,7 +88,7 @@ class tb_env extends std_verif_pkg::base;
         axis_to_adpt_monitor.axis_vif = axis_to_adpt_vif;
         ts_agent.timestamp_vif        = timestamp_vif;
         reg_agent.axil_vif            = axil_vif;
-        vitisnetp4_reg_agent.axil_vif      = axil_vitisnetp4_vif;
+        vitisnetp4_reg_agent.axil_vif = axil_vitisnetp4_vif;
     endfunction
 
     task reset();

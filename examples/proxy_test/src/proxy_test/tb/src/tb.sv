@@ -51,7 +51,7 @@ module tb;
     std_reset_intf #()               reset_if      (.clk(clk));
     std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_if (.clk(axil_if.aclk));
 
-    timestamp_if #() timestamp_if (.clk(clk), .srst(rst));
+    timestamp_if #() timestamp_if (.clk(clk), .srst(srst));
 
     // Generate datapath clock
     initial clk = 1'b0;

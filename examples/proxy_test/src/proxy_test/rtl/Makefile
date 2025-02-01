@@ -28,9 +28,11 @@ SUBCOMPONENTS = \
     vitisnetp4.ip \
     smartnic.pkg@smartnic \
     xilinx.hbm.rtl@smartnic \
+    xilinx.axi.rtl@smartnic \
     util.rtl@common@smartnic \
     axi4l.rtl@common@smartnic \
     axi4s.rtl@common@smartnic \
+    axi3.rtl@common@smartnic \
     mem.rtl@common@smartnic \
     mem.proxy.rtl@common@smartnic \
     reg.rtl@common@smartnic \
