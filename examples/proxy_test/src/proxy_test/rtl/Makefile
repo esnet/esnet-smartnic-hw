@@ -26,8 +26,11 @@ SUBCOMPONENTS = \
     proxy_test.ip \
     proxy_test.regio.rtl \
     xilinx.hbm.rtl@$(SMARTNIC_LIB_NAME) \
+    xilinx.axi.rtl@$(SMARTNIC_LIB_NAME) \
+    util.rtl@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME) \
+    axi3.rtl@$(COMMON_LIB_NAME) \
     mem.rtl@$(COMMON_LIB_NAME) \
     mem.proxy.rtl@$(COMMON_LIB_NAME) \
     reg.rtl@$(COMMON_LIB_NAME) \

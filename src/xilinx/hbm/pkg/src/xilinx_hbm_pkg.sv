@@ -31,9 +31,9 @@ package xilinx_hbm_pkg;
 
     function automatic int get_addr_wid(input density_t DENSITY);
         case (DENSITY)
-            DENSITY_4G : return 33;
-            DENSITY_8G : return 34;
-            default    : return 33;
+            DENSITY_4G : return 32;
+            DENSITY_8G : return 33;
+            default    : return 32;
         endcase
     endfunction
 

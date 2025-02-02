@@ -635,7 +635,41 @@ module xilinx_hbm_stack
     
     // HBM simulations not supported in Vivado Simulator
     // (instantiate functional model instead)
-    xilinx_hbm_4g_bfm i_hbm_4g_bfm (.*);
+    xilinx_hbm_4g_bfm i_hbm_4g_bfm (
+        .AXI_00_ARADDR ( {'0, AXI_00_ARADDR} ),
+        .AXI_00_AWADDR ( {'0, AXI_00_AWADDR} ),
+        .AXI_01_ARADDR ( {'0, AXI_01_ARADDR} ),
+        .AXI_01_AWADDR ( {'0, AXI_01_AWADDR} ),
+        .AXI_02_ARADDR ( {'0, AXI_02_ARADDR} ),
+        .AXI_02_AWADDR ( {'0, AXI_02_AWADDR} ),
+        .AXI_03_ARADDR ( {'0, AXI_03_ARADDR} ),
+        .AXI_03_AWADDR ( {'0, AXI_03_AWADDR} ),
+        .AXI_04_ARADDR ( {'0, AXI_04_ARADDR} ),
+        .AXI_04_AWADDR ( {'0, AXI_04_AWADDR} ),
+        .AXI_05_ARADDR ( {'0, AXI_05_ARADDR} ),
+        .AXI_05_AWADDR ( {'0, AXI_05_AWADDR} ),
+        .AXI_06_ARADDR ( {'0, AXI_06_ARADDR} ),
+        .AXI_06_AWADDR ( {'0, AXI_06_AWADDR} ),
+        .AXI_07_ARADDR ( {'0, AXI_07_ARADDR} ),
+        .AXI_07_AWADDR ( {'0, AXI_07_AWADDR} ),
+        .AXI_08_ARADDR ( {'0, AXI_08_ARADDR} ),
+        .AXI_08_AWADDR ( {'0, AXI_08_AWADDR} ),
+        .AXI_09_ARADDR ( {'0, AXI_09_ARADDR} ),
+        .AXI_09_AWADDR ( {'0, AXI_09_AWADDR} ),
+        .AXI_10_ARADDR ( {'0, AXI_10_ARADDR} ),
+        .AXI_10_AWADDR ( {'0, AXI_10_AWADDR} ),
+        .AXI_11_ARADDR ( {'0, AXI_11_ARADDR} ),
+        .AXI_11_AWADDR ( {'0, AXI_11_AWADDR} ),
+        .AXI_12_ARADDR ( {'0, AXI_12_ARADDR} ),
+        .AXI_12_AWADDR ( {'0, AXI_12_AWADDR} ),
+        .AXI_13_ARADDR ( {'0, AXI_13_ARADDR} ),
+        .AXI_13_AWADDR ( {'0, AXI_13_AWADDR} ),
+        .AXI_14_ARADDR ( {'0, AXI_14_ARADDR} ),
+        .AXI_14_AWADDR ( {'0, AXI_14_AWADDR} ),
+        .AXI_15_ARADDR ( {'0, AXI_15_ARADDR} ),
+        .AXI_15_AWADDR ( {'0, AXI_15_AWADDR} ),
+        .*
+    );
 
 `else // SYNTHESIS
    
