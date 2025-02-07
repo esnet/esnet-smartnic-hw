@@ -10,15 +10,15 @@ The p4_only example design provides the P4 source code and a behavioural simulat
 P4 application core.  This example follows a pure P4 design flow and does NOT include any custom verilog hardware.
 As such,  the user only needs to provide a working P4 program file to build the custom SmartNIC hardware.
 
-**NOTE:** See lower level README files for more details about each design.
-
-## Reference designs (not supported)
-
 ### p4_with_extern/
 
 The p4_with_extern example design provides the P4 source code and a behavioural simulation testcase for a simple
 P4 application core AND a user extern function.  In addition to the P4 program, the source content for this example
 includes a C++ (.cpp) behavioural model and system verilog RTL code for the accompanying extern function.
+
+**NOTE:** See lower level README files for more details about each design.
+
+## Reference designs (Not supported in this release)
 
 ### p4_multi_proc/
 
