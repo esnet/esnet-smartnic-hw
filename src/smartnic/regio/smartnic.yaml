@@ -112,6 +112,7 @@ regs:
           indexed by physical egress port as follows 0-CMAC0 1-CMAC1 2-HOST0 3-HOST1.
           flow control is asserted when FIFO fill level exceeds threshold value.
           threshold is specified in units of 64B words.  egress FIFOs can hold 1020x64B.
+          note that egr_fc_thresh should NOT be set below a min value of 4 to avoid tx deadlock.
     access : rw
     count  : 4
     init   : 0xffff_ffff

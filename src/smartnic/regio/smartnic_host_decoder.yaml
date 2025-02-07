@@ -54,3 +54,13 @@ interfaces:
     address: 0x900
     width: 8
     name: probe_to_pf1_vf2
+
+  - block: *axi4s_probe
+    address: 0xa00
+    width: 8
+    name: drops_q_range_fail_0
+
+  - block: *axi4s_probe
+    address: 0xb00
+    width: 8
+    name: drops_q_range_fail_1

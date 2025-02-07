@@ -155,6 +155,8 @@ module smartnic
    axi4l_intf   axil_from_vf2           [NUM_CMAC] ();
    axi4l_intf   axil_to_vf2             [NUM_CMAC] ();
 
+   axi4l_intf   axil_q_range_fail       [NUM_CMAC] ();
+
    smartnic_reg_intf   smartnic_regs ();
 
 
@@ -239,7 +241,9 @@ module smartnic
       .probe_from_pf0_vf2_axil_if      (axil_from_vf2[0]),
       .probe_from_pf1_vf2_axil_if      (axil_from_vf2[1]),
       .probe_to_pf0_vf2_axil_if        (axil_to_vf2[0]),
-      .probe_to_pf1_vf2_axil_if        (axil_to_vf2[1])
+      .probe_to_pf1_vf2_axil_if        (axil_to_vf2[1]),
+      .drops_q_range_fail_0_axil_if    (axil_q_range_fail[0]),
+      .drops_q_range_fail_1_axil_if    (axil_q_range_fail[1])
    );
 
    // smartnic bypass decoder
@@ -337,6 +341,7 @@ module smartnic
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid       [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid_p     [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_q_range_fail   [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_tid       [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_tid_p     [NUM_CMAC] ();
 
@@ -625,6 +630,20 @@ module smartnic
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__tid
        axi4s_intf_pipe axi4s_host_to_core_pipe (.axi4s_if_from_tx(axis_host_to_core[i]),    .axi4s_if_to_rx(axis_host_to_core_p[i]));
+
+       // axis_q_range_fail assignments
+       assign axis_q_range_fail[i].aclk    = axis_host_to_core_p[i].aclk;
+       assign axis_q_range_fail[i].aresetn = axis_host_to_core_p[i].aresetn;
+       assign axis_q_range_fail[i].tready  = axis_host_to_core_p[i].tready;
+       assign axis_q_range_fail[i].tvalid  = axis_host_to_core_p[i].tvalid && !host_q_in_range[i];
+       assign axis_q_range_fail[i].tdata   = axis_host_to_core_p[i].tdata;
+       assign axis_q_range_fail[i].tkeep   = axis_host_to_core_p[i].tkeep;
+       assign axis_q_range_fail[i].tlast   = axis_host_to_core_p[i].tlast;
+       assign axis_q_range_fail[i].tdest   = axis_host_to_core_p[i].tdest;
+       assign axis_q_range_fail[i].tuser   = axis_host_to_core_p[i].tuser;
+       assign axis_q_range_fail[i].tid     = axis_host_to_core_p[i].tid;
+
+       axi4s_probe q_range_fail_probe (.axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
 
        // host port tid assignments
        assign axis_host_to_core_p[i].tready = axis_host_tid[i].tready;
