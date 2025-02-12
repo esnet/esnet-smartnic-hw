@@ -147,6 +147,6 @@ interfaces:
     name: fifo_to_host_0
 
   - decoder: *smartnic_to_app_decoder
-    address: 0x80000
-    width: 19
+    address: 0x100000
+    width: 20
     name: smartnic_to_app

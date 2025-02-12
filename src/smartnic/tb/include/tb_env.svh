@@ -10,8 +10,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
 
     // -- AXI-L
-    localparam int AXIL_APP_OFFSET = 'h80000;
-    localparam int AXIL_VITISNET_OFFSET = 'hC0000;
+    localparam int AXIL_APP_OFFSET = 'h100000;
+    localparam int AXIL_VITISNET_OFFSET = 'h180000;
 
     //===================================
     // Properties
