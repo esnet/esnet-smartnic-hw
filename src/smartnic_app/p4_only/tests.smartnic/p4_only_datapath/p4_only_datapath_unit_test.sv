@@ -71,7 +71,7 @@ module p4_only_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agent
-        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'he0000);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'h1e0000);
     endfunction
 
     //===================================

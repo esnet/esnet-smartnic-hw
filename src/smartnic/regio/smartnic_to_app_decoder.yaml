@@ -9,9 +9,9 @@ decoders:
 interfaces:
   - decoder: *smartnic_app_decoder
     address: 0x00000
-    width: 18
+    width: 19
     name: smartnic_app
   - decoder: *smartnic_p4_decoder
-    address: 0x40000
-    width: 18
+    address: 0x80000
+    width: 19
     name: smartnic_p4
