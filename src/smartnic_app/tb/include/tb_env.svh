@@ -105,22 +105,22 @@ class tb_env extends std_verif_pkg::base;
 
         app_reg_agent          = new("axi4l_reg_agent");
         reg_agent              = new("axi4l_reg_agent");
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h23000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h63000);
         ts_agent               = new;
 
-        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h24000);
-        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h24100);
-        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h24200);
-        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h24300);
-        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h24400);
-        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h24500);
+        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h64000);
+        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h64100);
+        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h64200);
+        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h64300);
+        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h64400);
+        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h64500);
 
-        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h24600);
-        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h24700);
-        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h24800);
-        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h24900);
-        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h24a00);
-        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h24b00);
+        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h64600);
+        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h64700);
+        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h64800);
+        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h64900);
+        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h64a00);
+        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h64b00);
 
     endfunction
 

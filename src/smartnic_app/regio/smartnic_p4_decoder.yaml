@@ -21,86 +21,86 @@ decoders:
 interfaces:
   - block: *vitisnetp4
     address: 0x00000
-    width: 16
+    width: 18
     name: vitisnetp4_igr
 
   - block: *vitisnetp4
-    address: 0x10000
-    width: 16
+    address: 0x40000
+    width: 17
     name: vitisnetp4_egr
 
   - decoder: *p4_proc_decoder
-    address: 0x20000
+    address: 0x60000
     width: 12
     name: p4_proc_igr
 
   - decoder: *p4_proc_decoder
-    address: 0x22000
+    address: 0x62000
     width: 12
     name: p4_proc_egr
 
   - block: *smartnic_app
-    address: 0x23000
+    address: 0x63000
     width: 10
     name: app_common
 
 
   - block: *axi4s_probe
-    address: 0x24000
+    address: 0x64000
     width: 8
     name: probe_from_pf0
 
   - block: *axi4s_probe
-    address: 0x24100
+    address: 0x64100
     width: 8
     name: probe_from_pf1
 
   - block: *axi4s_probe
-    address: 0x24200
+    address: 0x64200
     width: 8
     name: probe_from_pf0_vf0
 
   - block: *axi4s_probe
-    address: 0x24300
+    address: 0x64300
     width: 8
     name: probe_from_pf1_vf0
 
   - block: *axi4s_probe
-    address: 0x24400
+    address: 0x64400
     width: 8
     name: probe_from_pf0_vf1
 
   - block: *axi4s_probe
-    address: 0x24500
+    address: 0x64500
     width: 8
     name: probe_from_pf1_vf1
 
   - block: *axi4s_probe
-    address: 0x24600
+    address: 0x64600
     width: 8
     name: probe_to_pf0
 
   - block: *axi4s_probe
-    address: 0x24700
+    address: 0x64700
     width: 8
     name: probe_to_pf1
 
   - block: *axi4s_probe
-    address: 0x24800
+    address: 0x64800
     width: 8
     name: probe_to_pf0_vf0
 
   - block: *axi4s_probe
-    address: 0x24900
+    address: 0x64900
     width: 8
     name: probe_to_pf1_vf0
 
   - block: *axi4s_probe
-    address: 0x24a00
+    address: 0x64a00
     width: 8
     name: probe_to_pf0_vf1
 
   - block: *axi4s_probe
-    address: 0x24b00
+    address: 0x64b00
     width: 8
     name: probe_to_pf1_vf1

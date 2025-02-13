@@ -8,19 +8,19 @@ vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 // Probe tasks
 //=======================================================================
 typedef enum logic [31:0] {
-    PROBE_FROM_PF0      = 'h24000,
-    PROBE_FROM_PF1      = 'h24100,
-    PROBE_FROM_PF0_VF0  = 'h24200,
-    PROBE_FROM_PF1_VF0  = 'h24300,
-    PROBE_FROM_PF0_VF1  = 'h24400,
-    PROBE_FROM_PF1_VF1  = 'h24500,
+    PROBE_FROM_PF0      = 'h64000,
+    PROBE_FROM_PF1      = 'h64100,
+    PROBE_FROM_PF0_VF0  = 'h64200,
+    PROBE_FROM_PF1_VF0  = 'h64300,
+    PROBE_FROM_PF0_VF1  = 'h64400,
+    PROBE_FROM_PF1_VF1  = 'h64500,
 
-    PROBE_TO_PF0        = 'h24600,
-    PROBE_TO_PF1        = 'h24700,
-    PROBE_TO_PF0_VF0    = 'h24800,
-    PROBE_TO_PF1_VF0    = 'h24900,
-    PROBE_TO_PF0_VF1    = 'h24a00,
-    PROBE_TO_PF1_VF1    = 'h24b00
+    PROBE_TO_PF0        = 'h64600,
+    PROBE_TO_PF1        = 'h64700,
+    PROBE_TO_PF0_VF0    = 'h64800,
+    PROBE_TO_PF1_VF0    = 'h64900,
+    PROBE_TO_PF0_VF1    = 'h64a00,
+    PROBE_TO_PF1_VF1    = 'h64b00
 
     } cntr_addr_encoding_t;
 
