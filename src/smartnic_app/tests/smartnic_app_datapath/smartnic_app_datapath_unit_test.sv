@@ -152,10 +152,11 @@ module smartnic_app_datapath_unit_test;
             check_cleared_probes;
         end
 
+        // enable override mux. select PF egr path.
         env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
 
         for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b egr interface...", i), 1);
+            debug_msg($sformatf("Testing PF%0b egr interface (override mux control)...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(PF0+i), .write_p4_tables(0));
             check_cleared_probes;
         end
@@ -183,6 +184,15 @@ module smartnic_app_datapath_unit_test;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF1 igr and egr interfaces...", i), 1);
             run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0_VF1+i), .out_if(PF0_VF1+i), .write_p4_tables(0));
+            check_cleared_probes;
+        end
+    `SVTEST_END
+
+
+    `SVTEST(test_to_pf_ifs_from_p4)
+        for (int i=0; i<2; i++) begin
+            debug_msg($sformatf("Testing PF%0b egr interface (p4 control)...", i), 1);
+            run_pkt_test(.testdir("test-fwd-p2"), .in_if(CMAC0+i), .out_if(PF0+i), .dest_port(PF0), .write_p4_tables(1));
             check_cleared_probes;
         end
     `SVTEST_END
