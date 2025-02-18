@@ -72,7 +72,7 @@ module smartnic_demux
         axi4s_intf_demux #(.N(2)) axi4s_port_demux (
             .axi4s_in  (_axis_app_to_core_p[i]),
             .axi4s_out (port_demux_out[i]),
-            .sel       (_axis_app_to_core_p[i].tdest[0])  // LSB of tdest determines destination port (0:CMAC0/PF0, 1:CMAC1/PF1).
+            .sel       (_axis_app_to_core_p[i].tdest[0])  // LSB of tdest determines destination port (0:CMAC0, 1:CMAC1).
         );
 
         axi4s_pkt_fifo_sync #(

@@ -497,15 +497,21 @@ module smartnic_app
     // ----------------------------------------------------------------------
     // smartnic app datapath logic (mux/demux and ingress/egress blocks).
     // ----------------------------------------------------------------------
-    logic [NUM_PORTS-1:0] smartnic_app_igr_p4_out_sel;  // each sel signal has wordlength $clog2(2)
+    logic axis_to_demux_sel[NUM_PORTS];
+    logic smartnic_app_igr_p4_out_sel[NUM_PORTS];
 
     axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_demux_out [NUM_PORTS][2] ();
 
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+            always_comb begin
+                axis_to_demux_sel[i] = 1'b0;
+                if (axis_to_demux[i].tdest == PF0) axis_to_demux_sel[i] = 1'b1;
+            end
+
             assign smartnic_app_igr_p4_out_sel[i] = smartnic_app_regs.smartnic_app_igr_p4_out_sel.enable ?
-                                                    smartnic_app_regs.smartnic_app_igr_p4_out_sel.value  : axis_to_demux[i].tdest[0];
+                                                    smartnic_app_regs.smartnic_app_igr_p4_out_sel.value  : axis_to_demux_sel[i];
 
             axi4s_intf_demux #(.N(2)) axi4s_intf_demux_inst (
                 .axi4s_in   ( axis_to_demux[i] ),

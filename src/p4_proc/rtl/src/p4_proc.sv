@@ -299,9 +299,19 @@ module p4_proc
     assign _axis_from_vitisnetp4.tid   = user_metadata_from_vitisnetp4_valid ?
                                          user_metadata_from_vitisnetp4.ingress_port : user_metadata_from_vitisnetp4_latch.ingress_port;
 
-    assign _axis_from_vitisnetp4.tdest = user_metadata_from_vitisnetp4_valid ?
-                                        (user_metadata_from_vitisnetp4.egress_port[1] ? LOOPBACK : {'0, user_metadata_from_vitisnetp4.egress_port[0]}) :
-                                        (user_metadata_from_vitisnetp4_latch.egress_port[1] ? LOOPBACK : {'0, user_metadata_from_vitisnetp4_latch.egress_port[0]}) ;
+    port_t   axis_from_vitisnetp4_tdest, axis_from_vitisnetp4_tdest_latch;
+    always_comb begin
+        case (user_metadata_from_vitisnetp4.egress_port)
+            2'h0: axis_from_vitisnetp4_tdest = CMAC0;
+            2'h1: axis_from_vitisnetp4_tdest = CMAC1;
+            2'h2: axis_from_vitisnetp4_tdest = PF0;
+            2'h3: axis_from_vitisnetp4_tdest = LOOPBACK;
+        endcase
+    end
+
+    always @(posedge core_clk) if (user_metadata_from_vitisnetp4_valid) axis_from_vitisnetp4_tdest_latch <= axis_from_vitisnetp4_tdest;
+
+    assign _axis_from_vitisnetp4.tdest = user_metadata_from_vitisnetp4_valid ? axis_from_vitisnetp4_tdest : axis_from_vitisnetp4_tdest_latch;
 
     assign _axis_from_vitisnetp4_tuser.pid = user_metadata_from_vitisnetp4_valid ?
                                             {7'd0, user_metadata_from_vitisnetp4.pid[8:0]} : {7'd0, user_metadata_from_vitisnetp4_latch.pid[8:0]};
