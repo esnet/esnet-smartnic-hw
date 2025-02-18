@@ -25,4 +25,4 @@ regs:
         - name: enable
           desc: activates the 'smartnic_app_igr_p4_out_sel' override value.
           width: 1
-          init: 1
+          init: 0
