@@ -429,7 +429,7 @@ define the User Metadata structure as follows:
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
         bit<4>  ingress_port;    // 4b ingress port
                                  // (0:CMAC0, 1:CMAC1, 2:PF0_VF2, 3:PF1_VF2, 4:PF0_VF1, 5:PF1_VF1, 6:PF0_VF0, 7:PF1_VF0, 8:PF0, 9:PF1)
-        bit<2>  egress_port;     // 2b egress port (0:CMAC0/PF0_VF2, 1:CMAC1/PF1_VF2, 2:RESERVED, 3:LOOPBACK).
+        bit<2>  egress_port;     // 2b egress port (0:PORT0, 1:PORT1, 2:HOST, 3:LOOPBACK).
         bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
         bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
         bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
@@ -447,6 +447,49 @@ interface, a user Program **MUST** have:
 - No HBM BCAMs.
 
 Support for these features may be added in a future release.
+
+
+### Upgrading a P4 application from a legacy version to this release
+
+This release of the ESnet SmartNIC Platform includes significant changes to the SmartNIC FPGA architecture.  See block
+diagrams below:
+
+![SmartNIC Top Level Block Diagram](docs/smartnic.svg)
+
+The new architecture incorporates 2 optional P4-programmable blocks (*smartnic_app_igr_p4, smartnic_app_egr_p4*) and
+4 optional RTL-programmable blocks (*vitisnetp4_igr_extern, vitisnetp4_egr_extern, smartnic_app_igr, smatnic_app_egr*).
+It also expands the number of datapath interfaces used to stream packet traffic into and out of these functional blocks
+by leveraging PCIe SR-IOV viritual functions (VFs).  See block diagram below.
+
+![SmartNIC Application Block Diagram](docs/smartnic_app.svg)
+
+It should be noted that while this new datapath architecture is designed to connect the new datapath interfaces using separate
+virtual functions (VFs) of an SR-IOV-enabled PCIe endpoint, this first release of the platform does NOT include an SRIOV-enabled
+PCIe endpoint. The addition of PCIe SR-IOV support is planned for an upcoming release. In the interim, HOST traffic may be
+directed to a single HOST interface by programming the ingress and egress queue configuration accordingly.
+
+By consequence of the new datapath updates, changes have been made to the SmartNIC configuration and status registers
+i.e. obsolete registers have been removed, and new registers have been added, as necessary.  The programming for this updated
+register set has been reflected in the SmartNIC platform firmware (esnet-smartnic-fw).
+
+Consistent with legacy releases of the SmartNIC platform, this version supports a single P4-processor application, with
+optional support for an RTL extern function, and optional RTL simulation support using the AMD example design. Other possible
+work flows and application examples are included in the release for reference, but are presently 'unsupported'.
+The supported 'p4_only' and 'p4_with_extern' examples have documentation and instructions (READMEs), as well as limited
+assistance from ESnet for questions and unexpected problems.  The 'unsupported' examples and work flows do NOT include README
+instructions, or ESnet support.
+
+The new datapath changes have been implemented to be backward compatible. Legacy single P4-processor applications will
+automatically instantiate 'passthru' versions of the new optionally programmable functions. The directory structure and automation
+scripts are designed to support legacy applications with minimal changes required to the source files and directories.
+
+For 'p4_only' applications, simply update the 'esnet-smartnic-hw' submodule and adapt the p4 program to the updated 'ingress_port'
+and 'egress_port' metadata definitions.
+
+For 'p4_with_extern' applications, create a new design directory by following the instructions above from the section
+'Building a New P4-with-extern Application', and adapt the p4 program to the updated 'ingress_port' and 'egress_port' metadata
+definitions.
+
 
 
 ### Reference Documents:
