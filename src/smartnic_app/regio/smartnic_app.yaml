@@ -1,0 +1,28 @@
+name: smartnic_app
+info: |
+  smartnic_app is the application regio block for the application core used on the esnet smart nic platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xacdccafe
+
+  - name: smartnic_app_igr_p4_out_sel
+    access : rw
+    fields:
+        - name: value
+          desc: set enable (1) to  override the p4 'egress_port' signal used to direct 'smartnic_app_igr_p4' output. 
+                set value (1) to direct smartnic_app_igr_p4 output to the HOST.  default (0) directs to 'smartnic_app_igr'.
+          width: 1
+          init: 0
+          enum:
+              0 : SMARTNIC_APP_IGR
+              1 : HOST
+        - name: enable
+          desc: activates the 'smartnic_app_igr_p4_out_sel' override value.
+          width: 1
+          init: 0

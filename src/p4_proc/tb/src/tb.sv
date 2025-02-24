@@ -25,53 +25,44 @@ module tb;
 
     axi4l_intf axil_if       ();
     axi4l_intf axil_to_vitisnetp4 ();
+    axi4l_intf axil_to_extern ();
 
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_in_if  [NUM_PORTS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_in_if  [NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_out_if [NUM_PORTS] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_out_if [NUM_PORTS] ();
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_to_vitisnetp4 ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_vitisnetp4 ();
     axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t))  axis_from_vitisnetp4 ();
-
-    axi3_intf  #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm [16] ();
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_vitisnetp4 ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_extern ();
+    axi4s_intf #(.TUSER_T(tuser_t),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_extern ();
 
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;
     user_metadata_t user_metadata_out, user_metadata_out_latch;
     logic           user_metadata_out_valid;
 
-    // DUT instance
-    p4_proc #(.NUM_PORTS(NUM_PORTS)) DUT (
+    // DUT instance - 'smartnic_app_igr_p4' instantiates the 'p4_proc' and 'vitisnetp4_wrapper' complex.
+    smartnic_app_igr_p4 #(.NUM_PORTS(NUM_PORTS)) DUT (
         .core_clk                ( clk ),
         .core_rstn               ( rstn ),
         .timestamp               ( timestamp ),
-        .axil_if                 ( axil_if ),
+        .axil_to_p4_proc         ( axil_if ),
+        .axil_to_vitisnetp4      ( axil_to_vitisnetp4 ),
+        .axil_to_extern          ( axil_to_extern ),
+        .egr_flow_ctl            ( '0 ),
         .axis_in                 ( axis_in_if ),
         .axis_out                ( axis_out_if ),
-        .axis_from_vitisnetp4         ( axis_from_vitisnetp4 ),
-        .axis_to_vitisnetp4           ( axis_to_vitisnetp4 ),
-        .user_metadata_to_vitisnetp4_valid   ( user_metadata_in_valid ),
-        .user_metadata_to_vitisnetp4         ( user_metadata_in ),
-        .user_metadata_from_vitisnetp4_valid ( user_metadata_out_valid ),
-        .user_metadata_from_vitisnetp4       ( user_metadata_out )
+        .axis_to_extern          ( axis_to_extern ),
+        .axis_from_extern        ( axis_from_extern )
     );
 
-    vitisnetp4_0_wrapper vitisnetp4_0_wrapper_inst (
-        .core_clk                ( clk ),
-        .core_rstn               ( rstn ),
-        .axil_if                 ( axil_to_vitisnetp4 ),
-        .axis_rx                 ( axis_to_vitisnetp4 ),
-        .axis_tx                 ( axis_from_vitisnetp4 ),
-        .user_metadata_in_valid  ( user_metadata_in_valid ),
-        .user_metadata_in        ( user_metadata_in ),
-        .user_metadata_out_valid ( user_metadata_out_valid ),
-        .user_metadata_out       ( user_metadata_out ),
-        .axi_to_hbm              ( axi_to_hbm )
-    );
-
-    axi3_mem_bfm #(.CHANNELS (16)) i_hbm_model (.axi3_if (axi_to_hbm));
+    axi4l_intf_controller_term   axil_term     ( .axi4l_if(axil_to_extern) );
+    axi4s_intf_rx_sink   axis_from_extern_sink ( .axi4s_if(axis_from_extern) );
+    axi4s_intf_tx_term   axis_to_extern_term ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_to_extern) );
 
     //===================================
     // Local signals
@@ -136,8 +127,6 @@ module tb;
             env.axis_out_vif[0] = axis_out_if[0];
             env.axis_in_vif[1]  = axis_in_if[1];
             env.axis_out_vif[1] = axis_out_if[1];
-
-            env.axi_to_hbm_vif = axi_to_hbm;
 
             env.connect();
         end

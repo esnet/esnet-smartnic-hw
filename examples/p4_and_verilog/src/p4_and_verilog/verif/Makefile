@@ -24,9 +24,9 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     p4_and_verilog.regio.verif \
-    std.verif@common@smartnic \
-    axi4l.verif@common@smartnic \
-    axi4s.verif@common@smartnic
+    std.verif@$(COMMON_LIB_NAME) \
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

@@ -1,0 +1,66 @@
+name: smartnic_host
+
+blocks:
+  axi4s_probe: &axi4s_probe
+    !include src/axi4s/regio/axi4s_probe.yaml 
+
+interfaces:
+  - block: *axi4s_probe
+    address: 0x000
+    width: 8
+    name: probe_from_host_0
+
+  - block: *axi4s_probe
+    address: 0x100
+    width: 8
+    name: probe_from_host_1
+
+  - block: *axi4s_probe
+    address: 0x200
+    width: 8
+    name: probe_to_host_0
+
+  - block: *axi4s_probe
+    address: 0x300
+    width: 8
+    name: drops_ovfl_to_host_0
+
+  - block: *axi4s_probe
+    address: 0x400
+    width: 8
+    name: probe_to_host_1
+
+  - block: *axi4s_probe
+    address: 0x500
+    width: 8
+    name: drops_ovfl_to_host_1
+
+  - block: *axi4s_probe
+    address: 0x600
+    width: 8
+    name: probe_from_pf0_vf2
+
+  - block: *axi4s_probe
+    address: 0x700
+    width: 8
+    name: probe_from_pf1_vf2
+
+  - block: *axi4s_probe
+    address: 0x800
+    width: 8
+    name: probe_to_pf0_vf2
+
+  - block: *axi4s_probe
+    address: 0x900
+    width: 8
+    name: probe_to_pf1_vf2
+
+  - block: *axi4s_probe
+    address: 0xa00
+    width: 8
+    name: drops_q_range_fail_0
+
+  - block: *axi4s_probe
+    address: 0xb00
+    width: 8
+    name: drops_q_range_fail_1

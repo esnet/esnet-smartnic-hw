@@ -1,6 +1,6 @@
-package vitisnetp4_verif_pkg;
+package `VITISNETP4_VERIF_PKG_NAME;
 
    `include "vitisnetp4_agent.svh"
 
-endpackage : vitisnetp4_verif_pkg
+endpackage : `VITISNETP4_VERIF_PKG_NAME
 

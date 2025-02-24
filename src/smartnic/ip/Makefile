@@ -25,8 +25,6 @@ include $(COMPONENT_ROOT)/config.mk
 #	not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    axis_switch_egress \
-    axis_switch_ingress \
     clk_wiz_0 \
     clk_wiz_1
 
@@ -53,8 +51,6 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    axis_switch_egress/sim/axis_switch_egress.v \
-    axis_switch_ingress/sim/axis_switch_ingress.v \
     clk_wiz_0/clk_wiz_0_clk_wiz.v \
     clk_wiz_0/clk_wiz_0.v \
     clk_wiz_1/clk_wiz_1_clk_wiz.v \

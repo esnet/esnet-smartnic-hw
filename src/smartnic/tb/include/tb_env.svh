@@ -1,17 +1,19 @@
 import smartnic_pkg::*;
 
 class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
+
     // Parameters
     // -- Datapath
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
+
     // -- Timeouts
     localparam int RESET_TIMEOUT = 1024; // In clk cycles
     localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
 
     // -- AXI-L
     localparam int AXIL_APP_OFFSET = 'h100000;
-    localparam int AXIL_VITISNET_OFFSET = 'h180000;
+    localparam int AXIL_VITISNET_OFFSET = 'h80000;
 
     //===================================
     // Properties
@@ -21,32 +23,35 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     virtual std_reset_intf reset_vif;
     virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
 
-    // AXI-L management interface
+    // AXI-L interface
     virtual axi4l_intf axil_vif;
 
-    // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_in_vif [2*NUM_CMAC];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)) axis_out_vif [2*NUM_CMAC];
+    // AXI-S interfaces
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr_vif [NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c_vif      [NUM_CMAC];
+
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_egr_vif [NUM_CMAC];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif      [NUM_CMAC];
+
     virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample_vif;
 
     // Drivers/Monitors
-    axi4s_driver #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
-    ) axis_driver [2*NUM_CMAC];
+    axi4s_driver #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr_driver [NUM_CMAC];
+    axi4s_driver #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c_driver      [NUM_CMAC];
 
-    axi4s_monitor #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(egr_tdest_t)
-    ) axis_monitor [2*NUM_CMAC];
+    axi4s_monitor #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_cmac_egr_monitor [NUM_CMAC];
+    axi4s_monitor #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_monitor      [NUM_CMAC];
 
-    axi4s_sample #(
-        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)
-    ) axis_sample;
+    axi4s_sample #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(igr_tdest_t)) axis_sample;
+
 
     // AXI-L agent
     axi4l_reg_agent #() reg_agent;
 
     // Register block agents
     smartnic_reg_blk_agent #() smartnic_reg_blk_agent;
+    smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_0_reg_blk_agent;
+    smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_1_reg_blk_agent;
     reg_endian_check_reg_blk_agent #() reg_endian_check_reg_blk_agent;
 
     axi4s_probe_reg_blk_agent #() probe_from_cmac_0_reg_blk_agent;
@@ -61,7 +66,8 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_cmac_1_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_host_0_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_host_1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_bypass_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_bypass_0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_bypass_1_reg_blk_agent;
 
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
@@ -81,27 +87,36 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     // Constructor
     function new(string name , bit bigendian = 1);
         this.name = name;
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i] = new(.BIGENDIAN(bigendian));
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i] = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i]  = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i]       = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i] = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i]      = new(.BIGENDIAN(bigendian));
+
         axis_sample = new(.BIGENDIAN(bigendian));
         reg_agent = new("axi4l_reg_agent");
         ts_agent = new;
         smartnic_reg_blk_agent = new("smartnic_reg_blk", 'h0000);
+        smartnic_hash2qid_0_reg_blk_agent = new("smartnic_hash2qid_0_reg_blk", 'h12000);
+        smartnic_hash2qid_1_reg_blk_agent = new("smartnic_hash2qid_1_reg_blk", 'h13000);
         reg_endian_check_reg_blk_agent = new("reg_endian_check_reg_blk", 'h0400);
 
-        probe_from_cmac_0_reg_blk_agent  = new("probe_from_cmac_0_reg_blk",    'h8000);
-        probe_from_cmac_1_reg_blk_agent  = new("probe_from_cmac_1_reg_blk",    'h8c00);
-        probe_from_host_0_reg_blk_agent  = new("probe_from_host_0_reg_blk",    'h9800);
-        probe_from_host_1_reg_blk_agent  = new("probe_from_host_1_reg_blk",    'h9c00);
-        probe_core_to_app0_reg_blk_agent = new("probe_core_to_app0_reg_blk",   'ha000);
-        probe_core_to_app1_reg_blk_agent = new("probe_core_to_app1_reg_blk",   'ha400);
-        probe_app0_to_core_reg_blk_agent = new("probe_app0_to_core_reg_blk",   'ha800);
-        probe_app1_to_core_reg_blk_agent = new("probe_app1_to_core_reg_blk",   'hac00);
-        probe_to_cmac_0_reg_blk_agent    = new("probe_core_to_cmac_0_reg_blk", 'hb000);
-        probe_to_cmac_1_reg_blk_agent    = new("probe_core_to_cmac_1_reg_blk", 'hb800);
-        probe_to_host_0_reg_blk_agent    = new("probe_core_to_host_0_reg_blk", 'hc000);
-        probe_to_host_1_reg_blk_agent    = new("probe_core_to_host_1_reg_blk", 'hc800);
-        probe_to_bypass_reg_blk_agent    = new("probe_to_bypass_reg_blk",      'hd000);
+        probe_from_cmac_0_reg_blk_agent  = new("probe_from_cmac_0_reg_blk",    'h2000);
+        probe_from_cmac_1_reg_blk_agent  = new("probe_from_cmac_1_reg_blk",    'h2300);
+        probe_to_cmac_0_reg_blk_agent    = new("probe_core_to_cmac_0_reg_blk", 'h2600);
+        probe_to_cmac_1_reg_blk_agent    = new("probe_core_to_cmac_1_reg_blk", 'h2800);
+
+        probe_from_host_0_reg_blk_agent  = new("probe_from_host_0_reg_blk",    'h3000);
+        probe_from_host_1_reg_blk_agent  = new("probe_from_host_1_reg_blk",    'h3100);
+        probe_to_host_0_reg_blk_agent    = new("probe_core_to_host_0_reg_blk", 'h3200);
+        probe_to_host_1_reg_blk_agent    = new("probe_core_to_host_1_reg_blk", 'h3400);
+
+        probe_to_bypass_0_reg_blk_agent  = new("probe_to_bypass_0_reg_blk",    'h4000);
+        probe_to_bypass_1_reg_blk_agent  = new("probe_to_bypass_1_reg_blk",    'h4300);
+
+        probe_core_to_app0_reg_blk_agent = new("probe_core_to_app0_reg_blk",   'h0c00);
+        probe_core_to_app1_reg_blk_agent = new("probe_core_to_app1_reg_blk",   'h0d00);
+        probe_app0_to_core_reg_blk_agent = new("probe_app0_to_core_reg_blk",   'h0e00);
+        probe_app1_to_core_reg_blk_agent = new("probe_app1_to_core_reg_blk",   'h0f00);
 
     endfunction
 
@@ -121,12 +136,17 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     endfunction
 
     function void connect();
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i].axis_vif = axis_in_vif[i];
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i].axis_vif = axis_out_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i].axis_vif  = axis_cmac_igr_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i].axis_vif = axis_cmac_egr_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i].axis_vif  = axis_h2c_vif[i];
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].axis_vif = axis_c2h_vif[i];
+
         axis_sample.axis_vif = axis_sample_vif;
         ts_agent.timestamp_vif = timestamp_vif;
         reg_agent.axil_vif = axil_vif;
         smartnic_reg_blk_agent.reg_agent = reg_agent;
+        smartnic_hash2qid_0_reg_blk_agent.reg_agent = reg_agent;
+        smartnic_hash2qid_1_reg_blk_agent.reg_agent = reg_agent;
         reg_endian_check_reg_blk_agent.reg_agent = reg_agent;
 
         probe_from_cmac_0_reg_blk_agent.reg_agent  = reg_agent;
@@ -141,15 +161,18 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         probe_to_cmac_1_reg_blk_agent.reg_agent    = reg_agent;
         probe_to_host_0_reg_blk_agent.reg_agent    = reg_agent;
         probe_to_host_1_reg_blk_agent.reg_agent    = reg_agent;
-        probe_to_bypass_reg_blk_agent.reg_agent    = reg_agent;
+        probe_to_bypass_0_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_bypass_1_reg_blk_agent.reg_agent  = reg_agent;
     endfunction
 
     task reset();
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);
         axil_vif.idle_controller();
-        for (int i=0; i < 2*NUM_CMAC; i++)  axis_driver[i].idle();
-        for (int i=0; i < 2*NUM_CMAC; i++) axis_monitor[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_igr_driver[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i].idle();
+        for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].idle();
     endtask
 
     task init_timestamp();

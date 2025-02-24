@@ -29,18 +29,15 @@ of hardware boards.  More information about the OpenNIC shell can be found at:
 https://github.com/esnet/open-nic-shell
 
 The ESnet SmartNIC platform implements a P4-programmable packet processing core within the
-OpenNIC shell.  The P4 processor is implemented with the AMD (Xilinx) VitisNetP4 IP core.
-More information about the VitisNetP4 core is available at the AMD (Xilinx) Vitis Networking
-P4 Secure Site (once access privileges are approved and granted).  Further questions can be
-directed to vitisnetp4@xilinx.com.
+OpenNIC shell.  The P4 processing is implemented with the AMD (Xilinx) VitisNetP4 IP core.
+More information about the VitisNetP4 core is available at
+https://www.xilinx.com/products/intellectual-property/ef-di-vitisnetp4.html
 
 The SmartNIC platform provides the necessary hardware datapath and control features
-to operate the custom VitisNetP4 processor core.
-
-The `esnet-smartnic-hw` repository includes the RTL source files, verification test suites
-and build scripts for compiling a user P4 file into a downloadable bitfile, as well as the
-software artifacts necessary for seamless integration with the SmartNIC runtime firmware,
-which is located in a companion github repository at:
+to operate the custom VitisNetP4 processor.  The `esnet-smartnic-hw` repository includes the
+RTL source files, verification test suites and build scripts for compiling a user P4 file
+into a downloadable bitfile, as well as the software artifacts necessary for seamless integration
+with the SmartNIC runtime firmware, which is located in a companion github repository at:
 https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
@@ -211,7 +208,7 @@ suitably-configured host running Ubuntu 20.04 LTS Linux.
 
 ### Installing and Configuring the Vivado Runtime Environment
 
-1. Install the AMD (Xilinx) Vivado tool suite, including the VitisNetP4 option.
+1. Install the AMD (Xilinx) Vivado tool suite (version 2023.2.2), including the VitisNetP4 option.
 
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
@@ -285,48 +282,91 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 
        > make
 
-8. To simulate the P4 program, refer to the readme file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
+8. To simulate the P4 program, refer to the README file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
 
 
-### Multi-Processor Support (Ingress and Egress P4 Programs)
+### Ingress and Egress processing functions
 
-The ESnet SmartNIC Platform optionally supports capturing separate ingress and egress P4 programs for
-packet processing.  In the current release, the ingress and egress processors are simply instantiated
-back-to-back.  Application ingress traffic is processed first by the ingress P4 processor and then
-by the egress P4 processor, prior to being driven through the SmartNIC egress datapath.
+This release of the ESnet SmartNIC architecture is presently structured to accommodate optionally capturing separate
+ingress and egress processing functions.  It includes separate P4 processors (for ingress and egress P4 programs),
+as well as optionally customizable ingress and egress RTL datapath functions.  See block diagram at `docs/smartnic_app.svg`.
 
-The P4 files to be used for building these separate processors are specified in the root-level application
-Makefile by the P4_IGR_FILE and P4_EGR_FILE variables.
+The P4 files for building these separate processors (smartnic_app_igr_p4 and smartnic_app_egr_p4) are specified
+in the root-level application Makefile by the P4_IGR_FILE and P4_EGR_FILE variables.  Applications that implement
+only a single P4 program should specify only the P4_IGR_FILE variable and leave the P4_EGR_FILE variable unspecified.
+If the P4_EGR_FILE variable is unspecified, pass-through logic is implemented instead of an egress processor.
 
-Applications that are implemented with a single P4 program should specify only the P4_IGR_FILE variable
-and leave the P4_EGR_FILE variable unspecified.  If the P4_EGR_FILE variable is unspecified, pass-through
-logic is implemented instead of	an egress processor.
+The current SmartNIC release supports backwards compatibility for legacy SmartNIC applications (which implement only
+a single P4 processor) by automatically mapping the P4 program onto the ingress processor and implementing pass-through
+logic in place of the egress P4 processor.  The optionally cumstomizable ingress and egress RTL datapath functions also
+implement pass-through logic by default.
 
-NOTE: By default, legacy designs implementing a single P4 program are automatically mapped onto the ingress
-processor and implement pass-through egress logic.
-
-In future (TBD), the SmartNIC platform may also incorporate additional support for optional RTL-customizable
-ingress and egress datapath functions, to augment the processing capabilities supported by the programmable
-P4 processors in this release.
-
-See the `p4_multi_proc` example design for reference.
+Support for multi-processor application design is limited in the current release.  See the `p4_multi_proc` example design
+for reference.
 
 
 ### User Extern Function Support
 
 The ESnet SmartNIC Platform optionally supports the integration of custom user extern function(s) that
-complement an application P4 program.  For such a design, in addition to the appliction P4 program, a
+complement an application P4 program.  For such a design, in addition to the application P4 program, a
 user must provide a custom C++ (.cpp) model of the extern function(s) for behavioural simulation, as well
 as the custom system verilog RTL code that implements the function for synthesis (and RTL simulation,
 if desired).
 
-For compatibility with the automation scripts, the name of the extern top-level module MUST be
-`vitisnetp4_igr_extern` or `vitisnetp4_egr_extern`, depending on which P4 processor it is associated with.
-Also, the .cpp model MUST be located in a directory located beside the p4 test(s) directory called
-`user_externs/` and the extern Makefile and RTL code MUST be located in a directory called
-`src/vitisnetp4_igr_extern` or `src/vitisnetp4_egr_extern`, again depending on which P4 processor it connects to.
+For an extern function that is associated with the *ingress* P4 processor:
+- The name of the extern top-level module MUST be `vitisnetp4_igr_extern`
+- The extern RTL code MUST be located in a filename with the path `src/vitisnetp4_igr/rtl/src/vitisnetp4_igr_extern.sv`
+- The .cpp model MUST be located in a filename with the path `p4/sim/user_externs/vitisnetp4_igr_extern.cpp`
+- Subdirectories and files necessary to support the automated build and simulation scripts MUST also be included and
+structured as shown.
 
 See the `p4_with_extern` example design for reference.
+
+
+#### Building a New P4-with-extern Application
+
+The following steps can be taken by a new user to setup a local application design directory for building
+the bitfile and artifacts for a custom P4-based SmartNIC application that includes a custom user extern function.
+
+1. Install the esnet-smartnic-hw respository (as described above).
+
+2. Initialize all submodules within the esnet-smartnic-hw/ design directory:
+
+       > cd esnet-smartnic-hw
+       > git submodule update --init --recursive
+
+3. Beside the esnet-smartnic-hw/ directory, create a new application design directory based on a copy of the `p4_with_extern`
+example design:
+
+       > cd ../
+       > cp -r esnet-smartnic-hw/examples/p4_with_extern <APP_NAME>
+       > cd  <APP_NAME>
+
+4. Using a preferred editor, edit the application Makefile to update the SMARTNIC_DIR environment variable assignment as follows:
+
+       SMARTNIC_DIR := ../esnet-smartnic-hw
+
+5. Copy the application p4 file to the following location and filename:
+
+       > cp <p4_filename> p4/`basename $PWD`.p4
+
+   Note: By default, the SmartNIC scripts take the basename of the application design directory to be the name of the application.  The application name is used in associated filenames as well.
+
+6. Copy the application extern system verilog file to the following location and filename:
+
+       > cp <extern_filename> src/vitisnetp4_igr/rtl/src/vitisnetp4_igr_extern.sv
+
+7. Install Vivado and configure the runtime environment (as described above).
+
+8. Build the design by executing the copied application Makefile:
+
+       > make
+
+9. To simulate the P4 program, copy the extern cpp file to the following location and filename:
+
+       > cp <cpp_filename> p4/sim/user_externs/vitisnetp4_igr_extern.cpp
+
+    Refer to the README file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
 
 
 ## P4 Programming Requirements
@@ -387,8 +427,9 @@ define the User Metadata structure as follows:
     struct smartnic_metadata {
         bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
         bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
-        bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
-        bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+        bit<4>  ingress_port;    // 4b ingress port
+                                 // (0:CMAC0, 1:CMAC1, 2:PF0_VF2, 3:PF1_VF2, 4:PF0_VF1, 5:PF1_VF1, 6:PF0_VF0, 7:PF1_VF0, 8:PF0, 9:PF1)
+        bit<2>  egress_port;     // 2b egress port (0:PORT0, 1:PORT1, 2:HOST, 3:LOOPBACK).
         bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
         bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
         bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
@@ -406,6 +447,49 @@ interface, a user Program **MUST** have:
 - No HBM BCAMs.
 
 Support for these features may be added in a future release.
+
+
+### Upgrading a P4 application from a legacy version to this release
+
+This release of the ESnet SmartNIC Platform includes significant changes to the SmartNIC FPGA architecture.  See block
+diagrams below:
+
+![SmartNIC Top Level Block Diagram](docs/smartnic.svg)
+
+The new architecture incorporates 2 optional P4-programmable blocks (*smartnic_app_igr_p4, smartnic_app_egr_p4*) and
+4 optional RTL-programmable blocks (*vitisnetp4_igr_extern, vitisnetp4_egr_extern, smartnic_app_igr, smatnic_app_egr*).
+It also expands the number of datapath interfaces used to stream packet traffic into and out of these functional blocks
+by leveraging PCIe SR-IOV viritual functions (VFs).  See block diagram below.
+
+![SmartNIC Application Block Diagram](docs/smartnic_app.svg)
+
+It should be noted that while this new datapath architecture is designed to connect the new datapath interfaces using separate
+virtual functions (VFs) of an SR-IOV-enabled PCIe endpoint, this first release of the platform does NOT include an SRIOV-enabled
+PCIe endpoint. The addition of PCIe SR-IOV support is planned for an upcoming release. In the interim, HOST traffic may be
+directed to a single HOST interface by programming the ingress and egress queue configuration accordingly.
+
+By consequence of the new datapath updates, changes have been made to the SmartNIC configuration and status registers
+i.e. obsolete registers have been removed, and new registers have been added, as necessary.  The programming for this updated
+register set has been reflected in the SmartNIC platform firmware (esnet-smartnic-fw).
+
+Consistent with legacy releases of the SmartNIC platform, this version supports a single P4-processor application, with
+optional support for an RTL extern function, and optional RTL simulation support using the AMD example design. Other possible
+work flows and application examples are included in the release for reference, but are presently 'unsupported'.
+The supported 'p4_only' and 'p4_with_extern' examples have documentation and instructions (READMEs), as well as limited
+assistance from ESnet for questions and unexpected problems.  The 'unsupported' examples and work flows do NOT include README
+instructions, or ESnet support.
+
+The new datapath changes have been implemented to be backward compatible. Legacy single P4-processor applications will
+automatically instantiate 'passthru' versions of the new optionally programmable functions. The directory structure and automation
+scripts are designed to support legacy applications with minimal changes required to the source files and directories.
+
+For 'p4_only' applications, simply update the 'esnet-smartnic-hw' submodule and adapt the p4 program to the updated 'ingress_port'
+and 'egress_port' metadata definitions.
+
+For 'p4_with_extern' applications, create a new design directory by following the instructions above from the section
+'Building a New P4-with-extern Application', and adapt the p4 program to the updated 'ingress_port' and 'egress_port' metadata
+definitions.
+
 
 
 ### Reference Documents:

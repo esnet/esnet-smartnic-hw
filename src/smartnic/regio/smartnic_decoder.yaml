@@ -7,10 +7,18 @@ blocks:
     !include src/reg/endian/regio/reg_endian_check.yaml
   axi4s_probe: &axi4s_probe
     !include src/axi4s/regio/axi4s_probe.yaml 
+  smartnic_hash2qid: &smartnic_hash2qid
+    !include ../src/smartnic/regio/smartnic_hash2qid.yaml
 
 decoders:
-  smartnic_to_app_decoder: &smartnic_to_app_decoder
-    !include ../src/smartnic/regio/smartnic_to_app_decoder.yaml
+  smartnic_cmac_decoder: &smartnic_cmac_decoder
+    !include ../src/smartnic/regio/smartnic_cmac_decoder.yaml
+  smartnic_host_decoder: &smartnic_host_decoder
+    !include ../src/smartnic/regio/smartnic_host_decoder.yaml
+  smartnic_bypass_decoder: &smartnic_bypass_decoder
+    !include ../src/smartnic/regio/smartnic_bypass_decoder.yaml
+  smartnic_p4: &smartnic_p4
+    !include ../src/smartnic_app/regio/smartnic_p4_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_core_decoder.yaml
 
@@ -25,128 +33,59 @@ interfaces:
     width: 10
     name: endian_check
 
-
-  - block: *axi4s_probe
-    address: 0x08000
-    width: 10
-    name: probe_from_cmac_0
-
-  - block: *axi4s_probe
-    address: 0x08400
-    width: 10
-    name: drops_ovfl_from_cmac_0
-
-  - block: *axi4s_probe
-    address: 0x08800
-    width: 10
-    name: drops_err_from_cmac_0
-
-  - block: *axi4s_probe
-    address: 0x08c00
-    width: 10
-    name: probe_from_cmac_1
-
-  - block: *axi4s_probe
-    address: 0x09000
-    width: 10
-    name: drops_ovfl_from_cmac_1
-
-  - block: *axi4s_probe
-    address: 0x09400
-    width: 10
-    name: drops_err_from_cmac_1
-
-  - block: *axi4s_probe
-    address: 0x09800
-    width: 10
-    name: probe_from_host_0
-
-  - block: *axi4s_probe
-    address: 0x09c00
-    width: 10
-    name: probe_from_host_1
-
-  - block: *axi4s_probe
-    address: 0x0a000
-    width: 10
-    name: probe_core_to_app0
-
-  - block: *axi4s_probe
-    address: 0x0a400
-    width: 10
-    name: probe_core_to_app1
-
-  - block: *axi4s_probe
-    address: 0x0a800
-    width: 10
-    name: probe_app0_to_core
-
-  - block: *axi4s_probe
-    address: 0x0ac00
-    width: 10
-    name: probe_app1_to_core
-
-  - block: *axi4s_probe
-    address: 0x0b000
-    width: 10
-    name: probe_to_cmac_0
-
-  - block: *axi4s_probe
-    address: 0x0b400
-    width: 10
-    name: drops_ovfl_to_cmac_0
-
-  - block: *axi4s_probe
-    address: 0x0b800
-    width: 10
-    name: probe_to_cmac_1
-
-  - block: *axi4s_probe
-    address: 0x0bc00
-    width: 10
-    name: drops_ovfl_to_cmac_1
-
-  - block: *axi4s_probe
-    address: 0x0c000
-    width: 10
-    name: probe_to_host_0
-
-  - block: *axi4s_probe
-    address: 0x0c400
-    width: 10
-    name: drops_ovfl_to_host_0
-
-  - block: *axi4s_probe
-    address: 0x0c800
-    width: 10
-    name: probe_to_host_1
-
-  - block: *axi4s_probe
-    address: 0x0cc00
-    width: 10
-    name: drops_ovfl_to_host_1
-
-  - block: *axi4s_probe
-    address: 0x0d000
-    width: 10
-    name: probe_to_bypass
-
-  - block: *axi4s_probe
-    address: 0x0d400
-    width: 10
-    name: drops_from_igr_sw
-
-  - block: *axi4s_probe
-    address: 0x0d800
-    width: 10
-    name: drops_from_bypass
-
   - decoder: *fifo
-    address: 0x0e000
+    address: 0x00800
     width: 10
     name: fifo_to_host_0
 
-  - decoder: *smartnic_to_app_decoder
-    address: 0x100000
-    width: 20
-    name: smartnic_to_app
+  - block: *axi4s_probe
+    address: 0x00c00
+    width: 8
+    name: probe_core_to_app0
+
+  - block: *axi4s_probe
+    address: 0x00d00
+    width: 8
+    name: probe_core_to_app1
+
+  - block: *axi4s_probe
+    address: 0x00e00
+    width: 8
+    name: probe_app0_to_core
+
+  - block: *axi4s_probe
+    address: 0x00f00
+    width: 8
+    name: probe_app1_to_core
+
+
+  - decoder: *smartnic_cmac_decoder
+    address: 0x02000
+    width: 12
+    name: smartnic_cmac
+
+  - decoder: *smartnic_host_decoder
+    address: 0x03000
+    width: 12
+    name: smartnic_host
+
+  - decoder: *smartnic_bypass_decoder
+    address: 0x04000
+    width: 12
+    name: smartnic_bypass
+
+
+  - block: *smartnic_hash2qid
+    address: 0x12000
+    width: 12
+    name: smartnic_hash2qid_0
+
+  - block: *smartnic_hash2qid
+    address: 0x13000
+    width: 12
+    name: smartnic_hash2qid_1
+
+  - decoder: *smartnic_p4
+    address: 0x80000
+    width: 19
+    name: smartnic_p4

@@ -31,8 +31,7 @@ SUBCOMPONENTS = \
     xilinx.axi.rtl \
     xilinx.axis.rtl \
     axi4l.rtl@common \
-    axi4s.rtl@common \
-    axi3.rtl@common
+    axi4s.rtl@common
 
 EXT_LIBS =
 

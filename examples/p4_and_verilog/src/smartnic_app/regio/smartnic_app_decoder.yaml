@@ -1,11 +1,28 @@
 name: smartnic_app
 
-decoders:
-  p4_and_verilog_decoder: &p4_and_verilog_decoder
-    !include ../examples/p4_and_verilog/src/p4_and_verilog/regio/p4_and_verilog_decoder.yaml
+blocks:
+  p4_and_verilog: &p4_and_verilog
+    !include ../examples/p4_and_verilog/src/p4_and_verilog/regio/p4_and_verilog.yaml
+  empty: &empty
+    name: empty
+    info: |
+      Placeholder for empty block.
+    regs: []
 
 interfaces:
-  - decoder: *p4_and_verilog_decoder
+  - block: *empty
     address: 0x00000
-    width: 18
-    name: p4_and_verilog
+    width: 16
+    name: igr_extern
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+  - block: *p4_and_verilog
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+  - block: *empty
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr

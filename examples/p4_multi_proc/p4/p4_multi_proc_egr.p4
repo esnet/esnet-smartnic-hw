@@ -23,8 +23,9 @@ struct headers {
 struct smartnic_metadata {
     bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
     bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
-    bit<3>  ingress_port;    // 3b ingress port (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
-    bit<3>  egress_port;     // 3b egress port  (0:CMAC0, 1:CMAC1, 2:HOST0, 3:HOST1).
+    bit<4>  ingress_port;    // 4b ingress port
+                             // (0:CMAC0, 1:CMAC1, 2:PF0_VF2, 3:PF1_VF2, 4:PF0_VF1, 5:PF1_VF1, 6:PF0_VF0, 7:PF1_VF0, 8:PF0, 9:PF1)
+    bit<2>  egress_port;     // 2b egress port (0:PORT0, 1:PORT1, 2:HOST, 3:LOOPBACK).
     bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
     bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
     bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
@@ -59,7 +60,7 @@ control MatchActionImpl( inout headers hdr,
                          inout smartnic_metadata sn_meta,
                          inout standard_metadata_t smeta) {
 
-    action forwardPacket(bit<3> dest_port) {
+    action forwardPacket(bit<2> dest_port) {
         sn_meta.egress_port = dest_port;
     }
     

@@ -27,8 +27,29 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
+ifneq ($(P4_IGR_FILE),)
+IGR_P4_DEPENDENCIES = \
+    vitisnetp4_igr.rtl \
+	smartnic_app.igr_p4.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
+else
+IGR_P4_DEPENDENCIES = \
+	smartnic_app.igr_p4.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
+endif
+ifneq ($(P4_EGR_FILE),)
+EGR_P4_DEPENDENCIES = \
+    vitisnetp4_egr.rtl \
+	smartnic_app.egr_p4.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
+else
+EGR_P4_DEPENDENCIES = \
+	smartnic_app.egr_p4.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
+endif
+
 SUBCOMPONENTS = \
-    smartnic_app.p4_only.rtl
+    $(IGR_P4_DEPENDENCIES) \
+    $(EGR_P4_DEPENDENCIES) \
+    smartnic_app.igr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.egr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
 
 # ----------------------------------------------------
 # Targets

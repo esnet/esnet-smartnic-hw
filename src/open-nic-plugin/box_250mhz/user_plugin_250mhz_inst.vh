@@ -43,8 +43,8 @@ smartnic_250mhz #(
   .m_axis_qdma_c2h_tuser_size       (m_axis_qdma_c2h_tuser_size),
   .m_axis_qdma_c2h_tuser_src        (m_axis_qdma_c2h_tuser_src),
   .m_axis_qdma_c2h_tuser_dst        (m_axis_qdma_c2h_tuser_dst),
-  .m_axis_qdma_c2h_tuser_rss_hash_valid  (m_axis_qdma_c2h_tuser_rss_hash_valid),
-  .m_axis_qdma_c2h_tuser_rss_hash        (m_axis_qdma_c2h_tuser_rss_hash),
+  .m_axis_qdma_c2h_tuser_rss_hash_valid  (m_axis_qdma_c2h_tuser_qid_valid),
+  .m_axis_qdma_c2h_tuser_rss_hash        (m_axis_qdma_c2h_tuser_qid),
   .m_axis_qdma_c2h_tready           (m_axis_qdma_c2h_tready),
 
   .m_axis_adap_tx_250mhz_tvalid     (m_axis_adap_tx_250mhz_tvalid),
@@ -63,8 +63,8 @@ smartnic_250mhz #(
   .s_axis_adap_rx_250mhz_tuser_size (s_axis_adap_rx_250mhz_tuser_size),
   .s_axis_adap_rx_250mhz_tuser_src  (s_axis_adap_rx_250mhz_tuser_src),
   .s_axis_adap_rx_250mhz_tuser_dst  (s_axis_adap_rx_250mhz_tuser_dst),
-  .s_axis_adap_rx_250mhz_tuser_rss_hash_valid  (s_axis_adap_rx_250mhz_tuser_rss_hash_valid),
-  .s_axis_adap_rx_250mhz_tuser_rss_hash        (s_axis_adap_rx_250mhz_tuser_rss_hash),
+  .s_axis_adap_rx_250mhz_tuser_rss_hash_valid  (s_axis_adap_rx_250mhz_tuser_qid_valid),
+  .s_axis_adap_rx_250mhz_tuser_rss_hash        (s_axis_adap_rx_250mhz_tuser_qid),
   .s_axis_adap_rx_250mhz_tready     (s_axis_adap_rx_250mhz_tready),
 
   .mod_rstn                         (mod_rstn[0]),

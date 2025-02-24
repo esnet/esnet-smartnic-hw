@@ -61,10 +61,10 @@ sim_p4_apps:
   script:
     - make -s -C src/p4_proc/tests/regression
     - grep 'PASSED.*suites passing' src/p4_proc/tests/regression/run_$SEED/sim.log
-    - make -s -C src/smartnic_app/p4_only/tests/regression
-    - grep 'PASSED.*suites passing' src/smartnic_app/p4_only/tests/regression/run_$SEED/sim.log
-    - make -s -C src/smartnic_app/p4_only/tests.smartnic/regression
-    - grep 'PASSED.*suites passing' src/smartnic_app/p4_only/tests.smartnic/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic_app/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic_app/tests/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic_app/tests.smartnic/regression
+    - grep 'PASSED.*suites passing' src/smartnic_app/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C examples/p4_multi_proc config
     - make -s -C examples/p4_multi_proc/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
@@ -77,13 +77,13 @@ sim_p4_apps:
     reports:
       junit:
         - src/p4_proc/tests/regression/run_*/tests.xml
-        - src/smartnic_app/p4_only/tests/regression/run_*/tests.xml
-        - src/smartnic_app/p4_only/tests.smartnic/regression/run_*/tests.xml
+        - src/smartnic_app/tests/regression/run_*/tests.xml
+        - src/smartnic_app/tests.smartnic/regression/run_*/tests.xml
         - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
         - examples/proxy_test/tests/regression/run_*/tests.xml
     when: always
-  timeout: 2h
+  timeout: 3h
   needs: []
 
 sim_platform:
@@ -92,8 +92,12 @@ sim_platform:
   tags:
     - ht-sim
   script:
-    - make -s -C src/smartnic/tests/regression
-    - grep 'PASSED.*suites passing' src/smartnic/tests/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/tests/0/regression
+    - grep 'PASSED.*suites passing' src/smartnic/tests/0/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/tests/1/regression
+    - grep 'PASSED.*suites passing' src/smartnic/tests/1/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/tests/block/regression
+    - grep 'PASSED.*suites passing' src/smartnic/tests/block/regression/run_$SEED/sim.log
     - make -s -C examples/p2p/tests.smartnic/regression
     - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_250mhz/tests/regression
@@ -102,7 +106,9 @@ sim_platform:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
-        - src/smartnic/tests/regression/run_*/tests.xml
+        - src/smartnic/tests/0/regression/run_*/tests.xml
+        - src/smartnic/tests/1/regression/run_*/tests.xml
+        - src/smartnic/tests/block/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml
     when: always
@@ -162,6 +168,9 @@ ons_ip_au250:
   extends: .ons_ip
   variables:
     SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 smartnic_ip_cache_key:
   stage: ip
@@ -192,8 +201,8 @@ smartnic_ip_cache_key:
   script:
     - make -s -C src refresh
     - make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
-    - make -s -C src/smartnic_app/blackbox/app_if BOARD=$SN_HW_BOARD
     - make -s -C src synth COMPONENT=smartnic.build BOARD=$SN_HW_BOARD
+    - make -s -C src synth COMPONENT=smartnic_app.build BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
@@ -259,6 +268,9 @@ smartnic_ip_au250:
   extends: .smartnic_ip
   variables:
     SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 shell_ip_au280:
   extends: .shell_ip
@@ -357,6 +369,9 @@ build_p4_with_extern:
   needs:
     - ons_ip_au250
     - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_multi_proc_u280:
   extends: .bitfile
@@ -379,9 +394,6 @@ build_p4_multi_proc_u55c:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
-  rules:
-    - when: manual
-      allow_failure: true
 
 build_proxy_test_u280:
   extends: .bitfile

@@ -27,14 +27,11 @@ module p4_and_verilog_datapath_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
-
-    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
     //===================================
     // Import common testcase tasks
     //=================================== 
-    `include "../common/tasks.svh"
+    `include "../../../../src/smartnic_app/tests/common/tasks.svh"
 
     //===================================
     // Build
@@ -61,22 +58,25 @@ module p4_and_verilog_datapath_unit_test;
         svunit_ut.setup();
 
         // Flush packets from pipeline
-        env.axis_monitor.flush();
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_out_monitor[i].flush();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_c2h_monitor[j][i].flush();
+            end
+        end
 
         // Issue reset (both datapath and management domains)
         reset();
 
-        // Initialize SDNet tables
-        vitisnetp4_agent.init();
-
-        //`INFO("Waiting to initialize axis fifos...");
-        //for (integer i = 0; i < 100 ; i=i+1 ) begin
-        //  @(posedge tb.clk);
-        //end
-
         // Put AXI-S interfaces into quiescent state
-        env.axis_driver.idle();
-        env.axis_monitor.idle();
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_in_driver[i].idle();
+            env.axis_out_monitor[i].idle();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_h2c_driver[j][i].idle();
+                env.axis_c2h_monitor[j][i].idle();
+            end
+        end
 
     endtask
 
@@ -93,11 +93,13 @@ module p4_and_verilog_datapath_unit_test;
         svunit_ut.teardown();
 
         // Flush remaining packets
-        env.axis_monitor.flush();
+        for (integer i = 0; i < 2; i += 1) begin
+            env.axis_out_monitor[i].flush();
+            for (integer j = 0; j < 3; j += 1) begin
+                env.axis_c2h_monitor[j][i].flush();
+            end
+        end
         #10us;
-
-        // Clean up SDNet tables
-        vitisnetp4_agent.terminate();
 
     endtask
 
@@ -122,80 +124,13 @@ module p4_and_verilog_datapath_unit_test;
 
     `SVUNIT_TESTS_BEGIN
 
+    `SVTEST(init)
+        // Initialize VitisNetP4 tables
+        vitisnetp4_agent.init();
+    `SVTEST_END
+
     `include "../../p4/sim/run_pkt_test_incl.svh"
 
     `SVUNIT_TESTS_END
 
-
-     task run_pkt_test (
-        input string testdir, input logic[63:0] init_timestamp=0, input port_t dest_port=0, input VERBOSE=1 );
-	
-        string filename;
-
-        // expected pcap data
-        pcap_pkg::pcap_t exp_pcap;
-
-        // variables for sending packet data
-        automatic logic [63:0] timestamp = init_timestamp;
-        automatic int          num_pkts  = 0;
-        automatic int          start_idx = 0;
-
-        // variables for receiving (monitoring) packet data
-        automatic int rx_pkt_cnt = 0;    
-        automatic bit rx_done = 0;
-        byte          rx_data[$];
-        port_t        id;
-        port_t        dest;
-        bit           user;
-
-        debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
-        env.ts_agent.set_static(timestamp);
-
-        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/cli_commands.txt"};
-        vitisnetp4_agent.table_init_from_file(filename);
-        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
-
-        debug_msg("Reading expected pcap file...", VERBOSE);
-        filename = {"../../../p4/sim/", testdir, "/expected/packets_out.pcap"};
-        exp_pcap = pcap_pkg::read_pcap(filename);
-
-        debug_msg("Starting simulation...", VERBOSE);
-         filename = {"../../../p4/sim/", testdir, "/packets_in.pcap"};
-         rx_pkt_cnt = 0;
-         fork
-             begin
-                 // Send packets
-                 send_pcap(filename, num_pkts, start_idx);
-             end
-             begin
-                 // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
-                 while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if.tlast or posedge rx_done) begin
-                       if (tb.axis_in_if.tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
-                    end
-                 end
-             end
-             begin
-                 // Monitor output packets
-                 while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                     env.axis_monitor.receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(0));
-                     rx_pkt_cnt++;
-                     debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...", 
-                                           rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
-
-                     debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                     compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data);
-                    `FAIL_IF_LOG( dest != dest_port, 
-                                  $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
-                 end
-                 rx_done = 1;
-             end
-         join
-     endtask
-
-     task debug_msg(input string msg, input bit VERBOSE=0);
-         if (VERBOSE) `INFO(msg);
-     endtask
-      
 endmodule

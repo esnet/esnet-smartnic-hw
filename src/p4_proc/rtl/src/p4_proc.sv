@@ -93,28 +93,31 @@ module p4_proc
     tuser_t  _axis_from_vitisnetp4_tuser;
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_in [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   _axis_in [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_split_join [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_from_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_from_split_join [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   _axis_from_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        _axis_to_vitisnetp4 ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   _axis_to_vitisnetp4 ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   _axis_from_vitisnetp4 ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   _axis_from_vitisnetp4 ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_split_join [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_split_join [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_drop [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_drop [NUM_PORTS] ();
 
     axi4s_intf  #( .TUSER_T(tuser_t),
-                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(egr_tdest_t))   axis_to_trunc [NUM_PORTS] ();
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_drop_p [NUM_PORTS] ();
+
+    axi4s_intf  #( .TUSER_T(tuser_t),
+                   .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))   axis_to_trunc [NUM_PORTS] ();
 
 
     // --------------------------------------------------------------------
@@ -147,7 +150,7 @@ module p4_proc
             .FIFO_DEPTH (512)
         ) axi4s_split_join_inst (
             .axi4s_in      (_axis_in[i]),
-            .axi4s_out     (axis_to_drop[i]),
+            .axi4s_out     (axis_to_drop_p[i]),
             .axi4s_hdr_out (axis_from_split_join[i]),
             .axi4s_hdr_in  (axis_to_split_join[i]),
             .axil_if       (axil_to_split_join[i]),
@@ -173,6 +176,8 @@ module p4_proc
         assign axis_from_split_join[i].tready = _axis_from_split_join[i].tready;
  
         // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(_axis_from_split_join[0]));
+
+        axi4s_tready_pipe axis_to_drop_pipe (.axi4s_if_from_tx(axis_to_drop_p[i]), .axi4s_if_to_rx(axis_to_drop[i]));
 
         // packet drop logic.  deletes zero-length packets, and packets with tdest == tid i.e. switching loops.
         assign zero_length[i] = axis_to_drop[i].tvalid && axis_to_drop[i].sop && axis_to_drop[i].tlast &&
@@ -270,14 +275,14 @@ module p4_proc
     assign axis_to_vitisnetp4_tuser = axis_to_vitisnetp4.tuser;
 
     always_comb begin
-        user_metadata_to_vitisnetp4.timestamp_ns      = axis_to_vitisnetp4_tuser.timestamp;
+        user_metadata_to_vitisnetp4.timestamp_ns      =      axis_to_vitisnetp4_tuser.timestamp;
         user_metadata_to_vitisnetp4.pid               = {'0, axis_to_vitisnetp4_tuser.pid[9:0]};
-        user_metadata_to_vitisnetp4.ingress_port      = {'0, axis_to_vitisnetp4.tid};
-        user_metadata_to_vitisnetp4.egress_port       = {'0, axis_to_vitisnetp4.tdest};
-        user_metadata_to_vitisnetp4.truncate_enable   = 0;
-        user_metadata_to_vitisnetp4.truncate_length   = 0;
-        user_metadata_to_vitisnetp4.rss_enable        = 0;
-        user_metadata_to_vitisnetp4.rss_entropy       = 0;
+        user_metadata_to_vitisnetp4.ingress_port      =      axis_to_vitisnetp4.tid;
+        user_metadata_to_vitisnetp4.egress_port       = {'0, axis_to_vitisnetp4.tdest[0]};  // p4 core only passes 1b egress_port (and loopback control bit).
+        user_metadata_to_vitisnetp4.truncate_enable   =      axis_to_vitisnetp4_tuser.trunc_enable;
+        user_metadata_to_vitisnetp4.truncate_length   =      axis_to_vitisnetp4_tuser.trunc_length;
+        user_metadata_to_vitisnetp4.rss_enable        =      axis_to_vitisnetp4_tuser.rss_enable;
+        user_metadata_to_vitisnetp4.rss_entropy       =      axis_to_vitisnetp4_tuser.rss_entropy;
         user_metadata_to_vitisnetp4.drop_reason       = 0;
         user_metadata_to_vitisnetp4.scratch           = 0;
 
@@ -286,20 +291,30 @@ module p4_proc
 
     // --- metadata_from_vitisnetp4 ---
     user_metadata_t user_metadata_from_vitisnetp4_latch;
-
     always @(posedge core_clk) if (user_metadata_from_vitisnetp4_valid) user_metadata_from_vitisnetp4_latch <= user_metadata_from_vitisnetp4;
    
     assign axis_from_vitisnetp4_proc_port = user_metadata_from_vitisnetp4_valid ?
-                                       user_metadata_from_vitisnetp4.pid[9] : user_metadata_from_vitisnetp4_latch.pid[9];
+                                            user_metadata_from_vitisnetp4.pid[9] : user_metadata_from_vitisnetp4_latch.pid[9];
 
     assign _axis_from_vitisnetp4.tid   = user_metadata_from_vitisnetp4_valid ?
-                                   user_metadata_from_vitisnetp4.ingress_port : user_metadata_from_vitisnetp4_latch.ingress_port;
+                                         user_metadata_from_vitisnetp4.ingress_port : user_metadata_from_vitisnetp4_latch.ingress_port;
 
-    assign _axis_from_vitisnetp4.tdest = user_metadata_from_vitisnetp4_valid ?
-                                   user_metadata_from_vitisnetp4.egress_port : user_metadata_from_vitisnetp4_latch.egress_port;
+    port_t   axis_from_vitisnetp4_tdest, axis_from_vitisnetp4_tdest_latch;
+    always_comb begin
+        case (user_metadata_from_vitisnetp4.egress_port)
+            2'h0: axis_from_vitisnetp4_tdest = CMAC0;
+            2'h1: axis_from_vitisnetp4_tdest = CMAC1;
+            2'h2: axis_from_vitisnetp4_tdest = PF0;
+            2'h3: axis_from_vitisnetp4_tdest = LOOPBACK;
+        endcase
+    end
 
-    assign _axis_from_vitisnetp4_tuser.pid          = user_metadata_from_vitisnetp4_valid ?
-                                                {7'd0, user_metadata_from_vitisnetp4.pid[8:0]} : {7'd0, user_metadata_from_vitisnetp4_latch.pid[8:0]};
+    always @(posedge core_clk) if (user_metadata_from_vitisnetp4_valid) axis_from_vitisnetp4_tdest_latch <= axis_from_vitisnetp4_tdest;
+
+    assign _axis_from_vitisnetp4.tdest = user_metadata_from_vitisnetp4_valid ? axis_from_vitisnetp4_tdest : axis_from_vitisnetp4_tdest_latch;
+
+    assign _axis_from_vitisnetp4_tuser.pid = user_metadata_from_vitisnetp4_valid ?
+                                            {7'd0, user_metadata_from_vitisnetp4.pid[8:0]} : {7'd0, user_metadata_from_vitisnetp4_latch.pid[8:0]};
 
     assign _axis_from_vitisnetp4_tuser.trunc_enable = p4_proc_regs[1].trunc_config.enable ? p4_proc_regs[1].trunc_config.trunc_enable :
                                                 ( user_metadata_from_vitisnetp4_valid ?

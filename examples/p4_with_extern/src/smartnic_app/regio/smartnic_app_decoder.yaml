@@ -1,0 +1,26 @@
+name: smartnic_app
+
+blocks:
+  empty: &empty
+    name: empty
+    info: |
+      Placeholder for empty block.
+    regs: []
+
+interfaces:
+  - block: *empty
+    address: 0x00000
+    width: 16
+    name: igr_extern
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+  - block: *empty
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+  - block: *empty
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr

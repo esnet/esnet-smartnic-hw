@@ -12,67 +12,67 @@ regs:
   - name: status
     init: 0xC0BEBEEF
 
-  # ----- switch configuration registers. -----
-  - name: igr_sw_tid
+  # ----- smartnic configuration registers. -----
+  - name: igr_q_config_0
     access : rw
     count: 4
     fields:
-        - name: value
-          desc: sets the axi4s 'tid' (src port) signal for the specified ingress port.
-                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
-                igr_sw_tid[0]=1 sets 'tid' from CMAC_0 to CMAC_1.
-          width: 2
+        - name: base
+          desc: sets the base queue id (qid) for the specified PF0 interface.
+                indexed by host interface id number as follows
+                   0 PF0     -> SMARTNIC_APP_EGR_P4
+                   1 PF0_VF0 -> SMARTNIC_APP_EGR
+                   2 PF0_VF1 -> VITISNETP4_IGR_EXTERN
+                   3 PF0_VF2 -> SMARTNIC_MUX
+                for example, igr_q_config_0[3].base=6 sets the base qid for PF0_VF2 (SMARTNIC_MUX) to 6.
+          width: 12
           init: 0
-          enum:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
+        - name: num_q
+          desc: sets the number of queues associated with the specified PF0 interface.
+          width: 12
+          init: 0
 
-  - name: igr_sw_tdest
+  - name: igr_q_config_1
+    access : rw
+    count: 4
+    fields:
+        - name: base
+          desc: sets the base queue id (qid) for the specified PF1 interface.
+                indexed by host interface id number as follows
+                   0 PF1     -> SMARTNIC_APP_EGR_P4
+                   1 PF1_VF0 -> SMARTNIC_APP_EGR
+                   2 PF1_VF1 -> VITISNETP4_IGR_EXTERN
+                   3 PF1_VF2 -> SMARTNIC_MUX
+                for example, igr_q_config_1[0].base=3 sets the base qid for PF1 (SMARTNIC_APP_EGR_P4) to 3.
+          width: 12
+          init: 0
+        - name: num_q
+          desc: sets the number of queues associated with the specified PF1 interface.
+          width: 12
+          init: 0
+
+  - name: smartnic_mux_out_sel
     access : rw
     count: 4
     fields:
         - name: value
-          desc: sets the axi4s 'tdest' signal (ingress switch output port) for the specified ingress port.
-                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
-                igr_sw_dest[0]=1 sends pkts from CMAC_0 to APP_1.
+          desc: for each physical ingress port, selects the smartnic_mux output port.
+                indexed by physical ingress port as follows 0-CMAC0 1-CMAC1 2-HOST0 3-HOST1.
+                for example, smartnic_mux_out_sel[0]=2 directs packets from CMAC0 to the BYPASS path.
           width: 2
           init: 3
           enum:
-              0 : APP_0
-              1 : APP_1
-              2 : APP_BYPASS
+              0 : APP
+              2 : BYPASS
               3 : DROP
 
-  - name: bypass_tdest
-    access : rw
-    count: 4
-    fields:
-        - name: value
-          desc: sets the bypass axi4s 'tdest' signal (egress switch output port) for the specified ingress port.
-                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
-                bypass_tdest[0]=1 sends pkts from CMAC_0 to CMAC_1.
-          width: 3
-          init: 0
-          enum:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-
-  - name: h2c_demux_sel
+  - name: bypass_config
     access : rw
     fields:
-        - name: value
-          desc: steers h2c traffic to the selected ingress function.
-          width: 2
+        - name: swap_paths
+          desc: set (1) to swap the bypass paths (p0->p1, p1->p0).  default (0) is straight (p0->p0, p1->p1).
+          width: 1
           init: 0
-          enum:
-              0 : HOST_F0
-              1 : HOST_F1
-              2 : HOST_F2
-              3 : HOST_F3
 
   - name: switch_config
     access: rw
@@ -95,45 +95,24 @@ regs:
         width: 1
         init : 0
 
-  - name: app_0_tdest_remap
+  - name: smartnic_demux_out_sel
     access : rw
-    count: 4
     fields:
-        - name: value
-          desc: remaps APP_0 axi4s 'tdest' signal (egress switch output port) for pkts directed to specified egress port.
-                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
-                app_0_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
-          width: 3
+        - name: port0
+          desc: set (1) to direct smartnic_demux port0 to HOST0 (via PF0_VF2).  default (0) directs to CMAC0.
+          width: 1
           init: 0
-          enum:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-          count: 4
-
-  - name: app_1_tdest_remap
-    access : rw
-    count: 4
-    fields:
-        - name: value
-          desc: remaps APP_1 axi4s 'tdest' signal (egress switch output port) for pkts directed to specified egress port.
-                indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
-                app_1_tdest_remap[0]=1 remaps CMAC_0 to CMAC_1.
-          width: 3
+        - name: port1
+          desc: set (1) to direct smartnic_demux port1 to HOST1 (via PF1_VF2).  default (0) directs to CMAC1.
+          width: 1
           init: 0
-          enum:
-              0 : CMAC_0
-              1 : CMAC_1
-              2 : HOST_0
-              3 : HOST_1
-          count: 4
 
   - name: egr_fc_thresh
     desc: egress flow control threshold registers.  one per egress FIFO.
-          indexed by port number (0:CMAC_0, 1:CMAC_1, 2:HOST_0, 3:HOST_1).
+          indexed by physical egress port as follows 0-CMAC0 1-CMAC1 2-HOST0 3-HOST1.
           flow control is asserted when FIFO fill level exceeds threshold value.
           threshold is specified in units of 64B words.  egress FIFOs can hold 1020x64B.
+          note that egr_fc_thresh should NOT be set below a min value of 4 to avoid tx deadlock.
     access : rw
     count  : 4
     init   : 0xffff_ffff

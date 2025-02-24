@@ -12,9 +12,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML = \
    p2p.yaml
-
-REG_DECODER_YAML = \
-   p2p_decoder.yaml
+REG_DECODER_YAML =
 
 # ----------------------------------------------------
 # Options

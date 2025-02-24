@@ -1,0 +1,34 @@
+name: smartnic_app
+
+blocks:
+  smartnic_app_igr: &smartnic_app_igr
+    !include ../examples/p4_multi_proc/src/smartnic_app/igr/regio/smartnic_app_igr.yaml
+  smartnic_app_egr: &smartnic_app_egr
+    !include ../examples/p4_multi_proc/src/smartnic_app/egr/regio/smartnic_app_egr.yaml
+  empty: &empty
+    name: empty
+    info: Empty register block. Used only as placeholder.
+    regs: []
+
+interfaces:
+
+  - block: *empty
+    address: 0x00000
+    width: 16
+    name: igr_extern
+
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+
+  - block: *smartnic_app_igr
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+
+  - block: *smartnic_app_egr
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr
+

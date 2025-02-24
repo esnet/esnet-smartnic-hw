@@ -6,6 +6,7 @@
 
 module {{ props.name }}_wrapper
     import {{ props.name }}_pkg::*;
+    import smartnic_pkg::*;
 (
     // Clock/reset
     input logic           core_clk,
@@ -24,32 +25,40 @@ module {{ props.name }}_wrapper
     output logic          user_metadata_out_valid,
     output logic [{{ props.user_metadata_wid - 1 }}:0]   user_metadata_out,
 
-    {%- if props.num_user_externs > 0 and props.extern_ports %}
-    // Extern ports
-    output USER_EXTERN_OUT_T    user_extern_out,
-    output USER_EXTERN_VALID_T  user_extern_out_valid,
-    input  USER_EXTERN_IN_T     user_extern_in,
-    input  USER_EXTERN_VALID_T  user_extern_in_valid,
+    input timestamp_t      timestamp,
 
-    {% endif %}
-    // HBM AXI3
-    axi3_intf.controller  axi_to_hbm [16]
+    // Flow control
+    input logic [3:0]      egr_flow_ctl,
+
+    // Extern ports
+    axi4l_intf.peripheral  axil_to_extern,
+    axi4s_intf.rx          axis_to_extern,
+    axi4s_intf.tx          axis_from_extern
 );
 
-    {%- if props.num_user_externs > 0 and not props.extern_ports %}
+    {%- if props.num_user_externs > 0 %}
     USER_EXTERN_OUT_T    user_extern_out;
     USER_EXTERN_VALID_T  user_extern_out_valid;
     USER_EXTERN_IN_T     user_extern_in;
     USER_EXTERN_VALID_T  user_extern_in_valid;
 
     {{ props.name }}_extern smartnic_extern_0 (
-      .clk                     ( core_clk ),
-      .rstn                    ( core_rstn ),
+      .clk                          ( core_clk ),
+      .rstn                         ( core_rstn ),
       .extern_from_vitisnetp4       ( user_extern_out ),
       .extern_from_vitisnetp4_valid ( user_extern_out_valid ),
       .extern_to_vitisnetp4         ( user_extern_in ),
-      .extern_to_vitisnetp4_valid   ( user_extern_in_valid )
+      .extern_to_vitisnetp4_valid   ( user_extern_in_valid ),
+      .timestamp                    ( timestamp ),
+      .egr_flow_ctl                 ( egr_flow_ctl ),
+      .axil_to_extern               ( axil_to_extern ),
+      .axis_to_extern               ( axis_to_extern ),
+      .axis_from_extern             ( axis_from_extern )
     );
+    {% else %}
+    axi4l_intf_peripheral_term   axil_term     ( .axi4l_if(axil_to_extern) );
+    axi4s_intf_rx_sink   axis_to_extern_sink   ( .axi4s_if(axis_to_extern) );
+    axi4s_intf_tx_term   axis_from_extern_term ( .aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_from_extern) );
     {% endif %}
 
     // --- vitisnetp4 instance ---
@@ -66,10 +75,6 @@ module {{ props.name }}_wrapper
         .s_axi_aresetn           (axil_if.aresetn),
         .cam_mem_aclk            (core_clk), // {{ props.cam_mem_clk_freq_mhz }} MHz
         .cam_mem_aresetn         (core_rstn),
-        {%- if props.hbm_axi_if_num > 0 %}
-        .m_axi_hbm_aclk          (core_clk),
-        .m_axi_hbm_aresetn       (core_rstn),
-        {% endif %}
         // Metadata
         .user_metadata_in        (user_metadata_in),         
         .user_metadata_in_valid  (user_metadata_in_valid),   
@@ -113,73 +118,11 @@ module {{ props.name }}_wrapper
         .m_axis_tkeep            (axis_tx.tkeep),
         .m_axis_tvalid           (axis_tx.tvalid),
         .m_axis_tlast            (axis_tx.tlast),
-        .m_axis_tready           (axis_tx.tready){{ ',' if props.hbm_axi_if_num > 0 }}
-
-        {%- for hbm_if_idx,hbm_if_name in props.hbm_axi_ifs.items(): %}
-
-        // HBM AXI {{ hbm_if_name }}
-        .m_axi_hbm{{ hbm_if_name }}_awid        (axi_to_hbm[{{ hbm_if_idx }}].awid),     // output wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_awid
-        .m_axi_hbm{{ hbm_if_name }}_awaddr      (axi_to_hbm[{{ hbm_if_idx }}].awaddr),   // output wire [{{ props.hbm_axi_if_addr_wid - 1 }} : 0] m_axi_hbm{{ hbm_if_name }}_awaddr
-        .m_axi_hbm{{ hbm_if_name }}_awlen       (axi_to_hbm[{{ hbm_if_idx }}].awlen),    // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_awlen
-        .m_axi_hbm{{ hbm_if_name }}_awsize      (axi_to_hbm[{{ hbm_if_idx }}].awsize),   // output wire [2 : 0] m_axi_hbm{{ hbm_if_name }}_awsize
-        .m_axi_hbm{{ hbm_if_name }}_awburst     (axi_to_hbm[{{ hbm_if_idx }}].awburst),  // output wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_awburst
-        .m_axi_hbm{{ hbm_if_name }}_awlock      (axi_to_hbm[{{ hbm_if_idx }}].awlock),   // output wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_awlock
-        .m_axi_hbm{{ hbm_if_name }}_awcache     (axi_to_hbm[{{ hbm_if_idx }}].awcache),  // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_awcache
-        .m_axi_hbm{{ hbm_if_name }}_awprot      (axi_to_hbm[{{ hbm_if_idx }}].awprot),   // output wire [2 : 0] m_axi_hbm{{ hbm_if_name }}_awprot
-        .m_axi_hbm{{ hbm_if_name }}_awqos       (axi_to_hbm[{{ hbm_if_idx }}].awqos),    // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_awqos
-        .m_axi_hbm{{ hbm_if_name }}_awregion    (axi_to_hbm[{{ hbm_if_idx }}].awregion), // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_awregion
-        .m_axi_hbm{{ hbm_if_name }}_awvalid     (axi_to_hbm[{{ hbm_if_idx }}].awvalid),  // output wire m_axi_hbm{{ hbm_if_name }}_awvalid
-        .m_axi_hbm{{ hbm_if_name }}_awready     (axi_to_hbm[{{ hbm_if_idx }}].awready),  // input wire m_axi_hbm{{ hbm_if_name }}_awready
-        .m_axi_hbm{{ hbm_if_name }}_wid         (axi_to_hbm[{{ hbm_if_idx }}].wid),      // output wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_wid
-        .m_axi_hbm{{ hbm_if_name }}_wdata       (axi_to_hbm[{{ hbm_if_idx }}].wdata),    // output wire [{{ props.hbm_axi_if_data_wid -1 }} : 0] m_axi_hbm{{ hbm_if_name }}_wdata
-        .m_axi_hbm{{ hbm_if_name }}_wstrb       (axi_to_hbm[{{ hbm_if_idx }}].wstrb),    // output wire [{{ (props.hbm_axi_if_data_wid / 8 - 1) | int }} : 0] m_axi_hbm{{ hbm_if_name }}_wstrb
-        .m_axi_hbm{{ hbm_if_name }}_wlast       (axi_to_hbm[{{ hbm_if_idx }}].wlast),    // output wire m_axi_hbm{{ hbm_if_name }}_wlast
-        .m_axi_hbm{{ hbm_if_name }}_wvalid      (axi_to_hbm[{{ hbm_if_idx }}].wvalid),   // output wire m_axi_hbm{{ hbm_if_name }}_wvalid
-        .m_axi_hbm{{ hbm_if_name }}_wready      (axi_to_hbm[{{ hbm_if_idx }}].wready),   // input wire m_axi_hbm{{ hbm_if_name }}_wready
-        .m_axi_hbm{{ hbm_if_name }}_bid         (axi_to_hbm[{{ hbm_if_idx }}].bid),      // input wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_bid
-        .m_axi_hbm{{ hbm_if_name }}_bresp       (axi_to_hbm[{{ hbm_if_idx }}].bresp),    // input wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_bresp
-        .m_axi_hbm{{ hbm_if_name }}_bvalid      (axi_to_hbm[{{ hbm_if_idx }}].bvalid),   // input wire m_axi_hbm{{ hbm_if_name }}_bvalid
-        .m_axi_hbm{{ hbm_if_name }}_bready      (axi_to_hbm[{{ hbm_if_idx }}].bready),   // output wire m_axi_hbm{{ hbm_if_name }}_bready
-        .m_axi_hbm{{ hbm_if_name }}_arid        (axi_to_hbm[{{ hbm_if_idx }}].arid),     // output wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_arid
-        .m_axi_hbm{{ hbm_if_name }}_araddr      (axi_to_hbm[{{ hbm_if_idx }}].araddr),   // output wire [{{ props.hbm_axi_if_addr_wid - 1 }} : 0] m_axi_hbm{{ hbm_if_name }}_araddr
-        .m_axi_hbm{{ hbm_if_name }}_arlen       (axi_to_hbm[{{ hbm_if_idx }}].arlen),    // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_arlen
-        .m_axi_hbm{{ hbm_if_name }}_arsize      (axi_to_hbm[{{ hbm_if_idx }}].arsize),   // output wire [2 : 0] m_axi_hbm{{ hbm_if_name }}_arsize
-        .m_axi_hbm{{ hbm_if_name }}_arburst     (axi_to_hbm[{{ hbm_if_idx }}].arburst),  // output wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_arburst
-        .m_axi_hbm{{ hbm_if_name }}_arlock      (axi_to_hbm[{{ hbm_if_idx }}].arlock),   // output wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_arlock
-        .m_axi_hbm{{ hbm_if_name }}_arcache     (axi_to_hbm[{{ hbm_if_idx }}].arcache),  // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_arcache
-        .m_axi_hbm{{ hbm_if_name }}_arprot      (axi_to_hbm[{{ hbm_if_idx }}].arprot),   // output wire [2 : 0] m_axi_hbm{{ hbm_if_name }}_arprot
-        .m_axi_hbm{{ hbm_if_name }}_arqos       (axi_to_hbm[{{ hbm_if_idx }}].arqos),    // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_arqos
-        .m_axi_hbm{{ hbm_if_name }}_arregion    (axi_to_hbm[{{ hbm_if_idx }}].arregion), // output wire [3 : 0] m_axi_hbm{{ hbm_if_name }}_arregion
-        .m_axi_hbm{{ hbm_if_name }}_arvalid     (axi_to_hbm[{{ hbm_if_idx }}].arvalid),  // output wire m_axi_hbm{{ hbm_if_name }}_arvalid
-        .m_axi_hbm{{ hbm_if_name }}_arready     (axi_to_hbm[{{ hbm_if_idx }}].arready),  // input wire m_axi_hbm{{ hbm_if_name }}_arready
-        .m_axi_hbm{{ hbm_if_name }}_rid         (axi_to_hbm[{{ hbm_if_idx }}].rid),      // input wire [5 : 0] m_axi_hbm{{ hbm_if_name }}_rid
-        .m_axi_hbm{{ hbm_if_name }}_rdata       (axi_to_hbm[{{ hbm_if_idx }}].rdata),    // input wire [{{ props.hbm_axi_if_data_wid -1 }} : 0] m_axi_hbm{{ hbm_if_name }}_rdata
-        .m_axi_hbm{{ hbm_if_name }}_rresp       (axi_to_hbm[{{ hbm_if_idx }}].rresp),    // input wire [1 : 0] m_axi_hbm{{ hbm_if_name }}_rresp
-        .m_axi_hbm{{ hbm_if_name }}_rlast       (axi_to_hbm[{{ hbm_if_idx }}].rlast),    // input wire m_axi_hbm{{ hbm_if_name }}_rlast
-        .m_axi_hbm{{ hbm_if_name }}_rvalid      (axi_to_hbm[{{ hbm_if_idx }}].rvalid),   // input wire m_axi_hbm{{ hbm_if_name }}_rvalid
-        .m_axi_hbm{{ hbm_if_name }}_rready      (axi_to_hbm[{{ hbm_if_idx }}].rready){{ ',' if not loop.last }}{{ ' ' if loop.last }}   // output wire m_axi_hbm00_rready
-        {%- endfor %}
+        .m_axis_tready           (axis_tx.tready)
     );
 
     assign axis_tx.aclk = core_clk;
     assign axis_tx.aresetn = core_rstn;
-
-    generate
-        // Assign all other HBM AXI signals
-        for (genvar i = 0; i < M_AXI_HBM_NUM_SLOTS; i++) begin : g__hbm_axi_if
-            // Drive clock/reset
-            assign axi_to_hbm[i].aclk = core_clk;
-            assign axi_to_hbm[i].aresetn = core_rstn;
-            // Tie off user signals (unused)
-            assign axi_to_hbm[i].awuser = '0;
-            assign axi_to_hbm[i].wuser = '0;
-            assign axi_to_hbm[i].aruser = '0;
-        end : g__hbm_axi_if
-        // Tie off unused interfaces
-        for (genvar i = M_AXI_HBM_NUM_SLOTS; i < 16; i++) begin : g__hbm_axi_if_tieoff
-            axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if ( axi_to_hbm[i] ));
-        end : g__hbm_axi_if_tieoff
-    endgenerate
 
 endmodule : {{ props.name }}_wrapper
 

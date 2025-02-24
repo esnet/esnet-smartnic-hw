@@ -17,7 +17,7 @@ module proxy_test_packet_fifo_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common proxy_test
+    // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
     // loaded into the tb_glbl scope, so is available
     // at tb_glbl.tb.
@@ -27,11 +27,6 @@ module proxy_test_packet_fifo_unit_test;
     // reference to the testbench environment is provided
     // here for convenience.
     tb_pkg::tb_env env;
-
-    //===================================
-    // Import common testcase tasks
-    //===================================
-    `include "../common/tasks.svh"
 
     //===================================
     // Parameters
@@ -50,6 +45,9 @@ module proxy_test_packet_fifo_unit_test;
     // Environment
     packet_component_env #(META_T) packet_env;
 
+    // Reset
+    std_reset_intf reset_if (.clk(tb.clk));
+
     // Driver
     packet_playback_driver#(META_T) driver;
 
@@ -62,7 +60,10 @@ module proxy_test_packet_fifo_unit_test;
     // Scoreboard
     std_verif_pkg::event_scoreboard#(PACKET_T) scoreboard;
 
-    assign tb.mgmt_reset_if.reset = !tb.reset_if.reset;
+    assign tb.mgmt_reset_if.reset = !reset_if.reset;
+    assign tb.reset_if.reset = !reset_if.reset;
+
+    assign reset_if.ready = tb.reset_if.ready;
 
     //===================================
     // Build
@@ -78,11 +79,13 @@ module proxy_test_packet_fifo_unit_test;
         env = tb.env;
 
         // Driver
-        driver = new("packet_playback_driver", PACKET_MEM_SIZE, DATA_WID, env.reg_agent, 'h4000 );
+        driver = new("packet_playback_driver", PACKET_MEM_SIZE, DATA_WID, env.app_reg_agent, 'h24000 );
         driver.set_op_timeout(16384);
+        driver.mem_agent.set_op_timeout(1024);
 
         // Monitor
-        monitor = new("packet_capture_monitor", PACKET_MEM_SIZE, DATA_WID, env.reg_agent, 'h5000 );
+        monitor = new("packet_capture_monitor", PACKET_MEM_SIZE, DATA_WID, env.app_reg_agent, 'h25000 );
+        monitor.mem_agent.set_op_timeout(1024);
         monitor.disable_autostart();
 
         // Model
@@ -93,8 +96,8 @@ module proxy_test_packet_fifo_unit_test;
 
         // Environment
         packet_env = new("packet env", driver, monitor, model, scoreboard);
-        packet_env.reset_vif = tb.reset_if;
-        packet_env.register_subcomponent(env.reg_agent);
+        packet_env.reset_vif = reset_if;
+        packet_env.register_subcomponent(env.app_reg_agent);
         packet_env.build();
 
     endfunction

@@ -136,27 +136,27 @@ module p4_proc_datapath_unit_test
     `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
     `SVTEST(test_pkt_loopback)
-        run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(7) );
+        run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(LOOPBACK) );
     `SVTEST_END
 
     `SVTEST(test_fwd_p1)
-        run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(1) );
+        run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
     `SVTEST_END
 
     `SVTEST(test_fwd_p3)
-        run_pkt_test ( .testdir("test-fwd-p3"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt), .init_timestamp('0), .dest_port(3) );
+        run_pkt_test ( .testdir("test-fwd-p3"), .init_timestamp('0), .dest_port(3) );
     `SVTEST_END
 
     `SVTEST(test_traffic_mux)
         fork
            // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-           run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+           run_pkt_test ( .testdir("test-fwd-p1"),
                           .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
 
            // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
            // (without re-programming the p4 tables).
            @(posedge tb.axis_in_if[1].tvalid)
-               run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+               run_pkt_test ( .testdir("test-default"),
                               .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
 
            // manually pause traffic through ingress mux, and restart.
@@ -176,12 +176,12 @@ module p4_proc_datapath_unit_test
         fork
            begin
               // run packet stream from CMAC1-to-CMAC1 (includes programming the p4 tables accordingly).
-              run_pkt_test ( .testdir("test-fwd-p1"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+              run_pkt_test ( .testdir("test-fwd-p1"),
                              .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1), .enable_monitor(0) );
               #(100ns) check_probe (DROPS_FROM_PROC_PORT_1, exp_pkt_cnt, exp_byte_cnt);
 
               // run packet streams from CMAC0-to-CMAC0 (skips reprogramming the p4 tables).
-              run_pkt_test ( .testdir("test-default"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
+              run_pkt_test ( .testdir("test-default"),
                              .init_timestamp(1), .in_if(0), .out_if(0), .dest_port(0), .enable_monitor(0), .write_p4_tables(0) );
               #(100ns) check_probe (DROPS_FROM_PROC_PORT_0, exp_pkt_cnt, exp_byte_cnt);
            end
@@ -205,8 +205,8 @@ module p4_proc_datapath_unit_test
            trunc_config.trunc_length = $urandom_range(65,500);
            env.p4_proc_reg_agent.write_trunc_config(trunc_config);
 
-           run_pkt_test ( .testdir("test-pkt-loopback"), .exp_pkt_cnt(exp_pkt_cnt), .exp_byte_cnt(exp_byte_cnt),
-                          .init_timestamp('0), .dest_port(7), .max_pkt_size(trunc_config.trunc_length) );
+           run_pkt_test ( .testdir("test-pkt-loopback"),
+                          .init_timestamp('0), .dest_port(4'hf), .max_pkt_size(trunc_config.trunc_length) );
         end
     `SVTEST_END
 
@@ -214,8 +214,8 @@ module p4_proc_datapath_unit_test
 
 
      task automatic run_pkt_test (
-        input string testdir, output int exp_pkt_cnt, exp_byte_cnt,
-        input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input egr_tdest_t dest_port=0,
+        input string testdir,
+        input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input port_t dest_port=0,
         input int max_pkt_size = 0, input bit write_p4_tables=1, enable_monitor=1, VERBOSE=1 );
 	
         string filename;
@@ -234,7 +234,7 @@ module p4_proc_datapath_unit_test
         automatic bit rx_done = 0;
         byte          rx_data[$];
         port_t        id;
-        egr_tdest_t   dest;
+        port_t        dest;
         bit           user;
 
         debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
@@ -282,7 +282,7 @@ module p4_proc_datapath_unit_test
 
                           debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
                           compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
-                          `FAIL_IF_LOG( dest != dest_port,
+                          `FAIL_IF_LOG( dest[0] != dest_port[0],  // compare LSB of dest_port (p4 egress_port is only 1b)
                                         $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
                       end
                  end

@@ -26,7 +26,8 @@ smartnic #(
   .s_axis_adpt_tx_322mhz_tdata     (s_axis_adap_tx_322mhz_tdata),
   .s_axis_adpt_tx_322mhz_tkeep     (s_axis_adap_tx_322mhz_tkeep),
   .s_axis_adpt_tx_322mhz_tlast     (s_axis_adap_tx_322mhz_tlast),
-  .s_axis_adpt_tx_322mhz_tdest     ('0),
+  .s_axis_adpt_tx_322mhz_tid       (s_axis_adap_tx_322mhz_tid),
+  .s_axis_adpt_tx_322mhz_tdest     ({2'b01, 2'b00}),
   .s_axis_adpt_tx_322mhz_tuser_err (s_axis_adap_tx_322mhz_tuser_err),
   .s_axis_adpt_tx_322mhz_tready    (s_axis_adap_tx_322mhz_tready),
 
@@ -36,8 +37,8 @@ smartnic #(
   .m_axis_adpt_rx_322mhz_tlast     (m_axis_adap_rx_322mhz_tlast),
   .m_axis_adpt_rx_322mhz_tdest     (),
   .m_axis_adpt_rx_322mhz_tuser_err (m_axis_adap_rx_322mhz_tuser_err),
-  .m_axis_adpt_rx_322mhz_tuser_rss_enable  (m_axis_adap_rx_322mhz_tuser_rss_hash_valid),
-  .m_axis_adpt_rx_322mhz_tuser_rss_entropy (m_axis_adap_rx_322mhz_tuser_rss_hash),
+  .m_axis_adpt_rx_322mhz_tuser_rss_enable  (m_axis_adap_rx_322mhz_tuser_qid_valid),
+  .m_axis_adpt_rx_322mhz_tuser_rss_entropy (m_axis_adap_rx_322mhz_tuser_qid),
   .m_axis_adpt_rx_322mhz_tready    (m_axis_adap_rx_322mhz_tready),
 
   .m_axis_cmac_tx_322mhz_tvalid           (m_axis_cmac_tx_tvalid),
