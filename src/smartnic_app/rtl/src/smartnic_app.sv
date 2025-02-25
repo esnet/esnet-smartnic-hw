@@ -390,6 +390,11 @@ module smartnic_app
     axi4l_intf  axil_to_smartnic_app__core_clk ();
     axi4l_intf  axil_to_smartnic_app_igr ();
     axi4l_intf  axil_to_smartnic_app_egr ();
+
+    axi4l_intf  axil_to_probe_app_igr_in  [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_egr_in  [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_egr_out [NUM_PORTS] ();
+
     axi4l_intf  axil_to_p4_proc [NUM_P4_PROC] ();
 
     smartnic_app_reg_intf  smartnic_app_regs ();
@@ -423,7 +428,13 @@ module smartnic_app
        .probe_to_pf0_vf0_axil_if    ( axil_c2h[VF0][0] ),
        .probe_to_pf1_vf0_axil_if    ( axil_c2h[VF0][1] ),
        .probe_to_pf0_vf1_axil_if    ( axil_c2h[VF1][0] ),
-       .probe_to_pf1_vf1_axil_if    ( axil_c2h[VF1][1] )
+       .probe_to_pf1_vf1_axil_if    ( axil_c2h[VF1][1] ),
+       .probe_to_app_igr_in0_axil_if  ( axil_to_probe_app_igr_in[0] ),
+       .probe_to_app_igr_in1_axil_if  ( axil_to_probe_app_igr_in[1] ),
+       .probe_to_app_egr_in0_axil_if  ( axil_to_probe_app_egr_in[0] ),
+       .probe_to_app_egr_in1_axil_if  ( axil_to_probe_app_egr_in[1] ),
+       .probe_to_app_egr_out0_axil_if ( axil_to_probe_app_egr_out[0] ),
+       .probe_to_app_egr_out1_axil_if ( axil_to_probe_app_egr_out[1] )
     );
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
@@ -522,8 +533,10 @@ module smartnic_app
             axi4s_intf_pipe axis_demux_out_pipe_0 ( .axi4s_if_from_tx(axis_demux_out[i][0]), .axi4s_if_to_rx(axis_to_smartnic_app_igr[i]) );
             axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(_axis_c2h[PF][i]) );
 
+            axi4s_probe axis_probe_app_igr_in  (.axi4l_if(axil_to_probe_app_igr_in[i]),  .axi4s_if(axis_to_smartnic_app_igr[i]));
+            axi4s_probe axis_probe_app_egr_in  (.axi4l_if(axil_to_probe_app_egr_in[i]),  .axi4s_if(axis_to_smartnic_app_egr[i]));
+            axi4s_probe axis_probe_app_egr_out (.axi4l_if(axil_to_probe_app_egr_out[i]), .axi4s_if(axis_to_mux[i]));
         end
-
     endgenerate
 
     // xilinx_axi4s_ila xilinx_axi4s_ila_3 (.axis_in(axis_to_demux[0]));

@@ -104,3 +104,34 @@ interfaces:
     address: 0x64b00
     width: 8
     name: probe_to_pf1_vf1
+
+  - block: *axi4s_probe
+    address: 0x64c00
+    width: 8
+    name: probe_to_app_igr_in0
+
+  - block: *axi4s_probe
+    address: 0x64d00
+    width: 8
+    name: probe_to_app_igr_in1
+
+  - block: *axi4s_probe
+    address: 0x64e00
+    width: 8
+    name: probe_to_app_egr_in0
+
+  - block: *axi4s_probe
+    address: 0x64f00
+    width: 8
+    name: probe_to_app_egr_in1
+
+  - block: *axi4s_probe
+    address: 0x65000
+    width: 8
+    name: probe_to_app_egr_out0
+
+  - block: *axi4s_probe
+    address: 0x65100
+    width: 8
+    name: probe_to_app_egr_out1
+
