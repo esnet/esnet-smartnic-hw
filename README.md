@@ -239,8 +239,8 @@ From the esnet-smartnic-hw directory:
    In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
    and any wireshark .lua files.
 
-   For more details about the `p4_only` design, as well as simulating the P4 program,  refer to
-   `examples/p4_only/README.md`.
+   For more details about the `p4_only` design, as well as simulating the P4 program,  refer to the
+   [p4_only README](examples/p4_only/README.md).
 
 
 ### Building a New P4 Application
@@ -282,7 +282,7 @@ the bitfile and artifacts for a custom P4-based SmartNIC application.
 
        > make
 
-8. To simulate the P4 program, refer to the README file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
+8. To simulate the P4 program, refer to the [p4/sim README](examples/p4_only/p4/sim/README.md).
 
 
 ### Ingress and Egress processing functions
@@ -366,7 +366,7 @@ example design:
 
        > cp <cpp_filename> p4/sim/user_externs/vitisnetp4_igr_extern.cpp
 
-    Refer to the README file provided in the p4/sim/ directory i.e. `p4/sim/README.md`
+    Refer to the [p4/sim README](examples/p4_with_extern/p4/sim/README.md).
 
 
 ## P4 Programming Requirements
