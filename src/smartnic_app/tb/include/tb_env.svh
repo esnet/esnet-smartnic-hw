@@ -73,6 +73,13 @@ class tb_env extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_pf0_vf1_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_pf1_vf1_reg_blk_agent;
 
+    axi4s_probe_reg_blk_agent #() probe_to_app_igr_in0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_igr_in1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_in0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_in1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_out0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_out1_reg_blk_agent;
+
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
 
@@ -122,6 +129,12 @@ class tb_env extends std_verif_pkg::base;
         probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h64a00);
         probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h64b00);
 
+        probe_to_app_igr_in0_reg_blk_agent  = new("probe_to_app_igr_in0_reg_blk",  'h64c00);
+        probe_to_app_igr_in1_reg_blk_agent  = new("probe_to_app_igr_in1_reg_blk",  'h64d00);
+        probe_to_app_egr_in0_reg_blk_agent  = new("probe_to_app_egr_in0_reg_blk",  'h64e00);
+        probe_to_app_egr_in1_reg_blk_agent  = new("probe_to_app_egr_in1_reg_blk",  'h64f00);
+        probe_to_app_egr_out0_reg_blk_agent = new("probe_to_app_egr_out0_reg_blk", 'h65000);
+        probe_to_app_egr_out1_reg_blk_agent = new("probe_to_app_egr_out1_reg_blk", 'h65100);
     endfunction
 
     // Destructor
@@ -167,6 +180,12 @@ class tb_env extends std_verif_pkg::base;
         probe_to_pf0_vf1_reg_blk_agent.reg_agent = reg_agent;
         probe_to_pf1_vf1_reg_blk_agent.reg_agent = reg_agent;
 
+        probe_to_app_igr_in0_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_app_igr_in1_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_app_egr_in0_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_app_egr_in1_reg_blk_agent.reg_agent  = reg_agent;
+        probe_to_app_egr_out0_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_app_egr_out1_reg_blk_agent.reg_agent = reg_agent;
     endfunction
 
     task reset();
