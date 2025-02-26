@@ -24,8 +24,8 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     shell.pkg \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
