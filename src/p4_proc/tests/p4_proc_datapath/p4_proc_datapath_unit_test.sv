@@ -84,6 +84,7 @@ module p4_proc_datapath_unit_test
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
         p4_proc_config.hdr_length = HDR_LENGTH;
         p4_proc_config.drop_pkt_loop = 1'b0;
+        p4_proc_config.p4_bypass = 1'b0;
         env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
     endtask
@@ -148,29 +149,40 @@ module p4_proc_datapath_unit_test
     `SVTEST_END
 
     `SVTEST(test_traffic_mux)
-        fork
-           // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-           run_pkt_test ( .testdir("test-fwd-p1"),
-                          .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_config.drop_pkt_loop = 1'b0;
+        p4_proc_config.p4_bypass = 1'b0;
 
-           // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
-           // (without re-programming the p4 tables).
-           @(posedge tb.axis_in_if[1].tvalid)
-               run_pkt_test ( .testdir("test-default"),
-                              .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
+        repeat (2) begin
+            // Toggle p4_bypass register.
+            p4_proc_config.p4_bypass = ~p4_proc_config.p4_bypass;
+            env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
-           // manually pause traffic through ingress mux, and restart.
-           @(posedge tb.axis_in_if[1].tvalid) begin
-               env.p4_proc_reg_agent.write_tpause(1);
-               env.p4_proc_reg_agent.write_tpause(0);
-            end
-        join
+            fork
+               // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
+               run_pkt_test ( .testdir("test-fwd-p1"),
+                              .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
+
+               // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
+               // (without re-programming the p4 tables).
+               @(posedge tb.axis_in_if[1].tvalid)
+                   run_pkt_test ( .testdir("test-default"),
+                                  .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
+
+               // manually pause traffic through ingress mux, and restart.
+               @(posedge tb.axis_in_if[1].tvalid) begin
+                   env.p4_proc_reg_agent.write_tpause(1);
+                   env.p4_proc_reg_agent.write_tpause(0);
+               end
+            join
+        end
     `SVTEST_END
 
     `SVTEST(test_pkt_loop_drops)
         // Write drop_pkt_loop register.
-        p4_proc_config.drop_pkt_loop = 1'b1;
         p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_config.drop_pkt_loop = 1'b1;
+        p4_proc_config.p4_bypass = 1'b0;
         env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
         fork
@@ -208,6 +220,16 @@ module p4_proc_datapath_unit_test
            run_pkt_test ( .testdir("test-pkt-loopback"),
                           .init_timestamp('0), .dest_port(4'hf), .max_pkt_size(trunc_config.trunc_length) );
         end
+    `SVTEST_END
+
+    `SVTEST(test_p4_bypass)
+        // Write p4_bypass register.
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_config.drop_pkt_loop = 1'b0;
+        p4_proc_config.p4_bypass = 1'b1;
+        env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+
+        run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0) );
     `SVTEST_END
 
     `SVUNIT_TESTS_END
@@ -249,7 +271,8 @@ module p4_proc_datapath_unit_test
 
         debug_msg("Reading expected pcap file...", VERBOSE);
 
-        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
+        if (p4_proc_config.p4_bypass) filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
+        else                          filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
         exp_pcap = pcap_pkg::read_pcap(filename);
 
         exp_pkt_cnt = exp_pcap.records.size();
