@@ -23,6 +23,10 @@ regs:
               enables drop logic on 'APP_0' and 'APP_BYPASS'.  drops on 'APP_1' to be implemented in future.
         width: 1
         init : 0
+      - name: p4_bypass
+        desc: set to 1 to enable bypassing the vitisnetp4 block (which steers packets around/past the p4 processor).
+        width: 1
+        init : 0
 
   - name: rss_config
     access: rw
