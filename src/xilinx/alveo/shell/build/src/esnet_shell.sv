@@ -1,4 +1,4 @@
-module esnet_smartnic
+module esnet_shell
 `ifdef __au280__
     import xilinx_alveo_au280_pkg::*;
 `elsif __au250__
@@ -17,14 +17,18 @@ module esnet_smartnic
     `include "xilinx_alveo_au55c_io.svh"
 `endif
 );
-    // Imports
-    import xilinx_alveo_pkg::*;
-    import shell_pkg::*;
-
     // Interfaces
     xilinx_alveo_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
 
-    shell_intf shell_if ();
+    // Signals
+    wire logic clk;
+    wire logic srst;
+    wire logic mgmt_clk;
+    wire logic mgmt_srst;
+    wire logic clk_100mhz;
+
+    wire shell_pkg::shell_to_core_t shell_to_core;
+    wire shell_pkg::core_to_shell_t core_to_shell;
 
     // Physical (hardware) layer
 `ifdef __au280__
@@ -45,9 +49,7 @@ module esnet_smartnic
     );
 
     // Application core
-    core #() i_core (
-        .*
-    );
+    core i_core (.*);
 
-endmodule : esnet_smartnic
+endmodule : esnet_shell
 

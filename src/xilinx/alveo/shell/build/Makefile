@@ -13,7 +13,7 @@ BOARD ?= au280 # Default of au280 can be overriden using make BOARD={au55c|au250
 # -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
-TOP = esnet_smartnic
+TOP = esnet_shell
 
 # -----------------------------------------------
 # Build config
@@ -44,7 +44,6 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     shell.pkg \
-    shell.rtl \
     xilinx.alveo.pkg \
     xilinx.alveo.rtl \
     xilinx.alveo.shell.rtl \
