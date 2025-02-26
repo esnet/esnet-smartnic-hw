@@ -16,8 +16,8 @@ package xilinx_qdma_pkg;
     // --------------------------------------------------------------
     // Typedefs
     // --------------------------------------------------------------
-    typedef logic [AXIS_DATA_WIDTH-1:0]    axis_tdata_t;
-    typedef logic [AXIS_DATA_BYTE_WID-1:0] axis_tkeep_t;
+    typedef struct packed {logic unused;} unused_t;
+
 
     typedef logic [QID_WID-1:0]         qid_t;
     typedef logic [PORT_ID_WID-1:0]     port_id_t;
@@ -39,14 +39,11 @@ package xilinx_qdma_pkg;
         len_t    len;
     } c2h_cmpt_data_t;
 
-    // (External) H2C AXI-S TUSER format
-    typedef struct packed {
-        logic err;
-    } axis_h2c_tuser_t;
-
-    // (External) C2H AXI-S TUSER format
-    typedef struct packed {
-        logic err;
-    } axis_c2h_tuser_t;
+    // (External) AXI-S types
+    typedef logic [AXIS_DATA_BYTE_WID-1:0][7:0] axis_tdata_t;
+    typedef logic [AXIS_DATA_BYTE_WID-1:0]      axis_tkeep_t;
+    typedef struct packed {qid_t qid;}          axis_tid_t;
+    typedef unused_t                            axis_tdest_t;
+    typedef struct packed {logic err;}          axis_tuser_t;
 
 endpackage : xilinx_qdma_pkg

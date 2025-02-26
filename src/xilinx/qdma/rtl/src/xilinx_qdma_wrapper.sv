@@ -352,17 +352,19 @@ module xilinx_qdma_wrapper #(
     // H2C stream
     // =========================================================================
     // (Local) signals
-    h2c_tuser_mdata_t __h2c_mdata;
-    axis_h2c_tuser_t __h2c_tuser;
+    axis_tid_t   __h2c_tid;
+    axis_tdest_t __h2c_tdest;
+    axis_tuser_t __h2c_tuser;
 
     assign axis_h2c.aclk = axi_aclk;                           // output wire axi_aclk
     assign axis_h2c.aresetn = axi_aresetn;                     // output wire axi_aresetn
     assign axis_h2c.tvalid = m_axis_h2c_tvalid;                // output wire m_axis_h2c_tvalid
     assign axis_h2c.tdata = m_axis_h2c_tdata;                  // output wire [511 : 0] m_axis_h2c_tdata
     assign axis_h2c.tlast = m_axis_h2c_tlast;                  // output wire m_axis_h2c_tlast
-    assign axis_h2c.tid = m_axis_h2c_tuser_qid;                // output wire [10 : 0] m_axis_h2c_tuser_qid
-    assign axis_h2c.tdest = m_axis_h2c_tuser_port_id;          // output wire [2 : 0] m_axis_h2c_tuser_port_id
-    assign __h2c_mdata = m_axis_h2c_tuser_mdata;               // output wire [31 : 0] m_axis_h2c_tuser_mdata
+    assign __h2c_tid.qid = m_axis_h2c_tuser_qid;               // output wire [10 : 0] m_axis_h2c_tuser_qid
+    assign axis_h2c.tid = __h2c_tid;
+    assign __h2c_tdest.unused = 1'b0;
+    assign axis_h2c.tdest = __h2c_tdest;
     assign __h2c_tuser.err = m_axis_h2c_tuser_err;             // output wire m_axis_h2c_tuser_err
     assign axis_h2c.tuser = __h2c_tuser;
 
@@ -372,6 +374,8 @@ module xilinx_qdma_wrapper #(
     assign axis_h2c.tkeep = m_axis_h2c_tlast ? '1 : '1;
     // output wire [5 : 0] m_axis_h2c_tuser_mty
     // output wire m_axis_h2c_tuser_zero_byte
+    // output wire [31 : 0] m_axis_h2c_tuser_mdata
+    // output wire [2 : 0] m_axis_h2c_tuser_port_id
 
     // TODO: check CRC
     // From PG302:
@@ -384,9 +388,12 @@ module xilinx_qdma_wrapper #(
     // =========================================================================
     // (Local) signals
     pkt_id_t __c2h_pkt_id;
+    axis_tid_t   __c2h_tid;
+    axis_tdest_t __c2h_tdest;
+    axis_tuser_t __c2h_tuser;
 
     // (Local) interfaces
-    axi4s_intf #(.DATA_BYTE_WID(), .TID_T (port_id_t), .TDEST_T(qid_t), .TUSER_T(axis_c2h_tuser_t)) __axis_c2h ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T (axis_tid_t), .TDEST_T(axis_tdest_t), .TUSER_T(axis_tuser_t)) __axis_c2h ();
 
     // Store/forward FIFO
     assign axis_c2h.aclk = axi_aclk;                // output wire axi_aclk
@@ -407,8 +414,11 @@ module xilinx_qdma_wrapper #(
     assign s_axis_c2h_tvalid = __axis_c2h.tvalid;   // input wire s_axis_c2h_tvalid
     assign s_axis_c2h_tlast = __axis_c2h.tlast;     // input wire s_axis_c2h_tlast
     assign s_axis_c2h_tdata = __axis_c2h.tdata;     // input wire [511 : 0] s_axis_c2h_tdata
-    assign s_axis_c2h_ctrl_qid = axis_c2h.tdest;    // input wire [10 : 0] s_axis_c2h_ctrl_qid
-    assign s_axis_c2h_ctrl_port_id = axis_c2h.tid;  // input wire [2 : 0] s_axis_c2h_ctrl_port_id
+    assign __c2h_tid   = axis_c2h.tid;
+    assign s_axis_c2h_ctrl_qid = __c2h_tid.qid;     // input wire [10 : 0] s_axis_c2h_ctrl_qid
+    assign __c2h_tdest = axis_c2h.tdest;
+    assign __c2h_tuser = axis_c2h.tuser;
+    assign s_axis_c2h_ctrl_port_id = '0;            // input wire [2 : 0] s_axis_c2h_ctrl_port_id
     assign s_axis_c2h_ctrl_len = '0;                // input wire [15 : 0] s_axis_c2h_ctrl_len
     assign s_axis_c2h_mty = '0;                     // input wire [5 : 0] s_axis_c2h_mty
 
