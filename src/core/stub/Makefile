@@ -23,14 +23,12 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    shell.rtl
-EXT_LIBS =
+    shell.pkg \
+    shell.rtl \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME)
 
-# ----------------------------------------------------
-# Defines
-#   List macro definitions.
-# ----------------------------------------------------
-DEFINES = __$(BOARD)__ BOARD=$(BOARD)
+EXT_LIBS =
 
 # ----------------------------------------------------
 # Options
