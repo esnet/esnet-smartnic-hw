@@ -32,13 +32,12 @@ The sections below direct the user to:
 
 ### Installing the SmartNIC Repositories
 
-Refer to the `Getting Started` section of the `esnet-smartnic-hw/README.md` file:
-https://github.com/esnet/esnet-smartnic-hw#readme
+Refer to the `Getting Started` section of the [esnet-smartnic-hw README](../../README.md).
 
 
 ### Simulating the P4 Program
 
-Refer to instructions in the `esnet-smartnic-hw/examples/p4_with_extern/p4/sim/README.md` file.
+Refer to instructions in the [p4/sim README](p4/sim/README.md).
 
 
 ### Generating and Simulating the AMD (Xilinx) Vitisnetp4 Example Design
@@ -101,8 +100,7 @@ instantiation can be found within the `example_dut_wrapper` module (instance nam
 
 ### Building the SmartNIC hardware design
 
-Refer to the `Getting Started` section of the `esnet-smartnic-hw/README.md` file:
-https://github.com/esnet/esnet-smartnic-hw#readme
+Refer to the `Getting Started` section of the [esnet-smartnic-hw README](../../README.md).
 
 
 **NOTE: See lower level README files for more details.**

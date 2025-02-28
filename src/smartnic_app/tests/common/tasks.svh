@@ -20,7 +20,14 @@ typedef enum logic [31:0] {
     PROBE_TO_PF0_VF0    = 'h64800,
     PROBE_TO_PF1_VF0    = 'h64900,
     PROBE_TO_PF0_VF1    = 'h64a00,
-    PROBE_TO_PF1_VF1    = 'h64b00
+    PROBE_TO_PF1_VF1    = 'h64b00,
+
+    PROBE_TO_APP_IGR_IN0  = 'h64c00,
+    PROBE_TO_APP_IGR_IN1  = 'h64d00,
+    PROBE_TO_APP_EGR_IN0  = 'h64e00,
+    PROBE_TO_APP_EGR_IN1  = 'h64f00,
+    PROBE_TO_APP_EGR_OUT0 = 'h65000,
+    PROBE_TO_APP_EGR_OUT1 = 'h65100
 
     } cntr_addr_encoding_t;
 
@@ -56,6 +63,16 @@ endtask;
 
 task clear_egr_probe (input port_t out_if=0);
     case (out_if)
+        CMAC0: begin
+              env.probe_to_app_igr_in0_reg_blk_agent.write_probe_control ( 'h2 );
+              env.probe_to_app_egr_in0_reg_blk_agent.write_probe_control ( 'h2 );
+              env.probe_to_app_egr_out0_reg_blk_agent.write_probe_control( 'h2 );
+        end
+        CMAC1: begin
+              env.probe_to_app_igr_in1_reg_blk_agent.write_probe_control ( 'h2 );
+              env.probe_to_app_egr_in1_reg_blk_agent.write_probe_control ( 'h2 );
+              env.probe_to_app_egr_out1_reg_blk_agent.write_probe_control( 'h2 );
+        end
         PF0:          env.probe_to_pf0_reg_blk_agent.write_probe_control ( 'h2 );
         PF1:          env.probe_to_pf1_reg_blk_agent.write_probe_control ( 'h2 );
         PF0_VF0:  env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control ( 'h2 );
@@ -259,6 +276,16 @@ task automatic run_pkt_test (
             endcase
 
             case (out_if)
+                CMAC0:     if (in_if == CMAC0) begin
+                                 check_probe (PROBE_TO_APP_IGR_IN0,  rx_pkt_cnt, rx_byte_cnt);
+                                 check_probe (PROBE_TO_APP_EGR_IN0,  rx_pkt_cnt, rx_byte_cnt);
+                                 check_probe (PROBE_TO_APP_EGR_OUT0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
+                           end
+                CMAC1:     if (in_if == CMAC1) begin
+                                 check_probe (PROBE_TO_APP_IGR_IN1,  rx_pkt_cnt, rx_byte_cnt);
+                                 check_probe (PROBE_TO_APP_EGR_IN1,  rx_pkt_cnt, rx_byte_cnt);
+                                 check_probe (PROBE_TO_APP_EGR_OUT1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
+                           end
                 PF0:       begin check_probe (PROBE_TO_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
                 PF1:       begin check_probe (PROBE_TO_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
                 PF0_VF0:   begin check_probe (PROBE_TO_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
