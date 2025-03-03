@@ -35,6 +35,7 @@ module proxy_test
     // ----------------------------------------------------------------
     //  Register map block and decoder instantiations
     // ----------------------------------------------------------------
+    axi4l_intf __axil_if ();
     axi4l_intf axil_to_proxy_test ();
     axi4l_intf axil_to_reg_proxy ();
     axi4l_intf axil_to_mem_proxy_4b ();
@@ -46,9 +47,14 @@ module proxy_test
 
     proxy_test_reg_intf  proxy_test_regs();
 
+    axi4l_pipe_slr  i_axi4l_pipe_slr (
+        .axi4l_if_from_controller ( axil_if ),
+        .axi4l_if_to_peripheral   ( __axil_if )
+    );
+
     // proxy_test register decoder
     proxy_test_decoder proxy_test_decoder (
-        .axil_if                     ( axil_if ),
+        .axil_if                     ( __axil_if ),
         .proxy_test_axil_if          ( axil_to_proxy_test ),
         .reg_proxy_axil_if           ( axil_to_reg_proxy ),
         .mem_proxy_4b_axil_if        ( axil_to_mem_proxy_4b ),
