@@ -237,10 +237,10 @@ module tb;
     assign m_axis_adpt_rx_322mhz_tready[1] = axis_c2h[1].tready;
 
     // axis_out tvalid monitors
-    always @(negedge axis_cmac_egr[0].tvalid) if (axis_cmac_egr[0].tready && !axis_cmac_egr[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge axis_cmac_egr[1].tvalid) if (axis_cmac_egr[1].tready && !axis_cmac_egr[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge      axis_c2h[0].tvalid) if (axis_c2h[0].tready && !axis_c2h[0].tlast)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge      axis_c2h[1].tvalid) if (axis_c2h[1].tready && !axis_c2h[1].tlast)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[0].tvalid) if (axis_cmac_egr[0].tready && !axis_cmac_egr[0].sop) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[1].tvalid) if (axis_cmac_egr[1].tready && !axis_cmac_egr[1].sop) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge      axis_c2h[0].tvalid) if (axis_c2h[0].tready && !axis_c2h[0].sop)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge      axis_c2h[1].tvalid) if (axis_c2h[1].tready && !axis_c2h[1].sop)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
 
     //===================================
     // Build

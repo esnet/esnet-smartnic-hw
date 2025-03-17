@@ -204,7 +204,7 @@ module smartnic_datapath_unit_test;
                // Reconfigure SMARTNIC_MUX_OUT_SEL (during 2nd packet).
                begin
                  count = 0;
-                 while (count < 2) @(negedge tb.DUT.axis_core_to_bypass[0].tlast or negedge tb.DUT.axis_core_to_bypass[1].tlast) count++;
+                 while (count < 2) @(posedge tb.DUT.axis_core_to_bypass[0].sop or posedge tb.DUT.axis_core_to_bypass[1].sop) count++;
                  smartnic_mux_out_sel = (smartnic_mux_out_sel == 2) ? 3 : 2;  // alternate directing traffic to bypass interface and igr_sw_drop.
                  enable_monitor = (smartnic_mux_out_sel == 2) ? 1 : 0;        // disable output monitor when traffic flows to DROP interface.
                  env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[igr_port], smartnic_mux_out_sel );
@@ -303,7 +303,7 @@ module smartnic_datapath_unit_test;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++)
-           exp_pkts[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
+           exp_pkts[i] = (pkt_len[i]==0) ? 0 : (FIFO_DEPTH + 31)/$ceil(pkt_len[i]/64.0)+1; // Include axi4s_pipe_auto
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
         switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);

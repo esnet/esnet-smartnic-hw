@@ -627,7 +627,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch0 (
         .axi3_if  ( axi_if[0] ),
-        .aclk     ( AXI_00_ACLK ),
         .aresetn  ( AXI_00_ARESET_N ),
         .awid     ( AXI_00_AWID ),
         .awaddr   ( AXI_00_AWADDR ),
@@ -676,6 +675,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_00_RREADY )
     );
 
+    assign AXI_00_ACLK = axi_if[0].aclk;
     assign AXI_00_WDATA_PARITY = '0;
   
     // Memory Channel 1
@@ -685,7 +685,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch1 (
         .axi3_if  ( axi_if[1] ),
-        .aclk     ( AXI_01_ACLK ),
         .aresetn  ( AXI_01_ARESET_N ),
         .awid     ( AXI_01_AWID ),
         .awaddr   ( AXI_01_AWADDR ),
@@ -734,6 +733,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_01_RREADY )
     );
 
+    assign AXI_01_ACLK = axi_if[1].aclk;
     assign AXI_01_WDATA_PARITY = '0;
  
     // Memory Channel 2
@@ -743,7 +743,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch2 (
         .axi3_if  ( axi_if[2] ),
-        .aclk     ( AXI_02_ACLK ),
         .aresetn  ( AXI_02_ARESET_N ),
         .awid     ( AXI_02_AWID ),
         .awaddr   ( AXI_02_AWADDR ),
@@ -792,6 +791,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_02_RREADY )
     );
 
+    assign AXI_02_ACLK = axi_if[2].aclk;
     assign AXI_02_WDATA_PARITY = '0;
  
     // Memory Channel 3
@@ -801,7 +801,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch3 (
         .axi3_if  ( axi_if[3] ),
-        .aclk     ( AXI_03_ACLK ),
         .aresetn  ( AXI_03_ARESET_N ),
         .awid     ( AXI_03_AWID ),
         .awaddr   ( AXI_03_AWADDR ),
@@ -850,6 +849,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_03_RREADY )
     );
 
+    assign AXI_03_ACLK = axi_if[3].aclk;
     assign AXI_03_WDATA_PARITY = '0;
 
     // Memory Channel 4
@@ -859,7 +859,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch4 (
         .axi3_if  ( axi_if[4] ),
-        .aclk     ( AXI_04_ACLK ),
         .aresetn  ( AXI_04_ARESET_N ),
         .awid     ( AXI_04_AWID ),
         .awaddr   ( AXI_04_AWADDR ),
@@ -908,6 +907,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_04_RREADY )
     );
 
+    assign AXI_04_ACLK = axi_if[4].aclk;
     assign AXI_04_WDATA_PARITY = '0;
  
     // Memory Channel 5
@@ -917,7 +917,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch5 (
         .axi3_if  ( axi_if[5] ),
-        .aclk     ( AXI_05_ACLK ),
         .aresetn  ( AXI_05_ARESET_N ),
         .awid     ( AXI_05_AWID ),
         .awaddr   ( AXI_05_AWADDR ),
@@ -966,6 +965,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_05_RREADY )
     );
 
+    assign AXI_05_ACLK = axi_if[5].aclk;
     assign AXI_05_WDATA_PARITY = '0;
 
     // Memory Channel 6
@@ -975,7 +975,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch6 (
         .axi3_if  ( axi_if[6] ),
-        .aclk     ( AXI_06_ACLK ),
         .aresetn  ( AXI_06_ARESET_N ),
         .awid     ( AXI_06_AWID ),
         .awaddr   ( AXI_06_AWADDR ),
@@ -1024,6 +1023,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_06_RREADY )
     );
 
+    assign AXI_06_ACLK = axi_if[6].aclk;
     assign AXI_06_WDATA_PARITY = '0;
  
     // Memory Channel 7
@@ -1033,7 +1033,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch7 (
         .axi3_if  ( axi_if[7] ),
-        .aclk     ( AXI_07_ACLK ),
         .aresetn  ( AXI_07_ARESET_N ),
         .awid     ( AXI_07_AWID ),
         .awaddr   ( AXI_07_AWADDR ),
@@ -1082,6 +1081,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_07_RREADY )
     );
 
+    assign AXI_07_ACLK = axi_if[7].aclk;
     assign AXI_07_WDATA_PARITY = '0;
  
     // Memory Channel 8
@@ -1091,7 +1091,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch8 (
         .axi3_if  ( axi_if[8] ),
-        .aclk     ( AXI_08_ACLK ),
         .aresetn  ( AXI_08_ARESET_N ),
         .awid     ( AXI_08_AWID ),
         .awaddr   ( AXI_08_AWADDR ),
@@ -1140,6 +1139,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_08_RREADY )
     );
 
+    assign AXI_08_ACLK = axi_if[8].aclk;
     assign AXI_08_WDATA_PARITY = '0;
  
     // Memory Channel 9
@@ -1149,7 +1149,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch9 (
         .axi3_if  ( axi_if[9] ),
-        .aclk     ( AXI_09_ACLK ),
         .aresetn  ( AXI_09_ARESET_N ),
         .awid     ( AXI_09_AWID ),
         .awaddr   ( AXI_09_AWADDR ),
@@ -1198,6 +1197,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_09_RREADY )
     );
 
+    assign AXI_09_ACLK = axi_if[9].aclk;
     assign AXI_09_WDATA_PARITY = '0;
 
     // Memory Channel 10
@@ -1207,7 +1207,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch10 (
         .axi3_if  ( axi_if[10] ),
-        .aclk     ( AXI_10_ACLK ),
         .aresetn  ( AXI_10_ARESET_N ),
         .awid     ( AXI_10_AWID ),
         .awaddr   ( AXI_10_AWADDR ),
@@ -1256,6 +1255,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_10_RREADY )
     );
 
+    assign AXI_10_ACLK = axi_if[10].aclk;
     assign AXI_10_WDATA_PARITY = '0;
 
     // Memory Channel 11
@@ -1265,7 +1265,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch11 (
         .axi3_if  ( axi_if[11] ),
-        .aclk     ( AXI_11_ACLK ),
         .aresetn  ( AXI_11_ARESET_N ),
         .awid     ( AXI_11_AWID ),
         .awaddr   ( AXI_11_AWADDR ),
@@ -1314,6 +1313,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_11_RREADY )
     );
 
+    assign AXI_11_ACLK = axi_if[11].aclk;
     assign AXI_11_WDATA_PARITY = '0;
 
     // Memory Channel 12
@@ -1323,7 +1323,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch12 (
         .axi3_if  ( axi_if[12] ),
-        .aclk     ( AXI_12_ACLK ),
         .aresetn  ( AXI_12_ARESET_N ),
         .awid     ( AXI_12_AWID ),
         .awaddr   ( AXI_12_AWADDR ),
@@ -1372,6 +1371,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_12_RREADY )
     );
 
+    assign AXI_12_ACLK = axi_if[12].aclk;
     assign AXI_12_WDATA_PARITY = '0;
 
     // Memory Channel 13
@@ -1381,7 +1381,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch13 (
         .axi3_if  ( axi_if[13] ),
-        .aclk     ( AXI_13_ACLK ),
         .aresetn  ( AXI_13_ARESET_N ),
         .awid     ( AXI_13_AWID ),
         .awaddr   ( AXI_13_AWADDR ),
@@ -1430,6 +1429,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_13_RREADY )
     );
 
+    assign AXI_13_ACLK = axi_if[13].aclk;
     assign AXI_13_WDATA_PARITY = '0;
 
     // Memory Channel 14
@@ -1439,7 +1439,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch14 (
         .axi3_if  ( axi_if[14] ),
-        .aclk     ( AXI_14_ACLK ),
         .aresetn  ( AXI_14_ARESET_N ),
         .awid     ( AXI_14_AWID ),
         .awaddr   ( AXI_14_AWADDR ),
@@ -1488,6 +1487,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_14_RREADY )
     );
 
+    assign AXI_14_ACLK = axi_if[14].aclk;
     assign AXI_14_WDATA_PARITY = '0;
 
     // Memory Channel 15
@@ -1497,7 +1497,6 @@ module xilinx_hbm_stack_if
         .ID_T          ( axi_id_t )
     ) i_axi3_intf_to_signals__ch15 (
         .axi3_if  ( axi_if[15] ),
-        .aclk     ( AXI_15_ACLK ),
         .aresetn  ( AXI_15_ARESET_N ),
         .awid     ( AXI_15_AWID ),
         .awaddr   ( AXI_15_AWADDR ),
@@ -1546,6 +1545,7 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_15_RREADY )
     );
 
+    assign AXI_15_ACLK = axi_if[15].aclk;
     assign AXI_15_WDATA_PARITY = '0;
 
 endmodule : xilinx_hbm_stack_if
