@@ -31,3 +31,8 @@ interfaces:
     address: 0x0c00
     width: 10
     name: axi4s_split_join_0
+
+  - decoder: *axi4s_split_join_decoder
+    address: 0x1000
+    width: 10
+    name: axi4s_split_join_1

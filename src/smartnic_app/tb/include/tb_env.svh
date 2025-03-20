@@ -80,6 +80,11 @@ class tb_env extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_app_egr_out0_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_app_egr_out1_reg_blk_agent;
 
+    axi4s_probe_reg_blk_agent #() probe_to_app_igr_p4_out0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_igr_p4_out1_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_p4_in0_reg_blk_agent;
+    axi4s_probe_reg_blk_agent #() probe_to_app_egr_p4_in1_reg_blk_agent;
+
     // Timestamp
     virtual timestamp_if #() timestamp_vif;
 
@@ -112,29 +117,33 @@ class tb_env extends std_verif_pkg::base;
 
         app_reg_agent          = new("axi4l_reg_agent");
         reg_agent              = new("axi4l_reg_agent");
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h63000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h64000);
         ts_agent               = new;
 
-        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h64000);
-        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h64100);
-        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h64200);
-        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h64300);
-        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h64400);
-        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h64500);
+        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h65000);
+        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h65100);
+        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h65200);
+        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h65300);
+        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h65400);
+        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h65500);
 
-        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h64600);
-        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h64700);
-        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h64800);
-        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h64900);
-        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h64a00);
-        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h64b00);
+        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h65600);
+        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h65700);
+        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h65800);
+        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h65900);
+        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h65a00);
+        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h65b00);
 
-        probe_to_app_igr_in0_reg_blk_agent  = new("probe_to_app_igr_in0_reg_blk",  'h64c00);
-        probe_to_app_igr_in1_reg_blk_agent  = new("probe_to_app_igr_in1_reg_blk",  'h64d00);
-        probe_to_app_egr_in0_reg_blk_agent  = new("probe_to_app_egr_in0_reg_blk",  'h64e00);
-        probe_to_app_egr_in1_reg_blk_agent  = new("probe_to_app_egr_in1_reg_blk",  'h64f00);
-        probe_to_app_egr_out0_reg_blk_agent = new("probe_to_app_egr_out0_reg_blk", 'h65000);
-        probe_to_app_egr_out1_reg_blk_agent = new("probe_to_app_egr_out1_reg_blk", 'h65100);
+        probe_to_app_igr_in0_reg_blk_agent  = new("probe_to_app_igr_in0_reg_blk",  'h65c00);
+        probe_to_app_igr_in1_reg_blk_agent  = new("probe_to_app_igr_in1_reg_blk",  'h65d00);
+        probe_to_app_egr_in0_reg_blk_agent  = new("probe_to_app_egr_in0_reg_blk",  'h65e00);
+        probe_to_app_egr_in1_reg_blk_agent  = new("probe_to_app_egr_in1_reg_blk",  'h65f00);
+        probe_to_app_egr_out0_reg_blk_agent = new("probe_to_app_egr_out0_reg_blk", 'h66000);
+        probe_to_app_egr_out1_reg_blk_agent = new("probe_to_app_egr_out1_reg_blk", 'h66100);
+        probe_to_app_igr_p4_out0_reg_blk_agent = new("probe_to_app_igr_p4_out0_reg_blk", 'h66200);
+        probe_to_app_igr_p4_out1_reg_blk_agent = new("probe_to_app_igr_p4_out1_reg_blk", 'h66300);
+        probe_to_app_egr_p4_in0_reg_blk_agent  = new("probe_to_app_egr_p4_in0_reg_blk",  'h66400);
+        probe_to_app_egr_p4_in1_reg_blk_agent  = new("probe_to_app_egr_p4_in1_reg_blk",  'h66500);
     endfunction
 
     // Destructor
@@ -186,6 +195,10 @@ class tb_env extends std_verif_pkg::base;
         probe_to_app_egr_in1_reg_blk_agent.reg_agent  = reg_agent;
         probe_to_app_egr_out0_reg_blk_agent.reg_agent = reg_agent;
         probe_to_app_egr_out1_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_app_igr_p4_out0_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_app_igr_p4_out1_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_app_egr_p4_in0_reg_blk_agent.reg_agent = reg_agent;
+        probe_to_app_egr_p4_in1_reg_blk_agent.reg_agent = reg_agent;
     endfunction
 
     task reset();

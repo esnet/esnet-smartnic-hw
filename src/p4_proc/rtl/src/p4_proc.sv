@@ -50,11 +50,10 @@ module p4_proc
         .p4_proc_axil_if  (axil_to_p4_proc),
         .drops_from_proc_port_0_axil_if (axil_to_drops[0]),
         .drops_from_proc_port_1_axil_if (axil_to_drops[1]),
-        .axi4s_split_join_0_axil_if     (axil_to_split_join[0])
+        .axi4s_split_join_0_axil_if     (axil_to_split_join[0]),
+        .axi4s_split_join_1_axil_if     (axil_to_split_join[1])
     );
 
-    axi4l_intf_controller_term axi4l_to_split_join_1_term (.axi4l_if(axil_to_split_join[1]));
-   
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
         .axi4l_if_from_controller   (axil_to_p4_proc),
