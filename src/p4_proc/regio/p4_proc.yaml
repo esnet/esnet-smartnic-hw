@@ -18,13 +18,30 @@ regs:
         desc: configures header slice size (in bytes) for split-join logic.  set to 0 to disable split-join logic.
         width: 16
         init: 0x0
-      - name: drop_pkt_loop
-        desc: set to 1 to enable dropping egress packets that have axi4s tdest==tid (egress_port==ingress_port).
-              enables drop logic on 'APP_0' and 'APP_BYPASS'.  drops on 'APP_1' to be implemented in future.
+
+  - name: p4_bypass_config
+    access: rw
+    fields:
+      - name: p4_bypass_egr_port_num_0
+        desc: configures egress port number used for port0 when 'p4_bypass' is enabled.  0-PORT0, 1-PORT1.
         width: 1
-        init : 0
-      - name: p4_bypass
-        desc: set to 1 to enable bypassing the vitisnetp4 block (which steers packets around/past the p4 processor).
+        init: 0x0
+      - name: p4_bypass_egr_port_type_0
+        desc: configures egress port type used for port0 when 'p4_bypass' is enabled.
+              0-PHY, 1-PF, 2-VF, 3-APP, 4-rsvd, 5-rsvd, 6-rsvd, 7-UNSET
+        width: 3
+        init: 0x0
+      - name: p4_bypass_egr_port_num_1
+        desc: configures egress port number used for port1 when 'p4_bypass' is enabled.  0-PORT0, 1-PORT1.
+        width: 1
+        init: 0x1
+      - name: p4_bypass_egr_port_type_1
+        desc: configures egress port type used for port1 when 'p4_bypass' is enabled.
+              0-PHY, 1-PF, 2-VF, 3-APP, 4-rsvd, 5-rsvd, 6-rsvd, 7-UNSET
+        width: 3
+        init: 0x0
+      - name: p4_bypass_enable
+        desc: set to 1 to bypass the vitisnetp4 block (steers packets around/past the p4 processor).
         width: 1
         init : 0
 
