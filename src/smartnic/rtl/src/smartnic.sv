@@ -150,7 +150,6 @@ module smartnic
 
    axi4l_intf   axil_to_probe_to_bypass [NUM_CMAC] ();
    axi4l_intf   axil_to_drops_to_bypass [NUM_CMAC] ();
-   axi4l_intf   axil_to_drops_from_bypass [NUM_CMAC] ();
 
    axi4l_intf   axil_from_vf2           [NUM_CMAC] ();
    axi4l_intf   axil_to_vf2             [NUM_CMAC] ();
@@ -251,10 +250,8 @@ module smartnic
       .axil_if                         (axil_to_bypass),
       .probe_to_bypass_0_axil_if       (axil_to_probe_to_bypass[0]),
       .drops_to_bypass_0_axil_if       (axil_to_drops_to_bypass[0]),
-      .drops_from_bypass_0_axil_if     (axil_to_drops_from_bypass[0]),
       .probe_to_bypass_1_axil_if       (axil_to_probe_to_bypass[1]),
-      .drops_to_bypass_1_axil_if       (axil_to_drops_to_bypass[1]),
-      .drops_from_bypass_1_axil_if     (axil_to_drops_from_bypass[1])
+      .drops_to_bypass_1_axil_if       (axil_to_drops_to_bypass[1])
    );
 
    // AXI-L interface synchronizer
@@ -714,7 +711,6 @@ module smartnic
        .axis_bypass_to_core       (axis_bypass_to_core),
        .axil_to_drops_to_bypass   (axil_to_drops_to_bypass),
        .axil_to_probe_to_bypass   (axil_to_probe_to_bypass),
-       .axil_to_drops_from_bypass (axil_to_drops_from_bypass),
        .smartnic_regs             (smartnic_regs)
    );
 
