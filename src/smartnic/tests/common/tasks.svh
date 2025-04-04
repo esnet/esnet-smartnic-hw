@@ -276,21 +276,19 @@ task check_stream_probes ( input port_t       in_port, out_port,
     logic [63:0] exp_tot_pkts, exp_tot_bytes;
 
     // establish base addr for ingress probe
-    case (in_port)
-           CMAC0   : in_port_base_addr = PROBE_FROM_CMAC0;
-           CMAC1   : in_port_base_addr = PROBE_FROM_CMAC1;
-           PF0_VF2 : in_port_base_addr = PROBE_FROM_PF0;
-           PF1_VF2 : in_port_base_addr = PROBE_FROM_PF1;
-           default : in_port_base_addr = 'hxxxx;
+    case (in_port.encoded.typ)
+           PHY: if (in_port.encoded.num == P0)     in_port_base_addr = PROBE_FROM_CMAC0;
+                else                               in_port_base_addr = PROBE_FROM_CMAC1;
+           default: if (in_port.encoded.num == P0) in_port_base_addr = PROBE_FROM_PF0;
+                else                               in_port_base_addr = PROBE_FROM_PF1;
     endcase
 
     // establish base addr for egress probe
-    case (out_port)
-           CMAC0   : out_port_base_addr = PROBE_TO_CMAC0;
-           CMAC1   : out_port_base_addr = PROBE_TO_CMAC1;
-           PF0_VF2 : out_port_base_addr = PROBE_TO_PF0;
-           PF1_VF2 : out_port_base_addr = PROBE_TO_PF1;
-           default : out_port_base_addr = 'hxxxx;
+    case (out_port.encoded.typ)
+           PHY: if (out_port.encoded.num == P0)     out_port_base_addr = PROBE_TO_CMAC0;
+                else                                out_port_base_addr = PROBE_TO_CMAC1;
+           default: if (out_port.encoded.num == P0) out_port_base_addr = PROBE_TO_PF0;
+                else                                out_port_base_addr = PROBE_TO_PF1;
     endcase
 
     // establish pkt and byte totals       
@@ -308,7 +306,7 @@ task check_stream_probes ( input port_t       in_port, out_port,
 
 
     // check ingress and egress ovfl counts
-    if ( (in_port != PF0_VF2) && (in_port != PF1_VF2) ) begin  // no ovfl counters for these ingress ports.
+    if (in_port.encoded.typ == PHY) begin  // no ovfl counters for HOST ingress ports.
        in_port_base_addr = in_port_base_addr + 'h100;
        if (ovfl_mode==1)
           check_probe (.base_addr(in_port_base_addr), .exp_pkt_cnt(exp_ovfl_pkts), .exp_byte_cnt(exp_ovfl_bytes));
@@ -345,10 +343,10 @@ task check_and_clear_err_probes ( input port_t in_port, input logic [63:0] exp_e
     cntr_addr_t in_port_err_addr;
 
     // establish addr for ingress err counts
-    case (in_port)
-       CMAC0 : in_port_err_addr = DROPS_ERR_FROM_CMAC0;
-       CMAC1 : in_port_err_addr = DROPS_ERR_FROM_CMAC1;
-       default    : in_port_err_addr = 'hxxxx;
+    case (in_port.encoded.typ)
+       PHY: if (in_port.encoded.num == P0) in_port_err_addr = DROPS_ERR_FROM_CMAC0;
+            else                           in_port_err_addr = DROPS_ERR_FROM_CMAC1;
+       default: in_port_err_addr = 'hxxxx;
     endcase
 
     check_probe (.base_addr(in_port_err_addr), .exp_pkt_cnt(exp_err_pkts), .exp_byte_cnt(exp_err_bytes));

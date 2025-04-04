@@ -227,7 +227,7 @@ module p4_proc
 
         // unset drop logic (packets with UNSET codepoint).
         assign unset_drop[i] = axis_to_unset_drop[i].tvalid && axis_to_unset_drop[i].sop &&
-                               axis_to_unset_drop[i].tdest == LOOPBACK;
+                               axis_to_unset_drop[i].tdest.encoded.typ == UNSET;
 
         // unset drop instantiation.
         axi4s_drop axi4s_unset_drop_inst (
@@ -432,7 +432,7 @@ module p4_proc
         user_metadata_to_vitisnetp4.timestamp_ns      =      axis_to_vitisnetp4_tuser.timestamp;
         user_metadata_to_vitisnetp4.pid               = {'0, axis_to_vitisnetp4_tuser.pid[9:0]};
         user_metadata_to_vitisnetp4.ingress_port      =      axis_to_vitisnetp4.tid;
-        user_metadata_to_vitisnetp4.egress_port       =      axis_to_vitisnetp4.tdest[1:0];  // egress_port is 2b.
+        user_metadata_to_vitisnetp4.egress_port       =      axis_to_vitisnetp4.tdest;
         user_metadata_to_vitisnetp4.truncate_enable   =      axis_to_vitisnetp4_tuser.trunc_enable;
         user_metadata_to_vitisnetp4.truncate_length   =      axis_to_vitisnetp4_tuser.trunc_length;
         user_metadata_to_vitisnetp4.rss_enable        =      axis_to_vitisnetp4_tuser.rss_enable;
@@ -449,11 +449,20 @@ module p4_proc
             user_metadata_from_vitisnetp4_latch <= user_metadata_from_vitisnetp4;
 
     always_comb begin
-        case (user_metadata_from_vitisnetp4.egress_port)
-            2'h0: axis_from_vitisnetp4_tdest = CMAC0;
-            2'h1: axis_from_vitisnetp4_tdest = CMAC1;
-            2'h2: axis_from_vitisnetp4_tdest = PF0;
-            2'h3: axis_from_vitisnetp4_tdest = LOOPBACK;
+        case (user_metadata_from_vitisnetp4.egress_port[0])
+            1'b0: axis_from_vitisnetp4_tdest.encoded.num = P0;
+            1'b1: axis_from_vitisnetp4_tdest.encoded.num = P1;
+        endcase
+
+        case (user_metadata_from_vitisnetp4.egress_port[3:1])
+            3'h0: axis_from_vitisnetp4_tdest.encoded.typ = PHY;
+            3'h1: axis_from_vitisnetp4_tdest.encoded.typ = PF;
+            3'h2: axis_from_vitisnetp4_tdest.encoded.typ = VF0;
+            3'h3: axis_from_vitisnetp4_tdest.encoded.typ = APP_IGR;
+            3'h4: axis_from_vitisnetp4_tdest.encoded.typ = VF2; // reserved for testing.
+            3'h5: axis_from_vitisnetp4_tdest.encoded.typ = UNSET;
+            3'h6: axis_from_vitisnetp4_tdest.encoded.typ = UNSET;
+            3'h7: axis_from_vitisnetp4_tdest.encoded.typ = UNSET;
         endcase
     end
 

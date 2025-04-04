@@ -153,27 +153,27 @@ class tb_env extends std_verif_pkg::base;
     endfunction
 
     function void connect();
-        axis_in_driver[0].axis_vif        = axis_in_vif[0];
-        axis_in_driver[1].axis_vif        = axis_in_vif[1];
-        axis_h2c_driver[PF][0].axis_vif   = axis_h2c_vif[PF][0];
-        axis_h2c_driver[PF][1].axis_vif   = axis_h2c_vif[PF][1];
-        axis_h2c_driver[VF0][0].axis_vif  = axis_h2c_vif[VF0][0];
-        axis_h2c_driver[VF0][1].axis_vif  = axis_h2c_vif[VF0][1];
-        axis_h2c_driver[VF1][0].axis_vif  = axis_h2c_vif[VF1][0];
-        axis_h2c_driver[VF1][1].axis_vif  = axis_h2c_vif[VF1][1];
+        axis_in_driver[0].axis_vif      = axis_in_vif[0];
+        axis_in_driver[1].axis_vif      = axis_in_vif[1];
+        axis_h2c_driver[0][0].axis_vif  = axis_h2c_vif[0][0];
+        axis_h2c_driver[0][1].axis_vif  = axis_h2c_vif[0][1];
+        axis_h2c_driver[1][0].axis_vif  = axis_h2c_vif[1][0];
+        axis_h2c_driver[1][1].axis_vif  = axis_h2c_vif[1][1];
+        axis_h2c_driver[2][0].axis_vif  = axis_h2c_vif[2][0];
+        axis_h2c_driver[2][1].axis_vif  = axis_h2c_vif[2][1];
 
-        axis_out_monitor[0].axis_vif      = axis_out_vif[0];
-        axis_out_monitor[1].axis_vif      = axis_out_vif[1];
-        axis_c2h_monitor[PF][0].axis_vif  = axis_c2h_vif[PF][0];
-        axis_c2h_monitor[PF][1].axis_vif  = axis_c2h_vif[PF][1];
-        axis_c2h_monitor[VF0][0].axis_vif = axis_c2h_vif[VF0][0];
-        axis_c2h_monitor[VF0][1].axis_vif = axis_c2h_vif[VF0][1];
-        axis_c2h_monitor[VF1][0].axis_vif = axis_c2h_vif[VF1][0];
-        axis_c2h_monitor[VF1][1].axis_vif = axis_c2h_vif[VF1][1];
+        axis_out_monitor[0].axis_vif    = axis_out_vif[0];
+        axis_out_monitor[1].axis_vif    = axis_out_vif[1];
+        axis_c2h_monitor[0][0].axis_vif = axis_c2h_vif[0][0];
+        axis_c2h_monitor[0][1].axis_vif = axis_c2h_vif[0][1];
+        axis_c2h_monitor[1][0].axis_vif = axis_c2h_vif[1][0];
+        axis_c2h_monitor[1][1].axis_vif = axis_c2h_vif[1][1];
+        axis_c2h_monitor[2][0].axis_vif = axis_c2h_vif[2][0];
+        axis_c2h_monitor[2][1].axis_vif = axis_c2h_vif[2][1];
 
-        ts_agent.timestamp_vif            = timestamp_vif;
-        app_reg_agent.axil_vif            = app_axil_vif;
-        reg_agent.axil_vif                = axil_vif;
+        ts_agent.timestamp_vif          = timestamp_vif;
+        app_reg_agent.axil_vif          = app_axil_vif;
+        reg_agent.axil_vif              = axil_vif;
 
         probe_from_pf0_reg_blk_agent.reg_agent     = reg_agent;
         probe_from_pf1_reg_blk_agent.reg_agent     = reg_agent;
@@ -207,21 +207,21 @@ class tb_env extends std_verif_pkg::base;
 
         axis_in_driver[0].idle();
         axis_in_driver[1].idle();
-        axis_h2c_driver[PF][0].idle();
-        axis_h2c_driver[PF][1].idle();
-        axis_h2c_driver[VF0][0].idle();
-        axis_h2c_driver[VF0][1].idle();
-        axis_h2c_driver[VF1][0].idle();
-        axis_h2c_driver[VF1][1].idle();
+        axis_h2c_driver[0][0].idle();
+        axis_h2c_driver[0][1].idle();
+        axis_h2c_driver[1][0].idle();
+        axis_h2c_driver[1][1].idle();
+        axis_h2c_driver[2][0].idle();
+        axis_h2c_driver[2][1].idle();
 
         axis_out_monitor[0].idle();
         axis_out_monitor[1].idle();
-        axis_c2h_monitor[PF][0].idle();
-        axis_c2h_monitor[PF][1].idle();
-        axis_c2h_monitor[VF0][0].idle();
-        axis_c2h_monitor[VF0][1].idle();
-        axis_c2h_monitor[VF1][0].idle();
-        axis_c2h_monitor[VF1][1].idle();
+        axis_c2h_monitor[0][0].idle();
+        axis_c2h_monitor[0][1].idle();
+        axis_c2h_monitor[1][0].idle();
+        axis_c2h_monitor[1][1].idle();
+        axis_c2h_monitor[2][0].idle();
+        axis_c2h_monitor[2][1].idle();
 
         reset_vif.pulse(8);
         mgmt_reset_vif.pulse(8);

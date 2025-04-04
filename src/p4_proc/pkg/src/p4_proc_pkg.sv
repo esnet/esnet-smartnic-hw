@@ -12,7 +12,7 @@ package p4_proc_pkg;
         logic [63:0] timestamp_ns;
         logic [15:0] pid;
         logic [3:0] ingress_port;
-        logic [1:0] egress_port;
+        logic [3:0] egress_port;
         logic truncate_enable;
         logic [15:0] truncate_length;
         logic rss_enable;

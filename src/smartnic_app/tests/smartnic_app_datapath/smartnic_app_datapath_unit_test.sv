@@ -30,6 +30,8 @@ module smartnic_app_datapath_unit_test;
 
     smartnic_app_igr_demux_reg_verif_pkg::smartnic_app_igr_reg_blk_agent #() smartnic_app_igr_reg_blk_agent;
 
+    port_t in_if=0, out_if=0;
+
     //===================================
     // Import common testcase tasks
     //=================================== 
@@ -82,6 +84,9 @@ module smartnic_app_datapath_unit_test;
                 env.axis_c2h_monitor[j][i].idle();
             end
         end
+
+         in_if.encoded.num = P0;  in_if.encoded.typ = PHY;
+        out_if.encoded.num = P0; out_if.encoded.typ = PHY;
     endtask
 
 
@@ -135,64 +140,83 @@ module smartnic_app_datapath_unit_test;
 
     `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
-
     `SVTEST(test_cmac_ifs)
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing CMAC%0b igr and egr interfaces...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(CMAC0+i), .write_p4_tables(1));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(1));
             check_cleared_probes;
         end
     `SVTEST_END
 
 
     `SVTEST(test_pf_ifs)
+        in_if.encoded.typ = PF;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b igr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0+i), .out_if(CMAC0+i), .write_p4_tables(0));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
             check_cleared_probes;
         end
 
         // enable override mux. select PF egr path.
         env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
 
+        in_if.encoded.typ  = PHY;
+        out_if.encoded.typ = PF;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b egr interface (override mux control)...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(PF0+i), .write_p4_tables(0));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
             check_cleared_probes;
         end
     `SVTEST_END
 
 
     `SVTEST(test_vf0_ifs)
+        in_if.encoded.typ = VF0;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF0 igr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0_VF0+i), .out_if(CMAC0+i), .write_p4_tables(0));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
             check_cleared_probes;
         end
 
+        // enable demux to select VF0 egr path.
         smartnic_app_igr_reg_blk_agent.write_app_igr_config(1'b1);
 
+        in_if.encoded.typ  = PHY;
+        out_if.encoded.typ = VF0;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF0 egr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(CMAC0+i), .out_if(PF0_VF0+i), .write_p4_tables(0));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
             check_cleared_probes;
         end
     `SVTEST_END
 
 
     `SVTEST(test_vf1_ifs)
+        in_if.encoded.typ  = VF1;
+        out_if.encoded.typ = VF1;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b VF1 igr and egr interfaces...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(PF0_VF1+i), .out_if(PF0_VF1+i), .write_p4_tables(0));
+            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
             check_cleared_probes;
         end
     `SVTEST_END
 
 
     `SVTEST(test_to_pf_ifs_from_p4)
+        out_if.encoded.typ = PF;
         for (int i=0; i<2; i++) begin
             debug_msg($sformatf("Testing PF%0b egr interface (p4 control)...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p2"), .in_if(CMAC0+i), .out_if(PF0+i), .dest_port(PF0), .write_p4_tables(1));
+            run_pkt_test(.testdir("test-fwd-p2"), .in_if(in_if+i), .out_if(out_if+i), .dest_port(2), .write_p4_tables(1));
+            check_cleared_probes;
+        end
+    `SVTEST_END
+
+
+    `SVTEST(test_to_vf0_ifs_from_p4)
+        out_if.encoded.typ = VF0;
+        for (int i=0; i<2; i++) begin
+            debug_msg($sformatf("Testing PF%0b VF0 egr interface (p4 control)...", i), 1);
+            run_pkt_test(.testdir("test-fwd-p4"), .in_if(in_if+i), .out_if(out_if+i), .dest_port(4), .write_p4_tables(1));
             check_cleared_probes;
         end
     `SVTEST_END

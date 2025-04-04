@@ -70,10 +70,10 @@ class smartnic_env extends std_verif_pkg::basic_env;
         for (int i=0; i < 4; i++) driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)), .BIGENDIAN(1'b1));
         for (int i=0; i < 4; i++) monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(1'b1));
 
-        model[0] = new(.name("model[0]"), .dest_if(CMAC0));
-        model[1] = new(.name("model[1]"), .dest_if(CMAC1));
-        model[2] = new(.name("model[2]"), .dest_if(PF0));
-        model[3] = new(.name("model[3]"), .dest_if(PF1));
+        model[0] = new(.name("model[0]"), .dest_if(0)); // PHY0
+        model[1] = new(.name("model[1]"), .dest_if(1)); // PHY1
+        model[2] = new(.name("model[2]"), .dest_if(2)); // PF0
+        model[3] = new(.name("model[3]"), .dest_if(3)); // PF1
 
         //for (int i=0; i < 4; i++) scoreboard[i] = new();
         scoreboard0 = new("scoreboard[0]");
@@ -161,40 +161,36 @@ class smartnic_env extends std_verif_pkg::basic_env;
             forever begin
                 inbox[0].get(transaction[0]);
                 __drv_inbox[0].put(transaction[0]);
-                case (transaction[0].get_tdest())
-                    CMAC0:  dest_if[0]=0;  PF0_VF2: dest_if[0]=2;  PF0_VF1: dest_if[0]=2;  PF0_VF0: dest_if[0]=2;  PF0: dest_if[0]=2;
-                    CMAC1:  dest_if[0]=1;  PF1_VF2: dest_if[0]=3;  PF1_VF1: dest_if[0]=3;  PF1_VF0: dest_if[0]=3;  PF1: dest_if[0]=3;
-                    default dest_if[0]=0;
+                case (transaction[0].get_tdest().encoded.typ)
+                    PHY:    dest_if[0] = (transaction[0].get_tdest().encoded.num == P0) ? 0 : 1;
+                    default dest_if[0] = (transaction[0].get_tdest().encoded.num == P0) ? 2 : 3;
                 endcase
                 __model_inbox[dest_if[0]].put(transaction[0]);
             end
             forever begin
                 inbox[1].get(transaction[1]);
                 __drv_inbox[1].put(transaction[1]);
-                case (transaction[1].get_tdest())
-                    CMAC0:  dest_if[1]=0;  PF0_VF2: dest_if[1]=2;  PF0_VF1: dest_if[1]=2;  PF0_VF0: dest_if[1]=2;  PF0: dest_if[1]=2;
-                    CMAC1:  dest_if[1]=1;  PF1_VF2: dest_if[1]=3;  PF1_VF1: dest_if[1]=3;  PF1_VF0: dest_if[1]=3;  PF1: dest_if[1]=3;
-                    default dest_if[1]=0;
+                case (transaction[1].get_tdest().encoded.typ)
+                    PHY:    dest_if[1] = (transaction[1].get_tdest().encoded.num == P0) ? 0 : 1;
+                    default dest_if[1] = (transaction[1].get_tdest().encoded.num == P0) ? 2 : 3;
                 endcase
                 __model_inbox[dest_if[1]].put(transaction[1]);
             end
             forever begin
                 inbox[2].get(transaction[2]);
                 __drv_inbox[2].put(transaction[2]);
-                case (transaction[2].get_tdest())
-                    CMAC0:  dest_if[2]=0;  PF0_VF2: dest_if[2]=2;  PF0_VF1: dest_if[2]=2;  PF0_VF0: dest_if[2]=2;  PF0: dest_if[2]=2;
-                    CMAC1:  dest_if[2]=1;  PF1_VF2: dest_if[2]=3;  PF1_VF1: dest_if[2]=3;  PF1_VF0: dest_if[2]=3;  PF1: dest_if[2]=3;
-                    default dest_if[2]=0;
+                case (transaction[2].get_tdest().encoded.typ)
+                    PHY:    dest_if[2] = (transaction[2].get_tdest().encoded.num == P0) ? 0 : 1;
+                    default dest_if[2] = (transaction[2].get_tdest().encoded.num == P0) ? 2 : 3;
                 endcase
                 __model_inbox[dest_if[2]].put(transaction[2]);
             end
             forever begin
                 inbox[3].get(transaction[3]);
                 __drv_inbox[3].put(transaction[3]);
-                case (transaction[3].get_tdest())
-                    CMAC0:  dest_if[3]=0;  PF0_VF2: dest_if[3]=2;  PF0_VF1: dest_if[3]=2;  PF0_VF0: dest_if[3]=2;  PF0: dest_if[3]=2;
-                    CMAC1:  dest_if[3]=1;  PF1_VF2: dest_if[3]=3;  PF1_VF1: dest_if[3]=3;  PF1_VF0: dest_if[3]=3;  PF1: dest_if[3]=3;
-                    default dest_if[3]=0;
+                case (transaction[3].get_tdest().encoded.typ)
+                    PHY:    dest_if[3] = (transaction[3].get_tdest().encoded.num == P0) ? 0 : 1;
+                    default dest_if[3] = (transaction[3].get_tdest().encoded.num == P0) ? 2 : 3;
                 endcase
                 __model_inbox[dest_if[3]].put(transaction[3]);
             end
@@ -211,7 +207,7 @@ class smartnic_model extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_ti
                                                    axi4s_transaction#(       port_t, port_t, tuser_smartnic_meta_t));
     port_t dest_if;
 
-    function new(string name="smartnic_model", port_t dest_if=CMAC0);
+    function new(string name="smartnic_model", port_t dest_if=0);
         super.new(name);
         this.dest_if = dest_if;
     endfunction
@@ -225,20 +221,21 @@ class smartnic_model extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_ti
         tid_out   = 'x; // egr tid is disconnected.
         tdest_out = 'x; // egr tdest is disconnected.
 
-        if ((dest_if==CMAC0) || (dest_if==CMAC1)) begin
+        if (dest_if.encoded.typ == PHY) begin
             tuser_out = 1'b0; // m_axis_adpt_rx_322mhz_tuser_err=0 for egr CMAC ifs.
         end else begin
             tuser_out = 'x;
             tuser_out.rss_enable = 1'b1;
-            case (transaction.get_tdest())
-                PF0:     tuser_out.rss_entropy = 12'd2048;  // set entropy=qid based on egr queue (hash2qid) config.
-                PF0_VF0: tuser_out.rss_entropy = 12'd2560;
-                PF0_VF1: tuser_out.rss_entropy = 12'd3072;
-                PF0_VF2: tuser_out.rss_entropy = 12'd3584;
-                PF1:     tuser_out.rss_entropy = 12'd0;
-                PF1_VF0: tuser_out.rss_entropy = 12'd512;
-                PF1_VF1: tuser_out.rss_entropy = 12'd1024;
-                PF1_VF2: tuser_out.rss_entropy = 12'd1536;
+            // set entropy=qid based on egr queue (hash2qid) config.
+            case (transaction.get_tdest().encoded.typ)
+                PF:  if (transaction.get_tdest().encoded.num == P0) tuser_out.rss_entropy = 12'd2048;
+                     else                                           tuser_out.rss_entropy = 12'd0;
+                VF0: if (transaction.get_tdest().encoded.num == P0) tuser_out.rss_entropy = 12'd2560;
+                     else                                           tuser_out.rss_entropy = 12'd512;
+                VF1: if (transaction.get_tdest().encoded.num == P0) tuser_out.rss_entropy = 12'd3072;
+                     else                                           tuser_out.rss_entropy = 12'd1024;
+                VF2: if (transaction.get_tdest().encoded.num == P0) tuser_out.rss_entropy = 12'd3584;
+                     else                                           tuser_out.rss_entropy = 12'd1536;
                 default  tuser_out.rss_entropy = 12'd0;
             endcase
         end
@@ -327,6 +324,9 @@ module smartnic_unit_test;
     always @(posedge axis_cmac_egr[1].aclk) if (axis_cmac_egr[1].tready && axis_cmac_egr[1].tvalid) $display ("Port1: Valid transaction!");
 */
 
+    port_t  tid, tdest;
+    string  msg;
+
     //===================================
     // Build
     //===================================
@@ -398,6 +398,10 @@ module smartnic_unit_test;
         smartnic_hash2qid_1_reg_blk_agent.write_q_config (1, 12'd512);
         smartnic_hash2qid_1_reg_blk_agent.write_q_config (2, 12'd1024);
         smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 12'd1536);
+
+        tid.encoded.num   = P0; tid.encoded.typ   = PHY;
+        tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+
     endtask
 
 
@@ -428,33 +432,47 @@ module smartnic_unit_test;
     //===================================
 
     // Create and send input transaction
-    task automatic one_packet(input int idx=0, len=64, input port_t tid=CMAC0, tdest=tid);
+    task automatic one_packet(input int idx=0, len=64, input port_t tid=0, tdest=tid);
         axi4s_transaction#(adpt_tx_tid_t, port_t, tuser_smartnic_meta_t)  transaction_in;
 
         transaction_in = new(.name($sformatf("trans_%0d_in", idx)), .len(len));
         transaction_in.randomize();
         transaction_in.set_tdest(tdest);
-        case (tid)
-            CMAC0:   begin  transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[0].put(transaction_in);  end
-            CMAC1:   begin  transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[1].put(transaction_in);  end
-            PF0:     begin  transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[2].put(transaction_in);  end
-            PF0_VF0: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd512);   env.inbox[2].put(transaction_in);  end
-            PF0_VF1: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd1024);  env.inbox[2].put(transaction_in);  end
-            PF0_VF2: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd1536);  env.inbox[2].put(transaction_in);  end
-            PF1:     begin  transaction_in.set_tid($urandom_range(0,511) + 16'd2048);  env.inbox[3].put(transaction_in);  end
-            PF1_VF0: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd2560);  env.inbox[3].put(transaction_in);  end
-            PF1_VF1: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd3072);  env.inbox[3].put(transaction_in);  end
-            PF1_VF2: begin  transaction_in.set_tid($urandom_range(0,511) + 16'd3584);  env.inbox[3].put(transaction_in);  end
+        case (tid.encoded.typ)
+            PHY: if (tid.encoded.num == P0) begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[0].put(transaction_in);
+                 end else begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[1].put(transaction_in);
+                 end
+            PF:  if (tid.encoded.num == P0) begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[2].put(transaction_in);
+                 end else begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd2048);  env.inbox[3].put(transaction_in);
+                 end
+            VF0: if (tid.encoded.num == P0) begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd512);   env.inbox[2].put(transaction_in);
+                 end else begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd2560);  env.inbox[3].put(transaction_in);
+                 end
+            VF1: if (tid.encoded.num == P0) begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd1024);  env.inbox[2].put(transaction_in);
+                 end else begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd3072);  env.inbox[3].put(transaction_in);
+                 end
+            VF2: if (tid.encoded.num == P0) begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd1536);  env.inbox[2].put(transaction_in);
+                 end else begin
+                     transaction_in.set_tid($urandom_range(0,511) + 16'd3584);  env.inbox[3].put(transaction_in);
+                 end
         endcase
     endtask
 
-    task automatic packet_stream(input int num=10, input port_t tid=CMAC0, tdest=tid);
+    task automatic packet_stream(input int num=10, input port_t tid=0, tdest=tid);
        for (int i = 0; i < num; i++) begin
            one_packet(.idx(i), .len($urandom_range(64, 1500)), .tid(tid), .tdest(tdest));
        end
     endtask
 
-    string msg;
 
     `SVUNIT_TESTS_BEGIN
 
@@ -462,7 +480,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(CMAC0_passthru_test)
-            packet_stream(.tid(CMAC0));
+            tid.encoded.num   = P0; tid.encoded.typ   = PHY;
+            tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(), 10);
             `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
@@ -473,7 +493,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(CMAC1_passthru_test)
-            packet_stream(.tid(CMAC1));
+            tid.encoded.num   = P1; tid.encoded.typ   = PHY;
+            tdest.encoded.num = P1; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), 10);
@@ -485,7 +507,9 @@ module smartnic_unit_test;
         `SVTEST(CMAC0_to_PF0_VF2_test)
             smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
-            packet_stream(.tid(CMAC0), .tdest(PF0_VF2));
+            tid.encoded.num   = P0; tid.encoded.typ   = PHY;
+            tdest.encoded.num = P0; tdest.encoded.typ = VF2;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard2.got_matched(), 10);
@@ -497,7 +521,9 @@ module smartnic_unit_test;
         `SVTEST(CMAC1_to_PF1_VF2_test)
             smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
-            packet_stream(.tid(CMAC1), .tdest(PF1_VF2));
+            tid.encoded.num   = P1; tid.encoded.typ   = PHY;
+            tdest.encoded.num = P1; tdest.encoded.typ = VF2;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard3.got_matched(), 10);
@@ -507,7 +533,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF0_VF2_to_CMAC0_test)
-            packet_stream(.tid(PF0_VF2), .tdest(CMAC0));
+            tid.encoded.num   = P0; tid.encoded.typ   = VF2;
+            tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(), 10);
@@ -517,7 +545,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF1_VF2_to_CMAC1_test)
-            packet_stream(.tid(PF1_VF2), .tdest(CMAC1));
+            tid.encoded.num   = P1; tid.encoded.typ   = VF2;
+            tdest.encoded.num = P1; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), 10);
@@ -529,7 +559,9 @@ module smartnic_unit_test;
         `SVTEST(PF0_VF2_passthru_test)
             smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
-            packet_stream(.tid(PF0_VF2));
+            tid.encoded.num   = P0; tid.encoded.typ   = VF2;
+            tdest.encoded.num = P0; tdest.encoded.typ = VF2;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us
             `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard2.got_matched(), 10);
@@ -541,7 +573,9 @@ module smartnic_unit_test;
         `SVTEST(PF1_VF2_passthru_test)
             smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);
 
-            packet_stream(.tid(PF1_VF2));
+            tid.encoded.num   = P1; tid.encoded.typ   = VF2;
+            tdest.encoded.num = P1; tdest.encoded.typ = VF2;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us
             `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard3.got_matched(), 10);
@@ -551,7 +585,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF0_VF1_loopback_test)
-            packet_stream(.tid(PF0_VF1));
+            tid.encoded.num   = P0; tid.encoded.typ   = VF1;
+            tdest.encoded.num = P0; tdest.encoded.typ = VF1;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard2.got_matched(), 10);
@@ -561,7 +597,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF1_VF1_loopback_test)
-            packet_stream(.tid(PF1_VF1));
+            tid.encoded.num   = P1; tid.encoded.typ   = VF1;
+            tdest.encoded.num = P1; tdest.encoded.typ = VF1;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard3.got_matched(), 10);
@@ -571,7 +609,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF0_VF0_to_CMAC0_test)
-            packet_stream(.tid(PF0_VF0), .tdest(CMAC0));
+            tid.encoded.num   = P0; tid.encoded.typ   = VF0;
+            tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(), 10);
@@ -581,7 +621,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF1_VF0_to_CMAC1_test)
-            packet_stream(.tid(PF1_VF0), .tdest(CMAC1));
+            tid.encoded.num   = P1; tid.encoded.typ   = VF0;
+            tdest.encoded.num = P1; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), 10);
@@ -591,7 +633,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF0_to_CMAC0_test)
-            packet_stream(.tid(PF0), .tdest(CMAC0));
+            tid.encoded.num   = P0; tid.encoded.typ   = PF;
+            tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(), 10);
@@ -601,7 +645,9 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(PF1_to_CMAC1_test)
-            packet_stream(.tid(PF1), .tdest(CMAC1));
+            tid.encoded.num   = P1; tid.encoded.typ   = PF;
+            tdest.encoded.num = P1; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), 10);
@@ -613,7 +659,9 @@ module smartnic_unit_test;
         `SVTEST(PF0_out_of_range_test)
             smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd0, 12'd0});
 
-            packet_stream(.tid(PF0), .tdest(CMAC0));
+            tid.encoded.num   = P0; tid.encoded.typ   = PF;
+            tdest.encoded.num = P0; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
@@ -624,7 +672,9 @@ module smartnic_unit_test;
         `SVTEST(PF1_out_of_range_test)
             smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd0, 12'd0});
 
-            packet_stream(.tid(PF1), .tdest(CMAC1));
+            tid.encoded.num   = P1; tid.encoded.typ   = PF;
+            tdest.encoded.num = P1; tdest.encoded.typ = PHY;
+            packet_stream(.tid(tid), .tdest(tdest));
             #2us;
             `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
             `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
@@ -633,30 +683,39 @@ module smartnic_unit_test;
         `SVTEST_END
 
         `SVTEST(random_in_test)
-            port_t   tid, tdest;
-            int      num, exp_cnt[4];
+            int num, exp_cnt[4];
 
             for (int i = 0; i < 4; i++) exp_cnt[i] = 0;
 
             for (int i = 0; i < 10; i++) begin
-                case ($urandom_range(0,9))
-                    0: tid=CMAC0;  1: tid=PF0_VF2;  2: tid=PF0_VF1;  3: tid=PF0_VF0;  4: tid=PF0;
-                    5: tid=CMAC1;  6: tid=PF1_VF2;  7: tid=PF1_VF1;  8: tid=PF1_VF0;  9: tid=PF1;
+                tid.raw[0] = $urandom_range(0,1);
+
+                case ($urandom_range(0,4))
+                    0: tid.encoded.typ=PHY;
+                    1: tid.encoded.typ=PF;
+                    2: tid.encoded.typ=VF0;
+                    3: tid.encoded.typ=VF1;
+                    4: tid.encoded.typ=VF2;
                 endcase
 
-                case (tid)
-                    CMAC0: tdest=CMAC0;  PF0_VF2: tdest=CMAC0;  PF0_VF1: tdest=PF0_VF1;  PF0_VF0: tdest=CMAC0;  PF0: tdest=CMAC0;
-                    CMAC1: tdest=CMAC1;  PF1_VF2: tdest=CMAC1;  PF1_VF1: tdest=PF1_VF1;  PF1_VF0: tdest=CMAC1;  PF1: tdest=CMAC1;
+                tdest.encoded.num = tid.encoded.num;
+
+                case (tid.encoded.typ)
+                    PHY: tdest.encoded.typ = PHY;
+                    PF:  tdest.encoded.typ = PHY;
+                    VF0: tdest.encoded.typ = PHY;
+                    VF1: tdest.encoded.typ = VF1;
+                    VF2: tdest.encoded.typ = PHY;
                 endcase
 
                 num = $urandom_range(1,5);
                 packet_stream(.num(num), .tid(tid), .tdest(tdest));
 
-                case (tdest)
-                    CMAC0:   exp_cnt[0] = exp_cnt[0] + num;
-                    CMAC1:   exp_cnt[1] = exp_cnt[1] + num;
-                    PF0_VF1: exp_cnt[2] = exp_cnt[2] + num;
-                    PF1_VF1: exp_cnt[3] = exp_cnt[3] + num;
+                case (tdest.encoded.typ)
+                    PHY: if (tdest.encoded.num == P0) exp_cnt[0] = exp_cnt[0] + num;
+                         else                         exp_cnt[1] = exp_cnt[1] + num;
+                    VF1: if (tdest.encoded.num == P0) exp_cnt[2] = exp_cnt[2] + num;
+                         else                         exp_cnt[3] = exp_cnt[3] + num;
                 endcase
 
                 #1us;

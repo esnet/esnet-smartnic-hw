@@ -2,8 +2,8 @@ module `VITISNETP4_EXTERN_NAME
     import smartnic_pkg::*;
 #(
     parameter type EXTERN_VALID_T = logic,
-    parameter type EXTERN_OUT_T = logic[1:0],
-    parameter type EXTERN_IN_T = logic[1:0]
+    parameter type EXTERN_OUT_T = logic[3:0],
+    parameter type EXTERN_IN_T = logic[3:0]
 ) (
     input   logic clk,
     input   logic rstn,
