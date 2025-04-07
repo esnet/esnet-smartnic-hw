@@ -145,11 +145,11 @@ module p4_proc_datapath_unit_test
     `SVTEST(test_fwd_p1)
         run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
     `SVTEST_END
-/*
+
     `SVTEST(test_fwd_p3)
         run_pkt_test ( .testdir("test-fwd-p3"), .init_timestamp('0), .dest_port(3) );
     `SVTEST_END
-*/
+
     `SVTEST(test_traffic_mux)
         repeat (2) begin
             // Toggle p4_bypass register.

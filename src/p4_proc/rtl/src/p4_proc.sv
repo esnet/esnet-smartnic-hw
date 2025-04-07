@@ -432,7 +432,7 @@ module p4_proc
         user_metadata_to_vitisnetp4.timestamp_ns      =      axis_to_vitisnetp4_tuser.timestamp;
         user_metadata_to_vitisnetp4.pid               = {'0, axis_to_vitisnetp4_tuser.pid[9:0]};
         user_metadata_to_vitisnetp4.ingress_port      =      axis_to_vitisnetp4.tid;
-        user_metadata_to_vitisnetp4.egress_port       =      axis_to_vitisnetp4.tdest;
+        user_metadata_to_vitisnetp4.egress_port       =      UNSET; // axis_to_vitisnetp4.tdest;
         user_metadata_to_vitisnetp4.truncate_enable   =      axis_to_vitisnetp4_tuser.trunc_enable;
         user_metadata_to_vitisnetp4.truncate_length   =      axis_to_vitisnetp4_tuser.trunc_length;
         user_metadata_to_vitisnetp4.rss_enable        =      axis_to_vitisnetp4_tuser.rss_enable;

@@ -72,6 +72,10 @@ control MatchActionImpl( inout headers hdr,
         sn_meta.egress_port = (bit<4>) (extern_out);
     }
     
+    action loopPacket() {
+        sn_meta.egress_port = sn_meta.ingress_port;
+    }
+
     action dropPacket() {
         smeta.drop = 1;
     }
@@ -79,11 +83,12 @@ control MatchActionImpl( inout headers hdr,
     table forward {
         key     = { hdr.ethernet.dstAddr : lpm; }
         actions = { forwardPacket; 
+                    loopPacket;
                     dropPacket;
                     NoAction; }
         size    = 128;
         num_masks = 8;
-        default_action = NoAction;
+        default_action = loopPacket;
     }
 
     apply {
