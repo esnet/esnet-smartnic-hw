@@ -293,49 +293,45 @@ module smartnic_250mhz #(
             axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_c2h_t)) axis_if__c2h ();
 
             // H2C register slices (bridge between SLRs)
-            axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
-            ) i_axi4s_pipe_slr__qdma_h2c (
-                .axi4s_if_from_tx ( axis_if__qdma_h2c[g_if] ),
-                .axi4s_if_to_rx   ( axis_if__h2c )
+            xilinx_axi4s_reg_slice #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
+            ) i_xilinx_axi4s_reg_slice__qdma_h2c (
+                .axi4s_from_tx ( axis_if__qdma_h2c[g_if] ),
+                .axi4s_to_rx   ( axis_if__h2c )
             );
 
+            xilinx_axi4s_reg_slice #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
             `ifdef __au280__
-            axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
-            ) i_axi4s_pipe_slr__adap_tx (
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
-            axi4s_pipe #(
-                .STAGES ( 1 )
-            ) i_axi4s_pipe__adap_tx (
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
-                .axi4s_if_from_tx ( axis_if__h2c ),
-                .axi4s_if_to_rx   ( axis_if__adap_tx_250mhz[g_if] )
+            ) i_xilinx_axi4s_reg_slice__adap_tx (
+                .axi4s_from_tx ( axis_if__h2c ),
+                .axi4s_to_rx   ( axis_if__adap_tx_250mhz[g_if] )
             );
 
             // C2H register slices (bridge between SLRs)
+            xilinx_axi4s_reg_slice #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
             `ifdef __au280__
-            axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
-            ) i_axi4s_pipe_slr__adap_rx (
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
-            axi4s_pipe #(
-                .STAGES ( 1 )
-            ) i_axi4s_pipe__adap_rx (
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
-                .axi4s_if_from_tx ( axis_if__adap_rx_250mhz[g_if] ),
-                .axi4s_if_to_rx   ( axis_if__c2h )
+            ) i_xilinx_axi4s_reg_slice__adap_rx (
+                .axi4s_from_tx ( axis_if__adap_rx_250mhz[g_if] ),
+                .axi4s_to_rx   ( axis_if__c2h )
             );
 
-            axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
-            ) i_axi4s_pipe_slr__qdma_c2h (
-                .axi4s_if_from_tx ( axis_if__c2h ),
-                .axi4s_if_to_rx   ( axis_if__qdma_c2h[g_if] )
+            xilinx_axi4s_reg_slice #(
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
+                .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
+            ) i_xilinx_axi4s_reg_slice__qdma_c2h (
+                .axi4s_from_tx ( axis_if__c2h ),
+                .axi4s_to_rx   ( axis_if__qdma_c2h[g_if] )
             );
         end : g__if
     endgenerate
