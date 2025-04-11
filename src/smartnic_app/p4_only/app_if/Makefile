@@ -35,10 +35,16 @@ reg_package:
 p4_package:
 	@if [ ! -z "$(strip $(P4_IGR_FILE))" ]; then \
 		cp $(P4_IGR_FILE) smartnic_app_igr.p4; \
+		if [ -e "$(P4_IGR_METADATA)" ]; then \
+		    cp $(P4_IGR_METADATA) smartnic_app_igr-metadata.yaml; \
+		fi; \
 		find $(dir $(P4_IGR_FILE)) -name \*.lua -exec cp {} ./ \; ; \
 	fi
 	@if [ ! -z "$(strip $(P4_EGR_FILE))" ]; then \
 		cp $(P4_EGR_FILE) smartnic_app_egr.p4; \
+		if [ -e "$(P4_EGR_METADATA)" ]; then \
+		    cp $(P4_EGR_METADATA) smartnic_app_egr-metadata.yaml; \
+		fi; \
 		find $(dir $(P4_EGR_FILE)) -name \*.lua -exec cp {} ./ \; ; \
 	fi
 
