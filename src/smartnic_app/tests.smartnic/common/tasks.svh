@@ -11,8 +11,6 @@
 
         // Write hdr_length register (hdr_length = 0B to disable split-join logic).
         p4_proc_config.hdr_length = HDR_LENGTH;
-        p4_proc_config.drop_pkt_loop = 1'b0;
-        p4_proc_config.p4_bypass = 1'b0;
         p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
         // Initialize VitisNetP4 tables
@@ -27,8 +25,8 @@
         env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[2], 2'h0 );
 
         // Configure tdest for CMAC_1 to APP_1 i.e. ingress switch port 1 is connected to vitisnetp4 block.
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2'h1 );
-        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[3], 2'h1 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[1], 2'h0 );
+        env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_SMARTNIC_MUX_OUT_SEL[3], 2'h0 );
 
         // Configure smartnic_app_igr_p4_out_sel to steer traffic to datapath (app_igr).
         //p4_only_reg_agent.write_smartnic_app_igr_p4_out_sel({1'b1, SMARTNIC_APP_IGR_P4_OUT_SEL_VALUE_SMARTNIC_APP_IGR});

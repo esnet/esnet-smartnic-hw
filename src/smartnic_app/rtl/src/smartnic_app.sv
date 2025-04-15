@@ -391,9 +391,11 @@ module smartnic_app
     axi4l_intf  axil_to_smartnic_app_igr ();
     axi4l_intf  axil_to_smartnic_app_egr ();
 
-    axi4l_intf  axil_to_probe_app_igr_in  [NUM_PORTS] ();
-    axi4l_intf  axil_to_probe_app_egr_in  [NUM_PORTS] ();
-    axi4l_intf  axil_to_probe_app_egr_out [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_igr_p4_out  [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_igr_in      [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_egr_in      [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_egr_out     [NUM_PORTS] ();
+    axi4l_intf  axil_to_probe_app_egr_p4_in   [NUM_PORTS] ();
 
     axi4l_intf  axil_to_p4_proc [NUM_P4_PROC] ();
 
@@ -417,24 +419,28 @@ module smartnic_app
        .p4_proc_igr_axil_if         ( axil_to_p4_proc[0] ),
        .p4_proc_egr_axil_if         ( axil_to_p4_proc[1] ),
 
-       .probe_from_pf0_axil_if      ( axil_h2c[PF][0] ),
-       .probe_from_pf1_axil_if      ( axil_h2c[PF][1] ),
-       .probe_from_pf0_vf0_axil_if  ( axil_h2c[VF0][0] ),
-       .probe_from_pf1_vf0_axil_if  ( axil_h2c[VF0][1] ),
-       .probe_from_pf0_vf1_axil_if  ( axil_h2c[VF1][0] ),
-       .probe_from_pf1_vf1_axil_if  ( axil_h2c[VF1][1] ),
-       .probe_to_pf0_axil_if        ( axil_c2h[PF][0] ),
-       .probe_to_pf1_axil_if        ( axil_c2h[PF][1] ),
-       .probe_to_pf0_vf0_axil_if    ( axil_c2h[VF0][0] ),
-       .probe_to_pf1_vf0_axil_if    ( axil_c2h[VF0][1] ),
-       .probe_to_pf0_vf1_axil_if    ( axil_c2h[VF1][0] ),
-       .probe_to_pf1_vf1_axil_if    ( axil_c2h[VF1][1] ),
+       .probe_from_pf0_axil_if      ( axil_h2c[0][0] ),
+       .probe_from_pf1_axil_if      ( axil_h2c[0][1] ),
+       .probe_from_pf0_vf0_axil_if  ( axil_h2c[1][0] ),
+       .probe_from_pf1_vf0_axil_if  ( axil_h2c[1][1] ),
+       .probe_from_pf0_vf1_axil_if  ( axil_h2c[2][0] ),
+       .probe_from_pf1_vf1_axil_if  ( axil_h2c[2][1] ),
+       .probe_to_pf0_axil_if        ( axil_c2h[0][0] ),
+       .probe_to_pf1_axil_if        ( axil_c2h[0][1] ),
+       .probe_to_pf0_vf0_axil_if    ( axil_c2h[1][0] ),
+       .probe_to_pf1_vf0_axil_if    ( axil_c2h[1][1] ),
+       .probe_to_pf0_vf1_axil_if    ( axil_c2h[2][0] ),
+       .probe_to_pf1_vf1_axil_if    ( axil_c2h[2][1] ),
        .probe_to_app_igr_in0_axil_if  ( axil_to_probe_app_igr_in[0] ),
        .probe_to_app_igr_in1_axil_if  ( axil_to_probe_app_igr_in[1] ),
        .probe_to_app_egr_in0_axil_if  ( axil_to_probe_app_egr_in[0] ),
        .probe_to_app_egr_in1_axil_if  ( axil_to_probe_app_egr_in[1] ),
        .probe_to_app_egr_out0_axil_if ( axil_to_probe_app_egr_out[0] ),
-       .probe_to_app_egr_out1_axil_if ( axil_to_probe_app_egr_out[1] )
+       .probe_to_app_egr_out1_axil_if ( axil_to_probe_app_egr_out[1] ),
+       .probe_to_app_igr_p4_out0_axil_if ( axil_to_probe_app_igr_p4_out[0] ),
+       .probe_to_app_igr_p4_out1_axil_if ( axil_to_probe_app_igr_p4_out[1] ),
+       .probe_to_app_egr_p4_in0_axil_if  ( axil_to_probe_app_egr_p4_in[0] ),
+       .probe_to_app_egr_p4_in1_axil_if  ( axil_to_probe_app_egr_p4_in[1] )
     );
 
     // Pass AXI-L interface from aclk (AXI-L clock) to core clk domain
@@ -484,8 +490,8 @@ module smartnic_app
         .egr_flow_ctl       ( egr_flow_ctl ),
         .axis_in            ( _axis_app_igr ),
         .axis_out           ( axis_to_demux ),
-        .axis_to_extern     ( _axis_h2c[VF1][0] ),
-        .axis_from_extern   ( _axis_c2h[VF1][0] )
+        .axis_to_extern     ( _axis_h2c[2][0] ),
+        .axis_from_extern   ( _axis_c2h[2][0] )
     );
 
     // ----------------------------------------------------------------------
@@ -501,8 +507,8 @@ module smartnic_app
         .egr_flow_ctl       ( egr_flow_ctl ),
         .axis_in            ( axis_from_mux ),
         .axis_out           ( _axis_app_egr ),
-        .axis_to_extern     ( _axis_h2c[VF1][1] ),
-        .axis_from_extern   ( _axis_c2h[VF1][1] )
+        .axis_to_extern     ( _axis_h2c[2][1] ),
+        .axis_from_extern   ( _axis_c2h[2][1] )
     );
 
     // ----------------------------------------------------------------------
@@ -518,7 +524,7 @@ module smartnic_app
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
             always_comb begin
                 axis_to_demux_sel[i] = 1'b0;
-                if (axis_to_demux[i].tdest == PF0) axis_to_demux_sel[i] = 1'b1;
+                if (axis_to_demux[i].tdest.encoded.typ == PF) axis_to_demux_sel[i] = 1'b1;
             end
 
             assign smartnic_app_igr_p4_out_sel[i] = smartnic_app_regs.smartnic_app_igr_p4_out_sel.enable ?
@@ -531,11 +537,12 @@ module smartnic_app
             );
 
             axi4s_intf_pipe axis_demux_out_pipe_0 ( .axi4s_if_from_tx(axis_demux_out[i][0]), .axi4s_if_to_rx(axis_to_smartnic_app_igr[i]) );
-            axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(_axis_c2h[PF][i]) );
+            axi4s_intf_pipe axis_demux_out_pipe_1 ( .axi4s_if_from_tx(axis_demux_out[i][1]), .axi4s_if_to_rx(_axis_c2h[0][i]) );
 
-            axi4s_probe axis_probe_app_igr_in  (.axi4l_if(axil_to_probe_app_igr_in[i]),  .axi4s_if(axis_to_smartnic_app_igr[i]));
-            axi4s_probe axis_probe_app_egr_in  (.axi4l_if(axil_to_probe_app_egr_in[i]),  .axi4s_if(axis_to_smartnic_app_egr[i]));
-            axi4s_probe axis_probe_app_egr_out (.axi4l_if(axil_to_probe_app_egr_out[i]), .axi4s_if(axis_to_mux[i]));
+            axi4s_probe axis_probe_app_igr_p4_out (.axi4l_if(axil_to_probe_app_igr_p4_out[i]), .axi4s_if(axis_to_demux[i]));
+            axi4s_probe axis_probe_app_igr_in     (.axi4l_if(axil_to_probe_app_igr_in[i]),     .axi4s_if(axis_to_smartnic_app_igr[i]));
+            axi4s_probe axis_probe_app_egr_in     (.axi4l_if(axil_to_probe_app_egr_in[i]),     .axi4s_if(axis_to_smartnic_app_egr[i]));
+            axi4s_probe axis_probe_app_egr_out    (.axi4l_if(axil_to_probe_app_egr_out[i]),    .axi4s_if(axis_to_mux[i]));
         end
     endgenerate
 
@@ -546,7 +553,6 @@ module smartnic_app
         .core_rstn  ( core_rstn ),
         .axi4s_in   ( axis_to_smartnic_app_igr ),
         .axi4s_out  ( axis_to_smartnic_app_egr ),
-//        .axi4s_c2h  ( _axis_c2h[VF0] ),
         .axi4s_c2h  ( _axis_c2h[1] ),
         .axil_if    ( axil_to_smartnic_app_igr )
     );
@@ -556,7 +562,6 @@ module smartnic_app
         .core_clk   ( core_clk ),
         .core_rstn  ( core_rstn ),
         .axi4s_in   ( axis_to_smartnic_app_egr ),
-//        .axi4s_h2c  ( _axis_h2c[VF0] ),
         .axi4s_h2c  ( _axis_h2c[1] ),
         .axi4s_out  ( axis_to_mux ),
         .axil_if    ( axil_to_smartnic_app_egr )
@@ -567,13 +572,14 @@ module smartnic_app
     generate
         for (genvar i = 0; i < NUM_PORTS; i += 1) begin
             axi4s_intf_connector axis_mux_in_pipe_0 ( .axi4s_from_tx(axis_to_mux[i]), .axi4s_to_rx(axi4s_mux_in[i][0]) );
-            axi4s_intf_connector axis_mux_in_pipe_1 ( .axi4s_from_tx(_axis_h2c[PF][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
+            axi4s_intf_connector axis_mux_in_pipe_1 ( .axi4s_from_tx(_axis_h2c[0][i]), .axi4s_to_rx(axi4s_mux_in[i][1]) );
 
             axi4s_mux #(.N(2)) axi4s_mux_inst (
                 .axi4s_in   ( axi4s_mux_in[i] ),
                 .axi4s_out  ( axis_from_mux[i] )
             );
 
+            axi4s_probe axis_probe_app_egr_p4_in  (.axi4l_if(axil_to_probe_app_egr_p4_in[i]),  .axi4s_if(axis_from_mux[i]));
         end
 
     endgenerate

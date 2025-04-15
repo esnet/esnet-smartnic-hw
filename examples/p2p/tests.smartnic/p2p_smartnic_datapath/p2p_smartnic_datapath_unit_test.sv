@@ -156,30 +156,6 @@ module p2p_smartnic_datapath_unit_test;
 
       `SVTEST_END
 
-
-      `SVTEST(app0_pkt_loop_drops)
-         switch_config.drop_pkt_loop = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
-
-         fork
-            run_pkt_stream ( .in_port(0), .out_port(out_port_map[0]), .in_pcap(in_pcap[0]), .out_pcap(out_pcap[0]),
-                             .tx_pkt_cnt(tx_pkt_cnt[0]), .tx_byte_cnt(tx_byte_cnt[0]),
-                             .rx_pkt_cnt(rx_pkt_cnt[0]), .rx_byte_cnt(rx_byte_cnt[0]),
-                             .exp_pkt_cnt(exp_pkts[0]),
-                             .tpause(0), .twait(0) );
-
-            begin
-               #10us
-               check_probe (.base_addr(PROBE_CORE_TO_APP0), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
-               check_probe (.base_addr(PROBE_APP0_TO_CORE), .exp_pkt_cnt(0), .exp_byte_cnt(0));
-               check_probe (.base_addr(DROPS_FROM_IGR_PROC_PORT0), .exp_pkt_cnt(tx_pkt_cnt[0]), .exp_byte_cnt(tx_byte_cnt[0]));
-               check_stream_probes (.in_port(0), .out_port(out_port_map[0]),
-                                    .exp_good_pkts(0), .exp_good_bytes(0), .exp_ovfl_pkts(tx_pkt_cnt[0]), .exp_ovfl_bytes(tx_byte_cnt[0]),
-                                    .ovfl_mode(2) );
-            end
-         join_any
-
-      `SVTEST_END
-
     `SVUNIT_TESTS_END
 
 endmodule

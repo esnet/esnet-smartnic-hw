@@ -50,8 +50,9 @@ endtask
 
 // Drop counter typedefs
 typedef enum logic [31:0] {
-    DROPS_FROM_PROC_PORT_0 = 'h0400,
-    DROPS_FROM_PROC_PORT_1 = 'h0800
+    DROPS_FROM_P4          = 'h0400,
+    DROPS_UNSET_ERR_PORT_0 = 'h0800,
+    DROPS_UNSET_ERR_PORT_1 = 'h0C00
     } cntr_addr_encoding_t;
 
 typedef union packed {

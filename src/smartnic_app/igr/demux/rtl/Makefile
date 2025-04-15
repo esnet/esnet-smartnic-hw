@@ -24,6 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     smartnic_app.igr.demux.regio.rtl \
+    smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)
 

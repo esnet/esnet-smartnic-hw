@@ -64,10 +64,10 @@ module smartnic_hash2qid #(
         if (!axi4s_in_p1.tuser.rss_enable)
             qid <=  '0;
         else case (host_if_id)
-            PF  : qid <=  pf_table_qid;
-            VF0 : qid <= vf0_table_qid;
-            VF1 : qid <= vf1_table_qid;
-            VF2 : qid <= vf2_table_qid;
+            H2C_PF  : qid <=  pf_table_qid;
+            H2C_VF0 : qid <= vf0_table_qid;
+            H2C_VF1 : qid <= vf1_table_qid;
+            H2C_VF2 : qid <= vf2_table_qid;
         endcase
 
         base <= smartnic_hash2qid_regs.q_config[host_if_id];

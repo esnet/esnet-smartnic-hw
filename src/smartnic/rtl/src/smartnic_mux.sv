@@ -108,7 +108,7 @@ module smartnic_mux
         assign axis_core_to_app[i].tlast   = _axis_core_to_app[i].tlast;
         assign axis_core_to_app[i].tid     = _axis_core_to_app[i].tid;
         assign axis_core_to_app[i].tuser   = '0;
-        assign axis_core_to_app[i].tdest   = {'0, _axis_core_to_app[i].tid[0]};  // assign tdest to CMAC0/CMAC1 by default.
+        assign axis_core_to_app[i].tdest   = {'0, _axis_core_to_app[i].tid[0]};  // assign tdest to CMAC0/CMAC1 by default.  TODO: assign to UNSET
 
         axi4s_intf_connector axis_core_to_bypass_pipe (.axi4s_from_tx(igr_demux_out[i][1]), .axi4s_to_rx(_axis_core_to_bypass[i]));
 

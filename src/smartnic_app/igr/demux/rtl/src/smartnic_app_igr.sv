@@ -11,6 +11,7 @@ module smartnic_app_igr
 
     axi4l_intf.peripheral axil_if
 );
+    import smartnic_pkg::*;
 
     localparam int  DATA_BYTE_WID = axi4s_in[0].DATA_BYTE_WID;
     localparam type TID_T         = axi4s_in[0].TID_T;
@@ -44,11 +45,16 @@ module smartnic_app_igr
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID),
                   .TUSER_T(TUSER_T), .TID_T(TID_T), .TDEST_T(TDEST_T))  demux_out [NUM_PORTS][2] ();
 
+    logic  demux_sel [NUM_PORTS];
+
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+        assign demux_sel[i] = (axi4s_in[i].tdest.encoded.typ == VF0) ||
+                              smartnic_app_igr_regs.app_igr_config.demux_sel;
+
         axi4s_intf_demux #(.N(2)) axi4s_demux_inst (
             .axi4s_in  (axi4s_in[i]),
             .axi4s_out (demux_out[i]),
-            .sel       (smartnic_app_igr_regs.app_igr_config.demux_sel)
+            .sel       (demux_sel[i])
         );
 
         axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(demux_out[i][0]), .axi4s_if_to_rx(axi4s_out[i]));

@@ -8,27 +8,31 @@ vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 // Probe tasks
 //=======================================================================
 typedef enum logic [31:0] {
-    PROBE_FROM_PF0      = 'h64000,
-    PROBE_FROM_PF1      = 'h64100,
-    PROBE_FROM_PF0_VF0  = 'h64200,
-    PROBE_FROM_PF1_VF0  = 'h64300,
-    PROBE_FROM_PF0_VF1  = 'h64400,
-    PROBE_FROM_PF1_VF1  = 'h64500,
+    PROBE_FROM_PF0      = 'h65000,
+    PROBE_FROM_PF1      = 'h65100,
+    PROBE_FROM_PF0_VF0  = 'h65200,
+    PROBE_FROM_PF1_VF0  = 'h65300,
+    PROBE_FROM_PF0_VF1  = 'h65400,
+    PROBE_FROM_PF1_VF1  = 'h65500,
 
-    PROBE_TO_PF0        = 'h64600,
-    PROBE_TO_PF1        = 'h64700,
-    PROBE_TO_PF0_VF0    = 'h64800,
-    PROBE_TO_PF1_VF0    = 'h64900,
-    PROBE_TO_PF0_VF1    = 'h64a00,
-    PROBE_TO_PF1_VF1    = 'h64b00,
+    PROBE_TO_PF0        = 'h65600,
+    PROBE_TO_PF1        = 'h65700,
+    PROBE_TO_PF0_VF0    = 'h65800,
+    PROBE_TO_PF1_VF0    = 'h65900,
+    PROBE_TO_PF0_VF1    = 'h65a00,
+    PROBE_TO_PF1_VF1    = 'h65b00,
 
-    PROBE_TO_APP_IGR_IN0  = 'h64c00,
-    PROBE_TO_APP_IGR_IN1  = 'h64d00,
-    PROBE_TO_APP_EGR_IN0  = 'h64e00,
-    PROBE_TO_APP_EGR_IN1  = 'h64f00,
-    PROBE_TO_APP_EGR_OUT0 = 'h65000,
-    PROBE_TO_APP_EGR_OUT1 = 'h65100
+    PROBE_TO_APP_IGR_IN0  = 'h65c00,
+    PROBE_TO_APP_IGR_IN1  = 'h65d00,
+    PROBE_TO_APP_EGR_IN0  = 'h65e00,
+    PROBE_TO_APP_EGR_IN1  = 'h65f00,
+    PROBE_TO_APP_EGR_OUT0 = 'h66000,
+    PROBE_TO_APP_EGR_OUT1 = 'h66100,
 
+    PROBE_TO_APP_IGR_P4_OUT0 = 'h66200,
+    PROBE_TO_APP_IGR_P4_OUT1 = 'h66300,
+    PROBE_TO_APP_EGR_P4_IN0  = 'h66400,
+    PROBE_TO_APP_EGR_P4_IN1  = 'h66500
     } cntr_addr_encoding_t;
 
 typedef union packed {
@@ -51,51 +55,54 @@ task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkt_cnt, e
 endtask;
 
 task clear_igr_probe (input port_t in_if=0);
-    case (in_if)
-        PF0:          env.probe_from_pf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1:          env.probe_from_pf1_reg_blk_agent.write_probe_control ( 'h2 );
-        PF0_VF0:  env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1_VF0:  env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF0_VF1:  env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1_VF1:  env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ( 'h2 );
+    case (in_if.encoded.typ)
+        PF:  if (in_if.encoded.num == P0) env.probe_from_pf0_reg_blk_agent.write_probe_control     ('h2);
+             else                         env.probe_from_pf1_reg_blk_agent.write_probe_control     ('h2);
+        VF0: if (in_if.encoded.num == P0) env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
+             else                         env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
+        VF1: if (in_if.encoded.num == P0) env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
+             else                         env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
     endcase
 endtask;
 
 task clear_egr_probe (input port_t out_if=0);
-    case (out_if)
-        CMAC0: begin
-              env.probe_to_app_igr_in0_reg_blk_agent.write_probe_control ( 'h2 );
-              env.probe_to_app_egr_in0_reg_blk_agent.write_probe_control ( 'h2 );
-              env.probe_to_app_egr_out0_reg_blk_agent.write_probe_control( 'h2 );
-        end
-        CMAC1: begin
-              env.probe_to_app_igr_in1_reg_blk_agent.write_probe_control ( 'h2 );
-              env.probe_to_app_egr_in1_reg_blk_agent.write_probe_control ( 'h2 );
-              env.probe_to_app_egr_out1_reg_blk_agent.write_probe_control( 'h2 );
-        end
-        PF0:          env.probe_to_pf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1:          env.probe_to_pf1_reg_blk_agent.write_probe_control ( 'h2 );
-        PF0_VF0:  env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1_VF0:  env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-        PF0_VF1:  env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control ( 'h2 );
-        PF1_VF1:  env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control ( 'h2 );
+    case (out_if.encoded.typ)
+        PHY: if (out_if.encoded.num == P0) begin
+                 env.probe_to_app_igr_p4_out0_reg_blk_agent.write_probe_control ('h2);
+                 env.probe_to_app_igr_in0_reg_blk_agent.write_probe_control     ('h2);
+                 env.probe_to_app_egr_in0_reg_blk_agent.write_probe_control     ('h2);
+                 env.probe_to_app_egr_out0_reg_blk_agent.write_probe_control    ('h2);
+                 env.probe_to_app_egr_p4_in0_reg_blk_agent.write_probe_control  ('h2);
+             end else begin
+                 env.probe_to_app_igr_p4_out1_reg_blk_agent.write_probe_control ('h2);
+                 env.probe_to_app_igr_in1_reg_blk_agent.write_probe_control     ('h2);
+                 env.probe_to_app_egr_in1_reg_blk_agent.write_probe_control     ('h2);
+                 env.probe_to_app_egr_out1_reg_blk_agent.write_probe_control    ('h2);
+                 env.probe_to_app_egr_p4_in1_reg_blk_agent.write_probe_control  ('h2);
+             end
+        PF:  if (out_if.encoded.num == P0) env.probe_to_pf0_reg_blk_agent.write_probe_control     ('h2);
+             else                          env.probe_to_pf1_reg_blk_agent.write_probe_control     ('h2);
+        VF0: if (out_if.encoded.num == P0) env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
+             else                          env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
+        VF1: if (out_if.encoded.num == P0) env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
+             else                          env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
     endcase
 endtask;
 
 task clear_all_probes;
-    env.probe_from_pf0_reg_blk_agent.write_probe_control     ( 'h2 );
-    env.probe_from_pf1_reg_blk_agent.write_probe_control     ( 'h2 );
-    env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ( 'h2 );
-    env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ( 'h2 );
+    env.probe_from_pf0_reg_blk_agent.write_probe_control     ('h2);
+    env.probe_from_pf1_reg_blk_agent.write_probe_control     ('h2);
+    env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
+    env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
+    env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
+    env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
 
-    env.probe_to_pf0_reg_blk_agent.write_probe_control       ( 'h2 );
-    env.probe_to_pf1_reg_blk_agent.write_probe_control       ( 'h2 );
-    env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control   ( 'h2 );
-    env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control   ( 'h2 );
+    env.probe_to_pf0_reg_blk_agent.write_probe_control       ('h2);
+    env.probe_to_pf1_reg_blk_agent.write_probe_control       ('h2);
+    env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control   ('h2);
+    env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control   ('h2);
+    env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control   ('h2);
+    env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control   ('h2);
 endtask;
 
 task check_cleared_probes;
@@ -137,16 +144,20 @@ endtask
 
 // Send packets described in PCAP file on AXI-S input interface
 task send_pcap(input string pcap_filename, input int num_pkts=0, start_idx=0, twait=0, input port_t in_if=0, id=0, dest=0);
-    case (in_if)
-        CMAC0:          env.axis_in_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        CMAC1:          env.axis_in_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF0:       env.axis_h2c_driver[PF][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF1:       env.axis_h2c_driver[PF][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF0_VF0:  env.axis_h2c_driver[VF0][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF1_VF0:  env.axis_h2c_driver[VF0][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF0_VF1:  env.axis_h2c_driver[VF1][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF1_VF1:  env.axis_h2c_driver[VF1][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        default:  $display ("Input interface 'in_if' undefined:", in_if);
+    case (in_if.encoded.typ)
+        PHY: if (in_if.encoded.num == P0)
+                  env.axis_in_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+             else env.axis_in_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+        PF:  if (in_if.encoded.num == P0)
+                  env.axis_h2c_driver[0][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+             else env.axis_h2c_driver[0][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+        VF0: if (in_if.encoded.num == P0)
+                  env.axis_h2c_driver[1][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+             else env.axis_h2c_driver[1][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+        VF1: if (in_if.encoded.num == P0)
+                  env.axis_h2c_driver[2][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+             else env.axis_h2c_driver[2][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
+        default: $display ("Input interface 'in_if' undefined:", in_if);
     endcase
 endtask
 
@@ -243,15 +254,19 @@ task automatic run_pkt_test (
         begin
             // Monitor output packets
             while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                case (out_if)
-                    CMAC0:        env.axis_out_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    CMAC1:        env.axis_out_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF0:      env.axis_c2h_monitor[PF][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF1:      env.axis_c2h_monitor[PF][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF0_VF0: env.axis_c2h_monitor[VF0][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF1_VF0: env.axis_c2h_monitor[VF0][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF0_VF1: env.axis_c2h_monitor[VF1][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF1_VF1: env.axis_c2h_monitor[VF1][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                case (out_if.encoded.typ)
+                    PHY: if (out_if.encoded.num == P0)
+                                 env.axis_out_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                         else    env.axis_out_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                    PF:  if (out_if.encoded.num == P0)
+                              env.axis_c2h_monitor[0][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                         else env.axis_c2h_monitor[0][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                    VF0: if (out_if.encoded.num == P0)
+                              env.axis_c2h_monitor[1][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                         else env.axis_c2h_monitor[1][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                    VF1: if (out_if.encoded.num == P0)
+                              env.axis_c2h_monitor[2][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
+                         else env.axis_c2h_monitor[2][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
                     default: $display ("Output interface 'out_if' undefined:", out_if);
                 endcase
 
@@ -266,32 +281,42 @@ task automatic run_pkt_test (
                                                $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
             end
 
-            case (in_if)
-                PF0:       begin check_probe (PROBE_FROM_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                PF1:       begin check_probe (PROBE_FROM_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                PF0_VF0:   begin check_probe (PROBE_FROM_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                PF1_VF0:   begin check_probe (PROBE_FROM_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                PF0_VF1:   begin check_probe (PROBE_FROM_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                PF1_VF1:   begin check_probe (PROBE_FROM_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+            case (in_if.encoded.typ)
+                PF:  if (in_if.encoded.num == P0)
+                          begin check_probe (PROBE_FROM_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+                     else begin check_probe (PROBE_FROM_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+                VF0: if (in_if.encoded.num == P0)
+                          begin check_probe (PROBE_FROM_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+                     else begin check_probe (PROBE_FROM_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+                VF1: if (in_if.encoded.num == P0)
+                          begin check_probe (PROBE_FROM_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
+                     else begin check_probe (PROBE_FROM_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
             endcase
 
-            case (out_if)
-                CMAC0:     if (in_if == CMAC0) begin
-                                 check_probe (PROBE_TO_APP_IGR_IN0,  rx_pkt_cnt, rx_byte_cnt);
-                                 check_probe (PROBE_TO_APP_EGR_IN0,  rx_pkt_cnt, rx_byte_cnt);
-                                 check_probe (PROBE_TO_APP_EGR_OUT0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
-                           end
-                CMAC1:     if (in_if == CMAC1) begin
-                                 check_probe (PROBE_TO_APP_IGR_IN1,  rx_pkt_cnt, rx_byte_cnt);
-                                 check_probe (PROBE_TO_APP_EGR_IN1,  rx_pkt_cnt, rx_byte_cnt);
-                                 check_probe (PROBE_TO_APP_EGR_OUT1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
-                           end
-                PF0:       begin check_probe (PROBE_TO_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                PF1:       begin check_probe (PROBE_TO_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                PF0_VF0:   begin check_probe (PROBE_TO_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                PF1_VF0:   begin check_probe (PROBE_TO_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                PF0_VF1:   begin check_probe (PROBE_TO_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                PF1_VF1:   begin check_probe (PROBE_TO_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+            case (out_if.encoded.typ)
+                PHY: if (in_if.encoded.typ == PHY)
+                        if (out_if.encoded.num == P0) begin
+                            check_probe (PROBE_TO_APP_IGR_P4_OUT0,  rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_IGR_IN0,      rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_IN0,      rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_OUT0,     rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_P4_IN0,   rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
+                        end else begin
+                            check_probe (PROBE_TO_APP_IGR_P4_OUT1,  rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_IGR_IN1,      rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_IN1,      rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_OUT1,     rx_pkt_cnt, rx_byte_cnt);
+                            check_probe (PROBE_TO_APP_EGR_P4_IN1,   rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
+                        end
+                PF:  if (out_if.encoded.num == P0)
+                          begin check_probe (PROBE_TO_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+                     else begin check_probe (PROBE_TO_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+                VF0: if (out_if.encoded.num == P0)
+                          begin check_probe (PROBE_TO_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+                     else begin check_probe (PROBE_TO_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+                VF1: if (out_if.encoded.num == P0)
+                          begin check_probe (PROBE_TO_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
+                     else begin check_probe (PROBE_TO_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
             endcase
 
             rx_done = 1;

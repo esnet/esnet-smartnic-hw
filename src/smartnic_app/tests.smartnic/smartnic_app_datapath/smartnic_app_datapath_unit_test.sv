@@ -113,29 +113,31 @@ module smartnic_app_datapath_unit_test
            fork
               // --- run traffic from/to both HOST ports ---
               begin
-                 // source traffic from/to PF0_VF2. direct traffic to qid PF0_VF2.
-                 // i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
-                 src_vf[0] = PF0_VF2;
+                 // source traffic from/to PF0_VF2.
+                 // direct traffic to qid 'PF0_VF2' (echoes 'src_vf' in dst qid).
+                 // p4 program sets rss_entropy to 'src_vf' (ingress_port).
+                 src_vf[0].encoded.num = P0; src_vf[0].encoded.typ = VF2;
                  env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table ({'0, src_vf[0]}, {'0, src_vf[0]});
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF0_VF2), .out_port(PF0_VF2) );
+                 run_pkt_test (.testdir( "test-default" ), .init_timestamp(1), .in_port(2), .out_port(2));
 
-                 // source traffic from/to PF1_VF2. direct traffic to qid PF1_VF2.
-                 //  i.e. echoes 'src_vf' in dst qid.  p4 program sets rss_entropy to src_vf (ingress_port).
-                 src_vf[1] = PF1_VF2;
+                 // source traffic from/to PF1_VF2.
+                 // direct traffic to qid 'PF1_VF2' (echoes 'src_vf' in dst qid).
+                 // p4 program sets rss_entropy to 'src_vf' (ingress_port).
+                 src_vf[1].encoded.num = P1; src_vf[1].encoded.typ = VF2;
                  env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table ({'0, src_vf[1]}, {'0, src_vf[1]});
-                 run_pkt_test ( .testdir( "test-default" ), .init_timestamp(1), .in_port(PF1_VF2), .out_port(PF1_VF2) );
+                 run_pkt_test (.testdir( "test-default" ), .init_timestamp(1), .in_port(3), .out_port(3));
               end
 
               // --- compare rss metadata to expected on HOST_0 port ---
               while (1) @(posedge tb.axis_c2h[0].aclk) if (tb.axis_c2h[0].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[0][0]] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[src_vf[0][0]] == src_vf[0]+1 );
+                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[0].encoded.num] == 1'b1 );
+                 `FAIL_UNLESS( rss_entropy[src_vf[0].encoded.num] == src_vf[0]+1 );
               end
 
               // --- compare rss metadata to expected on HOST_1 port ---
               while (1) @(posedge tb.axis_c2h[1].aclk) if (tb.axis_c2h[1].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[1][0]] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[src_vf[1][0]] == src_vf[1]+16 );
+                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[1].encoded.num] == 1'b1 );
+                 `FAIL_UNLESS( rss_entropy[src_vf[1].encoded.num] == src_vf[1]+16 );
               end
            join_any
 

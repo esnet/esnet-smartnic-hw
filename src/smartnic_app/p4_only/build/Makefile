@@ -47,8 +47,8 @@ endif
 SUBCOMPONENTS = \
     $(IGR_P4_DEPENDENCIES) \
     $(EGR_P4_DEPENDENCIES) \
-    smartnic_app.igr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
-    smartnic_app.egr.passthru.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.igr.demux.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.egr.mux.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic_app.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),)
 
 # ----------------------------------------------------

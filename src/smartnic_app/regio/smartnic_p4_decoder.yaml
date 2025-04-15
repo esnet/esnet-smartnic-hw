@@ -31,107 +31,126 @@ interfaces:
 
   - decoder: *p4_proc_decoder
     address: 0x60000
-    width: 12
+    width: 13
     name: p4_proc_igr
 
   - decoder: *p4_proc_decoder
     address: 0x62000
-    width: 12
+    width: 13
     name: p4_proc_egr
 
   - block: *smartnic_app
-    address: 0x63000
+    address: 0x64000
     width: 10
     name: app_common
 
 
   - block: *axi4s_probe
-    address: 0x64000
+    address: 0x65000
     width: 8
     name: probe_from_pf0
 
   - block: *axi4s_probe
-    address: 0x64100
+    address: 0x65100
     width: 8
     name: probe_from_pf1
 
   - block: *axi4s_probe
-    address: 0x64200
+    address: 0x65200
     width: 8
     name: probe_from_pf0_vf0
 
   - block: *axi4s_probe
-    address: 0x64300
+    address: 0x65300
     width: 8
     name: probe_from_pf1_vf0
 
   - block: *axi4s_probe
-    address: 0x64400
+    address: 0x65400
     width: 8
     name: probe_from_pf0_vf1
 
   - block: *axi4s_probe
-    address: 0x64500
+    address: 0x65500
     width: 8
     name: probe_from_pf1_vf1
 
   - block: *axi4s_probe
-    address: 0x64600
+    address: 0x65600
     width: 8
     name: probe_to_pf0
 
   - block: *axi4s_probe
-    address: 0x64700
+    address: 0x65700
     width: 8
     name: probe_to_pf1
 
   - block: *axi4s_probe
-    address: 0x64800
+    address: 0x65800
     width: 8
     name: probe_to_pf0_vf0
 
   - block: *axi4s_probe
-    address: 0x64900
+    address: 0x65900
     width: 8
     name: probe_to_pf1_vf0
 
   - block: *axi4s_probe
-    address: 0x64a00
+    address: 0x65a00
     width: 8
     name: probe_to_pf0_vf1
 
   - block: *axi4s_probe
-    address: 0x64b00
+    address: 0x65b00
     width: 8
     name: probe_to_pf1_vf1
 
   - block: *axi4s_probe
-    address: 0x64c00
+    address: 0x65c00
     width: 8
     name: probe_to_app_igr_in0
 
   - block: *axi4s_probe
-    address: 0x64d00
+    address: 0x65d00
     width: 8
     name: probe_to_app_igr_in1
 
   - block: *axi4s_probe
-    address: 0x64e00
+    address: 0x65e00
     width: 8
     name: probe_to_app_egr_in0
 
   - block: *axi4s_probe
-    address: 0x64f00
+    address: 0x65f00
     width: 8
     name: probe_to_app_egr_in1
 
   - block: *axi4s_probe
-    address: 0x65000
+    address: 0x66000
     width: 8
     name: probe_to_app_egr_out0
 
   - block: *axi4s_probe
-    address: 0x65100
+    address: 0x66100
     width: 8
     name: probe_to_app_egr_out1
 
+  - block: *axi4s_probe
+    address: 0x66200
+    width: 8
+    name: probe_to_app_igr_p4_out0
+
+  - block: *axi4s_probe
+    address: 0x66300
+    width: 8
+    name: probe_to_app_igr_p4_out1
+
+  - block: *axi4s_probe
+    address: 0x66400
+    width: 8
+    name: probe_to_app_egr_p4_in0
+
+  - block: *axi4s_probe
+    address: 0x66500
+    width: 8
+    name: probe_to_app_egr_p4_in1

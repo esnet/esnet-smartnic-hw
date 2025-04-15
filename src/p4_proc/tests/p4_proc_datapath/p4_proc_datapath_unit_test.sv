@@ -33,8 +33,9 @@ module p4_proc_datapath_unit_test
 
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
-    p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
-    p4_proc_reg_pkg::reg_trunc_config_t    trunc_config;
+    p4_proc_reg_pkg::reg_p4_proc_config_t    p4_proc_config;
+    p4_proc_reg_pkg::reg_p4_bypass_config_t  p4_bypass_config;
+    p4_proc_reg_pkg::reg_trunc_config_t      trunc_config;
 
     int exp_pkt_cnt, exp_byte_cnt;
 
@@ -81,11 +82,16 @@ module p4_proc_datapath_unit_test
         env.axis_monitor[0].idle();
         env.axis_monitor[1].idle();
 
-        // Write hdr_length register (hdr_length = 0B to disable split-join logic).
+        // Write hdr_length register (set hdr_length to 0B to disable split-join logic).
         p4_proc_config.hdr_length = HDR_LENGTH;
-        p4_proc_config.drop_pkt_loop = 1'b0;
-        p4_proc_config.p4_bypass = 1'b0;
         env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+
+        // Initialize p4_bypass_config.
+        p4_bypass_config.p4_bypass_enable          = 1'b0;
+        p4_bypass_config.p4_bypass_egr_port_num_0  = 1'b0;
+        p4_bypass_config.p4_bypass_egr_port_type_0 =   '0;
+        p4_bypass_config.p4_bypass_egr_port_num_1  = 1'b1;
+        p4_bypass_config.p4_bypass_egr_port_type_1 =   '0;
 
     endtask
 
@@ -136,10 +142,6 @@ module p4_proc_datapath_unit_test
 
     `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
-    `SVTEST(test_pkt_loopback)
-        run_pkt_test ( .testdir("test-pkt-loopback"), .init_timestamp('0), .dest_port(LOOPBACK) );
-    `SVTEST_END
-
     `SVTEST(test_fwd_p1)
         run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
     `SVTEST_END
@@ -149,14 +151,10 @@ module p4_proc_datapath_unit_test
     `SVTEST_END
 
     `SVTEST(test_traffic_mux)
-        p4_proc_config.hdr_length = HDR_LENGTH;
-        p4_proc_config.drop_pkt_loop = 1'b0;
-        p4_proc_config.p4_bypass = 1'b0;
-
         repeat (2) begin
             // Toggle p4_bypass register.
-            p4_proc_config.p4_bypass = ~p4_proc_config.p4_bypass;
-            env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+            p4_bypass_config.p4_bypass_enable = ~p4_bypass_config.p4_bypass_enable;
+            env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
 
             fork
                // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
@@ -178,24 +176,19 @@ module p4_proc_datapath_unit_test
         end
     `SVTEST_END
 
-    `SVTEST(test_pkt_loop_drops)
-        // Write drop_pkt_loop register.
-        p4_proc_config.hdr_length = HDR_LENGTH;
-        p4_proc_config.drop_pkt_loop = 1'b1;
-        p4_proc_config.p4_bypass = 1'b0;
-        env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
-
+    `SVTEST(test_unset_err_drops)
         fork
            begin
               // run packet stream from CMAC1-to-CMAC1 (includes programming the p4 tables accordingly).
-              run_pkt_test ( .testdir("test-fwd-p1"),
+              run_pkt_test ( .testdir("test-pkt-loopback"),
                              .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1), .enable_monitor(0) );
-              #(100ns) check_probe (DROPS_FROM_PROC_PORT_1, exp_pkt_cnt, exp_byte_cnt);
+              #(100ns) check_probe (DROPS_UNSET_ERR_PORT_1, exp_pkt_cnt, exp_byte_cnt);
 
               // run packet streams from CMAC0-to-CMAC0 (skips reprogramming the p4 tables).
-              run_pkt_test ( .testdir("test-default"),
-                             .init_timestamp(1), .in_if(0), .out_if(0), .dest_port(0), .enable_monitor(0), .write_p4_tables(0) );
-              #(100ns) check_probe (DROPS_FROM_PROC_PORT_0, exp_pkt_cnt, exp_byte_cnt);
+              run_pkt_test ( .testdir("test-pkt-loopback"),
+                             .init_timestamp(1), .in_if(0), .out_if(0), .dest_port(0), .enable_monitor(0),
+                             .write_p4_tables(0) );
+              #(100ns) check_probe (DROPS_UNSET_ERR_PORT_0, exp_pkt_cnt, exp_byte_cnt);
            end
            begin
               // monitor output interfaces for any valid axi4s transactions.
@@ -217,19 +210,29 @@ module p4_proc_datapath_unit_test
            trunc_config.trunc_length = $urandom_range(65,500);
            env.p4_proc_reg_agent.write_trunc_config(trunc_config);
 
-           run_pkt_test ( .testdir("test-pkt-loopback"),
-                          .init_timestamp('0), .dest_port(4'hf), .max_pkt_size(trunc_config.trunc_length) );
+           run_pkt_test ( .testdir("test-default"),
+                          .init_timestamp('0), .max_pkt_size(trunc_config.trunc_length) );
         end
     `SVTEST_END
 
     `SVTEST(test_p4_bypass)
         // Write p4_bypass register.
-        p4_proc_config.hdr_length = HDR_LENGTH;
-        p4_proc_config.drop_pkt_loop = 1'b0;
-        p4_proc_config.p4_bypass = 1'b1;
-        env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+        p4_bypass_config.p4_bypass_enable = 1'b1;
+        env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
 
         run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0) );
+    `SVTEST_END
+
+    `SVTEST(test_p4_bypass_w_traffic)
+        fork
+           run_pkt_test ( .testdir("test-default"), .init_timestamp('0) );
+
+           @(posedge tb.axis_out_if[0].tvalid) begin
+               // Write p4_bypass register.
+               p4_bypass_config.p4_bypass_enable = 1'b1;
+               env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
+           end
+        join
     `SVTEST_END
 
     `SVUNIT_TESTS_END
@@ -271,12 +274,16 @@ module p4_proc_datapath_unit_test
 
         debug_msg("Reading expected pcap file...", VERBOSE);
 
-        if (p4_proc_config.p4_bypass) filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
-        else                          filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
+        if (p4_bypass_config.p4_bypass_enable)
+            filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
+        else
+            filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
         exp_pcap = pcap_pkg::read_pcap(filename);
 
         exp_pkt_cnt = exp_pcap.records.size();
-        exp_byte_cnt = 0; for (integer i = 0; i < exp_pkt_cnt; i=i+1) exp_byte_cnt = exp_byte_cnt + exp_pcap.records[i].pkt_data.size();
+        exp_byte_cnt = 0;
+        for (integer i = 0; i < exp_pkt_cnt; i=i+1)
+            exp_byte_cnt = exp_byte_cnt + exp_pcap.records[i].pkt_data.size();
 
         debug_msg("Starting simulation...", VERBOSE);
          filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};

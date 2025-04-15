@@ -4,11 +4,30 @@ blocks:
   empty: &empty
     name: empty
     info: |
-      No custom registers included in p4-only flow.
+      This block is a stub for the smartnic_app functional components that
+      are empty for the p4_only application (egr, igr_intern and egr_extern).
     regs: []
+
+  smartnic_app_igr: &smartnic_app_igr
+    !include ../src/smartnic_app/igr/demux/regio/smartnic_app_igr.yaml
 
 interfaces:
   - block: *empty
     address: 0x00000
-    width: 18
-    name: empty
+    width: 16
+    name: igr_extern
+
+  - block: *empty
+    address: 0x10000
+    width: 16
+    name: egr_extern
+
+  - block: *smartnic_app_igr
+    address: 0x20000
+    width: 16
+    name: smartnic_app_igr
+
+  - block: *empty
+    address: 0x30000
+    width: 16
+    name: smartnic_app_egr

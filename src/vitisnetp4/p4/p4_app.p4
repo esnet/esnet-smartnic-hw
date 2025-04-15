@@ -23,23 +23,24 @@ struct headers {
 struct smartnic_metadata {
     bit<64> timestamp_ns;    // 64b timestamp (in nanoseconds). Set at packet arrival time.
     bit<16> pid;             // 16b packet id used by platform (READ ONLY - DO NOT EDIT).
-    bit<4>  ingress_port;    // 4b ingress port
-                             // (0:CMAC0, 1:CMAC1, 2:PF0_VF2, 3:PF1_VF2, 4:PF0_VF1, 5:PF1_VF1, 6:PF0_VF0, 7:PF1_VF0, 8:PF0, 9:PF1)
-    bit<2>  egress_port;     // 2b egress port (0:PORT0, 1:PORT1, 2:HOST, 3:LOOPBACK).
-    bit<1>  truncate_enable; // 1b set to 1 to enable truncation of egress packet to 'truncate_length'.
-    bit<16> truncate_length; // 16b set to desired length of egress packet (used when 'truncate_enable' == 1).
-    bit<1>  rss_enable;      // 1b set to 1 to override open-nic-shell rss hash result with 'rss_entropy' value.
-    bit<12> rss_entropy;     // 12b set to rss_entropy hash value (used for open-nic-shell qdma qid selection).
+    bit<4>  ingress_port;    // bit<0>   port_num (0:P0, 1:P1).
+                             // bit<3:1> port_typ (0:PHY, 1:PF, 2:VF, 3:APP, 4-7:reserved).
+    bit<4>  egress_port;     // bit<0>   port_num (0:P0, 1:P1).
+                             // bit<3:1> port_typ (0:PHY, 1:PF, 2:VF, 3:APP, 4-6:reserved, 7:UNSET).
+    bit<1>  truncate_enable; // 1b set to 1 to truncate egress packet to 'truncate_length'.
+    bit<16> truncate_length; // 16b egress packet length (when 'truncate_enable' == 1).
+    bit<1>  rss_enable;      // 1b set to 1 to enable 'rss_entropy' hash value.
+    bit<12> rss_entropy;     // 12b rss_entropy hash value (used for qdma qid selection).
     bit<4>  drop_reason;     // reserved (tied to 0).
     bit<32> scratch;         // reserved (tied to 0).
 }
 
 struct ext_fcn_input_t {
-    bit<2> data;
+    bit<4> data;
 }
 
 struct ext_fcn_output_t {
-    bit<2> data;
+    bit<4> data;
 }
 
 // ****************************************************************************** //
@@ -74,12 +75,16 @@ control MatchActionImpl( inout headers hdr,
     ext_fcn_input_t  ext_fcn_in;
     ext_fcn_output_t ext_fcn_out;
 
-    action forwardPacket(bit<2> dest_port) {
+    action forwardPacket(bit<4> dest_port) {
         ext_fcn_in.data = dest_port;
         ext_fcn.apply(ext_fcn_in, ext_fcn_out);
         sn_meta.egress_port = ext_fcn_out.data;
     }
     
+    action loopPacket() {
+        sn_meta.egress_port = sn_meta.ingress_port;
+    }
+
     action dropPacket() {
         smeta.drop = 1;
     }
@@ -87,11 +92,12 @@ control MatchActionImpl( inout headers hdr,
     table forward {
         key     = { hdr.ethernet.dstAddr : lpm; }
         actions = { forwardPacket; 
+                    loopPacket;
                     dropPacket;
                     NoAction; }
         size    = 128;
         num_masks = 8;
-        default_action = NoAction;
+        default_action = loopPacket;
     }
 
     apply {
