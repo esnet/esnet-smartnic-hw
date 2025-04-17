@@ -303,7 +303,7 @@ module smartnic_datapath_unit_test;
 
         // FIFO holds FIFO_DEPTH x 64B good packets (all others dropped).
         for (int i=0; i<NUM_PORTS; i++)
-           exp_pkts[i] = (pkt_len[i]==0) ? 0 : (FIFO_DEPTH + 31)/$ceil(pkt_len[i]/64.0)+1; // Include axi4s_pipe_auto
+           exp_pkts[i] = (pkt_len[i]==0) ? 0 : FIFO_DEPTH/$ceil(pkt_len[i]/64.0)+1;
 
         // force backpressure on ingress ports (deasserts tready from app core to ingress switch).
         switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
