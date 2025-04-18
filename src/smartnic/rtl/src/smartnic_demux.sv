@@ -94,12 +94,12 @@ module smartnic_demux
 
 
         // axi4s_egr_mux connections. Note crossed connections from each demux_out_fifo instance.
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_0 (
-            .axi4s_from_tx(axis_bypass_to_core[i]),    .axi4s_to_rx(egr_mux_in[i][0]));
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_1 (
-            .axi4s_from_tx(port_demux_out_fifo[0][i]), .axi4s_to_rx(egr_mux_in[i][1]));
-        axi4s_intf_connector axi4s_egr_mux_in_pipe_2 (
-            .axi4s_from_tx(port_demux_out_fifo[1][i]), .axi4s_to_rx(egr_mux_in[i][2]));
+        axi4s_full_pipe axi4s_egr_mux_in_pipe_0 (
+            .axi4s_if_from_tx(axis_bypass_to_core[i]),    .axi4s_if_to_rx(egr_mux_in[i][0]));
+        axi4s_full_pipe axi4s_egr_mux_in_pipe_1 (
+            .axi4s_if_from_tx(port_demux_out_fifo[0][i]), .axi4s_if_to_rx(egr_mux_in[i][1]));
+        axi4s_full_pipe axi4s_egr_mux_in_pipe_2 (
+            .axi4s_if_from_tx(port_demux_out_fifo[1][i]), .axi4s_if_to_rx(egr_mux_in[i][2]));
 
         axi4s_mux #(.N(3)) axi4s_egr_mux (
             .axi4s_in  (egr_mux_in[i]),
