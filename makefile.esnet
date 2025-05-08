@@ -109,7 +109,7 @@ package :
 		--include-dir $(LIB_ROOT) \
 		--output-file $(artifact_dir)/regmap/spec/box1_322mhz_decoder.yaml \
 		$(PROJ_ROOT)/src/open-nic-plugin/box_322mhz/box_322mhz_decoder.yaml
-	@cp .out/$(BOARD)/smartnic_250mhz/regio/ir/smartnic_250mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box0_250mhz_decoder.yaml
+	@cp .out/$(BOARD)/$(notdir $(XILINX_VIVADO))/smartnic_250mhz/regio/ir/smartnic_250mhz_decoder-ir.yaml $(artifact_dir)/regmap/spec/box0_250mhz_decoder.yaml
 	@$(REGIO_ROOT)/regio-elaborate \
 	   --file-type top \
 	   --include-dir $(artifact_dir)/regmap/spec \

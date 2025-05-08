@@ -294,8 +294,8 @@ shell_ip_au55c:
     - cat bitfile.env
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
     - make -s -C src refresh
-    - mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD
-    - cp -pr .out/$SN_HW_BOARD $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
+    - mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION
+    - cp -pr .out/$SN_HW_BOARD/$VIVADO_VERSION $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"

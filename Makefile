@@ -125,10 +125,11 @@ $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
 $(ARTIFACTS_DIR) :
 	@mkdir $(ARTIFACTS_DIR)
 
-SHELL_BUILD_OUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/smartnic/xilinx/alveo/shell/build/proj/proj.runs/impl_1
+__SHELL_BUILD_OUTPUT_ROOT = $(OUTPUT_ROOT)/$(BOARD)/$(notdir $(shell echo $$XILINX_VIVADO))
+SHELL_BUILD_OUT_DIR = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/build/proj/proj.runs/impl_1
 SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
 
-SHELL_REG_ARTIFACT = $(OUTPUT_ROOT)/$(BOARD)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
+SHELL_REG_ARTIFACT = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
 SHELL_VITISNETP4_DRV_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar
 SHELL_P4_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr.p4
 
