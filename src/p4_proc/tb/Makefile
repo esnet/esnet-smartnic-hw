@@ -26,6 +26,7 @@ SUBCOMPONENTS = \
     p4_proc.rtl \
     p4_proc.verif \
     smartnic_app.igr_p4.default.rtl \
+    smartnic_app.verif \
     std.rtl@common \
     std.verif@common \
     axi3.rtl@common \

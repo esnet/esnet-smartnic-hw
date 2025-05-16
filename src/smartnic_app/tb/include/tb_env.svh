@@ -86,7 +86,7 @@ class tb_env extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_app_egr_p4_in1_reg_blk_agent;
 
     // Timestamp
-    virtual timestamp_if #() timestamp_vif;
+    virtual timestamp_intf #() timestamp_vif;
 
     timestamp_agent #() ts_agent;
 

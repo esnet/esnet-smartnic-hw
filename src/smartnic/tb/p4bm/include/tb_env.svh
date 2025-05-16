@@ -69,11 +69,6 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
     axi4s_probe_reg_blk_agent #() probe_to_bypass_0_reg_blk_agent;
     axi4s_probe_reg_blk_agent #() probe_to_bypass_1_reg_blk_agent;
 
-    // Timestamp
-    virtual timestamp_if #() timestamp_vif;
-
-    timestamp_agent #() ts_agent;
-
     // Name
     protected string name;
 
@@ -142,7 +137,6 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].axis_vif = axis_c2h_vif[i];
 
         axis_sample.axis_vif = axis_sample_vif;
-        ts_agent.timestamp_vif = timestamp_vif;
         reg_agent.axil_vif = axil_vif;
         smartnic_reg_blk_agent.reg_agent = reg_agent;
         smartnic_hash2qid_0_reg_blk_agent.reg_agent = reg_agent;
@@ -173,10 +167,6 @@ class tb_env #(parameter int NUM_CMAC = 2) extends std_verif_pkg::base;
         for (int i=0; i < NUM_CMAC; i++) axis_h2c_driver[i].idle();
         for (int i=0; i < NUM_CMAC; i++) axis_cmac_egr_monitor[i].idle();
         for (int i=0; i < NUM_CMAC; i++) axis_c2h_monitor[i].idle();
-    endtask
-
-    task init_timestamp();
-        ts_agent.reset();
     endtask
 
     task read(

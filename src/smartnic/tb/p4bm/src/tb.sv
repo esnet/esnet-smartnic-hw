@@ -93,8 +93,6 @@ module tb;
     std_reset_intf #() reset_if (.clk(clk));
     std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_if (.clk(axil_aclk));
 
-    timestamp_if #() timestamp_if (.clk(clk), .srst(rst));
-
     axi4l_intf axil_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr [NUM_CMAC] ();
@@ -254,7 +252,6 @@ module tb;
             // Connect
             env.reset_vif = reset_if;
             env.mgmt_reset_vif = mgmt_reset_if;
-            env.timestamp_vif = timestamp_if;
             env.axil_vif = axil_if;
 
             env.axis_cmac_igr_vif[0] = axis_cmac_igr[0];

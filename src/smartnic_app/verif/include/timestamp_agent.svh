@@ -10,7 +10,7 @@ class timestamp_agent #(
     //===================================
     // Interfaces
     //===================================
-    virtual timestamp_if timestamp_vif;
+    virtual timestamp_intf #(TIMESTAMP_T) timestamp_vif;
 
     //===================================
     // Methods
