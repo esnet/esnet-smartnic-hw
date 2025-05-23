@@ -23,15 +23,23 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    smartnic.pkg \
     smartnic.rtl \
     smartnic.tb \
-    smartnic_app.stub.rtl \
+    smartnic.verif \
+    smartnic_app.rtl \
+    smartnic_app.regio.verif \
+    smartnic_app.igr_p4.vf_loopback.rtl \
+    smartnic_app.egr_p4.vf_loopback.rtl \
+    smartnic_app.igr.demux.rtl \
+    smartnic_app.igr.demux.regio.verif \
+    smartnic_app.egr.mux.rtl \
     std.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \
     axi4s.rtl@common \
     axi4s.verif@common \
-    pcap.pkg@common
+    axi4s.regio.verif@common
 
 EXT_LIBS =
 
@@ -64,17 +72,14 @@ SIM_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: build_test pcap sim
-
-pcap:
-	cd $(PROJ_ROOT)/src/smartnic/tests/common/pcap; python3 gen_pcap.py;
+all: build_test sim
 
 build_test: _build_test
 sim:        _sim
 info:       _sim_info
 clean:      _clean_test _clean_sim
 
-.PHONY: all pcap build_test sim info clean
+.PHONY: all build_test sim info clean
 
 # ----------------------------------------------------
 # Import SVUNIT build targets/configuration
