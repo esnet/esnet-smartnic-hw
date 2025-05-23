@@ -119,7 +119,7 @@ module smartnic_hash2qid_unit_test;
         env.axis_out_vif = axis_out_if;
         env.build();
 
-        env.set_debug_level(0);
+        env.set_debug_level(1);
     endfunction
 
 
