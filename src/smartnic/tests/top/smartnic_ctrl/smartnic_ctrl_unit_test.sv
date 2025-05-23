@@ -6,8 +6,10 @@
 `define SVUNIT_TIMEOUT 500us
 
 module smartnic_ctrl_unit_test;
-
+    // Testcase name
     string name = "smartnic_ctrl_ut";
+
+    // SVUnit base testcase
     svunit_pkg::svunit_testcase svunit_ut;
 
     //===================================
@@ -19,10 +21,10 @@ module smartnic_ctrl_unit_test;
     // at tb_glbl.tb.
     //
     // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
+    // via the testbench environment class (smartnic_env).
+    // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
+    tb_pkg::smartnic_env env;
 
     //===================================
     // Import common testcase tasks
@@ -49,8 +51,8 @@ module smartnic_ctrl_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        // start environment
+        env.run();
 
     endtask
 
