@@ -27,6 +27,7 @@ SUBCOMPONENTS = \
     smartnic.rtl \
     smartnic.tb \
     smartnic_app.rtl \
+    smartnic_app.regio.verif \
     smartnic_app.igr_p4.vf_loopback.rtl \
     smartnic_app.egr_p4.vf_loopback.rtl \
     smartnic_app.igr.demux.rtl \
@@ -37,7 +38,7 @@ SUBCOMPONENTS = \
     axi4l.verif@common \
     axi4s.rtl@common \
     axi4s.verif@common \
-    pcap.pkg@common
+    axi4s.regio.verif@common
 
 EXT_LIBS =
 
@@ -77,7 +78,7 @@ sim:        _sim
 info:       _sim_info
 clean:      _clean_test _clean_sim
 
-.PHONY: all pcap build_test sim info clean
+.PHONY: all build_test sim info clean
 
 # ----------------------------------------------------
 # Import SVUNIT build targets/configuration
@@ -85,7 +86,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-#TOP += smartnic__tb.tb
+TOP += smartnic__tb.tb
 
 # ----------------------------------------------------
 # Import Vivado sim targets
