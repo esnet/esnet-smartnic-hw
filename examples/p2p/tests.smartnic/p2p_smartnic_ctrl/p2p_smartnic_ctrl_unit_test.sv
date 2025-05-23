@@ -22,10 +22,10 @@ module p2p_smartnic_ctrl_unit_test;
     // at tb_glbl.tb.
     //
     // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
+    // via the testbench environment class (smartnic_env).
+    // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
+    tb_pkg::smartnic_env env;
 
     p2p_reg_verif_pkg::p2p_reg_blk_agent #() p2p_reg_blk_agent;
 
@@ -46,7 +46,7 @@ module p2p_smartnic_ctrl_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
-        p2p_reg_blk_agent = new("p2p_reg_blk", env.AXIL_APP_OFFSET + 'h20000);
+        p2p_reg_blk_agent = new("p2p_reg_blk", 'h100000 + 'h20000);
         p2p_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 
@@ -56,8 +56,8 @@ module p2p_smartnic_ctrl_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        // start environment
+        env.run();
 
     endtask
 
@@ -67,6 +67,9 @@ module p2p_smartnic_ctrl_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
+        // Stop environment
+        env.stop();
+
         svunit_ut.teardown();
 
     endtask
