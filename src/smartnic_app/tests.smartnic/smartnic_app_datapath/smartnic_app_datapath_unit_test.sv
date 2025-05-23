@@ -3,7 +3,7 @@
 import tb_pkg::*;
 import p4_proc_verif_pkg::*;
 import smartnic_app_verif_pkg::*;
-import smartnic_app_reg_pkg::*;
+//import smartnic_app_reg_pkg::*;
 
 //===================================
 // (Failsafe) timeout
@@ -29,16 +29,13 @@ module smartnic_app_datapath_unit_test
     // at tb_glbl.tb.
     //
     // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
+    // via the testbench environment class (tb_env).
+    // A reference to the testbench environment is provided
     // here for convenience.
     tb_pkg::tb_env env;
 
     // VitisNetP4 table agent
     vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
-
-    // smartnic_app register agent
-    smartnic_app_reg_agent  smartnic_app_reg_agent;
 
     // p4_proc register agent and variables
     p4_proc_reg_agent  p4_proc_reg_agent;
@@ -53,7 +50,6 @@ module smartnic_app_datapath_unit_test
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic/tests/common/tasks.svh"
     `include "../common/tasks.svh"
 
     //===================================
@@ -74,8 +70,7 @@ module smartnic_app_datapath_unit_test
                                        // path to AXI-L write/read tasks
 
         // Create P4 reg agents
-        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, env.AXIL_VITISNET_OFFSET + 'h60000);
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", env.reg_agent, env.AXIL_APP_OFFSET);
+        p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, 'h80000 + 'h60000);
     endfunction
 
     //===================================

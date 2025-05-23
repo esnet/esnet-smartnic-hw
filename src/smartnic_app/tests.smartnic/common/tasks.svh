@@ -1,11 +1,80 @@
-    //===================================
-    // Setup for running the Unit Tests
-    //===================================
+//=======================================================================
+// Global variables
+//=======================================================================
+localparam NUM_PORTS = 4;
+
+import smartnic_pkg::*;
+port_t out_port_map [NUM_PORTS-1:0];  // vector specifies output port for each input stream.
+logic  host_ports;                // set (1) to exercise 'host' ports during stream test. default is 'cmac' ports.
+
+string in_pcap  [NUM_PORTS-1:0];  // vector specifies the in_pcap file for each input stream.
+string out_pcap [NUM_PORTS-1:0];  // vector specifies the out_pcap file for each input stream.
+
+// variables for probe checks.
+int tx_pkt_cnt  [NUM_PORTS-1:0];  // captures the tx pkt & byte counts from the pcap file for a given test.
+int tx_byte_cnt [NUM_PORTS-1:0];
+int rx_pkt_cnt  [NUM_PORTS-1:0];  // captures the rx pkt & byte counts from the pcap file for a given test.
+int rx_byte_cnt [NUM_PORTS-1:0];
+int rx_pkt_tot  = 0;
+int rx_byte_tot = 0;
+int exp_pkts    [NUM_PORTS-1:0];  // vector specifies the expected number of pkts received for each stream.
+
+typedef enum logic [31:0] {
+    PROBE_FROM_CMAC0      = 'h2000,
+    DROPS_OVFL_FROM_CMAC0 = 'h2100,
+    DROPS_ERR_FROM_CMAC0  = 'h2200,
+    PROBE_FROM_CMAC1      = 'h2300,
+    DROPS_OVFL_FROM_CMAC1 = 'h2400,
+    DROPS_ERR_FROM_CMAC1  = 'h2500,
+    PROBE_TO_CMAC0        = 'h2600,
+    DROPS_OVFL_TO_CMAC0   = 'h2700,
+    PROBE_TO_CMAC1        = 'h2800,
+    DROPS_OVFL_TO_CMAC1   = 'h2900,
+
+    PROBE_FROM_PF0        = 'h3000,
+    PROBE_FROM_PF1        = 'h3100,
+    PROBE_TO_PF0          = 'h3200,
+    DROPS_OVFL_TO_PF0     = 'h3300,
+    PROBE_TO_PF1          = 'h3400,
+    DROPS_OVFL_TO_PF1     = 'h3500,
+
+    PROBE_TO_BYPASS0      = 'h4000,
+    DROPS_TO_BYPASS0      = 'h4100,
+    DROPS_FROM_BYPASS0    = 'h4200,
+    PROBE_TO_BYPASS1      = 'h4300,
+    DROPS_TO_BYPASS1      = 'h4400,
+    DROPS_FROM_BYPASS1    = 'h4500,
+
+    PROBE_CORE_TO_APP0    = 'h0c00,
+    PROBE_CORE_TO_APP1    = 'h0d00,
+    PROBE_APP0_TO_CORE    = 'h0e00,
+    PROBE_APP1_TO_CORE    = 'h0f00,
+
+    DROPS_FROM_IGR_PROC_PORT0 = 'h20400
+
+    } cntr_addr_encoding_t;
+
+typedef union packed {
+    cntr_addr_encoding_t  encoded;
+    logic [31:0]          raw;
+} cntr_addr_t;
+
+smartnic_reg_pkg::reg_switch_config_t switch_config;
+
+
+//=======================================================================
+// Tasks
+//=======================================================================
+
+    // ----- setup for unit tests -----
     task setup();
         svunit_ut.setup();
 
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_cmac_igr_driver[i].set_min_gap(0);
         for (int i=0; i<NUM_PORTS/2; i++) env.axis_h2c_driver[i].set_min_gap(0);
+
+        // start environment
+//        env.run();
 
         reset(); // Issue reset (both datapath and management domains)
 
@@ -39,9 +108,7 @@
     endtask
 
 
-    //=======================================
-    // Teardown from running the Unit Tests
-    //=======================================
+    // ----- teardown for unit tests -----
     task teardown();
         `INFO("Waiting to end testcase...");
         for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
@@ -55,9 +122,64 @@
     endtask
 
 
-    //=======================================================================
-    // Packet test sequence
-    //=======================================================================
+    // ----- execute block reset (dataplane + control plane) -----
+    task reset();
+        automatic bit reset_done;
+        automatic string msg;
+        env.reset();
+        env.wait_reset_done(reset_done, msg);
+        `FAIL_IF_LOG((reset_done == 0), msg);
+    endtask
+
+
+    // ----- send packets described in PCAP file on AXI-S input interface -----
+    task send_pcap (
+        input string  pcap_filename,
+        input int     num_pkts=0, start_idx=0, twait=0,
+        input adpt_tx_tid_t  id=0,
+        input port_t  dest=0,
+        input bit     user=0 );
+
+        case (id)
+            0: env.axis_cmac_igr_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+            1: env.axis_cmac_igr_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+            2:      env.axis_h2c_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+            3:      env.axis_h2c_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest, user);
+        endcase
+    endtask
+
+
+    // ----- compare packets -----
+    task compare_pkts(input byte pkt1[$], pkt2[$], input int size=0);
+        automatic int byte_idx = 0;
+
+        if ((size == 0) || (size > pkt2.size)) size = pkt2.size;
+
+        if ( pkt1.size() != size ) begin
+           $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
+           $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
+
+          `FAIL_IF_LOG( pkt1.size() != size,
+                        $sformatf("FAIL!!! Packet size mismatch. size1=%0d size2=%0d", pkt1.size(), size) )
+        end
+
+        byte_idx = 0;
+        while ( byte_idx < pkt1.size() ) begin
+            //if (pkt1[byte_idx] == pkt2[byte_idx]) $display("Pass. Packet bytes match at byte_idx: %d", byte_idx);
+            if (pkt1[byte_idx] != pkt2[byte_idx]) begin
+                $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
+                $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
+
+                `FAIL_IF_LOG( pkt1[byte_idx] != pkt2[byte_idx],
+                              $sformatf("FAIL!!! Packet bytes mismatch at byte_idx: 0x%0h (d:%0d)", byte_idx, byte_idx) )
+            end
+            byte_idx++;
+        end
+    endtask
+
+
+
+    // ----- packet test sequence -----
      task automatic run_pkt_test (
         input string testdir, input logic[63:0] init_timestamp=0,
         input port_t in_port=0, out_port=0,

@@ -33,7 +33,7 @@ SUBCOMPONENTS = \
     p4_proc.regio.rtl \
     p4_proc.verif \
     smartnic.rtl \
-    smartnic.tb \
+    smartnic.tb.p4bm \
     std.verif@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME) \
@@ -92,7 +92,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += smartnic__tb.tb
+TOP += smartnic__tb__p4bm.tb
 
 # ----------------------------------------------------
 # Import VitisNetP4 IP simulation configuration
