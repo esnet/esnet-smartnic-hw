@@ -14,9 +14,7 @@ include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = \
-    $(COMPONENT_OUT_PATH)/../ip/$(VITISNETP4_IP_NAME)_ex/imports
-
+INC_DIRS =
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -24,9 +22,20 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
+ifeq ($(XILINX_VIVADO__VERSION),2023.2)
 SUBCOMPONENTS = \
     $(COMPONENT_BASE).ip \
-    std.verif@$(COMMON_LIB_NAME)
+    std.verif@$(COMMON_LIB_NAME) \
+    xilinx.vitisnetp4.example@$(COMMON_LIB_NAME)
+
+VITISNETP4_AGENT_INCLUDE_FILE = vitisnetp4_agent__legacy.svh
+else
+SUBCOMPONENTS = \
+    $(COMPONENT_BASE).ip \
+    xilinx.vitisnetp4.verif@$(COMMON_LIB_NAME)
+
+VITISNETP4_AGENT_INCLUDE_FILE = vitisnetp4_agent.svh
+endif
 
 EXT_LIBS =
 
@@ -37,7 +46,8 @@ EXT_LIBS =
 DEFINES = \
     VITISNETP4_AGENT_NAME=$(VITISNETP4_IP_NAME)_agent \
     VITISNETP4_PKG_NAME=$(VITISNETP4_IP_NAME)_pkg \
-    VITISNETP4_VERIF_PKG_NAME=$(VITISNETP4_IP_NAME)_verif_pkg
+    VITISNETP4_VERIF_PKG_NAME=$(VITISNETP4_IP_NAME)_verif_pkg \
+    VITISNETP4_AGENT_INCLUDE_FILE=$(VITISNETP4_AGENT_INCLUDE_FILE)
 
 # ----------------------------------------------------
 # Options
