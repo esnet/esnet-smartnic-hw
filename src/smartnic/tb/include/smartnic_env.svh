@@ -2,6 +2,7 @@ import smartnic_pkg::*;
 import smartnic_verif_pkg::*;
 import axi4s_verif_pkg::*;
 import smartnic_app_reg_pkg::*;
+import pcap_pkg::*;
 
 // Environment class for 'smartnic' component verification.
 class smartnic_env extends std_verif_pkg::basic_env;
@@ -23,6 +24,10 @@ class smartnic_env extends std_verif_pkg::basic_env;
     localparam type SCOREBOARD_T      = std_verif_pkg::event_scoreboard#(TRANSACTION_OUT_T);
 
     local static const string __CLASS_NAME = "std_verif_pkg::smartnic_env";
+
+    // -- AXI-L
+    localparam int AXIL_APP_OFFSET = 'h100000;
+    localparam int AXIL_VITISNET_OFFSET = 'h80000;
 
     //===================================
     // Properties
@@ -71,15 +76,15 @@ class smartnic_env extends std_verif_pkg::basic_env;
     // Methods
     //===================================
     // Constructor
-    function new(input string name="smartnic_env");
+    function new(input string name="smartnic_env", bit bigendian=1);
         super.new(name);
         for (int i=0; i < 4; i++) inbox[i] = new();
         for (int i=0; i < 4; i++) __drv_inbox[i]    = new();
         for (int i=0; i < 4; i++) __mon_outbox[i]   = new();
         for (int i=0; i < 4; i++) __model_inbox[i]  = new();
         for (int i=0; i < 4; i++) __model_outbox[i] = new();
-        for (int i=0; i < 4; i++) driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(1'b1));
-        for (int i=0; i < 4; i++) monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(1'b1));
+        for (int i=0; i < 4; i++) driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
+        for (int i=0; i < 4; i++) monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
 
         model[0] = new(.name("model[0]"), .dest_if(0)); // PHY0
         model[1] = new(.name("model[1]"), .dest_if(1)); // PHY1
@@ -224,6 +229,109 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
         trace_msg("_run() Done.");
     endtask
+
+
+    task automatic pcap_to_driver (
+        input string      filename,
+        input TID_IN_T    tid=0,
+        input TDEST_T     tdest=0,
+        input TUSER_IN_T  tuser=0,
+        input DRIVER_T    driver  );
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+        int num_pkts;
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+        num_pkts = pcap.records.size();
+
+        // put packets one at a time
+        for (int i = 0; i < num_pkts; i++) begin
+            axi4s_transaction#(TID_IN_T, TDEST_T, TUSER_IN_T) transaction =
+                axi4s_transaction#(TID_IN_T, TDEST_T, TUSER_IN_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    pcap.records[i].pkt_data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            driver.inbox.put(transaction);
+        end
+    endtask
+
+
+    task automatic pcap_to_scoreboard (
+        input string       filename,
+        input TID_OUT_T    tid=0,
+        input TDEST_T      tdest=0,
+        input TUSER_OUT_T  tuser=0,
+        //input SCOREBOARD_T scoreboard );
+        input port_t       out_port );
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+        int num_pkts;
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+        num_pkts = pcap.records.size();
+
+        // put packets one at a time
+        for (int i = 0; i < num_pkts; i++) begin
+            axi4s_transaction#(TID_OUT_T, TDEST_T, TUSER_OUT_T) transaction =
+                axi4s_transaction#(TID_OUT_T, TDEST_T, TUSER_OUT_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    pcap.records[i].pkt_data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            //scoreboard.exp_inbox.put(transaction);
+            __model_outbox[out_port].put(transaction);
+        end
+    endtask
+
+
+   task read(
+           input  bit [31:0] addr,
+           output bit [31:0] data,
+           output bit error,
+           output bit timeout,
+           input  int TIMEOUT=128
+      );
+       axil_vif.read(addr, data, error, timeout, TIMEOUT);
+   endtask
+
+   task write(
+           input  bit [31:0] addr,
+           input  bit [31:0] data,
+           output bit error,
+           output bit timeout,
+           input  int TIMEOUT=32
+       );
+       axil_vif.write(addr, data, error, timeout, TIMEOUT);
+   endtask
+
+
+   task vitisnetp4_read(
+           input  bit [31:0] addr,
+           output bit [31:0] data
+       );
+       int _addr = AXIL_VITISNET_OFFSET + addr;
+       reg_agent.set_rd_timeout(128);
+       reg_agent.read_reg(_addr, data);
+   endtask
+
+
+   task vitisnetp4_write(
+           input  bit [31:0] addr,
+           input  bit [31:0] data
+       );
+       int _addr = AXIL_VITISNET_OFFSET + addr;
+       reg_agent.set_wr_timeout(128);
+       reg_agent.write_reg(_addr, data);
+   endtask
 
 endclass : smartnic_env
 

@@ -34,7 +34,8 @@ SUBCOMPONENTS = \
     reg.endian.regio.verif@common \
     axi4l.verif@common \
     axi4s.verif@common \
-    axi4s.regio.verif@common
+    axi4s.regio.verif@common \
+    pcap.pkg@common
 
 EXT_LIBS =
 

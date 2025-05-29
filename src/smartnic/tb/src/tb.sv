@@ -39,14 +39,14 @@ module tb;
     generate for (genvar i = 0; i < 2; i += 1) assign axis_c2h[i].aclk      = axis_clk; endgenerate
 
     // Resets
-    std_reset_intf axis_reset_if (.clk(axis_clk));
-    assign mod_rstn = ~axis_reset_if.reset;
-    assign axis_reset_if.ready = mod_rst_done;
+    std_reset_intf reset_if (.clk(axis_clk));
+    assign mod_rstn = ~reset_if.reset;
+    assign reset_if.ready = mod_rst_done;
 
-    generate for (genvar i = 0; i < 4; i += 1) assign axis_in_if[i].aresetn  = ~axis_reset_if.reset; endgenerate
-    generate for (genvar i = 0; i < 4; i += 1) assign axis_out_if[i].aresetn = ~axis_reset_if.reset; endgenerate
+    generate for (genvar i = 0; i < 4; i += 1) assign axis_in_if[i].aresetn  = ~reset_if.reset; endgenerate
+    generate for (genvar i = 0; i < 4; i += 1) assign axis_out_if[i].aresetn = ~reset_if.reset; endgenerate
 
-    assign axil_if.aresetn = ~axis_reset_if.reset;
+    assign axil_if.aresetn = ~reset_if.reset;
 
 
     // output monitors
@@ -70,10 +70,10 @@ module tb;
     function void build();
         if (env == null) begin
             // Instantiate environment
-            env = new("env");
+            env = new("env", 0); // bigendian=0 to match CMACs.
 
             // Connect environment
-            env.reset_vif = axis_reset_if;
+            env.reset_vif = reset_if;
             // for (int i=0; i < 4; i++) env.axis_in_vif[i] = axis_in_if[i];  // commented out due to simulator errors.
             env.axis_in_vif[0] = axis_in_if[0];
             env.axis_in_vif[1] = axis_in_if[1];
@@ -92,7 +92,7 @@ module tb;
             env.set_debug_level(1);
         end
     endfunction
-/*
+
     // Export AXI-L accessors to VitisNetP4 shared library
     export "DPI-C" task axi_lite_wr;
     task axi_lite_wr(input int address, input int data);
@@ -103,5 +103,5 @@ module tb;
     task axi_lite_rd(input int address, inout int data);
         env.vitisnetp4_read(address, data);
     endtask
-*/
+
 endmodule : tb
