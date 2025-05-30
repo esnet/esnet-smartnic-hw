@@ -55,6 +55,9 @@ IP_LIST = \
 #
 #         (The <path-to-out-dir> is prepended automatically)
 # ----------------------------------------------------
+# Import IP core revision details from version-specific tool config
+include $(CFG_ROOT)/vivado_ip.mk
+
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
@@ -65,9 +68,9 @@ IP_SIM_SRC_FILES = \
     xilinx_cmac_0/ip_0/sim/xilinx_cmac_0_gt_gtwizard_gtye4.v \
     xilinx_cmac_0/ip_0/sim/xilinx_cmac_0_gt_gtwizard_top.v \
     xilinx_cmac_0/ip_0/sim/xilinx_cmac_0_gt.v \
-    xilinx_cmac_0/cmac_usplus_v3_1_14/xilinx_cmac_0_wrapper.v \
-    xilinx_cmac_0/cmac_usplus_v3_1_14/xilinx_cmac_0_ultrascale_tx_userclk.v \
-    xilinx_cmac_0/cmac_usplus_v3_1_14/xilinx_cmac_0_ultrascale_rx_userclk.v \
+    xilinx_cmac_0/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_0_wrapper.v \
+    xilinx_cmac_0/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_0_ultrascale_tx_userclk.v \
+    xilinx_cmac_0/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_0_ultrascale_rx_userclk.v \
     xilinx_cmac_0/xilinx_cmac_0/example_design/xilinx_cmac_0_axi4_lite_slave_2_ipif.v \
     xilinx_cmac_0/xilinx_cmac_0/example_design/xilinx_cmac_0_axi4_lite_reg_map.v \
     xilinx_cmac_0/xilinx_cmac_0/example_design/xilinx_cmac_0_axi4_lite_if_wrapper.v \
@@ -81,9 +84,9 @@ IP_SIM_SRC_FILES = \
     xilinx_cmac_1/ip_0/sim/xilinx_cmac_1_gt_gtwizard_gtye4.v \
     xilinx_cmac_1/ip_0/sim/xilinx_cmac_1_gt_gtwizard_top.v \
     xilinx_cmac_1/ip_0/sim/xilinx_cmac_1_gt.v \
-    xilinx_cmac_1/cmac_usplus_v3_1_14/xilinx_cmac_1_wrapper.v \
-    xilinx_cmac_1/cmac_usplus_v3_1_14/xilinx_cmac_1_ultrascale_tx_userclk.v \
-    xilinx_cmac_1/cmac_usplus_v3_1_14/xilinx_cmac_1_ultrascale_rx_userclk.v \
+    xilinx_cmac_1/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_1_wrapper.v \
+    xilinx_cmac_1/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_1_ultrascale_tx_userclk.v \
+    xilinx_cmac_1/cmac_usplus_v$(IP_VER_CMAC_USPLUS)/xilinx_cmac_1_ultrascale_rx_userclk.v \
     xilinx_cmac_1/xilinx_cmac_1/example_design/xilinx_cmac_1_axi4_lite_slave_2_ipif.v \
     xilinx_cmac_1/xilinx_cmac_1/example_design/xilinx_cmac_1_axi4_lite_reg_map.v \
     xilinx_cmac_1/xilinx_cmac_1/example_design/xilinx_cmac_1_axi4_lite_if_wrapper.v \
@@ -96,8 +99,8 @@ IP_SIM_INC_DIRS =
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
-    gtwizard_ultrascale_v1_7_17 \
-    cmac_usplus_v3_1_14 \
+    gtwizard_ultrascale_$(IP_VER_GTWIZARD_ULTRASCALE) \
+    cmac_usplus_v$(IP_VER_CMAC_USPLUS) \
     unisims_ver \
     unimacro_ver \
     secureip \

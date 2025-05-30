@@ -32,14 +32,18 @@ SUBCOMPONENTS = \
     util.rtl@common \
     xilinx.axis.ip
 
+# Import IP core revision details from version-specific tool config
+include $(CFG_ROOT)/vivado_ip.mk
+
 EXT_LIBS = \
-    axis_register_slice_v1_1_30
+    unisims_ver \
+    axis_register_slice_v$(IP_VER_AXIS_REGISTER_SLICE)
 
 # ----------------------------------------------------
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = AXIS_REGISTER_SLICE_MODULE_NAME=axis_register_slice_v$(IP_VER_AXIS_REGISTER_SLICE)_axis_register_slice
 
 # ----------------------------------------------------
 # Options

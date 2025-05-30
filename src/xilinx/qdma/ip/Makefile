@@ -118,12 +118,15 @@ IP_SIM_SRC_FILES = \
 IP_SIM_INC_DIRS = \
 	xilinx_qdma/ip_0/source
 
+# Import IP core revision details from version-specific tool config
+include $(CFG_ROOT)/vivado_ip.mk
+
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
-    ecc_v2_0_15 \
-    gtwizard_ultrascale_v1_7_17 \
-    qdma_v5_0_6 \
+    ecc_v$(IP_VER_ECC) \
+    gtwizard_ultrascale_v$(IP_VER_GTWIZARD_ULTRASCALE) \
+    qdma_v$(IP_VER_QDMA) \
     unisims_ver \
     unimacro_ver \
     secureip \
