@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -25,7 +25,6 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     smartnic.rtl \
     smartnic.ip \
-    smartnic.verif \
     smartnic.regio.verif \
     smartnic_app.regio.rtl \
     smartnic_app.regio.verif \
@@ -34,8 +33,7 @@ SUBCOMPONENTS = \
     reg.endian.regio.verif@common \
     axi4l.verif@common \
     axi4s.verif@common \
-    axi4s.regio.verif@common \
-    pcap.pkg@common
+    axi4s.regio.verif@common
 
 EXT_LIBS =
 

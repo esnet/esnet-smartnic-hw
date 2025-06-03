@@ -92,10 +92,8 @@ sim_platform:
   tags:
     - ht-sim
   script:
-    - make -s -C src/smartnic/tests/0/regression
-    - grep 'PASSED.*suites passing' src/smartnic/tests/0/regression/run_$SEED/sim.log
-    - make -s -C src/smartnic/tests/1/regression
-    - grep 'PASSED.*suites passing' src/smartnic/tests/1/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/tests/top/regression
+    - grep 'PASSED.*suites passing' src/smartnic/tests/top/regression/run_$SEED/sim.log
     - make -s -C src/smartnic/tests/block/regression
     - grep 'PASSED.*suites passing' src/smartnic/tests/block/regression/run_$SEED/sim.log
     - make -s -C examples/p2p/tests.smartnic/regression
@@ -106,8 +104,7 @@ sim_platform:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
       junit:
-        - src/smartnic/tests/0/regression/run_*/tests.xml
-        - src/smartnic/tests/1/regression/run_*/tests.xml
+        - src/smartnic/tests/top/regression/run_*/tests.xml
         - src/smartnic/tests/block/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml

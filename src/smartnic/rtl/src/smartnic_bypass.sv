@@ -74,8 +74,8 @@ module smartnic_bypass #(
         always @(posedge core_clk)
             if (!core_rstn)
                 bypass_demux_sel[i] <= 0;
-            else if (axis_bypass_demux_in[i].tready && axis_bypass_demux_in[i].tvalid &&
-                     axis_bypass_demux_in[i].sop)
+            else if (axis_from_bypass_fifo[i].tready && axis_from_bypass_fifo[i].tvalid &&
+                     axis_from_bypass_fifo[i].sop)
                 bypass_demux_sel[i] <= smartnic_regs.bypass_config.swap_paths;
 
         axi4s_intf_demux #(.N(2)) axi4s_bypass_demux (

@@ -23,19 +23,9 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    smartnic.rtl \
-    smartnic.ip \
-    smartnic.verif \
-    smartnic.regio.verif \
-    smartnic_app.regio.rtl \
-    smartnic_app.regio.verif \
-    std.rtl@common \
-    std.verif@common \
-    reg.endian.regio.verif@common \
-    axi4l.verif@common \
-    axi4s.verif@common \
-    axi4s.regio.verif@common \
-    pcap.pkg@common
+    smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    std.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

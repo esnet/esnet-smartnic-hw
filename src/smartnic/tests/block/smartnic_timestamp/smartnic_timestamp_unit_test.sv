@@ -6,7 +6,6 @@
 `define SVUNIT_TIMEOUT 500us
 
 module smartnic_timestamp_unit_test;
-
     // Testcase name
     string name = "smartnic_timestamp_ut";
 
@@ -22,10 +21,10 @@ module smartnic_timestamp_unit_test;
     // at tb_glbl.tb.
     //
     // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
+    // via the testbench environment class (smartnic_env).
+    // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
+    tb_pkg::smartnic_env env;
 
     //===================================
     // Import common testcase tasks
@@ -51,8 +50,9 @@ module smartnic_timestamp_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        // start environment
+        env.run();
+
     endtask
 
     //===================================
@@ -60,10 +60,6 @@ module smartnic_timestamp_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
-        `INFO("Waiting to end testcase...");
-        for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
-        `INFO("Ending testcase!");
-
         svunit_ut.teardown();
     endtask
 

@@ -3,7 +3,6 @@
 import tb_pkg::*;
 import p4_proc_verif_pkg::*;
 import smartnic_app_verif_pkg::*;
-import smartnic_app_reg_pkg::*;
 
 //===================================
 // (Failsafe) timeout
@@ -29,32 +28,23 @@ module smartnic_app_datapath_unit_test
     // at tb_glbl.tb.
     //
     // Interaction with the testbench is expected to occur
-    // via the testbench environment class (tb_env). A
-    // reference to the testbench environment is provided
+    // via the testbench environment class (smartnic_env).
+    // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::tb_env env;
+    tb_pkg::smartnic_env env;
 
     // VitisNetP4 table agent
     vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 
-    // smartnic_app register agent
-    smartnic_app_reg_agent  smartnic_app_reg_agent;
-
     // p4_proc register agent and variables
     p4_proc_reg_agent  p4_proc_reg_agent;
-
     p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
-    p4_proc_reg_pkg::reg_trunc_config_t    trunc_config;
 
-    wire [11:0] rss_entropy [2];
-    assign rss_entropy[0] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
-    assign rss_entropy[1] = tb.m_axis_adpt_rx_322mhz_tuser_rss_entropy[23:12];
 
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../../../../src/smartnic/tests/common/tasks.svh"
-    `include "../common/tasks.svh"
+    `include "../../../../src/smartnic/tests/common/tasks.svh"
 
     //===================================
     // Build
@@ -72,15 +62,51 @@ module smartnic_app_datapath_unit_test
         vitisnetp4_agent = new;
         vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
                                        // path to AXI-L write/read tasks
-
-        // Create P4 reg agents
+        // Create P4 reg agent
         p4_proc_reg_agent = new("p4_proc_reg_agent", env.reg_agent, env.AXIL_VITISNET_OFFSET + 'h60000);
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", env.reg_agent, env.AXIL_APP_OFFSET);
+
     endfunction
 
     //===================================
     // Local test variables
     //===================================
+
+    //===================================
+    // Setup for running the Unit Tests
+    //===================================
+    task setup();
+        svunit_ut.setup();
+
+        // start environment
+        env.run();
+
+        // write hdr_length register (hdr_length = 0B to disable split-join logic).
+        p4_proc_config.hdr_length = HDR_LENGTH;
+        p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
+
+        // configure all ingress interfaces to direct pkts to app core.
+        app_mode(0); app_mode(1); app_mode(2); app_mode(3);
+
+        // initialize VitisNetP4 tables
+        vitisnetp4_agent.init();
+
+    endtask
+
+
+    //===================================
+    // Here we deconstruct anything we
+    // need after running the Unit Tests
+    //===================================
+    task teardown();
+        // stop environment
+        env.stop();
+
+        svunit_ut.teardown();
+
+        // clean up VitisNetP4 tables
+        vitisnetp4_agent.terminate();
+
+    endtask
 
     //=======================================================================
     // TESTS
@@ -100,63 +126,87 @@ module smartnic_app_datapath_unit_test
     //   `SVTEST_END
     //===================================
 
+    task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0);
+        string filename;
+
+       `INFO("Writing VitisNetP4 tables...");
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
+        vitisnetp4_agent.table_init_from_file(filename);
+
+       `INFO("Writing expected pcap data to scoreboard...");
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
+        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser('0), .out_port(out_port));
+
+       `INFO("Starting simulation...");
+        filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
+        env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
+
+        #3us;
+       `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
+    endtask
+
+
     `SVUNIT_TESTS_BEGIN
+       `SVTEST(rss_metadata_test)
+           // tests propagation of rss_metadata/qid to smartnic egress ports.
+           string testdir  = "../../../../vitisnetp4/p4/sim/test-default/";
+           string filename = {testdir, "cli_commands.txt"};
 
-       `SVTEST(rss_metadata_test) // tests propagation of rss_metadata and qid selection through datapath to smartnic ports.
-           port_t  src_vf[2];
+           tuser_smartnic_meta_t   tuser='x;
 
-           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel('1);  // demux egr traffic to host ports.
+           // ingress queue assignments. qid 0 maps to PF0_VF2 and PF1_VF2.
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h0});
+           env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_1[3], {12'h1, 12'h0});
 
-           env.smartnic_hash2qid_0_reg_blk_agent.write_q_config (3, 1);  // write PF0_VF2 base address = 1.
-           env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 16); // write PF1_VF2 base address = 16.
+           // egr traffic is directed to PF0_VF2 and PF1_VF2.
+           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
 
-           fork
-              // --- run traffic from/to both HOST ports ---
-              begin
-                 // source traffic from/to PF0_VF2.
-                 // direct traffic to qid 'PF0_VF2' (echoes 'src_vf' in dst qid).
-                 // p4 program sets rss_entropy to 'src_vf' (ingress_port).
-                 src_vf[0].encoded.num = P0; src_vf[0].encoded.typ = VF2;
-                 env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table ({'0, src_vf[0]}, {'0, src_vf[0]});
-                 run_pkt_test (.testdir( "test-default" ), .init_timestamp(1), .in_port(2), .out_port(2));
+           env.smartnic_hash2qid_0_reg_blk_agent.write_q_config (3, 1);  // PF0_VF2 base address = 1.
+           env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 16); // PF1_VF2 base address = 16.
 
-                 // source traffic from/to PF1_VF2.
-                 // direct traffic to qid 'PF1_VF2' (echoes 'src_vf' in dst qid).
-                 // p4 program sets rss_entropy to 'src_vf' (ingress_port).
-                 src_vf[1].encoded.num = P1; src_vf[1].encoded.typ = VF2;
-                 env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table ({'0, src_vf[1]}, {'0, src_vf[1]});
-                 run_pkt_test (.testdir( "test-default" ), .init_timestamp(1), .in_port(3), .out_port(3));
-              end
+           // configure qid to match entropy values for indexes PF0_VF2 and PF0_VF1.
+           env.smartnic_hash2qid_0_reg_blk_agent.write_vf2_table (PF0_VF2, PF0_VF2);
+           env.smartnic_hash2qid_1_reg_blk_agent.write_vf2_table (PF1_VF2, PF1_VF2);
 
-              // --- compare rss metadata to expected on HOST_0 port ---
-              while (1) @(posedge tb.axis_c2h[0].aclk) if (tb.axis_c2h[0].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[0].encoded.num] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[src_vf[0].encoded.num] == src_vf[0]+1 );
-              end
+           vitisnetp4_agent.table_init_from_file(filename);  // configure p4 tables.
 
-              // --- compare rss metadata to expected on HOST_1 port ---
-              while (1) @(posedge tb.axis_c2h[1].aclk) if (tb.axis_c2h[1].tvalid) begin
-                 `FAIL_UNLESS( tb.m_axis_adpt_rx_322mhz_tuser_rss_enable[src_vf[1].encoded.num] == 1'b1 );
-                 `FAIL_UNLESS( rss_entropy[src_vf[1].encoded.num] == src_vf[1]+16 );
-              end
-           join_any
+           // program scoreboards with expected data for PF0 and PF1.
+           filename = {testdir, "packets_out.pcap"};
+           tuser.rss_enable  = 1'b1;
+           tuser.rss_entropy = PF0_VF2 + 1;
+           env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(PF0));
+           tuser.rss_entropy = PF1_VF2 + 16;
+           env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(PF1));
+
+           // program drivers with traffic data for PF0 and PF1.  start simulation.
+           env.pcap_to_driver     (.filename(filename), .driver(env.driver[PF0]));
+           env.pcap_to_driver     (.filename(filename), .driver(env.driver[PF1]));
+
+           #4us;
+          `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
 
        `SVTEST_END
 
-       `SVTEST(cmac0_to_cmac0_test)
-           run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp(1), .in_port(0), .out_port(0) );
+       `SVTEST(PHY0_to_PHY0_test)
+           run_pkt_test ( .testdir("test-fwd-p0"), .in_port(PHY0), .out_port(PHY0) );
        `SVTEST_END
 
-       `SVTEST(cmac0_to_cmac1_test)
-           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(0), .out_port(1) );
+       `SVTEST(PHY0_to_PHY1_test)
+           run_pkt_test ( .testdir("test-fwd-p1"), .in_port(PHY0), .out_port(PHY1) );
        `SVTEST_END
 
-       `SVTEST(cmac1_to_cmac0_test)
-           run_pkt_test ( .testdir("test-fwd-p0"), .init_timestamp(1), .in_port(1), .out_port(0) );
+       `SVTEST(PHY1_to_PHY0_test)
+           run_pkt_test ( .testdir("test-fwd-p0"), .in_port(PHY1), .out_port(PHY0) );
        `SVTEST_END
 
-       `SVTEST(cmac1_to_cmac1_test)
-           run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp(1), .in_port(1), .out_port(1) );
+       `SVTEST(PHY1_to_PHY1_test)
+           run_pkt_test ( .testdir("test-fwd-p1"), .in_port(PHY1), .out_port(PHY1) );
        `SVTEST_END
 
        `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"

@@ -1,8 +1,4 @@
-    import tb_pkg::*;
-    import smartnic_pkg::*;
-    import pcap_pkg::*;
-
-    // (Local) parameters
+    // Local parameters
     localparam int NUM_CMAC = 2;
     localparam int AXIS_DATA_WID = 512;
     localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
@@ -77,6 +73,8 @@
     // Local signals
     //===================================
 
+    logic start_rx = 1'b1;
+
     // Interfaces
     axi4l_intf axil_if ();    
 
@@ -122,21 +120,21 @@
     assign axis_cmac_igr[1].tready = s_axis_cmac_rx_322mhz_tready[1];
 
     // Assign AXI-S CMAC output interfaces
-    assign axis_cmac_egr[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0];
+    assign axis_cmac_egr[0].tvalid = m_axis_cmac_tx_322mhz_tvalid[0] && start_rx;
     assign axis_cmac_egr[0].tlast  = m_axis_cmac_tx_322mhz_tlast[0];
     assign axis_cmac_egr[0].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_cmac_egr[0].tdata  = m_axis_cmac_tx_322mhz_tdata[511:0];
     assign axis_cmac_egr[0].tkeep  = m_axis_cmac_tx_322mhz_tkeep[63:0];
     assign axis_cmac_egr[0].tuser  = m_axis_cmac_tx_322mhz_tuser_err[0];
-    assign m_axis_cmac_tx_322mhz_tready[0] = axis_cmac_egr[0].tready;
+    assign m_axis_cmac_tx_322mhz_tready[0] = axis_cmac_egr[0].tready && start_rx;
 
-    assign axis_cmac_egr[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1];
+    assign axis_cmac_egr[1].tvalid = m_axis_cmac_tx_322mhz_tvalid[1] && start_rx;
     assign axis_cmac_egr[1].tlast  = m_axis_cmac_tx_322mhz_tlast[1];
     assign axis_cmac_egr[1].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_cmac_egr[1].tdata  = m_axis_cmac_tx_322mhz_tdata[1023:512];
     assign axis_cmac_egr[1].tkeep  = m_axis_cmac_tx_322mhz_tkeep[127:64];
     assign axis_cmac_egr[1].tuser  = m_axis_cmac_tx_322mhz_tuser_err[1];
-    assign m_axis_cmac_tx_322mhz_tready[1] = axis_cmac_egr[1].tready;
+    assign m_axis_cmac_tx_322mhz_tready[1] = axis_cmac_egr[1].tready && start_rx;
 
     // Assign AXI-S ADPT input interfaces
     assign s_axis_adpt_tx_322mhz_tvalid[0]    = axis_h2c[0].tvalid;
@@ -158,20 +156,20 @@
     assign axis_h2c[1].tready = s_axis_adpt_tx_322mhz_tready[1];
 
     // Assign AXI-S ADPT output interfaces
-    assign axis_c2h[0].tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
+    assign axis_c2h[0].tvalid = m_axis_adpt_rx_322mhz_tvalid[0] && start_rx;
     assign axis_c2h[0].tlast  = m_axis_adpt_rx_322mhz_tlast[0];
     assign axis_c2h[0].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_c2h[0].tdata  = m_axis_adpt_rx_322mhz_tdata[511:0];
     assign axis_c2h[0].tkeep  = m_axis_adpt_rx_322mhz_tkeep[63:0];
     assign axis_c2h[0].tuser.rss_enable  = m_axis_adpt_rx_322mhz_tuser_rss_enable[0];
     assign axis_c2h[0].tuser.rss_entropy = m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
-    assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h[0].tready;
+    assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h[0].tready && start_rx;
 
-    assign axis_c2h[1].tvalid = m_axis_adpt_rx_322mhz_tvalid[1];
+    assign axis_c2h[1].tvalid = m_axis_adpt_rx_322mhz_tvalid[1] && start_rx;
     assign axis_c2h[1].tlast  = m_axis_adpt_rx_322mhz_tlast[1];
     assign axis_c2h[1].tdest  = 'hx; // unused by open_nic_shell.
     assign axis_c2h[1].tdata  = m_axis_adpt_rx_322mhz_tdata[1023:512];
     assign axis_c2h[1].tkeep  = m_axis_adpt_rx_322mhz_tkeep[127:64];
     assign axis_c2h[1].tuser.rss_enable  = m_axis_adpt_rx_322mhz_tuser_rss_enable[1];
     assign axis_c2h[1].tuser.rss_entropy = m_axis_adpt_rx_322mhz_tuser_rss_entropy[23:12];
-    assign m_axis_adpt_rx_322mhz_tready[1] = axis_c2h[1].tready;
+    assign m_axis_adpt_rx_322mhz_tready[1] = axis_c2h[1].tready && start_rx;

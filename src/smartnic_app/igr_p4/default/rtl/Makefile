@@ -27,7 +27,7 @@ SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic_app.igr_p4.default.vitisnetp4_igr.rtl \
     smartnic_app.igr_p4.default.vitisnetp4_igr.extern.rtl \
-	smartnic_app.igr_p4.rtl \
+    smartnic_app.igr_p4.rtl \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)
 

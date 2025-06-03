@@ -7,6 +7,7 @@ package tb_pkg;
 
     // Testbench class definitions
     // (declared here to enforce tb_pkg:: namespace for testbench definitions)
-    `include "smartnic_env.svh"
+    `include "timestamp_agent.svh"
+    `include "tb_env.svh"
 
 endpackage : tb_pkg
