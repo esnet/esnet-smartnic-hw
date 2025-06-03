@@ -83,7 +83,7 @@ sim_p4_apps:
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
         - examples/proxy_test/tests/regression/run_*/tests.xml
     when: always
-  timeout: 3h
+  timeout: 4h
   needs: []
 
 sim_platform:
