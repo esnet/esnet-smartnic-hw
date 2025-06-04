@@ -56,9 +56,10 @@ SMARTNIC_LIB_NAME = smartnic
 #   LIB_ENV = VAR1_NAME=VAR1_VALUE VAR2_NAME=VAR2_VALUE
 # ----------------------------------------------------
 BOARD ?= au280
+__CONFIGURED_VIVADO_VERSION=$(notdir $(shell echo $$XILINX_VIVADO))
 
-# Maintain separate output products per board
-OUTPUT_SUBDIR = $(BOARD)
+# Maintain separate output products per board and Vivado version
+OUTPUT_SUBDIR = $(BOARD)/$(__CONFIGURED_VIVADO_VERSION)
 
 LIB_ENV = \
     BOARD=$(BOARD)

@@ -1,4 +1,4 @@
-interface timestamp_if #(
+interface timestamp_intf #(
     parameter type TIMESTAMP_T = bit[63:0]
 ) (
     input clk,
@@ -50,4 +50,4 @@ interface timestamp_if #(
         hold <= 1'b0;
     endtask
 
-endinterface : timestamp_if
+endinterface : timestamp_intf

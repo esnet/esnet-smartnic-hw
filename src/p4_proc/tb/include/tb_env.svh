@@ -53,7 +53,7 @@ class tb_env extends std_verif_pkg::base;
     p4_proc_reg_agent p4_proc_reg_agent;
 
     // Timestamp
-    virtual timestamp_if #() timestamp_vif;
+    virtual timestamp_intf #() timestamp_vif;
 
     timestamp_agent #() ts_agent;
 

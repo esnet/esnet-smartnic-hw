@@ -7,6 +7,10 @@ include $(COMPONENT_ROOT)/config.mk
 
 P4_FILE ?= $(P4_IGR_FILE)
 
+# Output products are arranged by board and Vivado version
+# (e.g. .app/out/au280/2024.2/...)
+__OUTPUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/$(notdir $(shell echo $$XILINX_VIVADO))
+
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
@@ -18,11 +22,11 @@ build:
 package: build_package reg_package p4_package driver_package
 
 build_package:
-	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic_app/p4_only/build/proj/proj.runs/impl_1/smartnic_app_opt.dcp smartnic_app.dcp
+	@cp $(__OUTPUT_DIR)/smartnic_app/p4_only/build/proj/proj.runs/impl_1/smartnic_app_opt.dcp smartnic_app.dcp
 
 reg_package:
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic_app.p4_only.regio BOARD=$(BOARD)
-	@cp $(OUTPUT_ROOT)/$(BOARD)/smartnic_app/p4_only/regio/ir/smartnic_app_decoder-ir.yaml smartnic_app_decoder.yaml
+	@cp $(__OUTPUT_DIR)/smartnic_app/p4_only/regio/ir/smartnic_app_decoder-ir.yaml smartnic_app_decoder.yaml
 
 p4_package:
 	@if [ ! -z "$(strip $(P4_IGR_FILE))" ]; then \
@@ -37,11 +41,11 @@ p4_package:
 driver_package:
 	@if [ ! -z "$(strip $(P4_IGR_FILE))" ]; then \
 		$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_igr.ip; \
-		tar -cf smartnic_app_igr_drv.tar -C $(OUTPUT_ROOT)/$(BOARD)/vitisnetp4_igr/ip/vitisnetp4_igr/src/sw/drivers/install . ; \
+		tar -cf smartnic_app_igr_drv.tar -C $(__OUTPUT_DIR)/vitisnetp4_igr/ip/vitisnetp4_igr/src/sw/drivers/install . ; \
 	fi
 	@if [ ! -z "$(strip $(P4_EGR_FILE))" ]; then \
 		$(MAKE) -s -C $(SRC_ROOT) driver COMPONENT=vitisnetp4_egr.ip; \
-		tar -cf smartnic_app_egr_drv.tar -C $(OUTPUT_ROOT)/$(BOARD)/vitisnetp4_egr/ip/vitisnetp4_egr/src/sw/drivers/install . ; \
+		tar -cf smartnic_app_egr_drv.tar -C $(__OUTPUT_DIR)/vitisnetp4_egr/ip/vitisnetp4_egr/src/sw/drivers/install . ; \
 	fi
 
 clean:

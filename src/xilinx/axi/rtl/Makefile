@@ -32,15 +32,18 @@ SUBCOMPONENTS = \
     axi4l.rtl@common \
     util.rtl@common
 
+# Import IP core revision details from version-specific tool config
+include $(CFG_ROOT)/vivado_ip.mk
+
 EXT_LIBS = \
     unisims_ver \
-    axi_register_slice_v2_1_30
+    axi_register_slice_v$(IP_VER_AXI_REGISTER_SLICE)
 
 # ----------------------------------------------------
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = AXI_REGISTER_SLICE_MODULE_NAME=axi_register_slice_v$(IP_VER_AXI_REGISTER_SLICE)_axi_register_slice
 
 # ----------------------------------------------------
 # Options
