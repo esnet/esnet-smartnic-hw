@@ -56,10 +56,8 @@ COMMON_LIB_NAME = common
 # ----------------------------------------------------
 BOARD ?= au280
 
-__CONFIGURED_VIVADO_VERSION=$(notdir $(XILINX_VIVADO))
-
 # Maintain separate output products per board and Vivado version
-OUTPUT_SUBDIR = $(BOARD)/$(__CONFIGURED_VIVADO_VERSION)
+OUTPUT_SUBDIR = $(BOARD)/$(XILINX_VIVADO__VERSION)
 
 LIB_ENV = \
     BOARD=$(BOARD)
