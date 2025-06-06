@@ -967,12 +967,12 @@ module smartnic
 
    tuser_smartnic_meta_t axis_c2h_tuser [NUM_CMAC][HOST_NUM_IFS];
 
-   logic [$clog2(HOST_NUM_IFS)-1:0] host_if_id [HOST_NUM_IFS];
-
    generate
        for (genvar j = 0; j < HOST_NUM_IFS; j += 1) begin : g__h2c_c2h
            for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__cmac_idx
-               assign host_if_id[j] = j;
+               logic [$clog2(HOST_NUM_IFS)-1:0] host_if_id;
+
+               assign host_if_id = j;
 
                assign axis_h2c_tvalid[j][i]    = axis_h2c[i][j].tvalid;
                assign axis_h2c[i][j].tready    = axis_h2c_tready[j][i];
@@ -997,7 +997,7 @@ module smartnic
                assign axis_c2h_tuser[i][j].trunc_enable  = axis_c2h_tuser_trunc_enable[j][i];
                assign axis_c2h_tuser[i][j].trunc_length  = axis_c2h_tuser_trunc_length[j][i];
                assign axis_c2h_tuser[i][j].rss_enable    = axis_c2h_tuser_rss_enable[j][i];
-               assign axis_c2h_tuser[i][j].rss_entropy   = {host_if_id[j], axis_c2h_tuser_rss_entropy[j][i][9:0]};
+               assign axis_c2h_tuser[i][j].rss_entropy   = {host_if_id, axis_c2h_tuser_rss_entropy[j][i][9:0]};
                assign axis_c2h_tuser[i][j].hdr_tlast     = '0;
                assign axis_c2h[i][j].tuser               = axis_c2h_tuser[i][j];
 
