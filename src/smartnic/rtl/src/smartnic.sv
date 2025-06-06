@@ -452,7 +452,9 @@ module smartnic
         .axi4s_out      (axis_cmac_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_cmac[i]),
-        .axil_if        (axil_to_fifo_from_cmac[i])
+        .axil_if        (axil_to_fifo_from_cmac[i]),
+        .flow_ctl_thresh('0), // Unused
+        .flow_ctl       ( )
       );
 
       // Terminate unused AXI-L interface
@@ -595,7 +597,9 @@ module smartnic
         .axi4s_out      (axis_host_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_host[i]),
-        .axil_if        (axil_to_fifo_from_host[i])
+        .axil_if        (axil_to_fifo_from_host[i]),
+        .flow_ctl_thresh('0), // Unused
+        .flow_ctl       ( )
       );
 
       axi4l_intf_controller_term axi4l_ovfl_from_host_term (.axi4l_if (axil_to_ovfl_from_host[i]));
