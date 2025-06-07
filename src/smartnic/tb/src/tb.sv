@@ -17,10 +17,35 @@ module tb;
                  .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t))           axis_out_if [4] ();
 
     generate for (genvar i = 0; i < 2; i += 1) begin
-        axi4s_intf_connector cmac_igr_connector (.axi4s_from_tx(axis_in_if[i]),    .axi4s_to_rx(axis_cmac_igr[i]));
+        port_t axis_in_if_tdest_cmac_igr;
+        port_t axis_in_if_tdest_h2c;
+
+        assign axis_cmac_igr[i].aclk = axis_in_if[i].aclk;
+        assign axis_cmac_igr[i].aresetn = axis_in_if[i].aresetn;
+        assign axis_cmac_igr[i].tvalid = axis_in_if[i].tvalid;
+        assign axis_cmac_igr[i].tlast = axis_in_if[i].tlast;
+        assign axis_cmac_igr[i].tdata = axis_in_if[i].tdata;
+        assign axis_cmac_igr[i].tkeep = axis_in_if[i].tkeep;
+        assign axis_cmac_igr[i].tid = axis_in_if[i].tid;
+        assign axis_in_if_tdest_cmac_igr = axis_in_if[i].tdest;
+        assign axis_cmac_igr[i].tdest = axis_in_if_tdest_cmac_igr[1:0];
+        assign axis_cmac_igr[i].tuser = axis_in_if[i].tuser;
+        assign axis_in_if[i].tready = axis_cmac_igr[i].tready;
+
         axi4s_intf_connector cmac_egr_connector (.axi4s_from_tx(axis_cmac_egr[i]), .axi4s_to_rx(axis_out_if[i]));
 
-        axi4s_intf_connector      h2c_connector (.axi4s_from_tx(axis_in_if[i+2]),  .axi4s_to_rx(axis_h2c[i]));
+        assign axis_h2c[i].aclk = axis_in_if[i+2].aclk;
+        assign axis_h2c[i].aresetn = axis_in_if[i+2].aresetn;
+        assign axis_h2c[i].tvalid = axis_in_if[i+2].tvalid;
+        assign axis_h2c[i].tlast = axis_in_if[i+2].tlast;
+        assign axis_h2c[i].tdata = axis_in_if[i+2].tdata;
+        assign axis_h2c[i].tkeep = axis_in_if[i+2].tkeep;
+        assign axis_h2c[i].tid = axis_in_if[i+2].tid;
+        assign axis_in_if_tdest_h2c = axis_in_if[i+2].tdest;
+        assign axis_h2c[i].tdest = axis_in_if_tdest_h2c[1:0];
+        assign axis_h2c[i].tuser = axis_in_if[i+2].tuser;
+        assign axis_in_if[i+2].tready = axis_h2c[i].tready;
+
         axi4s_intf_connector      c2h_connector (.axi4s_from_tx(axis_c2h[i]),      .axi4s_to_rx(axis_out_if[i+2]));
     end endgenerate
 
