@@ -63,8 +63,6 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' src/p4_proc/tests/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_app/tests/regression
     - grep 'PASSED.*suites passing' src/smartnic_app/tests/regression/run_$SEED/sim.log
-    - make -s -C src/smartnic_app/tests.smartnic/regression
-    - grep 'PASSED.*suites passing' src/smartnic_app/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C examples/p4_multi_proc config
     - make -s -C examples/p4_multi_proc/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
@@ -78,7 +76,6 @@ sim_p4_apps:
       junit:
         - src/p4_proc/tests/regression/run_*/tests.xml
         - src/smartnic_app/tests/regression/run_*/tests.xml
-        - src/smartnic_app/tests.smartnic/regression/run_*/tests.xml
         - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
         - examples/proxy_test/tests/regression/run_*/tests.xml
@@ -96,6 +93,8 @@ sim_platform:
     - grep 'PASSED.*suites passing' src/smartnic/tests/top/regression/run_$SEED/sim.log
     - make -s -C src/smartnic/tests/block/regression
     - grep 'PASSED.*suites passing' src/smartnic/tests/block/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic_app/tests.smartnic/regression
+    - grep 'PASSED.*suites passing' src/smartnic_app/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C examples/p2p/tests.smartnic/regression
     - grep 'PASSED.*suites passing' examples/p2p/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_250mhz/tests/regression
@@ -106,6 +105,7 @@ sim_platform:
       junit:
         - src/smartnic/tests/top/regression/run_*/tests.xml
         - src/smartnic/tests/block/regression/run_*/tests.xml
+        - src/smartnic_app/tests.smartnic/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml
     when: always
