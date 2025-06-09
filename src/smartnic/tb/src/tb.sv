@@ -1,7 +1,6 @@
 module tb;
     import tb_pkg::*;
     import smartnic_pkg::*;
-    import pcap_pkg::*;
 
     //===================================
     // (Common) test environment
