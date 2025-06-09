@@ -22,6 +22,10 @@ module smartnic_app_ctrl_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
+    tb_pkg::tb_env env;
+
+    // VitisNetP4 table agent
+    vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
 
     //===================================
     // Import common testcase tasks
@@ -40,6 +44,10 @@ module smartnic_app_ctrl_unit_test;
         // Retrieve reference to testbench environment class
         env = tb.env;
 
+        // Create P4 table agent
+        vitisnetp4_agent = new;
+        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
+                                       // path to AXI-L write/read tasks
     endfunction
 
     //===================================
@@ -48,9 +56,10 @@ module smartnic_app_ctrl_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        // start environment
+        env.run();
 
+        #100ns;
     endtask
 
 
@@ -59,8 +68,10 @@ module smartnic_app_ctrl_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
-        svunit_ut.teardown();
+        // Stop environment
+        env.stop();
 
+        svunit_ut.teardown();
     endtask
 
 

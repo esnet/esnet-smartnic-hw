@@ -1,11 +1,8 @@
 import smartnic_pkg::*;
-
-tb_pkg::tb_env env;
-
-vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
+import axi4s_verif_pkg::*;
 
 //=======================================================================
-// Probe tasks
+// Global variables
 //=======================================================================
 typedef enum logic [31:0] {
     PROBE_FROM_PF0      = 'h65000,
@@ -40,286 +37,110 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
-task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkt_cnt, exp_byte_cnt);
+
+localparam PHY0    = 4'h0;
+localparam PHY1    = 4'h1;
+localparam PF0     = 4'h2;
+localparam PF1     = 4'h3;
+localparam PF0_VF0 = 4'h4;
+localparam PF1_VF0 = 4'h5;
+localparam PF0_VF1 = 4'h6;
+localparam PF1_VF1 = 4'h7;
+localparam PF0_VF2 = 4'h8;
+localparam PF1_VF2 = 4'h9;
+
+string  msg;
+string  p4_sim_dir = "../../../../vitisnetp4/p4/sim/";
+
+tuser_smartnic_meta_t   tuser;
+
+//=======================================================================
+// Tasks
+//=======================================================================
+task debug_msg(input string msg, input bit VERBOSE=0);
+    if (VERBOSE) `INFO(msg);
+endtask
+
+
+task automatic write_p4_tables (input string testdir);
+    string filename;
+
+   `INFO("Writing VitisNetP4 tables...");
+    filename = {p4_sim_dir, testdir, "/cli_commands.txt"};
+    vitisnetp4_agent.table_init_from_file(filename);
+endtask
+
+
+task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tdest=0,
+                             tuser_smartnic_meta_t tuser={16'd0,1'bx,16'hxxxx,1'b0,12'd0,1'bx},
+                             bit write_tables=1);
+    string filename;
+
+    if (write_tables) write_p4_tables (.testdir(testdir));
+
+   `INFO("Writing expected pcap data to scoreboard...");
+    filename = {p4_sim_dir, testdir, "/packets_out.pcap"};
+
+    env.pcap_to_scoreboard (.filename(filename), .tid('0), .tdest(tdest), .tuser(tuser),
+                            .out_port(out_port));
+
+   `INFO("Starting simulation...");
+    filename = {p4_sim_dir, testdir, "/packets_in.pcap"};
+    env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
+
+    #2us;
+   `FAIL_IF_LOG(env.scoreboard0.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard1.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard2.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard3.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard4.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard5.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard6.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard7.report(msg) > 0, msg);
+endtask
+
+
+task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkts, exp_bytes);
     logic [63:0] rd_data;
 
     env.reg_agent.read_reg( base_addr + 'h0, rd_data[63:32] );  // pkt_count_upper
     env.reg_agent.read_reg( base_addr + 'h4, rd_data[31:0]  );  // pkt_count_lower
    `INFO($sformatf("%s pkt count: %0d", base_addr.encoded.name(), rd_data));
-   `FAIL_UNLESS( rd_data == exp_pkt_cnt );
+   `FAIL_UNLESS( rd_data == exp_pkts );
 
     env.reg_agent.read_reg( base_addr + 'h8, rd_data[63:32] );  // byte_count_upper
     env.reg_agent.read_reg( base_addr + 'hc, rd_data[31:0]  );  // byte_count_lower
    `INFO($sformatf("%s byte count: %0d", base_addr.encoded.name(), rd_data));
-   `FAIL_UNLESS( rd_data == exp_byte_cnt );
+   `FAIL_UNLESS( rd_data == exp_bytes );
+
+    env.reg_agent.write_reg( base_addr + 'h10, 'h2 ); // CLR_ON_WR_EVT
 endtask;
 
-task clear_igr_probe (input port_t in_if=0);
-    case (in_if.encoded.typ)
-        PF:  if (in_if.encoded.num == P0) env.probe_from_pf0_reg_blk_agent.write_probe_control     ('h2);
-             else                         env.probe_from_pf1_reg_blk_agent.write_probe_control     ('h2);
-        VF0: if (in_if.encoded.num == P0) env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
-             else                         env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
-        VF1: if (in_if.encoded.num == P0) env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
-             else                         env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
-    endcase
-endtask;
-
-task clear_egr_probe (input port_t out_if=0);
-    case (out_if.encoded.typ)
-        PHY: if (out_if.encoded.num == P0) begin
-                 env.probe_to_app_igr_p4_out0_reg_blk_agent.write_probe_control ('h2);
-                 env.probe_to_app_igr_in0_reg_blk_agent.write_probe_control     ('h2);
-                 env.probe_to_app_egr_in0_reg_blk_agent.write_probe_control     ('h2);
-                 env.probe_to_app_egr_out0_reg_blk_agent.write_probe_control    ('h2);
-                 env.probe_to_app_egr_p4_in0_reg_blk_agent.write_probe_control  ('h2);
-             end else begin
-                 env.probe_to_app_igr_p4_out1_reg_blk_agent.write_probe_control ('h2);
-                 env.probe_to_app_igr_in1_reg_blk_agent.write_probe_control     ('h2);
-                 env.probe_to_app_egr_in1_reg_blk_agent.write_probe_control     ('h2);
-                 env.probe_to_app_egr_out1_reg_blk_agent.write_probe_control    ('h2);
-                 env.probe_to_app_egr_p4_in1_reg_blk_agent.write_probe_control  ('h2);
-             end
-        PF:  if (out_if.encoded.num == P0) env.probe_to_pf0_reg_blk_agent.write_probe_control     ('h2);
-             else                          env.probe_to_pf1_reg_blk_agent.write_probe_control     ('h2);
-        VF0: if (out_if.encoded.num == P0) env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
-             else                          env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
-        VF1: if (out_if.encoded.num == P0) env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
-             else                          env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
-    endcase
-endtask;
-
-task clear_all_probes;
-    env.probe_from_pf0_reg_blk_agent.write_probe_control     ('h2);
-    env.probe_from_pf1_reg_blk_agent.write_probe_control     ('h2);
-    env.probe_from_pf0_vf0_reg_blk_agent.write_probe_control ('h2);
-    env.probe_from_pf1_vf0_reg_blk_agent.write_probe_control ('h2);
-    env.probe_from_pf0_vf1_reg_blk_agent.write_probe_control ('h2);
-    env.probe_from_pf1_vf1_reg_blk_agent.write_probe_control ('h2);
-
-    env.probe_to_pf0_reg_blk_agent.write_probe_control       ('h2);
-    env.probe_to_pf1_reg_blk_agent.write_probe_control       ('h2);
-    env.probe_to_pf0_vf0_reg_blk_agent.write_probe_control   ('h2);
-    env.probe_to_pf1_vf0_reg_blk_agent.write_probe_control   ('h2);
-    env.probe_to_pf0_vf1_reg_blk_agent.write_probe_control   ('h2);
-    env.probe_to_pf1_vf1_reg_blk_agent.write_probe_control   ('h2);
-endtask;
 
 task check_cleared_probes;
-    check_probe ( .base_addr(PROBE_FROM_PF0),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_FROM_PF1),     .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_FROM_PF0_VF0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_FROM_PF1_VF0), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_FROM_PF0_VF1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_FROM_PF1_VF1), .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF0),     .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF1),     .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF0_VF0), .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF1_VF0), .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF0_VF1), .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_FROM_PF1_VF1), .exp_pkts(0), .exp_bytes(0) );
 
-    check_probe ( .base_addr(PROBE_TO_PF0),       .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_TO_PF1),       .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_TO_PF0_VF0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_TO_PF1_VF0),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_TO_PF0_VF1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
-    check_probe ( .base_addr(PROBE_TO_PF1_VF1),   .exp_pkt_cnt(0), .exp_byte_cnt(0) );
+    check_probe ( .base_addr(PROBE_TO_PF0),       .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_PF1),       .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_PF0_VF0),   .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_PF1_VF0),   .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_PF0_VF1),   .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_PF1_VF1),   .exp_pkts(0), .exp_bytes(0) );
+
+    check_probe ( .base_addr(PROBE_TO_APP_IGR_IN0),      .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_IGR_IN1),      .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_IN0),      .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_IN1),      .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_OUT0),     .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_OUT1),     .exp_pkts(0), .exp_bytes(0) );
+
+    check_probe ( .base_addr(PROBE_TO_APP_IGR_P4_OUT0),  .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_IGR_P4_OUT1),  .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_P4_IN0),   .exp_pkts(0), .exp_bytes(0) );
+    check_probe ( .base_addr(PROBE_TO_APP_EGR_P4_IN1),   .exp_pkts(0), .exp_bytes(0) );
 endtask;
-
-
-
-//=======================================================================
-// Traffic tasks
-//=======================================================================
-string P4_SIM_PATH = "../../../p4/sim/";
-
-task debug_msg(input string msg, input bit VERBOSE=0);
-    if (VERBOSE) `INFO(msg);
-endtask
-
-// Execute block reset (dataplane + control plane)
-task reset();
-    automatic bit reset_done;
-    automatic string msg;
-    env.reset();
-    env.wait_reset_done(reset_done, msg);
-    `FAIL_IF_LOG((reset_done == 0), msg);
-endtask
-
-
-// Send packets described in PCAP file on AXI-S input interface
-task send_pcap(input string pcap_filename, input int num_pkts=0, start_idx=0, twait=0, input port_t in_if=0, id=0, dest=0);
-    case (in_if.encoded.typ)
-        PHY: if (in_if.encoded.num == P0)
-                  env.axis_in_driver[0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-             else env.axis_in_driver[1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        PF:  if (in_if.encoded.num == P0)
-                  env.axis_h2c_driver[0][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-             else env.axis_h2c_driver[0][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        VF0: if (in_if.encoded.num == P0)
-                  env.axis_h2c_driver[1][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-             else env.axis_h2c_driver[1][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        VF1: if (in_if.encoded.num == P0)
-                  env.axis_h2c_driver[2][0].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-             else env.axis_h2c_driver[2][1].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-        default: $display ("Input interface 'in_if' undefined:", in_if);
-    endcase
-endtask
-
-
-// Compare packets
-task compare_pkts(input byte pkt1[$], pkt2[$]);
-    automatic int byte_idx = 0;
-
-    if (pkt1.size != pkt2.size()) begin
-        $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
-        $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
-        `FAIL_IF_LOG(
-            pkt1.size() != pkt2.size(),
-            $sformatf("FAIL!!! Packet size mismatch. size1=%0d size2=%0d", pkt1.size(), pkt2.size())
-        );
-    end
-
-    byte_idx = 0;
-    while ( byte_idx < pkt1.size() ) begin
-       if (pkt1[byte_idx] != pkt2[byte_idx]) begin
-          $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
-          $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
-	  
-          `FAIL_IF_LOG( pkt1[byte_idx] != pkt2[byte_idx],
-                        $sformatf("FAIL!!! Packet bytes mismatch at byte_idx: 0x%0h (d:%0d)", byte_idx, byte_idx) )
-       end
-       byte_idx++;
-    end
-endtask
-
-
-// Run packet test
-task automatic run_pkt_test (
-    input string testdir, expfile="/expected/packets_out.pcap",
-    input logic[63:0] init_timestamp=0,
-    input port_t in_if=0, out_if=0, dest_port=0,
-    input write_p4_tables=1, check_tdest=1, VERBOSE=1 );
-
-    string filename;
-
-    // expected pcap data
-    pcap_pkg::pcap_t exp_pcap;
-
-    // variables for sending packet data
-    automatic logic [63:0] timestamp = init_timestamp;
-    automatic int          num_pkts  = 0;
-    automatic int          start_idx = 0;
-    automatic int          twait = 0;
-
-    // variables for receiving (monitoring) packet data
-    automatic int rx_pkt_cnt = 0;
-    automatic int rx_byte_cnt = 0;
-    automatic bit rx_done = 0;
-    byte          rx_data[$];
-    port_t        id;
-    port_t        dest;
-    bit           user;
-
-    debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
-    env.ts_agent.set_static(timestamp);
-
-    if (write_p4_tables==1) begin
-        debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-        filename = {P4_SIM_PATH, testdir, "/cli_commands.txt"};
-        vitisnetp4_agent.table_init_from_file(filename);
-        debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
-    end
-
-    debug_msg("Reading expected pcap file...", VERBOSE);
-    filename = {P4_SIM_PATH, testdir, expfile};
-    exp_pcap = pcap_pkg::read_pcap(filename);
-
-    debug_msg("Starting simulation...", VERBOSE);
-    filename = {P4_SIM_PATH, testdir, "/packets_in.pcap"};
-    rx_pkt_cnt = 0;
-    rx_byte_cnt = 0;
-    clear_all_probes;
-    fork
-        begin
-            // Send packets
-            send_pcap(.pcap_filename(filename), .num_pkts(num_pkts), .start_idx(start_idx),
-                      .twait(twait), .in_if(in_if), .id(in_if), .dest(dest_port));
-        end
-
-        begin
-            // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
-            while ( (init_timestamp == 1) && (in_if==0) && !rx_done ) begin
-                @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
-                    if (tb.axis_in_if[0].tlast) begin tb.axis_in_if[0]._wait(50); timestamp++; env.ts_agent.set_static(timestamp); end
-                end
-            end
-        end
-
-        begin
-            // Monitor output packets
-            while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                case (out_if.encoded.typ)
-                    PHY: if (out_if.encoded.num == P0)
-                                 env.axis_out_monitor[0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                         else    env.axis_out_monitor[1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    PF:  if (out_if.encoded.num == P0)
-                              env.axis_c2h_monitor[0][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                         else env.axis_c2h_monitor[0][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    VF0: if (out_if.encoded.num == P0)
-                              env.axis_c2h_monitor[1][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                         else env.axis_c2h_monitor[1][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    VF1: if (out_if.encoded.num == P0)
-                              env.axis_c2h_monitor[2][0].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                         else env.axis_c2h_monitor[2][1].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(5));
-                    default: $display ("Output interface 'out_if' undefined:", out_if);
-                endcase
-
-                rx_pkt_cnt++;
-                rx_byte_cnt = rx_byte_cnt + rx_data.size();
-                debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
-                                      rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
-
-                debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data);
-                if (check_tdest) `FAIL_IF_LOG( dest != dest_port,
-                                               $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
-            end
-
-            case (in_if.encoded.typ)
-                PF:  if (in_if.encoded.num == P0)
-                          begin check_probe (PROBE_FROM_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                     else begin check_probe (PROBE_FROM_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                VF0: if (in_if.encoded.num == P0)
-                          begin check_probe (PROBE_FROM_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                     else begin check_probe (PROBE_FROM_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                VF1: if (in_if.encoded.num == P0)
-                          begin check_probe (PROBE_FROM_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-                     else begin check_probe (PROBE_FROM_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_igr_probe(in_if); end
-            endcase
-
-            case (out_if.encoded.typ)
-                PHY: if (in_if.encoded.typ == PHY)
-                        if (out_if.encoded.num == P0) begin
-                            check_probe (PROBE_TO_APP_IGR_P4_OUT0,  rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_IGR_IN0,      rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_IN0,      rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_OUT0,     rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_P4_IN0,   rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
-                        end else begin
-                            check_probe (PROBE_TO_APP_IGR_P4_OUT1,  rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_IGR_IN1,      rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_IN1,      rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_OUT1,     rx_pkt_cnt, rx_byte_cnt);
-                            check_probe (PROBE_TO_APP_EGR_P4_IN1,   rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if);
-                        end
-                PF:  if (out_if.encoded.num == P0)
-                          begin check_probe (PROBE_TO_PF0,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                     else begin check_probe (PROBE_TO_PF1,     rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                VF0: if (out_if.encoded.num == P0)
-                          begin check_probe (PROBE_TO_PF0_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                     else begin check_probe (PROBE_TO_PF1_VF0, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                VF1: if (out_if.encoded.num == P0)
-                          begin check_probe (PROBE_TO_PF0_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-                     else begin check_probe (PROBE_TO_PF1_VF1, rx_pkt_cnt, rx_byte_cnt); clear_egr_probe(out_if); end
-            endcase
-
-            rx_done = 1;
-        end
-    join
-endtask

@@ -83,10 +83,10 @@ sim:
 
 
 sim-svh: sim
-	(echo \`SVTEST\( $(shell echo $(P4BM_DIR) | sed 's/\-/\_/g') \)    >> $(P4BM_OUTPUT_SVH) )
-	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \) \)\;          >> $(P4BM_OUTPUT_SVH) )
-	(echo \`SVTEST_END                                                 >> $(P4BM_OUTPUT_SVH) )
-	(echo                                                              >> $(P4BM_OUTPUT_SVH) )
+	(echo \`SVTEST\( $(shell echo $(P4BM_DIR) | sed 's/\-/\_/g') \)               >> $(P4BM_OUTPUT_SVH) )
+	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \)\, \.tuser\(tuser\) \)\;  >> $(P4BM_OUTPUT_SVH) )
+	(echo \`SVTEST_END                                                            >> $(P4BM_OUTPUT_SVH) )
+	(echo                                                                         >> $(P4BM_OUTPUT_SVH) )
 
 test:
 	(cd $(P4BM_DIR) && ../$(PCAP_DIFF) -c -d -i expected/$(P4BM_OUTPUT_PCAP) -i $(P4BM_OUTPUT_PCAP) -o $(DIFF_PCAP) | tee $(P4BM_OUTPUT_TXT))
