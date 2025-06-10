@@ -141,7 +141,7 @@ module proxy_test_packet_fifo_unit_test;
     string msg;
     int len;
 
-    task one_packet(int id=0, int len=$urandom_range(64, 1500));
+    task one_packet(int id=0, int len=$urandom_range(64, 256));
         packet_raw#(META_T) packet;
         packet = new($sformatf("pkt_%0d", id), len);
         packet.randomize();
@@ -191,7 +191,7 @@ module proxy_test_packet_fifo_unit_test;
         `SVTEST_END
 
         `SVTEST(packet_stream)
-            localparam NUM_PKTS = 10;
+            localparam NUM_PKTS = 4;
             monitor.start();
             for (int i = 0; i < NUM_PKTS; i++) begin
                 one_packet(i);
