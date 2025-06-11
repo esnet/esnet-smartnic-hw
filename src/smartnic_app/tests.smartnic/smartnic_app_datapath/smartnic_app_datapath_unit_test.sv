@@ -40,6 +40,7 @@ module smartnic_app_datapath_unit_test
     p4_proc_reg_agent  p4_proc_reg_agent;
     p4_proc_reg_pkg::reg_p4_proc_config_t  p4_proc_config;
 
+    tuser_smartnic_meta_t tuser=0;
 
     //===================================
     // Import common testcase tasks
@@ -90,6 +91,7 @@ module smartnic_app_datapath_unit_test
         // initialize VitisNetP4 tables
         vitisnetp4_agent.init();
 
+        tuser=0;
     endtask
 
 
@@ -126,7 +128,8 @@ module smartnic_app_datapath_unit_test
     //   `SVTEST_END
     //===================================
 
-    task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0);
+    task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
+                                 tuser_smartnic_meta_t tuser=0);
         string filename;
 
        `INFO("Writing VitisNetP4 tables...");
@@ -135,7 +138,7 @@ module smartnic_app_datapath_unit_test
 
        `INFO("Writing expected pcap data to scoreboard...");
         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
-        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser('0), .out_port(out_port));
+        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(out_port));
 
        `INFO("Starting simulation...");
         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
@@ -155,7 +158,7 @@ module smartnic_app_datapath_unit_test
            string testdir  = "../../../../vitisnetp4/p4/sim/test-default/";
            string filename = {testdir, "cli_commands.txt"};
 
-           tuser_smartnic_meta_t   tuser='x;
+           tuser='x;
 
            // ingress queue assignments. qid 0 maps to PF0_VF2 and PF1_VF2.
            env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h0});
