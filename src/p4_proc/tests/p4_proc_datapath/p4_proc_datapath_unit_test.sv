@@ -238,10 +238,13 @@ module p4_proc_datapath_unit_test
     `SVUNIT_TESTS_END
 
 
+     tuser_smartnic_meta_t tuser=0;
+
      task automatic run_pkt_test (
         input string testdir,
-        input logic[63:0] init_timestamp=0, input in_if=0, out_if=0, input port_t dest_port=0,
-        input int max_pkt_size = 0, input bit write_p4_tables=1, enable_monitor=1, VERBOSE=1 );
+        logic[63:0] init_timestamp=0, in_if=0, out_if=0, port_t dest_port=0,
+        int max_pkt_size = 0, bit write_p4_tables=1, enable_monitor=1, VERBOSE=1,
+        tuser_smartnic_meta_t tuser=0);
 	
         string filename;
 
