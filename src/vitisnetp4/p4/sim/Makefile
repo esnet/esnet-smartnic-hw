@@ -18,7 +18,7 @@ P4_OBJECT_TEST = ../$(P4_OBJECT)
 P4BM_DIR = test-default
 
 # Directories to use for p4bm simulation
-P4BM_DIRS = test-default test-default-w-drops test-fwd-p0 test-fwd-p1 test-fwd-p3 test-pkt-loopback
+P4BM_DIRS = test-default test-default-w-drops test-fwd-p0 test-fwd-p1 test-fwd-p2 test-fwd-p3 test-fwd-p4 test-pkt-loopback
 
 # Directories to use for system verilog simulation
 SVH_DIRS = test-default test-default-w-drops test-fwd-p0
@@ -83,10 +83,10 @@ sim:
 
 
 sim-svh: sim
-	(echo \`SVTEST\( $(shell echo $(P4BM_DIR) | sed 's/\-/\_/g') \)    >> $(P4BM_OUTPUT_SVH) )
-	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \) \)\;          >> $(P4BM_OUTPUT_SVH) )
-	(echo \`SVTEST_END                                                 >> $(P4BM_OUTPUT_SVH) )
-	(echo                                                              >> $(P4BM_OUTPUT_SVH) )
+	(echo \`SVTEST\( $(shell echo $(P4BM_DIR) | sed 's/\-/\_/g') \)               >> $(P4BM_OUTPUT_SVH) )
+	(echo run_pkt_test \( \.testdir\( \"$(P4BM_DIR)\" \)\, \.tuser\(tuser\) \)\;  >> $(P4BM_OUTPUT_SVH) )
+	(echo \`SVTEST_END                                                            >> $(P4BM_OUTPUT_SVH) )
+	(echo                                                                         >> $(P4BM_OUTPUT_SVH) )
 
 test:
 	(cd $(P4BM_DIR) && ../$(PCAP_DIFF) -c -d -i expected/$(P4BM_OUTPUT_PCAP) -i $(P4BM_OUTPUT_PCAP) -o $(DIFF_PCAP) | tee $(P4BM_OUTPUT_TXT))

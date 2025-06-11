@@ -33,7 +33,8 @@ SUBCOMPONENTS = \
     axi4s.rtl@$(COMMON_LIB_NAME) \
     axi4l.verif@$(COMMON_LIB_NAME) \
     axi4s.verif@$(COMMON_LIB_NAME) \
-    axi4s.regio.verif@$(COMMON_LIB_NAME)
+    axi4s.regio.verif@$(COMMON_LIB_NAME) \
+    pcap.pkg@common
 
 EXT_LIBS =
 

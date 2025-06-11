@@ -60,9 +60,7 @@ module proxy_test_packet_fifo_unit_test;
     // Scoreboard
     std_verif_pkg::event_scoreboard#(PACKET_T) scoreboard;
 
-    assign tb.mgmt_reset_if.reset = !reset_if.reset;
-    assign tb.reset_if.reset = !reset_if.reset;
-
+    assign tb.reset_if.reset = reset_if.reset;
     assign reset_if.ready = tb.reset_if.ready;
 
     //===================================

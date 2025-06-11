@@ -1,236 +1,306 @@
 import smartnic_pkg::*;
-import axi4s_reg_verif_pkg::*;
-import smartnic_app_reg_verif_pkg::*;
+import smartnic_app_verif_pkg::*;
+import axi4s_verif_pkg::*;
+import pcap_pkg::*;
 
-class tb_env extends std_verif_pkg::base;
-
+// Environment class for 'smartnic_app' component verification.
+class tb_env extends std_verif_pkg::basic_env;
+    //===================================
     // Parameters
-    // -- Datapath
-    localparam int AXIS_DATA_WID = 512;
-    localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
+    //===================================
+    localparam int  DATA_BYTE_WID = 64;
+    localparam type TID_T         = port_t;
+    localparam type TDEST_T       = port_t;
+    localparam type TUSER_T       = tuser_smartnic_meta_t;
 
-    localparam int HOST_NUM_IFS = 3;   // Number of HOST interfaces.
-    localparam int NUM_PORTS = 2;      // Number of processor ports (per vitisnetp4 processor).
+    localparam type TRANSACTION_T = axi4s_transaction#(TID_T, TDEST_T, TUSER_T);
+    localparam type DRIVER_T      = axi4s_driver  #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
+    localparam type MONITOR_T     = axi4s_monitor #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
+    localparam type MODEL_T       = smartnic_app_model;
+    localparam type SCOREBOARD_T  = std_verif_pkg::event_scoreboard#(TRANSACTION_T);
 
-    // -- Timeouts
-    localparam int RESET_TIMEOUT = 1024;     // In clk cycles
-    localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
+    local static const string __CLASS_NAME = "std_verif_pkg::tb_env";
+
+
+    localparam int AXIL_APP_OFFSET = 'h100000;
+    localparam int AXIL_VITISNET_OFFSET = 'h80000;
+
+    localparam int NUM_HOST_IFS = 3;       // Number of HOST interfaces.
+    localparam int NUM_PROC_PORTS = 2;     // Number of processor ports (per vitisnetp4 processor).
+    localparam int N = NUM_PROC_PORTS*(NUM_HOST_IFS+1);
 
     //===================================
     // Properties
     //===================================
+    DRIVER_T     driver  [N];
+    MONITOR_T    monitor [N];
+    MODEL_T      model   [N];
+    // SCOREBOARD_T scoreboard [N];
+    SCOREBOARD_T scoreboard0;
+    SCOREBOARD_T scoreboard1;
+    SCOREBOARD_T scoreboard2;
+    SCOREBOARD_T scoreboard3;
+    SCOREBOARD_T scoreboard4;
+    SCOREBOARD_T scoreboard5;
+    SCOREBOARD_T scoreboard6;
+    SCOREBOARD_T scoreboard7;
 
-    // Reset interfaces
-    virtual std_reset_intf #(.ACTIVE_LOW(1)) reset_vif;
-    virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
+    mailbox #(TRANSACTION_T)  inbox [N];
 
-    // AXI-L management interface
-    virtual axi4l_intf app_axil_vif;
-
-    // SDnet AXI-L management interface
-    virtual axi4l_intf axil_vif;
+    local mailbox #(TRANSACTION_T) __drv_inbox    [N];
+    local mailbox #(TRANSACTION_T) __mon_outbox   [N];
+    local mailbox #(TRANSACTION_T) __model_inbox  [N];
+    local mailbox #(TRANSACTION_T) __model_outbox [N];
 
     // AXI-S interfaces
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [NUM_PORTS];
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_vif [HOST_NUM_IFS][NUM_PORTS];
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [NUM_PORTS];
-    virtual axi4s_intf #(.TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_vif [HOST_NUM_IFS][NUM_PORTS];
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_in_vif  [NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_h2c_vif [NUM_HOST_IFS][NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_out_vif [NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_c2h_vif [NUM_HOST_IFS][NUM_PROC_PORTS];
 
-    // Drivers/Monitors
-    axi4s_driver #(      .TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_driver   [NUM_PORTS];
-    axi4s_driver #(      .TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_h2c_driver  [HOST_NUM_IFS][NUM_PORTS];
-    axi4s_monitor #(     .TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_monitor [NUM_PORTS];
-    axi4s_monitor #(     .TUSER_T(tuser_smartnic_meta_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_c2h_monitor [HOST_NUM_IFS][NUM_PORTS];
+    // AXI-L interfaces
+    virtual axi4l_intf axil_vif;
+    virtual axi4l_intf app_axil_vif;
 
-    // AXI-L agent
-    axi4l_reg_agent #() app_reg_agent;
-
-    // SDnet AXI-L agent
+    // AXI-L reg agents
     axi4l_reg_agent #() reg_agent;
+    axi4l_reg_agent #() app_reg_agent;
 
     // Register agents
     smartnic_app_reg_agent smartnic_app_reg_agent;
-
-    axi4s_probe_reg_blk_agent #() probe_from_pf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_from_pf1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_from_pf0_vf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_from_pf1_vf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_from_pf0_vf1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_from_pf1_vf1_reg_blk_agent;
-
-    axi4s_probe_reg_blk_agent #() probe_to_pf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_pf1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_pf0_vf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_pf1_vf0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_pf0_vf1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_pf1_vf1_reg_blk_agent;
-
-    axi4s_probe_reg_blk_agent #() probe_to_app_igr_in0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_igr_in1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_in0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_in1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_out0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_out1_reg_blk_agent;
-
-    axi4s_probe_reg_blk_agent #() probe_to_app_igr_p4_out0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_igr_p4_out1_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_p4_in0_reg_blk_agent;
-    axi4s_probe_reg_blk_agent #() probe_to_app_egr_p4_in1_reg_blk_agent;
 
     // Timestamp
     virtual timestamp_intf #() timestamp_vif;
 
     timestamp_agent #() ts_agent;
 
+
     //===================================
     // Methods
     //===================================
-
     // Constructor
-    function new(string name , bit bigendian = 1);
+    function new(input string name="tb_env", bit bigendian=1);
         super.new(name);
-        axis_in_driver[0]      = new(.BIGENDIAN(bigendian));
-        axis_in_driver[1]      = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[0][0]  = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[1][0]  = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[2][0]  = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[0][1]  = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[1][1]  = new(.BIGENDIAN(bigendian));
-        axis_h2c_driver[2][1]  = new(.BIGENDIAN(bigendian));
+        for (int i=0; i < N; i++) begin
+            inbox[i]   = new();
+            driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
+            monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            model[i]   = new(.name($sformatf("model[%0d]",i)));
 
-        axis_out_monitor[0]    = new(.BIGENDIAN(bigendian));
-        axis_out_monitor[1]    = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[0][0] = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[1][0] = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[2][0] = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[0][1] = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[1][1] = new(.BIGENDIAN(bigendian));
-        axis_c2h_monitor[2][1] = new(.BIGENDIAN(bigendian));
+            __drv_inbox[i]    = new();
+            __mon_outbox[i]   = new();
+            __model_inbox[i]  = new();
+            __model_outbox[i] = new();
+        end
 
-        app_reg_agent          = new("axi4l_reg_agent");
-        reg_agent              = new("axi4l_reg_agent");
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h64000);
-        ts_agent               = new;
+        //for (int i=0; i < N; i++) scoreboard[i] = new();
+        scoreboard0 = new("scoreboard[0]");
+        scoreboard1 = new("scoreboard[1]");
+        scoreboard2 = new("scoreboard[2]");
+        scoreboard3 = new("scoreboard[3]");
+        scoreboard4 = new("scoreboard[4]");
+        scoreboard5 = new("scoreboard[5]");
+        scoreboard6 = new("scoreboard[6]");
+        scoreboard7 = new("scoreboard[7]");
 
-        probe_from_pf0_reg_blk_agent     = new("probe_from_pf0_reg_blk",     'h65000);
-        probe_from_pf1_reg_blk_agent     = new("probe_from_pf1_reg_blk",     'h65100);
-        probe_from_pf0_vf0_reg_blk_agent = new("probe_from_pf0_vf0_reg_blk", 'h65200);
-        probe_from_pf1_vf0_reg_blk_agent = new("probe_from_pf1_vf0_reg_blk", 'h65300);
-        probe_from_pf0_vf1_reg_blk_agent = new("probe_from_pf0_vf1_reg_blk", 'h65400);
-        probe_from_pf1_vf1_reg_blk_agent = new("probe_from_pf1_vf1_reg_blk", 'h65500);
-
-        probe_to_pf0_reg_blk_agent     = new("probe_to_pf0_reg_blk",     'h65600);
-        probe_to_pf1_reg_blk_agent     = new("probe_to_pf1_reg_blk",     'h65700);
-        probe_to_pf0_vf0_reg_blk_agent = new("probe_to_pf0_vf0_reg_blk", 'h65800);
-        probe_to_pf1_vf0_reg_blk_agent = new("probe_to_pf1_vf0_reg_blk", 'h65900);
-        probe_to_pf0_vf1_reg_blk_agent = new("probe_to_pf0_vf1_reg_blk", 'h65a00);
-        probe_to_pf1_vf1_reg_blk_agent = new("probe_to_pf1_vf1_reg_blk", 'h65b00);
-
-        probe_to_app_igr_in0_reg_blk_agent  = new("probe_to_app_igr_in0_reg_blk",  'h65c00);
-        probe_to_app_igr_in1_reg_blk_agent  = new("probe_to_app_igr_in1_reg_blk",  'h65d00);
-        probe_to_app_egr_in0_reg_blk_agent  = new("probe_to_app_egr_in0_reg_blk",  'h65e00);
-        probe_to_app_egr_in1_reg_blk_agent  = new("probe_to_app_egr_in1_reg_blk",  'h65f00);
-        probe_to_app_egr_out0_reg_blk_agent = new("probe_to_app_egr_out0_reg_blk", 'h66000);
-        probe_to_app_egr_out1_reg_blk_agent = new("probe_to_app_egr_out1_reg_blk", 'h66100);
-        probe_to_app_igr_p4_out0_reg_blk_agent = new("probe_to_app_igr_p4_out0_reg_blk", 'h66200);
-        probe_to_app_igr_p4_out1_reg_blk_agent = new("probe_to_app_igr_p4_out1_reg_blk", 'h66300);
-        probe_to_app_egr_p4_in0_reg_blk_agent  = new("probe_to_app_egr_p4_in0_reg_blk",  'h66400);
-        probe_to_app_egr_p4_in1_reg_blk_agent  = new("probe_to_app_egr_p4_in1_reg_blk",  'h66500);
     endfunction
+
 
     // Destructor
     // [[ implements std_verif_pkg::base.destroy() ]]
     function automatic void destroy();
-        // TODO
+        for (int i=0; i < N; i++) begin
+            inbox[i]   = null;
+            driver[i]  = null;
+            monitor[i] = null;
+            model[i]   = null;
+
+            __drv_inbox[i]    = null;
+            __mon_outbox[i]   = null;
+            __model_inbox[i]  = null;
+            __model_outbox[i] = null;
+        end
+
+        //for (int i=0; i < 8; i++) scoreboard[i] = null;
+        scoreboard0 = null;
+        scoreboard1 = null;
+        scoreboard2 = null;
+        scoreboard3 = null;
+        scoreboard4 = null;
+        scoreboard5 = null;
+        scoreboard6 = null;
+        scoreboard7 = null;
+
+        super.destroy();
     endfunction
 
-    function void connect();
-        axis_in_driver[0].axis_vif      = axis_in_vif[0];
-        axis_in_driver[1].axis_vif      = axis_in_vif[1];
-        axis_h2c_driver[0][0].axis_vif  = axis_h2c_vif[0][0];
-        axis_h2c_driver[0][1].axis_vif  = axis_h2c_vif[0][1];
-        axis_h2c_driver[1][0].axis_vif  = axis_h2c_vif[1][0];
-        axis_h2c_driver[1][1].axis_vif  = axis_h2c_vif[1][1];
-        axis_h2c_driver[2][0].axis_vif  = axis_h2c_vif[2][0];
-        axis_h2c_driver[2][1].axis_vif  = axis_h2c_vif[2][1];
 
-        axis_out_monitor[0].axis_vif    = axis_out_vif[0];
-        axis_out_monitor[1].axis_vif    = axis_out_vif[1];
-        axis_c2h_monitor[0][0].axis_vif = axis_c2h_vif[0][0];
-        axis_c2h_monitor[0][1].axis_vif = axis_c2h_vif[0][1];
-        axis_c2h_monitor[1][0].axis_vif = axis_c2h_vif[1][0];
-        axis_c2h_monitor[1][1].axis_vif = axis_c2h_vif[1][1];
-        axis_c2h_monitor[2][0].axis_vif = axis_c2h_vif[2][0];
-        axis_c2h_monitor[2][1].axis_vif = axis_c2h_vif[2][1];
-
-        ts_agent.timestamp_vif          = timestamp_vif;
-        app_reg_agent.axil_vif          = app_axil_vif;
-        reg_agent.axil_vif              = axil_vif;
-
-        probe_from_pf0_reg_blk_agent.reg_agent     = reg_agent;
-        probe_from_pf1_reg_blk_agent.reg_agent     = reg_agent;
-        probe_from_pf0_vf0_reg_blk_agent.reg_agent = reg_agent;
-        probe_from_pf1_vf0_reg_blk_agent.reg_agent = reg_agent;
-        probe_from_pf0_vf1_reg_blk_agent.reg_agent = reg_agent;
-        probe_from_pf1_vf1_reg_blk_agent.reg_agent = reg_agent;
-
-        probe_to_pf0_reg_blk_agent.reg_agent     = reg_agent;
-        probe_to_pf1_reg_blk_agent.reg_agent     = reg_agent;
-        probe_to_pf0_vf0_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_pf1_vf0_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_pf0_vf1_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_pf1_vf1_reg_blk_agent.reg_agent = reg_agent;
-
-        probe_to_app_igr_in0_reg_blk_agent.reg_agent  = reg_agent;
-        probe_to_app_igr_in1_reg_blk_agent.reg_agent  = reg_agent;
-        probe_to_app_egr_in0_reg_blk_agent.reg_agent  = reg_agent;
-        probe_to_app_egr_in1_reg_blk_agent.reg_agent  = reg_agent;
-        probe_to_app_egr_out0_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_app_egr_out1_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_app_igr_p4_out0_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_app_igr_p4_out1_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_app_egr_p4_in0_reg_blk_agent.reg_agent = reg_agent;
-        probe_to_app_egr_p4_in1_reg_blk_agent.reg_agent = reg_agent;
+    // Configure trace output
+    // [[ overrides std_verif_pkg::base.trace_msg() ]]
+    function automatic void trace_msg(input string msg);
+        _trace_msg(msg, __CLASS_NAME);
     endfunction
 
-    task reset();
-        app_reg_agent.idle();
-        reg_agent.idle();
 
-        axis_in_driver[0].idle();
-        axis_in_driver[1].idle();
-        axis_h2c_driver[0][0].idle();
-        axis_h2c_driver[0][1].idle();
-        axis_h2c_driver[1][0].idle();
-        axis_h2c_driver[1][1].idle();
-        axis_h2c_driver[2][0].idle();
-        axis_h2c_driver[2][1].idle();
+    // Build environment
+    // [[ implements std_verif_pkg::env._build() ]]
+    virtual protected function automatic void _build();
+        trace_msg("_build()");
+        for (int i=0; i < N; i++) begin
+            driver[i].inbox   = __drv_inbox[i];
+            model[i].inbox    = __model_inbox[i];
+            model[i].outbox   = __model_outbox[i];
+            monitor[i].outbox = __mon_outbox[i];
+        end
 
-        axis_out_monitor[0].idle();
-        axis_out_monitor[1].idle();
-        axis_c2h_monitor[0][0].idle();
-        axis_c2h_monitor[0][1].idle();
-        axis_c2h_monitor[1][0].idle();
-        axis_c2h_monitor[1][1].idle();
-        axis_c2h_monitor[2][0].idle();
-        axis_c2h_monitor[2][1].idle();
+        //for (int i=0; i < N; i++) scoreboard[i].got_inbox = __mon_outbox[i];
+        scoreboard0.got_inbox = __mon_outbox[0];
+        scoreboard1.got_inbox = __mon_outbox[1];
+        scoreboard2.got_inbox = __mon_outbox[2];
+        scoreboard3.got_inbox = __mon_outbox[3];
+        scoreboard4.got_inbox = __mon_outbox[4];
+        scoreboard5.got_inbox = __mon_outbox[5];
+        scoreboard6.got_inbox = __mon_outbox[6];
+        scoreboard7.got_inbox = __mon_outbox[7];
 
-        reset_vif.pulse(8);
-        mgmt_reset_vif.pulse(8);
-        #100ns;
+        //for (int i=0; i < N; i++) scoreboard[i].exp_inbox = __model_outbox[i];
+        scoreboard0.exp_inbox = __model_outbox[0];
+        scoreboard1.exp_inbox = __model_outbox[1];
+        scoreboard2.exp_inbox = __model_outbox[2];
+        scoreboard3.exp_inbox = __model_outbox[3];
+        scoreboard4.exp_inbox = __model_outbox[4];
+        scoreboard5.exp_inbox = __model_outbox[5];
+        scoreboard6.exp_inbox = __model_outbox[6];
+        scoreboard7.exp_inbox = __model_outbox[7];
+
+        this.driver[0].axis_vif  = axis_in_vif[0];
+        this.driver[1].axis_vif  = axis_in_vif[1];
+        this.driver[2].axis_vif  = axis_h2c_vif[0][0];
+        this.driver[3].axis_vif  = axis_h2c_vif[0][1];
+        this.driver[4].axis_vif  = axis_h2c_vif[1][0];
+        this.driver[5].axis_vif  = axis_h2c_vif[1][1];
+        this.driver[6].axis_vif  = axis_h2c_vif[2][0];
+        this.driver[7].axis_vif  = axis_h2c_vif[2][1];
+
+        this.monitor[0].axis_vif  = axis_out_vif[0];
+        this.monitor[1].axis_vif  = axis_out_vif[1];
+        this.monitor[2].axis_vif  = axis_c2h_vif[0][0];
+        this.monitor[3].axis_vif  = axis_c2h_vif[0][1];
+        this.monitor[4].axis_vif  = axis_c2h_vif[1][0];
+        this.monitor[5].axis_vif  = axis_c2h_vif[1][1];
+        this.monitor[6].axis_vif  = axis_c2h_vif[2][0];
+        this.monitor[7].axis_vif  = axis_c2h_vif[2][1];
+
+        for (int i=0; i < N; i++) begin
+            register_subcomponent(driver[i]);
+            register_subcomponent(monitor[i]);
+            register_subcomponent(model[i]);
+        end
+
+        //for (int i=0; i < N; i++) register_subcomponent(scoreboard[i]);
+        register_subcomponent(scoreboard0);
+        register_subcomponent(scoreboard1);
+        register_subcomponent(scoreboard2);
+        register_subcomponent(scoreboard3);
+        register_subcomponent(scoreboard4);
+        register_subcomponent(scoreboard5);
+        register_subcomponent(scoreboard6);
+        register_subcomponent(scoreboard7);
+
+        reg_agent              = new("axi4l_reg_agent");
+        app_reg_agent          = new("axi4l_app_reg_agent");
+        ts_agent               = new;
+
+        reg_agent.axil_vif     = axil_vif;
+        app_reg_agent.axil_vif = app_axil_vif;
+        ts_agent.timestamp_vif = timestamp_vif;
+
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h64000);
+
+        trace_msg("_build() Done.");
+    endfunction
+
+
+    // Start environment execution (run loop)
+    // [[ implements std_verif_pkg::component._run() ]]
+    protected task _run();
+        trace_msg("_run()");
+        super._run();
+        trace_msg("Running...");
+
+        trace_msg("_run() Done.");
     endtask
+
+
+    task automatic pcap_to_driver (
+        input string      filename,
+        input TID_T       tid=0,
+        input TDEST_T     tdest=0,
+        input TUSER_T     tuser=0,
+        input DRIVER_T    driver  );
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+        int num_pkts;
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+        num_pkts = pcap.records.size();
+
+        // put packets one at a time
+        for (int i = 0; i < num_pkts; i++) begin
+            axi4s_transaction#(TID_T, TDEST_T, TUSER_T) transaction =
+                axi4s_transaction#(TID_T, TDEST_T, TUSER_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    pcap.records[i].pkt_data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            driver.inbox.put(transaction);
+        end
+    endtask
+
+
+    task automatic pcap_to_scoreboard (
+        input string       filename,
+        input TID_T        tid=0,
+        input TDEST_T      tdest=0,
+        input TUSER_T      tuser=0,
+        //input SCOREBOARD_T scoreboard );
+        input port_t       out_port );
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+        int num_pkts;
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+        num_pkts = pcap.records.size();
+
+        // put packets one at a time
+        for (int i = 0; i < num_pkts; i++) begin
+            axi4s_transaction#(TID_T, TDEST_T, TUSER_T) transaction =
+                axi4s_transaction#(TID_T, TDEST_T, TUSER_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    pcap.records[i].pkt_data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            __model_outbox[out_port].put(transaction);
+        end
+    endtask
+
 
     task init_timestamp();
         ts_agent.reset();
     endtask
+
 
     task read(
             input  bit [31:0] addr,
@@ -252,51 +322,7 @@ class tb_env extends std_verif_pkg::base;
         app_axil_vif.write(addr, data, error, timeout, TIMEOUT);
     endtask
 
-    task wait_reset_done(
-            output bit done,
-            output string msg
-        );
-        bit reset_done;
-        bit mgmt_reset_done;
-        bit reset_timeout;
-        bit mgmt_reset_timeout;
-        fork
-            begin
-                reset_vif.wait_ready(
-                    reset_timeout, RESET_TIMEOUT);
-            end
-            begin
-                mgmt_reset_vif.wait_ready(
-                    mgmt_reset_timeout, MGMT_RESET_TIMEOUT);
-            end
-        join
-        reset_done = !reset_timeout;
-        mgmt_reset_done = !mgmt_reset_timeout;
-        done = reset_done & mgmt_reset_done;
-        if (reset_done) begin
-            if (mgmt_reset_done) begin
-                msg = "Return from datapath and management resets completed.";
-            end else begin
-                msg =
-                    $sformatf(
-                        "Return from management reset timed out after %d mgmt_clk cycles.",
-                        MGMT_RESET_TIMEOUT
-                    );
-            end
-        end else begin
-            if (mgmt_reset_done) begin
-                msg =
-                    $sformatf(
-                        "Return from datapath reset timed out after %d clk cycles.",
-                        RESET_TIMEOUT
-                    );
-            end else begin
-                msg = "Return from datapath/management resets timed out.";
-            end
-        end
-    endtask
-
-    // SDnet Tasks
+    // vitisnetp4 tasks
     task vitisnetp4_read(
             input  bit [31:0] addr,
             output bit [31:0] data
@@ -314,3 +340,19 @@ class tb_env extends std_verif_pkg::base;
     endtask
 
 endclass : tb_env
+
+
+// Environment class for 'smartnic_app' component verification.  placeholder for future code (tbd).
+class smartnic_app_model
+    extends std_verif_pkg::model#(axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t),
+                                  axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t));
+
+    function new(string name="smartnic_app_model");
+        super.new(name);
+    endfunction
+
+    protected task _process(input axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t) transaction);
+        _enqueue(transaction);
+    endtask
+
+endclass

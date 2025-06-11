@@ -1,14 +1,11 @@
 `include "svunit_defines.svh"
 
-import tb_pkg::*;
-
 //===================================
 // (Failsafe) timeout
 //===================================
 `define SVUNIT_TIMEOUT 200us
 
 module smartnic_app_datapath_unit_test;
-
     // Testcase name
     string name = "smartnic_app_datapath_ut";
 
@@ -27,10 +24,13 @@ module smartnic_app_datapath_unit_test;
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
+    tb_pkg::tb_env env;
 
+    // VitisNetP4 table agent
+    vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
+
+    // smartnic_app_igr (demux version) reg blk agent.
     smartnic_app_igr_demux_reg_verif_pkg::smartnic_app_igr_reg_blk_agent #() smartnic_app_igr_reg_blk_agent;
-
-    port_t in_if=0, out_if=0;
 
     //===================================
     // Import common testcase tasks
@@ -64,29 +64,12 @@ module smartnic_app_datapath_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Flush packets from pipeline
-        for (integer i = 0; i < 2; i += 1) begin
-            env.axis_out_monitor[i].flush();
-            for (integer j = 0; j < 3; j += 1) begin
-                env.axis_c2h_monitor[j][i].flush();
-            end
-        end
+        // start environment
+	env.run();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        tuser={16'd0,1'bx,16'hxxxx,1'b1,12'd0,1'bx};
 
-        // Put AXI-S interfaces into quiescent state
-        for (integer i = 0; i < 2; i += 1) begin
-            env.axis_in_driver[i].idle();
-            env.axis_out_monitor[i].idle();
-            for (integer j = 0; j < 3; j += 1) begin
-                env.axis_h2c_driver[j][i].idle();
-                env.axis_c2h_monitor[j][i].idle();
-            end
-        end
-
-         in_if.encoded.num = P0;  in_if.encoded.typ = PHY;
-        out_if.encoded.num = P0; out_if.encoded.typ = PHY;
+        #100ns;
     endtask
 
 
@@ -95,21 +78,10 @@ module smartnic_app_datapath_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
-        `INFO("Waiting to end testcase...");
-        for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
-        `INFO("Ending testcase!");
+        // Stop environment
+        env.stop();
 
         svunit_ut.teardown();
-
-        // Flush remaining packets
-        for (integer i = 0; i < 2; i += 1) begin
-            env.axis_out_monitor[i].flush();
-            for (integer j = 0; j < 3; j += 1) begin
-                env.axis_c2h_monitor[j][i].flush();
-            end
-        end
-        #10us;
-
     endtask
 
    
@@ -131,95 +103,119 @@ module smartnic_app_datapath_unit_test;
     //   `SVTEST_END
     //===================================
 
+    int pkts=4, bytes=2048; // pkt and byte counts for 'test-fwd-p0', 'test-fwd-p2', and 'test-fwd-p4'.
+    int offset;
+
+
     `SVUNIT_TESTS_BEGIN
 
-    `SVTEST(init)
-        // Initialize VitisNetP4 tables
-        vitisnetp4_agent.init();
-    `SVTEST_END
+        `SVTEST(init)
+            // Initialize VitisNetP4 tables
+            vitisnetp4_agent.init();
+        `SVTEST_END
 
-    `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
+        `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
-    `SVTEST(test_cmac_ifs)
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing CMAC%0b igr and egr interfaces...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(1));
+        `SVTEST(PHY_if_test)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PHY%0b igr and egr interfaces...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PHY0+i), .out_port(PHY0+i),
+                             .tuser(tuser));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_TO_APP_IGR_P4_OUT0,  pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_IGR_IN0,      pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_IN0,      pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_OUT0,     pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_P4_IN0,   pkts, bytes);
+            end
             check_cleared_probes;
-        end
-    `SVTEST_END
+        `SVTEST_END
 
+        `SVTEST(PF_if_test)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b igr interface...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PF0+i), .out_port(PHY0+i), .write_tables(0));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_FROM_PF0,            pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_P4_IN0,   pkts, bytes);
+            end
 
-    `SVTEST(test_pf_ifs)
-        in_if.encoded.typ = PF;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b igr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
+            // enable override mux. select PF egr path.
+            env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
+
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b egr interface (override mux control)...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PHY0+i), .out_port(PF0+i), .write_tables(0),
+                             .tuser(tuser));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_TO_APP_IGR_P4_OUT0,  pkts, bytes);
+                check_probe (offset + PROBE_TO_PF0,              pkts, bytes);
+            end
             check_cleared_probes;
-        end
+        `SVTEST_END
 
-        // enable override mux. select PF egr path.
-        env.smartnic_app_reg_agent.write_smartnic_app_igr_p4_out_sel(2'b11);
+        `SVTEST(VF0_if_test)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b VF0 igr interface...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PF0_VF0+i), .out_port(PHY0+i), .write_tables(0));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_FROM_PF0_VF0,        pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_OUT0,     pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_EGR_P4_IN0,   pkts, bytes);
+            end
 
-        in_if.encoded.typ  = PHY;
-        out_if.encoded.typ = PF;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b egr interface (override mux control)...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
+            // enable demux to select VF0 egr path.
+            smartnic_app_igr_reg_blk_agent.write_app_igr_config(1'b1);
+
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b VF0 egr interface...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PHY0+i), .out_port(PF0_VF0+i), .write_tables(0),
+                             .tuser(tuser));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_TO_APP_IGR_P4_OUT0,  pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_IGR_IN0,      pkts, bytes);
+                check_probe (offset + PROBE_TO_PF0_VF0,          pkts, bytes);
+            end
             check_cleared_probes;
-        end
-    `SVTEST_END
+        `SVTEST_END
 
-
-    `SVTEST(test_vf0_ifs)
-        in_if.encoded.typ = VF0;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b VF0 igr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
+        `SVTEST(VF1_if_test)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b VF1 igr and egr interfaces...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p0"), .in_port(PF0_VF1+i), .out_port(PF0_VF1+i));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_FROM_PF0_VF1,        pkts, bytes);
+                check_probe (offset + PROBE_TO_PF0_VF1,          pkts, bytes);
+            end
             check_cleared_probes;
-        end
+        `SVTEST_END
 
-        // enable demux to select VF0 egr path.
-        smartnic_app_igr_reg_blk_agent.write_app_igr_config(1'b1);
 
-        in_if.encoded.typ  = PHY;
-        out_if.encoded.typ = VF0;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b VF0 egr interface...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
+        `SVTEST(PF_if_test_from_p4)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b egr interface (p4 control)...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p2"), .in_port(PHY0+i), .out_port(PF0+i), .tdest(PF0),
+                             .tuser(tuser));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_TO_APP_IGR_P4_OUT0,  pkts, bytes);
+                check_probe (offset + PROBE_TO_PF0,              pkts, bytes);
+            end
             check_cleared_probes;
-        end
-    `SVTEST_END
+        `SVTEST_END
 
 
-    `SVTEST(test_vf1_ifs)
-        in_if.encoded.typ  = VF1;
-        out_if.encoded.typ = VF1;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b VF1 igr and egr interfaces...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p0"), .in_if(in_if+i), .out_if(out_if+i), .write_p4_tables(0));
+        `SVTEST(VF0_if_test_from_p4)
+            for (int i=0; i<2; i++) begin
+                debug_msg($sformatf("Testing PF%0b VF0 egr interface (p4 control)...", i), 1);
+                run_pkt_test(.testdir("test-fwd-p4"), .in_port(PHY0+i), .out_port(PF0_VF0+i), .tdest(PF0_VF0),
+                             .tuser(tuser));
+                offset = 'h100 * i;
+                check_probe (offset + PROBE_TO_APP_IGR_P4_OUT0,  pkts, bytes);
+                check_probe (offset + PROBE_TO_APP_IGR_IN0,      pkts, bytes);
+                check_probe (offset + PROBE_TO_PF0_VF0,          pkts, bytes);
+            end
             check_cleared_probes;
-        end
-    `SVTEST_END
-
-
-    `SVTEST(test_to_pf_ifs_from_p4)
-        out_if.encoded.typ = PF;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b egr interface (p4 control)...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p2"), .in_if(in_if+i), .out_if(out_if+i), .dest_port(2), .write_p4_tables(1));
-            check_cleared_probes;
-        end
-    `SVTEST_END
-
-
-    `SVTEST(test_to_vf0_ifs_from_p4)
-        out_if.encoded.typ = VF0;
-        for (int i=0; i<2; i++) begin
-            debug_msg($sformatf("Testing PF%0b VF0 egr interface (p4 control)...", i), 1);
-            run_pkt_test(.testdir("test-fwd-p4"), .in_if(in_if+i), .out_if(out_if+i), .dest_port(4), .write_p4_tables(1));
-            check_cleared_probes;
-        end
-    `SVTEST_END
+        `SVTEST_END
 
     `SVUNIT_TESTS_END
 
