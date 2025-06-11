@@ -42,13 +42,9 @@ module tb;
             for (genvar j = 0; j < NUM_HOST_IFS; j += 1) begin
                 assign axis_h2c_if[j][i].aclk = clk;
                 assign axis_h2c_if[j][i].aresetn = rstn;
-                assign axis_c2h_if[j][i].aclk = clk;
-                assign axis_c2h_if[j][i].aresetn = rstn;
             end
             assign axis_in_if[i].aclk = clk;
             assign axis_in_if[i].aresetn = rstn;
-            assign axis_out_if[i].aclk = clk;
-            assign axis_out_if[i].aresetn = rstn;
         end
     endgenerate
 
