@@ -273,28 +273,6 @@ class smartnic_env extends std_verif_pkg::basic_env;
         end
     endtask
 
-
-   task read(
-           input  bit [31:0] addr,
-           output bit [31:0] data,
-           output bit error,
-           output bit timeout,
-           input  int TIMEOUT=128
-      );
-       axil_vif.read(addr, data, error, timeout, TIMEOUT);
-   endtask
-
-   task write(
-           input  bit [31:0] addr,
-           input  bit [31:0] data,
-           output bit error,
-           output bit timeout,
-           input  int TIMEOUT=32
-       );
-       axil_vif.write(addr, data, error, timeout, TIMEOUT);
-   endtask
-
-
    task vitisnetp4_read(
            input  bit [31:0] addr,
            output bit [31:0] data
