@@ -92,29 +92,27 @@ module tb;
     // Build
     //===================================
     function void build();
-        if (env == null) begin
-            // Instantiate environment
-            env = new("env", 0); // bigendian=0 to match CMACs.
+        // Instantiate environment
+        env = new("env", 0); // bigendian=0 to match CMACs.
 
-            // Connect environment
-            env.reset_vif = reset_if;
-            // for (int i=0; i < 4; i++) env.axis_in_vif[i] = axis_in_if[i];  // commented out due to simulator errors.
-            env.axis_in_vif[0] = axis_in_if[0];
-            env.axis_in_vif[1] = axis_in_if[1];
-            env.axis_in_vif[2] = axis_in_if[2];
-            env.axis_in_vif[3] = axis_in_if[3];
+        // Connect environment
+        env.reset_vif = reset_if;
+        // for (int i=0; i < 4; i++) env.axis_in_vif[i] = axis_in_if[i];  // commented out due to simulator errors.
+        env.axis_in_vif[0] = axis_in_if[0];
+        env.axis_in_vif[1] = axis_in_if[1];
+        env.axis_in_vif[2] = axis_in_if[2];
+        env.axis_in_vif[3] = axis_in_if[3];
 
-            //for (int i=0; i < 2; i++) env.axis_out_vif[i] = axis_out_if[i];  // commented out due to simulator errors.
-            env.axis_out_vif[0] = axis_out_if[0];
-            env.axis_out_vif[1] = axis_out_if[1];
-            env.axis_out_vif[2] = axis_out_if[2];
-            env.axis_out_vif[3] = axis_out_if[3];
+        //for (int i=0; i < 2; i++) env.axis_out_vif[i] = axis_out_if[i];  // commented out due to simulator errors.
+        env.axis_out_vif[0] = axis_out_if[0];
+        env.axis_out_vif[1] = axis_out_if[1];
+        env.axis_out_vif[2] = axis_out_if[2];
+        env.axis_out_vif[3] = axis_out_if[3];
 
-            env.axil_vif = axil_if;
+        env.axil_vif = axil_if;
 
-            env.build();
-            env.set_debug_level(1);
-        end
+        env.build();
+        env.set_debug_level(1);
     endfunction
 
     // Export AXI-L accessors to VitisNetP4 shared library
