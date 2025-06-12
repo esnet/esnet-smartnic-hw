@@ -66,7 +66,7 @@ override PLUSARGS +=
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS =
-ELAB_OPTS = --debug typical
+ELAB_OPTS = --relax --debug typical
 SIM_OPTS =
 
 # ----------------------------------------------------
