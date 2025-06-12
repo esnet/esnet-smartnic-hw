@@ -137,4 +137,10 @@ module tb;
         return env;
     endfunction
 
+    // Disable VitisNetP4 IP assertions
+    // - works around a time-zero underflow assertion that causes an immediate exit from the sim
+    // TODO: make this fine-grained... Vivado sim doesn't support hierarchical scoping, but could
+    //       turn off assertions during reset and then re-enable possibly
+    initial $assertoff(0);
+
 endmodule : tb
