@@ -64,6 +64,8 @@
 
     generate
         for (genvar j = 0; j < NUM_PROC_PORTS; j += 1) begin
+            assign axis_out_if[j].aclk               = clk;
+            assign axis_out_if[j].aresetn            = rstn;
             assign axis_out_if[j].tvalid             = axis_app_egr_tvalid[j];
             assign axis_app_egr_tready[j]            = axis_out_if[j].tready;
             assign axis_out_if[j].tdata              = axis_app_egr_tdata[j];

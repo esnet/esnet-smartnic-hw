@@ -162,6 +162,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
         reg_agent = new("axi4l_reg_agent");
         reg_agent.axil_vif = axil_vif;
+        register_subcomponent(reg_agent);
 
         smartnic_reg_blk_agent            = new("smartnic_reg_blk_agent");
         smartnic_hash2qid_0_reg_blk_agent = new("smartnic_hash2qid_0_reg_blk_agent", 'h12000);
@@ -181,52 +182,33 @@ class smartnic_env extends std_verif_pkg::basic_env;
     // Start environment execution (run loop)
     // [[ implements std_verif_pkg::component._run() ]]
     protected task _run();
-        TRANSACTION_IN_T transaction [4];
-        int              dest_if     [4];
-
         trace_msg("_run()");
         super._run();
         trace_msg("Running...");
 
         fork
-            forever begin
-                inbox[0].get(transaction[0]);
-                __drv_inbox[0].put(transaction[0]);
-                case (transaction[0].get_tdest().encoded.typ)
-                    PHY:    dest_if[0] = (transaction[0].get_tdest().encoded.num == P0) ? 0 : 1;
-                    default dest_if[0] = (transaction[0].get_tdest().encoded.num == P0) ? 2 : 3;
-                endcase
-                __model_inbox[dest_if[0]].put(transaction[0]);
+            begin
+                for (int i = 0; i < 4; i++) begin
+                    fork
+                        automatic int j = i;
+                        begin
+                            forever begin
+                                TRANSACTION_IN_T transaction;
+                                int dest_if;
+                                inbox[j].get(transaction);
+                                __drv_inbox[j].put(transaction);
+                                case (transaction.get_tdest().encoded.typ)
+                                    PHY:    dest_if = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
+                                    default dest_if = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                                endcase
+                                __model_inbox[dest_if].put(transaction);
+                            end
+                        end
+                    join_none
+                end
+                wait fork;
             end
-            forever begin
-                inbox[1].get(transaction[1]);
-                __drv_inbox[1].put(transaction[1]);
-                case (transaction[1].get_tdest().encoded.typ)
-                    PHY:    dest_if[1] = (transaction[1].get_tdest().encoded.num == P0) ? 0 : 1;
-                    default dest_if[1] = (transaction[1].get_tdest().encoded.num == P0) ? 2 : 3;
-                endcase
-                __model_inbox[dest_if[1]].put(transaction[1]);
-            end
-            forever begin
-                inbox[2].get(transaction[2]);
-                __drv_inbox[2].put(transaction[2]);
-                case (transaction[2].get_tdest().encoded.typ)
-                    PHY:    dest_if[2] = (transaction[2].get_tdest().encoded.num == P0) ? 0 : 1;
-                    default dest_if[2] = (transaction[2].get_tdest().encoded.num == P0) ? 2 : 3;
-                endcase
-                __model_inbox[dest_if[2]].put(transaction[2]);
-            end
-            forever begin
-                inbox[3].get(transaction[3]);
-                __drv_inbox[3].put(transaction[3]);
-                case (transaction[3].get_tdest().encoded.typ)
-                    PHY:    dest_if[3] = (transaction[3].get_tdest().encoded.num == P0) ? 0 : 1;
-                    default dest_if[3] = (transaction[3].get_tdest().encoded.num == P0) ? 2 : 3;
-                endcase
-                __model_inbox[dest_if[3]].put(transaction[3]);
-            end
-        join_any
-
+        join
         trace_msg("_run() Done.");
     endtask
 
@@ -291,28 +273,6 @@ class smartnic_env extends std_verif_pkg::basic_env;
             __model_outbox[out_port].put(transaction);
         end
     endtask
-
-
-   task read(
-           input  bit [31:0] addr,
-           output bit [31:0] data,
-           output bit error,
-           output bit timeout,
-           input  int TIMEOUT=128
-      );
-       axil_vif.read(addr, data, error, timeout, TIMEOUT);
-   endtask
-
-   task write(
-           input  bit [31:0] addr,
-           input  bit [31:0] data,
-           output bit error,
-           output bit timeout,
-           input  int TIMEOUT=32
-       );
-       axil_vif.write(addr, data, error, timeout, TIMEOUT);
-   endtask
-
 
    task vitisnetp4_read(
            input  bit [31:0] addr,

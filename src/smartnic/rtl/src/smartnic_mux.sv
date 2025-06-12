@@ -47,11 +47,11 @@ module smartnic_mux
                 smartnic_mux_out_sel[i]   <= DROP;
                 smartnic_mux_out_sel[2+i] <= DROP;
             end else begin
-                if (axis_cmac_to_core[i].tready && axis_cmac_to_core[i].tvalid && axis_cmac_to_core[i].sop)
-                    smartnic_mux_out_sel[i] <= smartnic_regs.smartnic_mux_out_sel[i];
+                if (axis_cmac_to_core[i].sop)
+                    smartnic_mux_out_sel[i] <= smartnic_regs.smartnic_mux_out_sel[i].value;
 
-                if (axis_host_to_core[i].tready && axis_host_to_core[i].tvalid && axis_host_to_core[i].sop)
-                    smartnic_mux_out_sel[2+i] <= smartnic_regs.smartnic_mux_out_sel[2+i];
+                if (axis_host_to_core[i].sop)
+                    smartnic_mux_out_sel[2+i] <= smartnic_regs.smartnic_mux_out_sel[2+i].value;
             end
         end
 

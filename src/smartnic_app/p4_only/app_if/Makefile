@@ -9,7 +9,11 @@ P4_FILE ?= $(P4_IGR_FILE)
 
 # Output products are arranged by board and Vivado version
 # (e.g. .app/out/au280/2024.2/...)
-__OUTPUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/$(notdir $(shell echo $$XILINX_VIVADO))
+ifdef XILINX_VIVADO
+__OUTPUT_DIR = $(OUTPUT_ROOT)/$(BOARD)/$(XILINX_VIVADO__VERSION)
+else
+$(error Vivado not configured.)
+endif
 
 # ----------------------------------------------------
 # Targets

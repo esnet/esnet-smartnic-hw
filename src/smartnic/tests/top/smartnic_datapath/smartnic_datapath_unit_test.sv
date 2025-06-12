@@ -20,8 +20,7 @@ module smartnic_datapath_unit_test;
     //===================================
     // This test suite references the common smartnic
     // testbench top level. The 'tb' module is
-    // loaded into the tb_glbl scope, so is available
-    // at tb_glbl.tb.
+    // loaded into the global scope.
     //
     // Interaction with the testbench is expected to occur
     // via the testbench environment class (smartnic_env).

@@ -118,8 +118,8 @@ _configure_app_src_lib := \
 	 sed -i 's:<library-desc>:$(APP_NAME) SmartNIC application library:' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<libraries>:smartnic=$(SMARTNIC_ROOT)/src:' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<common-lib-name>:common@smartnic:' $(APP_PROJ_ROOT)/src/config.mk; \
-	 sed -i 's:<custom-env-setup>:BOARD ?= au280\n__CONFIGURED_VIVADO_VERSION=$$(notdir $$(shell echo $$$$XILINX_VIVADO)):' $(APP_PROJ_ROOT)/src/config.mk; \
-	 sed -i 's:<output-subdir>:$$(BOARD)/$$(__CONFIGURED_VIVADO_VERSION):' $(APP_PROJ_ROOT)/src/config.mk; \
+	 sed -i 's:<custom-env-setup>:BOARD ?= au280:' $(APP_PROJ_ROOT)/src/config.mk; \
+	 sed -i 's:<output-subdir>:$$(BOARD)/$$(XILINX_VIVADO__VERSION):' $(APP_PROJ_ROOT)/src/config.mk; \
 	 sed -i 's:<lib-env>:\\\n\tBOARD=$$(BOARD):g' $(APP_PROJ_ROOT)/src/config.mk;
 
 _configure_app_out_dir := \

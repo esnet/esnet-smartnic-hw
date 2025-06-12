@@ -42,13 +42,9 @@ module tb;
             for (genvar j = 0; j < NUM_HOST_IFS; j += 1) begin
                 assign axis_h2c_if[j][i].aclk = clk;
                 assign axis_h2c_if[j][i].aresetn = rstn;
-                assign axis_c2h_if[j][i].aclk = clk;
-                assign axis_c2h_if[j][i].aresetn = rstn;
             end
             assign axis_in_if[i].aclk = clk;
             assign axis_in_if[i].aresetn = rstn;
-            assign axis_out_if[i].aclk = clk;
-            assign axis_out_if[i].aresetn = rstn;
         end
     endgenerate
 
@@ -61,35 +57,33 @@ module tb;
     // Build
     //===================================
     function void build();
-        if (env == null) begin
-            // Instantiate environment
-            env = new("tb_env", 0); // bigendian=0 to match CMACs.
+        // Instantiate environment
+        env = new("tb_env", 0); // bigendian=0 to match CMACs.
 
-            // Connect environment
-            env.reset_vif            = reset_if;
-            env.timestamp_vif        = timestamp_if;
-            env.app_axil_vif         = app_axil_if;
-            env.axil_vif             = axil_if;
-            env.axis_in_vif[0]       = axis_in_if[0];
-            env.axis_in_vif[1]       = axis_in_if[1];
-            env.axis_h2c_vif[0][0]   = axis_h2c_if[0][0];
-            env.axis_h2c_vif[1][0]   = axis_h2c_if[1][0];
-            env.axis_h2c_vif[2][0]   = axis_h2c_if[2][0];
-            env.axis_h2c_vif[0][1]   = axis_h2c_if[0][1];
-            env.axis_h2c_vif[1][1]   = axis_h2c_if[1][1];
-            env.axis_h2c_vif[2][1]   = axis_h2c_if[2][1];
-            env.axis_out_vif[0]      = axis_out_if[0];
-            env.axis_out_vif[1]      = axis_out_if[1];
-            env.axis_c2h_vif[0][0]   = axis_c2h_if[0][0];
-            env.axis_c2h_vif[1][0]   = axis_c2h_if[1][0];
-            env.axis_c2h_vif[2][0]   = axis_c2h_if[2][0];
-            env.axis_c2h_vif[0][1]   = axis_c2h_if[0][1];
-            env.axis_c2h_vif[1][1]   = axis_c2h_if[1][1];
-            env.axis_c2h_vif[2][1]   = axis_c2h_if[2][1];
+        // Connect environment
+        env.reset_vif            = reset_if;
+        env.timestamp_vif        = timestamp_if;
+        env.app_axil_vif         = app_axil_if;
+        env.axil_vif             = axil_if;
+        env.axis_in_vif[0]       = axis_in_if[0];
+        env.axis_in_vif[1]       = axis_in_if[1];
+        env.axis_h2c_vif[0][0]   = axis_h2c_if[0][0];
+        env.axis_h2c_vif[1][0]   = axis_h2c_if[1][0];
+        env.axis_h2c_vif[2][0]   = axis_h2c_if[2][0];
+        env.axis_h2c_vif[0][1]   = axis_h2c_if[0][1];
+        env.axis_h2c_vif[1][1]   = axis_h2c_if[1][1];
+        env.axis_h2c_vif[2][1]   = axis_h2c_if[2][1];
+        env.axis_out_vif[0]      = axis_out_if[0];
+        env.axis_out_vif[1]      = axis_out_if[1];
+        env.axis_c2h_vif[0][0]   = axis_c2h_if[0][0];
+        env.axis_c2h_vif[1][0]   = axis_c2h_if[1][0];
+        env.axis_c2h_vif[2][0]   = axis_c2h_if[2][0];
+        env.axis_c2h_vif[0][1]   = axis_c2h_if[0][1];
+        env.axis_c2h_vif[1][1]   = axis_c2h_if[1][1];
+        env.axis_c2h_vif[2][1]   = axis_c2h_if[2][1];
 
-            env.build();
-            env.set_debug_level(1);
-        end
+        env.build();
+        env.set_debug_level(1);
     endfunction
 
     // Export AXI-L accessors to VitisNetP4 shared library
