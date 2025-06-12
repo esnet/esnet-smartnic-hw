@@ -162,6 +162,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
         reg_agent = new("axi4l_reg_agent");
         reg_agent.axil_vif = axil_vif;
+        register_subcomponent(reg_agent);
 
         smartnic_reg_blk_agent            = new("smartnic_reg_blk_agent");
         smartnic_hash2qid_0_reg_blk_agent = new("smartnic_hash2qid_0_reg_blk_agent", 'h12000);
