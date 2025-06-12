@@ -74,19 +74,19 @@ module tb;
 
 
     // output monitors
-    always @(negedge tb.axis_cmac_egr[0].tvalid)
-        if (tb.axis_cmac_egr[0].tready && !tb.axis_cmac_egr[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge tb.axis_cmac_egr[1].tvalid)
-        if (tb.axis_cmac_egr[1].tready && !tb.axis_cmac_egr[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge tb.axis_c2h[0].tvalid)
-        if (tb.axis_c2h[0].tready && !tb.axis_c2h[0].tlast)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
-    always @(negedge tb.axis_c2h[1].tvalid)
-        if (tb.axis_c2h[1].tready && !tb.axis_c2h[1].tlast)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[0].tvalid)
+        if (axis_cmac_egr[0].tready && !axis_cmac_egr[0].tlast) $display ("Port0: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_cmac_egr[1].tvalid)
+        if (axis_cmac_egr[1].tready && !axis_cmac_egr[1].tlast) $display ("Port1: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_c2h[0].tvalid)
+        if (axis_c2h[0].tready && !axis_c2h[0].tlast)           $display ("Port2: tvalid gap.  May lead to ONS underflow!");
+    always @(negedge axis_c2h[1].tvalid)
+        if (axis_c2h[1].tready && !axis_c2h[1].tlast)           $display ("Port3: tvalid gap.  May lead to ONS underflow!");
 
-    //always @(posedge tb.axis_cmac_egr[0].aclk)
-    //    if (tb.axis_cmac_egr[0].tready && tb.axis_cmac_egr[0].tvalid) $display ("Port0: Valid transaction!");
-    //always @(posedge tb.axis_cmac_egr[1].aclk)
-    //    if (tb.axis_cmac_egr[1].tready && tb.axis_cmac_egr[1].tvalid) $display ("Port1: Valid transaction!");
+    //always @(posedge axis_cmac_egr[0].aclk)
+    //    if (axis_cmac_egr[0].tready && axis_cmac_egr[0].tvalid) $display ("Port0: Valid transaction!");
+    //always @(posedge axis_cmac_egr[1].aclk)
+    //    if (axis_cmac_egr[1].tready && axis_cmac_egr[1].tvalid) $display ("Port1: Valid transaction!");
 
     //===================================
     // Build
