@@ -217,6 +217,10 @@ class tb_env extends std_verif_pkg::basic_env;
 
         reg_agent.axil_vif     = axil_vif;
         app_reg_agent.axil_vif = app_axil_vif;
+
+        register_subcomponent(reg_agent);
+        register_subcomponent(app_reg_agent);
+
         ts_agent.timestamp_vif = timestamp_vif;
 
         smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h64000);
