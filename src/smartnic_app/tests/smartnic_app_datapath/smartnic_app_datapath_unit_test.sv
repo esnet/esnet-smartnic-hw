@@ -47,6 +47,7 @@ module smartnic_app_datapath_unit_test;
        
         // Retrieve reference to testbench environment class
         env = tb.env;
+        env.set_debug_level(1);
 
         // Create P4 table agent
         vitisnetp4_agent = new;
