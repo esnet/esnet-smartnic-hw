@@ -144,10 +144,10 @@ module smartnic_app_datapath_unit_test
         env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
 
         #3us;
-       `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
+       `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
     endtask
 
 
@@ -188,10 +188,10 @@ module smartnic_app_datapath_unit_test
            env.pcap_to_driver     (.filename(filename), .driver(env.driver[PF1]));
 
            #4us;
-          `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
+          `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
 
        `SVTEST_END
 

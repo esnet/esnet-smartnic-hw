@@ -159,40 +159,40 @@ endtask
 
 task automatic check_sb0(input int pkts=0);
     if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(), 0);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_processed(), 0);
     end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard0.report(msg), msg);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_matched(), pkts);
+       `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
     end
 endtask
 
 
 task automatic check_sb1(input int pkts=0);
     if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(), 0);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_processed(), 0);
     end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard1.report(msg), msg);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_matched(), pkts);
+       `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
     end
 endtask
 
 
 task automatic check_sb2(input int pkts=0);
     if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(), 0);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_processed(), 0);
     end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard2.got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard2.report(msg), msg);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_matched(), pkts);
+       `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
     end
 endtask
 
 
 task automatic check_sb3(input int pkts=0);
     if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(), 0);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_processed(), 0);
     end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard3.got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard3.report(msg), msg);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_matched(), pkts);
+       `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
     end
 endtask
 

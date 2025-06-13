@@ -20,7 +20,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
     localparam type DRIVER_T          = axi4s_driver  #(DATA_BYTE_WID, TID_IN_T,  TDEST_T, TUSER_IN_T);
     localparam type MONITOR_T         = axi4s_monitor #(DATA_BYTE_WID, TID_OUT_T, TDEST_T, TUSER_OUT_T);
     localparam type MODEL_T           = smartnic_model;
-    localparam type SCOREBOARD_T      = std_verif_pkg::event_scoreboard#(TRANSACTION_OUT_T);
+    localparam type SCOREBOARD_T      = event_scoreboard#(TRANSACTION_OUT_T);
 
     local static const string __CLASS_NAME = "std_verif_pkg::smartnic_env";
 
@@ -34,11 +34,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
     DRIVER_T     driver  [4];
     MONITOR_T    monitor [4];
     MODEL_T      model   [4];
-    // SCOREBOARD_T scoreboard [4];
-    SCOREBOARD_T scoreboard0;
-    SCOREBOARD_T scoreboard1;
-    SCOREBOARD_T scoreboard2;
-    SCOREBOARD_T scoreboard3;
+    SCOREBOARD_T scoreboard [4];
 
     mailbox #(TRANSACTION_IN_T)  inbox [4];
 
@@ -90,11 +86,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
         model[2] = new(.name("model[2]"), .dest_if(2)); // PF0
         model[3] = new(.name("model[3]"), .dest_if(3)); // PF1
 
-        //for (int i=0; i < 4; i++) scoreboard[i] = new();
-        scoreboard0 = new("scoreboard[0]");
-        scoreboard1 = new("scoreboard[1]");
-        scoreboard2 = new("scoreboard[2]");
-        scoreboard3 = new("scoreboard[3]");
+        for (int i=0; i < 4; i++) scoreboard[i] = new(.name($sformatf("scoreboard[%0d]",i)));
 
     endfunction
 
@@ -111,11 +103,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
         for (int i=0; i < 4; i++) __model_inbox[i]  = null;
         for (int i=0; i < 4; i++) __model_outbox[i] = null;
 
-        //for (int i=0; i < 4; i++) scoreboard[i] = null;
-        scoreboard0 = null;
-        scoreboard1 = null;
-        scoreboard2 = null;
-        scoreboard3 = null;
+        for (int i=0; i < 4; i++) scoreboard[i] = null;
 
         super.destroy();
     endfunction
@@ -135,29 +123,16 @@ class smartnic_env extends std_verif_pkg::basic_env;
         for (int i=0; i < 4; i++) model[i].outbox   = __model_outbox[i];
         for (int i=0; i < 4; i++) monitor[i].outbox = __mon_outbox[i];
 
-        //for (int i=0; i < 4; i++) scoreboard[i].got_inbox = __mon_outbox[i];
-        scoreboard0.got_inbox = __mon_outbox[0];
-        scoreboard1.got_inbox = __mon_outbox[1];
-        scoreboard2.got_inbox = __mon_outbox[2];
-        scoreboard3.got_inbox = __mon_outbox[3];
+        for (int i=0; i < 4; i++) scoreboard[i].got_inbox = __mon_outbox[i];
 
-        //for (int i=0; i < 4; i++) scoreboard[i].exp_inbox = __model_outbox[i];
-        scoreboard0.exp_inbox = __model_outbox[0];
-        scoreboard1.exp_inbox = __model_outbox[1];
-        scoreboard2.exp_inbox = __model_outbox[2];
-        scoreboard3.exp_inbox = __model_outbox[3];
+        for (int i=0; i < 4; i++) scoreboard[i].exp_inbox = __model_outbox[i];
 
         for (int i=0; i < 4; i++) this.driver[i].axis_vif  = axis_in_vif[i];
         for (int i=0; i < 4; i++) this.monitor[i].axis_vif = axis_out_vif[i];
         for (int i=0; i < 4; i++) register_subcomponent(driver[i]);
         for (int i=0; i < 4; i++) register_subcomponent(monitor[i]);
         for (int i=0; i < 4; i++) register_subcomponent(model[i]);
-
-        //for (int i=0; i < 4; i++) register_subcomponent(scoreboard[i]);
-        register_subcomponent(scoreboard0);
-        register_subcomponent(scoreboard1);
-        register_subcomponent(scoreboard2);
-        register_subcomponent(scoreboard3);
+        for (int i=0; i < 4; i++) register_subcomponent(scoreboard[i]);
 
         reg_agent = new("axi4l_reg_agent");
         reg_agent.axil_vif = axil_vif;
