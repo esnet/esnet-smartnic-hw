@@ -328,3 +328,17 @@ task check_probe_control_defaults;
 
     `FAIL_UNLESS( rd_fail == 0 );
 endtask;
+
+// Export AXI-L accessors to VitisNetP4 shared library
+export "DPI-C" task axi_lite_wr;
+task axi_lite_wr(input int address, input int data);
+    env.vitisnetp4_write(address, data);
+endtask
+
+export "DPI-C" task axi_lite_rd;
+task axi_lite_rd(input int address, inout int data);
+    env.vitisnetp4_read(address, data);
+endtask
+
+string p4_dpic_hier_path = $sformatf("%m");
+

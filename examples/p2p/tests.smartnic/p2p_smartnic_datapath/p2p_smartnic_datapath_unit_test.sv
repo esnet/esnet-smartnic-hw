@@ -37,10 +37,8 @@ module p2p_smartnic_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
+        env = tb.build();
 
-        // Retrieve reference to testbench environment class
-        env = tb.env;
     endfunction
 
     //===================================

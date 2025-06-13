@@ -42,10 +42,7 @@ module smartnic_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
 
         smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h20000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.reg_agent;
