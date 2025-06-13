@@ -1,6 +1,4 @@
 import smartnic_pkg::*;
-import smartnic_app_verif_pkg::*;
-import axi4s_verif_pkg::*;
 import pcap_pkg::*;
 
 // Environment class for 'smartnic_app' component verification.

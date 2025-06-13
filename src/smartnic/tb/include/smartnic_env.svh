@@ -1,6 +1,5 @@
 import smartnic_pkg::*;
 import smartnic_verif_pkg::*;
-import axi4s_verif_pkg::*;
 import smartnic_app_reg_pkg::*;
 import pcap_pkg::*;
 
