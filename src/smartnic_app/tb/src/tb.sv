@@ -83,7 +83,7 @@ module tb;
         env.axis_c2h_vif[2][1]   = axis_c2h_if[2][1];
 
         env.build();
-        env.set_debug_level(1);
+        env.set_debug_level(0);
     endfunction
 
     // Export AXI-L accessors to VitisNetP4 shared library

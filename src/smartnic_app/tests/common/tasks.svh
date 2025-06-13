@@ -71,24 +71,43 @@ task automatic write_p4_tables (input string testdir);
 endtask
 
 
-task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tdest=0,
+task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tid=0, tdest=0,
                              tuser_smartnic_meta_t tuser={16'd0,1'bx,16'hxxxx,1'b0,12'd0,1'bx},
                              bit write_tables=1);
     string filename;
+    bit    rx_done=0;
 
     if (write_tables) write_p4_tables (.testdir(testdir));
 
    `INFO("Writing expected pcap data to scoreboard...");
     filename = {p4_sim_dir, testdir, "/packets_out.pcap"};
 
-    env.pcap_to_scoreboard (.filename(filename), .tid('0), .tdest(tdest), .tuser(tuser),
-                            .out_port(out_port));
+    env.pcap_to_scoreboard (.filename(filename), .tid(tid), .tdest(tdest), .tuser(tuser),
+                            .out_port(out_port) );
 
    `INFO("Starting simulation...");
     filename = {p4_sim_dir, testdir, "/packets_in.pcap"};
     env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
 
-    #2us;
+    #1us;
+    fork
+        #10us `INFO("run_pkt_test task TIMEOUT!");
+
+        while (!rx_done) begin
+            case (out_port)
+                0: #100ns if (env.scoreboard0.exp_pending()==0)  rx_done=1;
+                1: #100ns if (env.scoreboard1.exp_pending()==0)  rx_done=1;
+                2: #100ns if (env.scoreboard2.exp_pending()==0)  rx_done=1;
+                3: #100ns if (env.scoreboard3.exp_pending()==0)  rx_done=1;
+                4: #100ns if (env.scoreboard4.exp_pending()==0)  rx_done=1;
+                5: #100ns if (env.scoreboard5.exp_pending()==0)  rx_done=1;
+                6: #100ns if (env.scoreboard6.exp_pending()==0)  rx_done=1;
+                7: #100ns if (env.scoreboard7.exp_pending()==0)  rx_done=1;
+            endcase
+        end
+    join_any
+
+    #100ns;
    `FAIL_IF_LOG(env.scoreboard0.report(msg) > 0, msg);
    `FAIL_IF_LOG(env.scoreboard1.report(msg) > 0, msg);
    `FAIL_IF_LOG(env.scoreboard2.report(msg) > 0, msg);
