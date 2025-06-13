@@ -276,21 +276,11 @@ module smartnic
    );
 
    // Timestamp counter and access logic
-   logic __core_rstn__timestamp;
    logic [63:0] timestamp;
-
-   util_reset_buffer #(
-       .INPUT_ACTIVE_LOW ( 1 )
-   ) i_util_reset_buffer__timestamp (
-       .clk       ( core_clk ),
-       .srst_in   ( core_rstn ),
-       .srst_out  ( ),
-       .srstn_out ( __core_rstn__timestamp )
-   );
 
    smartnic_timestamp  smartnic_timestamp_0 (
      .clk               (core_clk),
-     .rstn              (__core_rstn__timestamp),
+     .rstn              (core_rstn),
      .timestamp         (timestamp),
      .smartnic_regs (smartnic_regs)
    );
@@ -1005,20 +995,10 @@ module smartnic
        end : g__h2c_c2h
    endgenerate
 
-   logic __core_rstn__app;
-
-   util_reset_buffer #(
-       .INPUT_ACTIVE_LOW ( 1 )
-   ) i_util_reset_buffer__smartnic_app (
-       .clk       ( core_clk ),
-       .srst_in   ( core_rstn ),
-       .srst_out  ( ),
-       .srstn_out ( __core_rstn__app )
-   );
 
    smartnic_app smartnic_app (
     .core_clk            (core_clk),
-    .core_rstn           (__core_rstn__app),
+    .core_rstn           (core_rstn),
     .axil_aclk           (axil_aclk),
     .timestamp           (timestamp),
     // P4 AXI-L control interface
