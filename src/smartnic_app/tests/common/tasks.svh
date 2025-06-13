@@ -163,3 +163,16 @@ task check_cleared_probes;
     check_probe ( .base_addr(PROBE_TO_APP_EGR_P4_IN0),   .exp_pkts(0), .exp_bytes(0) );
     check_probe ( .base_addr(PROBE_TO_APP_EGR_P4_IN1),   .exp_pkts(0), .exp_bytes(0) );
 endtask;
+
+// Export AXI-L accessors to VitisNetP4 shared library
+export "DPI-C" task axi_lite_wr;
+task axi_lite_wr(input int address, input int data);
+    env.vitisnetp4_write(address, data);
+endtask
+
+export "DPI-C" task axi_lite_rd;
+task axi_lite_rd(input int address, inout int data);
+    env.vitisnetp4_read(address, data);
+endtask
+
+string p4_dpic_hier_path = $sformatf("%m");
