@@ -17,7 +17,7 @@ class tb_env extends std_verif_pkg::basic_env;
     localparam type MODEL_T       = smartnic_app_model;
     localparam type SCOREBOARD_T  = event_scoreboard#(TRANSACTION_T);
 
-    local static const string __CLASS_NAME = "std_verif_pkg::tb_env";
+    local static const string __CLASS_NAME = "tb_pkg::tb_env";
 
 
     localparam int AXIL_APP_OFFSET = 'h100000;
