@@ -95,27 +95,27 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
 
         while (!rx_done) begin
             case (out_port)
-                0: #100ns if (env.scoreboard0.exp_pending()==0)  rx_done=1;
-                1: #100ns if (env.scoreboard1.exp_pending()==0)  rx_done=1;
-                2: #100ns if (env.scoreboard2.exp_pending()==0)  rx_done=1;
-                3: #100ns if (env.scoreboard3.exp_pending()==0)  rx_done=1;
-                4: #100ns if (env.scoreboard4.exp_pending()==0)  rx_done=1;
-                5: #100ns if (env.scoreboard5.exp_pending()==0)  rx_done=1;
-                6: #100ns if (env.scoreboard6.exp_pending()==0)  rx_done=1;
-                7: #100ns if (env.scoreboard7.exp_pending()==0)  rx_done=1;
+                0: #100ns if (env.scoreboard[0].exp_pending()==0)  rx_done=1;
+                1: #100ns if (env.scoreboard[1].exp_pending()==0)  rx_done=1;
+                2: #100ns if (env.scoreboard[2].exp_pending()==0)  rx_done=1;
+                3: #100ns if (env.scoreboard[3].exp_pending()==0)  rx_done=1;
+                4: #100ns if (env.scoreboard[4].exp_pending()==0)  rx_done=1;
+                5: #100ns if (env.scoreboard[5].exp_pending()==0)  rx_done=1;
+                6: #100ns if (env.scoreboard[6].exp_pending()==0)  rx_done=1;
+                7: #100ns if (env.scoreboard[7].exp_pending()==0)  rx_done=1;
             endcase
         end
     join_any
 
     #100ns;
-   `FAIL_IF_LOG(env.scoreboard0.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard1.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard2.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard3.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard4.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard5.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard6.report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard7.report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[0].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[1].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[2].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[3].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[4].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[5].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[6].report(msg) > 0, msg);
+   `FAIL_IF_LOG(env.scoreboard[7].report(msg) > 0, msg);
 endtask
 
 

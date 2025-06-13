@@ -15,7 +15,7 @@ class tb_env extends std_verif_pkg::basic_env;
     localparam type DRIVER_T      = axi4s_driver  #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
     localparam type MONITOR_T     = axi4s_monitor #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
     localparam type MODEL_T       = smartnic_app_model;
-    localparam type SCOREBOARD_T  = std_verif_pkg::event_scoreboard#(TRANSACTION_T);
+    localparam type SCOREBOARD_T  = event_scoreboard#(TRANSACTION_T);
 
     local static const string __CLASS_NAME = "std_verif_pkg::tb_env";
 
@@ -33,15 +33,7 @@ class tb_env extends std_verif_pkg::basic_env;
     DRIVER_T     driver  [N];
     MONITOR_T    monitor [N];
     MODEL_T      model   [N];
-    // SCOREBOARD_T scoreboard [N];
-    SCOREBOARD_T scoreboard0;
-    SCOREBOARD_T scoreboard1;
-    SCOREBOARD_T scoreboard2;
-    SCOREBOARD_T scoreboard3;
-    SCOREBOARD_T scoreboard4;
-    SCOREBOARD_T scoreboard5;
-    SCOREBOARD_T scoreboard6;
-    SCOREBOARD_T scoreboard7;
+     SCOREBOARD_T scoreboard [N];
 
     mailbox #(TRANSACTION_T)  inbox [N];
 
@@ -84,26 +76,17 @@ class tb_env extends std_verif_pkg::basic_env;
     function new(input string name="tb_env", bit bigendian=1);
         super.new(name);
         for (int i=0; i < N; i++) begin
-            inbox[i]   = new();
-            driver[i]  = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
-            monitor[i] = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
-            model[i]   = new(.name($sformatf("model[%0d]",i)));
+            inbox[i]      = new();
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            model[i]      = new(.name($sformatf("model[%0d]",i)));
+            scoreboard[i] = new(.name($sformatf("scoreboard[%0d]",i)));
 
             __drv_inbox[i]    = new();
             __mon_outbox[i]   = new();
             __model_inbox[i]  = new();
             __model_outbox[i] = new();
         end
-
-        //for (int i=0; i < N; i++) scoreboard[i] = new();
-        scoreboard0 = new("scoreboard[0]");
-        scoreboard1 = new("scoreboard[1]");
-        scoreboard2 = new("scoreboard[2]");
-        scoreboard3 = new("scoreboard[3]");
-        scoreboard4 = new("scoreboard[4]");
-        scoreboard5 = new("scoreboard[5]");
-        scoreboard6 = new("scoreboard[6]");
-        scoreboard7 = new("scoreboard[7]");
 
     endfunction
 
@@ -112,27 +95,17 @@ class tb_env extends std_verif_pkg::basic_env;
     // [[ implements std_verif_pkg::base.destroy() ]]
     function automatic void destroy();
         for (int i=0; i < N; i++) begin
-            inbox[i]   = null;
-            driver[i]  = null;
-            monitor[i] = null;
-            model[i]   = null;
+            inbox[i]      = null;
+            driver[i]     = null;
+            monitor[i]    = null;
+            model[i]      = null;
+            scoreboard[i] = null;
 
             __drv_inbox[i]    = null;
             __mon_outbox[i]   = null;
             __model_inbox[i]  = null;
             __model_outbox[i] = null;
         end
-
-        //for (int i=0; i < 8; i++) scoreboard[i] = null;
-        scoreboard0 = null;
-        scoreboard1 = null;
-        scoreboard2 = null;
-        scoreboard3 = null;
-        scoreboard4 = null;
-        scoreboard5 = null;
-        scoreboard6 = null;
-        scoreboard7 = null;
-
         super.destroy();
     endfunction
 
@@ -155,25 +128,8 @@ class tb_env extends std_verif_pkg::basic_env;
             monitor[i].outbox = __mon_outbox[i];
         end
 
-        //for (int i=0; i < N; i++) scoreboard[i].got_inbox = __mon_outbox[i];
-        scoreboard0.got_inbox = __mon_outbox[0];
-        scoreboard1.got_inbox = __mon_outbox[1];
-        scoreboard2.got_inbox = __mon_outbox[2];
-        scoreboard3.got_inbox = __mon_outbox[3];
-        scoreboard4.got_inbox = __mon_outbox[4];
-        scoreboard5.got_inbox = __mon_outbox[5];
-        scoreboard6.got_inbox = __mon_outbox[6];
-        scoreboard7.got_inbox = __mon_outbox[7];
-
-        //for (int i=0; i < N; i++) scoreboard[i].exp_inbox = __model_outbox[i];
-        scoreboard0.exp_inbox = __model_outbox[0];
-        scoreboard1.exp_inbox = __model_outbox[1];
-        scoreboard2.exp_inbox = __model_outbox[2];
-        scoreboard3.exp_inbox = __model_outbox[3];
-        scoreboard4.exp_inbox = __model_outbox[4];
-        scoreboard5.exp_inbox = __model_outbox[5];
-        scoreboard6.exp_inbox = __model_outbox[6];
-        scoreboard7.exp_inbox = __model_outbox[7];
+        for (int i=0; i < N; i++) scoreboard[i].got_inbox = __mon_outbox[i];
+        for (int i=0; i < N; i++) scoreboard[i].exp_inbox = __model_outbox[i];
 
         this.driver[0].axis_vif  = axis_in_vif[0];
         this.driver[1].axis_vif  = axis_in_vif[1];
@@ -197,17 +153,8 @@ class tb_env extends std_verif_pkg::basic_env;
             register_subcomponent(driver[i]);
             register_subcomponent(monitor[i]);
             register_subcomponent(model[i]);
+            register_subcomponent(scoreboard[i]);
         end
-
-        //for (int i=0; i < N; i++) register_subcomponent(scoreboard[i]);
-        register_subcomponent(scoreboard0);
-        register_subcomponent(scoreboard1);
-        register_subcomponent(scoreboard2);
-        register_subcomponent(scoreboard3);
-        register_subcomponent(scoreboard4);
-        register_subcomponent(scoreboard5);
-        register_subcomponent(scoreboard6);
-        register_subcomponent(scoreboard7);
 
         reg_agent              = new("axi4l_reg_agent");
         app_reg_agent          = new("axi4l_app_reg_agent");
