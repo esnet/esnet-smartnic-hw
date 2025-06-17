@@ -41,15 +41,12 @@ module p4_and_verilog_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
+        env = tb.build();
        
-        // Retrieve reference to testbench environment class
-        env = tb.env;
-
         // Create P4 table agent
         vitisnetp4_agent = new;
-        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
-                                       // path to AXI-L write/read tasks
+        vitisnetp4_agent.create(p4_dpic_hier_path); // DPI-C P4 table agent requires hierarchial
+                                                    // path to AXI-L write/read tasks
     endfunction
 
     //===================================

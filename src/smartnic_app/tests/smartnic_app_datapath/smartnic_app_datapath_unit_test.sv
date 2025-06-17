@@ -43,16 +43,13 @@ module smartnic_app_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-       
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
         env.set_debug_level(1);
 
         // Create P4 table agent
         vitisnetp4_agent = new;
-        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
-                                       // path to AXI-L write/read tasks
+        vitisnetp4_agent.create(p4_dpic_hier_path); // DPI-C P4 table agent requires hierarchial
+                                                    // path to AXI-L write/read tasks
 
         smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h20000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.app_reg_agent;
@@ -65,7 +62,7 @@ module smartnic_app_datapath_unit_test;
         svunit_ut.setup();
 
         // start environment
-	env.run();
+        env.run();
 
         tuser={16'd0,1'bx,16'hxxxx,1'b1,12'd0,1'bx};
 

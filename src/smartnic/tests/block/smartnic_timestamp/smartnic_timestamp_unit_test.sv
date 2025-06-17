@@ -38,10 +38,7 @@ module smartnic_timestamp_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
     endfunction
 
     //===================================

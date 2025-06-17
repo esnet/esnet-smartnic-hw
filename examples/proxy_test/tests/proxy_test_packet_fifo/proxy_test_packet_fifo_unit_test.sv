@@ -71,10 +71,7 @@ module proxy_test_packet_fifo_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
 
         // Driver
         driver = new("packet_playback_driver", PACKET_MEM_SIZE, DATA_WID, env.app_reg_agent, 'h24000 );

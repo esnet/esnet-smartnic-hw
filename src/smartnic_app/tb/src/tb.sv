@@ -3,11 +3,6 @@ module tb;
     import smartnic_pkg::*;
 
     //===================================
-    // (Common) test environment
-    //===================================
-    tb_env env;
-
-    //===================================
     // Device Under Test
     //===================================
     `include "../include/DUT.svh"
@@ -56,7 +51,8 @@ module tb;
     //===================================
     // Build
     //===================================
-    function void build();
+    function automatic tb_env build();
+        tb_env env;
         // Instantiate environment
         env = new("tb_env", 0); // bigendian=0 to match CMACs.
 
@@ -84,17 +80,7 @@ module tb;
 
         env.build();
         env.set_debug_level(0);
+        return env;
     endfunction
-
-    // Export AXI-L accessors to VitisNetP4 shared library
-    export "DPI-C" task axi_lite_wr;
-    task axi_lite_wr(input int address, input int data);
-        env.vitisnetp4_write(address, data);
-    endtask
-
-    export "DPI-C" task axi_lite_rd;
-    task axi_lite_rd(input int address, inout int data);
-        env.vitisnetp4_read(address, data);
-    endtask
 
 endmodule : tb

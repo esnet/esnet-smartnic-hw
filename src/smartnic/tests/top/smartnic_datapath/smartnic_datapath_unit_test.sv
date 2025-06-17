@@ -42,10 +42,7 @@ module smartnic_datapath_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
 
         smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h20000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.reg_agent;
@@ -733,9 +730,9 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_CMAC0, exp_pkts[0], exp_pkts[0]*1518);
             check_sb1(); check_sb2(); check_sb3();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_processed(),   exp_pkts[0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard0.got_matched(),     exp_pkts[0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard0.exp_pending(), 128-exp_pkts[0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_processed(),   exp_pkts[0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_matched(),     exp_pkts[0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[0].exp_pending(), 128-exp_pkts[0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY1)
@@ -758,9 +755,9 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_CMAC1, exp_pkts[1], exp_pkts[1]*1518);
             check_sb0(); check_sb2(); check_sb3();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_processed(),   exp_pkts[1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard1.got_matched(),     exp_pkts[1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard1.exp_pending(), 128-exp_pkts[1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_processed(),   exp_pkts[1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_matched(),     exp_pkts[1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[1].exp_pending(), 128-exp_pkts[1]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF0)
@@ -784,9 +781,9 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_PF0, exp_pkts[2], exp_pkts[2]*1518);
             check_sb0(); check_sb1(); check_sb3();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_processed(),   exp_pkts[2]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard2.got_matched(),     exp_pkts[2]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard2.exp_pending(), 128-exp_pkts[2]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_processed(),   exp_pkts[2]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_matched(),     exp_pkts[2]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[2].exp_pending(), 128-exp_pkts[2]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF1)
@@ -810,9 +807,9 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_PF1, exp_pkts[3], exp_pkts[3]*1518);
             check_sb0(); check_sb1(); check_sb2();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_processed(),   exp_pkts[3]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard3.got_matched(),     exp_pkts[3]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard3.exp_pending(), 128-exp_pkts[3]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_processed(),   exp_pkts[3]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_matched(),     exp_pkts[3]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[3].exp_pending(), 128-exp_pkts[3]);
         `SVTEST_END
 
         `SVTEST(PF0_out_of_range_test)

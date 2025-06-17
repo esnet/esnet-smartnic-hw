@@ -3,11 +3,6 @@ module tb;
     import smartnic_pkg::*;
 
     //===================================
-    // (Common) test environment
-    //===================================
-    smartnic_env env;
-
-    //===================================
     // DUT
     //===================================
     `include "../include/DUT.svh"
@@ -91,19 +86,19 @@ module tb;
     //===================================
     // Build
     //===================================
-    function void build();
+    function automatic smartnic_env build();
+        smartnic_env env;
         // Instantiate environment
         env = new("env", 0); // bigendian=0 to match CMACs.
 
         // Connect environment
         env.reset_vif = reset_if;
-        // for (int i=0; i < 4; i++) env.axis_in_vif[i] = axis_in_if[i];  // commented out due to simulator errors.
+
         env.axis_in_vif[0] = axis_in_if[0];
         env.axis_in_vif[1] = axis_in_if[1];
         env.axis_in_vif[2] = axis_in_if[2];
         env.axis_in_vif[3] = axis_in_if[3];
 
-        //for (int i=0; i < 2; i++) env.axis_out_vif[i] = axis_out_if[i];  // commented out due to simulator errors.
         env.axis_out_vif[0] = axis_out_if[0];
         env.axis_out_vif[1] = axis_out_if[1];
         env.axis_out_vif[2] = axis_out_if[2];
@@ -113,17 +108,7 @@ module tb;
 
         env.build();
         env.set_debug_level(1);
+        return env;
     endfunction
-
-    // Export AXI-L accessors to VitisNetP4 shared library
-    export "DPI-C" task axi_lite_wr;
-    task axi_lite_wr(input int address, input int data);
-        env.vitisnetp4_write(address, data);
-    endtask
-
-    export "DPI-C" task axi_lite_rd;
-    task axi_lite_rd(input int address, inout int data);
-        env.vitisnetp4_read(address, data);
-    endtask
 
 endmodule : tb
