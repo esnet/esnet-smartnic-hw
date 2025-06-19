@@ -88,16 +88,25 @@ package :
 	if [ -e $(APP_ROOT)/app_if/smartnic_app_drv.tar ]; then \
 	   mkdir -p $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr; \
 	   tar xf $(APP_ROOT)/app_if/smartnic_app_drv.tar -C $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr; \
+           if [ -e $(APP_ROOT)/app_if/smartnic_app-metadata.yaml ]; then \
+	      cp $(APP_ROOT)/app_if/smartnic_app-metadata.yaml $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr/metadata.yaml; \
+           fi; \
 	   cp $(APP_ROOT)/app_if/smartnic_app.p4 $(artifact_dir)/firmware/esnet-smartnic-igr.p4; \
 	fi
 	if [ -e $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar ]; then \
 	   mkdir -p $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr; \
 	   tar xf $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar -C $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr; \
+           if [ -e $(APP_ROOT)/app_if/smartnic_app_igr-metadata.yaml ]; then \
+	      cp $(APP_ROOT)/app_if/smartnic_app_igr-metadata.yaml $(artifact_dir)/libvitisnetp4drv/vitisnetp4_igr/metadata.yaml; \
+           fi; \
 	   cp $(APP_ROOT)/app_if/smartnic_app_igr.p4 $(artifact_dir)/firmware/esnet-smartnic-igr.p4; \
 	fi
 	if [ -e $(APP_ROOT)/app_if/smartnic_app_egr_drv.tar ]; then \
 	   mkdir -p $(artifact_dir)/libvitisnetp4drv/vitisnetp4_egr; \
 	   tar xf $(APP_ROOT)/app_if/smartnic_app_egr_drv.tar -C $(artifact_dir)/libvitisnetp4drv/vitisnetp4_egr; \
+           if [ -e $(APP_ROOT)/app_if/smartnic_app_egr-metadata.yaml ]; then \
+	      cp $(APP_ROOT)/app_if/smartnic_app_egr-metadata.yaml $(artifact_dir)/libvitisnetp4drv/vitisnetp4_egr/metadata.yaml; \
+           fi; \
 	   cp $(APP_ROOT)/app_if/smartnic_app_egr.p4 $(artifact_dir)/firmware/esnet-smartnic-egr.p4; \
 	fi
 	-@cp $(APP_ROOT)/app_if/*.lua $(artifact_dir)/wireshark/plugins
