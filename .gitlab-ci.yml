@@ -516,6 +516,7 @@ validate_proxy_test_u280:
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
       SN_HW_APP_NAME=$SN_HW_APP_NAME
       SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
       _EOF
     - cat hwapi.env
 
