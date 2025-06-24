@@ -1,174 +1,228 @@
 import smartnic_pkg::*;
 import p4_proc_pkg::*;
+import axi4s_verif_pkg::*;
+import pcap_pkg::*;
 
-class tb_env extends std_verif_pkg::base;
-
+// Environment class for 'p4_proc' component verification.
+class tb_env extends std_verif_pkg::basic_env;
     // Parameters
-    // -- Datapath
-    localparam int AXIS_DATA_WID = 512;
-    localparam int AXIS_DATA_BYTE_WID = AXIS_DATA_WID/8;
-    // -- Timeouts
-    localparam int RESET_TIMEOUT = 1024;     // In clk cycles
-    localparam int MGMT_RESET_TIMEOUT = 256; // In aclk cycles
+    localparam int  DATA_BYTE_WID = 64;
+    localparam type TID_T         = port_t;
+    localparam type TDEST_T       = port_t;
+    localparam type TUSER_T       = tuser_t;
+
+    localparam type TRANSACTION_T = axi4s_transaction#(TID_T, TDEST_T, TUSER_T);
+    localparam type DRIVER_T      = axi4s_driver  #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
+    localparam type MONITOR_T     = axi4s_monitor #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
+    localparam type MODEL_T       = p4_proc_model;
+    localparam type SCOREBOARD_T  = event_scoreboard#(TRANSACTION_T);
+
+    local static const string __CLASS_NAME = "tb_pkg::tb_env";
+
+    localparam int NUM_PROC_PORTS = 2;     // Number of processor ports (per vitisnetp4 processor).
 
     //===================================
     // Properties
     //===================================
+    DRIVER_T     driver     [NUM_PROC_PORTS];
+    MONITOR_T    monitor    [NUM_PROC_PORTS];
+    MODEL_T      model      [NUM_PROC_PORTS];
+    SCOREBOARD_T scoreboard [NUM_PROC_PORTS];
 
-    // Reset interfaces
-    virtual std_reset_intf #(.ACTIVE_LOW(1)) reset_vif;
-    virtual std_reset_intf #(.ACTIVE_LOW(1)) mgmt_reset_vif;
+    mailbox #(TRANSACTION_T)  inbox [NUM_PROC_PORTS];
 
-    // AXI-L management interface
+    local mailbox #(TRANSACTION_T) __drv_inbox    [NUM_PROC_PORTS];
+    local mailbox #(TRANSACTION_T) __mon_outbox   [NUM_PROC_PORTS];
+    local mailbox #(TRANSACTION_T) __model_inbox  [NUM_PROC_PORTS];
+    local mailbox #(TRANSACTION_T) __model_outbox [NUM_PROC_PORTS];
+
+    // AXI-S interfaces
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_in_vif  [NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_out_vif [NUM_PROC_PORTS];
+
+    // AXI-L interfaces
     virtual axi4l_intf axil_vif;
-
-    // SDnet AXI-L management interface
     virtual axi4l_intf axil_vitisnetp4_vif;
 
-    // AXI-S input interface
-    virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_in_vif  [2];
-    virtual axi4s_intf #(.TUSER_T(tuser_t),
-                         .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) axis_out_vif [2];
-
-    // AXI3 interfaces to HBM
-    virtual axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_T(logic[5:0])) axi_to_hbm_vif [16];
-
-    // Drivers/Monitors
-    axi4s_driver #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_driver  [2];
-
-    axi4s_monitor #(
-        .TUSER_T(tuser_t), .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T (port_t), .TDEST_T (port_t)
-    ) axis_monitor [2];
-
-    // AXI-L agent
+    // AXI-L reg agents
     axi4l_reg_agent #() reg_agent;
-
-    // SDnet AXI-L agent
     axi4l_reg_agent #() vitisnetp4_reg_agent;
 
-    // Register agents
+    // p4_proc reg agent
     p4_proc_reg_agent p4_proc_reg_agent;
 
     // Timestamp
     virtual timestamp_intf #() timestamp_vif;
-
     timestamp_agent #() ts_agent;
+
 
     //===================================
     // Methods
     //===================================
-
     // Constructor
-    function new(string name , bit bigendian = 1);
+    function new(input string name="tb_env", bit bigendian=1);
         super.new(name);
-        axis_driver  [0]     = new(.BIGENDIAN(bigendian));
-        axis_driver  [1]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [0]     = new(.BIGENDIAN(bigendian));
-        axis_monitor [1]     = new(.BIGENDIAN(bigendian));
-        reg_agent            = new("axi4l_reg_agent");
-        vitisnetp4_reg_agent = new("axi4l_reg_agent");
-        p4_proc_reg_agent    = new("p4_proc_reg_agent", reg_agent, 'h0000);
-        ts_agent             = new;
+        for (int i=0; i < NUM_PROC_PORTS; i++) begin
+            inbox[i]      = new();
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            model[i]      = new(.name($sformatf("model[%0d]",i)));
+            scoreboard[i] = new();
+
+            __drv_inbox[i]    = new();
+            __mon_outbox[i]   = new();
+            __model_inbox[i]  = new();
+            __model_outbox[i] = new();
+        end
     endfunction
 
     // Destructor
     // [[ implements std_verif_pkg::base.destroy() ]]
     function automatic void destroy();
-        // TODO
+        for (int i=0; i < NUM_PROC_PORTS; i++) begin
+            inbox[i]      = null;
+            driver[i]     = null;
+            monitor[i]    = null;
+            model[i]      = null;
+            scoreboard[i] = null;
+
+            __drv_inbox[i]    = null;
+            __mon_outbox[i]   = null;
+            __model_inbox[i]  = null;
+            __model_outbox[i] = null;
+        end
+
+        super.destroy();
     endfunction
 
-    function void connect();
-        axis_driver[0].axis_vif       = axis_in_vif[0];
-        axis_driver[1].axis_vif       = axis_in_vif[1];
-        axis_monitor[0].axis_vif      = axis_out_vif[0];
-        axis_monitor[1].axis_vif      = axis_out_vif[1];
-        ts_agent.timestamp_vif        = timestamp_vif;
+    // Build environment
+    // [[ implements std_verif_pkg::env._build() ]]
+    virtual protected function automatic void _build();
+        trace_msg("_build()");
+        for (int i=0; i < NUM_PROC_PORTS; i++) begin
+            driver[i].inbox   = __drv_inbox[i];
+            model[i].inbox    = __model_inbox[i];
+            model[i].outbox   = __model_outbox[i];
+            monitor[i].outbox = __mon_outbox[i];
+
+            scoreboard[i].got_inbox = __mon_outbox[i];
+            scoreboard[i].exp_inbox = __model_outbox[i];
+        end
+
+        driver[0].axis_vif  = axis_in_vif[0];
+        driver[1].axis_vif  = axis_in_vif[1];
+        monitor[0].axis_vif = axis_out_vif[0];
+        monitor[1].axis_vif = axis_out_vif[1];
+
+        for (int i=0; i < NUM_PROC_PORTS; i++) begin
+            register_subcomponent(driver[i]);
+            register_subcomponent(monitor[i]);
+            register_subcomponent(model[i]);
+            register_subcomponent(scoreboard[i]);
+        end
+
+        reg_agent            = new("axi4l_reg_agent");
+        vitisnetp4_reg_agent = new("vitisnetp4_reg_agent");
+        p4_proc_reg_agent    = new("p4_proc_reg_agent", reg_agent, 'h0000);
+        ts_agent             = new;
+
         reg_agent.axil_vif            = axil_vif;
-        vitisnetp4_reg_agent.axil_vif      = axil_vitisnetp4_vif;
+        vitisnetp4_reg_agent.axil_vif = axil_vitisnetp4_vif;
+
+        register_subcomponent(reg_agent);
+        register_subcomponent(vitisnetp4_reg_agent);
+
+        ts_agent.timestamp_vif = timestamp_vif;
+
+        trace_msg("_build() Done.");
     endfunction
 
-    task reset();
-        reg_agent.idle();
-        vitisnetp4_reg_agent.idle();
-        axis_driver[0].idle();
-        axis_driver[1].idle();
-        axis_monitor[0].idle();
-        axis_monitor[1].idle();
-        reset_vif.pulse(8);
-        mgmt_reset_vif.pulse(8);
-        #100ns;
+
+    // Start environment execution (run loop)
+    // [[ implements std_verif_pkg::component._run() ]]
+    protected task _run();
+        trace_msg("_run()");
+        super._run();
+        trace_msg("Running...");
+
+        trace_msg("_run() Done.");
     endtask
+
+
+    task automatic pcap_to_driver (
+        input string      filename,
+        input TID_T       tid=0,
+        input TDEST_T     tdest=0,
+        input TUSER_T     tuser=0,
+        input DRIVER_T    driver  );
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+
+        // put packets one at a time
+        for (int i = 0; i < pcap.records.size(); i++) begin
+            axi4s_transaction#(TID_T, TDEST_T, TUSER_T) transaction =
+                axi4s_transaction#(TID_T, TDEST_T, TUSER_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    pcap.records[i].pkt_data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            driver.inbox.put(transaction);
+        end
+    endtask
+
+
+    task automatic pcap_to_scoreboard (
+        input string       filename,
+        input TID_T        tid=0,
+        input TDEST_T      tdest=0,
+        input TUSER_T      tuser=0,
+        input SCOREBOARD_T scoreboard,
+        input int          len=0 );
+
+        axi4s_transaction#(TID_T, TDEST_T, TUSER_T) transaction;
+
+        // signals
+        pcap_pkg::pcap_t pcap;
+        byte data [$];
+
+        // read pcap file
+        pcap = pcap_pkg::read_pcap(filename);
+
+        // put packets one at a time
+        for (int i = 0; i < pcap.records.size(); i++) begin
+            data = pcap.records[i].pkt_data;
+            while ( (len>0) && (data.size()>len) ) data.pop_back();
+
+            transaction = axi4s_transaction#(TID_T, TDEST_T, TUSER_T)::create_from_bytes(
+                    $sformatf("Packet %0d", i),
+                    data,
+                    tid,
+                    tdest,
+                    tuser
+                );
+            scoreboard.exp_inbox.put(transaction);
+        end
+    endtask
+
+
+    // Configure trace output
+    // [[ overrides std_verif_pkg::base.trace_msg() ]]
+    function automatic void trace_msg(input string msg);
+        _trace_msg(msg, __CLASS_NAME);
+    endfunction
 
     task init_timestamp();
         ts_agent.reset();
     endtask
 
-    task read(
-            input  bit [31:0] addr,
-            output bit [31:0] data,
-            output bit error,
-            output bit timeout,
-            input  int TIMEOUT=128
-        );
-        axil_vif.read(addr, data, error, timeout, TIMEOUT);
-    endtask
-
-    task write(
-            input  bit [31:0] addr,
-            input  bit [31:0] data,
-            output bit error,
-            output bit timeout,
-            input  int TIMEOUT=32
-        );
-        axil_vif.write(addr, data, error, timeout, TIMEOUT);
-    endtask
-
-    task wait_reset_done(
-            output bit done,
-            output string msg
-        );
-        bit reset_done;
-        bit mgmt_reset_done;
-        bit reset_timeout;
-        bit mgmt_reset_timeout;
-        fork
-            begin
-                reset_vif.wait_ready(
-                    reset_timeout, RESET_TIMEOUT);
-            end
-            begin
-                mgmt_reset_vif.wait_ready(
-                    mgmt_reset_timeout, MGMT_RESET_TIMEOUT);
-            end
-        join
-        reset_done = !reset_timeout;
-        mgmt_reset_done = !mgmt_reset_timeout;
-        done = reset_done & mgmt_reset_done;
-        if (reset_done) begin
-            if (mgmt_reset_done) begin
-                msg = "Return from datapath and management resets completed.";
-            end else begin
-                msg =
-                    $sformatf(
-                        "Return from management reset timed out after %d mgmt_clk cycles.",
-                        MGMT_RESET_TIMEOUT
-                    );
-            end
-        end else begin
-            if (mgmt_reset_done) begin
-                msg =
-                    $sformatf(
-                        "Return from datapath reset timed out after %d clk cycles.",
-                        RESET_TIMEOUT
-                    );
-            end else begin
-                msg = "Return from datapath/management resets timed out.";
-            end
-        end
-    endtask
 
     // SDnet Tasks
     task vitisnetp4_read(
@@ -188,3 +242,19 @@ class tb_env extends std_verif_pkg::base;
     endtask
 
 endclass : tb_env
+
+
+// model class for 'p4_proc' component verification.  placeholder for future code (tbd).
+class p4_proc_model
+    extends std_verif_pkg::model#(axi4s_transaction#(port_t, port_t, tuser_t),
+                                  axi4s_transaction#(port_t, port_t, tuser_t));
+
+    function new(string name="p4_proc_model");
+        super.new(name);
+    endfunction
+
+    protected task _process(input axi4s_transaction#(port_t, port_t, tuser_t) transaction);
+        _enqueue(transaction);
+    endtask
+
+endclass
