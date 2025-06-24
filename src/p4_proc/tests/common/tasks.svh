@@ -1,54 +1,10 @@
-//=======================================================================
-// Tasks
-//=======================================================================
 import smartnic_pkg::*;
+import axi4s_verif_pkg::*;
 import p4_proc_pkg::*;
 
-// Execute block reset (dataplane + control plane)
-task reset();
-    automatic bit reset_done;
-    automatic string msg;
-    env.reset();
-    env.wait_reset_done(reset_done, msg);
-    `FAIL_IF_LOG((reset_done == 0), msg);
-endtask
-
-
-// Send packets described in PCAP file on AXI-S input interface
-task send_pcap(input string pcap_filename, input int num_pkts=0, start_idx=0, twait=0, input in_if=0, input port_t id=0, dest=0);
-    env.axis_driver[in_if].send_from_pcap(pcap_filename, num_pkts, start_idx, twait, id, dest);
-endtask
-
-
-// Compare packets
-task compare_pkts(input byte pkt1[$], pkt2[$], input int size=0);
-    automatic int byte_idx = 0;
-
-    if ((size == 0) || (size > pkt2.size)) size = pkt2.size;
-
-    if ( pkt1.size() != size ) begin
-       $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
-       $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
-
-      `FAIL_IF_LOG( pkt1.size() != size,
-                    $sformatf("FAIL!!! Packet size mismatch. size1=%0d size2=%0d", pkt1.size(), size) )
-    end
-
-    byte_idx = 0;
-    while ( byte_idx < pkt1.size() ) begin
-       if (pkt1[byte_idx] != pkt2[byte_idx]) begin
-          $display("pkt1:"); pcap_pkg::print_pkt_data(pkt1);
-          $display("pkt2:"); pcap_pkg::print_pkt_data(pkt2);
-	  
-          `FAIL_IF_LOG( pkt1[byte_idx] != pkt2[byte_idx],
-                        $sformatf("FAIL!!! Packet bytes mismatch at byte_idx: 0x%0h (d:%0d)", byte_idx, byte_idx) )
-       end
-       byte_idx++;
-    end
-endtask
-
-
-// Drop counter typedefs
+//=======================================================================
+// Global variables
+//=======================================================================
 typedef enum logic [31:0] {
     DROPS_FROM_P4          = 'h0400,
     DROPS_UNSET_ERR_PORT_0 = 'h0800,
@@ -60,19 +16,85 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
+string  msg;
+string  p4_sim_dir = "../../../../vitisnetp4/p4/sim/";
 
-// Check probe counts (pkt and byte).
-task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkt_cnt, exp_byte_cnt);
+tuser_t tuser;
+
+//=======================================================================
+// Tasks
+//=======================================================================
+task debug_msg(input string msg, input bit VERBOSE=0);
+    if (VERBOSE) `INFO(msg);
+endtask
+
+
+task automatic write_p4_tables (input string testdir);
+    string filename;
+
+   `INFO("Writing VitisNetP4 tables...");
+    filename = {p4_sim_dir, testdir, "/cli_commands.txt"};
+    vitisnetp4_agent.table_init_from_file(filename);
+endtask
+
+
+task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tid=0, tdest=0,
+                             tuser_t tuser={64'hxxxxxxxxxxxxxxxx,16'd0,1'bx,16'hxxxx,1'b0,12'd0,1'bx},
+                             bit write_tables=1, check_scoreboards=1);
+    string filename;
+    bit    rx_done=0;
+
+    if (write_tables) write_p4_tables (.testdir(testdir));
+
+   `INFO("Writing expected pcap data to scoreboard...");
+    filename = {p4_sim_dir, testdir, "/packets_out.pcap"};
+
+    env.pcap_to_scoreboard (.filename(filename), .tid(tid), .tdest(tdest), .tuser(tuser),
+                            .scoreboard(env.scoreboard[out_port]) );
+
+   `INFO("Starting simulation...");
+    filename = {p4_sim_dir, testdir, "/packets_in.pcap"};
+    env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
+
+    #1us;
+    fork
+        #10us if (!rx_done) `INFO("run_pkt_test task TIMEOUT!");
+
+        while (!rx_done) #100ns if (env.scoreboard[out_port].exp_pending()==0)  rx_done=1;
+    join_any
+ 
+    if (check_scoreboards)
+       for (int i=0; i < env.NUM_PROC_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
+
+endtask
+
+
+task check_probe (input cntr_addr_t base_addr, input logic [63:0] exp_pkts, exp_bytes);
     logic [63:0] rd_data;
 
     env.reg_agent.read_reg( base_addr + 'h0, rd_data[63:32] );  // pkt_count_upper
     env.reg_agent.read_reg( base_addr + 'h4, rd_data[31:0]  );  // pkt_count_lower
    `INFO($sformatf("%s pkt count: %0d", base_addr.encoded.name(), rd_data));
-   `FAIL_UNLESS( rd_data == exp_pkt_cnt );
+   `FAIL_UNLESS( rd_data == exp_pkts );
 
     env.reg_agent.read_reg( base_addr + 'h8, rd_data[63:32] );  // byte_count_upper
     env.reg_agent.read_reg( base_addr + 'hc, rd_data[31:0]  );  // byte_count_lower
    `INFO($sformatf("%s byte count: %0d", base_addr.encoded.name(), rd_data));
-   `FAIL_UNLESS( rd_data == exp_byte_cnt );
+   `FAIL_UNLESS( rd_data == exp_bytes );
 
+    env.reg_agent.write_reg( base_addr + 'h10, 'h2 ); // CLR_ON_WR_EVT
 endtask;
+
+
+// Export AXI-L accessors to VitisNetP4 shared library
+export "DPI-C" task axi_lite_wr;
+task axi_lite_wr(input int address, input int data);
+    env.vitisnetp4_write(address, data);
+endtask
+
+export "DPI-C" task axi_lite_rd;
+task axi_lite_rd(input int address, inout int data);
+    env.vitisnetp4_read(address, data);
+endtask
+
+string p4_dpic_hier_path = $sformatf("%m");
