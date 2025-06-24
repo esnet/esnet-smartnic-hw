@@ -91,7 +91,7 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
 
     #1us;
     fork
-        #10us `INFO("run_pkt_test task TIMEOUT!");
+        #10us if (!rx_done) `INFO("run_pkt_test task TIMEOUT!");
 
         while (!rx_done) begin
             case (out_port)

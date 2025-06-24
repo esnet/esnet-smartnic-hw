@@ -33,7 +33,7 @@ class tb_env extends std_verif_pkg::basic_env;
     DRIVER_T     driver  [N];
     MONITOR_T    monitor [N];
     MODEL_T      model   [N];
-     SCOREBOARD_T scoreboard [N];
+    SCOREBOARD_T scoreboard [N];
 
     mailbox #(TRANSACTION_T)  inbox [N];
 
