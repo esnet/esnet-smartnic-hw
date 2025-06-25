@@ -135,17 +135,16 @@ module smartnic_app_datapath_unit_test
 
        `INFO("Writing expected pcap data to scoreboard...");
         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
-        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(out_port));
+        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+                                .scoreboard(env.scoreboard[out_port]));
 
        `INFO("Starting simulation...");
         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
         env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
 
         #3us;
-       `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
-       `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
+        for (int i=0; i < NUM_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
+
     endtask
 
 
@@ -177,19 +176,19 @@ module smartnic_app_datapath_unit_test
            filename = {testdir, "packets_out.pcap"};
            tuser.rss_enable  = 1'b1;
            tuser.rss_entropy = PF0_VF2 + 1;
-           env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(PF0));
+           env.pcap_to_scoreboard ( .filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+                                    .scoreboard(env.scoreboard[PF0]) );
+
            tuser.rss_entropy = PF1_VF2 + 16;
-           env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser), .out_port(PF1));
+           env.pcap_to_scoreboard ( .filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+                                    .scoreboard(env.scoreboard[PF1]) );
 
            // program drivers with traffic data for PF0 and PF1.  start simulation.
            env.pcap_to_driver     (.filename(filename), .driver(env.driver[PF0]));
            env.pcap_to_driver     (.filename(filename), .driver(env.driver[PF1]));
 
            #4us;
-          `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
-          `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
+           for (int i=0; i < NUM_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
 
        `SVTEST_END
 
