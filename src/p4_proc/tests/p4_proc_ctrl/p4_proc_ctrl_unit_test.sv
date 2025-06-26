@@ -15,14 +15,16 @@ module p4_proc_ctrl_unit_test;
     //===================================
     // This test suite references the common p4_proc
     // testbench top level. The 'tb' module is
-    // loaded into the tb_glbl scope, so is available
-    // at tb_glbl.tb.
+    // loaded into the global scope.
     //
     // Interaction with the testbench is expected to occur
     // via the testbench environment class (tb_env). A
     // reference to the testbench environment is provided
     // here for convenience.
     tb_pkg::tb_env env;
+
+    // VitisNetP4 table agent
+    vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
     //===================================
     // Import common testcase tasks
@@ -36,10 +38,7 @@ module p4_proc_ctrl_unit_test;
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
 
     endfunction
 
@@ -49,9 +48,10 @@ module p4_proc_ctrl_unit_test;
     task setup();
         svunit_ut.setup();
 
-        // Issue reset (both datapath and management domains)
-        reset();
+        // start environment
+        env.run();
 
+        #100ns;
     endtask
 
 
@@ -60,8 +60,10 @@ module p4_proc_ctrl_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
-        svunit_ut.teardown();
+        // Stop environment
+        env.stop();
 
+        svunit_ut.teardown();
     endtask
 
 

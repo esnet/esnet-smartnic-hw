@@ -222,8 +222,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
         input TID_OUT_T    tid=0,
         input TDEST_T      tdest=0,
         input TUSER_OUT_T  tuser=0,
-        //input SCOREBOARD_T scoreboard );
-        input port_t       out_port );
+        input SCOREBOARD_T scoreboard );
 
         // signals
         pcap_pkg::pcap_t pcap;
@@ -243,8 +242,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     tdest,
                     tuser
                 );
-            //scoreboard.exp_inbox.put(transaction);
-            __model_outbox[out_port].put(transaction);
+            scoreboard.exp_inbox.put(transaction);
         end
     endtask
 

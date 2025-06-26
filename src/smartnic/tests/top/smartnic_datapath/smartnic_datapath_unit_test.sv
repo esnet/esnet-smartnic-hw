@@ -51,7 +51,7 @@ module smartnic_datapath_unit_test;
     //===================================
     // Local test variables
     //===================================
-    int  bytes[4];
+    int  bytes[NUM_PORTS];
     real FIFO_DEPTH = 1306.0; // 1024 - 4 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
     //===================================
@@ -147,8 +147,8 @@ module smartnic_datapath_unit_test;
         check_probe(PROBE_APP1_TO_CORE, pkts, bytes[3]);
         check_probe(PROBE_TO_CMAC1,     pkts, bytes[3]);
 
-        check_sb0(.pkts(pkts)); check_sb1(.pkts(pkts));
-        check_sb2(.pkts(pkts)); check_sb3(.pkts(pkts));
+        check_phy0(.pkts(pkts)); check_phy1(.pkts(pkts));
+        check_pf0 (.pkts(pkts)); check_pf1 (.pkts(pkts));
     endtask
 
 
@@ -179,10 +179,10 @@ module smartnic_datapath_unit_test;
         `SVTEST_END
 
         `SVTEST(single_pkts_test)
-            env.driver[0].set_min_gap(50); // set gap to 50 cycles
-            env.driver[1].set_min_gap(50);
-            env.driver[2].set_min_gap(50);
-            env.driver[3].set_min_gap(50);
+            env.driver[PHY0].set_min_gap(50); // set gap to 50 cycles
+            env.driver[PHY1].set_min_gap(50);
+            env.driver[PF0].set_min_gap(50);
+            env.driver[PF1].set_min_gap(50);
 
             passthru_test(.usec(3));
         `SVTEST_END
@@ -210,7 +210,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_BYPASS1, 10, bytes[1]);
             check_probe(PROBE_TO_CMAC1,   10, bytes[1]);
 
-            check_sb0(.pkts(10));  check_sb1(.pkts(10)); check_sb2(); check_sb3();
+            check_phy0(.pkts(10));  check_phy1(.pkts(10)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(host_bypass_test)
@@ -235,7 +235,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_TO_PF1_VF2,   10, bytes[3]);
             check_probe(PROBE_TO_PF1,       10, bytes[3]);
 
-            check_sb2(.pkts(10));  check_sb3(.pkts(10)); check_sb0(); check_sb1();
+            check_pf0(.pkts(10));  check_pf1(.pkts(10)); check_phy0(); check_phy1();
 
             check_cleared_probe_counters;
         `SVTEST_END
@@ -247,13 +247,13 @@ module smartnic_datapath_unit_test;
         `SVTEST(PHY0_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #1us;  // 1us > (3ns/cycle * 10 pkts * 1518/64 cycles/pkt)
-            check_sb0(.pkts(10)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY1_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #1us;
-            check_sb1(.pkts(10)) ; check_sb0(); check_sb2(); check_sb3();
+            check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY0_to_PHY1_test)
@@ -261,7 +261,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[1]), .tid(PHY0), .tdest(PHY1));
             #1us;
-            check_sb1(.pkts(10)) ; check_sb0(); check_sb2(); check_sb3();
+            check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY1_to_PHY0_test)
@@ -269,7 +269,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[0]), .tid(PHY1), .tdest(PHY0));
             #1us;
-            check_sb0(.pkts(10)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY0_to_PF0_VF2_test)
@@ -277,7 +277,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
             #1us;
-            check_sb2(.pkts(10)) ; check_sb0(); check_sb1(); check_sb3();
+            check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY1_to_PF1_VF2_test)
@@ -285,7 +285,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
             #1us;
-            check_sb3(.pkts(10)) ; check_sb0(); check_sb1(); check_sb2();
+            check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
 
         `SVTEST(PHY0_to_PF0_test)
@@ -294,7 +294,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[2]), .tid(PHY0), .tdest(PF0));
             #1us;
-            check_sb2(.pkts(10)) ; check_sb0(); check_sb1(); check_sb3();
+            check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY1_to_PF1_test)
@@ -303,7 +303,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[3]), .tid(PHY1), .tdest(PF1));
             #1us;
-            check_sb3(.pkts(10)) ; check_sb0(); check_sb1(); check_sb2();
+            check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
 
         `SVTEST(PHY0_to_PF0_VF0_test)
@@ -313,7 +313,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF0));
             #1us;
-            check_sb2(.pkts(10)) ; check_sb0(); check_sb1(); check_sb3();
+            check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PHY1_to_PF1_VF0_test)
@@ -323,19 +323,19 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF0));
             #1us;
-            check_sb3(.pkts(10)) ; check_sb0(); check_sb1(); check_sb2();
+            check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
 
         `SVTEST(PF0_VF2_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0_VF2), .tdest(PHY0));
             #1us;
-            check_sb0(.pkts(10)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_VF2_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1_VF2), .tdest(PHY1));
             #1us;
-            check_sb1(.pkts(10)) ; check_sb0(); check_sb2(); check_sb3();
+            check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF0_VF2_to_PF0_VF2_test)
@@ -343,7 +343,7 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[2]), .tid(PF0_VF2), .tdest(PF0_VF2));
             #1us
-            check_sb2(.pkts(10)) ; check_sb0(); check_sb1(); check_sb3();
+            check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_VF2_to_PF0_VF2_test)
@@ -351,50 +351,50 @@ module smartnic_datapath_unit_test;
 
             packet_stream(.bytes(bytes[3]), .tid(PF1_VF2), .tdest(PF1_VF2));
             #1us
-            check_sb3(.pkts(10)) ; check_sb0(); check_sb1(); check_sb2();
+            check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
 
         `SVTEST(PF0_VF1_to_PF0_VF1_test)
             packet_stream(.bytes(bytes[2]), .tid(PF0_VF1), .tdest(PF0_VF1));
             #1us;
-            check_sb2(.pkts(10)) ; check_sb0(); check_sb1(); check_sb3();
+            check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_VF1_to_PF1_VF1_test)
             packet_stream(.bytes(bytes[3]), .tid(PF1_VF1), .tdest(PF1_VF1));
             #1us;
-            check_sb3(.pkts(10)) ; check_sb0(); check_sb1(); check_sb2();
+            check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
 
         `SVTEST(PF0_VF0_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0_VF0), .tdest(PHY0));
             #1us;
-            check_sb0(.pkts(10)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_VF0_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1_VF0), .tdest(PHY1));
             #1us;
-            check_sb1(.pkts(10)) ; check_sb0(); check_sb2(); check_sb3();
+            check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF0_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0), .tdest(PHY0));
             #1us;
-            check_sb0(.pkts(10)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1), .tdest(PHY1));
             #1us;
-            check_sb1(.pkts(10)) ; check_sb0(); check_sb2(); check_sb3();
+            check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(random_tid_test)
             port_t  tid, tdest;
-            int     pkts, exp_pkts[4];
+            int     pkts, exp_pkts[NUM_PORTS];
 
-            for (int i = 0; i < 4; i++) exp_pkts[i] = 0;
+            for (int i = 0; i < NUM_PORTS; i++) exp_pkts[i] = 0;
 
             for (int i = 0; i < 10; i++) begin  // send 10 consecutive pkt streams
                 // randomly select tid from P0/P1 and PHY/PF/VF0/VF1/VF2.
@@ -415,18 +415,18 @@ module smartnic_datapath_unit_test;
                 packet_stream(.bytes(bytes[0]), .pkts(pkts), .tid(tid), .tdest(tdest));
 
                 case (tdest.encoded.typ)
-                    PHY: if (tdest.encoded.num == P0) exp_pkts[0] = exp_pkts[0] + pkts;
-                         else                         exp_pkts[1] = exp_pkts[1] + pkts;
-                    VF1: if (tdest.encoded.num == P0) exp_pkts[2] = exp_pkts[2] + pkts;
-                         else                         exp_pkts[3] = exp_pkts[3] + pkts;
+                    PHY: if (tdest.encoded.num == P0) exp_pkts[PHY0] = exp_pkts[PHY0] + pkts;
+                         else                         exp_pkts[PHY1] = exp_pkts[PHY1] + pkts;
+                    VF1: if (tdest.encoded.num == P0) exp_pkts[PF0]  = exp_pkts[PF0]  + pkts;
+                         else                         exp_pkts[PF1]  = exp_pkts[PF1]  + pkts;
                 endcase
 
                 #500ns;  // 500ns > (3ns/cycle * 5 pkts * 1518/64 cycles/pkt)
             end
 
             // check scoreboards.
-            check_sb0(.pkts(exp_pkts[0])); check_sb1(.pkts(exp_pkts[1]));
-            check_sb2(.pkts(exp_pkts[2])); check_sb3(.pkts(exp_pkts[3]));
+            check_phy0(.pkts(exp_pkts[PHY0])); check_phy1(.pkts(exp_pkts[PHY1]));
+            check_pf0 (.pkts(exp_pkts[PF0]));  check_pf1 (.pkts(exp_pkts[PF1]));
         `SVTEST_END
 
 
@@ -443,7 +443,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast)
                           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
             join
-            check_sb0(.pkts(2));  check_sb1(); check_sb2(.pkts(2)); check_sb3();
+            check_phy0(.pkts(2));  check_phy1(); check_pf0(.pkts(2)); check_pf1();
 
         `SVTEST_END
 
@@ -457,7 +457,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast)
                           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
             join
-            check_sb0(); check_sb1(.pkts(2));  check_sb2(); check_sb3(.pkts(2));
+            check_phy0(); check_phy1(.pkts(2));  check_pf0(); check_pf1(.pkts(2));
 
         `SVTEST_END
 
@@ -477,7 +477,7 @@ module smartnic_datapath_unit_test;
                           env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
             join
 
-            check_sb0(.pkts(4)) ; check_sb1(.pkts(4)); check_sb2(); check_sb3();
+            check_phy0(.pkts(4)) ; check_phy1(.pkts(4)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(reconfig_mux_out_sel0)
@@ -497,7 +497,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast) bypass_mode(0);
             join
 
-            check_sb0(.pkts(2)) ; check_sb1(.pkts(2)); check_sb2(); check_sb3();
+            check_phy0(.pkts(2)) ; check_phy1(.pkts(2)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(reconfig_mux_out_sel1)
@@ -517,7 +517,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast) bypass_mode(1);
             join
 
-            check_sb0(.pkts(2)) ; check_sb1(.pkts(2)); check_sb2(); check_sb3();
+            check_phy0(.pkts(2)) ; check_phy1(.pkts(2)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(reconfig_mux_out_sel2)
@@ -537,7 +537,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_host_to_core[0].tlast) bypass_mode(2);
             join
 
-            check_sb0(.pkts(2)) ; check_sb1(.pkts(2)); check_sb2(); check_sb3();
+            check_phy0(.pkts(2)) ; check_phy1(.pkts(2)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(reconfig_mux_out_sel3)
@@ -557,7 +557,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_host_to_core[1].tlast) bypass_mode(3);
             join
 
-            check_sb0(.pkts(2)) ; check_sb1(.pkts(2)); check_sb2(); check_sb3();
+            check_phy0(.pkts(2)) ; check_phy1(.pkts(2)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(traffic_after_drops0)
@@ -575,7 +575,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast) bypass_mode(0);
             join
 
-            check_sb0() ; check_sb1(.pkts(2)); check_sb2(); check_sb3();
+            check_phy0() ; check_phy1(.pkts(2)); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(traffic_after_drops1)
@@ -593,7 +593,7 @@ module smartnic_datapath_unit_test;
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast) bypass_mode(1);
             join
 
-            check_sb0(.pkts(2)) ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0(.pkts(2)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
 
@@ -607,7 +607,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_FROM_CMAC0, 10, bytes[0]);
             check_probe(DROPS_TO_BYPASS0, 10, bytes[0]);
             check_probe(PROBE_TO_BYPASS0, 0, 0);
-            check_sb0();  check_sb1(); check_sb2(); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
          `SVTEST(phy_drops_to_BYPASS1)
@@ -617,7 +617,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_FROM_CMAC1, 10, bytes[1]);
             check_probe(DROPS_TO_BYPASS1, 10, bytes[1]);
             check_probe(PROBE_TO_BYPASS1, 0, 0);
-            check_sb0();  check_sb1(); check_sb2(); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(host_drops_to_BYPASS0)
@@ -627,7 +627,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_FROM_PF0_VF2, 10, bytes[2]);
             check_probe(DROPS_TO_BYPASS0, 10, bytes[2]);
             check_probe(PROBE_TO_BYPASS0, 0, 0);
-            check_sb0();  check_sb1(); check_sb2(); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(host_drops_to_BYPASS1)
@@ -637,7 +637,7 @@ module smartnic_datapath_unit_test;
             check_probe(PROBE_FROM_PF1_VF2, 10, bytes[3]);
             check_probe(DROPS_TO_BYPASS1, 10, bytes[3]);
             check_probe(PROBE_TO_BYPASS1, 0, 0);
-            check_sb0();  check_sb1(); check_sb2(); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(err_drops_from_PHY0)
@@ -647,7 +647,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(5), .mode(0), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
             #1us;
             check_probe(DROPS_ERR_FROM_CMAC0, 5, bytes[0]);
-            check_sb0();  check_sb1(); check_sb2(.pkts(5)); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(.pkts(5)); check_pf1();
         `SVTEST_END
 
         `SVTEST(err_drops_from_PHY1)
@@ -657,12 +657,12 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(5), .mode(0), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
             #1us;
             check_probe(DROPS_ERR_FROM_CMAC1, 5, bytes[1]);
-            check_sb0();  check_sb1(); check_sb2(); check_sb3(.pkts(5));
+            check_phy0();  check_phy1(); check_pf0(); check_pf1(.pkts(5));
         `SVTEST_END
 
         `SVTEST(ovfl_drops_from_PHY0)
             drop_mode(0);
-            exp_pkts[0] = FIFO_DEPTH/$ceil(9100/64.0)+1;
+            exp_pkts[PHY0] = FIFO_DEPTH/$ceil(9100/64.0)+1;
 
             // force backpressure (deasserts tready from app core to ingress switch).
             switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
@@ -670,44 +670,44 @@ module smartnic_datapath_unit_test;
             // start traffic and check probes.
             packet_stream(.pkts(32), .mode(9100), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #15us;
-            check_probe(PROBE_FROM_CMAC0, exp_pkts[0], exp_pkts[0]*9100);
-            check_probe(DROPS_OVFL_FROM_CMAC0, 32-exp_pkts[0], (32-exp_pkts[0])*9100);
+            check_probe(PROBE_FROM_CMAC0, exp_pkts[PHY0], exp_pkts[PHY0]*9100);
+            check_probe(DROPS_OVFL_FROM_CMAC0, 32-exp_pkts[PHY0], (32-exp_pkts[PHY0])*9100);
 
             // release backpressure. start traffic and check probes.
             switch_config.igr_sw_tpause = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
             #5us;
-            check_probe(DROPS_TO_BYPASS0, exp_pkts[0], exp_pkts[0]*9100);
+            check_probe(DROPS_TO_BYPASS0, exp_pkts[PHY0], exp_pkts[PHY0]*9100);
 
             // send packets to PF0_VF2 and check scoreboards.
             app_mode(0); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PF0_VF2));
             #1us;
-            check_sb0();  check_sb1(); check_sb2(.pkts(10)); check_sb3();
+            check_phy0();  check_phy1(); check_pf0(.pkts(10)); check_pf1();
         `SVTEST_END
 
         `SVTEST(ovfl_drops_from_PHY1)
             drop_mode(1);
-            exp_pkts[1] = FIFO_DEPTH/$ceil(9100/64.0)+1;
+            exp_pkts[PHY1] = FIFO_DEPTH/$ceil(9100/64.0)+1;
 
             switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
             packet_stream(.pkts(32), .mode(9100), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #15us;
-            check_probe(PROBE_FROM_CMAC1, exp_pkts[1], exp_pkts[1]*9100);
-            check_probe(DROPS_OVFL_FROM_CMAC1, 32-exp_pkts[1], (32-exp_pkts[1])*9100);
+            check_probe(PROBE_FROM_CMAC1, exp_pkts[PHY1], exp_pkts[PHY1]*9100);
+            check_probe(DROPS_OVFL_FROM_CMAC1, 32-exp_pkts[PHY1], (32-exp_pkts[PHY1])*9100);
 
             switch_config.igr_sw_tpause = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
             #5us;
-            check_probe(DROPS_TO_BYPASS1, exp_pkts[1], exp_pkts[1]*9100);
+            check_probe(DROPS_TO_BYPASS1, exp_pkts[PHY1], exp_pkts[PHY1]*9100);
 
             app_mode(1); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PF1_VF2));
             #1us;
-            check_sb0();  check_sb1(); check_sb2(); check_sb3(.pkts(10));
+            check_phy0();  check_phy1(); check_pf0(); check_pf1(.pkts(10));
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY0)
-            exp_pkts[0] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PHY0] = FIFO_DEPTH/$ceil(1518/64.0)+1;
 
             // set flow control threshold and check egr_flow_ctl.
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[0], 32'd1020);
@@ -718,7 +718,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(128), .mode(1518), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #10us;
             check_probe(PROBE_FROM_CMAC0, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_CMAC0, 128-exp_pkts[0], (128-exp_pkts[0])*1518);
+            check_probe(DROPS_OVFL_TO_CMAC0, 128-exp_pkts[PHY0], (128-exp_pkts[PHY0])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b1 );
 
             // relase backpressure and check egr_flow_ctl.
@@ -727,16 +727,16 @@ module smartnic_datapath_unit_test;
 
             // start traffic and check probes.
             #4us;
-            check_probe(PROBE_TO_CMAC0, exp_pkts[0], exp_pkts[0]*1518);
-            check_sb1(); check_sb2(); check_sb3();
+            check_probe(PROBE_TO_CMAC0, exp_pkts[PHY0], exp_pkts[PHY0]*1518);
+            check_phy1(); check_pf0(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_processed(),   exp_pkts[0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_matched(),     exp_pkts[0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[0].exp_pending(), 128-exp_pkts[0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_processed(),   exp_pkts[PHY0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_matched(),     exp_pkts[PHY0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].exp_pending(), 128-exp_pkts[PHY0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY1)
-            exp_pkts[1] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PHY1] = FIFO_DEPTH/$ceil(1518/64.0)+1;
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[1], 32'd1020);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
@@ -745,23 +745,23 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(128), .mode(1518), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #10us;
             check_probe(PROBE_FROM_CMAC1, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_CMAC1, 128-exp_pkts[1], (128-exp_pkts[1])*1518);
+            check_probe(DROPS_OVFL_TO_CMAC1, 128-exp_pkts[PHY1], (128-exp_pkts[PHY1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b1 );
 
             tb.start_rx=1;
             @(posedge tb.axis_out_if[1].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
 
             #4us;
-            check_probe(PROBE_TO_CMAC1, exp_pkts[1], exp_pkts[1]*1518);
-            check_sb0(); check_sb2(); check_sb3();
+            check_probe(PROBE_TO_CMAC1, exp_pkts[PHY1], exp_pkts[PHY1]*1518);
+            check_phy0(); check_pf0(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_processed(),   exp_pkts[1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_matched(),     exp_pkts[1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[1].exp_pending(), 128-exp_pkts[1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_processed(),   exp_pkts[PHY1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_matched(),     exp_pkts[PHY1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].exp_pending(), 128-exp_pkts[PHY1]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF0)
-            exp_pkts[2] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PF0] = FIFO_DEPTH/$ceil(1518/64.0)+1;
             host_mode(0);
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[2], 32'd1020);
@@ -771,23 +771,23 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(128), .mode(1518), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
             #10us;
             check_probe(PROBE_FROM_CMAC0, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_PF0, 128-exp_pkts[2], (128-exp_pkts[2])*1518);
+            check_probe(DROPS_OVFL_TO_PF0, 128-exp_pkts[PF0], (128-exp_pkts[PF0])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b1 );
 
             tb.start_rx=1;
             @(posedge tb.axis_out_if[2].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
 
             #4us;
-            check_probe(PROBE_TO_PF0, exp_pkts[2], exp_pkts[2]*1518);
-            check_sb0(); check_sb1(); check_sb3();
+            check_probe(PROBE_TO_PF0, exp_pkts[PF0], exp_pkts[PF0]*1518);
+            check_phy0(); check_phy1(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_processed(),   exp_pkts[2]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_matched(),     exp_pkts[2]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[2].exp_pending(), 128-exp_pkts[2]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_processed(),   exp_pkts[PF0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_matched(),     exp_pkts[PF0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].exp_pending(), 128-exp_pkts[PF0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF1)
-            exp_pkts[3] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PF1] = FIFO_DEPTH/$ceil(1518/64.0)+1;
             host_mode(1);
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[3], 32'd1020);
@@ -797,19 +797,19 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(128), .mode(1518), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
             #10us;
             check_probe(PROBE_FROM_CMAC1, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_PF1, 128-exp_pkts[3], (128-exp_pkts[3])*1518);
+            check_probe(DROPS_OVFL_TO_PF1, 128-exp_pkts[PF1], (128-exp_pkts[PF1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b1 );
 
             tb.start_rx=1;
             @(posedge tb.axis_out_if[3].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
 
             #4us;
-            check_probe(PROBE_TO_PF1, exp_pkts[3], exp_pkts[3]*1518);
-            check_sb0(); check_sb1(); check_sb2();
+            check_probe(PROBE_TO_PF1, exp_pkts[PF1], exp_pkts[PF1]*1518);
+            check_phy0(); check_phy1(); check_pf0();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_processed(),   exp_pkts[3]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_matched(),     exp_pkts[3]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[3].exp_pending(), 128-exp_pkts[3]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_processed(),   exp_pkts[PF1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_matched(),     exp_pkts[PF1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].exp_pending(), 128-exp_pkts[PF1]);
         `SVTEST_END
 
         `SVTEST(PF0_out_of_range_test)
@@ -819,7 +819,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_probe(PROBE_FROM_PF0,      10, bytes[0]);
             check_probe(DROPS_Q_RANGE_FAIL0, 10, bytes[0]);
-            check_sb0() ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0() ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
         `SVTEST(PF1_out_of_range_test)
@@ -829,7 +829,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_probe(PROBE_FROM_PF1,      10, bytes[1]);
             check_probe(DROPS_Q_RANGE_FAIL1, 10, bytes[1]);
-            check_sb0() ; check_sb1(); check_sb2(); check_sb3();
+            check_phy0() ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
     `SVUNIT_TESTS_END

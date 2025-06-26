@@ -33,7 +33,7 @@ class tb_env extends std_verif_pkg::basic_env;
     DRIVER_T     driver  [N];
     MONITOR_T    monitor [N];
     MODEL_T      model   [N];
-     SCOREBOARD_T scoreboard [N];
+    SCOREBOARD_T scoreboard [N];
 
     mailbox #(TRANSACTION_T)  inbox [N];
 
@@ -220,8 +220,7 @@ class tb_env extends std_verif_pkg::basic_env;
         input TID_T        tid=0,
         input TDEST_T      tdest=0,
         input TUSER_T      tuser=0,
-        //input SCOREBOARD_T scoreboard );
-        input port_t       out_port );
+        input SCOREBOARD_T scoreboard );
 
         // signals
         pcap_pkg::pcap_t pcap;
@@ -241,7 +240,7 @@ class tb_env extends std_verif_pkg::basic_env;
                     tdest,
                     tuser
                 );
-            __model_outbox[out_port].put(transaction);
+            scoreboard.exp_inbox.put(transaction);
         end
     endtask
 

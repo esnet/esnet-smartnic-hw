@@ -1,7 +1,5 @@
 `include "svunit_defines.svh"
 
-import tb_pkg::*;
-
 //===================================
 // (Failsafe) timeout
 //===================================
@@ -31,13 +29,13 @@ module p4_proc_datapath_unit_test
     // here for convenience.
     tb_pkg::tb_env env;
 
+    // VitisNetP4 table agent
     vitisnetp4_verif_pkg::vitisnetp4_agent vitisnetp4_agent;
 
     p4_proc_reg_pkg::reg_p4_proc_config_t    p4_proc_config;
     p4_proc_reg_pkg::reg_p4_bypass_config_t  p4_bypass_config;
     p4_proc_reg_pkg::reg_trunc_config_t      trunc_config;
 
-    int exp_pkt_cnt, exp_byte_cnt;
 
     //===================================
     // Import common testcase tasks
@@ -51,16 +49,13 @@ module p4_proc_datapath_unit_test
         svunit_ut = new(name);
 
         // Build testbench
-        tb.build();
-       
-        // Retrieve reference to testbench environment class
-        env = tb.env;
+        env = tb.build();
+        env.set_debug_level(1);
 
         // Create P4 table agent
         vitisnetp4_agent = new;
-        vitisnetp4_agent.create("tb"); // DPI-C P4 table agent requires hierarchial
-                                       // path to AXI-L write/read tasks
-
+        vitisnetp4_agent.create(p4_dpic_hier_path); // DPI-C P4 table agent requires hierarchial
+                                                    // path to AXI-L write/read tasks
     endfunction
 
     //===================================
@@ -69,30 +64,23 @@ module p4_proc_datapath_unit_test
     task setup();
         svunit_ut.setup();
 
-        // Flush packets from pipeline
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-
-        // Issue reset (both datapath and management domains)
-        reset();
-
-        // Put AXI-S interfaces into quiescent state
-        env.axis_driver[0].idle();
-        env.axis_driver[1].idle();
-        env.axis_monitor[0].idle();
-        env.axis_monitor[1].idle();
-
+        // start environment
+        env.run();
         // Write hdr_length register (set hdr_length to 0B to disable split-join logic).
         p4_proc_config.hdr_length = HDR_LENGTH;
         env.p4_proc_reg_agent.write_p4_proc_config(p4_proc_config);
 
-        // Initialize p4_bypass_config.
+        // initialize p4_bypass_config.
         p4_bypass_config.p4_bypass_enable          = 1'b0;
         p4_bypass_config.p4_bypass_egr_port_num_0  = 1'b0;
         p4_bypass_config.p4_bypass_egr_port_type_0 =   '0;
         p4_bypass_config.p4_bypass_egr_port_num_1  = 1'b1;
         p4_bypass_config.p4_bypass_egr_port_type_1 =   '0;
 
+        // initialize expected 'tuser' signal.
+        tuser={64'h0000000000000000,16'd0,1'b0,16'd0,1'b1,12'd0,1'b0};
+
+        #100ns;
     endtask
 
 
@@ -101,17 +89,10 @@ module p4_proc_datapath_unit_test
     // need after running the Unit Tests
     //===================================
     task teardown();
-        `INFO("Waiting to end testcase...");
-        for (integer i = 0; i < 100 ; i=i+1 ) @(posedge tb.clk);
-        `INFO("Ending testcase!");
+        // Stop environment
+        env.stop();
 
         svunit_ut.teardown();
-
-        // Flush remaining packets
-        env.axis_monitor[0].flush();
-        env.axis_monitor[1].flush();
-        #10us;
-
     endtask
 
    
@@ -142,53 +123,120 @@ module p4_proc_datapath_unit_test
 
     `include "../../../vitisnetp4/p4/sim/run_pkt_test_incl.svh"
 
-    `SVTEST(test_fwd_p1)
-        run_pkt_test ( .testdir("test-fwd-p1"), .init_timestamp('0), .dest_port(1) );
+    `SVTEST(test_fwd_p3)
+        run_pkt_test ( .testdir("test-fwd-p3"), .tuser(tuser), .tdest(3) );
     `SVTEST_END
 
-    `SVTEST(test_fwd_p3)
-        run_pkt_test ( .testdir("test-fwd-p3"), .init_timestamp('0), .dest_port(3) );
-    `SVTEST_END
 
     `SVTEST(test_traffic_mux)
-        repeat (2) begin
-            // Toggle p4_bypass register.
+        string testdir_0 = "test-default";
+        string testdir_1 = "test-fwd-p1";
+        string filename;
+
+        // reset rss_enable (when bypassing p4 processor).
+        tuser.rss_enable = 1'b0;
+
+        // force output tuser for ALL pkts (for consistency in p4-mode and p4-bypass-mode).
+        force tb.axis_out_if[0].tuser = tuser;
+        force tb.axis_out_if[1].tuser = tuser;
+
+        write_p4_tables ( .testdir(testdir_1) );
+
+        repeat (3) begin
+            // post expected pkts to scoreboards.
+            filename = {p4_sim_dir, testdir_1, "/packets_out.pcap"};
+            env.pcap_to_scoreboard (.filename(filename), .tuser(tuser), .tdest(1),
+                                    .scoreboard(env.scoreboard[1]) );
+
+            filename = {p4_sim_dir, testdir_0, "/packets_out.pcap"};
+            env.pcap_to_scoreboard (.filename(filename), .tuser(tuser),
+                                    .scoreboard(env.scoreboard[0]) );
+
+            // inject input pkts to drivers.
+            filename = {p4_sim_dir, testdir_1, "/packets_in.pcap"};
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[1]));        
+
+            filename = {p4_sim_dir, testdir_0, "/packets_in.pcap"};
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[0]));        
+
+            #3us;  // time to allow packets to flow through DUT.
+
+            // toggle p4_bypass register.
             p4_bypass_config.p4_bypass_enable = ~p4_bypass_config.p4_bypass_enable;
             env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
 
-            fork
-               // run packet stream from CMAC1 to CMAC1 (includes programming the p4 tables accordingly).
-               run_pkt_test ( .testdir("test-fwd-p1"),
-                              .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1) );
-
-               // simultaneously run packet stream from CMAC0 to CMAC0, starting once CMAC1 traffic is started.
-               // (without re-programming the p4 tables).
-               @(posedge tb.axis_in_if[1].tvalid)
-                   run_pkt_test ( .testdir("test-default"),
-                                  .init_timestamp(1), .in_if(0), .out_if(0), .write_p4_tables(0) );
-
-               // manually pause traffic through ingress mux, and restart.
-               @(posedge tb.axis_in_if[1].tvalid) begin
-                   env.p4_proc_reg_agent.write_tpause(1);
-                   env.p4_proc_reg_agent.write_tpause(0);
-               end
-            join
+            #3us;  // time to allow 'p4_bypass' timer to expire.
         end
+
+        for (int i=0; i < env.NUM_PROC_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
+
+        release tb.axis_out_if[0].tuser;
+        release tb.axis_out_if[1].tuser;
+
     `SVTEST_END
 
+
+    `SVTEST(test_egr_pkt_trunc)
+        string testdir_0 = "test-default";
+        string testdir_1 = "test-fwd-p1";
+        string filename;
+
+        logic [15:0] len;
+
+        write_p4_tables ( .testdir(testdir_1) );
+
+        repeat (3) begin
+            len =  $urandom_range(65,300);  // generate random max pkt length.
+
+            // write trunc_config register.
+            trunc_config.enable = 1'b1;
+            trunc_config.trunc_enable = 1'b1;
+            trunc_config.trunc_length = len;
+            env.p4_proc_reg_agent.write_trunc_config(trunc_config);
+
+            // set expected tuser fields.
+            tuser={64'h0000000000000000,16'd0,1'b1,len,1'b1,12'd0,1'b0};
+
+            // post expected pkts to scoreboards.
+            filename = {p4_sim_dir, testdir_1, "/packets_out.pcap"};
+            env.pcap_to_scoreboard (.filename(filename), .tuser(tuser), .tdest(1),
+                                    .scoreboard(env.scoreboard[1]), .len(len) );
+
+            filename = {p4_sim_dir, testdir_0, "/packets_out.pcap"};
+            env.pcap_to_scoreboard (.filename(filename), .tuser(tuser),
+                                    .scoreboard(env.scoreboard[0]), .len(len) );
+
+            // inject input pkts to drivers.
+            filename = {p4_sim_dir, testdir_1, "/packets_in.pcap"};
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[1]));        
+
+            filename = {p4_sim_dir, testdir_0, "/packets_in.pcap"};
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[0]));        
+
+            #3us;  // time to allow packets to flow through DUT.
+        end
+
+        for (int i=0; i < env.NUM_PROC_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
+
+    `SVTEST_END
+
+
     `SVTEST(test_unset_err_drops)
+        int pkts=4, bytes=2048; // pkt and byte counts for 'test-unset'.
+
         fork
            begin
-              // run packet stream from CMAC1-to-CMAC1 (includes programming the p4 tables accordingly).
-              run_pkt_test ( .testdir("test-pkt-loopback"),
-                             .init_timestamp(1), .in_if(1), .out_if(1), .dest_port(1), .enable_monitor(0) );
-              #(100ns) check_probe (DROPS_UNSET_ERR_PORT_1, exp_pkt_cnt, exp_byte_cnt);
+              // run packets from port 1 to port 1 (includes programming the p4 tables).
+              run_pkt_test ( .testdir("test-unset"), .in_port(1), .out_port(1),
+                             .check_scoreboards(0) );
+              check_probe (DROPS_UNSET_ERR_PORT_1, pkts, bytes);
+             `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_processed(), 0);
 
-              // run packet streams from CMAC0-to-CMAC0 (skips reprogramming the p4 tables).
-              run_pkt_test ( .testdir("test-pkt-loopback"),
-                             .init_timestamp(1), .in_if(0), .out_if(0), .dest_port(0), .enable_monitor(0),
-                             .write_p4_tables(0) );
-              #(100ns) check_probe (DROPS_UNSET_ERR_PORT_0, exp_pkt_cnt, exp_byte_cnt);
+              // run packets from port 0 to port 0 (skips reprogramming the p4 tables).
+              run_pkt_test ( .testdir("test-unset"), .in_port(0), .out_port(0),
+                             .check_scoreboards(0), .write_tables(0) );
+              check_probe (DROPS_UNSET_ERR_PORT_0, pkts, bytes);
+             `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_processed(), 0);
            end
            begin
               // monitor output interfaces for any valid axi4s transactions.
@@ -202,30 +250,29 @@ module p4_proc_datapath_unit_test
         join_any
     `SVTEST_END
 
-    `SVTEST(test_egr_pkt_trunc)
-        repeat (1) begin
-           // Write trunc_config register and run pkt test.
-           trunc_config.enable = 1'b1;
-           trunc_config.trunc_enable = 1'b1;
-           trunc_config.trunc_length = $urandom_range(65,500);
-           env.p4_proc_reg_agent.write_trunc_config(trunc_config);
-
-           run_pkt_test ( .testdir("test-default"),
-                          .init_timestamp('0), .max_pkt_size(trunc_config.trunc_length) );
-        end
-    `SVTEST_END
 
     `SVTEST(test_p4_bypass)
+        // reset rss_enable (when bypassing p4 processor).
+        tuser.rss_enable = 1'b0;
+
         // Write p4_bypass register.
         p4_bypass_config.p4_bypass_enable = 1'b1;
         env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
 
-        run_pkt_test ( .testdir("test-default-w-drops"), .init_timestamp('0) );
+        write_p4_tables ( .testdir("test-default-w-drops") );
+        run_pkt_test ( .testdir("test-default"), .tuser(tuser), .write_tables(0) );
     `SVTEST_END
 
+
     `SVTEST(test_p4_bypass_w_traffic)
+        // reset rss_enable (when bypassing p4 processor).
+        tuser.rss_enable = 1'b0;
+
+        // force output tuser for ALL pkts (for consistency in p4-mode and p4-bypass-mode).
+        force tb.axis_out_if[0].tuser = tuser;
+
         fork
-           run_pkt_test ( .testdir("test-default"), .init_timestamp('0) );
+           run_pkt_test ( .testdir("test-default"), .tuser(tuser) );
 
            @(posedge tb.axis_out_if[0].tvalid) begin
                // Write p4_bypass register.
@@ -233,101 +280,13 @@ module p4_proc_datapath_unit_test
                env.p4_proc_reg_agent.write_p4_bypass_config(p4_bypass_config);
            end
         join
+
+        release tb.axis_out_if[0].tuser;
+
     `SVTEST_END
 
     `SVUNIT_TESTS_END
 
-
-     tuser_smartnic_meta_t tuser=0;
-
-     task automatic run_pkt_test (
-        input string testdir,
-        logic[63:0] init_timestamp=0, in_if=0, out_if=0, port_t dest_port=0,
-        int max_pkt_size = 0, bit write_p4_tables=1, enable_monitor=1, VERBOSE=1,
-        tuser_smartnic_meta_t tuser=0);
-	
-        string filename;
-
-        // expected pcap data
-        pcap_pkg::pcap_t exp_pcap;
-
-        // variables for sending packet data
-        automatic logic [63:0] timestamp = init_timestamp;
-        automatic int          num_pkts  = 0;
-        automatic int          start_idx = 0;
-        automatic int          twait = 0;
-
-        // variables for receiving (monitoring) packet data
-        automatic int rx_pkt_cnt = 0;
-        automatic bit rx_done = 0;
-        byte          rx_data[$];
-        port_t        id;
-        port_t        dest;
-        bit           user;
-
-        debug_msg($sformatf("Write initial timestamp value: %0x", timestamp), VERBOSE);
-        env.ts_agent.set_static(timestamp);
-
-        if (write_p4_tables==1) begin
-           debug_msg("Start writing VitisNetP4 tables...", VERBOSE);
-           filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/cli_commands.txt"};
-           vitisnetp4_agent.table_init_from_file(filename);
-           debug_msg("Done writing VitisNetP4 tables...", VERBOSE);
-        end
-
-        debug_msg("Reading expected pcap file...", VERBOSE);
-
-        if (p4_bypass_config.p4_bypass_enable)
-            filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
-        else
-            filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
-        exp_pcap = pcap_pkg::read_pcap(filename);
-
-        exp_pkt_cnt = exp_pcap.records.size();
-        exp_byte_cnt = 0;
-        for (integer i = 0; i < exp_pkt_cnt; i=i+1)
-            exp_byte_cnt = exp_byte_cnt + exp_pcap.records[i].pkt_data.size();
-
-        debug_msg("Starting simulation...", VERBOSE);
-         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_in.pcap"};
-         rx_pkt_cnt = 0;
-         fork
-             begin
-                 // Send packets
-                 send_pcap(filename, num_pkts, start_idx, twait, in_if, in_if, dest_port);
-             end
-             begin
-                 // If init_timestamp=1, increment timestamp after each tx packet (puts packet # in timestamp field)
-                 while ( (init_timestamp == 1) && !rx_done ) begin
-                    @(posedge tb.axis_in_if[0].tlast or posedge rx_done) begin
-                       if (tb.axis_in_if[0].tlast) begin timestamp++; env.ts_agent.set_static(timestamp); end
-                    end
-                 end
-             end
-             begin
-                 if (enable_monitor == 1) begin
-                      // Monitor output packets
-                      while (rx_pkt_cnt < exp_pcap.records.size()) begin
-                          env.axis_monitor[out_if].receive_raw(.data(rx_data), .id(id), .dest(dest), .user(user), .tpause(10));
-                          rx_pkt_cnt++;
-                          debug_msg( $sformatf( "      Receiving packet # %0d (of %0d)...",
-                                                rx_pkt_cnt, exp_pcap.records.size()), VERBOSE );
-
-                          debug_msg("      Comparing rx_pkt to exp_pkt...", VERBOSE);
-                          compare_pkts(rx_data, exp_pcap.records[start_idx+rx_pkt_cnt-1].pkt_data, max_pkt_size);
-                          `FAIL_IF_LOG( dest[0] != dest_port[0],  // compare LSB of dest_port (p4 egress_port is only 1b)
-                                        $sformatf("FAIL!!! Output tdest mismatch. tdest=%0h (exp:%0h)", dest, dest_port) )
-                      end
-                 end
-                 rx_done = 1;
-             end
-         join
-     endtask
-
-     task debug_msg(input string msg, input bit VERBOSE=0);
-         if (VERBOSE) `INFO(msg);
-     endtask
-      
 endmodule
 
 

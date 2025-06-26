@@ -110,33 +110,33 @@ task automatic one_packet(input int idx=0, len=64, input port_t tid=0, tdest=tid
     transaction_in.set_tdest(tdest);
     transaction_in.set_tuser(tuser);
     case (tid.encoded.typ)
-        PHY: if (tid.encoded.num == P0) begin transaction_in.set_tid(0); env.inbox[0].put(transaction_in); end
-             else                       begin transaction_in.set_tid(0); env.inbox[1].put(transaction_in); end
+        PHY: if (tid.encoded.num == P0) begin transaction_in.set_tid(0); env.inbox[PHY0].put(transaction_in); end
+             else                       begin transaction_in.set_tid(0); env.inbox[PHY1].put(transaction_in); end
 
         PF:  if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[2].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[PF0].put(transaction_in);
              end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd2048);  env.inbox[3].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd2048);  env.inbox[PF1].put(transaction_in);
              end
         VF0: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd512);   env.inbox[2].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd512);   env.inbox[PF0].put(transaction_in);
              end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd2560);  env.inbox[3].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd2560);  env.inbox[PF1].put(transaction_in);
              end
         VF1: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd1024);  env.inbox[2].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd1024);  env.inbox[PF0].put(transaction_in);
              end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd3072);  env.inbox[3].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,511) + 16'd3072);  env.inbox[PF1].put(transaction_in);
              end
         VF2: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,510) + 16'd1536);  env.inbox[2].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,510) + 16'd1536);  env.inbox[PF0].put(transaction_in);
              end else begin
-                 transaction_in.set_tid($urandom_range(0,510) + 16'd3584);  env.inbox[3].put(transaction_in);
+                 transaction_in.set_tid($urandom_range(0,510) + 16'd3584);  env.inbox[PF1].put(transaction_in);
              end
         UNSET: if (tid.encoded.num == P0) begin  // used for out-of-range test
-                 transaction_in.set_tid(                  511 + 16'd1536);  env.inbox[2].put(transaction_in);
+                 transaction_in.set_tid(                  511 + 16'd1536);  env.inbox[PF0].put(transaction_in);
              end else begin
-                 transaction_in.set_tid(                  511 + 16'd3584);  env.inbox[3].put(transaction_in);
+                 transaction_in.set_tid(                  511 + 16'd3584);  env.inbox[PF1].put(transaction_in);
              end
     endcase
 endtask
@@ -157,43 +157,29 @@ task automatic packet_stream(input int pkts=10, mode=0, output int bytes, input 
 endtask
 
 
-task automatic check_sb0(input int pkts=0);
+task automatic check_scoreboard(input int port=0, pkts=0);
     if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_processed(), 0);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[port].got_processed(), 0);
     end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[0].got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard[0].report(msg), msg);
+       `FAIL_UNLESS_EQUAL(env.scoreboard[port].got_matched(), pkts);
+       `FAIL_IF_LOG(env.scoreboard[port].report(msg) > 0, msg);
     end
 endtask
 
-
-task automatic check_sb1(input int pkts=0);
-    if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_processed(), 0);
-    end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[1].got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard[1].report(msg), msg);
-    end
+task automatic check_phy0(input int pkts=0);
+    check_scoreboard (.port(PHY0), .pkts(pkts) );
 endtask
 
-
-task automatic check_sb2(input int pkts=0);
-    if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_processed(), 0);
-    end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[2].got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard[2].report(msg), msg);
-    end
+task automatic check_phy1(input int pkts=0);
+    check_scoreboard (.port(PHY1), .pkts(pkts) );
 endtask
 
+task automatic check_pf0(input int pkts=0);
+    check_scoreboard (.port(PF0), .pkts(pkts) );
+endtask
 
-task automatic check_sb3(input int pkts=0);
-    if (pkts==0) begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_processed(), 0);
-    end else begin
-       `FAIL_UNLESS_EQUAL(env.scoreboard[3].got_matched(), pkts);
-       `FAIL_IF_LOG(env.scoreboard[3].report(msg), msg);
-    end
+task automatic check_pf1(input int pkts=0);
+    check_scoreboard (.port(PF1), .pkts(pkts) );
 endtask
 
 

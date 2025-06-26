@@ -108,7 +108,7 @@ module p2p_smartnic_datapath_unit_test;
           check_probe(PROBE_CORE_TO_APP1, 10, bytes[1]);
           check_probe(PROBE_TO_CMAC1,     10, bytes[1]);
 
-          check_sb0(.pkts(10));  check_sb1(.pkts(10)); check_sb2(); check_sb3();
+          check_phy0(.pkts(10)); check_phy1(.pkts(10)); check_pf0(); check_pf1();
 
       `SVTEST_END
 

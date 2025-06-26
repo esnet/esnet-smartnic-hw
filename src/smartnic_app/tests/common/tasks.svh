@@ -83,7 +83,7 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
     filename = {p4_sim_dir, testdir, "/packets_out.pcap"};
 
     env.pcap_to_scoreboard (.filename(filename), .tid(tid), .tdest(tdest), .tuser(tuser),
-                            .out_port(out_port) );
+                            .scoreboard(env.scoreboard[out_port]) );
 
    `INFO("Starting simulation...");
     filename = {p4_sim_dir, testdir, "/packets_in.pcap"};
@@ -91,31 +91,14 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
 
     #1us;
     fork
-        #10us `INFO("run_pkt_test task TIMEOUT!");
+        #10us if (!rx_done) `INFO("run_pkt_test task TIMEOUT!");
 
-        while (!rx_done) begin
-            case (out_port)
-                0: #100ns if (env.scoreboard[0].exp_pending()==0)  rx_done=1;
-                1: #100ns if (env.scoreboard[1].exp_pending()==0)  rx_done=1;
-                2: #100ns if (env.scoreboard[2].exp_pending()==0)  rx_done=1;
-                3: #100ns if (env.scoreboard[3].exp_pending()==0)  rx_done=1;
-                4: #100ns if (env.scoreboard[4].exp_pending()==0)  rx_done=1;
-                5: #100ns if (env.scoreboard[5].exp_pending()==0)  rx_done=1;
-                6: #100ns if (env.scoreboard[6].exp_pending()==0)  rx_done=1;
-                7: #100ns if (env.scoreboard[7].exp_pending()==0)  rx_done=1;
-            endcase
-        end
+        while (!rx_done) #100ns if (env.scoreboard[out_port].exp_pending()==0)  rx_done=1;
     join_any
 
     #100ns;
-   `FAIL_IF_LOG(env.scoreboard[0].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[1].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[2].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[3].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[4].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[5].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[6].report(msg) > 0, msg);
-   `FAIL_IF_LOG(env.scoreboard[7].report(msg) > 0, msg);
+    for (int i=0; i < env.N; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);
+
 endtask
 
 
