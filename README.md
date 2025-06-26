@@ -42,7 +42,7 @@ https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
 suite.  The current release supports development with Vivado version 2023.2.2, running on
-Ubuntu 20.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
+Ubuntu 22.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
 shell and the AMD (Xilinx) Vivado tool suite are all public and openly available, note
 that the AMD (Xilinx) VitisNetP4 IP core is a commercially licensed feature that requires a
 site-specific license file.
@@ -184,7 +184,7 @@ test/
 
 The following steps guide a new user through the installation of the
 SmartNIC Hardware Design Repository, beginning with a
-suitably-configured host running Ubuntu 20.04 LTS Linux.
+suitably-configured host running Ubuntu 22.04 LTS Linux.
 
 1. Install the esnet-smartnic-hw respository by creating a clone from github into a local directory:
 

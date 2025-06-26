@@ -43,9 +43,7 @@ module p4_and_verilog_ctrl_unit_test;
         env = tb.build();
 
         // Create P4 table agent
-        vitisnetp4_agent = new;
-        vitisnetp4_agent.create(p4_dpic_hier_path); // DPI-C P4 table agent requires hierarchial
-                                                    // path to AXI-L write/read tasks
+        vitisnetp4_agent = new(.hier_path(p4_dpic_hier_path)); // DPI-C P4 table agent requires hierarchical path to AXI-L write/read tasks
 
         p4_and_verilog_reg_agent = new("p4_and_verilog_reg_agent", env.app_reg_agent, 'h20000);
 
