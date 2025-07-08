@@ -321,16 +321,12 @@ module smartnic
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t))  axis_from_host      [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t))  axis_host_to_core   [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t))  axis_host_to_core_p [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         _axis_host_to_core  [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_to_core_demux   [NUM_CMAC][2] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid       [NUM_CMAC] ();
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid_p     [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_q_range_fail   [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_tid       [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_tid_p     [NUM_CMAC] ();
 
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_core_to_bypass [NUM_CMAC] ();
 
@@ -377,13 +373,11 @@ module smartnic
    axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_host     [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_hash2qid         [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         _axis_core_to_host    [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         _axis_hash2qid        [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_core_to_host   [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         __axis_hash2qid       [NUM_CMAC] ();
-   axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         core_to_host_mux      [NUM_CMAC][2] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_host_mux [NUM_CMAC][2] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_to_host          [NUM_CMAC] ();
 
@@ -507,16 +501,6 @@ module smartnic
 
 
       //------------------------ from core to host --------------
-      smartnic_hash2qid #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-      ) smartnic_hash2qid (
-        .core_clk       (core_clk),
-        .core_rstn      (core_rstn),
-        .axi4s_in       (axis_hash2qid[i]),
-        .axi4s_out      (axis_core_to_host[i]),
-        .axil_if        (axil_to_hash2qid[i])
-      );
-
       axi4s_pkt_fifo_async #(
         .FIFO_DEPTH     (1024),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
@@ -600,69 +584,8 @@ module smartnic
    endgenerate
 
 
-   //------------------------ tid assignment logic --------------
-   logic host_if_sel [NUM_CMAC][HOST_NUM_IFS+1];
-   generate
-       for (genvar j = 0; j < HOST_NUM_IFS+1; j += 1) begin : g__host_if_sel
-           always @(posedge core_clk) begin
-               host_if_sel[0][j] <= (        axis_host_to_core[0].tid[11:0]  >=  smartnic_regs.igr_q_config_0[j].base ) &&
-                                    ( {1'b0, axis_host_to_core[0].tid[11:0]} <  (smartnic_regs.igr_q_config_0[j].base + smartnic_regs.igr_q_config_0[j].num_q) );
-               host_if_sel[1][j] <= (        axis_host_to_core[1].tid[11:0]  >=  smartnic_regs.igr_q_config_1[j].base ) &&
-                                    ( {1'b0, axis_host_to_core[1].tid[11:0]} <  (smartnic_regs.igr_q_config_1[j].base + smartnic_regs.igr_q_config_1[j].num_q) );
-           end
-       end : g__host_if_sel
-   endgenerate
-
-   logic  host_q_in_range [NUM_CMAC];
-   generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__tid
-       assign axis_host_tid[i].tid.raw[0] = i;
-       assign axis_host_tid[i].tid.encoded.typ = (host_if_sel[i][0] ? PF  :
-                                                 (host_if_sel[i][1] ? VF0 :
-                                                 (host_if_sel[i][2] ? VF1 : VF2)));
-
-       assign host_q_in_range[i] = host_if_sel[i][0] || host_if_sel[i][1] || host_if_sel[i][2] || host_if_sel[i][3];
-
-       axi4s_intf_pipe axi4s_host_to_core_pipe (.axi4s_if_from_tx(axis_host_to_core[i]),    .axi4s_if_to_rx(axis_host_to_core_p[i]));
-
-       // axis_q_range_fail assignments
-       assign axis_q_range_fail[i].aclk    = axis_host_to_core_p[i].aclk;
-       assign axis_q_range_fail[i].aresetn = axis_host_to_core_p[i].aresetn;
-       assign axis_q_range_fail[i].tready  = axis_host_to_core_p[i].tready;
-       assign axis_q_range_fail[i].tvalid  = axis_host_to_core_p[i].tvalid && !host_q_in_range[i];
-       assign axis_q_range_fail[i].tdata   = axis_host_to_core_p[i].tdata;
-       assign axis_q_range_fail[i].tkeep   = axis_host_to_core_p[i].tkeep;
-       assign axis_q_range_fail[i].tlast   = axis_host_to_core_p[i].tlast;
-       assign axis_q_range_fail[i].tdest   = axis_host_to_core_p[i].tdest;
-       assign axis_q_range_fail[i].tuser   = axis_host_to_core_p[i].tuser;
-       assign axis_q_range_fail[i].tid     = axis_host_to_core_p[i].tid;
-
-       axi4s_probe q_range_fail_probe (.axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
-
-       // host port tid assignments
-       assign axis_host_to_core_p[i].tready = axis_host_tid[i].tready;
-
-       assign axis_host_tid[i].aclk    = axis_host_to_core_p[i].aclk;
-       assign axis_host_tid[i].aresetn = axis_host_to_core_p[i].aresetn;
-       assign axis_host_tid[i].tvalid  = axis_host_to_core_p[i].tvalid && host_q_in_range[i];
-       assign axis_host_tid[i].tdata   = axis_host_to_core_p[i].tdata;
-       assign axis_host_tid[i].tkeep   = axis_host_to_core_p[i].tkeep;
-       assign axis_host_tid[i].tlast   = axis_host_to_core_p[i].tlast;
-       assign axis_host_tid[i].tdest   = axis_host_to_core_p[i].tdest;
-       assign axis_host_tid[i].tuser   = axis_host_to_core_p[i].tuser;
-       //     axis_host_tid[i].tid assigned above.
-
-       axi4s_intf_pipe axi4s_host_tid_pipe (.axi4s_if_from_tx(axis_host_tid[i]), .axi4s_if_to_rx(axis_host_tid_p[i]));
-
-       //ila_axi4s ila_host_tid (
-       //   .clk    (axis_host_tid_p[i].aclk),
-       //   .probe0 (axis_host_tid_p[i].tdata),
-       //   .probe1 (axis_host_tid_p[i].tvalid),
-       //   .probe2 (axis_host_tid_p[i].tlast),
-       //   .probe3 (axis_host_tid_p[i].tkeep),
-       //   .probe4 (axis_host_tid_p[i].tready),
-       //   .probe5 ({30'd0, axis_host_tid_p[i].tid})
-       //);
-
+   // cmac tid assignment logic
+   generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__cmac_tid
        // cmac port tid assignments
        assign axis_cmac_to_core[i].tready = axis_cmac_tid[i].tready;
 
@@ -678,7 +601,7 @@ module smartnic
        assign axis_cmac_tid[i].tid     = i;
 
        axi4s_intf_pipe axi4s_cmac_tid_pipe (.axi4s_if_from_tx(axis_cmac_tid[i]), .axi4s_if_to_rx(axis_cmac_tid_p[i]));
-   end : g__tid
+   end : g__cmac_tid
    endgenerate
 
 
@@ -724,30 +647,32 @@ module smartnic
        .axis_bypass_to_core (axis_bypass_to_core),
        .axis_app_to_core    (axis_app_to_core),
        .axis_core_to_cmac   (axis_core_to_cmac),
-       .axis_core_to_host   (_axis_hash2qid),
+       .axis_core_to_host   (_axis_core_to_host),
        .smartnic_regs       (smartnic_regs)
    );
 
+   // smartnic_host instantiation.
+   smartnic_host #(
+       .NUM_CMAC (NUM_CMAC),
+       .HOST_NUM_IFS (HOST_NUM_IFS)
+   ) smartnic_host_inst (
+       .core_clk                (core_clk),
+       .core_rstn               (core_rstn),
+       .axis_host_to_core       (axis_host_to_core),
+       .axis_core_to_host       (axis_core_to_host),
+       .axis_core_to_host_mux   (axis_core_to_host_mux),
+       .axis_host_to_core_demux (axis_host_to_core_demux),
+       .axil_q_range_fail       (axil_q_range_fail),
+       .axil_to_hash2qid        (axil_to_hash2qid),
+       .smartnic_regs           (smartnic_regs)
+   );
 
-   logic host_to_core_demux_sel [NUM_CMAC];
-
-   h2c_t h2c_demux_sel [NUM_CMAC];
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
-       always @(posedge core_clk)
-            if (!core_rstn)
-                host_to_core_demux_sel[i] <= 0;
-            else if (axis_host_tid[i].tready && axis_host_tid[i].tvalid && axis_host_tid[i].sop)
-                host_to_core_demux_sel[i] <= host_if_sel[i][0] || host_if_sel[i][1] || host_if_sel[i][2];
-
-       axi4s_intf_demux #(.N(2)) host_to_core_demux_inst (
-           .axi4s_in   ( axis_host_tid_p[i] ),
-           .axi4s_out  ( axis_host_to_core_demux[i] ),
-           .sel        ( host_to_core_demux_sel[i] )
-        );
-
-       axi4s_intf_connector host_to_core_demux_pipe_0 (.axi4s_from_tx(axis_host_to_core_demux[i][0]), .axi4s_to_rx(_axis_host_to_core[i]));
-       axi4s_intf_connector host_to_core_demux_pipe_1 (.axi4s_from_tx(axis_host_to_core_demux[i][1]), .axi4s_to_rx(axis_h2c_demux__demarc[i]));
+       axi4s_intf_connector host_to_core_demux_pipe_0 (.axi4s_from_tx(axis_host_to_core_demux[i][0]),
+                                                       .axi4s_to_rx(_axis_host_to_core[i]));
+       axi4s_intf_connector host_to_core_demux_pipe_1 (.axi4s_from_tx(axis_host_to_core_demux[i][1]),
+                                                       .axi4s_to_rx(axis_h2c_demux__demarc[i]));
 
        axi4s_probe axis_probe_from_vf2 (.axi4l_if(axil_from_vf2[i]), .axi4s_if(_axis_host_to_core[i]));
 
@@ -755,35 +680,30 @@ module smartnic
        axi4s_intf_pipe axis_core_to_app_pipe   (.axi4s_if_from_tx(axis_core_to_app[i]),         .axi4s_if_to_rx(axis_to_app__demarc[i]));
        axi4s_intf_pipe axis_app_to_core_pipe   (.axi4s_if_from_tx(axis_from_app__demarc[i]),    .axi4s_if_to_rx(axis_app_to_core[i]));
 
-       axi4s_probe axis_probe_to_vf2 (.axi4l_if(axil_to_vf2[i]), .axi4s_if(_axis_hash2qid[i]));
+       axi4s_probe axis_probe_to_vf2 (.axi4l_if(axil_to_vf2[i]), .axi4s_if(_axis_core_to_host[i]));
 
-       assign _axis_hash2qid[i].tready = __axis_hash2qid[i].tready;
-
-       assign __axis_hash2qid[i].aclk    = _axis_hash2qid[i].aclk;
-       assign __axis_hash2qid[i].aresetn = _axis_hash2qid[i].aresetn;
-       assign __axis_hash2qid[i].tvalid  = _axis_hash2qid[i].tvalid;
-       assign __axis_hash2qid[i].tdata   = _axis_hash2qid[i].tdata;
-       assign __axis_hash2qid[i].tkeep   = _axis_hash2qid[i].tkeep;
-       assign __axis_hash2qid[i].tlast   = _axis_hash2qid[i].tlast;
-       assign __axis_hash2qid[i].tid     = _axis_hash2qid[i].tid;
-       assign __axis_hash2qid[i].tdest   = _axis_hash2qid[i].tdest;
+       assign  _axis_core_to_host[i].tready  = __axis_core_to_host[i].tready;
+       assign __axis_core_to_host[i].aclk    =  _axis_core_to_host[i].aclk;
+       assign __axis_core_to_host[i].aresetn =  _axis_core_to_host[i].aresetn;
+       assign __axis_core_to_host[i].tvalid  =  _axis_core_to_host[i].tvalid;
+       assign __axis_core_to_host[i].tdata   =  _axis_core_to_host[i].tdata;
+       assign __axis_core_to_host[i].tkeep   =  _axis_core_to_host[i].tkeep;
+       assign __axis_core_to_host[i].tlast   =  _axis_core_to_host[i].tlast;
+       assign __axis_core_to_host[i].tid     =  _axis_core_to_host[i].tid;
+       assign __axis_core_to_host[i].tdest   =  _axis_core_to_host[i].tdest;
 
        always_comb begin
-           __axis_hash2qid[i].tuser = _axis_hash2qid[i].tuser;
-           __axis_hash2qid[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with PF VF2 id (2'h3).
+           __axis_core_to_host[i].tuser = _axis_core_to_host[i].tuser;
+           __axis_core_to_host[i].tuser.rss_entropy[11:10] = 2'h3;  // overwrite top bits with PF VF2 id (2'h3).
        end
 
-       axi4s_intf_connector core_to_host_mux_pipe_0 (.axi4s_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_to_rx(core_to_host_mux[i][0]));
-       axi4s_intf_connector core_to_host_mux_pipe_1 (.axi4s_from_tx(__axis_hash2qid[i]),          .axi4s_to_rx(core_to_host_mux[i][1]));
-
-       axi4s_mux #(.N(2)) core_to_host_mux_inst (
-           .axi4s_in   ( core_to_host_mux[i] ),
-           .axi4s_out  ( axis_hash2qid[i] )
-       );
+       axi4s_intf_connector core_to_host_mux_pipe_0 (.axi4s_from_tx(axis_c2h_mux_out__demarc[i]), .axi4s_to_rx(axis_core_to_host_mux[i][0]));
+       axi4s_intf_connector core_to_host_mux_pipe_1 (.axi4s_from_tx(__axis_core_to_host[i]),      .axi4s_to_rx(axis_core_to_host_mux[i][1]));
 
    end : g__host_mux_core
    endgenerate
 
+   h2c_t h2c_demux_sel [NUM_CMAC];
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_app  // app-side host mux logic
        axi4s_mux #(.N(HOST_NUM_IFS)) axis_c2h_mux (
            .axi4s_in   ( axis_c2h[i] ),
@@ -873,7 +793,6 @@ module smartnic
    // ----------------------------------------------------------------
    // Application Core
    // ----------------------------------------------------------------
-
    always @(posedge core_clk) begin
       if (!core_rstn) begin
          for (int i=0; i<3; i++) egr_flow_ctl_pipe[i] <= '0;
