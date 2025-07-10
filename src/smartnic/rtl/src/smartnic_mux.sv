@@ -17,12 +17,11 @@ module smartnic_mux
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))   axis_cmac_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        axis_cmac_to_core_p [NUM_CMAC]    ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))        axis_host_to_core_p [NUM_CMAC]    ();
+
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_cmac_to_core_p [NUM_CMAC]    ();
-
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))   axis_host_to_core_p [NUM_CMAC]    ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  _axis_host_to_core_p [NUM_CMAC]    ();
-
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_mux_in           [NUM_CMAC][2] ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_mux_out          [NUM_CMAC]    ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  igr_demux_out        [NUM_CMAC][2] ();

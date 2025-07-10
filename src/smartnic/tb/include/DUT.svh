@@ -30,7 +30,7 @@
     logic  [(64*NUM_CMAC)-1:0] s_axis_adpt_tx_322mhz_tkeep;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tlast;
     logic    [16*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tid;
-    logic     [2*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tdest;
+    logic     [4*NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] s_axis_adpt_tx_322mhz_tready;
 
@@ -56,7 +56,7 @@
     logic [(512*NUM_CMAC)-1:0] s_axis_cmac_rx_322mhz_tdata;
     logic  [(64*NUM_CMAC)-1:0] s_axis_cmac_rx_322mhz_tkeep;
     logic       [NUM_CMAC-1:0] s_axis_cmac_rx_322mhz_tlast;
-    logic   [(2*NUM_CMAC)-1:0] s_axis_cmac_rx_322mhz_tdest;
+    logic   [(4*NUM_CMAC)-1:0] s_axis_cmac_rx_322mhz_tdest;
     logic       [NUM_CMAC-1:0] s_axis_cmac_rx_322mhz_tuser_err;
     logic       [NUM_CMAC-1:0] s_axis_cmac_rx_322mhz_tready;
 
@@ -78,11 +78,11 @@
     // Interfaces
     axi4l_intf axil_if ();    
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_cmac_igr [NUM_CMAC] ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t))      axis_cmac_egr [NUM_CMAC] ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)) axis_h2c      [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t)) axis_cmac_igr [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t)) axis_cmac_egr [NUM_CMAC] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t)) axis_h2c      [NUM_CMAC] ();
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t),        .TDEST_T(port_t), 
-                 .TUSER_T(tuser_smartnic_meta_t))                                                  axis_c2h      [NUM_CMAC] ();
+                 .TUSER_T(tuser_smartnic_meta_t))                                             axis_c2h      [NUM_CMAC] ();
 
     // Assign AXI-L control interface
     assign s_axil_awvalid = axil_if.awvalid;
@@ -105,7 +105,7 @@
     // Assign AXI-S CMAC input interfaces
     assign s_axis_cmac_rx_322mhz_tvalid[0]    = axis_cmac_igr[0].tvalid;
     assign s_axis_cmac_rx_322mhz_tlast[0]     = axis_cmac_igr[0].tlast;
-    assign s_axis_cmac_rx_322mhz_tdest[1:0]   = axis_cmac_igr[0].tdest;
+    assign s_axis_cmac_rx_322mhz_tdest[3:0]   = axis_cmac_igr[0].tdest;
     assign s_axis_cmac_rx_322mhz_tdata[511:0] = axis_cmac_igr[0].tdata;
     assign s_axis_cmac_rx_322mhz_tkeep[63:0]  = axis_cmac_igr[0].tkeep;
     assign s_axis_cmac_rx_322mhz_tuser_err[0] = axis_cmac_igr[0].tuser;
@@ -113,7 +113,7 @@
 
     assign s_axis_cmac_rx_322mhz_tvalid[1]    = axis_cmac_igr[1].tvalid;
     assign s_axis_cmac_rx_322mhz_tlast[1]     = axis_cmac_igr[1].tlast;
-    assign s_axis_cmac_rx_322mhz_tdest[3:2]   = axis_cmac_igr[1].tdest;
+    assign s_axis_cmac_rx_322mhz_tdest[7:4]   = axis_cmac_igr[1].tdest;
     assign s_axis_cmac_rx_322mhz_tdata[1023:512] = axis_cmac_igr[1].tdata;
     assign s_axis_cmac_rx_322mhz_tkeep[127:64]  = axis_cmac_igr[1].tkeep;
     assign s_axis_cmac_rx_322mhz_tuser_err[1] = axis_cmac_igr[1].tuser;
@@ -140,7 +140,7 @@
     assign s_axis_adpt_tx_322mhz_tvalid[0]    = axis_h2c[0].tvalid;
     assign s_axis_adpt_tx_322mhz_tlast[0]     = axis_h2c[0].tlast;
     assign s_axis_adpt_tx_322mhz_tid[15:0]    = axis_h2c[0].tid;
-    assign s_axis_adpt_tx_322mhz_tdest[1:0]   = axis_h2c[0].tdest;
+    assign s_axis_adpt_tx_322mhz_tdest[3:0]   = axis_h2c[0].tdest;
     assign s_axis_adpt_tx_322mhz_tdata[511:0] = axis_h2c[0].tdata;
     assign s_axis_adpt_tx_322mhz_tkeep[63:0]  = axis_h2c[0].tkeep;
     assign s_axis_adpt_tx_322mhz_tuser_err[0] = axis_h2c[0].tuser;
@@ -149,7 +149,7 @@
     assign s_axis_adpt_tx_322mhz_tvalid[1]    = axis_h2c[1].tvalid;
     assign s_axis_adpt_tx_322mhz_tlast[1]     = axis_h2c[1].tlast;
     assign s_axis_adpt_tx_322mhz_tid[31:16]   = axis_h2c[1].tid;
-    assign s_axis_adpt_tx_322mhz_tdest[3:2]   = axis_h2c[1].tdest;
+    assign s_axis_adpt_tx_322mhz_tdest[7:4]   = axis_h2c[1].tdest;
     assign s_axis_adpt_tx_322mhz_tdata[1023:512] = axis_h2c[1].tdata;
     assign s_axis_adpt_tx_322mhz_tkeep[127:64]  = axis_h2c[1].tkeep;
     assign s_axis_adpt_tx_322mhz_tuser_err[1] = axis_h2c[1].tuser;

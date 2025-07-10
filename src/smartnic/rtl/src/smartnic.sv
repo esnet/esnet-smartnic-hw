@@ -30,7 +30,7 @@ module smartnic
   input [(64*NUM_CMAC)-1:0]   s_axis_adpt_tx_322mhz_tkeep,
   input [NUM_CMAC-1:0]        s_axis_adpt_tx_322mhz_tlast,
   input [(16*NUM_CMAC)-1:0]   s_axis_adpt_tx_322mhz_tid,
-  input [(2*NUM_CMAC)-1:0]    s_axis_adpt_tx_322mhz_tdest,
+  input [(4*NUM_CMAC)-1:0]    s_axis_adpt_tx_322mhz_tdest,
   input [NUM_CMAC-1:0]        s_axis_adpt_tx_322mhz_tuser_err,
   output [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tready,
 
@@ -56,7 +56,7 @@ module smartnic
   input [(512*NUM_CMAC)-1:0]  s_axis_cmac_rx_322mhz_tdata,
   input [(64*NUM_CMAC)-1:0]   s_axis_cmac_rx_322mhz_tkeep,
   input [NUM_CMAC-1:0]        s_axis_cmac_rx_322mhz_tlast,
-  input [(2*NUM_CMAC)-1:0]    s_axis_cmac_rx_322mhz_tdest,
+  input [(4*NUM_CMAC)-1:0]    s_axis_cmac_rx_322mhz_tdest,
   input [NUM_CMAC-1:0]        s_axis_cmac_rx_322mhz_tuser_err,
   output [NUM_CMAC-1:0]       s_axis_cmac_rx_322mhz_tready,
 
@@ -126,6 +126,8 @@ module smartnic
    axi4l_intf   axil_to_cmac                ();
    axi4l_intf   axil_to_host                ();
    axi4l_intf   axil_to_bypass              ();
+   axi4l_intf   axil_to_pkt_playback        ();
+   axi4l_intf   axil_to_pkt_capture         ();
 
    axi4l_intf   axil_to_probe_from_cmac [NUM_CMAC] ();
    axi4l_intf   axil_to_ovfl_from_cmac  [NUM_CMAC] ();
@@ -208,6 +210,8 @@ module smartnic
       .smartnic_cmac_axil_if           (axil_to_cmac),
       .smartnic_host_axil_if           (axil_to_host),
       .smartnic_bypass_axil_if         (axil_to_bypass),
+      .smartnic_pkt_playback_axil_if   (axil_to_pkt_playback),
+      .smartnic_pkt_capture_axil_if    (axil_to_pkt_capture),
       .smartnic_hash2qid_0_axil_if     (axil_to_hash2qid[0]),
       .smartnic_hash2qid_1_axil_if     (axil_to_hash2qid[1]),
       .smartnic_p4_axil_if             (axil_to_p4__demarc)
@@ -312,25 +316,23 @@ module smartnic
    //  axi4s interface instantiations
    // ----------------------------------------------------------------
 
-   // interfaces with TDEST_T=igr_tdest_t
-   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_from_cmac      [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_MODE(PKT_ERROR),
-                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         _axis_from_cmac     [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_to_core   [NUM_CMAC] ();
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         _axis_from_cmac     [NUM_CMAC] ();
+   axi4s_intf  #(.MODE(IGNORES_TREADY), .TUSER_MODE(PKT_ERROR),
+                 .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_from_cmac      [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_to_core   [NUM_CMAC] ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t))  axis_from_host      [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t))  axis_host_to_core   [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t))  axis_from_host      [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t))  axis_host_to_core   [NUM_CMAC] ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         _axis_host_to_core  [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_host_to_core_demux   [NUM_CMAC][2] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         _axis_host_to_core  [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_host_to_core_demux   [NUM_CMAC][2] ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid       [NUM_CMAC] ();
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_cmac_tid_p     [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_tid       [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_cmac_tid_p     [NUM_CMAC] ();
 
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))         axis_core_to_bypass [NUM_CMAC] ();
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))    axis_core_to_bypass      [NUM_CMAC] ();
 
-   // interfaces with TDEST_T=port_t
    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_bypass_to_core      [NUM_CMAC] ();
    axi4s_intf  #(.TUSER_T(tuser_smartnic_meta_t),
                  .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))         axis_core_to_app         [NUM_CMAC] ();
@@ -396,7 +398,7 @@ module smartnic
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
       //------------------------ from cmac to core --------------
       axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t)
+        .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)
       ) axis_from_cmac_from_signals (
         .aclk     (cmac_clk[i]),
         .aresetn  (cmac_rstn[i]),
@@ -406,7 +408,7 @@ module smartnic
         .tkeep    (s_axis_cmac_rx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_cmac_rx_322mhz_tlast[i]),
         .tid      (i),
-        .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(2, i)]),
+        .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(4, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
         .axi4s_if (_axis_from_cmac[i])
@@ -415,7 +417,7 @@ module smartnic
       // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
 
       xilinx_axi4s_reg_slice #(
-          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(igr_tdest_t),
+          .DATA_BYTE_WID (64), .TID_T (port_t), .TDEST_T(port_t),
           .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
       ) xilinx_axi4s_reg_slice_from_cmac (
           .axi4s_from_tx (_axis_from_cmac[i]),
@@ -546,7 +548,7 @@ module smartnic
 
       //------------------------ from host to core --------------
       axi4s_intf_from_signals #(
-        .DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(igr_tdest_t)
+        .DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t)
       ) axis_from_host_from_signals (
         .aclk     (cmac_clk[i]),
         .aresetn  (cmac_rstn[i]),
@@ -556,7 +558,7 @@ module smartnic
         .tkeep    (s_axis_adpt_tx_322mhz_tkeep[`getvec(64, i)]),
         .tlast    (s_axis_adpt_tx_322mhz_tlast[i]),
         .tid      (s_axis_adpt_tx_322mhz_tid[`getvec(16, i)]),
-        .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(2, i)]),
+        .tdest    (s_axis_adpt_tx_322mhz_tdest[`getvec(4, i)]),
         .tuser    (s_axis_adpt_tx_322mhz_tuser_err[i]),  // this is a deadend for now. no use in smartnic.
 
         .axi4s_if (axis_from_host[i])
@@ -664,6 +666,8 @@ module smartnic
        .axis_host_to_core_demux (axis_host_to_core_demux),
        .axil_q_range_fail       (axil_q_range_fail),
        .axil_to_hash2qid        (axil_to_hash2qid),
+       .axil_to_pkt_playback    (axil_to_pkt_playback),
+       .axil_to_pkt_capture     (axil_to_pkt_capture),
        .smartnic_regs           (smartnic_regs)
    );
 

@@ -21,7 +21,9 @@ module smartnic_bypass #(
     axi4l_intf  axil_to_ovfl_to_bypass [NUM_CMAC] ();
     axi4l_intf  axil_to_fifo_to_bypass [NUM_CMAC] ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_core_to_bypass_p [NUM_CMAC] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  axis_core_to_bypass_p [NUM_CMAC] ();
+
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) _axis_core_to_bypass_p [NUM_CMAC] ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_igr_sw_drop      [NUM_CMAC] ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_to_bypass_fifo   [NUM_CMAC] ();
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_from_bypass_fifo [NUM_CMAC] ();
@@ -41,9 +43,21 @@ module smartnic_bypass #(
         assign igr_sw_drop_pkt[i] = axis_core_to_bypass_p[i].tvalid && axis_core_to_bypass_p[i].sop &&
                                     axis_core_to_bypass_p[i].tdest == DROP;
 
+        assign  axis_core_to_bypass_p[i].tready  = _axis_core_to_bypass_p[i].tready;
+
+        assign _axis_core_to_bypass_p[i].aclk    =  axis_core_to_bypass_p[i].aclk;
+        assign _axis_core_to_bypass_p[i].aresetn =  axis_core_to_bypass_p[i].aresetn;
+        assign _axis_core_to_bypass_p[i].tvalid  =  axis_core_to_bypass_p[i].tvalid;
+        assign _axis_core_to_bypass_p[i].tdata   =  axis_core_to_bypass_p[i].tdata;
+        assign _axis_core_to_bypass_p[i].tkeep   =  axis_core_to_bypass_p[i].tkeep;
+        assign _axis_core_to_bypass_p[i].tlast   =  axis_core_to_bypass_p[i].tlast;
+        assign _axis_core_to_bypass_p[i].tid     =  axis_core_to_bypass_p[i].tid;
+        assign _axis_core_to_bypass_p[i].tuser   =  '0;
+        assign _axis_core_to_bypass_p[i].tdest   = {'0, axis_core_to_bypass_p[i].tid[0]};  // assign tdest to CMAC0/CMAC1 by default.
+
         // igr_sw_drop axi4s_drop instantiation.
         axi4s_drop igr_sw_drop_0 (
-           .axi4s_in    (axis_core_to_bypass_p[i]),
+           .axi4s_in    (_axis_core_to_bypass_p[i]),
            .axi4s_out   (axis_igr_sw_drop[i]),
            .axil_if     (axil_to_drops_to_bypass[i]),
            .drop_pkt    (igr_sw_drop_pkt[i])
