@@ -340,7 +340,7 @@ module proxy_test
         .MAX_PKT_SIZE    ( 9200 ),
         .BUFFER_SIZE     ( PACKET_Q_BUFFER_SIZE ),
         .PTR_T           ( PACKET_Q_BUFFER_PTR_T ),
-        .MAX_RD_LATENCY  ( 64 )
+        .MAX_RD_LATENCY  ( 63 )
     ) i_packet_q_core (
         .clk,
         .srst,
