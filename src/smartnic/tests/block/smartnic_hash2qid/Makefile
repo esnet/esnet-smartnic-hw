@@ -39,4 +39,4 @@ SIM_OPTS =
 # -----------------------------------------------
 # Use common testcase Makefile
 # -----------------------------------------------
-include ../test_base.mk
+include ../../test_base.mk
