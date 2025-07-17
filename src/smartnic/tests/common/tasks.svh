@@ -6,6 +6,8 @@ localparam NUM_PORTS = 4;
 import smartnic_pkg::*;
 import axi4s_verif_pkg::*;
 
+localparam P4_DECODER_BASE = 'h80000;
+
 typedef enum logic [31:0] {
     PROBE_CORE_TO_APP0    = 'h0c00,
     PROBE_CORE_TO_APP1    = 'h0d00,
@@ -39,7 +41,15 @@ typedef enum logic [31:0] {
     PROBE_TO_BYPASS0      = 'h4000,
     DROPS_TO_BYPASS0      = 'h4100,
     PROBE_TO_BYPASS1      = 'h4300,
-    DROPS_TO_BYPASS1      = 'h4400
+    DROPS_TO_BYPASS1      = 'h4400,
+
+    PROBE_FROM_APP_PF0      = P4_DECODER_BASE + 'h65000,
+    PROBE_FROM_APP_PF1      = P4_DECODER_BASE + 'h65100,
+    PROBE_FROM_APP_PF0_VF0  = P4_DECODER_BASE + 'h65200,
+    PROBE_FROM_APP_PF1_VF0  = P4_DECODER_BASE + 'h65300,
+    PROBE_FROM_APP_PF0_VF1  = P4_DECODER_BASE + 'h65400,
+    PROBE_FROM_APP_PF1_VF1  = P4_DECODER_BASE + 'h65500
+
     } cntr_addr_encoding_t;
 
 typedef union packed {
