@@ -31,6 +31,7 @@ SUBCOMPONENTS = \
     smartnic_app.regio.verif \
     std.rtl@common \
     std.verif@common \
+    packet.verif@common \
     reg.endian.regio.verif@common \
     axi4l.verif@common \
     axi4s.verif@common \
