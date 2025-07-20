@@ -4,7 +4,7 @@ create_ip -name hbm -vendor xilinx.com -library ip -module_name $module_name -di
 
 set_property -dict [list \
     CONFIG.USER_SINGLE_STACK_SELECTION {RIGHT} \
-    CONFIG.USER_SWITCH_ENABLE_00 {FALSE} \
+    CONFIG.USER_SWITCH_ENABLE_00 {TRUE} \
     CONFIG.USER_MC0_TRAFFIC_OPTION {Random}  \
     CONFIG.USER_MC1_TRAFFIC_OPTION {Random}  \
     CONFIG.USER_MC2_TRAFFIC_OPTION {Random}  \
