@@ -336,11 +336,10 @@ module proxy_test
         .NUM_MEM_WR_IFS  ( PACKET_Q_MEM_WR_IFS ),
         .NUM_OUTPUT_IFS  ( PACKET_Q_OUTPUT_IFS ),
         .NUM_MEM_RD_IFS  ( PACKET_Q_MEM_RD_IFS ),
-        .MIN_PKT_SIZE    ( 40 ),
         .MAX_PKT_SIZE    ( 9200 ),
         .BUFFER_SIZE     ( PACKET_Q_BUFFER_SIZE ),
         .PTR_T           ( PACKET_Q_BUFFER_PTR_T ),
-        .MAX_RD_LATENCY  ( 63 )
+        .MAX_RD_LATENCY  ( 48 )
     ) i_packet_q_core (
         .clk,
         .srst,
