@@ -18,15 +18,16 @@ include $(COMPONENT_ROOT)/config.mk
 #
 #   IP_LIST = ip1 ip2
 #
-#	Assumes ./ip1.tcl and ./ip2.tcl exist
+#   Assumes ./ip1.tcl and ./ip2.tcl exist
 #
-#	Note: ./ip3.tcl and ./ip4.tcl could also exist, but
-#	will be ignored by this makefile since they are
-#	not explicitly listed.
+#   Note: ./ip3.tcl and ./ip4.tcl could also exist, but
+#   will be ignored by this makefile since they are
+#   not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
     clk_wiz_0 \
-    clk_wiz_1
+    clk_wiz_1 \
+    smartnic_hbm_clk_wiz
 
 # ----------------------------------------------------
 # Simulation sources
@@ -54,7 +55,9 @@ IP_SIM_SRC_FILES = \
     clk_wiz_0/clk_wiz_0_clk_wiz.v \
     clk_wiz_0/clk_wiz_0.v \
     clk_wiz_1/clk_wiz_1_clk_wiz.v \
-    clk_wiz_1/clk_wiz_1.v
+    clk_wiz_1/clk_wiz_1.v \
+    smartnic_hbm_clk_wiz/smartnic_hbm_clk_wiz_clk_wiz.v \
+    smartnic_hbm_clk_wiz/smartnic_hbm_clk_wiz.v
 
 IP_SIM_INC_DIRS =
 

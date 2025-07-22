@@ -30,8 +30,14 @@ SUBCOMPONENTS = \
     reg.proxy.rtl@common \
     xilinx.axi.rtl \
     xilinx.axis.rtl \
+    xilinx.hbm.pkg \
+    xilinx.hbm.rtl \
     axi4l.rtl@common \
-    axi4s.rtl@common
+    axi4s.rtl@common \
+    mem.rtl@common \
+    mem.infra.rtl@common \
+    axi3.rtl@common \
+    packet.rtl@common
 
 EXT_LIBS =
 

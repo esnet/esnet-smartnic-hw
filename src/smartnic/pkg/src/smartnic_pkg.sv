@@ -2,9 +2,17 @@ package smartnic_pkg;
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
-    // Timestamp
+    localparam int PHY_NUM_PORTS = 2;
+    localparam int PHY_DATA_BYTE_WID = 64;
+
     localparam int TIMESTAMP_WID = 64;
 
+    localparam int MAX_PKT_LEN = 9200;
+
+    localparam int NUM_EGR_QS = 128;
+
+    // Derived parameters
+    localparam int EGR_Q_WID = $clog2(NUM_EGR_QS);
 
     // --------------------------------------------------------------
     // Typedefs
@@ -12,6 +20,7 @@ package smartnic_pkg;
     typedef logic [TIMESTAMP_WID-1:0] timestamp_t;
 
     typedef logic [15:0] adpt_tx_tid_t;
+    typedef logic [EGR_Q_WID-1:0] egr_q_t;
 
     typedef enum logic {
         P0 = 1'b0,

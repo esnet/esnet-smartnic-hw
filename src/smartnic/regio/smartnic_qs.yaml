@@ -1,0 +1,17 @@
+name: smartnic_qs
+info: |
+  registers for SmartNIC HBM-based queue component.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: control
+    access: rw
+    fields:
+        - name: enable
+          desc: When set, egress queues are enabled; when unset, egress queues are bypassed.
+          width: 1
+          init: 0

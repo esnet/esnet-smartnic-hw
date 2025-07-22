@@ -26,8 +26,6 @@ SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic.rtl \
     smartnic.tb \
-    xilinx.hbm.verif \
-    smartnic.verif \
     smartnic_app.rtl \
     smartnic_app.regio.verif \
     smartnic_app.igr_p4.vf_loopback.rtl \
@@ -35,11 +33,13 @@ SUBCOMPONENTS = \
     smartnic_app.igr.demux.rtl \
     smartnic_app.igr.demux.regio.verif \
     smartnic_app.egr.mux.rtl \
-    std.rtl@common \
+    xilinx.hbm.verif \
     std.verif@common \
-    packet.verif@common \
     axi4l.rtl@common \
-    axi4s.rtl@common
+    axi4l.verif@common \
+    axi4s.rtl@common \
+    axi4s.verif@common \
+    axi4s.regio.verif@common
 
 EXT_LIBS =
 
