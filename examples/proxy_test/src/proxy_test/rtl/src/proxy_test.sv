@@ -242,7 +242,8 @@ module proxy_test
         .hbm_ref_clk ( hbm_ref_clk ),
         .clk_100mhz  ( clk_100mhz ),
         .axil_if     ( axil_to_hbm_left ),
-        .axi_if      ( axi_if__hbm_left )
+        .axi_if      ( axi_if__hbm_left ),
+        .init_done   ( )
     );
 
     xilinx_hbm_stack #(
@@ -254,7 +255,8 @@ module proxy_test
         .hbm_ref_clk ( hbm_ref_clk ),
         .clk_100mhz  ( clk_100mhz ),
         .axil_if     ( axil_to_hbm_right ),
-        .axi_if      ( axi_if__hbm_right )
+        .axi_if      ( axi_if__hbm_right ),
+        .init_done   ( )
     );
 
     generate

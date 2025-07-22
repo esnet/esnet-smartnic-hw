@@ -18,13 +18,15 @@ module xilinx_hbm_stack
     axi4l_intf.peripheral  axil_if,
 
     // AXI3 memory interfaces
-    axi3_intf.peripheral   axi_if [PSEUDO_CHANNELS_PER_STACK]
+    axi3_intf.peripheral   axi_if [PSEUDO_CHANNELS_PER_STACK],
+
+    // Status
+    output wire logic      init_done
 );
     // Parameters
     localparam int ADDR_WID = get_addr_wid(DENSITY);
 
     // Signals
-    logic       init_done;
     logic       dram_status_cattrip;
     logic [6:0] dram_status_temp;
 
