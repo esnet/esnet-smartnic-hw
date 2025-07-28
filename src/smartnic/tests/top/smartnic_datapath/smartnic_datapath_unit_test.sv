@@ -62,6 +62,8 @@ module smartnic_datapath_unit_test;
         // start environment
         env.run();
 
+        env.disable_egress_qs();
+
         // configure all ingress ports for BYPASS mode.
         bypass_mode(0); bypass_mode(1); bypass_mode(2); bypass_mode(3);
 

@@ -3,6 +3,7 @@ package smartnic_verif_pkg;
     import axi4s_verif_pkg::*;
     import reg_endian_reg_verif_pkg::*;
     import smartnic_pkg::*;
+    import smartnic_reg_verif_pkg::*;
 
     // Testbench class definitions
     // (declared here to enforce smartnic_verif_pkg::* namespace)

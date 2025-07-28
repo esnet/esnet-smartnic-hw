@@ -25,6 +25,7 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     smartnic.rtl \
     smartnic.verif \
+    xilinx.hbm.verif \
     std.rtl@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)

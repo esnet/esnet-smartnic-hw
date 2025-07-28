@@ -26,7 +26,6 @@ SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic.rtl \
     smartnic.tb \
-    xilinx.hbm.verif \
     smartnic.verif \
     smartnic_app.rtl \
     smartnic_app.regio.verif \

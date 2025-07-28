@@ -64,6 +64,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
     smartnic_reg_verif_pkg::smartnic_reg_blk_agent          #() smartnic_reg_blk_agent;
     smartnic_reg_verif_pkg::smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_0_reg_blk_agent;
     smartnic_reg_verif_pkg::smartnic_hash2qid_reg_blk_agent #() smartnic_hash2qid_1_reg_blk_agent;
+    smartnic_reg_verif_pkg::smartnic_qs_reg_blk_agent       #() egress_qs_reg_blk_agent;
     reg_endian_check_reg_blk_agent                          #() reg_endian_check_reg_blk_agent;
     smartnic_app_reg_verif_pkg::smartnic_app_reg_blk_agent  #() smartnic_app_reg_blk_agent;
 
@@ -169,12 +170,14 @@ class smartnic_env extends std_verif_pkg::basic_env;
         smartnic_reg_blk_agent            = new("smartnic_reg_blk_agent");
         smartnic_hash2qid_0_reg_blk_agent = new("smartnic_hash2qid_0_reg_blk_agent", 'h12000);
         smartnic_hash2qid_1_reg_blk_agent = new("smartnic_hash2qid_1_reg_blk_agent", 'h13000);
+        egress_qs_reg_blk_agent           = new("egress_qs_reg_blk_agent",           'h18000);
         reg_endian_check_reg_blk_agent    = new("reg_endian_check_reg_blk_agent",    'h00400);
         smartnic_app_reg_blk_agent        = new("smartnic_app_reg_blk_agent",        'he4000);
 
         smartnic_reg_blk_agent.reg_agent            = reg_agent;
         smartnic_hash2qid_0_reg_blk_agent.reg_agent = reg_agent;
         smartnic_hash2qid_1_reg_blk_agent.reg_agent = reg_agent;
+        egress_qs_reg_blk_agent.reg_agent           = reg_agent;
         reg_endian_check_reg_blk_agent.reg_agent    = reg_agent;
         smartnic_app_reg_blk_agent.reg_agent        = reg_agent;
 
@@ -356,6 +359,18 @@ class smartnic_env extends std_verif_pkg::basic_env;
         int _addr = AXIL_VITISNET_OFFSET + addr;
         reg_agent.set_wr_timeout(128);
         reg_agent.write_reg(_addr, data);
+    endtask
+
+    task enable_egress_qs();
+        smartnic_qs_reg_pkg::reg_control_t reg_control;
+        reg_control.enable = 1'b1;
+        egress_qs_reg_blk_agent.write_control(reg_control);
+    endtask
+
+    task disable_egress_qs();
+        smartnic_qs_reg_pkg::reg_control_t reg_control;
+        reg_control.enable = 1'b0;
+        egress_qs_reg_blk_agent.write_control(reg_control);
     endtask
 
 endclass : smartnic_env
