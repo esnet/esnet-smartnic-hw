@@ -153,6 +153,14 @@ class Library:
             return {}
 
     @keyword
+    def packet_layer_is_present(self, packet, layer_name):
+        return packet.haslayer(layer_name)
+
+    @keyword
+    def packet_layer_is_absent(self, packet, layer_name):
+        return not self.packet_layer_is_present(packet, layer_name)
+
+    @keyword
     def packet_log_packets(self, *packets):
         for idx, packet in enumerate(packets):
             print(f"====== packet {idx} ======")
