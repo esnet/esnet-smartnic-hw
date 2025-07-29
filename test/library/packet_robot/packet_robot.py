@@ -139,7 +139,7 @@ class Library:
 
     @keyword
     def packet_write_pcap(self, filename, *packets):
-        wrpcap(filename, *packets)
+        wrpcap(filename, packets)
 
     @keyword
     def packet_read_pcap(self, filename):
