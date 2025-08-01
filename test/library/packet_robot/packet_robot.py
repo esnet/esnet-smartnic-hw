@@ -4,7 +4,13 @@ from operator import truediv
 from functools import reduce
 
 import scapy
-from scapy.all import Ether, IP, ICMP, IPv6, ARP, ICMPv6ND_NS, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest, UDP, TCP, rdpcap, wrpcap
+from scapy.all import rdpcap, wrpcap
+from scapy.all import Ether, Dot1Q
+from scapy.all import IP, ARP, ICMP
+from scapy.all import IPOption, IPOption_EOL, IPOption_NOP, IPOption_Security, IPOption_LSRR, IPOption_Timestamp, IPOption_RR, IPOption_Stream_Id, IPOption_SSRR, IPOption_MTU_Probe, IPOption_MTU_Reply, IPOption_Traceroute, IPOption_Address_Extension, IPOption_Router_Alert, IPOption_SDBM
+from scapy.all import IPv6, ICMPv6ND_NS, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest
+from scapy.all import UDP, TCP
+from scapy.all import ESP
 
 #---------------------------------------------------------------------------------------------------
 # TODO: Maybe auto-create layer keywords by introspection into the scapy layer list
@@ -18,8 +24,72 @@ class Library:
         return Ether(**kwargs)
 
     @keyword
+    def packet_dot1q(self, **kwargs):
+        return Dot1Q(**kwargs)
+
+    @keyword
     def packet_ip(self, **kwargs):
         return IP(**kwargs)
+
+    @keyword
+    def packet_ipoption(self, **kwargs):
+        return IPOption(**kwargs)
+
+    @keyword
+    def packet_ipoption_eol(self, **kwargs):
+        return IPOption_EOL(**kwargs)
+
+    @keyword
+    def packet_ipoption_nop(self, **kwargs):
+        return IPOption_NOP(**kwargs)
+
+    @keyword
+    def packet_ipoption_security(self, **kwargs):
+        return IPOption_Security(**kwargs)
+
+    @keyword
+    def packet_ipoption_lssr(self, **kwargs):
+        return IPOption_LSSR(**kwargs)
+
+    @keyword
+    def packet_ipoption_timestamp(self, **kwargs):
+        return IPOption_Timestamp(**kwargs)
+
+    @keyword
+    def packet_ipoption_rr(self, **kwargs):
+        return IPOption_RR(**kwargs)
+
+    @keyword
+    def packet_ipoption_stream_id(self, **kwargs):
+        return IPOption_Stream_Id(**kwargs)
+
+    @keyword
+    def packet_ipoption_ssrr(self, **kwargs):
+        return IPOption_SSRR(**kwargs)
+
+    @keyword
+    def packet_ipoption_mtu_probe(self, **kwargs):
+        return IPOption_MTU_Probe(**kwargs)
+
+    @keyword
+    def packet_ipoption_mtu_reply(self, **kwargs):
+        return IPOption_MTU_Reply(**kwargs)
+
+    @keyword
+    def packet_ipoption_traceroute(self, **kwargs):
+        return IPOption_Traceroute(**kwargs)
+
+    @keyword
+    def packet_ipoption_address_extension(self, **kwargs):
+        return IPOption_Address_Extension(**kwargs)
+
+    @keyword
+    def packet_ipoption_router_alert(self, **kwargs):
+        return IPOption_Router_Alert(**kwargs)
+
+    @keyword
+    def packet_ipoption_sdbm(self, **kwargs):
+        return IPOption_SDBM(**kwargs)
 
     @keyword
     def packet_ipv6(self, **kwargs):
@@ -37,6 +107,10 @@ class Library:
     @keyword
     def packet_tcp(self, **kwargs):
         return TCP(**kwargs)
+
+    @keyword
+    def packet_esp(self, **kwargs):
+        return ESP(**kwargs)
 
     @keyword
     def packet_arp(self, **kwargs):
@@ -65,7 +139,7 @@ class Library:
 
     @keyword
     def packet_write_pcap(self, filename, *packets):
-        wrpcap(filename, *packets)
+        wrpcap(filename, packets)
 
     @keyword
     def packet_read_pcap(self, filename):
@@ -77,6 +151,14 @@ class Library:
             return packet[layer_name].fields
         else:
             return {}
+
+    @keyword
+    def packet_layer_is_present(self, packet, layer_name):
+        return packet.haslayer(layer_name)
+
+    @keyword
+    def packet_layer_is_absent(self, packet, layer_name):
+        return not self.packet_layer_is_present(packet, layer_name)
 
     @keyword
     def packet_log_packets(self, *packets):

@@ -32,16 +32,28 @@ class Library(P4RobotAPI):
         self.cmd_log = []
 
     @keyword
-    def p4_start_server(self, p4_json_path):
+    def p4_start_server(self, p4_json_path, externs=None, **kwargs):
         # Look up the user-provided output directory
         robot_built_in = BuiltIn()
         output_dir = robot_built_in.get_variable_value('${OUTPUT DIR}')
+
+        # Generate any target-specific options
+        target_options = []
+        if externs is not None and len(externs) > 0:
+            # Generate a comma separated list of loadable modules to simulate externs
+            target_options.append("--load-modules")
+            target_options.append(",".join(externs))
+
         stdout = open(output_dir + '/p4bm-vitisnet.err.txt', 'w')
         self.s = subprocess.Popen(["p4bm-vitisnet",
                                    "--thrift-port", "9090",
                                    "--log-file", output_dir + '/p4bm-vitisnet.log',
                                    "--log-flush",
-                                   p4_json_path],
+                                   p4_json_path]
+                                  +
+                                  ["--"]
+                                  +
+                                  target_options,
                                   stdout=stdout,
                                   stderr=subprocess.STDOUT)
 

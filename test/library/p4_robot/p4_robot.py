@@ -29,7 +29,7 @@ class API:
         raise NotImplementedError
 
     @keyword
-    def p4_start_server(self, p4_json_path):
+    def p4_start_server(self, p4_json_path, **kwargs):
         pass
 
     @keyword
