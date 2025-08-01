@@ -36,7 +36,7 @@ package smartnic_pkg;
 
     typedef union packed {
         port_encoding_t encoded;
-        bit [3:0]       raw;
+        logic [3:0]     raw;
     } port_t;
 
     typedef enum logic [1:0] {
@@ -48,7 +48,7 @@ package smartnic_pkg;
 
     typedef union packed {
         h2c_encoding_t encoded;
-        bit [1:0]       raw;
+        logic [1:0]    raw;
     } h2c_t;
 
     typedef enum logic [1:0] {
@@ -59,7 +59,7 @@ package smartnic_pkg;
 
     typedef union packed {
         igr_tdest_encoding_t encoded;
-        bit [1:0]            raw;
+        logic [1:0]          raw;
     } igr_tdest_t;
 
     typedef struct packed {
