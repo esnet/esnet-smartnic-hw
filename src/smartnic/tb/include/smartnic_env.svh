@@ -78,13 +78,12 @@ class smartnic_env extends std_verif_pkg::basic_env;
     // Methods
     //===================================
     // Constructor
-    function new(input string name="smartnic_env", bit bigendian=1);
+    function new(input string name="smartnic_env");
         super.new(name);
-        this.__BIGENDIAN = bigendian;
         for (int i=0; i < 4; i++) begin
             inbox[i]      = new();
-            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
-            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)));
 
             __drv_inbox[i] = new();
         end

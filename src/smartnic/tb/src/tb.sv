@@ -89,7 +89,7 @@ module tb;
     function automatic smartnic_env build();
         smartnic_env env;
         // Instantiate environment
-        env = new("env", 0); // bigendian=0 to match CMACs.
+        env = new("env");
 
         // Connect environment
         env.reset_vif = reset_if;

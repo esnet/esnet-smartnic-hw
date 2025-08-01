@@ -176,7 +176,6 @@ module p4_proc
 
         // axi4s_split_join instantiation (separates and recombines packet headers).
         axi4s_split_join #(
-            .BIGENDIAN  (0),
             .FIFO_DEPTH (FIFO_DEPTH)
         ) axi4s_split_join_inst (
             .axi4s_in      (_axis_in[i]),
@@ -243,7 +242,7 @@ module p4_proc
 
         // axi4s pkt truncate instantiation.
         axi4s_trunc #(
-            .BIGENDIAN(0), .IN_PIPE(1), .OUT_PIPE(1)
+            .IN_PIPE(1), .OUT_PIPE(1)
         ) axi4s_trunc_inst (
             .axi4s_in(axis_to_trunc[i]),
             .axi4s_out(axis_out[i]),

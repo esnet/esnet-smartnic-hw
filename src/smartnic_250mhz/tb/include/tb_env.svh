@@ -52,15 +52,15 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     //===================================
 
     // Constructor
-    function new(string name , bit bigendian = 1);
+    function new(string name);
         this.name = name;
         for (int i=0; i < NUM_INTF; i++) begin
             h2c_model[i] = new($sformatf("h2c_model[%0d]",i));
             c2h_model[i] = new($sformatf("c2h_model[%0d]",i));
             h2c_scoreboard[i] = new($sformatf("h2c_scoreboard[%0d]",i));
             c2h_scoreboard[i] = new($sformatf("c2h_scoreboard[%0d]",i));
-            env_h2c[i] = new("env_h2c", h2c_model[i], h2c_scoreboard[i], bigendian);
-            env_c2h[i] = new("env_c2h", c2h_model[i], c2h_scoreboard[i], bigendian);
+            env_h2c[i] = new("env_h2c", h2c_model[i], h2c_scoreboard[i]);
+            env_c2h[i] = new("env_c2h", c2h_model[i], c2h_scoreboard[i]);
         end
         reg_agent = new("axi4l_reg_agent");
         smartnic_250mhz_reg_blk_agent = new("smartnic_250mhz_reg_blk", 'h0000);

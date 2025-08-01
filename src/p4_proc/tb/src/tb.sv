@@ -120,7 +120,7 @@ module tb;
     function automatic tb_env build();
         tb_env env;
         // Instantiate environment
-        env = new("tb_env", 0); // bigendian=0 to match CMACs.
+        env = new("tb_env");
 
         // Connect environment
         env.reset_vif = reset_if;

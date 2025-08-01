@@ -73,12 +73,12 @@ class tb_env extends std_verif_pkg::basic_env;
     // Methods
     //===================================
     // Constructor
-    function new(input string name="tb_env", bit bigendian=1);
+    function new(input string name="tb_env");
         super.new(name);
         for (int i=0; i < N; i++) begin
             inbox[i]      = new();
-            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
-            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)));
             model[i]      = new(.name($sformatf("model[%0d]",i)));
             scoreboard[i] = new(.name($sformatf("scoreboard[%0d]",i)));
 

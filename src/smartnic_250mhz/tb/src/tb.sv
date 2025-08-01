@@ -238,7 +238,7 @@ module tb;
 
         if (env == null) begin
             // Instantiate environment
-            env = new("tb_env",0);   // bigendian=0 matches cmac's little endian axis
+            env = new("tb_env");
 
             // Connect
             env.reset_vif = reset_if;
