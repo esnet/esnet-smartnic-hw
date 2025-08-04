@@ -319,23 +319,40 @@ class smartnic_env extends std_verif_pkg::basic_env;
         end
     endtask
 
-   task vitisnetp4_read(
-           input  bit [31:0] addr,
-           output bit [31:0] data
-       );
-       int _addr = AXIL_VITISNET_OFFSET + addr;
-       reg_agent.set_rd_timeout(128);
-       reg_agent.read_reg(_addr, data);
-   endtask
+    task automatic send_packet(input string name, input port_t inport, input byte data[], input adpt_tx_tid_t tid=0, input port_t dest=0, input bit err=0);
+        TRANSACTION_IN_T transaction_in =
+            TRANSACTION_IN_T::create_from_bytes(
+                name,
+                data,
+                tid,
+                dest,
+                err
+            );
+        case (inport.encoded.typ)
+            PHY: if (inport.encoded.num == P0) this.inbox[0].put(transaction_in);
+                 else                          this.inbox[1].put(transaction_in);
+            PF:  if (inport.encoded.num == P0) this.inbox[2].put(transaction_in);
+                 else                          this.inbox[3].put(transaction_in);
+        endcase
+    endtask
+
+    task vitisnetp4_read(
+            input  bit [31:0] addr,
+            output bit [31:0] data
+        );
+        int _addr = AXIL_VITISNET_OFFSET + addr;
+        reg_agent.set_rd_timeout(128);
+        reg_agent.read_reg(_addr, data);
+    endtask
 
 
-   task vitisnetp4_write(
-           input  bit [31:0] addr,
-           input  bit [31:0] data
-       );
-       int _addr = AXIL_VITISNET_OFFSET + addr;
-       reg_agent.set_wr_timeout(128);
-       reg_agent.write_reg(_addr, data);
-   endtask
+    task vitisnetp4_write(
+            input  bit [31:0] addr,
+            input  bit [31:0] data
+        );
+        int _addr = AXIL_VITISNET_OFFSET + addr;
+        reg_agent.set_wr_timeout(128);
+        reg_agent.write_reg(_addr, data);
+    endtask
 
 endclass : smartnic_env
