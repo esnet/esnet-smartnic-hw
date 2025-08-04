@@ -24,8 +24,15 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic.regio.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic_app.regio.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     std.verif@$(COMMON_LIB_NAME) \
-    axi4s.verif@$(COMMON_LIB_NAME)
+    axi4l.verif@$(COMMON_LIB_NAME) \
+    axi4s.verif@$(COMMON_LIB_NAME) \
+    axi4s.regio.verif@$(COMMON_LIB_NAME) \
+    reg.endian.regio.verif@$(COMMON_LIB_NAME) \
+    pcap.pkg@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

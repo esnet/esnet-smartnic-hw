@@ -1,6 +1,3 @@
-import smartnic_pkg::*;
-import axi4s_verif_pkg::*;
-
 // Reference model for smartnic module.  Models egress axi4s signaling, including qid selection.
 class smartnic_model
     extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_tid_t, port_t, bit),

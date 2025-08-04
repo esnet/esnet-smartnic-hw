@@ -24,7 +24,7 @@ module smartnic_timestamp_unit_test;
     // via the testbench environment class (smartnic_env).
     // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::smartnic_env env;
+    smartnic_verif_pkg::smartnic_env env;
 
     //===================================
     // Import common testcase tasks

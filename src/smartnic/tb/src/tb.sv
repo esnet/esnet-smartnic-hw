@@ -1,6 +1,6 @@
 module tb;
-    import tb_pkg::*;
     import smartnic_pkg::*;
+    import smartnic_verif_pkg::*;
 
     //===================================
     // DUT

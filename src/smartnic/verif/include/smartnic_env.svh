@@ -1,9 +1,3 @@
-import smartnic_pkg::*;
-import smartnic_verif_pkg::*;
-import smartnic_app_reg_pkg::*;
-import packet_verif_pkg::*;
-import pcap_pkg::*;
-
 // Environment class for 'smartnic' component verification.
 class smartnic_env extends std_verif_pkg::basic_env;
     //===================================
