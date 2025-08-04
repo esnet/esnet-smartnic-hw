@@ -6,7 +6,6 @@
 `define SVUNIT_TIMEOUT 500us
 
 module smartnic_datapath_unit_test;
-    import packet_verif_pkg::*;
     import smartnic_pkg::*;
 
     // Testcase name
