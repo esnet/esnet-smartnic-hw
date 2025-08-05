@@ -156,4 +156,6 @@ module xilinx_axi3_reg_slice
         .m_axi_rready   ( axi3_if_to_peripheral.rready )
     );
 
+    assign axi3_if_to_peripheral.aresetn = axi3_if_from_controller.aresetn;
+
 endmodule : xilinx_axi3_reg_slice
