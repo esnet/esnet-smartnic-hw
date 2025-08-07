@@ -138,7 +138,7 @@ class Library:
         return reduce(truediv, layers)
 
     @keyword
-    def packet_write_pcap(self, filename, *packets):
+    def packet_write_pcap(self, filename, packets):
         wrpcap(filename, packets)
 
     @keyword
