@@ -58,6 +58,9 @@ module smartnic_ctrl_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
+        // Stop environment
+        env.stop();
+
         svunit_ut.teardown();
 
     endtask

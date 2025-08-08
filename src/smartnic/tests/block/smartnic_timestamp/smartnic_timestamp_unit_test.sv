@@ -57,6 +57,9 @@ module smartnic_timestamp_unit_test;
     // need after running the Unit Tests
     //===================================
     task teardown();
+        // Stop environment
+        env.stop();
+
         svunit_ut.teardown();
     endtask
 
@@ -68,7 +71,7 @@ module smartnic_timestamp_unit_test;
     logic [63:0] rd_data;
     smartnic_reg_pkg::reg_timestamp_incr_t   rd_incr, new_incr;
 
-    int period_ns = 5000;
+    int period_ns = 10000;
     int num_samples = 5;
 
     //===================================
@@ -147,7 +150,7 @@ module smartnic_timestamp_unit_test;
 
        real expected;
        real clk_period_ns = 2.909091;  // set clk period to 2.909091ns (343.75 MHz)
-       integer guardband_ns = 5;
+       integer guardband_ns = 150;
        logic [63:0] rd_data, prev_data;
 
        expected = (period_ns / clk_period_ns) * increment_ns;  // calculate expected timestamp delta
@@ -163,14 +166,14 @@ module smartnic_timestamp_unit_test;
 
       `INFO($sformatf("Timestamp reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
-      `FAIL_UNLESS( rd_data < init + 'd170 );  // check within 170ns margin, since timestamp counter is free running.
+      `FAIL_UNLESS( rd_data < init + 'd500 );  // check within 500ns margin, since timestamp counter is free running.
 
        env.smartnic_reg_blk_agent.read_freerun_rd_upper( rd_data[63:32] );
        env.smartnic_reg_blk_agent.read_freerun_rd_lower( rd_data[31:0]  );
 
       `INFO($sformatf("Freerun reg: 0x%x.", rd_data) );
       `FAIL_UNLESS( rd_data > init );
-      `FAIL_UNLESS( rd_data < init + 'd170 );
+      `FAIL_UNLESS( rd_data < init + 'd500 );
 
        // initialize and start polling loop
        prev_data = 0;

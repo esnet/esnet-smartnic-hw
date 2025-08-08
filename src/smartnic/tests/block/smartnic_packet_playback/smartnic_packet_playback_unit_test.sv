@@ -152,11 +152,11 @@ module smartnic_packet_playback_unit_test;
 
         `SVTEST(info)
             // Check packet memory size
-            env.pkt_playback_driver.read_mem_size(got_int);
+            env.pkt_playback_driver.agent.read_mem_size(got_int);
             `FAIL_UNLESS_EQUAL(got_int, 16384);
 
             // Check metadata width
-            env.pkt_playback_driver.read_meta_width(got_int);
+            env.pkt_playback_driver.agent.read_meta_width(got_int);
             `FAIL_UNLESS_EQUAL(got_int, $bits(PKT_PLAYBACK_META_T));
         `SVTEST_END
 
