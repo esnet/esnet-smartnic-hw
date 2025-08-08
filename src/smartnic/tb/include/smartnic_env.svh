@@ -23,10 +23,6 @@ class smartnic_env extends std_verif_pkg::basic_env;
     localparam type MODEL_T           = smartnic_model;
     localparam type SCOREBOARD_T      = event_scoreboard#(TRANSACTION_OUT_T);
 
-    localparam type PKT_PLAYBACK_META_T   = struct packed {port_t tid; port_t tdest; bit tuser;};
-    localparam type PKT_PLAYBACK_T        = packet#(PKT_PLAYBACK_META_T);
-    localparam type PKT_PLAYBACK_DRIVER_T = packet_playback_driver#(PKT_PLAYBACK_META_T);
-
     local static const string __CLASS_NAME = "tb_pkg::smartnic_env";
 
     // -- AXI-L
@@ -38,22 +34,21 @@ class smartnic_env extends std_verif_pkg::basic_env;
     //===================================
     local bit __BIGENDIAN;
 
-    DRIVER_T     driver  [4];
-    MONITOR_T    monitor [4];
-    MODEL_T      model   [4];
-    SCOREBOARD_T scoreboard [4];
+    DRIVER_T     driver     [4];
+    MONITOR_T    monitor    [4];
+    MODEL_T      model      [5];
+    SCOREBOARD_T scoreboard [5]; // 0:PHY0, 1:PHY1, 2:PF0, 3:PF1, 4:PKT_CAPTURE
 
-    PKT_PLAYBACK_DRIVER_T pkt_playback_driver;
+    axi4s_playback_driver#(DATA_BYTE_WID, port_t, port_t, bit) pkt_playback_driver;
+    axi4s_capture_monitor#(DATA_BYTE_WID, TID_OUT_T, TDEST_T, TUSER_OUT_T) pkt_capture_monitor;
 
     mailbox #(TRANSACTION_IN_T)  inbox [4];
-    mailbox #(PKT_PLAYBACK_T)    pkt_playback_inbox;
+    mailbox #(TRANSACTION_IN_T)  pkt_playback_inbox;
 
     local mailbox #(TRANSACTION_IN_T)  __drv_inbox    [4];
-    local mailbox #(TRANSACTION_OUT_T) __mon_outbox   [4];
-    local mailbox #(TRANSACTION_IN_T)  __model_inbox  [4];
-    local mailbox #(TRANSACTION_OUT_T) __model_outbox [4];
-
-    local mailbox #(PKT_PLAYBACK_T)    __pkt_playback_drv_inbox;
+    local mailbox #(TRANSACTION_OUT_T) __mon_outbox   [5];
+    local mailbox #(TRANSACTION_IN_T)  __model_inbox  [5];
+    local mailbox #(TRANSACTION_OUT_T) __model_outbox [5];
 
     virtual axi4s_intf #(
         .DATA_BYTE_WID(DATA_BYTE_WID),
@@ -88,23 +83,26 @@ class smartnic_env extends std_verif_pkg::basic_env;
         this.__BIGENDIAN = bigendian;
         for (int i=0; i < 4; i++) begin
             inbox[i]      = new();
-            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)), .BIGENDIAN(bigendian));
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
             monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
-            model[i]      = new(.name($sformatf("model[%0d]",i)), .dest_if(i));
+
+            __drv_inbox[i] = new();
+        end
+
+        for (int i=0; i < 5; i++) begin
+            model[i]      = new(.name($sformatf("model[%0d]",i)), .dest_port(i));
             scoreboard[i] = new(.name($sformatf("scoreboard[%0d]",i)));
 
-            __drv_inbox[i]    = new();
-            __mon_outbox[i]   = new();
             __model_inbox[i]  = new();
             __model_outbox[i] = new();
+            __mon_outbox[i]   = new();
         end
 
         reg_agent = new("axi4l_reg_agent");
 
         pkt_playback_inbox  = new();
-        pkt_playback_driver = new("packet_playback_driver", 16384, 512, reg_agent, 'h5000);
-
-        __pkt_playback_drv_inbox = new();
+        pkt_playback_driver = new("axi4s_playback_driver", 16384, reg_agent, 'h5000);
+        pkt_capture_monitor = new("axi4s_capture_monitor", 16384, reg_agent, 'h6000);
 
     endfunction
 
@@ -115,19 +113,22 @@ class smartnic_env extends std_verif_pkg::basic_env;
             inbox[i]      = null;
             driver[i]     = null;
             monitor[i]    = null;
+
+            __drv_inbox[i] = null;
+        end
+
+        for (int i=0; i < 5; i++) begin
             model[i]      = null;
             scoreboard[i] = null;
 
-            __drv_inbox[i]    = null;
-            __mon_outbox[i]   = null;
             __model_inbox[i]  = null;
             __model_outbox[i] = null;
+            __mon_outbox[i]   = null;
         end
 
         pkt_playback_inbox  = null;
         pkt_playback_driver = null;
-
-        __pkt_playback_drv_inbox = null;
+        pkt_capture_monitor = null;
 
         super.destroy();
     endfunction
@@ -144,24 +145,31 @@ class smartnic_env extends std_verif_pkg::basic_env;
         trace_msg("_build()");
         for (int i=0; i < 4; i++) begin
             driver[i].inbox   = __drv_inbox[i];
-            model[i].inbox    = __model_inbox[i];
-            model[i].outbox   = __model_outbox[i];
             monitor[i].outbox = __mon_outbox[i];
-
-            scoreboard[i].got_inbox = __mon_outbox[i];
-            scoreboard[i].exp_inbox = __model_outbox[i];
 
             this.driver[i].axis_vif  = axis_in_vif[i];
             this.monitor[i].axis_vif = axis_out_vif[i];
 
             register_subcomponent(driver[i]);
             register_subcomponent(monitor[i]);
+        end
+
+        for (int i=0; i < 5; i++) begin
+            model[i].inbox    = __model_inbox[i];
+            model[i].outbox   = __model_outbox[i];
+
+            scoreboard[i].got_inbox = __mon_outbox[i];
+            scoreboard[i].exp_inbox = __model_outbox[i];
+
             register_subcomponent(model[i]);
             register_subcomponent(scoreboard[i]);
         end
 
-        pkt_playback_driver.inbox = __pkt_playback_drv_inbox;
+        pkt_playback_driver.inbox = new();
         register_subcomponent(pkt_playback_driver);
+
+        pkt_capture_monitor.outbox = __mon_outbox[4];
+        register_subcomponent(pkt_capture_monitor);
 
         reg_agent.axil_vif = axil_vif;
         register_subcomponent(reg_agent);
@@ -189,76 +197,73 @@ class smartnic_env extends std_verif_pkg::basic_env;
         trace_msg("Running...");
 
         fork
-            begin
-                for (int i = 0; i < 4; i++) begin
-                    fork
-                        automatic int j = i;
-                        begin
-                            forever begin
-                                TRANSACTION_IN_T transaction;
-                                int dest_if;
-                                inbox[j].get(transaction);
-                                __drv_inbox[j].put(transaction);
-                                case (transaction.get_tdest().encoded.typ)
-                                    PHY:    dest_if = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
-                                    default dest_if = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                endcase
-                                __model_inbox[dest_if].put(transaction);
-                            end
-                        end
-                    join_none
-                end
-
+            for (int i = 0; i < 4; i++) begin
                 fork
+                    automatic int j = i;
                     begin
                         forever begin
-                            PKT_PLAYBACK_T       packet;
-                            PKT_PLAYBACK_META_T  meta;
-                            TRANSACTION_IN_T     transaction;
-
-                            int  dest_if;
-
-                            pkt_playback_inbox.get(packet);
-                            __pkt_playback_drv_inbox.put(packet);
-
-                            meta = packet.get_meta();
-                            case (meta.tdest.encoded.typ)
-                                PHY:    dest_if = (meta.tdest.encoded.num == P0) ? 0 : 1;
-                                default dest_if = (meta.tdest.encoded.num == P0) ? 2 : 3;
+                            TRANSACTION_IN_T transaction;
+                            int dest_port;
+                            inbox[j].get(transaction);
+                            driver[j].inbox.put(transaction);
+                            case (transaction.get_tdest().encoded.typ)
+                                PHY:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
+                                PF:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                                VF0:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                                VF1:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                                VF2:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                                default dest_port = 4; // 'pkt_capture' block
                             endcase
-
-                            transaction = axi4s_transaction#(adpt_tx_tid_t, port_t, bit)::create_from_bytes(
-                                .data (packet.to_bytes()),
-                                .tid  (meta.tid),
-                                .tdest(meta.tdest),
-                                .tuser(meta.tuser)
-                            );
-                            __model_inbox[dest_if].put(transaction);
+                            model[dest_port].inbox.put(transaction);
                         end
                     end
                 join_none
-
-                wait fork;
             end
-        join
+            forever begin
+                TRANSACTION_IN_T transaction_in;
+                axi4s_transaction#(port_t, port_t, bit) transaction;
+                int  dest_port;
+                adpt_tx_tid_t tid_in;
+                port_t tid;
+
+                pkt_playback_inbox.get(transaction_in);
+                tid_in = transaction_in.get_tid();
+                tid = tid_in[$bits(port_t)-1:0];
+                transaction = axi4s_transaction#(port_t, port_t, bit)::create_from_bytes(
+                    transaction_in.get_name(),
+                    transaction_in.to_bytes(),
+                    tid,
+                    transaction_in.get_tdest(),
+                    transaction_in.get_tuser()
+                );
+                pkt_playback_driver.inbox.put(transaction);
+
+                case (transaction_in.get_tdest().encoded.typ)
+                    PHY:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
+                    PF:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                    VF0:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                    VF1:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                    VF2:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                    default dest_port = 4; // 'pkt_capture' block
+                endcase
+                model[dest_port].inbox.put(transaction_in);
+            end
+        join_any
+        wait fork;
         trace_msg("_run() Done.");
     endtask
 
 
-    task automatic pkt_to_playback (int id=0, len=$urandom_range(64, 1500), port_t tid='0, tdest='0, bit tuser='0);
-        automatic packet_raw#(PKT_PLAYBACK_META_T) packet;
+    task automatic pkt_to_playback (int id=0, len=$urandom_range(64, 512), port_t tid='0, tdest='0, bit tuser='0);
+        TRANSACTION_IN_T transaction;
 
-        automatic PKT_PLAYBACK_META_T meta;
+        transaction = new($sformatf("pkt_%0d", id), len);
+        transaction.randomize();
+        transaction.set_tid(tid);
+        transaction.set_tdest(tdest);
+        transaction.set_tuser(tuser);
 
-        packet = new($sformatf("pkt_%0d", id), len);
-        packet.randomize();
-
-        meta.tid   = tid;
-        meta.tdest = tdest;
-        meta.tuser = tuser;
-        packet.set_meta(meta);
-
-        pkt_playback_inbox.put(packet);
+        pkt_playback_inbox.put(transaction);
     endtask
 
 
@@ -341,4 +346,3 @@ class smartnic_env extends std_verif_pkg::basic_env;
    endtask
 
 endclass : smartnic_env
-
