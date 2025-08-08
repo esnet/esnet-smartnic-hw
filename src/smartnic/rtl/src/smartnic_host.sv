@@ -173,7 +173,7 @@ module smartnic_host
         axi4s_intf_demux #(.N(2)) core_to_host_demux_inst (
            .axi4s_in   ( axis_core_to_host_demux_in[i] ),
            .axi4s_out  ( axis_core_to_host_demux_out[i] ),
-           .sel        ( 1'b0 )  // TODO: connect to reg.
+           .sel        ( smartnic_regs.switch_config.pkt_capture_enable )
         );
 
         axi4s_intf_connector core_to_host_demux_pipe_0
@@ -207,7 +207,7 @@ module smartnic_host
         .axi4s_out  ( axis_pkt_capture )
     );
 
-    axi4s_packet_capture axi4s_packet_capture_inst (
+    axi4s_packet_capture #(.NETWORK_BYTE_ORDER(0)) axi4s_packet_capture_inst (
        .clk     ( core_clk ),
        .srst    (~core_rstn ),
        .en      ( ),
