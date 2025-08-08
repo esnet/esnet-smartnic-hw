@@ -5,11 +5,11 @@ import axi4s_verif_pkg::*;
 class smartnic_model
     extends std_verif_pkg::model#(axi4s_transaction#(adpt_tx_tid_t, port_t, bit),
                                   axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t));
-    port_t dest_if;
+    port_t dest_port;
 
-    function new(string name="smartnic_model", port_t dest_if=0);
+    function new(string name="smartnic_model", port_t dest_port=0);
         super.new(name);
-        this.dest_if = dest_if;
+        this.dest_port = dest_port;
     endfunction
 
     protected task _process(input axi4s_transaction#(adpt_tx_tid_t, port_t, bit) transaction);
@@ -18,12 +18,13 @@ class smartnic_model
         port_t  tdest_out;
         tuser_smartnic_meta_t  tuser_out;
 
-        tid_out   = 'x; // egr tid is disconnected.
-        tdest_out = 'x; // egr tdest is disconnected.
+        tid_out   = 'x; // egr tid is disconnected (not used).
+        tdest_out = 'x; // egr tdest is disconnected (not used).
 
-        if (dest_if.encoded.typ == PHY) begin
+        if (dest_port.encoded.typ == PHY) begin
             tuser_out = 1'b0; // m_axis_adpt_rx_322mhz_tuser_err=0 for egr CMAC ifs.
-        end else begin
+
+        end else if (dest_port.encoded.typ == PF) begin
             tuser_out = 'x;
             tuser_out.rss_enable = 1'b1;
             // set entropy=qid based on egr queue (hash2qid) config.
@@ -38,6 +39,19 @@ class smartnic_model
                      else                                           tuser_out.rss_entropy = 12'd1536;
                 default  tuser_out.rss_entropy = 12'd0;
             endcase
+
+        end else begin  // packets are directed to 'smartnic_pkt_capture' block by default.
+            // 'smartnic_mux' sets tdest to PHY, and 'smartnic_pkt_capture' tests run 'smartnic_app' in passthru mode.
+	    tdest_out.encoded.num = transaction.get_tdest().encoded.num;
+            tdest_out.encoded.typ = PHY;
+
+            tid_out.encoded.num = tdest_out.encoded.num;
+            tid_out.encoded.typ = PHY;  // 'smartnic_pkt_capture' tests use PHY ports for input.
+
+            tuser_out = '0;
+            tuser_out.rss_enable = 1'b1;
+            tuser_out.rss_entropy = (tdest_out.encoded.num == P0) ? 12'd2048 : 12'd0;  // hash2qid config.
+
         end
 
         transaction_out = new ($sformatf("trans_%0d_out", num_output_transactions()), transaction.payload().size(),
