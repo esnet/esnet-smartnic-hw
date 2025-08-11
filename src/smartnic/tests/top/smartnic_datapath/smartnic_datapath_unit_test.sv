@@ -51,7 +51,6 @@ module smartnic_datapath_unit_test;
     //===================================
     // Local test variables
     //===================================
-    int  bytes[NUM_PORTS];
     real FIFO_DEPTH = 1306.0; // 1024 - 4 (fifo_async) + 2 x 143 (axi4s_pkt_discard_ovfl)
 
     //===================================
@@ -392,7 +391,7 @@ module smartnic_datapath_unit_test;
 
         `SVTEST(random_tid_test)
             port_t  tid, tdest;
-            int     pkts, exp_pkts[NUM_PORTS];
+            int     pkts;
 
             for (int i = 0; i < NUM_PORTS; i++) exp_pkts[i] = 0;
 
@@ -435,10 +434,10 @@ module smartnic_datapath_unit_test;
          // ---------------------------
         `SVTEST(reconfig_demux_out_sel0)
             bypass_mode(0);
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PF0_VF2));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PF0_VF2));
             fork
-                #1us;
+                #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast)
                           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
@@ -449,10 +448,10 @@ module smartnic_datapath_unit_test;
 
         `SVTEST(reconfig_demux_out_sel1)
             bypass_mode(1);
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PF1_VF2));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PF1_VF2));
             fork
-                #1us;
+                #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast)
                           env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
@@ -464,14 +463,14 @@ module smartnic_datapath_unit_test;
         `SVTEST(reconfig_bypass_swap)
             bypass_mode(0); bypass_mode(1);
 
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
 
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
 
             fork
-                #1us;
+                #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast)
                           env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
@@ -487,11 +486,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 pkts PHY-to-PHY thru app, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
 
             fork
-                #1us;
+                #3us;
 
                 // reconfigure mux_out_sel for bypass mode after 1st packet.
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast) bypass_mode(0);
@@ -507,11 +506,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 pkts PHY-to-PHY thru app, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
 
             fork
-                #1us;
+                #3us;
 
                 // reconfigure mux_out_sel for bypass mode after 1st packet.
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast) bypass_mode(1);
@@ -527,11 +526,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 pkts PF_VF2-to-PHY thru app, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[2]), .tid(PF0_VF2), .tdest(PHY0));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[2]), .tid(PF0_VF2), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[2]), .tid(PF0_VF2), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[2]), .tid(PF0_VF2), .tdest(PHY1));
 
             fork
-                #1us;
+                #3us;
 
                 // reconfigure mux_out_sel for bypass mode after 1st packet.
                 @(posedge tb.DUT.axis_host_to_core[0].tlast) bypass_mode(2);
@@ -547,11 +546,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 pkts PF_VF2-to-PHY thru app, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[3]), .tid(PF1_VF2), .tdest(PHY1));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[3]), .tid(PF1_VF2), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[3]), .tid(PF1_VF2), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[3]), .tid(PF1_VF2), .tdest(PHY0));
 
             fork
-                #1us;
+                #3us;
 
                 // reconfigure mux_out_sel for bypass mode after 1st packet.
                 @(posedge tb.DUT.axis_host_to_core[1].tlast) bypass_mode(3);
@@ -566,11 +565,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 dropped pkts, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY1));
 
             fork
-                #1us;
+                #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast) bypass_mode(0);
             join
@@ -584,11 +583,11 @@ module smartnic_datapath_unit_test;
             env.smartnic_reg_blk_agent.write_bypass_config(1);  // swap paths
 
             // start traffic.  2 dropped pkts, then two pkts thru BYPASS swap.
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
-            packet_stream(.pkts(2), .mode(2500), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(2), .mode(9000), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY0));
 
             fork
-                #1us;
+                #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast) bypass_mode(1);
             join

@@ -45,8 +45,6 @@ module p2p_smartnic_datapath_unit_test;
     // Local test variables
     //===================================
 
-    int bytes[2];
-
     //===================================
     // Setup for running the Unit Tests
     //===================================

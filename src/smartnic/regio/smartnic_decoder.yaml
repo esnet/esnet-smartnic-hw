@@ -21,6 +21,10 @@ decoders:
     !include ../src/smartnic_app/regio/smartnic_p4_decoder.yaml
   fifo: &fifo
     !include src/fifo/regio/fifo_decoder.yaml
+  pkt_playback: &pkt_playback
+    !include src/packet/regio/packet_playback_decoder.yaml
+  pkt_capture: &pkt_capture
+    !include src/packet/regio/packet_capture_decoder.yaml
 
 interfaces:
   - block: *smartnic
@@ -73,6 +77,16 @@ interfaces:
     address: 0x04000
     width: 12
     name: smartnic_bypass
+
+  - decoder: *pkt_playback
+    address: 0x05000
+    width: 12
+    name: smartnic_pkt_playback
+
+  - decoder: *pkt_capture
+    address: 0x06000
+    width: 12
+    name: smartnic_pkt_capture
 
 
   - block: *smartnic_hash2qid

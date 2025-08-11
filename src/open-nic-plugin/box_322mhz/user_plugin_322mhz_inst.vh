@@ -27,7 +27,7 @@ smartnic #(
   .s_axis_adpt_tx_322mhz_tkeep     (s_axis_adap_tx_322mhz_tkeep),
   .s_axis_adpt_tx_322mhz_tlast     (s_axis_adap_tx_322mhz_tlast),
   .s_axis_adpt_tx_322mhz_tid       (s_axis_adap_tx_322mhz_tid),
-  .s_axis_adpt_tx_322mhz_tdest     ({2'b01, 2'b00}),
+  .s_axis_adpt_tx_322mhz_tdest     ({4'h1, 4'h0}),
   .s_axis_adpt_tx_322mhz_tuser_err (s_axis_adap_tx_322mhz_tuser_err),
   .s_axis_adpt_tx_322mhz_tready    (s_axis_adap_tx_322mhz_tready),
 

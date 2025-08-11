@@ -89,6 +89,10 @@ regs:
         desc: set to 1 to assert axi4s backpressure to the host_1 egress FIFO (test register).
         width: 1
         init : 0
+      - name: pkt_capture_enable
+        desc: set to 1 to direct egress 'host' traffic to the 'pkt_capture' block. direct to host by default.
+        width: 1
+        init : 0
 
   - name: smartnic_demux_out_sel
     access : rw

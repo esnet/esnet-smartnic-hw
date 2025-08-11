@@ -34,7 +34,9 @@ SUBCOMPONENTS = \
     smartnic_app.igr.demux.rtl \
     smartnic_app.igr.demux.regio.verif \
     smartnic_app.egr.mux.rtl \
+    std.rtl@common \
     std.verif@common \
+    packet.verif@common \
     axi4l.rtl@common \
     axi4l.verif@common \
     axi4s.rtl@common \
