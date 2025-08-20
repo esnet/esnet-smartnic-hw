@@ -160,7 +160,7 @@ module xilinx_axi4l_reg_slice
 
     // Pipeline reset
     util_pipe       #(
-        .DATA_T      ( logic ),
+        .DATA_WID    ( 1 ),
         .PIPE_STAGES ( getResetPipeStages(CONFIG) )
     ) i_util_pipe_aresetn (
         .clk      ( axi4l_if_to_peripheral.aclk ),
