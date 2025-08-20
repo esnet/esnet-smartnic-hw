@@ -102,23 +102,24 @@ module tb;
 
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_in_if  [NUM_INTF] ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_out_if [NUM_INTF] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_in_if  [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_out_if [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_in_if  [NUM_INTF] ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_out_if [NUM_INTF] ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_in_if  [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_out_if [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
 
     // Generate datapath clock (250MHz)
     initial clk = 1'b0;
     always #2000ps clk = ~clk;
-
-    assign axis_aclk = clk;
 
     // Assign reset interfaces
     assign rst = reset_if.reset;
     assign reset_if.ready = mod_rst_done;
 
     assign mod_rstn = ~rst;
+    
+    assign axis_aclk = clk;
+    assign axis_aresetn = ~rst;
 
     // Generate AXI management clock (125MHz)
     initial axil_if.aclk = 1'b0;
@@ -173,9 +174,6 @@ module tb;
 
             assign axis_h2c_in_if[g_if].tready = s_axis_qdma_h2c_tready [g_if*1 +: 1];
 
-            assign axis_h2c_in_if[g_if].aclk = axis_aclk;
-            assign axis_h2c_in_if[g_if].aresetn = mod_rstn;
-
             // C2H (In)
             assign s_axis_adap_rx_250mhz_tvalid[g_if * 1 +: 1]                 = axis_c2h_in_if[g_if].tvalid;
             assign s_axis_adap_rx_250mhz_tlast [g_if * 1 +: 1]                 = axis_c2h_in_if[g_if].tlast;
@@ -191,9 +189,6 @@ module tb;
 
             assign axis_c2h_in_if[g_if].tready = s_axis_adap_rx_250mhz_tready [g_if*1 +: 1];
 
-            assign axis_c2h_in_if[g_if].aclk = axis_aclk;
-            assign axis_c2h_in_if[g_if].aresetn = mod_rstn;
-
             // H2C (Out)
             assign axis_h2c_out_if[g_if].tvalid = m_axis_adap_tx_250mhz_tvalid[g_if * 1 +: 1];
             assign axis_h2c_out_if[g_if].tlast  = m_axis_adap_tx_250mhz_tlast [g_if * 1 +: 1];
@@ -206,9 +201,6 @@ module tb;
             assign axis_h2c_out_if[g_if].tuser = m_axis_adap_tx_250mhz_tuser;
 
             assign m_axis_adap_tx_250mhz_tready [g_if*1 +: 1] = axis_h2c_out_if[g_if].tready;
-
-            assign axis_h2c_out_if[g_if].aclk = axis_aclk;
-            assign axis_h2c_out_if[g_if].aresetn = mod_rstn;
 
             // C2H (Out)
             assign axis_c2h_out_if[g_if].tvalid = m_axis_qdma_c2h_tvalid[g_if * 1 +: 1];
@@ -224,9 +216,6 @@ module tb;
             assign axis_c2h_out_if[g_if].tuser = m_axis_qdma_c2h_tuser;
 
             assign m_axis_qdma_c2h_tready [g_if*1 +: 1] = axis_c2h_out_if[g_if].tready;
-
-            assign axis_c2h_out_if[g_if].aclk = axis_aclk;
-            assign axis_c2h_out_if[g_if].aresetn = mod_rstn;
 
         end : g__if
     endgenerate

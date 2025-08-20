@@ -22,10 +22,10 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     virtual axi4l_intf axil_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_in_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_out_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_in_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_out_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_in_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_out_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_in_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_out_vif [NUM_INTF];
 
     axi4s_component_env #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) env_h2c [NUM_INTF];
     axi4s_component_env #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) env_c2h [NUM_INTF];

@@ -104,11 +104,11 @@ module smartnic_250mhz #(
 
     smartnic_250mhz_reg_intf smartnic_250mhz_regs ();
 
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_h2c_t)) axis_if__qdma_h2c [NUM_INTF] ();
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_h2c_t)) axis_if__adap_tx_250mhz [NUM_INTF] ();
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__qdma_h2c [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__adap_tx_250mhz [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
 
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_c2h_t)) axis_if__qdma_c2h [NUM_INTF] ();
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_c2h_t)) axis_if__adap_rx_250mhz [NUM_INTF] ();
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__qdma_c2h [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__adap_rx_250mhz [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
 
     // ----------------------------------------------------------------
     //  Clocks/Resets
@@ -190,10 +190,8 @@ module smartnic_250mhz #(
             assign s_axis_qdma_h2c_tuser.dst  = s_axis_qdma_h2c_tuser_dst  [g_if * 16 +: 16];
 
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)
             ) i_axi4s_intf_from_signals__qdma_h2c (
-                .aclk    ( core_clk ),
-                .aresetn ( core_rstn ),
                 .tvalid  ( s_axis_qdma_h2c_tvalid [g_if*        1 +:         1] ),
                 .tready  ( s_axis_qdma_h2c_tready [g_if*        1 +:         1] ),
                 .tdata   ( s_axis_qdma_h2c_tdata  [g_if*TDATA_WID +: TDATA_WID] ),
@@ -207,10 +205,8 @@ module smartnic_250mhz #(
 
             // QDMA C2H: Convert AXI-S interface to signals
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)
             ) i_axi4s_intf_to_signals__qdma_c2h (
-                .aclk    ( ), // Output
-                .aresetn ( ), // Output
                 .tvalid  ( m_axis_qdma_c2h_tvalid [g_if*        1 +:         1] ),
                 .tready  ( m_axis_qdma_c2h_tready [g_if*        1 +:         1] ),
                 .tdata   ( m_axis_qdma_c2h_tdata  [g_if*TDATA_WID +: TDATA_WID] ),
@@ -238,10 +234,8 @@ module smartnic_250mhz #(
 
             // ADAP RX: Convert AXI-S interface to signals
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)
             ) i_axi4s_intf_to_signals__adap_tx (
-                .aclk    ( ), // Output
-                .aresetn ( ), // Output
                 .tvalid  ( m_axis_adap_tx_250mhz_tvalid [g_if*        1 +:         1] ),
                 .tready  ( m_axis_adap_tx_250mhz_tready [g_if*        1 +:         1] ),
                 .tdata   ( m_axis_adap_tx_250mhz_tdata  [g_if*TDATA_WID +: TDATA_WID] ),
@@ -264,10 +258,8 @@ module smartnic_250mhz #(
             assign s_axis_adap_rx_250mhz_tuser.rss_hash       = s_axis_adap_rx_250mhz_tuser_rss_hash       [g_if * 12 +: 12];
 
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)
+                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)
             ) i_axi4s_intf_from_signals__adap_rx (
-                .aclk    ( core_clk ),
-                .aresetn ( core_rstn ),
                 .tvalid  ( s_axis_adap_rx_250mhz_tvalid [g_if*        1 +:         1] ),
                 .tready  ( s_axis_adap_rx_250mhz_tready [g_if*        1 +:         1] ),
                 .tdata   ( s_axis_adap_rx_250mhz_tdata  [g_if*TDATA_WID +: TDATA_WID] ),
@@ -289,49 +281,45 @@ module smartnic_250mhz #(
     generate
         for (genvar g_if = 0; g_if < NUM_INTF; g_if++) begin : g__if
             // (Local) interfaces
-            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_h2c_t)) axis_if__h2c ();
-            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_T (tuser_c2h_t)) axis_if__c2h ();
+            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__h2c (.aclk(core_clk), .aresetn(core_rstn));
+            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__c2h (.aclk(core_clk), .aresetn(core_rstn));
 
             // H2C register slices (bridge between SLRs)
             xilinx_axi4s_reg_slice #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             ) i_xilinx_axi4s_reg_slice__qdma_h2c (
-                .axi4s_from_tx ( axis_if__qdma_h2c[g_if] ),
-                .axi4s_to_rx   ( axis_if__h2c )
+                .from_tx ( axis_if__qdma_h2c[g_if] ),
+                .to_rx   ( axis_if__h2c )
             );
 
             xilinx_axi4s_reg_slice #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t),
             `ifdef __au280__
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
             ) i_xilinx_axi4s_reg_slice__adap_tx (
-                .axi4s_from_tx ( axis_if__h2c ),
-                .axi4s_to_rx   ( axis_if__adap_tx_250mhz[g_if] )
+                .from_tx ( axis_if__h2c ),
+                .to_rx   ( axis_if__adap_tx_250mhz[g_if] )
             );
 
             // C2H register slices (bridge between SLRs)
             xilinx_axi4s_reg_slice #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
             `ifdef __au280__
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             `else
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_BYPASS)
             `endif
             ) i_xilinx_axi4s_reg_slice__adap_rx (
-                .axi4s_from_tx ( axis_if__adap_rx_250mhz[g_if] ),
-                .axi4s_to_rx   ( axis_if__c2h )
+                .from_tx ( axis_if__adap_rx_250mhz[g_if] ),
+                .to_rx   ( axis_if__c2h )
             );
 
             xilinx_axi4s_reg_slice #(
-                .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t),
                 .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
             ) i_xilinx_axi4s_reg_slice__qdma_c2h (
-                .axi4s_from_tx ( axis_if__c2h ),
-                .axi4s_to_rx   ( axis_if__qdma_c2h[g_if] )
+                .from_tx ( axis_if__c2h ),
+                .to_rx   ( axis_if__qdma_c2h[g_if] )
             );
         end : g__if
     endgenerate
