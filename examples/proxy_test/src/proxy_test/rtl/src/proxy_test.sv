@@ -19,18 +19,18 @@ module proxy_test
     localparam int HBM_NUM_APP_AXI_CHANNELS__RIGHT = 1;
 
     localparam xilinx_hbm_pkg::density_t HBM_DENSITY = xilinx_hbm_pkg::DENSITY_4G;
-    localparam int  HBM_AXI_DATA_BYTE_WID = xilinx_hbm_pkg::AXI_DATA_BYTE_WID;
-    localparam int  HBM_AXI_DATA_WID = xilinx_hbm_pkg::AXI_DATA_WID;
-    localparam int  HBM_AXI_ADDR_WID = xilinx_hbm_pkg::get_addr_wid(HBM_DENSITY);
-    localparam type HBM_AXI_ID_T = logic[xilinx_hbm_pkg::AXI_ID_WID-1:0];
+    localparam int HBM_AXI_DATA_BYTE_WID = xilinx_hbm_pkg::AXI_DATA_BYTE_WID;
+    localparam int HBM_AXI_DATA_WID = xilinx_hbm_pkg::AXI_DATA_WID;
+    localparam int HBM_AXI_ADDR_WID = xilinx_hbm_pkg::get_addr_wid(HBM_DENSITY);
+    localparam int HBM_AXI_ID_WID = xilinx_hbm_pkg::AXI_ID_WID;
 
     // ----------------------------------------------------------------
     //  Interfaces
     // ----------------------------------------------------------------
-    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) app__axi_if__hbm_left [HBM_NUM_APP_AXI_CHANNELS__LEFT]  (.aclk (clk));
-    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) app__axi_if__hbm_right[HBM_NUM_APP_AXI_CHANNELS__RIGHT] (.aclk (clk));
-    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) axi_if__hbm_left  [HBM_NUM_AXI_CHANNELS] (.aclk (clk));
-    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_T(HBM_AXI_ID_T)) axi_if__hbm_right [HBM_NUM_AXI_CHANNELS] (.aclk (clk));
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_WID(HBM_AXI_ID_WID)) app__axi_if__hbm_left [HBM_NUM_APP_AXI_CHANNELS__LEFT]  (.aclk (clk), .aresetn(!srst));
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_WID(HBM_AXI_ID_WID)) app__axi_if__hbm_right[HBM_NUM_APP_AXI_CHANNELS__RIGHT] (.aclk (clk), .aresetn(!srst));
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_WID(HBM_AXI_ID_WID)) axi_if__hbm_left  [HBM_NUM_AXI_CHANNELS] (.aclk (clk), .aresetn(!srst));
+    axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_WID(HBM_AXI_ID_WID)) axi_if__hbm_right [HBM_NUM_AXI_CHANNELS] (.aclk (clk), .aresetn(!srst));
 
     // ----------------------------------------------------------------
     //  Register map block and decoder instantiations
@@ -147,7 +147,6 @@ module proxy_test
     localparam int MEM_SIZE_4B = 32768;
     localparam int MEM_DEPTH_4B = MEM_SIZE_4B / 32;
     localparam int ADDR_WID_4B = $clog2(MEM_DEPTH_4B);
-    localparam type ADDR_T_4B = logic[ADDR_WID_4B-1:0];
 
     localparam mem_pkg::spec_t SPEC_4B = '{
         ADDR_WID  : ADDR_WID_4B,
@@ -158,7 +157,7 @@ module proxy_test
     };
 
     axi4l_intf axil_to_mem_proxy_4b__clk ();
-    mem_intf #(.ADDR_T(ADDR_T_4B), .DATA_T(logic[31:0])) mem_4b_if (.clk);
+    mem_intf #(.ADDR_WID(ADDR_WID_4B), .DATA_WID(32)) mem_4b_if (.clk);
 
     // Pass AXI-L interface from aclk (AXI-L clock) to clk domain
     axi4l_intf_cdc i_axil_intf_cdc__mem_proxy_4b (
@@ -187,7 +186,6 @@ module proxy_test
     localparam int MEM_SIZE_64B = 32768;
     localparam int MEM_DEPTH_64B = MEM_SIZE_64B / 512;
     localparam int ADDR_WID_64B = $clog2(MEM_DEPTH_64B);
-    localparam type ADDR_T_64B = logic[ADDR_WID_64B-1:0];
 
     localparam mem_pkg::spec_t SPEC_64B = '{
         ADDR_WID  : ADDR_WID_64B,
@@ -198,7 +196,7 @@ module proxy_test
     };
 
     axi4l_intf axil_to_mem_proxy_64b__clk ();
-    mem_intf #(.ADDR_T(ADDR_T_64B), .DATA_T(logic[511:0])) mem_64b_if (.clk);
+    mem_intf #(.ADDR_WID(ADDR_WID_64B), .DATA_WID(512)) mem_64b_if (.clk);
 
     // Pass AXI-L interface from aclk (AXI-L clock) to clk domain
     axi4l_intf_cdc i_axil_intf_cdc__mem_proxy_64b (
@@ -263,32 +261,26 @@ module proxy_test
         // Pipeline AXI3 application interfaces
         for (genvar g_ch = 0; g_ch < HBM_NUM_APP_AXI_CHANNELS__LEFT; g_ch++) begin : g__hbm_left_ch_app
             xilinx_axi3_reg_slice #(
-                .ADDR_WID      ( HBM_AXI_ADDR_WID ),
-                .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
-                .ID_T          ( HBM_AXI_ID_T ),
-                .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
+                .CONFIG            ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
             ) i_xilinx_axi3_reg_slice__left (
-                .axi3_if_from_controller ( app__axi_if__hbm_left[g_ch] ),
-                .axi3_if_to_peripheral   ( axi_if__hbm_left[g_ch] )
+                .from_controller ( app__axi_if__hbm_left[g_ch] ),
+                .to_peripheral   ( axi_if__hbm_left[g_ch] )
             );
         end : g__hbm_left_ch_app
         for (genvar g_ch = 0; g_ch < HBM_NUM_APP_AXI_CHANNELS__RIGHT; g_ch++) begin : g__hbm_right_ch_app
             xilinx_axi3_reg_slice #(
-                .ADDR_WID      ( HBM_AXI_ADDR_WID ),
-                .DATA_BYTE_WID ( HBM_AXI_DATA_BYTE_WID ),
-                .ID_T          ( HBM_AXI_ID_T ),
-                .CONFIG        ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
+                .CONFIG            ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
             ) i_xilinx_axi3_reg_slice__right (
-                .axi3_if_from_controller ( app__axi_if__hbm_right[g_ch] ),
-                .axi3_if_to_peripheral   ( axi_if__hbm_right[g_ch] )
+                .from_controller ( app__axi_if__hbm_right[g_ch] ),
+                .to_peripheral   ( axi_if__hbm_right[g_ch] )
             );
         end : g__hbm_right_ch_app
         // Tie off all other HBM channels
         for (genvar g_ch = HBM_NUM_APP_AXI_CHANNELS__LEFT; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_left_ch_app_term
-            axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if (axi_if__hbm_left[g_ch]));
+            axi3_intf_controller_term i_axi3_intf_controller_term (.to_peripheral (axi_if__hbm_left[g_ch]));
         end : g__hbm_left_ch_app_term
         for (genvar g_ch = HBM_NUM_APP_AXI_CHANNELS__RIGHT; g_ch < HBM_NUM_AXI_CHANNELS; g_ch++) begin : g__hbm_right_ch_app_term
-            axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if (axi_if__hbm_right[g_ch]));
+            axi3_intf_controller_term i_axi3_intf_controller_term (.to_peripheral (axi_if__hbm_right[g_ch]));
         end : g__hbm_right_ch_app_term
     endgenerate
 
@@ -311,13 +303,12 @@ module proxy_test
     localparam longint __PACKET_Q_BUFFERS = PACKET_Q_CAPACITY / PACKET_Q_BUFFER_SIZE;
     localparam int  PACKET_Q_BUFFERS = int'(__PACKET_Q_BUFFERS);
     localparam int  PACKET_Q_BUFFER_PTR_WID = $clog2(PACKET_Q_BUFFERS);
-    localparam type PACKET_Q_BUFFER_PTR_T = logic[PACKET_Q_BUFFER_PTR_WID-1:0];
 
-    packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_T(HBM_AXI_ID_T)) packet_if__playback [PACKET_Q_INPUT_IFS]  (.clk, .srst);
-    packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_T(HBM_AXI_ID_T)) packet_if__capture  [PACKET_Q_OUTPUT_IFS] (.clk, .srst);
+    packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_WID(HBM_AXI_ID_WID)) packet_if__playback [PACKET_Q_INPUT_IFS]  (.clk, .srst);
+    packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_WID(HBM_AXI_ID_WID)) packet_if__capture  [PACKET_Q_OUTPUT_IFS] (.clk, .srst);
 
-    packet_descriptor_intf #(.ADDR_T(PACKET_Q_BUFFER_PTR_T), .META_T(HBM_AXI_ID_T)) packet_q_desc_in_if  [PACKET_Q_INPUT_IFS] (.clk);
-    packet_descriptor_intf #(.ADDR_T(PACKET_Q_BUFFER_PTR_T), .META_T(HBM_AXI_ID_T)) packet_q_desc_out_if [PACKET_Q_OUTPUT_IFS] (.clk);
+    packet_descriptor_intf #(.ADDR_WID(PACKET_Q_BUFFER_PTR_WID), .META_WID(HBM_AXI_ID_WID)) packet_q_desc_in_if  [PACKET_Q_INPUT_IFS] (.clk, .srst);
+    packet_descriptor_intf #(.ADDR_WID(PACKET_Q_BUFFER_PTR_WID), .META_WID(HBM_AXI_ID_WID)) packet_q_desc_out_if [PACKET_Q_OUTPUT_IFS] (.clk, .srst);
 
     mem_wr_intf #(.ADDR_WID(PACKET_Q_ROW_ADDR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_q_mem_wr_if [PACKET_Q_MEM_WR_IFS] (.clk);
     mem_rd_intf #(.ADDR_WID(PACKET_Q_ROW_ADDR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_q_mem_rd_if [PACKET_Q_MEM_RD_IFS] (.clk);
@@ -340,7 +331,7 @@ module proxy_test
         .NUM_MEM_RD_IFS  ( PACKET_Q_MEM_RD_IFS ),
         .MAX_PKT_SIZE    ( 9200 ),
         .BUFFER_SIZE     ( PACKET_Q_BUFFER_SIZE ),
-        .PTR_T           ( PACKET_Q_BUFFER_PTR_T ),
+        .NUM_BUFFERS     ( PACKET_Q_BUFFERS ),
         .MAX_RD_LATENCY  ( 48 )
     ) i_packet_q_core (
         .clk,
@@ -422,14 +413,14 @@ module proxy_test
     );
 
     // Terminate app AXI3 interface to HBM stack 1 (right)
-    axi3_intf_controller_term i_axi3_intf_controller_term (.axi3_if (app__axi_if__hbm_right[0]));
+    axi3_intf_controller_term i_axi3_intf_controller_term (.to_peripheral (app__axi_if__hbm_right[0]));
 
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             // Connect AXI-S interfaces in pass-through
-            axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(axi4s_in[g_port]), .axi4s_if_to_rx(axi4s_out[g_port]));
+            axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(axi4s_in[g_port]), .to_rx(axi4s_out[g_port]));
             // Tie off C2H interface
-            axi4s_intf_tx_term axi4s_intf_tx_term_0 (.aclk(clk), .aresetn(~srst), .axi4s_if(axi4s_c2h[g_port]));
+            axi4s_intf_tx_term axi4s_intf_tx_term_0 (.to_rx(axi4s_c2h[g_port]));
         end
     endgenerate
 
