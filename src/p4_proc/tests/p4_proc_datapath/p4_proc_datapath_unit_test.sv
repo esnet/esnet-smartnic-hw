@@ -77,7 +77,7 @@ module p4_proc_datapath_unit_test
         p4_bypass_config.p4_bypass_egr_port_type_1 =   '0;
 
         // initialize expected 'tuser' signal.
-        tuser={64'h0000000000000000,16'd0,1'b0,16'd0,1'b1,12'd0,1'b0};
+        tuser='{rss_enable: 1'b1, rss_entropy: '0};
 
         #100ns;
     endtask
@@ -153,10 +153,10 @@ module p4_proc_datapath_unit_test
 
             // inject input pkts to drivers.
             filename = {p4_sim_dir, testdir_1, "/packets_in.pcap"};
-            env.pcap_to_driver     (.filename(filename), .driver(env.driver[1]));        
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[1]));
 
             filename = {p4_sim_dir, testdir_0, "/packets_in.pcap"};
-            env.pcap_to_driver     (.filename(filename), .driver(env.driver[0]));        
+            env.pcap_to_driver     (.filename(filename), .driver(env.driver[0]));
 
             #3us;  // time to allow packets to flow through DUT.
 
@@ -193,8 +193,8 @@ module p4_proc_datapath_unit_test
             trunc_config.trunc_length = len;
             env.p4_proc_reg_agent.write_trunc_config(trunc_config);
 
-            // set expected tuser fields.
-            tuser={64'h0000000000000000,16'd0,1'b1,len,1'b1,12'd0,1'b0};
+            // set expected tuser fields
+            tuser='{rss_enable: 1'b1, rss_entropy: '0};
 
             // post expected pkts to scoreboards.
             filename = {p4_sim_dir, testdir_1, "/packets_out.pcap"};
@@ -282,6 +282,11 @@ module p4_proc_datapath_unit_test
 
         release tb.axis_out_if[0].tuser;
 
+    `SVTEST_END
+
+    `SVTEST(terminate)
+        // Clean up VitisNetP4 driver
+        vitisnetp4_agent.terminate();
     `SVTEST_END
 
     `SVUNIT_TESTS_END
