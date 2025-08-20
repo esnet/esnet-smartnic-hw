@@ -32,13 +32,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_00_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_00_ARADDR,
     output wire logic [1:0]                   AXI_00_ARBURST,
-    output wire axi_id_t                      AXI_00_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_00_ARID,
     output wire logic [3:0]                   AXI_00_ARLEN,
     output wire logic [2:0]                   AXI_00_ARSIZE,
     output wire logic                         AXI_00_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_00_AWADDR,
     output wire logic [1:0]                   AXI_00_AWBURST,
-    output wire axi_id_t                      AXI_00_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_00_AWID,
     output wire logic [3:0]                   AXI_00_AWLEN,
     output wire logic [2:0]                   AXI_00_AWSIZE,
     output wire logic                         AXI_00_AWVALID,
@@ -53,12 +53,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_00_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_00_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_00_RDATA,
-    input  wire axi_id_t                      AXI_00_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_00_RID,
     input  wire logic                         AXI_00_RLAST,
     input  wire logic [1:0]                   AXI_00_RRESP,
     input  wire logic                         AXI_00_RVALID,
     input  wire logic                         AXI_00_WREADY,
-    input  wire axi_id_t                      AXI_00_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_00_BID,
     input  wire logic [1:0]                   AXI_00_BRESP,
     input  wire logic                         AXI_00_BVALID,
     // Channel 1
@@ -66,13 +66,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_01_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_01_ARADDR,
     output wire logic [1:0]                   AXI_01_ARBURST,
-    output wire axi_id_t                      AXI_01_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_01_ARID,
     output wire logic [3:0]                   AXI_01_ARLEN,
     output wire logic [2:0]                   AXI_01_ARSIZE,
     output wire logic                         AXI_01_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_01_AWADDR,
     output wire logic [1:0]                   AXI_01_AWBURST,
-    output wire axi_id_t                      AXI_01_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_01_AWID,
     output wire logic [3:0]                   AXI_01_AWLEN,
     output wire logic [2:0]                   AXI_01_AWSIZE,
     output wire logic                         AXI_01_AWVALID,
@@ -87,12 +87,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_01_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_01_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_01_RDATA,
-    input  wire axi_id_t                      AXI_01_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_01_RID,
     input  wire logic                         AXI_01_RLAST,
     input  wire logic [1:0]                   AXI_01_RRESP,
     input  wire logic                         AXI_01_RVALID,
     input  wire logic                         AXI_01_WREADY,
-    input  wire axi_id_t                      AXI_01_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_01_BID,
     input  wire logic [1:0]                   AXI_01_BRESP,
     input  wire logic                         AXI_01_BVALID,
     // Channel 2
@@ -100,13 +100,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_02_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_02_ARADDR,
     output wire logic [1:0]                   AXI_02_ARBURST,
-    output wire axi_id_t                      AXI_02_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_02_ARID,
     output wire logic [3:0]                   AXI_02_ARLEN,
     output wire logic [2:0]                   AXI_02_ARSIZE,
     output wire logic                         AXI_02_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_02_AWADDR,
     output wire logic [1:0]                   AXI_02_AWBURST,
-    output wire axi_id_t                      AXI_02_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_02_AWID,
     output wire logic [3:0]                   AXI_02_AWLEN,
     output wire logic [2:0]                   AXI_02_AWSIZE,
     output wire logic                         AXI_02_AWVALID,
@@ -121,12 +121,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_02_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_02_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_02_RDATA,
-    input  wire axi_id_t                      AXI_02_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_02_RID,
     input  wire logic                         AXI_02_RLAST,
     input  wire logic [1:0]                   AXI_02_RRESP,
     input  wire logic                         AXI_02_RVALID,
     input  wire logic                         AXI_02_WREADY,
-    input  wire axi_id_t                      AXI_02_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_02_BID,
     input  wire logic [1:0]                   AXI_02_BRESP,
     input  wire logic                         AXI_02_BVALID,
     // Channel 3
@@ -134,13 +134,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_03_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_03_ARADDR,
     output wire logic [1:0]                   AXI_03_ARBURST,
-    output wire axi_id_t                      AXI_03_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_03_ARID,
     output wire logic [3:0]                   AXI_03_ARLEN,
     output wire logic [2:0]                   AXI_03_ARSIZE,
     output wire logic                         AXI_03_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_03_AWADDR,
     output wire logic [1:0]                   AXI_03_AWBURST,
-    output wire axi_id_t                      AXI_03_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_03_AWID,
     output wire logic [3:0]                   AXI_03_AWLEN,
     output wire logic [2:0]                   AXI_03_AWSIZE,
     output wire logic                         AXI_03_AWVALID,
@@ -155,12 +155,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_03_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_03_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_03_RDATA,
-    input  wire axi_id_t                      AXI_03_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_03_RID,
     input  wire logic                         AXI_03_RLAST,
     input  wire logic [1:0]                   AXI_03_RRESP,
     input  wire logic                         AXI_03_RVALID,
     input  wire logic                         AXI_03_WREADY,
-    input  wire axi_id_t                      AXI_03_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_03_BID,
     input  wire logic [1:0]                   AXI_03_BRESP,
     input  wire logic                         AXI_03_BVALID,
     // Channel 4
@@ -168,13 +168,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_04_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_04_ARADDR,
     output wire logic [1:0]                   AXI_04_ARBURST,
-    output wire axi_id_t                      AXI_04_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_04_ARID,
     output wire logic [3:0]                   AXI_04_ARLEN,
     output wire logic [2:0]                   AXI_04_ARSIZE,
     output wire logic                         AXI_04_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_04_AWADDR,
     output wire logic [1:0]                   AXI_04_AWBURST,
-    output wire axi_id_t                      AXI_04_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_04_AWID,
     output wire logic [3:0]                   AXI_04_AWLEN,
     output wire logic [2:0]                   AXI_04_AWSIZE,
     output wire logic                         AXI_04_AWVALID,
@@ -189,12 +189,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_04_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_04_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_04_RDATA,
-    input  wire axi_id_t                      AXI_04_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_04_RID,
     input  wire logic                         AXI_04_RLAST,
     input  wire logic [1:0]                   AXI_04_RRESP,
     input  wire logic                         AXI_04_RVALID,
     input  wire logic                         AXI_04_WREADY,
-    input  wire axi_id_t                      AXI_04_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_04_BID,
     input  wire logic [1:0]                   AXI_04_BRESP,
     input  wire logic                         AXI_04_BVALID,
     // Channel 5
@@ -202,13 +202,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_05_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_05_ARADDR,
     output wire logic [1:0]                   AXI_05_ARBURST,
-    output wire axi_id_t                      AXI_05_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_05_ARID,
     output wire logic [3:0]                   AXI_05_ARLEN,
     output wire logic [2:0]                   AXI_05_ARSIZE,
     output wire logic                         AXI_05_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_05_AWADDR,
     output wire logic [1:0]                   AXI_05_AWBURST,
-    output wire axi_id_t                      AXI_05_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_05_AWID,
     output wire logic [3:0]                   AXI_05_AWLEN,
     output wire logic [2:0]                   AXI_05_AWSIZE,
     output wire logic                         AXI_05_AWVALID,
@@ -223,12 +223,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_05_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_05_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_05_RDATA,
-    input  wire axi_id_t                      AXI_05_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_05_RID,
     input  wire logic                         AXI_05_RLAST,
     input  wire logic [1:0]                   AXI_05_RRESP,
     input  wire logic                         AXI_05_RVALID,
     input  wire logic                         AXI_05_WREADY,
-    input  wire axi_id_t                      AXI_05_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_05_BID,
     input  wire logic [1:0]                   AXI_05_BRESP,
     input  wire logic                         AXI_05_BVALID,
     // Channel 6
@@ -236,13 +236,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_06_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_06_ARADDR,
     output wire logic [1:0]                   AXI_06_ARBURST,
-    output wire axi_id_t                      AXI_06_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_06_ARID,
     output wire logic [3:0]                   AXI_06_ARLEN,
     output wire logic [2:0]                   AXI_06_ARSIZE,
     output wire logic                         AXI_06_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_06_AWADDR,
     output wire logic [1:0]                   AXI_06_AWBURST,
-    output wire axi_id_t                      AXI_06_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_06_AWID,
     output wire logic [3:0]                   AXI_06_AWLEN,
     output wire logic [2:0]                   AXI_06_AWSIZE,
     output wire logic                         AXI_06_AWVALID,
@@ -257,12 +257,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_06_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_06_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_06_RDATA,
-    input  wire axi_id_t                      AXI_06_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_06_RID,
     input  wire logic                         AXI_06_RLAST,
     input  wire logic [1:0]                   AXI_06_RRESP,
     input  wire logic                         AXI_06_RVALID,
     input  wire logic                         AXI_06_WREADY,
-    input  wire axi_id_t                      AXI_06_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_06_BID,
     input  wire logic [1:0]                   AXI_06_BRESP,
     input  wire logic                         AXI_06_BVALID,
     // Channel 7
@@ -270,13 +270,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_07_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_07_ARADDR,
     output wire logic [1:0]                   AXI_07_ARBURST,
-    output wire axi_id_t                      AXI_07_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_07_ARID,
     output wire logic [3:0]                   AXI_07_ARLEN,
     output wire logic [2:0]                   AXI_07_ARSIZE,
     output wire logic                         AXI_07_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_07_AWADDR,
     output wire logic [1:0]                   AXI_07_AWBURST,
-    output wire axi_id_t                      AXI_07_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_07_AWID,
     output wire logic [3:0]                   AXI_07_AWLEN,
     output wire logic [2:0]                   AXI_07_AWSIZE,
     output wire logic                         AXI_07_AWVALID,
@@ -291,12 +291,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_07_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_07_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_07_RDATA,
-    input  wire axi_id_t                      AXI_07_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_07_RID,
     input  wire logic                         AXI_07_RLAST,
     input  wire logic [1:0]                   AXI_07_RRESP,
     input  wire logic                         AXI_07_RVALID,
     input  wire logic                         AXI_07_WREADY,
-    input  wire axi_id_t                      AXI_07_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_07_BID,
     input  wire logic [1:0]                   AXI_07_BRESP,
     input  wire logic                         AXI_07_BVALID,
     // Channel 8
@@ -304,13 +304,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_08_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_08_ARADDR,
     output wire logic [1:0]                   AXI_08_ARBURST,
-    output wire axi_id_t                      AXI_08_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_08_ARID,
     output wire logic [3:0]                   AXI_08_ARLEN,
     output wire logic [2:0]                   AXI_08_ARSIZE,
     output wire logic                         AXI_08_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_08_AWADDR,
     output wire logic [1:0]                   AXI_08_AWBURST,
-    output wire axi_id_t                      AXI_08_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_08_AWID,
     output wire logic [3:0]                   AXI_08_AWLEN,
     output wire logic [2:0]                   AXI_08_AWSIZE,
     output wire logic                         AXI_08_AWVALID,
@@ -325,12 +325,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_08_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_08_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_08_RDATA,
-    input  wire axi_id_t                      AXI_08_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_08_RID,
     input  wire logic                         AXI_08_RLAST,
     input  wire logic [1:0]                   AXI_08_RRESP,
     input  wire logic                         AXI_08_RVALID,
     input  wire logic                         AXI_08_WREADY,
-    input  wire axi_id_t                      AXI_08_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_08_BID,
     input  wire logic [1:0]                   AXI_08_BRESP,
     input  wire logic                         AXI_08_BVALID,
     // Channel 9
@@ -338,13 +338,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_09_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_09_ARADDR,
     output wire logic [1:0]                   AXI_09_ARBURST,
-    output wire axi_id_t                      AXI_09_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_09_ARID,
     output wire logic [3:0]                   AXI_09_ARLEN,
     output wire logic [2:0]                   AXI_09_ARSIZE,
     output wire logic                         AXI_09_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_09_AWADDR,
     output wire logic [1:0]                   AXI_09_AWBURST,
-    output wire axi_id_t                      AXI_09_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_09_AWID,
     output wire logic [3:0]                   AXI_09_AWLEN,
     output wire logic [2:0]                   AXI_09_AWSIZE,
     output wire logic                         AXI_09_AWVALID,
@@ -359,12 +359,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_09_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_09_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_09_RDATA,
-    input  wire axi_id_t                      AXI_09_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_09_RID,
     input  wire logic                         AXI_09_RLAST,
     input  wire logic [1:0]                   AXI_09_RRESP,
     input  wire logic                         AXI_09_RVALID,
     input  wire logic                         AXI_09_WREADY,
-    input  wire axi_id_t                      AXI_09_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_09_BID,
     input  wire logic [1:0]                   AXI_09_BRESP,
     input  wire logic                         AXI_09_BVALID,
     // Channel 10
@@ -372,13 +372,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_10_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_10_ARADDR,
     output wire logic [1:0]                   AXI_10_ARBURST,
-    output wire axi_id_t                      AXI_10_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_10_ARID,
     output wire logic [3:0]                   AXI_10_ARLEN,
     output wire logic [2:0]                   AXI_10_ARSIZE,
     output wire logic                         AXI_10_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_10_AWADDR,
     output wire logic [1:0]                   AXI_10_AWBURST,
-    output wire axi_id_t                      AXI_10_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_10_AWID,
     output wire logic [3:0]                   AXI_10_AWLEN,
     output wire logic [2:0]                   AXI_10_AWSIZE,
     output wire logic                         AXI_10_AWVALID,
@@ -393,12 +393,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_10_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_10_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_10_RDATA,
-    input  wire axi_id_t                      AXI_10_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_10_RID,
     input  wire logic                         AXI_10_RLAST,
     input  wire logic [1:0]                   AXI_10_RRESP,
     input  wire logic                         AXI_10_RVALID,
     input  wire logic                         AXI_10_WREADY,
-    input  wire axi_id_t                      AXI_10_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_10_BID,
     input  wire logic [1:0]                   AXI_10_BRESP,
     input  wire logic                         AXI_10_BVALID,
     // Channel 11
@@ -406,13 +406,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_11_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_11_ARADDR,
     output wire logic [1:0]                   AXI_11_ARBURST,
-    output wire axi_id_t                      AXI_11_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_11_ARID,
     output wire logic [3:0]                   AXI_11_ARLEN,
     output wire logic [2:0]                   AXI_11_ARSIZE,
     output wire logic                         AXI_11_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_11_AWADDR,
     output wire logic [1:0]                   AXI_11_AWBURST,
-    output wire axi_id_t                      AXI_11_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_11_AWID,
     output wire logic [3:0]                   AXI_11_AWLEN,
     output wire logic [2:0]                   AXI_11_AWSIZE,
     output wire logic                         AXI_11_AWVALID,
@@ -427,12 +427,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_11_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_11_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_11_RDATA,
-    input  wire axi_id_t                      AXI_11_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_11_RID,
     input  wire logic                         AXI_11_RLAST,
     input  wire logic [1:0]                   AXI_11_RRESP,
     input  wire logic                         AXI_11_RVALID,
     input  wire logic                         AXI_11_WREADY,
-    input  wire axi_id_t                      AXI_11_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_11_BID,
     input  wire logic [1:0]                   AXI_11_BRESP,
     input  wire logic                         AXI_11_BVALID,
     // Channel 12
@@ -440,13 +440,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_12_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_12_ARADDR,
     output wire logic [1:0]                   AXI_12_ARBURST,
-    output wire axi_id_t                      AXI_12_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_12_ARID,
     output wire logic [3:0]                   AXI_12_ARLEN,
     output wire logic [2:0]                   AXI_12_ARSIZE,
     output wire logic                         AXI_12_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_12_AWADDR,
     output wire logic [1:0]                   AXI_12_AWBURST,
-    output wire axi_id_t                      AXI_12_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_12_AWID,
     output wire logic [3:0]                   AXI_12_AWLEN,
     output wire logic [2:0]                   AXI_12_AWSIZE,
     output wire logic                         AXI_12_AWVALID,
@@ -461,12 +461,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_12_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_12_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_12_RDATA,
-    input  wire axi_id_t                      AXI_12_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_12_RID,
     input  wire logic                         AXI_12_RLAST,
     input  wire logic [1:0]                   AXI_12_RRESP,
     input  wire logic                         AXI_12_RVALID,
     input  wire logic                         AXI_12_WREADY,
-    input  wire axi_id_t                      AXI_12_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_12_BID,
     input  wire logic [1:0]                   AXI_12_BRESP,
     input  wire logic                         AXI_12_BVALID,
     // Channel 13
@@ -474,13 +474,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_13_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_13_ARADDR,
     output wire logic [1:0]                   AXI_13_ARBURST,
-    output wire axi_id_t                      AXI_13_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_13_ARID,
     output wire logic [3:0]                   AXI_13_ARLEN,
     output wire logic [2:0]                   AXI_13_ARSIZE,
     output wire logic                         AXI_13_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_13_AWADDR,
     output wire logic [1:0]                   AXI_13_AWBURST,
-    output wire axi_id_t                      AXI_13_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_13_AWID,
     output wire logic [3:0]                   AXI_13_AWLEN,
     output wire logic [2:0]                   AXI_13_AWSIZE,
     output wire logic                         AXI_13_AWVALID,
@@ -495,12 +495,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_13_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_13_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_13_RDATA,
-    input  wire axi_id_t                      AXI_13_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_13_RID,
     input  wire logic                         AXI_13_RLAST,
     input  wire logic [1:0]                   AXI_13_RRESP,
     input  wire logic                         AXI_13_RVALID,
     input  wire logic                         AXI_13_WREADY,
-    input  wire axi_id_t                      AXI_13_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_13_BID,
     input  wire logic [1:0]                   AXI_13_BRESP,
     input  wire logic                         AXI_13_BVALID,
     // Channel 14
@@ -508,13 +508,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_14_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_14_ARADDR,
     output wire logic [1:0]                   AXI_14_ARBURST,
-    output wire axi_id_t                      AXI_14_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_14_ARID,
     output wire logic [3:0]                   AXI_14_ARLEN,
     output wire logic [2:0]                   AXI_14_ARSIZE,
     output wire logic                         AXI_14_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_14_AWADDR,
     output wire logic [1:0]                   AXI_14_AWBURST,
-    output wire axi_id_t                      AXI_14_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_14_AWID,
     output wire logic [3:0]                   AXI_14_AWLEN,
     output wire logic [2:0]                   AXI_14_AWSIZE,
     output wire logic                         AXI_14_AWVALID,
@@ -529,12 +529,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_14_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_14_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_14_RDATA,
-    input  wire axi_id_t                      AXI_14_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_14_RID,
     input  wire logic                         AXI_14_RLAST,
     input  wire logic [1:0]                   AXI_14_RRESP,
     input  wire logic                         AXI_14_RVALID,
     input  wire logic                         AXI_14_WREADY,
-    input  wire axi_id_t                      AXI_14_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_14_BID,
     input  wire logic [1:0]                   AXI_14_BRESP,
     input  wire logic                         AXI_14_BVALID,
     // Channel 15
@@ -542,13 +542,13 @@ module xilinx_hbm_stack_if
     output wire logic                         AXI_15_ARESET_N,
     output wire logic [ADDR_WID-1:0]          AXI_15_ARADDR,
     output wire logic [1:0]                   AXI_15_ARBURST,
-    output wire axi_id_t                      AXI_15_ARID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_15_ARID,
     output wire logic [3:0]                   AXI_15_ARLEN,
     output wire logic [2:0]                   AXI_15_ARSIZE,
     output wire logic                         AXI_15_ARVALID,
     output wire logic [ADDR_WID-1:0]          AXI_15_AWADDR,
     output wire logic [1:0]                   AXI_15_AWBURST,
-    output wire axi_id_t                      AXI_15_AWID,
+    output wire logic [AXI_ID_WID-1:0]        AXI_15_AWID,
     output wire logic [3:0]                   AXI_15_AWLEN,
     output wire logic [2:0]                   AXI_15_AWSIZE,
     output wire logic                         AXI_15_AWVALID,
@@ -563,12 +563,12 @@ module xilinx_hbm_stack_if
     input  wire logic                         AXI_15_AWREADY,
     input  wire logic [AXI_DATA_BYTE_WID-1:0] AXI_15_RDATA_PARITY,
     input  wire logic [AXI_DATA_WID-1:0]      AXI_15_RDATA,
-    input  wire axi_id_t                      AXI_15_RID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_15_RID,
     input  wire logic                         AXI_15_RLAST,
     input  wire logic [1:0]                   AXI_15_RRESP,
     input  wire logic                         AXI_15_RVALID,
     input  wire logic                         AXI_15_WREADY,
-    input  wire axi_id_t                      AXI_15_BID,
+    input  wire logic [AXI_ID_WID-1:0]        AXI_15_BID,
     input  wire logic [1:0]                   AXI_15_BRESP,
     input  wire logic                         AXI_15_BVALID,
     // APB interface
@@ -624,9 +624,10 @@ module xilinx_hbm_stack_if
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch0 (
         .axi3_if  ( axi_if[0] ),
+        .aclk     ( AXI_00_ACLK ),
         .aresetn  ( AXI_00_ARESET_N ),
         .awid     ( AXI_00_AWID ),
         .awaddr   ( AXI_00_AWADDR ),
@@ -675,16 +676,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_00_RREADY )
     );
 
-    assign AXI_00_ACLK = axi_if[0].aclk;
     assign AXI_00_WDATA_PARITY = '0;
   
     // Memory Channel 1
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch1 (
         .axi3_if  ( axi_if[1] ),
+        .aclk     ( AXI_01_ACLK ),
         .aresetn  ( AXI_01_ARESET_N ),
         .awid     ( AXI_01_AWID ),
         .awaddr   ( AXI_01_AWADDR ),
@@ -733,16 +734,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_01_RREADY )
     );
 
-    assign AXI_01_ACLK = axi_if[1].aclk;
     assign AXI_01_WDATA_PARITY = '0;
  
     // Memory Channel 2
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch2 (
         .axi3_if  ( axi_if[2] ),
+        .aclk     ( AXI_02_ACLK ),
         .aresetn  ( AXI_02_ARESET_N ),
         .awid     ( AXI_02_AWID ),
         .awaddr   ( AXI_02_AWADDR ),
@@ -791,16 +792,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_02_RREADY )
     );
 
-    assign AXI_02_ACLK = axi_if[2].aclk;
     assign AXI_02_WDATA_PARITY = '0;
  
     // Memory Channel 3
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch3 (
         .axi3_if  ( axi_if[3] ),
+        .aclk     ( AXI_03_ACLK ),
         .aresetn  ( AXI_03_ARESET_N ),
         .awid     ( AXI_03_AWID ),
         .awaddr   ( AXI_03_AWADDR ),
@@ -849,16 +850,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_03_RREADY )
     );
 
-    assign AXI_03_ACLK = axi_if[3].aclk;
     assign AXI_03_WDATA_PARITY = '0;
 
     // Memory Channel 4
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch4 (
         .axi3_if  ( axi_if[4] ),
+        .aclk     ( AXI_04_ACLK ),
         .aresetn  ( AXI_04_ARESET_N ),
         .awid     ( AXI_04_AWID ),
         .awaddr   ( AXI_04_AWADDR ),
@@ -907,16 +908,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_04_RREADY )
     );
 
-    assign AXI_04_ACLK = axi_if[4].aclk;
     assign AXI_04_WDATA_PARITY = '0;
  
     // Memory Channel 5
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch5 (
         .axi3_if  ( axi_if[5] ),
+        .aclk     ( AXI_05_ACLK ),
         .aresetn  ( AXI_05_ARESET_N ),
         .awid     ( AXI_05_AWID ),
         .awaddr   ( AXI_05_AWADDR ),
@@ -965,16 +966,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_05_RREADY )
     );
 
-    assign AXI_05_ACLK = axi_if[5].aclk;
     assign AXI_05_WDATA_PARITY = '0;
 
     // Memory Channel 6
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch6 (
         .axi3_if  ( axi_if[6] ),
+        .aclk     ( AXI_06_ACLK ),
         .aresetn  ( AXI_06_ARESET_N ),
         .awid     ( AXI_06_AWID ),
         .awaddr   ( AXI_06_AWADDR ),
@@ -1023,16 +1024,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_06_RREADY )
     );
 
-    assign AXI_06_ACLK = axi_if[6].aclk;
     assign AXI_06_WDATA_PARITY = '0;
  
     // Memory Channel 7
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch7 (
         .axi3_if  ( axi_if[7] ),
+        .aclk     ( AXI_07_ACLK ),
         .aresetn  ( AXI_07_ARESET_N ),
         .awid     ( AXI_07_AWID ),
         .awaddr   ( AXI_07_AWADDR ),
@@ -1081,16 +1082,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_07_RREADY )
     );
 
-    assign AXI_07_ACLK = axi_if[7].aclk;
     assign AXI_07_WDATA_PARITY = '0;
  
     // Memory Channel 8
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch8 (
         .axi3_if  ( axi_if[8] ),
+        .aclk     ( AXI_08_ACLK ),
         .aresetn  ( AXI_08_ARESET_N ),
         .awid     ( AXI_08_AWID ),
         .awaddr   ( AXI_08_AWADDR ),
@@ -1139,16 +1140,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_08_RREADY )
     );
 
-    assign AXI_08_ACLK = axi_if[8].aclk;
     assign AXI_08_WDATA_PARITY = '0;
  
     // Memory Channel 9
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch9 (
         .axi3_if  ( axi_if[9] ),
+        .aclk     ( AXI_09_ACLK ),
         .aresetn  ( AXI_09_ARESET_N ),
         .awid     ( AXI_09_AWID ),
         .awaddr   ( AXI_09_AWADDR ),
@@ -1197,16 +1198,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_09_RREADY )
     );
 
-    assign AXI_09_ACLK = axi_if[9].aclk;
     assign AXI_09_WDATA_PARITY = '0;
 
     // Memory Channel 10
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch10 (
         .axi3_if  ( axi_if[10] ),
+        .aclk     ( AXI_10_ACLK ),
         .aresetn  ( AXI_10_ARESET_N ),
         .awid     ( AXI_10_AWID ),
         .awaddr   ( AXI_10_AWADDR ),
@@ -1255,16 +1256,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_10_RREADY )
     );
 
-    assign AXI_10_ACLK = axi_if[10].aclk;
     assign AXI_10_WDATA_PARITY = '0;
 
     // Memory Channel 11
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch11 (
         .axi3_if  ( axi_if[11] ),
+        .aclk     ( AXI_11_ACLK ),
         .aresetn  ( AXI_11_ARESET_N ),
         .awid     ( AXI_11_AWID ),
         .awaddr   ( AXI_11_AWADDR ),
@@ -1313,16 +1314,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_11_RREADY )
     );
 
-    assign AXI_11_ACLK = axi_if[11].aclk;
     assign AXI_11_WDATA_PARITY = '0;
 
     // Memory Channel 12
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch12 (
         .axi3_if  ( axi_if[12] ),
+        .aclk     ( AXI_12_ACLK ),
         .aresetn  ( AXI_12_ARESET_N ),
         .awid     ( AXI_12_AWID ),
         .awaddr   ( AXI_12_AWADDR ),
@@ -1371,16 +1372,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_12_RREADY )
     );
 
-    assign AXI_12_ACLK = axi_if[12].aclk;
     assign AXI_12_WDATA_PARITY = '0;
 
     // Memory Channel 13
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch13 (
         .axi3_if  ( axi_if[13] ),
+        .aclk     ( AXI_13_ACLK ),
         .aresetn  ( AXI_13_ARESET_N ),
         .awid     ( AXI_13_AWID ),
         .awaddr   ( AXI_13_AWADDR ),
@@ -1429,16 +1430,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_13_RREADY )
     );
 
-    assign AXI_13_ACLK = axi_if[13].aclk;
     assign AXI_13_WDATA_PARITY = '0;
 
     // Memory Channel 14
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch14 (
         .axi3_if  ( axi_if[14] ),
+        .aclk     ( AXI_14_ACLK ),
         .aresetn  ( AXI_14_ARESET_N ),
         .awid     ( AXI_14_AWID ),
         .awaddr   ( AXI_14_AWADDR ),
@@ -1487,16 +1488,16 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_14_RREADY )
     );
 
-    assign AXI_14_ACLK = axi_if[14].aclk;
     assign AXI_14_WDATA_PARITY = '0;
 
     // Memory Channel 15
     axi3_intf_to_signals #(
         .DATA_BYTE_WID ( 32 ),
         .ADDR_WID      ( ADDR_WID ),
-        .ID_T          ( axi_id_t )
+        .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch15 (
         .axi3_if  ( axi_if[15] ),
+        .aclk     ( AXI_15_ACLK ),
         .aresetn  ( AXI_15_ARESET_N ),
         .awid     ( AXI_15_AWID ),
         .awaddr   ( AXI_15_AWADDR ),
@@ -1545,7 +1546,6 @@ module xilinx_hbm_stack_if
         .rready   ( AXI_15_RREADY )
     );
 
-    assign AXI_15_ACLK = axi_if[15].aclk;
     assign AXI_15_WDATA_PARITY = '0;
 
 endmodule : xilinx_hbm_stack_if

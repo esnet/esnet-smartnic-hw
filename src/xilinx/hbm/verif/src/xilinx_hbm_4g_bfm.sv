@@ -546,16 +546,15 @@ module xilinx_hbm_4g_bfm #(
 );
 
     // Interfaces
-    axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33)) axi_if [16] (.aclk(1'bz));
+    axi3_intf #(.DATA_BYTE_WID(32), .ADDR_WID(33), .ID_WID(6)) axi_if [16] (.aclk(1'bz), .aresetn(1'bz));
 
     // Macro to instantiate AXI3 signal -> interface converter
 `define axi3_intf_from_signals_inst(AXI_IF_NUM,AXI_IF_NAME)\
     axi3_intf_from_signals #(\
         .DATA_BYTE_WID (32),\
         .ADDR_WID (33),\
-        .ID_T (logic[5:0])\
+        .ID_WID   (6)\
     ) i_axi3_intf_from_signals_``AXI_IF_NAME`` (\
-        .aresetn  ( AXI_``AXI_IF_NAME``_ARESET_N ),\
         .awid     ( AXI_``AXI_IF_NAME``_AWID ),\
         .awaddr   ( AXI_``AXI_IF_NAME``_AWADDR ),\
         .awlen    ( AXI_``AXI_IF_NAME``_AWLEN ),\
@@ -604,6 +603,7 @@ module xilinx_hbm_4g_bfm #(
         .axi3_if  ( axi_if[``AXI_IF_NUM``] )\
     );\
     assign axi_if[``AXI_IF_NUM``].aclk = AXI_``AXI_IF_NAME``_ACLK;\
+    assign axi_if[``AXI_IF_NUM``].aresetn = AXI_``AXI_IF_NAME``_ARESET_N;\
 
     // Convert from signals (AXI_NN_*) to interface (axi_if[N])
     `axi3_intf_from_signals_inst(0,00);

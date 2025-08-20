@@ -99,7 +99,7 @@ module xilinx_hbm_stack_ctrl
     assign dram_status__apb_clk.cattrip = dram_status_cattrip;
 
     sync_bus_sampled #(
-        .DATA_T   ( dram_status_t )
+        .DATA_WID ( $bits(dram_status_t) )
     ) i_sync_bus_sampled__dram_status (
         .clk_in   ( apb_if.pclk ),
         .rst_in   ( 1'b0 ),
@@ -141,7 +141,7 @@ module xilinx_hbm_stack_ctrl
     localparam int MEM_ADDR_WID = AXI_ADDR_WID - $clog2(AXI_DATA_BYTE_WID); // Memory interface uses row addressing
 
     // (Local) Interfaces
-    mem_intf #(.ADDR_T(logic[MEM_ADDR_WID-1:0]), .DATA_T(logic[AXI_DATA_WID-1:0])) __mem_if (.clk(clk));
+    mem_intf #(.ADDR_WID(MEM_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_if (.clk(clk));
     mem_wr_intf #(.ADDR_WID(MEM_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_wr_if (.clk(clk));
     mem_rd_intf #(.ADDR_WID(MEM_ADDR_WID), .DATA_WID(AXI_DATA_WID)) __mem_rd_if (.clk(clk));
 
