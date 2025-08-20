@@ -57,8 +57,8 @@ module {{ props.name }}_wrapper
     );
     {% else %}
     axi4l_intf_peripheral_term   axil_term     ( .axi4l_if(axil_to_extern) );
-    axi4s_intf_rx_sink   axis_to_extern_sink   ( .axi4s_if(axis_to_extern) );
-    axi4s_intf_tx_term   axis_from_extern_term ( .aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axis_from_extern) );
+    axi4s_intf_rx_sink   axis_to_extern_sink   ( .from_tx(axis_to_extern) );
+    axi4s_intf_tx_term   axis_from_extern_term ( .to_rx(axis_from_extern) );
     {% endif %}
 
     // --- vitisnetp4 instance ---
@@ -120,9 +120,6 @@ module {{ props.name }}_wrapper
         .m_axis_tlast            (axis_tx.tlast),
         .m_axis_tready           (axis_tx.tready)
     );
-
-    assign axis_tx.aclk = core_clk;
-    assign axis_tx.aresetn = core_rstn;
 
 endmodule : {{ props.name }}_wrapper
 
