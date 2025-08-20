@@ -29,12 +29,12 @@ module smartnic_app_igr_p4
     // Pass datapath AXI-S interface directly from input to output
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
-            axi4s_full_pipe axi4s_full_pipe_inst (.axi4s_if_from_tx(axis_in[g_port]), .axi4s_if_to_rx(axis_out[g_port]));
+            axi4s_full_pipe axi4s_full_pipe_inst (.from_tx(axis_in[g_port]), .to_rx(axis_out[g_port]));
         end : g__port
     endgenerate
 
     // Terminate extern AXI-S interfaces
-    axi4s_intf_rx_sink axi4s_intf_rx_sink_inst (.axi4s_if (axis_to_extern));
-    axi4s_intf_tx_term axi4s_intf_tx_term_inst (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if (axis_from_extern));
+    axi4s_intf_rx_sink axi4s_intf_rx_sink_inst (.from_tx (axis_to_extern));
+    axi4s_intf_tx_term axi4s_intf_tx_term_inst (.to_rx (axis_from_extern));
 
 endmodule : smartnic_app_igr_p4

@@ -16,9 +16,9 @@ module smartnic_app_egr
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         // Connect AXI-S interfaces as passthrough
-        axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(axi4s_in[i]), .axi4s_if_to_rx(axi4s_out[i]));
+        axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(axi4s_in[i]), .to_rx(axi4s_out[i]));
         // Terminate H2C interface
-        axi4s_intf_rx_sink axi4s_intf_rx_sink_0 (.axi4s_if(axi4s_h2c[i]));
+        axi4s_intf_rx_sink axi4s_intf_rx_sink_0 (.from_tx(axi4s_h2c[i]));
     end endgenerate
 
 endmodule : smartnic_app_egr

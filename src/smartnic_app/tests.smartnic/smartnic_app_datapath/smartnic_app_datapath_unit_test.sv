@@ -1,6 +1,5 @@
 `include "svunit_defines.svh"
 
-import tb_pkg::*;
 import p4_proc_verif_pkg::*;
 import smartnic_app_verif_pkg::*;
 
@@ -30,7 +29,7 @@ module smartnic_app_datapath_unit_test
     // via the testbench environment class (smartnic_env).
     // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::smartnic_env env;
+    smartnic_verif_pkg::smartnic_env env;
 
     // VitisNetP4 table agent
     vitisnetp4_igr_verif_pkg::vitisnetp4_igr_agent vitisnetp4_agent;
@@ -133,7 +132,7 @@ module smartnic_app_datapath_unit_test
 
        `INFO("Writing expected pcap data to scoreboard...");
         filename = {"../../../../vitisnetp4/p4/sim/", testdir, "/packets_out.pcap"};
-        env.pcap_to_scoreboard (.filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+        env.pcap_to_scoreboard (.filename(filename), .tuser(tuser),
                                 .scoreboard(env.scoreboard[out_port]));
 
        `INFO("Starting simulation...");
@@ -151,8 +150,6 @@ module smartnic_app_datapath_unit_test
            // tests propagation of rss_metadata/qid to smartnic egress ports.
            string testdir  = "../../../../vitisnetp4/p4/sim/test-default/";
            string filename = {testdir, "cli_commands.txt"};
-
-           tuser='x;
 
            // ingress queue assignments. qid 0 maps to PF0_VF2 and PF1_VF2.
            env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_IGR_Q_CONFIG_0[3], {12'h1, 12'h0});
@@ -174,11 +171,11 @@ module smartnic_app_datapath_unit_test
            filename = {testdir, "packets_out.pcap"};
            tuser.rss_enable  = 1'b1;
            tuser.rss_entropy = PF0_VF2 + 1;
-           env.pcap_to_scoreboard ( .filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+           env.pcap_to_scoreboard ( .filename(filename), .tuser(tuser),
                                     .scoreboard(env.scoreboard[PF0]) );
 
            tuser.rss_entropy = PF1_VF2 + 16;
-           env.pcap_to_scoreboard ( .filename(filename), .tid('x), .tdest('x), .tuser(tuser),
+           env.pcap_to_scoreboard ( .filename(filename), .tuser(tuser),
                                     .scoreboard(env.scoreboard[PF1]) );
 
            // program drivers with traffic data for PF0 and PF1.  start simulation.

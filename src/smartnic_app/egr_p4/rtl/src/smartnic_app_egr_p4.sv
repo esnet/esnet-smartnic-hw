@@ -19,25 +19,27 @@ module smartnic_app_egr_p4
     axi4s_intf.rx         axis_to_extern,
     axi4s_intf.tx         axis_from_extern
 );
-
-    // Imports
-    import p4_proc_pkg::*;
-
     // Parameters
-    localparam int  AXIS_DATA_BYTE_WID = 64;
+    localparam int DATA_BYTE_WID = axis_in[0].DATA_BYTE_WID;
+
+    // Parameter checking
+    axi4s_intf_parameter_check param_check_inst (.from_tx(axis_in[0]), .to_rx(axis_out[0]));
+    initial begin
+        std_pkg::param_check(axis_in[0].TID_WID, PORT_WID, "axis_in.TID_WID");
+        std_pkg::param_check(axis_in[0].TDEST_WID, PORT_WID, "axis_in.TDEST_WID");
+        std_pkg::param_check(axis_in[0].TUSER_WID, TUSER_SMARTNIC_META_WID, "axis_in.TDEST_WID");
+    end
 
     // Signals
-    user_metadata_t user_metadata_in;
-    logic           user_metadata_in_valid;
+    p4_proc_pkg::user_metadata_t user_metadata_in;
+    logic                        user_metadata_in_valid;
 
-    user_metadata_t user_metadata_out;
-    logic           user_metadata_out_valid;
+    p4_proc_pkg::user_metadata_t user_metadata_out;
+    logic                        user_metadata_out_valid;
 
     // Interfaces
-    axi4s_intf #(.TUSER_T(p4_proc_pkg::tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_vitisnetp4 ();
-    axi4s_intf #(.TUSER_T(p4_proc_pkg::tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_vitisnetp4 ();
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_to_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_from_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
 
     // P4 processor complex
     p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_inst (
@@ -72,5 +74,5 @@ module smartnic_app_egr_p4
         .axis_to_extern          ( axis_to_extern ),
         .axis_from_extern        ( axis_from_extern )
     );
-    
+
 endmodule : smartnic_app_egr_p4
