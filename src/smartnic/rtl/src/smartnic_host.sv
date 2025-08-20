@@ -26,27 +26,33 @@ module smartnic_host
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t))  axis_host_to_core_p [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t))  axis_q_range_fail   [NUM_CMAC] ();
+    logic aclk;
+    logic aresetn;
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_tid               [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_tid_p             [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core_mux_in    [NUM_CMAC][2] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core_mux_out   [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_host_to_core_mux_out_p [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_pkt_playback                      ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) axis_pkt_playback_demux     [NUM_CMAC] ();
+    assign aclk = core_clk;
+    assign aresetn = core_rstn;
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t),
-                  .TDEST_T(port_t),   .TUSER_T(tuser_smartnic_meta_t))  axis_hash2qid               [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t),
-                  .TDEST_T(port_t),   .TUSER_T(tuser_smartnic_meta_t))  axis_core_to_host_demux_in  [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t),
-                  .TDEST_T(port_t),   .TUSER_T(tuser_smartnic_meta_t))  axis_core_to_host_demux_out [NUM_CMAC][2] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t),
-                  .TDEST_T(port_t),   .TUSER_T(tuser_smartnic_meta_t))  axis_pkt_capture_mux        [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t),
-                  .TDEST_T(port_t),   .TUSER_T(tuser_smartnic_meta_t))  axis_pkt_capture ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_host_to_core_p [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_q_range_fail   [NUM_CMAC] (.*);
+
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_host_tid               [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_host_tid_p             [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_host_to_core_mux_in    [NUM_CMAC][2] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_host_to_core_mux_out   [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_host_to_core_mux_out_p [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_pkt_playback                      (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) axis_pkt_playback_demux     [NUM_CMAC] (.*);
+
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
+                  .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_hash2qid               [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
+                  .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_core_to_host_demux_in  [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
+                  .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_core_to_host_demux_out [NUM_CMAC][2] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
+                  .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_pkt_capture_mux        [NUM_CMAC] (.*);
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
+                  .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_pkt_capture (.*);
 
 
     //------------------------ tid assignment logic --------------
@@ -67,18 +73,17 @@ module smartnic_host
 
     logic  host_q_in_range [NUM_CMAC];
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_tid
-        axi4s_intf_pipe axi4s_host_to_core_pipe (.axi4s_if_from_tx(axis_host_to_core[i]), .axi4s_if_to_rx(axis_host_to_core_p[i]));
-
-        assign axis_host_tid[i].tid.raw[0] = i;
-        assign axis_host_tid[i].tid.encoded.typ = (host_if_sel[i][0] ? PF  :
+        axi4s_intf_pipe axi4s_host_to_core_pipe (.from_tx(axis_host_to_core[i]), .to_rx(axis_host_to_core_p[i]));
+        port_t axis_host_tid_tid;
+        assign axis_host_tid_tid.encoded.num = (i == 1) ? P1 : P0;
+        assign axis_host_tid_tid.encoded.typ = (host_if_sel[i][0] ? PF  :
                                                   (host_if_sel[i][1] ? VF0 :
                                                   (host_if_sel[i][2] ? VF1 : VF2)));
+        assign axis_host_tid[i].tid = axis_host_tid_tid;
 
         assign host_q_in_range[i] = host_if_sel[i][0] || host_if_sel[i][1] || host_if_sel[i][2] || host_if_sel[i][3];
 
         // axis_q_range_fail assignments
-        assign axis_q_range_fail[i].aclk    = axis_host_to_core_p[i].aclk;
-        assign axis_q_range_fail[i].aresetn = axis_host_to_core_p[i].aresetn;
         assign axis_q_range_fail[i].tready  = axis_host_to_core_p[i].tready;
         assign axis_q_range_fail[i].tvalid  = axis_host_to_core_p[i].tvalid && !host_q_in_range[i];
         assign axis_q_range_fail[i].tdata   = axis_host_to_core_p[i].tdata;
@@ -93,8 +98,6 @@ module smartnic_host
         // host port tid assignments
         assign axis_host_to_core_p[i].tready = axis_host_tid[i].tready;
 
-        assign axis_host_tid[i].aclk    = axis_host_to_core_p[i].aclk;
-        assign axis_host_tid[i].aresetn = axis_host_to_core_p[i].aresetn;
         assign axis_host_tid[i].tvalid  = axis_host_to_core_p[i].tvalid && host_q_in_range[i];
         assign axis_host_tid[i].tdata   = axis_host_to_core_p[i].tdata;
         assign axis_host_tid[i].tkeep   = axis_host_to_core_p[i].tkeep;
@@ -103,7 +106,7 @@ module smartnic_host
         assign axis_host_tid[i].tuser   = axis_host_to_core_p[i].tuser;
         //     axis_host_tid[i].tid assigned above.
 
-        axi4s_intf_pipe axi4s_host_tid_pipe (.axi4s_if_from_tx(axis_host_tid[i]), .axi4s_if_to_rx(axis_host_tid_p[i]));
+        axi4s_intf_pipe axi4s_host_tid_pipe (.from_tx(axis_host_tid[i]), .to_rx(axis_host_tid_p[i]));
 
         //ila_axi4s ila_host_tid (
         //   .clk    (axis_host_tid_p[i].aclk),
@@ -121,19 +124,23 @@ module smartnic_host
     //------------------------ host mux/demux logic --------------
     logic host_to_core_demux_sel [NUM_CMAC];
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
+        port_t axis_host_to_core_mux_out_tid;
+        port_t axis_pkt_playback_tid;
+
         // host_to_core mux logic.
         axi4s_intf_connector host_to_core_mux_in_pipe_0
-                             (.axi4s_from_tx(axis_host_tid_p[i]),         .axi4s_to_rx(axis_host_to_core_mux_in[i][0]));
+                             (.from_tx(axis_host_tid_p[i]),         .to_rx(axis_host_to_core_mux_in[i][0]));
         axi4s_intf_connector host_to_core_mux_in_pipe_1
-                             (.axi4s_from_tx(axis_pkt_playback_demux[i]), .axi4s_to_rx(axis_host_to_core_mux_in[i][1]));
+                             (.from_tx(axis_pkt_playback_demux[i]), .to_rx(axis_host_to_core_mux_in[i][1]));
 
         axi4s_mux #(.N(2)) host_to_core_mux_inst (
             .axi4s_in   ( axis_host_to_core_mux_in[i] ),
             .axi4s_out  ( axis_host_to_core_mux_out[i] )
         );
+        assign axis_host_to_core_mux_out_tid = axis_host_to_core_mux_out[i].tid;
 
         axi4s_intf_pipe axi4s_host_to_core_mux_out_pipe
-                        (.axi4s_if_from_tx(axis_host_to_core_mux_out[i]), .axi4s_if_to_rx(axis_host_to_core_mux_out_p[i]));
+                        (.from_tx(axis_host_to_core_mux_out[i]), .to_rx(axis_host_to_core_mux_out_p[i]));
 
 
         // host_to_core demux logic.
@@ -141,14 +148,14 @@ module smartnic_host
             if (!core_rstn)
                 host_to_core_demux_sel[i] <= 0;
             else if (axis_host_to_core_mux_out[i].tready && axis_host_to_core_mux_out[i].tvalid && axis_host_to_core_mux_out[i].sop)
-                host_to_core_demux_sel[i] <= axis_host_to_core_mux_out[i].tid.encoded.typ == PF  ||
-                                             axis_host_to_core_mux_out[i].tid.encoded.typ == VF0 ||
-                                             axis_host_to_core_mux_out[i].tid.encoded.typ == VF1;
+                host_to_core_demux_sel[i] <= axis_host_to_core_mux_out_tid.encoded.typ == PF  ||
+                                             axis_host_to_core_mux_out_tid.encoded.typ == VF0 ||
+                                             axis_host_to_core_mux_out_tid.encoded.typ == VF1;
 
         axi4s_intf_demux #(.N(2)) host_to_core_demux_inst (
-           .axi4s_in   ( axis_host_to_core_mux_out_p[i] ),
-           .axi4s_out  ( axis_host_to_core_demux[i] ),
-           .sel        ( host_to_core_demux_sel[i] )
+           .from_tx ( axis_host_to_core_mux_out_p[i] ),
+           .to_rx   ( axis_host_to_core_demux[i] ),
+           .sel     ( host_to_core_demux_sel[i] )
         );
 
 
@@ -158,9 +165,7 @@ module smartnic_host
             .axi4s_out  ( axis_hash2qid[i] )
         );
 
-        smartnic_hash2qid #(
-            .DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)
-        ) smartnic_hash2qid (
+        smartnic_hash2qid smartnic_hash2qid_inst (
             .core_clk       (core_clk),
             .core_rstn      (core_rstn),
             .axi4s_in       (axis_hash2qid[i]),
@@ -171,15 +176,15 @@ module smartnic_host
 
         // core_to_host demux logic.
         axi4s_intf_demux #(.N(2)) core_to_host_demux_inst (
-           .axi4s_in   ( axis_core_to_host_demux_in[i] ),
-           .axi4s_out  ( axis_core_to_host_demux_out[i] ),
-           .sel        ( smartnic_regs.switch_config.pkt_capture_enable )
+           .from_tx ( axis_core_to_host_demux_in[i] ),
+           .to_rx   ( axis_core_to_host_demux_out[i] ),
+           .sel     ( smartnic_regs.switch_config.pkt_capture_enable )
         );
 
         axi4s_intf_connector core_to_host_demux_pipe_0
-                             (.axi4s_from_tx(axis_core_to_host_demux_out[i][0]), .axi4s_to_rx(axis_core_to_host[i]));
+                             (.from_tx(axis_core_to_host_demux_out[i][0]), .to_rx(axis_core_to_host[i]));
         axi4s_intf_connector core_to_host_demux_pipe_1
-                             (.axi4s_from_tx(axis_core_to_host_demux_out[i][1]), .axi4s_to_rx(axis_pkt_capture_mux[i]));
+                             (.from_tx(axis_core_to_host_demux_out[i][1]), .to_rx(axis_pkt_capture_mux[i]));
 
     end : g__host_mux_core
     endgenerate
@@ -187,18 +192,19 @@ module smartnic_host
 
 
     //------------------------ packet playback/capture logic --------------
-    axi4s_packet_playback #(.NETWORK_BYTE_ORDER(0)) axi4s_packet_playback_inst (
+    axi4s_packet_playback axi4s_packet_playback_inst (
        .clk     ( core_clk ),
        .srst    (~core_rstn ),
        .en      ( ),
        .axil_if ( axil_to_pkt_playback ),
        .axis_if ( axis_pkt_playback )
     );
+    assign axis_pkt_playback_tid = axis_pkt_playback.tid;
 
     axi4s_intf_demux #(.N(NUM_CMAC)) pkt_playback_demux_inst (
-       .axi4s_in   ( axis_pkt_playback ),
-       .axi4s_out  ( axis_pkt_playback_demux ),
-       .sel        ( axis_pkt_playback.tid[0] )
+       .from_tx ( axis_pkt_playback ),
+       .to_rx   ( axis_pkt_playback_demux ),
+       .sel     ( get_port_idx(axis_pkt_playback_tid) )
     );
 
 
@@ -207,7 +213,7 @@ module smartnic_host
         .axi4s_out  ( axis_pkt_capture )
     );
 
-    axi4s_packet_capture #(.NETWORK_BYTE_ORDER(0)) axi4s_packet_capture_inst (
+    axi4s_packet_capture axi4s_packet_capture_inst (
        .clk     ( core_clk ),
        .srst    (~core_rstn ),
        .en      ( ),

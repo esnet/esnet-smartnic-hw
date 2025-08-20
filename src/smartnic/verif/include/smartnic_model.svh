@@ -15,8 +15,8 @@ class smartnic_model
         port_t  tdest_out;
         tuser_smartnic_meta_t  tuser_out;
 
-        tid_out   = 'x; // egr tid is disconnected (not used).
-        tdest_out = 'x; // egr tdest is disconnected (not used).
+        tid_out   = '0; // egr tid is disconnected (not used).
+        tdest_out = '0; // egr tdest is disconnected (not used).
 
         if (dest_port.encoded.typ == PHY) begin
             tuser_out = 1'b0; // m_axis_adpt_rx_322mhz_tuser_err=0 for egr CMAC ifs.

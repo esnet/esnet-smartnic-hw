@@ -121,7 +121,7 @@ task one_packet(input int idx=0, len=64, input port_t tid=0, tdest=tid, input bi
     if (!std::randomize(data) with {data.size() == len;}) $fatal("Failed to randomize packet data.");
 
     // Determine input port from tid
-    inport.encoded.num = tid.encoded.num;
+    inport = tid;
     case (tid.encoded.typ)
         PHY:     inport.encoded.typ = PHY;
         default: inport.encoded.typ = PF;
@@ -147,8 +147,8 @@ endtask
 
 
 task automatic packet_stream(input int pkts=10, mode=0, output int bytes, input port_t tid=0, tdest=tid, input bit tuser=0);
+    int __bytes = 0;
     int len = 63;
-    bytes=0;
 
     for (int i = 0; i < pkts; i++) begin
         if      (mode==0) len = $urandom_range(64, 1518);
@@ -156,8 +156,9 @@ task automatic packet_stream(input int pkts=10, mode=0, output int bytes, input 
         else              len = mode;
 
         one_packet(.idx(i), .len(len), .tid(tid), .tdest(tdest), .tuser(tuser));
-        bytes = bytes + len;
+        __bytes = __bytes + len;
     end
+    bytes = __bytes;
 endtask
 
 

@@ -7,16 +7,14 @@ module tb;
     //===================================
     `include "../include/DUT.svh"
 
-    axi4s_intf #(.DATA_BYTE_WID(64), .TID_T(adpt_tx_tid_t), .TDEST_T(port_t), .TUSER_T(bit))  axis_in_if  [4] ();
-    axi4s_intf #(.DATA_BYTE_WID(64),
-                 .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t))           axis_out_if [4] ();
+    axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID), .TUSER_WID(1))  axis_in_if  [4] (.aclk(axis_clk), .aresetn(axis_aresetn));
+    axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID),
+                 .TUSER_WID(TUSER_SMARTNIC_META_WID))                                                 axis_out_if [4] (.aclk(axis_clk), .aresetn(axis_aresetn));
 
     generate for (genvar i = 0; i < 2; i += 1) begin
         port_t axis_in_if_tdest_cmac_igr;
         port_t axis_in_if_tdest_h2c;
 
-        assign axis_cmac_igr[i].aclk = axis_in_if[i].aclk;
-        assign axis_cmac_igr[i].aresetn = axis_in_if[i].aresetn;
         assign axis_cmac_igr[i].tvalid = axis_in_if[i].tvalid;
         assign axis_cmac_igr[i].tlast = axis_in_if[i].tlast;
         assign axis_cmac_igr[i].tdata = axis_in_if[i].tdata;
@@ -27,10 +25,18 @@ module tb;
         assign axis_cmac_igr[i].tuser = axis_in_if[i].tuser;
         assign axis_in_if[i].tready = axis_cmac_igr[i].tready;
 
-        axi4s_intf_connector cmac_egr_connector (.axi4s_from_tx(axis_cmac_egr[i]), .axi4s_to_rx(axis_out_if[i]));
+        axi4s_intf_set_meta #(
+            .TID_WID   (PORT_WID),
+            .TDEST_WID (PORT_WID),
+            .TUSER_WID (TUSER_SMARTNIC_META_WID)
+        ) cmac_egr_connector (
+            .from_tx(axis_cmac_egr[i]),
+            .to_rx  (axis_out_if[i]),
+            .tid ('0),
+            .tdest ('0),
+            .tuser  ('0)
+        );
 
-        assign axis_h2c[i].aclk = axis_in_if[i+2].aclk;
-        assign axis_h2c[i].aresetn = axis_in_if[i+2].aresetn;
         assign axis_h2c[i].tvalid = axis_in_if[i+2].tvalid;
         assign axis_h2c[i].tlast = axis_in_if[i+2].tlast;
         assign axis_h2c[i].tdata = axis_in_if[i+2].tdata;
@@ -41,7 +47,17 @@ module tb;
         assign axis_h2c[i].tuser = axis_in_if[i+2].tuser;
         assign axis_in_if[i+2].tready = axis_h2c[i].tready;
 
-        axi4s_intf_connector      c2h_connector (.axi4s_from_tx(axis_c2h[i]),      .axi4s_to_rx(axis_out_if[i+2]));
+        axi4s_intf_set_meta #(
+            .TID_WID   (PORT_WID),
+            .TDEST_WID (PORT_WID),
+            .TUSER_WID (TUSER_SMARTNIC_META_WID)
+        ) c2h_connector (
+            .from_tx(axis_c2h[i]),
+            .to_rx(axis_out_if[i+2]),
+            .tid ('0),
+            .tdest ('0),
+            .tuser (axis_c2h[i].tuser)
+        );
     end endgenerate
 
     //===================================
@@ -51,21 +67,15 @@ module tb;
     // Clocks
     assign axil_if.aclk = axil_aclk;
 
-    logic axis_clk;
-    generate for (genvar i = 0; i < 4; i += 1) assign axis_in_if[i].aclk    = axis_clk; endgenerate
-    generate for (genvar i = 0; i < 2; i += 1) assign cmac_clk[i]           = axis_clk; endgenerate
-    generate for (genvar i = 0; i < 2; i += 1) assign axis_cmac_egr[i].aclk = axis_clk; endgenerate
-    generate for (genvar i = 0; i < 2; i += 1) assign axis_c2h[i].aclk      = axis_clk; endgenerate
+    generate for (genvar i = 0; i < 2; i += 1) assign cmac_clk[i] = axis_clk; endgenerate
 
     // Resets
     std_reset_intf reset_if (.clk(axis_clk));
     assign mod_rstn = ~reset_if.reset;
     assign reset_if.ready = mod_rst_done;
 
-    generate for (genvar i = 0; i < 4; i += 1) assign axis_in_if[i].aresetn  = ~reset_if.reset; endgenerate
-    generate for (genvar i = 0; i < 4; i += 1) assign axis_out_if[i].aresetn = ~reset_if.reset; endgenerate
-
     assign axil_if.aresetn = ~reset_if.reset;
+    assign axis_aresetn = ~reset_if.reset;
 
 
     // output monitors

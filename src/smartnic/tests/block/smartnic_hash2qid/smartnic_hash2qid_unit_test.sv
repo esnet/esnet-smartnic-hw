@@ -19,24 +19,26 @@ module smartnic_hash2qid_unit_test;
     localparam type TDEST_T = port_t;
     localparam type TUSER_T = tuser_smartnic_meta_t;
 
+    localparam int TID_WID = $bits(TID_T);
+    localparam int TDEST_WID = $bits(TDEST_T);
+    localparam int TUSER_WID = $bits(TUSER_T);
+
     typedef axi4s_transaction#(TID_T,TDEST_T,TUSER_T) AXI4S_TRANSACTION_T;
 
     //===================================
     // DUT
     //===================================
-    axi4s_intf #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_in_if ();
-    axi4s_intf #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t), .TUSER_T(tuser_smartnic_meta_t)) axis_out_if ();
+    logic core_clk;
+    logic core_rstn;
+
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_in_if (.aclk (core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_out_if (.aclk (core_clk), .aresetn (core_rstn));
 
     axi4l_intf axil_if ();
 
-    smartnic_hash2qid #(
-        .DATA_BYTE_WID (DATA_BYTE_WID),
-        .TID_T         (TID_T),
-        .TDEST_T       (TDEST_T),
-        .TUSER_T       (TUSER_T)
-    ) DUT (
-        .core_clk      (axis_in_if.aclk),
-        .core_rstn     (axis_in_if.aresetn),
+    smartnic_hash2qid DUT (
+        .core_clk,
+        .core_rstn,
         .axi4s_in      (axis_in_if),
         .axi4s_out     (axis_out_if),
         .axil_if       (axil_if)
@@ -86,7 +88,7 @@ module smartnic_hash2qid_unit_test;
     std_verif_pkg::event_scoreboard#(AXI4S_TRANSACTION_T) scoreboard;
 
     // Assign axis clock (333MHz)
-    `SVUNIT_CLK_GEN(axis_in_if.aclk, 1.5ns);
+    `SVUNIT_CLK_GEN(core_clk, 1.5ns);
 
     // Assign axil clock (100MHz)
     `SVUNIT_CLK_GEN(axil_if.aclk, 4ns);
@@ -94,7 +96,7 @@ module smartnic_hash2qid_unit_test;
     // Assign resets
     std_reset_intf axis_reset_if (.clk(axis_in_if.aclk));
     assign axis_reset_if.ready = !axis_reset_if.reset;
-    assign axis_in_if.aresetn  = !axis_reset_if.reset;
+    assign core_rstn  = !axis_reset_if.reset;
     assign axil_if.aresetn     = !axis_reset_if.reset;
 
     //===================================
