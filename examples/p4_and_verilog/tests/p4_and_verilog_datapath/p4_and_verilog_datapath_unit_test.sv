@@ -59,7 +59,7 @@ module p4_and_verilog_datapath_unit_test;
 
         p4_sim_dir = "../../../p4/sim/";
 
-        tuser={16'd0,1'bx,16'hxxxx,1'b1,12'd0,1'bx};
+        tuser='{rss_enable: 1'b1, rss_entropy: '0};
 
         #100ns;
     endtask
