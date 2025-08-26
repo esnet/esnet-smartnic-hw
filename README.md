@@ -439,6 +439,7 @@ define the User Metadata structure as follows:
         bit<32> scratch;         // reserved (tied to 0).
     }
 
+
 ### Lookup Engines:
 
 In order for the compiled VitisNetP4 core to match the SmartNIC application
@@ -450,9 +451,33 @@ interface, a user Program **MUST** have:
 Support for these features may be added in a future release.
 
 
-### Upgrading a P4 application from a legacy version to this release
+### Disruptive Releases
 
-This release of the ESnet SmartNIC Platform includes significant changes to the SmartNIC FPGA architecture.  See block
+|Commit #         | d1cfd6a20ff183dbe10cff876bee7b020c4475e6              |
+|:----------------|:------------------------------------------------------|
+|Thu Aug 7 2025   | Merge branch 'dev/pb/adds-sriov-support' into 'main'. |
+
+The above release adds support for PCIe SR-IOV and increases the PCIe memory window to 8M.  Transitioning to a load with these changes
+to the PCIe interface capabilities subsequently requires the PCIe interface to be reset and rescanned by the root port, after the
+bitfile is downloaded to FPGA hardware.  As such, a host system reboot is required to transition to a load with these new PCIe
+capabilities.
+
+For clarity, when a subsequent bitfile is downloaded to the FPGA hardware, if it shares the same PCIe interface capabilites, no
+subsequent PCIe reset, rescan or reboot is required to bring up the new image.  By consequence, it is recommended to reprogram the
+FPGA image stored in the FPGA card's FLASH memory with a bitfile based on the above SmartNIC release.  Doing so will avoid the need
+for future reboot iterations.
+
+Instructions for reprogramming the FPGA card's FLASH memory are documented in the the `README.INSTALL.md` file located in the `sn-stack`
+sub-directory of the `esnet-smartnic-fw` repository (https://github.com/esnet/esnet-smartnic-fw.git).  See the section entitled
+'Converting from factory flash image to ESnet Smartnic flash image'.
+
+
+
+|Commit #         | fefa7063812e1349b1140a5ad50ce58ffeb9e809              |
+|:----------------|:------------------------------------------------------|
+|Feb 24 2025      | Merge branch 'smartnic_v2' into 'main'                |
+
+The above release of the ESnet SmartNIC Platform includes significant changes to the SmartNIC FPGA architecture.  See block
 diagrams below:
 
 ![SmartNIC Top Level Block Diagram](docs/smartnic.svg)
@@ -466,8 +491,9 @@ by leveraging PCIe SR-IOV viritual functions (VFs).  See block diagram below.
 
 It should be noted that while this new datapath architecture is designed to connect the new datapath interfaces using separate
 virtual functions (VFs) of an SR-IOV-enabled PCIe endpoint, this first release of the platform does NOT include an SRIOV-enabled
-PCIe endpoint. The addition of PCIe SR-IOV support is planned for an upcoming release. In the interim, HOST traffic may be
-directed to a single HOST interface by programming the ingress and egress queue configuration accordingly.
+PCIe endpoint. The addition of PCIe SR-IOV support was added in a subsequent release (see 'd1cfd6a20ff183dbe10cff876bee7b020c4475e6'
+above).  In the absence of PCIe SR-IOV support, HOST traffic may be directed to a single HOST interface by programming
+the ingress and egress queue configuration accordingly.
 
 By consequence of the new datapath updates, changes have been made to the SmartNIC configuration and status registers
 i.e. obsolete registers have been removed, and new registers have been added, as necessary.  The programming for this updated
@@ -490,7 +516,6 @@ and 'egress_port' metadata definitions.
 For 'p4_with_extern' applications, create a new design directory by following the instructions above from the section
 'Building a New P4-with-extern Application', and adapt the p4 program to the updated 'ingress_port' and 'egress_port' metadata
 definitions.
-
 
 
 ### Reference Documents:
