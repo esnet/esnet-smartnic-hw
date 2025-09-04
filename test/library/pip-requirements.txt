@@ -1,0 +1,4 @@
+docutils==0.20.1
+regio==0.1.0
+regmap_esnet_smartnic==0.1.0
+robotframework==6.1.1
