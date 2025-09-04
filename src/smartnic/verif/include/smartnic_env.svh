@@ -195,15 +195,17 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     begin
                         forever begin
                             TRANSACTION_IN_T transaction;
+                            port_t tdest_in;
                             int dest_port;
                             inbox[j].get(transaction);
                             driver[j].inbox.put(transaction);
-                            case (transaction.get_tdest().encoded.typ)
-                                PHY:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
-                                PF:      dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF0:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF1:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF2:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                            tdest_in = transaction.get_tdest();
+                            case (tdest_in.encoded.typ)
+                                PHY:     dest_port = (tdest_in.encoded.num == P0) ? 0 : 1;
+                                PF:      dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF0:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF1:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF2:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
                                 default: dest_port = 4; // 'pkt_capture' block
                             endcase
                             model[dest_port].inbox.put(transaction);
@@ -214,12 +216,14 @@ class smartnic_env extends std_verif_pkg::basic_env;
             forever begin
                 TRANSACTION_IN_T transaction_in;
                 axi4s_transaction#(port_t, TDEST_IN_T, TUSER_IN_T) transaction;
+                port_t tdest_in;
                 int  dest_port;
                 adpt_tx_tid_t tid_in;
                 port_t tid;
 
                 pkt_playback_inbox.get(transaction_in);
                 tid_in = transaction_in.get_tid();
+                tdest_in = transaction_in.get_tdest();
                 tid = tid_in[$bits(port_t)-1:0];
                 transaction = axi4s_transaction#(port_t, TDEST_IN_T, TUSER_IN_T)::create_from_bytes(
                     transaction_in.get_name(),
@@ -230,12 +234,12 @@ class smartnic_env extends std_verif_pkg::basic_env;
                 );
                 pkt_playback_driver.inbox.put(transaction);
 
-                case (transaction_in.get_tdest().encoded.typ)
-                    PHY:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
-                    PF:      dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF0:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF1:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF2:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
+                case (tdest_in.encoded.typ)
+                    PHY:     dest_port = (tdest_in.encoded.num == P0) ? 0 : 1;
+                    PF:      dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF0:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF1:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF2:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
                     default: dest_port = 4; // 'pkt_capture' block
                 endcase
                 model[dest_port].inbox.put(transaction_in);
