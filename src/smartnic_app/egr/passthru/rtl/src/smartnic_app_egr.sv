@@ -14,11 +14,12 @@ module smartnic_app_egr
     // Terminate AXI-L interface
     axi4l_intf_peripheral_term axil_term ( .axi4l_if (axil_if) );
 
-    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__port
         // Connect AXI-S interfaces as passthrough
         axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(axi4s_in[i]), .to_rx(axi4s_out[i]));
         // Terminate H2C interface
         axi4s_intf_rx_sink axi4s_intf_rx_sink_0 (.from_tx(axi4s_h2c[i]));
-    end endgenerate
+    end : g__port
+    endgenerate
 
 endmodule : smartnic_app_egr

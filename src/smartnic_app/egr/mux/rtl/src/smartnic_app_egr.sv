@@ -47,7 +47,7 @@ module smartnic_app_egr
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID),
                   .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  mux_out [NUM_PORTS]    (.aclk(core_clk), .aresetn(core_rstn));
 
-    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__port
         axi4s_intf_pipe axi4s_mux_in_pipe_0 ( .from_tx(axi4s_in[i]),  .to_rx(mux_in[i][0]) );
         axi4s_intf_pipe axi4s_mux_in_pipe_1 ( .from_tx(axi4s_h2c[i]), .to_rx(mux_in[i][1]) );
 
@@ -58,6 +58,7 @@ module smartnic_app_egr
 
         axi4s_full_pipe axis4s_full_pipe_inst (.from_tx(mux_out[i]), .to_rx(axi4s_out[i]));
 
-    end endgenerate
+    end : g__port
+    endgenerate
 
 endmodule // smartnic_app_egr

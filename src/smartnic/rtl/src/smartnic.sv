@@ -506,7 +506,9 @@ module smartnic
       // xilinx_axi4s_ila xilinx_axi4s_ila_to_host (.axis_in(axis_to_host[i]));
 
       // Terminate unused AXI-L interface
-      if (i != 0) axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
+      if (i != 0) begin : g__axi4l_fifo_to_host_term
+          axi4l_intf_controller_term axi4l_fifo_to_host_term (.axi4l_if (axil_to_fifo_to_host[i]));
+      end : g__axi4l_fifo_to_host_term
 
       axi4s_intf_to_signals #(
         .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID), .TUSER_WID(TUSER_SMARTNIC_META_WID)

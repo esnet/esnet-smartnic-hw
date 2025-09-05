@@ -47,7 +47,7 @@ module smartnic_app_igr
 
     logic  demux_sel [NUM_PORTS];
 
-    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__port
         port_t axi4s_in_tdest;
         assign axi4s_in_tdest = axi4s_in[i].tdest;
         assign demux_sel[i] = (axi4s_in_tdest.encoded.typ == VF0) ||
@@ -62,6 +62,7 @@ module smartnic_app_igr
         axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(demux_out[i][0]), .to_rx(axi4s_out[i]));
         axi4s_full_pipe axi4s_full_pipe_1 (.from_tx(demux_out[i][1]), .to_rx(axi4s_c2h[i]));
 
-    end endgenerate
+    end : g__port
+    endgenerate
 
 endmodule // smartnic_app_igr

@@ -11,7 +11,7 @@ module tb;
     axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID),
                  .TUSER_WID(TUSER_SMARTNIC_META_WID))                                                 axis_out_if [4] (.aclk(axis_clk), .aresetn(axis_aresetn));
 
-    generate for (genvar i = 0; i < 2; i += 1) begin
+    generate for (genvar i = 0; i < 2; i += 1) begin : g__port
         port_t axis_in_if_tdest_cmac_igr;
         port_t axis_in_if_tdest_h2c;
 
@@ -37,6 +37,8 @@ module tb;
             .tuser  ('0)
         );
 
+        assign cmac_clk[i] = axis_clk;
+
         assign axis_h2c[i].tvalid = axis_in_if[i+2].tvalid;
         assign axis_h2c[i].tlast = axis_in_if[i+2].tlast;
         assign axis_h2c[i].tdata = axis_in_if[i+2].tdata;
@@ -58,7 +60,9 @@ module tb;
             .tdest ('0),
             .tuser (axis_c2h[i].tuser)
         );
-    end endgenerate
+
+    end : g__port
+    endgenerate
 
     //===================================
     // Local signals
@@ -66,8 +70,6 @@ module tb;
 
     // Clocks
     assign axil_if.aclk = axil_aclk;
-
-    generate for (genvar i = 0; i < 2; i += 1) assign cmac_clk[i] = axis_clk; endgenerate
 
     // Resets
     std_reset_intf reset_if (.clk(axis_clk));
