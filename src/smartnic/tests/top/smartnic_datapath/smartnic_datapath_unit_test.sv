@@ -720,6 +720,7 @@ module smartnic_datapath_unit_test;
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b1 );
 
             // relase backpressure and check egr_flow_ctl.
+            @(posedge tb.axis_out_if[0].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[0].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b0 );
 
@@ -746,6 +747,7 @@ module smartnic_datapath_unit_test;
             check_probe(DROPS_OVFL_TO_CMAC1, 128-exp_pkts[PHY1], (128-exp_pkts[PHY1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b1 );
 
+            @(posedge tb.axis_out_if[1].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[1].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
 
@@ -772,6 +774,7 @@ module smartnic_datapath_unit_test;
             check_probe(DROPS_OVFL_TO_PF0, 128-exp_pkts[PF0], (128-exp_pkts[PF0])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b1 );
 
+            @(posedge tb.axis_out_if[2].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[2].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
 
@@ -798,6 +801,7 @@ module smartnic_datapath_unit_test;
             check_probe(DROPS_OVFL_TO_PF1, 128-exp_pkts[PF1], (128-exp_pkts[PF1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b1 );
 
+            @(posedge tb.axis_out_if[3].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[3].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
 
