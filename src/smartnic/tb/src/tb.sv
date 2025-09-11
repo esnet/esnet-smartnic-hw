@@ -67,8 +67,20 @@ module tb;
     //===================================
     // Local signals
     //===================================
-
     // Clocks
+
+    // AXI-L (125MHz)
+    initial begin
+        axil_aclk = 1'b0;
+        forever #4ns axil_aclk = !axil_aclk;
+    end
+
+    // CMAC/AXI-S (322MHz)
+    initial begin
+        axis_clk = 1'b0;
+        forever #1553ps axis_clk = !axis_clk;
+    end
+
     assign axil_if.aclk = axil_aclk;
 
     // Resets

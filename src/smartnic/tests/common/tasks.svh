@@ -76,10 +76,6 @@ smartnic_reg_pkg::reg_switch_config_t switch_config;
 int exp_pkts [NUM_PORTS-1:0];
 int bytes    [NUM_PORTS];
 
-`SVUNIT_CLK_GEN(tb.axil_aclk, 4ns);   // 125 Mhz
-`SVUNIT_CLK_GEN(tb.axis_clk, 1553ps); // 322 Mhz
-
-
 //=======================================================================
 // Tasks
 //=======================================================================
