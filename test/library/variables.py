@@ -45,10 +45,3 @@ class Device:
 # This variable is set by the global setup fixture when starting up the regmap proxy. It should be
 # used for all accesses to the device under test.
 dev = None
-
-#---------------------------------------------------------------------------------------------------
-# Testcase variables
-import random
-
-num  = 10
-size = random.randint(64, 1500)

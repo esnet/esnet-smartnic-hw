@@ -6,7 +6,7 @@ import math
 import enum
 import time
 
-from packet_mem_protocol import PacketMemProtocol
+from smartnic.packet_mem_protocol import PacketMemProtocol
 
 class PacketCaptureProtocol():
 
