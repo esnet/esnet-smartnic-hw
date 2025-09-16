@@ -279,13 +279,32 @@ module smartnic
 
    // Timestamp counter and access logic
    logic [63:0] timestamp;
+   logic        timestamp_rd_ack;
+   logic [63:0] timestamp_rd;
+   logic [63:0] freerun_rd;
 
    smartnic_timestamp  smartnic_timestamp_0 (
      .clk               (core_clk),
      .rstn              (core_rstn),
-     .timestamp         (timestamp),
-     .smartnic_regs (smartnic_regs)
+     .timestamp,
+     .timestamp_incr    (smartnic_regs.timestamp_incr),
+     .timestamp_wr_req  (smartnic_regs.timestamp_wr_lower_wr_evt),
+     .timestamp_wr      ({smartnic_regs.timestamp_wr_upper, smartnic_regs.timestamp_wr_lower}),
+     .timestamp_rd_req  (smartnic_regs.timestamp_rd_latch_wr_evt),
+     .timestamp_rd_ack,
+     .timestamp_rd,
+     .freerun_rd
    );
+
+   assign smartnic_regs.timestamp_rd_upper_nxt_v = timestamp_rd_ack;
+   assign smartnic_regs.timestamp_rd_lower_nxt_v = timestamp_rd_ack;
+   assign smartnic_regs.timestamp_rd_upper_nxt   = timestamp_rd[63:32];
+   assign smartnic_regs.timestamp_rd_lower_nxt   = timestamp_rd[31:0];
+
+   assign smartnic_regs.freerun_rd_upper_nxt_v = timestamp_rd_ack;
+   assign smartnic_regs.freerun_rd_lower_nxt_v = timestamp_rd_ack;
+   assign smartnic_regs.freerun_rd_upper_nxt   = freerun_rd[63:32];
+   assign smartnic_regs.freerun_rd_lower_nxt   = freerun_rd[31:0];
 
    // axis_to_host_tpause synchronizers
    logic axis_to_host_tpause [NUM_CMAC];
