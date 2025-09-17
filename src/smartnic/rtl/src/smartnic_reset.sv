@@ -10,7 +10,7 @@ module smartnic_reset #(
     input  logic [NUM_CMAC-1:0] cmac_clk,
     output logic [NUM_CMAC-1:0] cmac_srstn, // synchronous to cmac_clk (async assert, sync deassert)
 
-    output logic                core_clk,  // we synthesize this clock in this block
+    output logic                core_clk,   // we synthesize this clock in this block
     output logic                core_srstn, // synchronous to core_clk (async assert, sync deassert)
 
     output logic                clk_100mhz,
@@ -22,6 +22,7 @@ module smartnic_reset #(
     // ----------------------------------------------------------------
     localparam int RESET_DURATION = 100;
     localparam int TIMER_WID = $clog2(RESET_DURATION);
+    localparam int RESET_PIPE_STAGES = 3;
 
     // ----------------------------------------------------------------
     //  Typedefs
@@ -37,6 +38,9 @@ module smartnic_reset #(
     // ----------------------------------------------------------------
     state_t state;
     state_t nxt_state;
+
+    logic __rst_done;
+    logic __rst_done_p [RESET_PIPE_STAGES];
 
     logic [TIMER_WID-1:0] timer;
     logic                 timer_reset;
@@ -56,7 +60,7 @@ module smartnic_reset #(
         nxt_state = state;
         timer_reset = 1'b0;
         timer_inc = 1'b0;
-        mod_rst_done = 1'b0;
+        __rst_done = 1'b0;
         case (state)
             RESET : begin
                 timer_reset = 1'b1;
@@ -67,11 +71,20 @@ module smartnic_reset #(
                 if (timer == RESET_DURATION-1) nxt_state = RESET_DONE;
             end
             RESET_DONE : begin
-                mod_rst_done = 1'b1;
+                __rst_done = 1'b1;
             end
             default : nxt_state = RESET;
         endcase
     end
+
+    initial __rst_done_p = '{default: 1'b0};
+    always @(posedge axil_aclk) begin
+        for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
+            __rst_done_p[i] <= __rst_done_p[i-1];
+        end
+        __rst_done_p[0] <= __rst_done;
+    end
+    assign mod_rst_done = __rst_done_p[RESET_PIPE_STAGES-1];
 
     // Reset timer
     initial timer = 0;
@@ -86,27 +99,51 @@ module smartnic_reset #(
 
     // CMAC domain resets are generated from the locally generated AXI-L reset
     generate
-        for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__cmac
+        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
+            logic __cmac_rstn;
+            (* shreg_extract = "no" *) logic __cmac_rstn_p [RESET_PIPE_STAGES];
+
             sync_reset #(
                 .OUTPUT_ACTIVE_LOW (1)
             ) sync_reset__cmac (
                 .clk_in  (axil_aclk),
-                .rst_in  (axil_aresetn),
-                .clk_out (cmac_clk[i]),
-                .rst_out (cmac_srstn[i])
+                .rst_in  (__rst_done),
+                .clk_out (cmac_clk[g_cmac]),
+                .rst_out (__cmac_rstn)
             );
+
+            always_ff @(posedge cmac_clk[g_cmac]) begin
+                for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
+                    __cmac_rstn_p[i] <= __cmac_rstn_p[i-1];
+                end
+                __cmac_rstn_p[0] <= __cmac_rstn;
+            end
+
+            assign cmac_srstn[g_cmac] = __cmac_rstn_p[RESET_PIPE_STAGES-1];
         end : g__cmac
     endgenerate
 
     // core clock domain reset is generated from the locally generated AXI-L reset
+    logic __core_srstn;
+    (* shreg_extract = "no" *) logic __core_srstn_p [RESET_PIPE_STAGES];
+
     sync_reset #(
         .OUTPUT_ACTIVE_LOW (1)
     ) sync_reset__core_clk (
         .clk_in  (axil_aclk),
-        .rst_in  (axil_aresetn),
+        .rst_in  (__rst_done),
         .clk_out (core_clk),
-        .rst_out (core_srstn)
+        .rst_out (__core_srstn)
     );
+
+    always_ff @(posedge core_clk) begin
+        for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
+            __core_srstn_p[i] <= __core_srstn_p[i-1];
+        end
+        __core_srstn_p[0] <= __core_srstn;
+    end
+
+    assign core_srstn = __core_srstn_p[RESET_PIPE_STAGES-1];
 
     // ----------------------------------------------------------------
     //  Clocks
