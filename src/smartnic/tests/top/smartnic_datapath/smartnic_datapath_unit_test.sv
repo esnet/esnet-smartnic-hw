@@ -440,7 +440,7 @@ module smartnic_datapath_unit_test;
                 #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast)
-                          env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
+                          #200ns env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
             join
             check_phy0(.pkts(2));  check_phy1(); check_pf0(.pkts(2)); check_pf1();
 
@@ -454,7 +454,7 @@ module smartnic_datapath_unit_test;
                 #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast)
-                          env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
+                          #200ns env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
             join
             check_phy0(); check_phy1(.pkts(2));  check_pf0(); check_pf1(.pkts(2));
 
