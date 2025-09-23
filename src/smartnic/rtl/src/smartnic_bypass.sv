@@ -21,32 +21,34 @@ module smartnic_bypass #(
     axi4l_intf  axil_to_ovfl_to_bypass [NUM_CMAC] ();
     axi4l_intf  axil_to_fifo_to_bypass [NUM_CMAC] ();
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(igr_tdest_t))  axis_core_to_bypass_p [NUM_CMAC] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  axis_core_to_bypass_p [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t)) _axis_core_to_bypass_p [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_igr_sw_drop      [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_to_bypass_fifo   [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_from_bypass_fifo [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_to_bypass_drop   [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_bypass_demux_in  [NUM_CMAC] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_bypass_demux_out [NUM_CMAC][2] ();
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_T(port_t), .TDEST_T(port_t))  axis_bypass_mux_in    [NUM_CMAC][2] ();
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) _axis_core_to_bypass_p [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_igr_sw_drop      [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_bypass_fifo   [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_bypass_fifo [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_bypass_drop   [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_demux_in  [NUM_CMAC] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_demux_out [NUM_CMAC][2] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_mux_in    [NUM_CMAC][2] (.aclk(core_clk), .aresetn(core_rstn));
 
     logic  igr_sw_drop_pkt  [NUM_CMAC];
     logic  bypass_demux_sel [NUM_CMAC];
 
+
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__bypass
+        igr_tdest_t axis_core_to_bypass_p_tdest;
+
         axi4s_tready_pipe axis_core_to_bypass_pipe (
-            .axi4s_if_from_tx(axis_core_to_bypass[i]), .axi4s_if_to_rx(axis_core_to_bypass_p[i]));
+            .from_tx(axis_core_to_bypass[i]), .to_rx(axis_core_to_bypass_p[i]));
 
         // ingress switch drop pkt logic.  deletes packets that have tdest == DROP code point.
+        assign axis_core_to_bypass_p_tdest = axis_core_to_bypass_p[i].tdest;
         assign igr_sw_drop_pkt[i] = axis_core_to_bypass_p[i].tvalid && axis_core_to_bypass_p[i].sop &&
-                                    axis_core_to_bypass_p[i].tdest == DROP;
+                                    axis_core_to_bypass_p_tdest.encoded == DROP;
 
         assign  axis_core_to_bypass_p[i].tready  = _axis_core_to_bypass_p[i].tready;
 
-        assign _axis_core_to_bypass_p[i].aclk    =  axis_core_to_bypass_p[i].aclk;
-        assign _axis_core_to_bypass_p[i].aresetn =  axis_core_to_bypass_p[i].aresetn;
         assign _axis_core_to_bypass_p[i].tvalid  =  axis_core_to_bypass_p[i].tvalid;
         assign _axis_core_to_bypass_p[i].tdata   =  axis_core_to_bypass_p[i].tdata;
         assign _axis_core_to_bypass_p[i].tkeep   =  axis_core_to_bypass_p[i].tkeep;
@@ -57,6 +59,8 @@ module smartnic_bypass #(
 
         // igr_sw_drop axi4s_drop instantiation.
         axi4s_drop igr_sw_drop_0 (
+           .clk         (core_clk),
+           .srst        (!core_rstn),
            .axi4s_in    (_axis_core_to_bypass_p[i]),
            .axi4s_out   (axis_igr_sw_drop[i]),
            .axil_if     (axil_to_drops_to_bypass[i]),
@@ -64,7 +68,7 @@ module smartnic_bypass #(
         );
 
         axi4s_intf_pipe axis_to_bypass_pipe_0 (
-            .axi4s_if_from_tx(axis_igr_sw_drop[i]), .axi4s_if_to_rx(axis_to_bypass_fifo[i]));
+            .from_tx(axis_igr_sw_drop[i]), .to_rx(axis_to_bypass_fifo[i]));
 
         axi4s_pkt_fifo_sync #(
            .FIFO_DEPTH     (512),
@@ -82,8 +86,8 @@ module smartnic_bypass #(
         axi4l_intf_controller_term axi4l_to_fifo_to_bypass_term  (.axi4l_if (axil_to_fifo_to_bypass[i]));
 
         axi4s_full_pipe from_bypass_pipe_0 (
-            .axi4s_if_from_tx(axis_from_bypass_fifo[i]),
-            .axi4s_if_to_rx(axis_bypass_demux_in[i]) );
+            .from_tx(axis_from_bypass_fifo[i]),
+            .to_rx(axis_bypass_demux_in[i]) );
 
         always @(posedge core_clk)
             if (!core_rstn)
@@ -93,9 +97,9 @@ module smartnic_bypass #(
                 bypass_demux_sel[i] <= smartnic_regs.bypass_config.swap_paths;
 
         axi4s_intf_demux #(.N(2)) axi4s_bypass_demux (
-            .axi4s_in  (axis_bypass_demux_in[i]),
-            .axi4s_out (axis_bypass_demux_out[i]),
-            .sel       (bypass_demux_sel[i])
+            .from_tx (axis_bypass_demux_in[i]),
+            .to_rx   (axis_bypass_demux_out[i]),
+            .sel     (bypass_demux_sel[i])
         );
 
         axi4s_mux #(.N(2)) axi4s_bypass_mux (
@@ -108,12 +112,12 @@ module smartnic_bypass #(
 
     // mux_in assignments.  support for 'pass-through' and 'swap-paths' modes.
     axi4s_intf_connector axi4s_bypass_mux_in_0_pipe_0 (
-        .axi4s_from_tx(axis_bypass_demux_out[0][0]), .axi4s_to_rx(axis_bypass_mux_in[0][0]));
+        .from_tx(axis_bypass_demux_out[0][0]), .to_rx(axis_bypass_mux_in[0][0]));
     axi4s_intf_connector axi4s_bypass_mux_in_1_pipe_1 (
-        .axi4s_from_tx(axis_bypass_demux_out[0][1]), .axi4s_to_rx(axis_bypass_mux_in[1][1]));
+        .from_tx(axis_bypass_demux_out[0][1]), .to_rx(axis_bypass_mux_in[1][1]));
     axi4s_intf_connector axi4s_bypass_mux_in_1_pipe_0 (
-        .axi4s_from_tx(axis_bypass_demux_out[1][0]), .axi4s_to_rx(axis_bypass_mux_in[1][0]));
+        .from_tx(axis_bypass_demux_out[1][0]), .to_rx(axis_bypass_mux_in[1][0]));
     axi4s_intf_connector axi4s_bypass_mux_in_0_pipe_1 (
-        .axi4s_from_tx(axis_bypass_demux_out[1][1]), .axi4s_to_rx(axis_bypass_mux_in[0][1]));
+        .from_tx(axis_bypass_demux_out[1][1]), .to_rx(axis_bypass_mux_in[0][1]));
 
 endmodule // smartnic_bypass

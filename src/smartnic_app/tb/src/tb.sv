@@ -31,18 +31,6 @@ module tb;
     assign app_axil_if.aclk    = axil_if.aclk;
     assign app_axil_if.aresetn = axil_if.aresetn;
 
-    // Assign AXI-S input clocks/resets
-    generate
-        for (genvar i = 0; i < NUM_PROC_PORTS; i += 1) begin
-            for (genvar j = 0; j < NUM_HOST_IFS; j += 1) begin
-                assign axis_h2c_if[j][i].aclk = clk;
-                assign axis_h2c_if[j][i].aresetn = rstn;
-            end
-            assign axis_in_if[i].aclk = clk;
-            assign axis_in_if[i].aresetn = rstn;
-        end
-    endgenerate
-
     // Timestamp interface
     timestamp_intf #() timestamp_if (.clk(clk), .srst(~rstn));
     assign timestamp = timestamp_if.timestamp;
@@ -54,7 +42,7 @@ module tb;
     function automatic tb_env build();
         tb_env env;
         // Instantiate environment
-        env = new("tb_env", 0); // bigendian=0 to match CMACs.
+        env = new("tb_env");
 
         // Connect environment
         env.reset_vif            = reset_if;

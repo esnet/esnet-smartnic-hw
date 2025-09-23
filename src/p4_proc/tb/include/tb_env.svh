@@ -9,7 +9,7 @@ class tb_env extends std_verif_pkg::basic_env;
     localparam int  DATA_BYTE_WID = 64;
     localparam type TID_T         = port_t;
     localparam type TDEST_T       = port_t;
-    localparam type TUSER_T       = tuser_t;
+    localparam type TUSER_T       = tuser_smartnic_meta_t;
 
     localparam type TRANSACTION_T = axi4s_transaction#(TID_T, TDEST_T, TUSER_T);
     localparam type DRIVER_T      = axi4s_driver  #(DATA_BYTE_WID, TID_T, TDEST_T, TUSER_T);
@@ -37,10 +37,10 @@ class tb_env extends std_verif_pkg::basic_env;
     local mailbox #(TRANSACTION_T) __model_outbox [NUM_PROC_PORTS];
 
     // AXI-S interfaces
-    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
-                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_in_vif  [NUM_PROC_PORTS];
-    virtual axi4s_intf #(.TUSER_T(TUSER_T), .DATA_BYTE_WID(DATA_BYTE_WID),
-                         .TID_T(TID_T), .TDEST_T(TDEST_T)) axis_out_vif [NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_WID($bits(TUSER_T)), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_WID($bits(TID_T)), .TDEST_WID($bits(TDEST_T))) axis_in_vif  [NUM_PROC_PORTS];
+    virtual axi4s_intf #(.TUSER_WID($bits(TUSER_T)), .DATA_BYTE_WID(DATA_BYTE_WID),
+                         .TID_WID($bits(TID_T)), .TDEST_WID($bits(TDEST_T))) axis_out_vif [NUM_PROC_PORTS];
 
     // AXI-L interfaces
     virtual axi4l_intf axil_vif;
@@ -62,12 +62,12 @@ class tb_env extends std_verif_pkg::basic_env;
     // Methods
     //===================================
     // Constructor
-    function new(input string name="tb_env", bit bigendian=1);
+    function new(input string name="tb_env");
         super.new(name);
         for (int i=0; i < NUM_PROC_PORTS; i++) begin
             inbox[i]      = new();
-            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
-            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)));
             model[i]      = new(.name($sformatf("model[%0d]",i)));
             scoreboard[i] = new();
 
@@ -246,14 +246,14 @@ endclass : tb_env
 
 // model class for 'p4_proc' component verification.  placeholder for future code (tbd).
 class p4_proc_model
-    extends std_verif_pkg::model#(axi4s_transaction#(port_t, port_t, tuser_t),
-                                  axi4s_transaction#(port_t, port_t, tuser_t));
+    extends std_verif_pkg::model#(axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t),
+                                  axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t));
 
     function new(string name="p4_proc_model");
         super.new(name);
     endfunction
 
-    protected task _process(input axi4s_transaction#(port_t, port_t, tuser_t) transaction);
+    protected task _process(input axi4s_transaction#(port_t, port_t, tuser_smartnic_meta_t) transaction);
         _enqueue(transaction);
     endtask
 

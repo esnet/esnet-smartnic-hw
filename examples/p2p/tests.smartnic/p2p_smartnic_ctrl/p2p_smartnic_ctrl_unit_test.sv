@@ -24,7 +24,7 @@ module p2p_smartnic_ctrl_unit_test;
     // via the testbench environment class (smartnic_env).
     // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::smartnic_env env;
+    smartnic_verif_pkg::smartnic_env env;
 
     p2p_reg_verif_pkg::p2p_reg_blk_agent #() p2p_reg_blk_agent;
 

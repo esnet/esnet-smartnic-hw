@@ -20,8 +20,8 @@ module smartnic_app_igr
         .axis_out (axi4s_out[0])
     );
 
-    axi4s_intf_connector axi4s_intf_connector (.axi4s_from_tx(axi4s_in[1]), .axi4s_to_rx(axi4s_out[1]));
-    axi4s_intf_tx_term axi4s_intf_tx_term_ch2_0 (.axi4s_if(axi4s_c2h[0]));
-    axi4s_intf_tx_term axi4s_intf_tx_term_ch2_1 (.axi4s_if(axi4s_c2h[1]));
+    axi4s_intf_connector axi4s_intf_connector (.from_tx(axi4s_in[1]), .to_rx(axi4s_out[1]));
+    axi4s_intf_tx_term axi4s_intf_tx_term_ch2_0 (.to_rx(axi4s_c2h[0]));
+    axi4s_intf_tx_term axi4s_intf_tx_term_ch2_1 (.to_rx(axi4s_c2h[1]));
 
 endmodule // smartnic_app_igr

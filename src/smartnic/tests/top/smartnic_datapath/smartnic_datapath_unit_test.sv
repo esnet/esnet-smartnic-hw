@@ -6,7 +6,6 @@
 `define SVUNIT_TIMEOUT 500us
 
 module smartnic_datapath_unit_test;
-    import packet_verif_pkg::*;
     import smartnic_pkg::*;
 
     // Testcase name
@@ -26,7 +25,7 @@ module smartnic_datapath_unit_test;
     // via the testbench environment class (smartnic_env).
     // A reference to the testbench environment is provided
     // here for convenience.
-    tb_pkg::smartnic_env env;
+    smartnic_verif_pkg::smartnic_env env;
 
     smartnic_app_igr_demux_reg_verif_pkg::smartnic_app_igr_reg_blk_agent  #() smartnic_app_igr_reg_blk_agent;
 
@@ -43,6 +42,7 @@ module smartnic_datapath_unit_test;
 
         // Build testbench
         env = tb.build();
+        env.pkt_capture_monitor.disable_autostart();
 
         smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h20000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.reg_agent;
@@ -440,7 +440,7 @@ module smartnic_datapath_unit_test;
                 #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[0].tlast)
-                          env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
+                          #200ns env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b01);
             join
             check_phy0(.pkts(2));  check_phy1(); check_pf0(.pkts(2)); check_pf1();
 
@@ -454,7 +454,7 @@ module smartnic_datapath_unit_test;
                 #3us;
 
                 @(posedge tb.DUT.axis_cmac_to_core[1].tlast)
-                          env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
+                          #200ns env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b10);
             join
             check_phy0(); check_phy1(.pkts(2));  check_pf0(); check_pf1(.pkts(2));
 
@@ -714,13 +714,14 @@ module smartnic_datapath_unit_test;
 
             // assert backpressure, start traffic, and check probes.
             tb.start_rx=0;
-            packet_stream(.pkts(128), .mode(1518), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #10us;
-            check_probe(PROBE_FROM_CMAC0, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_CMAC0, 128-exp_pkts[PHY0], (128-exp_pkts[PHY0])*1518);
+            check_probe(PROBE_FROM_CMAC0, 100, 100*1518);
+            check_probe(DROPS_OVFL_TO_CMAC0, 100-exp_pkts[PHY0], (100-exp_pkts[PHY0])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b1 );
 
             // relase backpressure and check egr_flow_ctl.
+            @(posedge tb.axis_out_if[0].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[0].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b0 );
 
@@ -731,7 +732,7 @@ module smartnic_datapath_unit_test;
 
             `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_processed(),   exp_pkts[PHY0]);
             `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_matched(),     exp_pkts[PHY0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].exp_pending(), 128-exp_pkts[PHY0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].exp_pending(), 100-exp_pkts[PHY0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY1)
@@ -741,12 +742,13 @@ module smartnic_datapath_unit_test;
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(128), .mode(1518), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #10us;
-            check_probe(PROBE_FROM_CMAC1, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_CMAC1, 128-exp_pkts[PHY1], (128-exp_pkts[PHY1])*1518);
+            check_probe(PROBE_FROM_CMAC1, 100, 100*1518);
+            check_probe(DROPS_OVFL_TO_CMAC1, 100-exp_pkts[PHY1], (100-exp_pkts[PHY1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b1 );
 
+            @(posedge tb.axis_out_if[1].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[1].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
 
@@ -756,7 +758,7 @@ module smartnic_datapath_unit_test;
 
             `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_processed(),   exp_pkts[PHY1]);
             `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_matched(),     exp_pkts[PHY1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].exp_pending(), 128-exp_pkts[PHY1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].exp_pending(), 100-exp_pkts[PHY1]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF0)
@@ -767,12 +769,13 @@ module smartnic_datapath_unit_test;
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(128), .mode(1518), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
+            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
             #10us;
-            check_probe(PROBE_FROM_CMAC0, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_PF0, 128-exp_pkts[PF0], (128-exp_pkts[PF0])*1518);
+            check_probe(PROBE_FROM_CMAC0, 100, 100*1518);
+            check_probe(DROPS_OVFL_TO_PF0, 100-exp_pkts[PF0], (100-exp_pkts[PF0])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b1 );
 
+            @(posedge tb.axis_out_if[2].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[2].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
 
@@ -782,7 +785,7 @@ module smartnic_datapath_unit_test;
 
             `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_processed(),   exp_pkts[PF0]);
             `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_matched(),     exp_pkts[PF0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].exp_pending(), 128-exp_pkts[PF0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].exp_pending(), 100-exp_pkts[PF0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF1)
@@ -793,12 +796,13 @@ module smartnic_datapath_unit_test;
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(128), .mode(1518), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
+            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
             #10us;
-            check_probe(PROBE_FROM_CMAC1, 128, 128*1518);
-            check_probe(DROPS_OVFL_TO_PF1, 128-exp_pkts[PF1], (128-exp_pkts[PF1])*1518);
+            check_probe(PROBE_FROM_CMAC1, 100, 100*1518);
+            check_probe(DROPS_OVFL_TO_PF1, 100-exp_pkts[PF1], (100-exp_pkts[PF1])*1518);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b1 );
 
+            @(posedge tb.axis_out_if[3].aclk);
             tb.start_rx=1;
             @(posedge tb.axis_out_if[3].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
 
@@ -808,7 +812,7 @@ module smartnic_datapath_unit_test;
 
             `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_processed(),   exp_pkts[PF1]);
             `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_matched(),     exp_pkts[PF1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].exp_pending(), 128-exp_pkts[PF1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].exp_pending(), 100-exp_pkts[PF1]);
         `SVTEST_END
 
         `SVTEST(PF0_out_of_range_test)

@@ -25,9 +25,9 @@ module p4_and_verilog
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             // Connect AXI-S interfaces in pass-through
-            axi4s_full_pipe axi4s_full_pipe_0 (.axi4s_if_from_tx(axi4s_in[g_port]), .axi4s_if_to_rx(axi4s_out[g_port]));
+            axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(axi4s_in[g_port]), .to_rx(axi4s_out[g_port]));
             // Tie off C2H interface
-            axi4s_intf_tx_term axi4s_intf_tx_term_0 (.aclk(core_clk), .aresetn(core_rstn), .axi4s_if(axi4s_c2h[g_port]));
+            axi4s_intf_tx_term axi4s_intf_tx_term_0 (.to_rx(axi4s_c2h[g_port]));
         end
     endgenerate
 

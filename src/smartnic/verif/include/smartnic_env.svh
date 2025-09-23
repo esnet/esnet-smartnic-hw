@@ -1,9 +1,3 @@
-import smartnic_pkg::*;
-import smartnic_verif_pkg::*;
-import smartnic_app_reg_pkg::*;
-import packet_verif_pkg::*;
-import pcap_pkg::*;
-
 // Environment class for 'smartnic' component verification.
 class smartnic_env extends std_verif_pkg::basic_env;
     //===================================
@@ -11,15 +5,16 @@ class smartnic_env extends std_verif_pkg::basic_env;
     //===================================
     localparam int  DATA_BYTE_WID = 64;
     localparam type TID_IN_T      = adpt_tx_tid_t;
+    localparam type TDEST_IN_T    = port_t;
+    localparam type TUSER_IN_T    = bit; // error
     localparam type TID_OUT_T     = port_t;
-    localparam type TDEST_T       = port_t;
-    localparam type TUSER_IN_T    = bit;
+    localparam type TDEST_OUT_T   = port_t;
     localparam type TUSER_OUT_T   = tuser_smartnic_meta_t;
 
-    localparam type TRANSACTION_IN_T  = axi4s_transaction#(TID_IN_T, TDEST_T, TUSER_IN_T);
-    localparam type TRANSACTION_OUT_T = axi4s_transaction#(TID_OUT_T, TDEST_T, TUSER_OUT_T);
-    localparam type DRIVER_T          = axi4s_driver  #(DATA_BYTE_WID, TID_IN_T,  TDEST_T, TUSER_IN_T);
-    localparam type MONITOR_T         = axi4s_monitor #(DATA_BYTE_WID, TID_OUT_T, TDEST_T, TUSER_OUT_T);
+    localparam type TRANSACTION_IN_T  = axi4s_transaction#(TID_IN_T, TDEST_IN_T, TUSER_IN_T);
+    localparam type TRANSACTION_OUT_T = axi4s_transaction#(TDEST_OUT_T, TDEST_OUT_T, TUSER_OUT_T);
+    localparam type DRIVER_T          = axi4s_driver  #(DATA_BYTE_WID, TID_IN_T,  TDEST_IN_T,  TUSER_IN_T);
+    localparam type MONITOR_T         = axi4s_monitor #(DATA_BYTE_WID, TID_OUT_T, TDEST_OUT_T, TUSER_OUT_T);
     localparam type MODEL_T           = smartnic_model;
     localparam type SCOREBOARD_T      = event_scoreboard#(TRANSACTION_OUT_T);
 
@@ -32,15 +27,13 @@ class smartnic_env extends std_verif_pkg::basic_env;
     //===================================
     // Properties
     //===================================
-    local bit __BIGENDIAN;
-
     DRIVER_T     driver     [4];
     MONITOR_T    monitor    [4];
     MODEL_T      model      [5];
     SCOREBOARD_T scoreboard [5]; // 0:PHY0, 1:PHY1, 2:PF0, 3:PF1, 4:PKT_CAPTURE
 
-    axi4s_playback_driver#(DATA_BYTE_WID, port_t, port_t, bit) pkt_playback_driver;
-    axi4s_capture_monitor#(DATA_BYTE_WID, TID_OUT_T, TDEST_T, TUSER_OUT_T) pkt_capture_monitor;
+    axi4s_playback_driver#(DATA_BYTE_WID, port_t,    TDEST_IN_T,  TUSER_IN_T)  pkt_playback_driver;
+    axi4s_capture_monitor#(DATA_BYTE_WID, TID_OUT_T, TDEST_OUT_T, TUSER_OUT_T) pkt_capture_monitor;
 
     mailbox #(TRANSACTION_IN_T)  inbox [4];
     mailbox #(TRANSACTION_IN_T)  pkt_playback_inbox;
@@ -52,16 +45,16 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
     virtual axi4s_intf #(
         .DATA_BYTE_WID(DATA_BYTE_WID),
-        .TID_T   (TID_IN_T),
-        .TDEST_T (TDEST_T),
-        .TUSER_T (TUSER_IN_T)
+        .TID_WID   ($bits(TID_IN_T)),
+        .TDEST_WID ($bits(TDEST_IN_T)),
+        .TUSER_WID ($bits(TUSER_IN_T))
     ) axis_in_vif [4];
 
     virtual axi4s_intf #(
         .DATA_BYTE_WID(DATA_BYTE_WID),
-        .TID_T   (TID_OUT_T),
-        .TDEST_T (TDEST_T),
-        .TUSER_T (TUSER_OUT_T)
+        .TID_WID   ($bits(TID_OUT_T)),
+        .TDEST_WID ($bits(TDEST_OUT_T)),
+        .TUSER_WID ($bits(TUSER_OUT_T))
     ) axis_out_vif [4];
 
     virtual axi4l_intf axil_vif;
@@ -78,13 +71,12 @@ class smartnic_env extends std_verif_pkg::basic_env;
     // Methods
     //===================================
     // Constructor
-    function new(input string name="smartnic_env", bit bigendian=1);
+    function new(input string name="smartnic_env");
         super.new(name);
-        this.__BIGENDIAN = bigendian;
         for (int i=0; i < 4; i++) begin
             inbox[i]      = new();
-            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)),  .BIGENDIAN(bigendian));
-            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)), .BIGENDIAN(bigendian));
+            driver[i]     = new(.name($sformatf("axi4s_driver[%0d]",i)));
+            monitor[i]    = new(.name($sformatf("axi4s_monitor[%0d]",i)));
 
             __drv_inbox[i] = new();
         end
@@ -203,16 +195,18 @@ class smartnic_env extends std_verif_pkg::basic_env;
                     begin
                         forever begin
                             TRANSACTION_IN_T transaction;
+                            port_t tdest_in;
                             int dest_port;
                             inbox[j].get(transaction);
                             driver[j].inbox.put(transaction);
-                            case (transaction.get_tdest().encoded.typ)
-                                PHY:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
-                                PF:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF0:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF1:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                VF2:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                                default dest_port = 4; // 'pkt_capture' block
+                            tdest_in = transaction.get_tdest();
+                            case (tdest_in.encoded.typ)
+                                PHY:     dest_port = (tdest_in.encoded.num == P0) ? 0 : 1;
+                                PF:      dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF0:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF1:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                VF2:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                                default: dest_port = 4; // 'pkt_capture' block
                             endcase
                             model[dest_port].inbox.put(transaction);
                         end
@@ -221,15 +215,17 @@ class smartnic_env extends std_verif_pkg::basic_env;
             end
             forever begin
                 TRANSACTION_IN_T transaction_in;
-                axi4s_transaction#(port_t, port_t, bit) transaction;
+                axi4s_transaction#(port_t, TDEST_IN_T, TUSER_IN_T) transaction;
+                port_t tdest_in;
                 int  dest_port;
                 adpt_tx_tid_t tid_in;
                 port_t tid;
 
                 pkt_playback_inbox.get(transaction_in);
                 tid_in = transaction_in.get_tid();
+                tdest_in = transaction_in.get_tdest();
                 tid = tid_in[$bits(port_t)-1:0];
-                transaction = axi4s_transaction#(port_t, port_t, bit)::create_from_bytes(
+                transaction = axi4s_transaction#(port_t, TDEST_IN_T, TUSER_IN_T)::create_from_bytes(
                     transaction_in.get_name(),
                     transaction_in.to_bytes(),
                     tid,
@@ -238,13 +234,13 @@ class smartnic_env extends std_verif_pkg::basic_env;
                 );
                 pkt_playback_driver.inbox.put(transaction);
 
-                case (transaction_in.get_tdest().encoded.typ)
-                    PHY:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 0 : 1;
-                    PF:     dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF0:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF1:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    VF2:    dest_port = (transaction.get_tdest().encoded.num == P0) ? 2 : 3;
-                    default dest_port = 4; // 'pkt_capture' block
+                case (tdest_in.encoded.typ)
+                    PHY:     dest_port = (tdest_in.encoded.num == P0) ? 0 : 1;
+                    PF:      dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF0:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF1:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    VF2:     dest_port = (tdest_in.encoded.num == P0) ? 2 : 3;
+                    default: dest_port = 4; // 'pkt_capture' block
                 endcase
                 model[dest_port].inbox.put(transaction_in);
             end
@@ -270,7 +266,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
     task automatic pcap_to_driver (
         input string      filename,
         input TID_IN_T    tid=0,
-        input TDEST_T     tdest=0,
+        input TDEST_IN_T  tdest=0,
         input TUSER_IN_T  tuser=0,
         input DRIVER_T    driver  );
 
@@ -284,8 +280,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
         // put packets one at a time
         for (int i = 0; i < num_pkts; i++) begin
-            axi4s_transaction#(TID_IN_T, TDEST_T, TUSER_IN_T) transaction =
-                axi4s_transaction#(TID_IN_T, TDEST_T, TUSER_IN_T)::create_from_bytes(
+            TRANSACTION_IN_T transaction =
+                TRANSACTION_IN_T::create_from_bytes(
                     $sformatf("Packet %0d", i),
                     pcap.records[i].pkt_data,
                     tid,
@@ -300,7 +296,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
     task automatic pcap_to_scoreboard (
         input string       filename,
         input TID_OUT_T    tid=0,
-        input TDEST_T      tdest=0,
+        input TDEST_OUT_T  tdest=0,
         input TUSER_OUT_T  tuser=0,
         input SCOREBOARD_T scoreboard );
 
@@ -314,8 +310,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
 
         // put packets one at a time
         for (int i = 0; i < num_pkts; i++) begin
-            axi4s_transaction#(TID_OUT_T, TDEST_T, TUSER_OUT_T) transaction =
-                axi4s_transaction#(TID_OUT_T, TDEST_T, TUSER_OUT_T)::create_from_bytes(
+            TRANSACTION_OUT_T transaction =
+                TRANSACTION_OUT_T::create_from_bytes(
                     $sformatf("Packet %0d", i),
                     pcap.records[i].pkt_data,
                     tid,
@@ -326,23 +322,40 @@ class smartnic_env extends std_verif_pkg::basic_env;
         end
     endtask
 
-   task vitisnetp4_read(
-           input  bit [31:0] addr,
-           output bit [31:0] data
-       );
-       int _addr = AXIL_VITISNET_OFFSET + addr;
-       reg_agent.set_rd_timeout(128);
-       reg_agent.read_reg(_addr, data);
-   endtask
+    task automatic send_packet(input string name, input port_t inport, input byte data[], input adpt_tx_tid_t tid=0, input port_t dest=0, input bit err=0);
+        TRANSACTION_IN_T transaction_in =
+            TRANSACTION_IN_T::create_from_bytes(
+                name,
+                data,
+                tid,
+                dest,
+                err
+            );
+        case (inport.encoded.typ)
+            PHY: if (inport.encoded.num == P0) this.inbox[0].put(transaction_in);
+                 else                          this.inbox[1].put(transaction_in);
+            PF:  if (inport.encoded.num == P0) this.inbox[2].put(transaction_in);
+                 else                          this.inbox[3].put(transaction_in);
+        endcase
+    endtask
+
+    task vitisnetp4_read(
+            input  bit [31:0] addr,
+            output bit [31:0] data
+        );
+        int _addr = AXIL_VITISNET_OFFSET + addr;
+        reg_agent.set_rd_timeout(128);
+        reg_agent.read_reg(_addr, data);
+    endtask
 
 
-   task vitisnetp4_write(
-           input  bit [31:0] addr,
-           input  bit [31:0] data
-       );
-       int _addr = AXIL_VITISNET_OFFSET + addr;
-       reg_agent.set_wr_timeout(128);
-       reg_agent.write_reg(_addr, data);
-   endtask
+    task vitisnetp4_write(
+            input  bit [31:0] addr,
+            input  bit [31:0] data
+        );
+        int _addr = AXIL_VITISNET_OFFSET + addr;
+        reg_agent.set_wr_timeout(128);
+        reg_agent.write_reg(_addr, data);
+    endtask
 
 endclass : smartnic_env

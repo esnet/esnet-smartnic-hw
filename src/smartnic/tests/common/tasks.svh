@@ -4,7 +4,6 @@
 localparam NUM_PORTS = 4;
 
 import smartnic_pkg::*;
-import axi4s_verif_pkg::*;
 
 localparam P4_DECODER_BASE = 'h80000;
 
@@ -77,10 +76,6 @@ smartnic_reg_pkg::reg_switch_config_t switch_config;
 int exp_pkts [NUM_PORTS-1:0];
 int bytes    [NUM_PORTS];
 
-`SVUNIT_CLK_GEN(tb.axil_aclk, 4ns);   // 125 Mhz
-`SVUNIT_CLK_GEN(tb.axis_clk, 1553ps); // 322 Mhz
-
-
 //=======================================================================
 // Tasks
 //=======================================================================
@@ -113,49 +108,43 @@ endtask
 
 
 // Create and send input transaction
-task automatic one_packet(input int idx=0, len=64, input port_t tid=0, tdest=tid, input bit tuser=0);
-    axi4s_transaction#(adpt_tx_tid_t, port_t, bit)  transaction_in;
+task one_packet(input int idx=0, len=64, input port_t tid=0, tdest=tid, input bit tuser=0);
+    string name = $sformatf("trans_%0d_in", idx);
+    byte data[];
+    port_t inport;
+    adpt_tx_tid_t adpt_tx_tid;
 
-    transaction_in = new(.name($sformatf("trans_%0d_in", idx)), .len(len));
-    transaction_in.randomize();
-    transaction_in.set_tdest(tdest);
-    transaction_in.set_tuser(tuser);
+    if (!std::randomize(data) with {data.size() == len;}) $fatal("Failed to randomize packet data.");
+
+    // Determine input port from tid
+    inport = tid;
     case (tid.encoded.typ)
-        PHY: if (tid.encoded.num == P0) begin transaction_in.set_tid(0); env.inbox[PHY0].put(transaction_in); end
-             else                       begin transaction_in.set_tid(0); env.inbox[PHY1].put(transaction_in); end
-
-        PF:  if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd0);     env.inbox[PF0].put(transaction_in);
-             end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd2048);  env.inbox[PF1].put(transaction_in);
-             end
-        VF0: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd512);   env.inbox[PF0].put(transaction_in);
-             end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd2560);  env.inbox[PF1].put(transaction_in);
-             end
-        VF1: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd1024);  env.inbox[PF0].put(transaction_in);
-             end else begin
-                 transaction_in.set_tid($urandom_range(0,511) + 16'd3072);  env.inbox[PF1].put(transaction_in);
-             end
-        VF2: if (tid.encoded.num == P0) begin
-                 transaction_in.set_tid($urandom_range(0,510) + 16'd1536);  env.inbox[PF0].put(transaction_in);
-             end else begin
-                 transaction_in.set_tid($urandom_range(0,510) + 16'd3584);  env.inbox[PF1].put(transaction_in);
-             end
-        UNSET: if (tid.encoded.num == P0) begin  // used for out-of-range test
-                 transaction_in.set_tid(                  511 + 16'd1536);  env.inbox[PF0].put(transaction_in);
-             end else begin
-                 transaction_in.set_tid(                  511 + 16'd3584);  env.inbox[PF1].put(transaction_in);
-             end
+        PHY:     inport.encoded.typ = PHY;
+        default: inport.encoded.typ = PF;
     endcase
+
+    // Determine adpt_tx_tid from tid
+    case (tid.encoded.typ)
+        PHY:                              adpt_tx_tid = 0;
+        PF:    if (tid.encoded.num == P0) adpt_tx_tid = $urandom_range(0,511) + 16'd0;
+               else                       adpt_tx_tid = $urandom_range(0,511) + 16'd2048;
+        VF0:   if (tid.encoded.num == P0) adpt_tx_tid = $urandom_range(0,511) + 16'd512;
+               else                       adpt_tx_tid = $urandom_range(0,511) + 16'd2560;
+        VF1:   if (tid.encoded.num == P0) adpt_tx_tid = $urandom_range(0,511) + 16'd1024;
+               else                       adpt_tx_tid = $urandom_range(0,511) + 16'd3072;
+        VF2:   if (tid.encoded.num == P0) adpt_tx_tid = $urandom_range(0,510) + 16'd1536;
+               else                       adpt_tx_tid = $urandom_range(0,510) + 16'd3584;
+        UNSET: if (tid.encoded.num == P0) adpt_tx_tid = 511 + 16'd1536; // used for out-of-range test
+               else                       adpt_tx_tid = 511 + 16'd3584;
+    endcase
+
+    env.send_packet(name, inport, data, adpt_tx_tid, tdest, tuser);
 endtask
 
 
 task automatic packet_stream(input int pkts=10, mode=0, output int bytes, input port_t tid=0, tdest=tid, input bit tuser=0);
+    int __bytes = 0;
     int len = 63;
-    bytes=0;
 
     for (int i = 0; i < pkts; i++) begin
         if      (mode==0) len = $urandom_range(64, 1518);
@@ -163,8 +152,9 @@ task automatic packet_stream(input int pkts=10, mode=0, output int bytes, input 
         else              len = mode;
 
         one_packet(.idx(i), .len(len), .tid(tid), .tdest(tdest), .tuser(tuser));
-        bytes = bytes + len;
+        __bytes = __bytes + len;
     end
+    bytes = __bytes;
 endtask
 
 

@@ -21,16 +21,14 @@ module tb;
     axi4l_intf axil_to_vitisnetp4 ();
     axi4l_intf axil_to_extern ();
 
-    axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_in_if  [NUM_PROC_PORTS] ();
-    axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t)) _axis_out_if [NUM_PROC_PORTS] ();
-    axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_out_if [NUM_PROC_PORTS] ();
-    axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_to_extern ();
-    axi4s_intf #(.TUSER_T(tuser_t),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T(port_t), .TDEST_T(port_t))  axis_from_extern ();
+    axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if  [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+    axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+    axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_extern (.aclk(clk), .aresetn(rstn));
+    axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_extern (.aclk(clk), .aresetn(rstn));
 
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;
@@ -47,36 +45,14 @@ module tb;
         .axil_to_extern          ( axil_to_extern ),
         .egr_flow_ctl            ( '0 ),
         .axis_in                 ( axis_in_if ),
-        .axis_out                ( _axis_out_if ),
+        .axis_out                ( axis_out_if ),
         .axis_to_extern          ( axis_to_extern ),
         .axis_from_extern        ( axis_from_extern )
     );
 
-    // set some 'axis_out_if' tuser fields to zero to simplify scoreboard comparisons (dont_cares).
-    generate
-        for (genvar i = 0; i < NUM_PROC_PORTS; i += 1) begin
-            assign  axis_out_if[i].aclk    = _axis_out_if[i].aclk;
-            assign  axis_out_if[i].aresetn = _axis_out_if[i].aresetn;
-            assign  axis_out_if[i].tvalid  = _axis_out_if[i].tvalid;
-            assign  axis_out_if[i].tdata   = _axis_out_if[i].tdata;
-            assign  axis_out_if[i].tkeep   = _axis_out_if[i].tkeep;
-            assign  axis_out_if[i].tlast   = _axis_out_if[i].tlast;
-            assign  axis_out_if[i].tid     = _axis_out_if[i].tid;
-            assign  axis_out_if[i].tdest   = _axis_out_if[i].tdest;
-            assign _axis_out_if[i].tready  =  axis_out_if[i].tready;
-
-            always_comb begin
-                axis_out_if[i].tuser = _axis_out_if[i].tuser;
-                axis_out_if[i].tuser.timestamp = 0;
-                axis_out_if[i].tuser.pid = 0;
-                axis_out_if[i].tuser.hdr_tlast = 0;
-            end
-        end
-    endgenerate
-
     axi4l_intf_controller_term   axil_term     ( .axi4l_if(axil_to_extern) );
-    axi4s_intf_rx_sink   axis_from_extern_sink ( .axi4s_if(axis_from_extern) );
-    axi4s_intf_tx_term   axis_to_extern_term   ( .aclk(clk), .aresetn(rstn), .axi4s_if(axis_to_extern) );
+    axi4s_intf_rx_sink   axis_from_extern_sink ( .from_tx(axis_from_extern) );
+    axi4s_intf_tx_term   axis_to_extern_term   ( .to_rx(axis_to_extern) );
 
     //===================================
     // Local signals
@@ -102,14 +78,6 @@ module tb;
     assign axil_to_vitisnetp4.aclk = axil_if.aclk;
     assign axil_to_vitisnetp4.aresetn = axil_if.aresetn;
 
-    // Assign AXI-S input clock/reset
-    generate
-        for (genvar i = 0; i < NUM_PROC_PORTS; i += 1) begin
-            assign axis_in_if[i].aclk = clk;
-            assign axis_in_if[i].aresetn = rstn;
-        end
-    endgenerate
-
     // Timestamp
     timestamp_intf #() timestamp_if (.clk(clk), .srst(~rstn));
     assign timestamp = timestamp_if.timestamp;
@@ -120,7 +88,7 @@ module tb;
     function automatic tb_env build();
         tb_env env;
         // Instantiate environment
-        env = new("tb_env", 0); // bigendian=0 to match CMACs.
+        env = new("tb_env");
 
         // Connect environment
         env.reset_vif = reset_if;

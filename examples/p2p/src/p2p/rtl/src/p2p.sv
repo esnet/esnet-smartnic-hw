@@ -38,15 +38,12 @@ module p2p #(
    // ----------------------------------------------------------------
    //  Datpath pass-through connections (hard-wired bypass)
    // ----------------------------------------------------------------
-   assign axis_out.aclk = axis_in.aclk;
-   assign axis_out.aresetn = axis_in.aresetn;
-
    assign axis_out.tvalid = axis_in.tvalid && !tpause;
    assign axis_out.tdata  = axis_in.tdata;
    assign axis_out.tkeep  = axis_in.tkeep;
    assign axis_out.tlast  = axis_in.tlast;
    assign axis_out.tid    = axis_in.tid;
-   assign axis_out.tdest  = {'0, axis_in.tdest};
+   assign axis_out.tdest  = axis_in.tdest;
    assign axis_out.tuser  = axis_in.tuser;
 
    assign axis_in.tready = axis_out.tready && !tpause;

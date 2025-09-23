@@ -1,5 +1,4 @@
 import smartnic_pkg::*;
-import axi4s_verif_pkg::*;
 import p4_proc_pkg::*;
 
 //=======================================================================
@@ -16,10 +15,10 @@ typedef union packed {
     logic [31:0]          raw;
 } cntr_addr_t;
 
+tuser_smartnic_meta_t tuser;
+
 string  msg;
 string  p4_sim_dir = "../../../../vitisnetp4/p4/sim/";
-
-tuser_t tuser;
 
 //=======================================================================
 // Tasks
@@ -39,7 +38,7 @@ endtask
 
 
 task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tid=0, tdest=0,
-                             tuser_t tuser={64'hxxxxxxxxxxxxxxxx,16'd0,1'bx,16'hxxxx,1'b0,12'd0,1'bx},
+                             tuser_smartnic_meta_t tuser='{rss_enable: 1'b0, rss_entropy: '0},
                              bit write_tables=1, check_scoreboards=1);
     string filename;
     bit    rx_done=0;
@@ -62,6 +61,7 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
 
         while (!rx_done) #100ns if (env.scoreboard[out_port].exp_pending()==0)  rx_done=1;
     join_any
+
  
     if (check_scoreboards)
        for (int i=0; i < env.NUM_PROC_PORTS; i++) `FAIL_IF_LOG(env.scoreboard[i].report(msg) > 0, msg);

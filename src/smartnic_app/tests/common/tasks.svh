@@ -72,7 +72,7 @@ endtask
 
 
 task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tid=0, tdest=0,
-                             tuser_smartnic_meta_t tuser={16'd0,1'bx,16'hxxxx,1'b0,12'd0,1'bx},
+                             tuser_smartnic_meta_t tuser='{rss_enable: 1'b0, rss_entropy: '0},
                              bit write_tables=1);
     string filename;
     bit    rx_done=0;

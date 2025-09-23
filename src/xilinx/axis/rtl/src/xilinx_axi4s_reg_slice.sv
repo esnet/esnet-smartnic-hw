@@ -1,16 +1,19 @@
 module xilinx_axi4s_reg_slice
     import xilinx_axis_pkg::*;
 #(
-    parameter int  DATA_BYTE_WID = 8,
-    parameter type TID_T = logic,
-    parameter type TDEST_T = logic,
-    parameter type TUSER_T = logic,
     parameter xilinx_axis_reg_slice_config_t CONFIG = XILINX_AXIS_REG_SLICE_DEFAULT,
     parameter string DEVICE_FAMILY = "virtexuplusHBM"
 ) (
-    axi4s_intf.rx axi4s_from_tx,
-    axi4s_intf.tx axi4s_to_rx
+    axi4s_intf.rx from_tx,
+    axi4s_intf.tx to_rx
 );
+
+    axi4s_intf_parameter_check i_param_check (.*);
+
+    localparam int DATA_BYTE_WID = from_tx.DATA_BYTE_WID;
+    localparam int TID_WID = from_tx.TID_WID;
+    localparam int TDEST_WID = from_tx.TDEST_WID;
+    localparam int TUSER_WID = from_tx.TUSER_WID;
 
     function automatic int getResetPipeStages(input xilinx_axis_reg_slice_config_t _config);
         case (_config)
@@ -25,9 +28,9 @@ module xilinx_axi4s_reg_slice
     `AXIS_REGISTER_SLICE_MODULE_NAME #(
         .C_FAMILY            ( DEVICE_FAMILY ),
         .C_AXIS_TDATA_WIDTH  ( DATA_BYTE_WID*8 ),
-        .C_AXIS_TID_WIDTH    ( $bits(TID_T) ),
-        .C_AXIS_TDEST_WIDTH  ( $bits(TDEST_T) ),
-        .C_AXIS_TUSER_WIDTH  ( $bits(TUSER_T) ),
+        .C_AXIS_TID_WIDTH    ( TID_WID ),
+        .C_AXIS_TDEST_WIDTH  ( TDEST_WID ),
+        .C_AXIS_TUSER_WIDTH  ( TUSER_WID ),
         .C_AXIS_SIGNAL_SET   ( 32'b00000000000000000000000011111011 ), // No TSTRB
         .C_REG_CONFIG        ( CONFIG ),
         .C_NUM_SLR_CROSSINGS ( 0 ),
@@ -35,42 +38,28 @@ module xilinx_axi4s_reg_slice
         .C_PIPELINES_SLAVE   ( 0 ),
         .C_PIPELINES_MIDDLE  ( 0 )
     ) inst (
-        .aclk          ( axi4s_from_tx.aclk ),
+        .aclk          ( from_tx.aclk ),
         .aclk2x        ( 1'b0 ),
-        .aresetn       ( axi4s_from_tx.aresetn ),
+        .aresetn       ( from_tx.aresetn ),
         .aclken        ( 1'b1 ),
-        .s_axis_tvalid ( axi4s_from_tx.tvalid ),
-        .s_axis_tready ( axi4s_from_tx.tready ),
-        .s_axis_tdata  ( axi4s_from_tx.tdata ),
+        .s_axis_tvalid ( from_tx.tvalid ),
+        .s_axis_tready ( from_tx.tready ),
+        .s_axis_tdata  ( from_tx.tdata ),
         .s_axis_tstrb  ( '1 ),
-        .s_axis_tkeep  ( axi4s_from_tx.tkeep ),
-        .s_axis_tlast  ( axi4s_from_tx.tlast ),
-        .s_axis_tid    ( axi4s_from_tx.tid ),
-        .s_axis_tdest  ( axi4s_from_tx.tdest ),
-        .s_axis_tuser  ( axi4s_from_tx.tuser ),
-        .m_axis_tvalid ( axi4s_to_rx.tvalid ),
-        .m_axis_tready ( axi4s_to_rx.tready ),
-        .m_axis_tdata  ( axi4s_to_rx.tdata ),
+        .s_axis_tkeep  ( from_tx.tkeep ),
+        .s_axis_tlast  ( from_tx.tlast ),
+        .s_axis_tid    ( from_tx.tid ),
+        .s_axis_tdest  ( from_tx.tdest ),
+        .s_axis_tuser  ( from_tx.tuser ),
+        .m_axis_tvalid ( to_rx.tvalid ),
+        .m_axis_tready ( to_rx.tready ),
+        .m_axis_tdata  ( to_rx.tdata ),
         .m_axis_tstrb  ( ),
-        .m_axis_tkeep  ( axi4s_to_rx.tkeep ),
-        .m_axis_tlast  ( axi4s_to_rx.tlast ),
-        .m_axis_tid    ( axi4s_to_rx.tid ),
-        .m_axis_tdest  ( axi4s_to_rx.tdest ),
-        .m_axis_tuser  ( axi4s_to_rx.tuser)
+        .m_axis_tkeep  ( to_rx.tkeep ),
+        .m_axis_tlast  ( to_rx.tlast ),
+        .m_axis_tid    ( to_rx.tid ),
+        .m_axis_tdest  ( to_rx.tdest ),
+        .m_axis_tuser  ( to_rx.tuser)
     );
-
-    assign axi4s_to_rx.aclk = axi4s_from_tx.aclk;
-
-    // Pipeline reset
-    util_pipe       #(
-        .DATA_T      ( logic ),
-        .PIPE_STAGES ( getResetPipeStages(CONFIG) )
-    ) i_util_pipe_aresetn (
-        .clk      ( axi4s_to_rx.aclk ),
-        .srst     ( 1'b0 ),
-        .data_in  ( axi4s_from_tx.aresetn ),
-        .data_out ( axi4s_to_rx.aresetn )
-    );
-
 
 endmodule : xilinx_axi4s_reg_slice

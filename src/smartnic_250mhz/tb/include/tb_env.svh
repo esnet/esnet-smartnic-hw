@@ -22,10 +22,10 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     virtual axi4l_intf axil_vif;
 
     // AXI-S input interface
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_in_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) axis_h2c_out_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_in_vif [NUM_INTF];
-    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) axis_c2h_out_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_in_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_out_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_in_vif [NUM_INTF];
+    virtual axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_out_vif [NUM_INTF];
 
     axi4s_component_env #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_h2c_t)) env_h2c [NUM_INTF];
     axi4s_component_env #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(tuser_c2h_t)) env_c2h [NUM_INTF];
@@ -52,15 +52,15 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     //===================================
 
     // Constructor
-    function new(string name , bit bigendian = 1);
+    function new(string name);
         this.name = name;
         for (int i=0; i < NUM_INTF; i++) begin
             h2c_model[i] = new($sformatf("h2c_model[%0d]",i));
             c2h_model[i] = new($sformatf("c2h_model[%0d]",i));
             h2c_scoreboard[i] = new($sformatf("h2c_scoreboard[%0d]",i));
             c2h_scoreboard[i] = new($sformatf("c2h_scoreboard[%0d]",i));
-            env_h2c[i] = new("env_h2c", h2c_model[i], h2c_scoreboard[i], bigendian);
-            env_c2h[i] = new("env_c2h", c2h_model[i], c2h_scoreboard[i], bigendian);
+            env_h2c[i] = new("env_h2c", h2c_model[i], h2c_scoreboard[i]);
+            env_c2h[i] = new("env_c2h", c2h_model[i], c2h_scoreboard[i]);
         end
         reg_agent = new("axi4l_reg_agent");
         smartnic_250mhz_reg_blk_agent = new("smartnic_250mhz_reg_blk", 'h0000);

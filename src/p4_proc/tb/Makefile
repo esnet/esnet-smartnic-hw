@@ -23,8 +23,9 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    p4_proc.rtl \
     p4_proc.verif \
+    p4_proc.pkg \
+    smartnic.pkg \
     smartnic_app.igr_p4.default.rtl \
     smartnic_app.verif \
     std.rtl@common \

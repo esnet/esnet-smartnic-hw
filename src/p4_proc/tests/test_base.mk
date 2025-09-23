@@ -30,6 +30,7 @@ SUBCOMPONENTS = \
     vitisnetp4.rtl \
     vitisnetp4.extern.rtl \
     vitisnetp4.verif \
+    smartnic.pkg \
     smartnic.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \

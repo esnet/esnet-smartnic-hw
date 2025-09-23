@@ -36,8 +36,15 @@ package smartnic_pkg;
 
     typedef union packed {
         port_encoding_t encoded;
-        bit [3:0]       raw;
+        logic [3:0]     raw;
     } port_t;
+
+    function automatic logic get_port_idx(input port_t port);
+        case (port.encoded.num)
+            P0: return 1'b0;
+            P1: return 1'b1;
+        endcase
+    endfunction
 
     typedef enum logic [1:0] {
         H2C_PF   = 2'h0,
@@ -48,7 +55,7 @@ package smartnic_pkg;
 
     typedef union packed {
         h2c_encoding_t encoded;
-        bit [1:0]       raw;
+        logic [1:0]    raw;
     } h2c_t;
 
     typedef enum logic [1:0] {
@@ -59,16 +66,20 @@ package smartnic_pkg;
 
     typedef union packed {
         igr_tdest_encoding_t encoded;
-        bit [1:0]            raw;
+        logic [1:0]          raw;
     } igr_tdest_t;
 
     typedef struct packed {
-        logic [15:0] pid;
-        logic        trunc_enable;
-        logic [15:0] trunc_length;
         logic        rss_enable;
         logic [11:0] rss_entropy;
-        logic        hdr_tlast;
     } tuser_smartnic_meta_t;
+
+    // --------------------------------------------------------------
+    // Derived parameters
+    // --------------------------------------------------------------
+    localparam int PORT_WID                = $bits(port_t);
+    localparam int TUSER_SMARTNIC_META_WID = $bits(tuser_smartnic_meta_t);
+    localparam int IGR_TDEST_WID           = $bits(igr_tdest_t);
+    localparam int ADPT_TX_TID_WID         = $bits(adpt_tx_tid_t);
 
 endpackage : smartnic_pkg
