@@ -426,9 +426,7 @@ module xilinx_cmac_wrapper #(
     assign __axis_rx_tuser.err = rx_axis_tuser; // output wire rx_axis_tuser
     assign axis_rx.tuser = __axis_rx_tuser;
 
-    assign __axis_rx_tid.port_id = port_id_t'(PORT_ID);
-    assign axis_rx.tid = __axis_rx_tid;
-
+    assign axis_rx.tid = '0;
     assign axis_rx.tdest = '0;
 
     // =========================================================================

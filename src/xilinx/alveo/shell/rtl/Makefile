@@ -23,11 +23,13 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
+    shell.pkg \
     shell.rtl \
     shell.regio.rtl \
-    xilinx.alveo.rtl
+    xilinx.alveo.pkg \
+    xilinx.alveo.rtl \
+    axi4l.rtl@$(COMMON_LIB_NAME) \
+    axi4s.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

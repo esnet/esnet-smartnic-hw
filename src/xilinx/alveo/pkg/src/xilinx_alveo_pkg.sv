@@ -1,25 +1,37 @@
 package xilinx_alveo_pkg;
-    import shell_pkg::*;
 
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
-    export shell_pkg::NUM_CMAC;
+    localparam int NUM_CMAC = 2;
 
-    localparam int NUM_CMAC_REGMAP = 2;
-
-    export shell_pkg::DMA_ST_DATA_BYTE_WID;
-    export shell_pkg::DMA_ST_QUEUES;
+    localparam int DMA_ST_DATA_BYTE_WID = 64;
+    localparam int DMA_ST_QUEUES = 2048;
+    localparam int DMA_ST_QID_WID = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
     
-    export shell_pkg::CMAC_DATA_BYTE_WID;
+    localparam int CMAC_DATA_BYTE_WID = 64;
 
     // --------------------------------------------------------------
     // Typedefs
     // --------------------------------------------------------------
-    export shell_pkg::dma_st_qid_t;
-    export shell_pkg::dma_st_h2c_axis_tuser_t;
-    export shell_pkg::dma_st_c2h_axis_tuser_t;
+    typedef struct packed {logic unused;} unused_t;
 
-    typedef xilinx_cmac_pkg::axis_tuser_t cmac_axis_tuser_t;
+    typedef logic [DMA_ST_QID_WID-1:0] dma_st_qid_t;
+
+    typedef struct packed {dma_st_qid_t qid;} dma_st_axis_tid_t;
+    typedef unused_t                          dma_st_axis_tdest_t;
+    typedef struct packed {logic err;}        dma_st_axis_tuser_t;
+
+    localparam int DMA_ST_AXIS_TID_WID   = $bits(dma_st_axis_tid_t);
+    localparam int DMA_ST_AXIS_TDEST_WID = $bits(dma_st_axis_tdest_t);
+    localparam int DMA_ST_AXIS_TUSER_WID = $bits(dma_st_axis_tuser_t);
+
+    typedef unused_t                          cmac_axis_tid_t;
+    typedef unused_t                          cmac_axis_tdest_t;
+    typedef struct packed {logic err;}        cmac_axis_tuser_t;
+
+    localparam int CMAC_AXIS_TID_WID   = $bits(cmac_axis_tid_t);
+    localparam int CMAC_AXIS_TDEST_WID = $bits(cmac_axis_tdest_t);
+    localparam int CMAC_AXIS_TUSER_WID = $bits(cmac_axis_tuser_t);
 
 endpackage : xilinx_alveo_pkg

@@ -1,9 +1,14 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
+
+# -----------------------------------------------
+# Specify top-level module
+# -----------------------------------------------
+TOP = core
 
 # ----------------------------------------------------
 # Sources
@@ -23,34 +28,34 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    shell.pkg \
-    shell.rtl
-EXT_LIBS =
-
-# ----------------------------------------------------
-# Defines
-#   List macro definitions.
-# ----------------------------------------------------
-DEFINES =
-
-# ----------------------------------------------------
-# Options
-# ----------------------------------------------------
-COMPILE_OPTS =
+    core.smartnic.rtl \
+    smartnic.rtl \
+    smartnic_app.blackbox.rtl
 
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile synth
+all: synth
 
-compile: _compile_sim
-synth:   _compile_synth
-info:    _compile_info
-clean:   _compile_clean
+pre_synth: _pre_synth
+synth:     _build_core_synth
+opt:       _build_core_opt
+place:     _build_core_place
+validate:  _build_core_validate
+info:      _build_core_info
+clean:     _build_clean
 
-.PHONY: all compile synth info clean
+.PHONY: pre_synth synth opt validate info clean
 
 # ----------------------------------------------------
-# Import Vivado compile targets
+# Project management targets
 # ----------------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
+proj       : _proj
+proj_clean : _proj_clean
+
+.PHONY: proj proj_clean
+
+# -----------------------------------------------
+# Include Vivado definitions/targets
+# -----------------------------------------------
+include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk

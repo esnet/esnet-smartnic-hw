@@ -12,7 +12,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML =
 REG_DECODER_YAML = \
-    hbmtest_decoder.yaml
+    smartnic_decoder.yaml
 
 # ----------------------------------------------------
 # Options
