@@ -125,7 +125,6 @@ module smartnic_host
     logic host_to_core_demux_sel [NUM_CMAC];
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
         port_t axis_host_to_core_mux_out_tid;
-        port_t axis_pkt_playback_tid;
 
         // host_to_core mux logic.
         axi4s_intf_connector host_to_core_mux_in_pipe_0
@@ -192,6 +191,8 @@ module smartnic_host
 
 
     //------------------------ packet playback/capture logic --------------
+    port_t axis_pkt_playback_tid;
+
     axi4s_packet_playback axi4s_packet_playback_inst (
        .clk     ( core_clk ),
        .srst    (~core_rstn ),
