@@ -124,8 +124,8 @@ package :
 	   --include-dir $(artifact_dir)/regmap/spec \
 	   --output-file $(artifact_dir)/regmap/esnet-smartnic-top-ir.yaml \
 	   $(artifact_dir)/regmap/spec/esnet-smartnic-top.yaml
-	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit $(artifact_dir)/firmware/esnet-smartnic.bit
-	@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs $(artifact_dir)/firmware/esnet-smartnic.mcs
+	@zstd -9 $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit -o $(artifact_dir)/firmware/esnet-smartnic.bit.zst
+	@zstd -9 $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.mcs -o $(artifact_dir)/firmware/esnet-smartnic.mcs.zst
 	-@cp $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/*.ltx $(artifact_dir)/firmware
 	-@cp $(open_nic_build)/build_summary.json $(artifact_dir)/firmware
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
