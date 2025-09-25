@@ -1,3 +1,31 @@
+__all__ = ()
+
+from robot.api.deco import keyword, library
+
+from smartnic.config  import *
+
+
+#---------------------------------------------------------------------------------------------------
+@library
+class Library:
+    @keyword
+    def endian_check_packed_to_unpacked(self, dev, exp_data):
+        endian_check_packed_to_unpacked(dev, exp_data)
+
+    @keyword
+    def endian_check_unpacked_to_packed(self, dev, exp_data):
+        endian_check_unpacked_to_packed(dev, exp_data)
+
+    @keyword
+    def testcase_setup(self, dev, num_p4_proc):
+        testcase_setup(dev, num_p4_proc)
+        
+    @keyword
+    def testcase_teardown(self, dev):
+        testcase_teardown(dev)
+
+
+
 #---------------------------------------------------------------------------------------------------
 def endian_check_packed_to_unpacked(dev, exp_data):
     # esnet-fpga-library/src/reg/endian/tests/reg_endian_check/reg_endian_check_unit_test.sv

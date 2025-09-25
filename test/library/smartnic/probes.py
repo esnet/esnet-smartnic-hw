@@ -23,17 +23,24 @@ def clr_switch_stats(client):
     return resp.stats
 
 #---------------------------------------------------------------------------------------------------
-def check_probe(name, pkts, bytes):
+def check_probes(names, pkts, bytes, check_zeros=1):
     client = sn_cfg.connect_client(tls_insecure=True)
     stats = get_stats(client)
     metrics = stats_metrics_to_map(stats)
     #dump_metrics(metrics, 'Metrics')
 
-    m = metrics[name+'.pkt_count']
-    if (m['value'] != pkts): raise AssertionError(f'Number of packets received did NOT match expected!')
+    for name in names:
+        m = metrics[name+'.pkt_count']
+        rx_pkts = m['value']
+        #if (m['value'] != pkts): raise AssertionError(f'Number of packets received {m['value']} did NOT match expected {pkts}!')
+        if (rx_pkts != pkts): raise AssertionError(f'Number of packets received {rx_pkts} did NOT match expected {pkts}!')
 
-    m = metrics[name+'.byte_count']
-    if (m['value'] != bytes): raise AssertionError(f'Number of bytes received did NOT match expected!')
+        m = metrics[name+'.byte_count']
+        if (m['value'] != bytes): raise AssertionError(f'Number of bytes received did NOT match expected!')
+
+    if check_zeros and (len(metrics) != 2*len(names)):  # each 'non-zero' metric has 'pkt' and 'byte' count.
+        print(metrics)
+        raise AssertionError(f'A counter expected to be ZERO did NOT match!')
 
 #---------------------------------------------------------------------------------------------------
 def get_stats(client):

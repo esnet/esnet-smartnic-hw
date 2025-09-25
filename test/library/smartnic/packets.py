@@ -7,9 +7,18 @@ from scapy.all import *
 
 sys.path.append('.')
 
-from packet_playback_protocol import PacketPlaybackProtocol
-from packet_capture_protocol  import PacketCaptureProtocol
+from smartnic.packet_playback_protocol import PacketPlaybackProtocol
+from smartnic.packet_capture_protocol  import PacketCaptureProtocol
 
+from smartnic.config  import *
+
+#---------------------------------------------------------------------------------------------------
+def one_packet(size):
+        pkt = ''
+        for j in range(size): pkt += random.choice(string.ascii_lowercase)
+        tx_pkt = bytes(pkt, encoding='utf-8')
+
+        return tx_pkt
 
 #---------------------------------------------------------------------------------------------------
 def pkt_playback_config(dev, port):
@@ -20,9 +29,9 @@ def pkt_playback_config(dev, port):
     playback.enable()
 
 #---------------------------------------------------------------------------------------------------
-def pkt_playback (dev, pkt, tid=0):
+def pkt_playback (dev, pkt, tid=0, tdest=0):
     playback = PacketPlaybackProtocol(dev.bar2.smartnic_pkt_playback, 'Playback')
-    playback.send(pkt, tid << 5)
+    playback.send(pkt, tid << 5 | tdest << 1)
 
 #---------------------------------------------------------------------------------------------------
 def pkt_capture_config(dev, port):
@@ -56,22 +65,30 @@ def pkt_capture_read (dev, exp=''):
 
 #---------------------------------------------------------------------------------------------------
 def pkt_playback_capture(dev, num, size, port=0):
-    pkt_playback_config (dev, port)
-    pkt_capture_config  (dev, port)
-
     for i in range(num):
-        pkt = ''
-        for j in range(size): pkt += random.choice(string.ascii_lowercase)
-        tx_pkt = bytes(pkt, encoding='utf-8')
+        tx_pkt = one_packet(size)
 
         pkt_capture_trigger (dev)
-        pkt_playback (dev, tx_pkt, port)
+        pkt_playback (dev, tx_pkt, port, port)
         result = pkt_capture_read (dev, tx_pkt)
 
         if (result != True): raise AssertionError(f'Packet data received did NOT match expected!')
 
 #---------------------------------------------------------------------------------------------------
+def rnd_playback_capture(dev, num, port=0):
+    bytes = 0
+    for i in range(num):
+        size = random.randint(64, 1500)
+        bytes = bytes + size
+        pkt_playback_capture (dev, 1, size, port)
 
+    time.sleep(1) # wait in seconds, for stats collection.
+
+    return bytes
+
+
+
+#---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_config(dev, port, mux_out_sel):
     if (port==0):
@@ -79,25 +96,18 @@ def pkt_accelerator_config(dev, port, mux_out_sel):
         dev.bar2.smartnic_regs.smartnic_mux_out_sel[2]._r.value=int(mux_out_sel)
         dev.bar2.smartnic_regs.smartnic_demux_out_sel.port0=0
 
-        dev.bar2.cmac0.gt_loopback=1
-        dev.bar2.cmac0.conf_rx_1.ctl_rx_enable=1
-        dev.bar2.cmac0.conf_tx_1.ctl_tx_enable=1
     else:
         dev.bar2.smartnic_regs.smartnic_mux_out_sel[1]._r.value=int(mux_out_sel)
         dev.bar2.smartnic_regs.smartnic_mux_out_sel[3]._r.value=int(mux_out_sel)
         dev.bar2.smartnic_regs.smartnic_demux_out_sel.port1=0
 
-        dev.bar2.cmac1.gt_loopback=1
-        dev.bar2.cmac1.conf_rx_1.ctl_rx_enable=1
-        dev.bar2.cmac1.conf_tx_1.ctl_tx_enable=1
-
-    time.sleep(1) # pause for cmac configuration and synchronization.
+    cmac_loopback_config(dev, port)
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_inject(dev, num, pkt, port):
     pkt_playback_config(dev, port)
 
-    for i in range(num): pkt_playback (dev, pkt, port)
+    for i in range(num): pkt_playback (dev, pkt, port, port)
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_extract(dev, num, exp, port):

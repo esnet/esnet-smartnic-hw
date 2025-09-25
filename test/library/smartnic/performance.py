@@ -1,7 +1,33 @@
+__all__ = ()
+
+from robot.api.deco import keyword, library
+
+from smartnic.config  import *
+from smartnic.packets import *
+from smartnic.probes  import *
+
 import time
 
-from packets import *
-from probes  import *
+#---------------------------------------------------------------------------------------------------
+@library
+class Library:
+    @keyword
+    def performance_test(self, dev, port, num, size, mpps, gbps, mux_out_sel=0):
+        performance_test(dev, port, num, size, mpps, gbps, mux_out_sel)
+
+    @keyword
+    def testcase_setup(self, dev, num_p4_proc):
+        testcase_setup(dev, num_p4_proc)
+        
+    @keyword
+    def testcase_teardown(self, dev):
+        testcase_teardown(dev)
+        
+    @keyword
+    def hdr_length_config(self, dev, p4_proc, length):
+        hdr_length_config(dev, p4_proc, length)
+
+
 
 #---------------------------------------------------------------------------------------------------
 def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
@@ -10,9 +36,7 @@ def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
 
     # configure and enable packet accelerator(s).
     for _port in range(2):
-        pkt = ''
-        for i in range(size): pkt += random.choice(string.ascii_lowercase)             
-        tx_pkt.append(bytes(pkt, encoding='utf-8'))
+        tx_pkt.append(one_packet(size))
 
         if (port==2 or port==_port):
             pkt_accelerator_config (dev, _port, mux_out_sel)

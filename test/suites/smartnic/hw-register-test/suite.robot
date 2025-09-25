@@ -1,8 +1,9 @@
 *** Settings ***
 Documentation    Basic register tests.
-Library          hw.registers.Library
+Library          smartnic.registers.Library
 Variables        variables
-Test Setup       Testcase Setup       ${dev}
+Variables        smartnic.config
+Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
 
 
