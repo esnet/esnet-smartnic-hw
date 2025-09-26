@@ -27,6 +27,7 @@ module xilinx_hbm_stack
     localparam int ADDR_WID = get_addr_wid(DENSITY);
 
     // Signals
+    logic       apb_complete;
     logic       dram_status_cattrip;
     logic [6:0] dram_status_temp;
 

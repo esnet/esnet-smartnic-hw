@@ -16,10 +16,8 @@ module xilinx_hbm_stack_if
     // APB (management) interface
     apb_intf.peripheral         apb_if,
 
-    // Status
-    output wire logic           init_done,
-    
-    // DRAM status monitoring
+    // DRAM status monitoring (APB PCLK domain)
+    output wire logic           apb_complete,
     output wire logic           dram_status_cattrip,
     output wire logic [6:0]     dram_status_temp,
 
@@ -618,7 +616,7 @@ module xilinx_hbm_stack_if
         .pslverr ( APB_0_PSLVERR )
     );
 
-    assign init_done = apb_complete_0;
+    assign apb_complete = apb_complete_0;
 
     // Memory Channel 0
     axi3_intf_to_signals #(

@@ -18,13 +18,14 @@ module xilinx_hbm_stack_ctrl
     // APB (management) interface
     input logic           apb_clk,
     apb_intf.controller   apb_if,
-
-    // Status
-    input logic           init_done,
     
-    // DRAM status monitoring
+    // Status monitoring (synchronous with APB PCLK)
+    input logic           apb_complete,
     input logic           dram_status_cattrip,
-    input logic [6:0]     dram_status_temp
+    input logic [6:0]     dram_status_temp,
+
+    // Output (synchronous with clk)
+    output logic          init_done
 );
 
     // -----------------------------
@@ -94,7 +95,7 @@ module xilinx_hbm_stack_ctrl
     end
 
     // CDC (cross status signals from APB to clk clock domain)
-    assign dram_status__apb_clk.init_done = init_done;
+    assign dram_status__apb_clk.init_done = apb_complete;
     assign dram_status__apb_clk.temp = dram_status_temp;
     assign dram_status__apb_clk.cattrip = dram_status_cattrip;
 
@@ -108,6 +109,8 @@ module xilinx_hbm_stack_ctrl
         .rst_out  ( 1'b0 ),
         .data_out ( dram_status__clk )
     );
+
+    assign init_done = dram_status__clk.init_done;
 
     // Report status
     assign reg_if.status_nxt_v = 1'b1;
