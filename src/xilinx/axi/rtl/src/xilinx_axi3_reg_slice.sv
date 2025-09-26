@@ -7,13 +7,19 @@ module xilinx_axi3_reg_slice
     axi3_intf.peripheral from_controller,
     axi3_intf.controller to_peripheral
 );
-    axi3_intf_parameter_check i_param_check (.*);
-
     // Parameters
     localparam int ADDR_WID      = from_controller.ADDR_WID;
     localparam int DATA_BYTE_WID = from_controller.DATA_BYTE_WID;
     localparam int ID_WID        = from_controller.ID_WID;
     localparam int USER_WID      = from_controller.USER_WID;
+    
+    // Parameter check
+    initial begin
+        std_pkg::param_check(to_peripheral.DATA_BYTE_WID, DATA_BYTE_WID, "to_peripheral.DATA_BYTE_WID");
+        std_pkg::param_check(to_peripheral.ADDR_WID,      ADDR_WID,      "to_peripheral.ADDR_WID");
+        std_pkg::param_check(to_peripheral.ID_WID,        ID_WID,        "to_peripheral.ID_WID");
+        std_pkg::param_check(to_peripheral.USER_WID,      USER_WID,      "to_peripheral.USER_WID");
+    end
 
     function automatic int getResetPipeStages(input xilinx_axi_reg_slice_config_t _config);
         case (_config)

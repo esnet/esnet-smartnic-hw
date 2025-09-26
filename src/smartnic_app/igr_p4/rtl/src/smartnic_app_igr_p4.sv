@@ -23,11 +23,14 @@ module smartnic_app_igr_p4
     localparam int DATA_BYTE_WID = axis_in[0].DATA_BYTE_WID;
 
     // Parameter checking
-    axi4s_intf_parameter_check param_check_inst (.from_tx(axis_in[0]), .to_rx(axis_out[0]));
     initial begin
-        std_pkg::param_check(axis_in[0].TID_WID, PORT_WID, "axis_in.TID_WID");
-        std_pkg::param_check(axis_in[0].TDEST_WID, PORT_WID, "axis_in.TDEST_WID");
-        std_pkg::param_check(axis_in[0].TUSER_WID, TUSER_SMARTNIC_META_WID, "axis_in.TDEST_WID");
+        std_pkg::param_check(axis_in[0].TID_WID,        PORT_WID,                "axis_in.TID_WID");
+        std_pkg::param_check(axis_in[0].TDEST_WID,      PORT_WID,                "axis_in.TDEST_WID");
+        std_pkg::param_check(axis_in[0].TUSER_WID,      TUSER_SMARTNIC_META_WID, "axis_in.TDEST_WID");
+        std_pkg::param_check(axis_out[0].DATA_BYTE_WID, DATA_BYTE_WID,           "axis_out.DATA_BYTE_WID");
+        std_pkg::param_check(axis_out[0].TID_WID,       PORT_WID,                "axis_out.TID_WID");
+        std_pkg::param_check(axis_out[0].TDEST_WID,     PORT_WID,                "axis_out.TDEST_WID");
+        std_pkg::param_check(axis_out[0].TUSER_WID,     TUSER_SMARTNIC_META_WID, "axis_out.TDEST_WID");
     end
 
     // Signals
