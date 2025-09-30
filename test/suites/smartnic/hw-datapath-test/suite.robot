@@ -5,6 +5,7 @@ Variables        variables
 Variables        smartnic.config
 Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
+Test Timeout     1 minute
 
 
 
@@ -126,24 +127,24 @@ Drops To Bypass Test - Port 1
 
 Drops From CMAC Test - Port 0
    #Drops From CMAC Test    ${dev}    ${num}    ${size}    ${port}
-    Drops From CMAC Test    ${dev}    ${100}    ${1000}     ${0}
+    Drops From CMAC Test    ${dev}    ${75}     ${1500}    ${0}
 
 Drops From CMAC Test - Port 1
-    Drops From CMAC Test    ${dev}    ${100}    ${1000}     ${1}
+    Drops From CMAC Test    ${dev}    ${75}     ${1500}    ${1}
 
 Drops To Host Test - Port 0
    #Drops To Host Test    ${dev}    ${num}    ${size}    ${port}
-    Drops To Host Test    ${dev}    ${100}    ${1000}     ${0}
+    Drops To Host Test    ${dev}    ${75}     ${1500}    ${0}
 
 Drops To Host Test - Port 1
-    Drops To Host Test    ${dev}    ${100}    ${1000}     ${1}
+    Drops To Host Test    ${dev}    ${75}     ${1500}    ${1}
 
 Drops To CMAC Test - Port 0
    #Drops To CMAC Test    ${dev}    ${num}    ${size}    ${port}
-    Drops To CMAC Test    ${dev}    ${100}    ${1000}     ${0}
+    Drops To CMAC Test    ${dev}    ${75}     ${1500}    ${0}
 
 Drops To CMAC Test - Port 1
-    Drops To CMAC Test    ${dev}    ${100}    ${1000}     ${1}
+    Drops To CMAC Test    ${dev}    ${75}     ${1500}    ${1}
 
 
 
@@ -151,5 +152,5 @@ Drops To CMAC Test - Port 1
 Zero Length Packet Test - Port 0
     Pkt Playback Capture Test    ${dev}    ${1}    ${0}    ${0}
 
-Zero Length Packet Test - Port 0
+Packet Playback Capture Test - Port 0
     Pkt Playback Capture Test    ${dev}    ${num}    ${128}    ${0}

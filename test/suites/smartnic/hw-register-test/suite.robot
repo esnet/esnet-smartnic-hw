@@ -5,7 +5,7 @@ Variables        variables
 Variables        smartnic.config
 Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
-
+Test Timeout     1 minute
 
 *** Test Cases ***
 FW Bytes to Word Endian Test

@@ -58,10 +58,9 @@ def pkt_capture_read (dev, exp=''):
     if (exp == ''):
         Raw(raw(rx_pkt)).show()
     elif (raw(rx_pkt) != exp):
-        Raw(raw(rx_pkt)).show(); Raw(exp).show()
-        return False
-
-    return True
+        print("Received: "); Raw(raw(rx_pkt)).show();
+        print("Expected: "); Raw(exp).show()
+        raise AssertionError(f'Packet data received did NOT match expected!')
 
 #---------------------------------------------------------------------------------------------------
 def pkt_playback_capture(dev, num, size, port=0):
@@ -69,10 +68,8 @@ def pkt_playback_capture(dev, num, size, port=0):
         tx_pkt = one_packet(size)
 
         pkt_capture_trigger (dev)
-        pkt_playback (dev, tx_pkt, port, port)
-        result = pkt_capture_read (dev, tx_pkt)
-
-        if (result != True): raise AssertionError(f'Packet data received did NOT match expected!')
+        pkt_playback        (dev, tx_pkt, port, port)
+        pkt_capture_read    (dev, tx_pkt)
 
 #---------------------------------------------------------------------------------------------------
 def rnd_playback_capture(dev, num, port=0):
@@ -88,7 +85,6 @@ def rnd_playback_capture(dev, num, port=0):
 
 
 
-#---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_config(dev, port, mux_out_sel):
     if (port==0):
@@ -113,12 +109,9 @@ def pkt_accelerator_inject(dev, num, pkt, port):
 def pkt_accelerator_extract(dev, num, exp, port):
     pkt_capture_config (dev, port)
 
-    result=True
     for i in range(num):
         pkt_capture_trigger (dev)
-        result = result and pkt_capture_read (dev, exp)
-
-    if (result != True): raise AssertionError(f'Packet data received did NOT match expected!')
+        pkt_capture_read    (dev, exp)
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_flush(dev, port):

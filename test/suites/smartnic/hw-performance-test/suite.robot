@@ -5,7 +5,7 @@ Variables        variables
 Variables        smartnic.config
 Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
-
+Test Timeout     1 minute
 
 *** Test Cases ***
 # All platform performance tests have 'P4 Bypass' mode configured at startup.
@@ -31,7 +31,8 @@ HdrLen 0 - Both Ports - 64B Pkts
     Performance Test    ${dev}    ${2}    ${150}    ${64}      ${142.0}    ${100000}
 
 #HdrLen 0 - Both Ports - 1472B Pkts
-   #Performance Test    ${dev}    ${2}     ${15}    ${1472}    ${8.36}     ${100000}
+#    Performance Test    ${dev}    ${2}     ${15}    ${1472}    ${7.47}     ${100000}
+#    Performance Test    ${dev}    ${2}     ${15}    ${1472}    ${8.36}     ${100000}
 
 
 
@@ -57,3 +58,26 @@ HdrLen 64 - Both Ports - 1472B Pkts
     Run Keyword If    ${num_p4_proc} == ${2}    Hdr Length Config    ${dev}    egr        ${64}
 
     Performance Test     ${dev}    ${2}    ${15}     ${1472}    ${8.36}     ${100000}
+
+
+
+
+*** comment ***
+#HdrLen Changes - Both Ports - 64B Pkts2
+#    Hdr Length Config    ${dev}    igr        ${0}
+#    Performance Test     ${dev}    ${2}    ${150}    ${65}      ${140.4}    ${100000}
+HdrLen Changes - Both Ports - 64B Pkts3
+    Hdr Length Config    ${dev}    igr        ${64}
+    Performance Test     ${dev}    ${2}    ${150}    ${65}      ${140.4}    ${100000}
+#HdrLen Changes - Both Ports - 64B Pkts0
+    Hdr Length Config    ${dev}    igr        ${0}
+    Performance Test    ${dev}    ${2}    ${150}    ${64}      ${142.0}    ${100000}
+#HdrLen Changes - Both Ports - 64B Pkts1
+    Hdr Length Config    ${dev}    igr        ${64}
+    Performance Test    ${dev}    ${2}    ${150}    ${64}      ${142.0}    ${100000}
+    Hdr Length Config    ${dev}    igr        ${0}
+    Performance Test    ${dev}    ${2}    ${150}    ${64}      ${142.0}    ${100000}
+    Hdr Length Config    ${dev}    igr        ${64}
+    Performance Test     ${dev}    ${2}    ${15}     ${1472}    ${8.36}     ${100000}
+    Hdr Length Config    ${dev}    igr        ${0}
+    Performance Test    ${dev}    ${2}    ${150}    ${64}      ${142.0}    ${100000}

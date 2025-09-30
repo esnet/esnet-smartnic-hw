@@ -13,7 +13,7 @@ import math
 @library
 class Library:
     @keyword
-    def pkt_playback_capture_test(self, dev, num, size, port, enable_probes=1):
+    def pkt_playback_capture_test(self, dev, num, size, port, enable_probes=True):
         pkt_playback_capture_test(dev, num, size, port, enable_probes)
 
     @keyword
@@ -97,7 +97,7 @@ class Library:
 #---------------------------------------------------------------------------------------------------
 # basic traffic tests
 #---------------------------------------------------------------------------------------------------
-def pkt_playback_capture_test(dev, num, size, port, enable_probes=1):
+def pkt_playback_capture_test(dev, num, size, port, enable_probes=True):
     clear_switch_stats()
 
     pkt_playback_config (dev, port);  pkt_capture_config (dev, port)
@@ -114,7 +114,7 @@ def pkt_playback_capture_test(dev, num, size, port, enable_probes=1):
                  'probe_to_app_egr_in1', 'probe_to_app_egr_out1', 'probe_to_app_egr_p4_in1', 'probe_app1_to_core',
                  'probe_to_pf1_vf2']
 
-    if (enable_probes==1): check_probes (names, num, num*size)
+    if enable_probes: check_probes (names, num, num*size)
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_test(dev, port):
@@ -133,7 +133,7 @@ def pkt_accelerator_test(dev, port):
     if (port==0): _port = 1
     else:         _port = 0
 
-    pkt_playback_capture_test (dev, _num, _size, _port, 0)  # disable probes.
+    pkt_playback_capture_test (dev, _num, _size, _port, False)  # disable probes.
 
     pkt_accelerator_extract (dev, num, tx_pkt, port)
     #pkt_accelerator_flush (dev, port)
@@ -240,18 +240,16 @@ def pkt_trunc_test(dev, num, len, port):
 
         pkt_capture_trigger (dev)
         pkt_playback        (dev, tx_pkt, port, port)
+        pkt_capture_read    (dev, tx_pkt[:len])
 
-        result = pkt_capture_read (dev, tx_pkt[:len])
-        if (result != True): raise AssertionError(f'Packet data received did NOT match expected!')
-        
     time.sleep(1) # wait in seconds, for stats collection.
 
     if (port==0):
-        check_probes (['probe_from_pf0_vf2'], num, bytes_in, 0)  # disable ZERO checks
-        check_probes (['probe_to_pf0_vf2'],   num, bytes_out, 0)
+        check_probes (['probe_from_pf0_vf2'], num, bytes_in,  False)  # disable ZERO checks
+        check_probes (['probe_to_pf0_vf2'],   num, bytes_out, False)
     else:
-        check_probes (['probe_from_pf1_vf2'], num, bytes_in, 0)
-        check_probes (['probe_to_pf1_vf2'],   num, bytes_out, 0)
+        check_probes (['probe_from_pf1_vf2'], num, bytes_in,  False)
+        check_probes (['probe_to_pf1_vf2'],   num, bytes_out, False)
 
 
 
@@ -474,24 +472,22 @@ def drops_from_cmac_test(dev, num, size, port):
     else:         names = ['probe_from_pf1', 'probe_to_app_egr_p4_in1', 'probe_app1_to_core', 'probe_to_cmac_1']
 
     bytes = num * size
-    check_probes (names, num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, num, bytes, False)  # disable ZERO checks.
 
     if (port==0): names = ['drops_ovfl_from_cmac_0']
     else:         names = ['drops_ovfl_from_cmac_1']
 
-    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+1)
+    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+1) # +1 accounts for buffering in open-nic-shell.
     bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, 0)  # disable ZERO checks.
+    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
 
 
     pkt_capture_config (dev, port)
     dev.bar2.smartnic_regs.switch_config.igr_sw_tpause = 0  # assert tpause from 'p4_proc_igr' to igr FIFOs.
 
-    result=True
     for i in range(_num):
         pkt_capture_trigger (dev)
-        result = result and pkt_capture_read (dev, tx_pkt)
-    if (result != True): raise AssertionError(f'Packet data received did NOT match expected!')
+        pkt_capture_read (dev, tx_pkt)
 
     time.sleep(1) # wait in seconds, for stats collection.
 
@@ -499,10 +495,10 @@ def drops_from_cmac_test(dev, num, size, port):
     else:         names = ['probe_from_cmac_1', 'probe_to_bypass_1', 'probe_to_pf1_vf2']
 
     bytes = _num * size
-    check_probes (names, _num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, _num, bytes, False)  # disable ZERO checks.
 
 
-    pkt_playback_capture_test (dev, 10, size, port, 0)  # disable probe checks.
+    pkt_playback_capture_test (dev, 10, size, port, False)  # disable probe checks.
 
 #---------------------------------------------------------------------------------------------------
 def drops_to_host_test(dev, num, size, port):
@@ -534,7 +530,7 @@ def drops_to_host_test(dev, num, size, port):
                  'probe_from_cmac_1', 'probe_core_to_app1', 'probe_to_app_igr_p4_out1', 'probe_to_pf1']
 
     bytes = num * size
-    check_probes (names, num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, num, bytes, False)  # disable ZERO checks.
 
 
     if (port==0): names = ['drops_ovfl_to_host_0']
@@ -542,13 +538,13 @@ def drops_to_host_test(dev, num, size, port):
 
     _num = math.ceil(FIFO_DEPTH/math.ceil(size/64))
     bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, 0)  # disable ZERO checks.
+    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
 
     if (port==0): names = ['probe_to_host_0']
     else:         names = ['probe_to_host_1']
 
     bytes = _num * size
-    check_probes (names, _num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, _num, bytes, False)  # disable ZERO checks.
 
 #---------------------------------------------------------------------------------------------------
 def drops_to_cmac_test(dev, num, size, port):
@@ -566,19 +562,19 @@ def drops_to_cmac_test(dev, num, size, port):
     else:         names = ['probe_from_pf1', 'probe_to_app_egr_p4_in1', 'probe_app1_to_core']
 
     bytes = num * size
-    check_probes (names, num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, num, bytes, False)  # disable ZERO checks.
 
     if (port==0): names = ['drops_ovfl_to_cmac_0']
     else:         names = ['drops_ovfl_to_cmac_1']
 
-    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+2)
+    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+1) # +1 accounts for buffering in open-nic-shell.
     bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, 0)  # disable ZERO checks.
+    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
 
     if (port==0): names = ['probe_to_cmac_0']
     else:         names = ['probe_to_cmac_1']
 
     bytes = _num * size
-    check_probes (names, _num, bytes, 0)  # disable ZERO checks.
+    check_probes (names, _num, bytes, False)  # disable ZERO checks.
 
 #---------------------------------------------------------------------------------------------------
