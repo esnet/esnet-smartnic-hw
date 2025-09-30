@@ -58,13 +58,19 @@ module p4_proc
     // -------------------------------------------------
     // Parameter checking
     // -------------------------------------------------
-    axi4s_intf_parameter_check param_check_in_out   (.from_tx(axis_in[0]), .to_rx(axis_out[0]));
-    axi4s_intf_parameter_check param_check_vitisnet (.from_tx(axis_from_vitisnetp4), .to_rx(axis_to_vitisnetp4));
     initial begin
-        std_pkg::param_check(axis_in[0].DATA_BYTE_WID, 64, "axis_in[0].DATA_BYTE_WID");
-        std_pkg::param_check(axis_in[0].TID_WID, PORT_WID, "axis_in[0].TID_WID");
-        std_pkg::param_check(axis_in[0].TDEST_WID, PORT_WID, "axis_in[0].TDEST_WID");
-        std_pkg::param_check(axis_in[0].TUSER_WID, TUSER_SMARTNIC_META_WID, "axis_in[0].TUSER_WID");
+        std_pkg::param_check(axis_in[0].DATA_BYTE_WID,  64,                      "axis_in[0].DATA_BYTE_WID");
+        std_pkg::param_check(axis_in[0].TID_WID,        PORT_WID,                "axis_in[0].TID_WID");
+        std_pkg::param_check(axis_in[0].TDEST_WID,      PORT_WID,                "axis_in[0].TDEST_WID");
+        std_pkg::param_check(axis_in[0].TUSER_WID,      TUSER_SMARTNIC_META_WID, "axis_in[0].TUSER_WID");
+        std_pkg::param_check(axis_out[0].DATA_BYTE_WID, 64,                      "axis_out[0].DATA_BYTE_WID");
+        std_pkg::param_check(axis_out[0].TID_WID,       PORT_WID,                "axis_out[0].TID_WID");
+        std_pkg::param_check(axis_out[0].TDEST_WID,     PORT_WID,                "axis_out[0].TDEST_WID");
+        std_pkg::param_check(axis_out[0].TUSER_WID,     TUSER_SMARTNIC_META_WID, "axis_out[0].TUSER_WID");
+        std_pkg::param_check(axis_to_vitisnetp4.DATA_BYTE_WID, axis_from_vitisnetp4.DATA_BYTE_WID, "axis_to_vitisnetp4.DATA_BYTE_WID");
+        std_pkg::param_check(axis_to_vitisnetp4.TID_WID,       axis_from_vitisnetp4.TID_WID,       "axis_to_vitisnetp4.TID_WID");
+        std_pkg::param_check(axis_to_vitisnetp4.TDEST_WID,     axis_from_vitisnetp4.TDEST_WID,     "axis_to_vitisnetp4.TDEST_WID");
+        std_pkg::param_check(axis_to_vitisnetp4.TUSER_WID,     axis_from_vitisnetp4.TUSER_WID,     "axis_to_vitisnetp4.TUSER_WID");
         std_pkg::param_check_gt(NUM_PORTS, 1, "NUM_PORTS");
         std_pkg::param_check_lt(NUM_PORTS, 2, "NUM_PORTS");
         std_pkg::param_check_gt(PID_WID, $bits(pid_t), "PID_WID");
