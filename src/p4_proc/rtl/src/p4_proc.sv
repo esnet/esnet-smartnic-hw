@@ -119,6 +119,7 @@ module p4_proc
         p4_proc_regs[1].p4_bypass_config <= p4_proc_regs[0].p4_bypass_config;
         p4_proc_regs[1].trunc_config     <= p4_proc_regs[0].trunc_config;
         p4_proc_regs[1].rss_config       <= p4_proc_regs[0].rss_config;
+        p4_proc_regs[1].tpause           <= p4_proc_regs[0].tpause;
     end
 
 
