@@ -164,8 +164,8 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 	@mkdir -p $(ARTIFACTS_BUILD_DIR)
 	@mkdir -p $(SHELL_HWAPI_DIR)
 	@mkdir -p $(SHELL_HWAPI_DIR)/firmware
-	@zstd -9 $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.bit -o $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.bit.zst
-	@zstd -9 $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs -o $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.mcs.zst
+	@zstd -f9 $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.bit -o $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.bit.zst
+	@zstd -f9 $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs -o $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.mcs.zst
 	@-cp $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.ltx $(SHELL_HWAPI_DIR)/firmware/esnet-smartnic.ltx
 	@mkdir -p $(SHELL_HWAPI_DIR)/libvitisnetp4drv
 	@mkdir -p $(SHELL_HWAPI_DIR)/libvitisnetp4drv/vitisnetp4_igr
