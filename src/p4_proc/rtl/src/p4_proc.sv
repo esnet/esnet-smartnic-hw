@@ -129,8 +129,6 @@ module p4_proc
     logic p4_drop    [NUM_PORTS];
     logic unset_drop [NUM_PORTS];
 
-    logic proc_port;
-
     logic [15:0] trunc_length [NUM_PORTS];
 
     logic        p4_bypass_enable;
@@ -355,7 +353,7 @@ module p4_proc
     always_comb begin
          _axis_from_bypass_mux_tuser = _axis_from_bypass_mux.tuser;
 
-         proc_port                               = _axis_from_bypass_mux_tuser.proc_port;
+         axis_from_bypass_mux_tuser.proc_port    = _axis_from_bypass_mux_tuser.proc_port;
          axis_from_bypass_mux_tuser.timestamp    = _axis_from_bypass_mux_tuser.timestamp;
          axis_from_bypass_mux_tuser.split_join   = {'0, _axis_from_bypass_mux_tuser.split_join};
 
@@ -400,7 +398,7 @@ module p4_proc
                 .from_tx (axis_from_bypass_mux),
                 .to_rx_0 (_axis_to_split_join[0]),
                 .to_rx_1 (_axis_to_split_join[1]),
-                .output_sel (proc_port)
+                .output_sel (axis_from_bypass_mux_tuser.proc_port)
             );
 
             for (genvar i = 0; i < NUM_PORTS; i++) begin : g__port
