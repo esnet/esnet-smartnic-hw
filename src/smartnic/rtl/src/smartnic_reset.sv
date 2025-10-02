@@ -112,7 +112,8 @@ module smartnic_reset #(
                 .rst_out (__cmac_rstn)
             );
 
-            always_ff @(posedge cmac_clk[g_cmac]) begin
+            initial __cmac_rstn_p = '{RESET_PIPE_STAGES{1'b0}};
+            always @(posedge cmac_clk[g_cmac]) begin
                 for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
                     __cmac_rstn_p[i] <= __cmac_rstn_p[i-1];
                 end
@@ -136,7 +137,8 @@ module smartnic_reset #(
         .rst_out (__core_srstn)
     );
 
-    always_ff @(posedge core_clk) begin
+    initial __core_srstn_p = '{RESET_PIPE_STAGES{1'b0}};
+    always @(posedge core_clk) begin
         for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
             __core_srstn_p[i] <= __core_srstn_p[i-1];
         end
