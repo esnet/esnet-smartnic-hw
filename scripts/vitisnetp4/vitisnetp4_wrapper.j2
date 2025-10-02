@@ -121,5 +121,9 @@ module {{ props.name }}_wrapper
         .m_axis_tready           (axis_tx.tready)
     );
 
+    assign axis_tx.tid = '0;
+    assign axis_tx.tdest = '0;
+    assign axis_tx.tuser = '0;
+
 endmodule : {{ props.name }}_wrapper
 
