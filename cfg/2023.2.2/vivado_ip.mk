@@ -12,7 +12,5 @@ VIVADO_IP = \
     xilinx.com:ip:qdma:5.0=8 \
     xilinx.com:ip:vitis_net_p4:2.0=0 \
     xilinx.com:ip:cam:2.6=0 \
-    xilinx.com:ip:cdcam:1.0=0 \
-    xilinx.com:ip:axi_register_slice:2.1=30 \
-    xilinx.com:ip:axis_register_slice:1.1=30
+    xilinx.com:ip:cdcam:1.0=0
 
