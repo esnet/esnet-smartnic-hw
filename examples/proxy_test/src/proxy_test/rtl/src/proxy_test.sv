@@ -260,17 +260,13 @@ module proxy_test
     generate
         // Pipeline AXI3 application interfaces
         for (genvar g_ch = 0; g_ch < HBM_NUM_APP_AXI_CHANNELS__LEFT; g_ch++) begin : g__hbm_left_ch_app
-            xilinx_axi3_reg_slice #(
-                .CONFIG            ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
-            ) i_xilinx_axi3_reg_slice__left (
+            axi3_pipe i_axi3_pipe__left (
                 .from_controller ( app__axi_if__hbm_left[g_ch] ),
                 .to_peripheral   ( axi_if__hbm_left[g_ch] )
             );
         end : g__hbm_left_ch_app
         for (genvar g_ch = 0; g_ch < HBM_NUM_APP_AXI_CHANNELS__RIGHT; g_ch++) begin : g__hbm_right_ch_app
-            xilinx_axi3_reg_slice #(
-                .CONFIG            ( xilinx_axi_pkg::XILINX_AXI_REG_SLICE_FULL )
-            ) i_xilinx_axi3_reg_slice__right (
+            axi3_pipe i_axi3_pipe__right (
                 .from_controller ( app__axi_if__hbm_right[g_ch] ),
                 .to_peripheral   ( axi_if__hbm_right[g_ch] )
             );

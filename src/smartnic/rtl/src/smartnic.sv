@@ -449,8 +449,8 @@ module smartnic
 
    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__fifo
       //------------------------ from cmac to core --------------
-      axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID)) _axis_from_cmac (.aclk(cmac_clk[i]), .aresetn(cmac_rstn[i]));
       axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_cmac (.aclk(cmac_clk[i]), .aresetn(cmac_rstn[i]));
+      axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  _axis_from_cmac (.aclk(cmac_clk[i]), .aresetn(cmac_rstn[i]));
 
       axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_cmac_lpbk_mux_in[2]    (.aclk(cmac_clk[i]), .aresetn(cmac_rstn[i]));
 
@@ -466,26 +466,26 @@ module smartnic
         .tdest    (s_axis_cmac_rx_322mhz_tdest[`getvec(4, i)]),
         .tuser    (s_axis_cmac_rx_322mhz_tuser_err[i]),
 
-        .axi4s_if (_axis_from_cmac)
+        .axi4s_if (axis_from_cmac)
       );
 
-      xilinx_axi4s_reg_slice #(
-          .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
-      ) xilinx_axi4s_reg_slice_from_cmac (
-          .from_tx (_axis_from_cmac),
+      axi4s_pipe #(
+          .STAGES ( 1 )
+      ) axi4s_pipe__from_cmac (
+          .from_tx (axis_from_cmac),
           .to_rx   (axis_cmac_lpbk_mux_in[0])
       );
 
       axi4s_mux #(.N(2)) axi4s_cmac_lpbk_mux (
         .axi4s_in  (axis_cmac_lpbk_mux_in),
-        .axi4s_out (axis_from_cmac)
+        .axi4s_out (_axis_from_cmac)
       );
 
-      // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_from_cmac[i]));
+      // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_from_cmac));
 
       axi4s_probe #( .MODE(ERRORS), .TUSER_MODE(PKT_ERROR) ) axi4s_err_from_cmac (
             .axi4l_if  (axil_to_err_from_cmac[i]),
-            .axi4s_if  (axis_from_cmac)
+            .axi4s_if  (_axis_from_cmac)
          );
 
       axi4s_pkt_fifo_async #(
@@ -494,7 +494,7 @@ module smartnic
         .IGNORE_TREADY  (1),
         .DROP_ERRORED   (1)
       ) fifo_from_cmac (
-        .axi4s_in       (axis_from_cmac),
+        .axi4s_in       (_axis_from_cmac),
         .axi4s_out      (axis_cmac_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_cmac[i]),
@@ -542,12 +542,16 @@ module smartnic
           .sel     (cmac_lpbk_enable[i])
       );
 
-     axi4s_full_pipe axi4s_cmac_lpbk_demux_out_1 (
-        .from_tx(axis_cmac_lpbk_demux_out[1]), .to_rx(axis_cmac_lpbk_mux_in[1]));
+      axi4s_pipe #(
+          .STAGES ( 1 )
+      ) axi4s_pipe__cmac_lpbk_out (
+           .from_tx (axis_cmac_lpbk_demux_out[1]),
+           .to_rx   (axis_cmac_lpbk_mux_in[1])
+      );
 
-      xilinx_axi4s_reg_slice #(
-          .CONFIG ( xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_FULLY_REGISTERED )
-      ) xilinx_axi4s_reg_slice_to_cmac (
+      axi4s_pipe #(
+          .STAGES ( 1 )
+      ) axi4s_pipe__to_cmac (
           .from_tx (axis_cmac_lpbk_demux_out[0]),
           .to_rx   (axis_to_cmac)
       );
@@ -839,51 +843,50 @@ module smartnic
 
 
    // ----------------------------------------------------------------
-   // AXI register slices
+   // Inter-SLR pipelining
    // ----------------------------------------------------------------
    // - demarcate physical boundary between SmartNIC platform and application
    //   and support efficient pipelining between SLRs
 
    // AXI-L interface
-   xilinx_axi4l_reg_slice #(
-       .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
-   ) i_xilinx_axi4l_reg_slice__core_to_p4 (
-       .axi4l_if_from_controller ( axil_to_p4__demarc ),
-       .axi4l_if_to_peripheral   ( axil_to_p4 )
+   axi4l_pipe_slr axi4l_pipe_slr__core_to_p4 (
+       .from_controller ( axil_to_p4__demarc ),
+       .to_peripheral   ( axil_to_p4 )
    );
 
    // AXI-L interface
-   xilinx_axi4l_reg_slice #(
-       .CONFIG (xilinx_axi_pkg::XILINX_AXI_REG_SLICE_SLR_CROSSING)
-   ) i_xilinx_axi4l_reg_slice__core_to_app (
-       .axi4l_if_from_controller ( axil_to_app__demarc ),
-       .axi4l_if_to_peripheral   ( axil_to_app )
+   axi4l_pipe_slr axi4l_pipe_slr__core_to_app (
+       .from_controller ( axil_to_app__demarc ),
+       .to_peripheral   ( axil_to_app )
    );
 
-   generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__reg_slice
+   generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__port
        // AXI-S interfaces
-       xilinx_axi4s_reg_slice #(
-           .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_xilinx_axi4s_reg_slice__core_to_app (
+       axi4s_pipe_slr #(
+           .PRE_PIPE_STAGES ( 1 ),
+           .POST_PIPE_STAGES ( 1 )
+       ) axi4s_pipe_slr__core_to_app (
            .from_tx (axis_to_app__demarc[i]),
            .to_rx   (axis_to_app[i])
        );
 
-       xilinx_axi4s_reg_slice #(
-           .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_xilinx_axi4s_reg_slice__c2h_mux_out (
+       axi4s_pipe_slr #(
+           .PRE_PIPE_STAGES ( 1 ) ,
+           .POST_PIPE_STAGES ( 1 )
+       ) axi4s_pipe_slr__c2h_mux_out (
            .from_tx (axis_c2h_mux_out[i]),
            .to_rx   (axis_c2h_mux_out__demarc[i])
        );
 
-       xilinx_axi4s_reg_slice #(
-           .CONFIG(xilinx_axis_pkg::XILINX_AXIS_REG_SLICE_SLR_CROSSING)
-       ) i_xilinx_axi4s_reg_slice__h2c_demux_out (
+       axi4s_pipe_slr #(
+           .PRE_PIPE_STAGES ( 1 ),
+           .POST_PIPE_STAGES ( 1 )
+       ) axi4s_pipe_slr__h2c_demux_out (
            .from_tx (axis_h2c_demux__demarc[i]),
            .to_rx   (axis_h2c_demux[i])
        );
 
-   end : g__reg_slice
+   end : g__port
    endgenerate
 
     // ----------------------------------------------------------------

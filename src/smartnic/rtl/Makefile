@@ -28,7 +28,6 @@ SUBCOMPONENTS = \
     smartnic.regio.rtl \
     reg.endian.rtl@common \
     reg.proxy.rtl@common \
-    xilinx.axi.rtl \
     xilinx.axis.rtl \
     xilinx.hbm.pkg \
     xilinx.hbm.rtl \
