@@ -770,7 +770,7 @@ module smartnic_datapath_unit_test;
             // send packets to PF0_VF2 and check scoreboards.
             app_mode(0); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PF0_VF2));
-            #1us;
+            #2us;
             check_phy0();  check_phy1(); check_pf0(.pkts(10)); check_pf1();
         `SVTEST_END
 
@@ -791,7 +791,7 @@ module smartnic_datapath_unit_test;
 
             app_mode(1); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PF1_VF2));
-            #1us;
+            #2us;
             check_phy0();  check_phy1(); check_pf0(); check_pf1(.pkts(10));
         `SVTEST_END
 
