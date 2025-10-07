@@ -4,7 +4,6 @@ from robot.api.deco import keyword, library
 
 from smartnic.config  import *
 
-
 #---------------------------------------------------------------------------------------------------
 @library
 class Library:

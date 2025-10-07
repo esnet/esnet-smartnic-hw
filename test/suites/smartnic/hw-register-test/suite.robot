@@ -10,12 +10,12 @@ Test Timeout     1 minute
 *** Test Cases ***
 FW Bytes to Word Endian Test
     FOR    ${i}    IN RANGE    3
-        Endian Check Unpacked to Packed    ${dev}    ${0x11223344}
-        Endian Check Unpacked to Packed    ${dev}    ${0x44332211}
+        Endian Check Unpacked to Packed    dev=${dev}    exp_data=${0x11223344}
+        Endian Check Unpacked to Packed    dev=${dev}    exp_data=${0x44332211}
     END
 
 FW Word to Bytes Endian Test
     FOR    ${i}    IN RANGE    3
-        Endian Check Packed to Unpacked    ${dev}    ${0x44332211}
-        Endian Check Packed to Unpacked    ${dev}    ${0x11223344}
+        Endian Check Packed to Unpacked    dev=${dev}    exp_data=${0x44332211}
+        Endian Check Packed to Unpacked    dev=${dev}    exp_data=${0x11223344}
     END

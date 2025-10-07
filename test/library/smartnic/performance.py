@@ -1,12 +1,12 @@
 __all__ = ()
 
+import time
+
 from robot.api.deco import keyword, library
 
 from smartnic.config  import *
 from smartnic.packets import *
 from smartnic.probes  import *
-
-import time
 
 #---------------------------------------------------------------------------------------------------
 @library
@@ -24,8 +24,8 @@ class Library:
         testcase_teardown(dev)
         
     @keyword
-    def hdr_length_config(self, dev, p4_proc, length):
-        hdr_length_config(dev, p4_proc, length)
+    def hdr_length_config(self, dev, num_p4_proc, length):
+        hdr_length_config(dev, num_p4_proc, length)
 
 
 
@@ -34,7 +34,7 @@ def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
     tx_pkt = []
     clear_switch_stats()
 
-    # configure and enable packet accelerator(s).
+    # configure and start packet accelerator(s).
     for _port in range(2):
         tx_pkt.append(one_packet(size))
 
@@ -51,6 +51,5 @@ def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
         if (port==2 or port==_port):
             pkt_accelerator_extract (dev, num, tx_pkt[_port], _port)
             #pkt_accelerator_flush (dev, _port)
-            time.sleep(1)
 
 #---------------------------------------------------------------------------------------------------
