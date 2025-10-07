@@ -46,6 +46,9 @@ module smartnic_reset #(
     logic                 timer_reset;
     logic                 timer_inc;
 
+    logic __core_srst;
+    logic __core_srst_unbuffered;
+
     // ----------------------------------------------------------------
     //  Resets
     // ----------------------------------------------------------------
@@ -77,14 +80,14 @@ module smartnic_reset #(
         endcase
     end
 
-    initial __rst_done_p = '{default: 1'b0};
-    always @(posedge axil_aclk) begin
-        for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
-            __rst_done_p[i] <= __rst_done_p[i-1];
-        end
-        __rst_done_p[0] <= __rst_done;
-    end
-    assign mod_rst_done = __rst_done_p[RESET_PIPE_STAGES-1];
+    util_delay #(
+        .DELAY (2*RESET_PIPE_STAGES)
+    ) util_delay__rst_done (
+        .clk      (axil_aclk),
+        .srst     (1'b0),
+        .data_in  (__rst_done),
+        .data_out (mod_rst_done)
+    );
 
     // Reset timer
     initial timer = 0;
@@ -94,20 +97,34 @@ module smartnic_reset #(
     end
 
     // Drive AXI-L reset output
-    initial axil_aresetn = 1'b0;
-    always @(posedge axil_aclk) axil_aresetn <= mod_rst_done;
+    util_reset_buffer #(
+        .STAGES    (RESET_PIPE_STAGES)
+    ) util_reset_buffer__cmac_srst (
+        .clk       (axil_aclk),
+        .srst_in   (!__rst_done),
+        .srst_out  (),
+        .srstn_out (axil_aresetn)
+    );
 
     // CMAC domain resets are generated from the locally generated AXI-L reset
     generate
         for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
+            logic __cmac_srst;
 
             sync_reset sync_reset__cmac (
                 .clk_in  (axil_aclk),
                 .rst_in  (__rst_done),
                 .clk_out (cmac_clk[g_cmac]),
-                .rst_out (cmac_srst[g_cmac])
+                .rst_out (__cmac_srst)
             );
-
+            util_reset_buffer #(
+                .STAGES    (RESET_PIPE_STAGES)
+            ) util_reset_buffer__cmac_srst (
+                .clk       (cmac_clk[g_cmac]),
+                .srst_in   (__cmac_srst),
+                .srst_out  (cmac_srst[g_cmac]),
+                .srstn_out ()
+            );
         end : g__cmac
     endgenerate
 
@@ -116,7 +133,15 @@ module smartnic_reset #(
         .clk_in  (axil_aclk),
         .rst_in  (__rst_done),
         .clk_out (core_clk),
-        .rst_out (core_srst)
+        .rst_out (__core_srst)
+    );
+    util_reset_buffer #(
+        .STAGES    (RESET_PIPE_STAGES)
+    ) util_reset_buffer_core_srst (
+        .clk       (core_clk),
+        .srst_in   (__core_srst),
+        .srst_out  (core_srst),
+        .srstn_out ()
     );
 
     // ----------------------------------------------------------------
