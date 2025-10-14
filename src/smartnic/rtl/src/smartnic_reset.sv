@@ -8,10 +8,10 @@ module smartnic_reset #(
     output logic                axil_aresetn, // synchronous to axil_aclk (async assert, sync deassert)
 
     input  logic [NUM_CMAC-1:0] cmac_clk,
-    output logic [NUM_CMAC-1:0] cmac_srstn, // synchronous to cmac_clk (async assert, sync deassert)
+    output logic [NUM_CMAC-1:0] cmac_srst,  // synchronous to cmac_clk (sync assert, sync deassert)
 
     output logic                core_clk,   // we synthesize this clock in this block
-    output logic                core_srstn, // synchronous to core_clk (async assert, sync deassert)
+    output logic                core_srst,  // synchronous to core_clk (sync assert, sync deassert)
 
     output logic                clk_100mhz,
     output logic                hbm_ref_clk
@@ -100,52 +100,24 @@ module smartnic_reset #(
     // CMAC domain resets are generated from the locally generated AXI-L reset
     generate
         for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            logic __cmac_rstn;
-            (* shreg_extract = "no" *) logic __cmac_rstn_p [RESET_PIPE_STAGES];
 
-            sync_reset #(
-                .OUTPUT_ACTIVE_LOW (1)
-            ) sync_reset__cmac (
+            sync_reset sync_reset__cmac (
                 .clk_in  (axil_aclk),
                 .rst_in  (__rst_done),
                 .clk_out (cmac_clk[g_cmac]),
-                .rst_out (__cmac_rstn)
+                .rst_out (cmac_srst[g_cmac])
             );
 
-            initial __cmac_rstn_p = '{RESET_PIPE_STAGES{1'b0}};
-            always @(posedge cmac_clk[g_cmac]) begin
-                for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
-                    __cmac_rstn_p[i] <= __cmac_rstn_p[i-1];
-                end
-                __cmac_rstn_p[0] <= __cmac_rstn;
-            end
-
-            assign cmac_srstn[g_cmac] = __cmac_rstn_p[RESET_PIPE_STAGES-1];
         end : g__cmac
     endgenerate
 
     // core clock domain reset is generated from the locally generated AXI-L reset
-    logic __core_srstn;
-    (* shreg_extract = "no" *) logic __core_srstn_p [RESET_PIPE_STAGES];
-
-    sync_reset #(
-        .OUTPUT_ACTIVE_LOW (1)
-    ) sync_reset__core_clk (
+    sync_reset sync_reset__core_clk (
         .clk_in  (axil_aclk),
         .rst_in  (__rst_done),
         .clk_out (core_clk),
-        .rst_out (__core_srstn)
+        .rst_out (core_srst)
     );
-
-    initial __core_srstn_p = '{RESET_PIPE_STAGES{1'b0}};
-    always @(posedge core_clk) begin
-        for (int i = 1; i < RESET_PIPE_STAGES; i++) begin
-            __core_srstn_p[i] <= __core_srstn_p[i-1];
-        end
-        __core_srstn_p[0] <= __core_srstn;
-    end
-
-    assign core_srstn = __core_srstn_p[RESET_PIPE_STAGES-1];
 
     // ----------------------------------------------------------------
     //  Clocks

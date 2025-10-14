@@ -11,8 +11,8 @@
 module smartnic_egress_qs
     import smartnic_pkg::*;
 (
-    input  logic          clk,
-    input  logic          srst,
+    input  logic          core_clk,
+    input  logic          core_srst,
 
     axi4s_intf.rx         axis_in  [PHY_NUM_PORTS],
     axi4s_intf.tx         axis_out [PHY_NUM_PORTS],
@@ -71,9 +71,17 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     //  Signals
     // ----------------------------------------------------------------
+    logic clk;
+    logic srst;
     logic clk_100mhz;
     logic hbm_ref_clk;
     logic hbm_init_done;
+
+    // ----------------------------------------------------------------
+    //  Clock/reset
+    // ----------------------------------------------------------------
+    assign clk = core_clk;
+    assign srst = core_srst;
 
     // ----------------------------------------------------------------
     //  Interfaces

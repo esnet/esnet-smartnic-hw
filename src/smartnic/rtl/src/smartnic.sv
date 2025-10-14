@@ -74,11 +74,10 @@ module smartnic
 
    // Signals
    wire                       axil_aresetn;
-   wire [NUM_CMAC-1:0]        cmac_rstn;
+   wire [NUM_CMAC-1:0]        cmac_srst;
 
-   wire                       srst;
-   wire                       core_rstn;
    wire                       core_clk;
+   wire                       core_srst;
 
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
@@ -86,7 +85,6 @@ module smartnic
    tuser_smartnic_meta_t      m_axis_adpt_rx_322mhz_tuser [NUM_CMAC];
 
    logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
-
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -100,16 +98,14 @@ module smartnic
     .axil_aresetn (axil_aresetn),
 
     .cmac_clk     (cmac_clk),
-    .cmac_srstn   (cmac_rstn),
+    .cmac_srst    (cmac_srst),
 
-    .core_srstn   (core_rstn),
     .core_clk     (core_clk),
+    .core_srst    (core_srst),
 
     .clk_100mhz   (clk_100mhz),
     .hbm_ref_clk  (hbm_ref_clk)
   );
-
-  assign srst = !core_rstn;
 
    // ----------------------------------------------------------------
    //  axil interface instantiations and regmap logic
@@ -290,7 +286,7 @@ module smartnic
 
    smartnic_timestamp  smartnic_timestamp_0 (
      .clk               (core_clk),
-     .rstn              (core_rstn),
+     .srst              (core_srst),
      .timestamp,
      .timestamp_incr    (smartnic_regs.timestamp_incr),
      .timestamp_wr_req  (smartnic_regs.timestamp_wr_lower_wr_evt),
@@ -475,13 +471,13 @@ module smartnic
       axi4s_pipe #(
           .STAGES ( 1 )
       ) axi4s_pipe__from_cmac (
-          .srst    (!cmac_rstn[i]),
+          .srst    (cmac_srst[i]),
           .from_tx (axis_from_cmac),
           .to_rx   (axis_cmac_lpbk_mux_in[0])
       );
 
       axi4s_mux #(.N(2)) axi4s_cmac_lpbk_mux (
-        .srst      (!cmac_rstn[i]),
+        .srst      (cmac_srst[i]),
         .axi4s_in  (axis_cmac_lpbk_mux_in),
         .axi4s_out (_axis_from_cmac)
       );
@@ -489,6 +485,7 @@ module smartnic
       // xilinx_axi4s_ila xilinx_axi4s_ila_0 (.axis_in(axis_from_cmac));
 
       axi4s_probe #( .MODE(ERRORS), .TUSER_MODE(PKT_ERROR) ) axi4s_err_from_cmac (
+            .srst (cmac_srst[i]),
             .axi4l_if  (axil_to_err_from_cmac[i]),
             .axi4s_if  (_axis_from_cmac)
          );
@@ -499,9 +496,9 @@ module smartnic
         .IGNORE_TREADY  (1),
         .DROP_ERRORED   (1)
       ) fifo_from_cmac (
-        .axi4s_in_srst  (!cmac_rstn[i]),
+        .axi4s_in_srst  (cmac_srst[i]),
         .axi4s_in       (_axis_from_cmac),
-        .axi4s_out_srst (srst),
+        .axi4s_out_srst (core_srst),
         .axi4s_out      (axis_cmac_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_cmac[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_cmac[i]),
@@ -528,9 +525,9 @@ module smartnic
         .TX_THRESHOLD   (4),
         .IGNORE_TREADY  (1)
       ) fifo_to_cmac (
-        .axi4s_in_srst  (srst),
+        .axi4s_in_srst  (core_srst),
         .axi4s_in       (axis_core_to_cmac[i]),
-        .axi4s_out_srst (!cmac_rstn[i]),
+        .axi4s_out_srst (cmac_srst[i]),
         .axi4s_out      (axis_to_pad),
         .flow_ctl_thresh (smartnic_regs.egr_fc_thresh[i][15:0]),
         .flow_ctl       (egr_flow_ctl[i]),
@@ -541,13 +538,13 @@ module smartnic
 
       // axi4s pad instantiation.
       axi4s_pad axi4s_pad_0 (
-        .srst        (!cmac_rstn[i]),
+        .srst        (cmac_srst[i]),
         .axi4s_in    (axis_to_pad),
         .axi4s_out   (_axis_to_cmac)
       );
 
       axi4s_intf_demux #(.N(2)) axi4s_cmac_lpbk_demux (
-          .srst    (!cmac_rstn[i]),
+          .srst    (cmac_srst[i]),
           .from_tx (_axis_to_cmac),
           .to_rx   (axis_cmac_lpbk_demux_out),
           .sel     (cmac_lpbk_enable[i])
@@ -556,7 +553,7 @@ module smartnic
       axi4s_pipe #(
           .STAGES ( 1 )
       ) axi4s_pipe__cmac_lpbk_out (
-           .srst    (!cmac_rstn[i]),
+           .srst    (cmac_srst[i]),
            .from_tx (axis_cmac_lpbk_demux_out[1]),
            .to_rx   (axis_cmac_lpbk_mux_in[1])
       );
@@ -564,7 +561,7 @@ module smartnic
       axi4s_pipe #(
           .STAGES ( 1 )
       ) axi4s_pipe__to_cmac (
-          .srst    (!cmac_rstn[i]),
+          .srst    (cmac_srst[i]),
           .from_tx (axis_cmac_lpbk_demux_out[0]),
           .to_rx   (axis_to_cmac)
       );
@@ -605,9 +602,9 @@ module smartnic
         .MAX_PKT_LEN    (MAX_PKT_LEN),
         .IGNORE_TREADY  (1)
       ) fifo_to_host (
-        .axi4s_in_srst  (srst),
+        .axi4s_in_srst  (core_srst),
         .axi4s_in       (axis_core_to_host[i]),
-        .axi4s_out_srst (!cmac_rstn[i]),
+        .axi4s_out_srst (cmac_srst[i]),
         .axi4s_out      (axis_to_host),
         .flow_ctl_thresh (smartnic_regs.egr_fc_thresh[2+i][15:0]),
         .flow_ctl       (egr_flow_ctl[2+i]),
@@ -619,7 +616,7 @@ module smartnic
       // xilinx_axi4s_ila xilinx_axi4s_ila_to_host (.axis_in(axis_to_host));
 
       axi4s_intf_demux #(.N(2)) axi4s_host_lpbk_demux (
-          .srst    (!cmac_rstn[i]),
+          .srst    (cmac_srst[i]),
           .from_tx (axis_to_host),
           .to_rx   (axis_host_lpbk_demux_out),
           .sel     (host_lpbk_enable[i])
@@ -682,7 +679,7 @@ module smartnic
       );
 
       axi4s_mux #(.N(2)) axi4s_host_lpbk_mux (
-        .srst      (!cmac_rstn[i]),
+        .srst      (cmac_srst[i]),
         .axi4s_in  (axis_host_lpbk_mux_in),
         .axi4s_out (axis_from_host)
       );
@@ -691,9 +688,9 @@ module smartnic
         .FIFO_DEPTH     (512),
         .MAX_PKT_LEN    (MAX_PKT_LEN)
       ) fifo_from_host (
-        .axi4s_in_srst  (!cmac_rstn[i]),
+        .axi4s_in_srst  (cmac_srst[i]),
         .axi4s_in       (axis_from_host),
-        .axi4s_out_srst (srst),
+        .axi4s_out_srst (core_srst),
         .axi4s_out      (axis_host_to_core[i]),
         .axil_to_probe  (axil_to_probe_from_host[i]),
         .axil_to_ovfl   (axil_to_ovfl_from_host[i]),
@@ -724,7 +721,7 @@ module smartnic
 
        assign axis_cmac_tid[i].tid     = i;
 
-       axi4s_intf_pipe axi4s_cmac_tid_pipe (.srst, .from_tx(axis_cmac_tid[i]), .to_rx(axis_cmac_tid_p[i]));
+       axi4s_intf_pipe axi4s_cmac_tid_pipe (.srst(core_srst), .from_tx(axis_cmac_tid[i]), .to_rx(axis_cmac_tid_p[i]));
    end : g__cmac_tid
    endgenerate
 
@@ -733,8 +730,8 @@ module smartnic
    smartnic_mux #(
        .NUM_CMAC (NUM_CMAC)
    ) smartnic_mux_inst ( 
-       .core_clk            (core_clk),
-       .core_rstn           (core_rstn),
+       .core_clk,
+       .core_srst,
        .axis_cmac_to_core   (axis_cmac_tid_p),
        .axis_host_to_core   (_axis_host_to_core),
        .axis_core_to_app    (axis_core_to_app),
@@ -753,7 +750,7 @@ module smartnic
        .MAX_PKT_LEN (MAX_PKT_LEN)
    ) smartnic_bypass_inst ( 
        .core_clk,
-       .core_rstn,
+       .core_srst,
        .axis_core_to_bypass       (axis_core_to_bypass),
        .axis_bypass_to_core       (axis_bypass_to_core),
        .axil_to_drops_to_bypass   (axil_to_drops_to_bypass),
@@ -767,7 +764,7 @@ module smartnic
        .MAX_PKT_LEN (MAX_PKT_LEN)
    ) smartnic_demux_inst ( 
        .core_clk,
-       .core_rstn,
+       .core_srst,
        .axis_bypass_to_core (axis_bypass_to_core),
        .axis_app_to_core    (axis_app_to_core),
        .axis_core_to_cmac   (axis_core_to_cmac),
@@ -781,7 +778,7 @@ module smartnic
        .HOST_NUM_IFS (HOST_NUM_IFS)
    ) smartnic_host_inst (
        .core_clk,
-       .core_rstn,
+       .core_srst,
        .axis_host_to_core       (axis_host_to_core),
        .axis_core_to_host       (axis_core_to_host),
        .axis_core_to_host_mux   (axis_core_to_host_mux),
@@ -804,11 +801,11 @@ module smartnic
        axi4s_intf_connector host_to_core_demux_pipe_1 (.from_tx(axis_host_to_core_demux[i][1]),
                                                        .to_rx(axis_h2c_demux__demarc[i]));
 
-       axi4s_probe axis_probe_from_vf2 (.axi4l_if(axil_from_vf2[i]), .axi4s_if(_axis_host_to_core[i]));
+       axi4s_probe axis_probe_from_vf2 (.srst(core_srst), .axi4l_if(axil_from_vf2[i]), .axi4s_if(_axis_host_to_core[i]));
 
-       axi4s_intf_pipe axis_core_to_app_pipe (.srst, .from_tx(axis_core_to_app[i]), .to_rx(axis_to_app__demarc[i]));
+       axi4s_intf_pipe axis_core_to_app_pipe (.srst(core_srst), .from_tx(axis_core_to_app[i]), .to_rx(axis_to_app__demarc[i]));
 
-       axi4s_probe axis_probe_to_vf2 (.axi4l_if(axil_to_vf2[i]), .axi4s_if(_axis_core_to_host[i]));
+       axi4s_probe axis_probe_to_vf2 (.srst(core_srst), .axi4l_if(axil_to_vf2[i]), .axi4s_if(_axis_core_to_host[i]));
 
        assign  _axis_core_to_host[i].tready  = __axis_core_to_host[i].tready;
        assign __axis_core_to_host[i].tvalid  =  _axis_core_to_host[i].tvalid;
@@ -836,17 +833,17 @@ module smartnic
        logic  axis_h2c_demux_sop;
 
        axi4s_mux #(.N(HOST_NUM_IFS)) axis_c2h_mux (
-           .srst,
+           .srst       ( core_srst ),
            .axi4s_in   ( axis_c2h[i] ),
            .axi4s_out  ( axis_c2h_mux_out[i] )
        );
 
 
-       axi4s_intf_pipe axis_h2c_demux_pipe (.srst, .from_tx(axis_h2c_demux[i]), .to_rx(axis_h2c_demux_p[i]));
+       axi4s_intf_pipe axis_h2c_demux_pipe (.srst (core_srst), .from_tx(axis_h2c_demux[i]), .to_rx(axis_h2c_demux_p[i]));
 
        packet_sop packet_sop_axis_h2c_demux (
            .clk ( core_clk ),
-           .srst,
+           .srst( core_srst ),
            .vld ( axis_h2c_demux[i].tvalid ),
            .rdy ( axis_h2c_demux[i].tready ),
            .eop ( axis_h2c_demux[i].tlast ),
@@ -855,14 +852,14 @@ module smartnic
 
        assign axis_h2c_demux_tid = axis_h2c_demux[i].tid;
        always @(posedge core_clk)
-            if (srst)
+            if (core_srst)
                 h2c_demux_sel[i] <= H2C_PF;
             else if (axis_h2c_demux[i].tready && axis_h2c_demux[i].tvalid && axis_h2c_demux_sop)
                 h2c_demux_sel[i] <= (axis_h2c_demux_tid.encoded.typ == PF)  ? H2C_PF :
                                     (axis_h2c_demux_tid.encoded.typ == VF0) ? H2C_VF0 : H2C_VF1;
 
        axi4s_intf_demux #(.N(HOST_NUM_IFS)) axis_h2c_demux_inst (
-           .srst,
+           .srst    ( core_srst ),
            .from_tx ( axis_h2c_demux_p[i] ),
            .to_rx   ( axis_h2c[i] ),
            .sel     ( h2c_demux_sel[i] )
@@ -897,7 +894,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ),
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__core_to_app (
-           .srst,
+           .srst    (core_srst),
            .from_tx (axis_to_app__demarc[i]),
            .to_rx   (axis_to_app[i])
        );
@@ -906,7 +903,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ) ,
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__c2h_mux_out (
-           .srst,
+           .srst    (core_srst),
            .from_tx (axis_c2h_mux_out[i]),
            .to_rx   (axis_c2h_mux_out__demarc[i])
        );
@@ -915,7 +912,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ),
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__h2c_demux_out (
-           .srst,
+           .srst    (core_srst),
            .from_tx (axis_h2c_demux__demarc[i]),
            .to_rx   (axis_h2c_demux[i])
        );
@@ -969,8 +966,8 @@ module smartnic
 `else
     // HBM queue instantiation
     smartnic_egress_qs smartnic_egress_qs_0 (
-       .clk       ( core_clk ),
-       .srst,
+       .core_clk,
+       .core_srst,
        .axis_in   ( axis_to_qs ),
        .axis_out  ( axis_from_qs ),
        .axil_if   ( __axil_to_egr_qs ),
@@ -1002,7 +999,7 @@ module smartnic
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__app_to_qs_0 (
-                .srst,
+                .srst    ( core_srst ),
                 .from_tx ( __axis_from_app ),
                 .to_rx   ( __axis_to_qs )
             );
@@ -1015,7 +1012,7 @@ module smartnic
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__app_to_qs_1 (
-                .srst,
+                .srst    ( core_srst ),
         `endif
                 .from_tx ( __axis_to_qs ),
                 .to_rx   ( axis_to_qs[i] )
@@ -1026,7 +1023,7 @@ module smartnic
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__qs_to_phy_0 (
-                .srst,
+                .srst    ( core_srst ),
                 .from_tx ( axis_from_qs[i] ),
                 .to_rx   ( __axis_from_qs )
             );
@@ -1036,7 +1033,7 @@ module smartnic
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__qs_to_phy_1 (
-                .srst,
+                .srst    ( core_srst ),
         `else
             // For U55C/U250, only cross one boundary
             axi4s_intf_connector axi4s_intf_connector_0 (
@@ -1063,7 +1060,7 @@ module smartnic
    // Application Core
    // ----------------------------------------------------------------
    always @(posedge core_clk) begin
-      if (srst) begin
+      if (core_srst) begin
          for (int i=0; i<3; i++) egr_flow_ctl_pipe[i] <= '0;
       end else begin
          egr_flow_ctl_pipe[2] <= egr_flow_ctl;
@@ -1168,7 +1165,7 @@ module smartnic
 
    smartnic_app smartnic_app (
     .core_clk,
-    .core_rstn,
+    .core_srst,
     .axil_aclk           (axil_aclk),
     .timestamp           (timestamp),
     // P4 AXI-L control interface
@@ -1256,11 +1253,13 @@ module smartnic
    generate
        for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__probe
            axi4s_probe axis_probe_app_to_core (
+              .srst      (core_srst),
               .axi4l_if  (axil_to_app_to_core[i]),
               .axi4s_if  (axis_app_to_core[i])
            );
 
            axi4s_probe axis_probe_core_to_app (
+              .srst      (core_srst),
               .axi4l_if  (axil_to_core_to_app[i]),
               .axi4s_if  (axis_core_to_app[i])
            );

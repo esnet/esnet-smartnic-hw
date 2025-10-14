@@ -6,7 +6,7 @@ module p4_proc
     parameter int   FIFO_DEPTH = 512
 ) (
     input logic        core_clk,
-    input logic        core_rstn,
+    input logic        core_srst,
 
     input logic [TIMESTAMP_WID-1:0] timestamp,
 
@@ -90,7 +90,7 @@ module p4_proc
     p4_proc_reg_intf  p4_proc_regs[2] ();
 
     logic srst;
-    assign srst = !core_rstn;
+    assign srst = core_srst;
 
     // p4_proc register decoder
     p4_proc_decoder p4_proc_decoder (
@@ -427,6 +427,7 @@ module p4_proc
     assign axis_to_p4_drop_cnt.tuser   = axis_from_bypass_mux.tuser;
 
     axi4s_probe axis_p4_drop_count (
+        .srst,
         .axi4l_if  (axil_to_p4_drops),
         .axi4s_if  (axis_to_p4_drop_cnt)
     );
@@ -501,7 +502,7 @@ module p4_proc
         else if (axis_to_p4_drop_p[0].tready && axis_to_p4_drop_p[1].tready) // stall timer when split_join stalls.
             p4_bypass_timer <= p4_bypass_timer+1;
 
-        if (!core_rstn)
+        if (srst)
             p4_bypass_enable <= 0;
         else if (p4_bypass_timer == 2*FIFO_DEPTH) // Double timer threshold for margin (due to pipelining).
             p4_bypass_enable <= p4_proc_regs[1].p4_bypass_config.p4_bypass_enable;

@@ -10,7 +10,7 @@
     //===================================
     // Signals
     logic        clk;
-    logic        rstn;
+    logic        srst;
 
     logic [63:0] timestamp;
 
@@ -132,7 +132,7 @@
     // DUT instance
     smartnic_app DUT (
         .core_clk                       (clk),
-        .core_rstn                      (rstn),
+        .core_srst                      (srst),
         .timestamp                      (timestamp),
         .axil_aclk                      (axil_if.aclk),
         // P4 AXI-L control interface

@@ -3,7 +3,7 @@ module smartnic_app_igr
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic      core_clk,
-    input  logic      core_rstn,
+    input  logic      core_srst,
 
     axi4s_intf.rx     axi4s_in  [NUM_PORTS],
     axi4s_intf.tx     axi4s_out [NUM_PORTS],
@@ -18,15 +18,16 @@ module smartnic_app_igr
     localparam int TDEST_WID     = axi4s_in[0].TDEST_WID;
     localparam int TUSER_WID     = axi4s_in[0].TUSER_WID;
 
-    logic srst;
-    assign srst = !core_rstn;
-
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
     // ----------------------------------------------------------------------
     axi4l_intf  axil_if__core_clk ();
 
     smartnic_app_igr_reg_intf  smartnic_app_igr_regs ();
+
+    logic srst;
+
+    assign srst = core_srst;
 
     // pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (

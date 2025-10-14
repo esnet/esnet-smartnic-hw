@@ -4,7 +4,7 @@ module smartnic_host
     parameter int  HOST_NUM_IFS = 3
 ) (
     input logic        core_clk,
-    input logic        core_rstn,
+    input logic        core_srst,
 
     axi4s_intf.rx   axis_host_to_core [NUM_CMAC],
     axi4s_intf.tx   axis_core_to_host [NUM_CMAC],
@@ -30,11 +30,10 @@ module smartnic_host
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    logic aclk;
     logic srst;
+    logic aclk;
 
     assign aclk = core_clk;
-    assign srst = !core_rstn;
 
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_host_to_core_p [NUM_CMAC] (.*);
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_q_range_fail   [NUM_CMAC] (.*);
@@ -58,6 +57,8 @@ module smartnic_host
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
                   .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_pkt_capture (.*);
 
+    //------------------------ reset ----------------------------
+    assign srst = core_srst;
 
     //------------------------ tid assignment logic --------------
     logic host_if_sel [NUM_CMAC][HOST_NUM_IFS+1];
@@ -97,7 +98,7 @@ module smartnic_host
         assign axis_q_range_fail[i].tuser   = axis_host_to_core_p[i].tuser;
         assign axis_q_range_fail[i].tid     = axis_host_to_core_p[i].tid;
 
-        axi4s_probe q_range_fail_probe (.axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
+        axi4s_probe q_range_fail_probe (.srst, .axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
 
         // host port tid assignments
         assign axis_host_to_core_p[i].tready = axis_host_tid[i].tready;
@@ -186,7 +187,7 @@ module smartnic_host
 
         smartnic_hash2qid smartnic_hash2qid_inst (
             .core_clk,
-            .core_rstn,
+            .core_srst,
             .axi4s_in       (axis_hash2qid[i]),
             .axi4s_out      (axis_core_to_host_demux_in[i]),
             .axil_if        (axil_to_hash2qid[i])

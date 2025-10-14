@@ -1,7 +1,7 @@
 module smartnic_timestamp
 #() (
     input  logic        clk,
-    input  logic        rstn,
+    input  logic        srst,
     output logic [63:0] timestamp,
 
     input  logic [31:0] timestamp_incr,
@@ -24,7 +24,7 @@ module smartnic_timestamp
 
     // Timestamp counter and access logic.
     always @(posedge clk) begin
-       if (!rstn) begin
+       if (srst) begin
           timestamp_lsbs <= '0; timestamp_cntr <= '0;
           freerun_lsbs   <= '0; freerun_cntr   <= '0;
        end

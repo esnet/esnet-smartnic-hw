@@ -93,7 +93,6 @@ module smartnic_250mhz #(
     logic axil_aresetn;
 
     logic core_clk;
-    logic core_rstn;
     logic srst;
 
     // ----------------------------------------------------------------
@@ -121,10 +120,8 @@ module smartnic_250mhz #(
         .axil_aclk    ( axil_aclk ),
         .axil_aresetn ( axil_aresetn ),
         .core_clk     ( core_clk ),
-        .core_rstn    ( core_rstn )
+        .core_srst    ( srst )
     );
-
-    assign srst = !core_rstn;
 
     // ----------------------------------------------------------------
     //  AXI-L Control

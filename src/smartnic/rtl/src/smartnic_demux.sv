@@ -4,7 +4,7 @@ module smartnic_demux
     parameter int  MAX_PKT_LEN = 9100
 ) (
     input logic     core_clk,
-    input logic     core_rstn,
+    input logic     core_srst,
 
     axi4s_intf.rx   axis_bypass_to_core [NUM_CMAC],
     axi4s_intf.rx   axis_app_to_core    [NUM_CMAC],
@@ -44,13 +44,12 @@ module smartnic_demux
     axi4s_intf  #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  _axis_core_to_cmac [NUM_CMAC] (.aclk(core_clk));
 
-
     logic srst;
-
     logic smartnic_demux_out_sel [NUM_CMAC];
-
-    assign srst = !core_rstn;
-
+ 
+    // Reset
+    assign srst = core_srst;
+   
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__mux_demux
         axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID), .TUSER_WID(TUSER_SMARTNIC_META_WID))  __axis_bypass_to_core (.aclk(core_clk));
         tuser_smartnic_meta_t axis_core_to_host_tuser;

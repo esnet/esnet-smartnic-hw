@@ -10,7 +10,7 @@ module {{ props.name }}_wrapper
 (
     // Clock/reset
     input logic           core_clk,
-    input logic           core_rstn,
+    input logic           core_srst,
 
     // AXI-L
     axi4l_intf.peripheral axil_if,
@@ -44,7 +44,7 @@ module {{ props.name }}_wrapper
 
     {{ props.name }}_extern smartnic_extern_0 (
       .clk                          ( core_clk ),
-      .rstn                         ( core_rstn ),
+      .srst                         ( core_srst ),
       .extern_from_vitisnetp4       ( user_extern_out ),
       .extern_from_vitisnetp4_valid ( user_extern_out_valid ),
       .extern_to_vitisnetp4         ( user_extern_in ),
@@ -61,20 +61,22 @@ module {{ props.name }}_wrapper
     axi4s_intf_tx_term   axis_from_extern_term ( .to_rx(axis_from_extern) );
     {% endif %}
 
+    logic axis_aresetn;
+    always_ff @(posedge core_clk) axis_aresetn <= !core_srst;
+
     // --- vitisnetp4 instance ---
     //   Generated using Xilinx VitisNet P4 from P4 file:
     //   {{ props.p4_file }}
     //
     //   Packet processing rate: {{ props.pkt_rate_mhz }} MHz
-
     {{ props.name }} i_{{ props.name }} (
         // Clocks & Resets
         .s_axis_aclk             (core_clk), // {{ props.axis_clk_freq_mhz }} MHz
-        .s_axis_aresetn          (core_rstn),
+        .s_axis_aresetn          (axis_aresetn),
         .s_axi_aclk              (axil_if.aclk),
         .s_axi_aresetn           (axil_if.aresetn),
         .cam_mem_aclk            (core_clk), // {{ props.cam_mem_clk_freq_mhz }} MHz
-        .cam_mem_aresetn         (core_rstn),
+        .cam_mem_aresetn         (axis_aresetn),
         // Metadata
         .user_metadata_in        (user_metadata_in),         
         .user_metadata_in_valid  (user_metadata_in_valid),   

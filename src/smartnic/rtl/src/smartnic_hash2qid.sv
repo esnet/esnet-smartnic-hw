@@ -1,6 +1,6 @@
 module smartnic_hash2qid (
     input logic    core_clk,
-    input logic    core_rstn,
+    input logic    core_srst,
 
     axi4s_intf.rx  axi4s_in,
     axi4s_intf.tx  axi4s_out,
@@ -22,9 +22,9 @@ module smartnic_hash2qid (
        std_pkg::param_check(axi4s_out.TUSER_WID,     TUSER_WID,     "axi4s_out.TUSER_WID");
    end
 
+    // reset
     logic srst;
-
-    assign srst = !core_rstn;
+    assign srst = core_srst;
 
     // ----------------------------------------------------------------
     //  axi4l interface instantiations

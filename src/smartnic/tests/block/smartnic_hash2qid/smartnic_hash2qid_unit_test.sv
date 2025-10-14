@@ -29,7 +29,7 @@ module smartnic_hash2qid_unit_test;
     // DUT
     //===================================
     logic core_clk;
-    logic core_rstn;
+    logic core_srst;
 
     axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_in_if (.aclk (core_clk));
     axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_out_if (.aclk (core_clk));
@@ -38,7 +38,7 @@ module smartnic_hash2qid_unit_test;
 
     smartnic_hash2qid DUT (
         .core_clk,
-        .core_rstn,
+        .core_srst,
         .axi4s_in      (axis_in_if),
         .axi4s_out     (axis_out_if),
         .axil_if       (axil_if)
@@ -96,7 +96,7 @@ module smartnic_hash2qid_unit_test;
     // Assign resets
     std_reset_intf axis_reset_if (.clk(axis_in_if.aclk));
     assign axis_reset_if.ready = !axis_reset_if.reset;
-    assign core_rstn  = !axis_reset_if.reset;
+    assign core_srst  = axis_reset_if.reset;
     assign axil_if.aresetn     = !axis_reset_if.reset;
 
     //===================================

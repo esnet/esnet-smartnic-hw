@@ -3,7 +3,7 @@ module smartnic_bypass #(
     parameter int  MAX_PKT_LEN = 9100
 ) (
     input logic    core_clk,
-    input logic    core_rstn,
+    input logic    core_srst,
 
     axi4s_intf.rx  axis_core_to_bypass [NUM_CMAC],
     axi4s_intf.tx  axis_bypass_to_core [NUM_CMAC],
@@ -33,11 +33,11 @@ module smartnic_bypass #(
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_mux_in    [NUM_CMAC][2] (.aclk(core_clk));
 
     logic  srst;
-
     logic  igr_sw_drop_pkt  [NUM_CMAC];
     logic  bypass_demux_sel [NUM_CMAC];
 
-    assign srst = !core_rstn;
+    // Reset
+    assign srst = core_srst;
 
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__bypass
         igr_tdest_t axis_core_to_bypass_p_tdest;

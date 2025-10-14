@@ -5,7 +5,7 @@
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic          core_clk,
-    input  logic          core_rstn,
+    input  logic          core_srst,
 
     input  timestamp_t    timestamp,
 

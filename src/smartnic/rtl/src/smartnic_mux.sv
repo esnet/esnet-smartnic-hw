@@ -2,8 +2,8 @@ module smartnic_mux
 #(
     parameter int  NUM_CMAC = 2
 ) (
-    input logic        core_clk,
-    input logic        core_rstn,
+    input logic     core_clk,
+    input logic     core_srst,
 
     axi4s_intf.rx   axis_cmac_to_core   [NUM_CMAC],
     axi4s_intf.rx   axis_host_to_core   [NUM_CMAC],
@@ -30,13 +30,13 @@ module smartnic_mux
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_app    [NUM_CMAC]    (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_bypass [NUM_CMAC]    (.aclk(core_clk));
 
-    logic  srst;
-
     igr_tdest_t smartnic_mux_out_sel [2*NUM_CMAC];
 
+    logic srst;
     logic  igr_demux_sel  [NUM_CMAC];
 
-    assign srst = !core_rstn;
+    // Reset
+    assign srst = core_srst;
 
     // ingress mux/demux logic.
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__mux_demux
