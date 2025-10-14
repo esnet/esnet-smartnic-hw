@@ -89,6 +89,9 @@ module p4_proc
 
     p4_proc_reg_intf  p4_proc_regs[2] ();
 
+    logic srst;
+    assign srst = !core_rstn;
+
     // p4_proc register decoder
     p4_proc_decoder p4_proc_decoder (
         .axil_if          (axil_if),
@@ -139,61 +142,66 @@ module p4_proc
     port_t            axis_from_vitisnetp4_tdest;
     port_t            axis_from_vitisnetp4_tdest_latch;
 
+    logic             axis_to_vitisnetp4_sop;
+
     tuser_hdr_t  _axis_to_vitisnetp4_tuser;
     tuser_hdr_t  _axis_from_vitisnetp4_tuser;
     tuser_hdr_t  _axis_from_bypass_mux_tuser;
     tuser_hdr_t  axis_from_bypass_mux_tuser;
 
+    logic        axis_to_bypass_mux_sop;
+    logic        axis_from_bypass_mux_sop;
+
     pid_t user_metadata_to_vitisnetp4_pid;
     pid_t user_metadata_from_vitisnetp4_pid;
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_in [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_in [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_from_split_join [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_from_split_join [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_bypass_mux (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_bypass_mux (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_bypass_mux (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_bypass_mux (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_from_bypass_mux (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_from_bypass_mux (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_from_bypass_mux (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_from_bypass_mux (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_vitisnetp4 (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_from_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_from_vitisnetp4 (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_split_join [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_split_join [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_HDR_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_split_join [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_to_split_join [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop_cnt (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop_cnt (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop_p [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_p4_drop_p [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_unset_drop [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_unset_drop [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_trunc [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   axis_to_trunc [NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf  #( .TUSER_WID(TUSER_PKT_WID),
-                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_out [NUM_PORTS] (.aclk(core_clk), .aresetn(core_rstn));
+                   .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))   _axis_out [NUM_PORTS] (.aclk(core_clk));
 
 
     // --------------------------------------------------------------------
@@ -203,6 +211,8 @@ module p4_proc
         tuser_pkt_t _axis_in_tuser;
         port_t      axis_to_unset_drop_tdest;
         tuser_pkt_t axis_to_trunc_tuser;
+        logic       axis_to_p4_drop_sop;
+        logic       axis_to_unset_drop_sop;
 
         // add proc_port to tuser signal (to pipeline with pkt data destined to axis_to_bypass_mux).
         assign _axis_in[i].tvalid       = axis_in[i].tvalid;
@@ -229,7 +239,7 @@ module p4_proc
             .FIFO_DEPTH (FIFO_DEPTH)
         ) axi4s_split_join_inst (
             .clk           (core_clk),
-            .srst          (!core_rstn),
+            .srst,
             .axi4s_in      (_axis_in[i]),
             .axi4s_out     (axis_to_p4_drop_p[i]),
             .axi4s_hdr_out (axis_from_split_join[i]),
@@ -240,11 +250,21 @@ module p4_proc
  
         // xilinx_axi4s_ila xilinx_axi4s_ila_1 (.axis_in(axis_from_split_join[0]));
 
-        axi4s_tready_pipe axis_to_p4_drop_pipe ( .from_tx(axis_to_p4_drop_p[i]),
+        packet_sop packet_sop_p4_drop (
+            .clk (core_clk),
+            .srst,
+            .vld (axis_to_p4_drop[i].tvalid),
+            .rdy (axis_to_p4_drop[i].tready),
+            .eop (axis_to_p4_drop[i].tlast),
+            .sop (axis_to_p4_drop_sop)
+        );
+
+        axi4s_tready_pipe axis_to_p4_drop_pipe ( .srst,
+                                                 .from_tx(axis_to_p4_drop_p[i]),
                                                  .to_rx(axis_to_p4_drop[i]) );
 
         // p4 drop logic (zero-length packets).
-        assign p4_drop[i] = axis_to_p4_drop[i].tvalid && axis_to_p4_drop[i].sop &&
+        assign p4_drop[i] = axis_to_p4_drop[i].tvalid && axis_to_p4_drop_sop &&
                             axis_to_p4_drop[i].tlast  && axis_to_p4_drop[i].tkeep == '0;
 
 
@@ -253,22 +273,31 @@ module p4_proc
 
         axi4s_drop axi4s_p4_drop_inst (
             .clk         (core_clk),
-            .srst        (!core_rstn),
+            .srst,
             .axi4s_in    (axis_to_p4_drop[i]),
             .axi4s_out   (axis_to_unset_drop[i]),
             .axil_if     (axil_stub[i]),
             .drop_pkt    (p4_drop[i])
         );
 
+        packet_sop packet_sop_unset_drop (
+            .clk (core_clk),
+            .srst,
+            .vld (axis_to_unset_drop[i].tvalid),
+            .rdy (axis_to_unset_drop[i].tready),
+            .eop (axis_to_unset_drop[i].tlast),
+            .sop (axis_to_unset_drop_sop)
+        );
+
         // unset drop logic (packets with UNSET codepoint).
         assign axis_to_unset_drop_tdest = axis_to_unset_drop[i].tdest;
-        assign unset_drop[i] = axis_to_unset_drop[i].tvalid && axis_to_unset_drop[i].sop &&
+        assign unset_drop[i] = axis_to_unset_drop[i].tvalid && axis_to_unset_drop_sop &&
                                axis_to_unset_drop_tdest.encoded.typ == UNSET;
 
         // unset drop instantiation.
         axi4s_drop axi4s_unset_drop_inst (
             .clk         (core_clk),
-            .srst        (!core_rstn),
+            .srst,
             .axi4s_in    (axis_to_unset_drop[i]),
             .axi4s_out   (axis_to_trunc[i]),
             .axil_if     (axil_to_unset_drops[i]),
@@ -285,7 +314,7 @@ module p4_proc
             .IN_PIPE(1), .OUT_PIPE(1)
         ) axi4s_trunc_inst (
             .clk         (core_clk),
-            .srst        (!core_rstn),
+            .srst,
             .axi4s_in(axis_to_trunc[i]),
             .axi4s_out(_axis_out[i]),
             .length(trunc_length[i])
@@ -316,6 +345,7 @@ module p4_proc
     generate
         if (NUM_PORTS > 1) begin : g__multi_port_to_bypass
             axi4s_mux #(.N(NUM_PORTS)) axi4s_mux_0 (
+                .srst,
                 .axi4s_in (axis_from_split_join),
                 .axi4s_out(_axis_to_bypass_mux) );
 
@@ -376,9 +406,18 @@ module p4_proc
          axis_from_bypass_mux.tuser = axis_from_bypass_mux_tuser;
     end
 
+    packet_sop packet_sop_from_bypass_mux (
+        .clk (core_clk),
+        .srst,
+        .vld (axis_from_bypass_mux.tvalid),
+        .rdy (axis_from_bypass_mux.tready),
+        .eop (axis_from_bypass_mux.tlast),
+        .sop (axis_from_bypass_mux_sop)
+    );
+
     // p4 drop counter instantiation and signalling.
     assign axis_to_p4_drop_cnt.tready  = axis_from_bypass_mux.tready;
-    assign axis_to_p4_drop_cnt.tvalid  = axis_from_bypass_mux.tvalid && axis_from_bypass_mux.sop &&
+    assign axis_to_p4_drop_cnt.tvalid  = axis_from_bypass_mux.tvalid && axis_from_bypass_mux_sop &&
                                          axis_from_bypass_mux.tlast  && axis_from_bypass_mux.tkeep == '0;
     assign axis_to_p4_drop_cnt.tdata   = axis_from_bypass_mux.tdata;
     assign axis_to_p4_drop_cnt.tkeep   = axis_from_bypass_mux.tkeep;
@@ -444,9 +483,17 @@ module p4_proc
         end : g__single_port_from_bypass
     endgenerate
 
+    packet_sop packet_sop_to_bypass_mux (
+        .clk (core_clk),
+        .srst,
+        .vld (axis_to_bypass_mux.tvalid),
+        .rdy (axis_to_bypass_mux.tready),
+        .eop (axis_to_bypass_mux.tlast),
+        .sop (axis_to_bypass_mux_sop)
+    );
 
     assign p4_bypass_timer_enable = (p4_proc_regs[1].p4_bypass_config.p4_bypass_enable ^ p4_bypass_enable) &&
-                                     axis_to_bypass_mux.sop;
+                                     axis_to_bypass_mux_sop;
 
     always @(posedge core_clk) begin
         if (!p4_bypass_timer_enable)
@@ -464,6 +511,7 @@ module p4_proc
     axi4s_intf_bypass_mux #(
         .PIPE_STAGES(1)
     ) bypass_mux (
+        .srst,
         .from_tx    (axis_to_bypass_mux),
         .to_block   (_axis_to_vitisnetp4),
         .from_block (_axis_from_vitisnetp4),
@@ -475,6 +523,15 @@ module p4_proc
     // ----------------------------------------------------------------
     // SDnet block supporting logic.
     // ----------------------------------------------------------------
+    packet_sop packet_sop_to_vitisnetp4 (
+        .clk (core_clk),
+        .srst,
+        .vld (axis_to_vitisnetp4.tvalid),
+        .rdy (axis_to_vitisnetp4.tready),
+        .eop (axis_to_vitisnetp4.tlast),
+        .sop (axis_to_vitisnetp4_sop)
+    );
+
     // metadata type definitions (from ip/<app_name>/vitisnetp4_0/src/verilog/vitisnetp4_0_pkg.sv).
     // --- metadata_to_vitisnetp4 ---
     assign _axis_to_vitisnetp4_tuser = _axis_to_vitisnetp4.tuser;
@@ -493,7 +550,7 @@ module p4_proc
         user_metadata_to_vitisnetp4.drop_reason       = 0;
         user_metadata_to_vitisnetp4.scratch           = 0;
 
-        user_metadata_to_vitisnetp4_valid = axis_to_vitisnetp4.tvalid && axis_to_vitisnetp4.sop;
+        user_metadata_to_vitisnetp4_valid = axis_to_vitisnetp4.tvalid && axis_to_vitisnetp4_sop;
     end
 
     // TID/TDEST/TUSER not needed towards VitisNetP4 IP

@@ -81,10 +81,10 @@
     logic axis_clk;
     logic axis_aresetn;
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID)) axis_cmac_igr [NUM_CMAC] (.aclk(axis_clk), .aresetn(axis_aresetn));
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID))                                                  axis_cmac_egr [NUM_CMAC] (.aclk(axis_clk), .aresetn(axis_aresetn));
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID)) axis_h2c      [NUM_CMAC] (.aclk(axis_clk), .aresetn(axis_aresetn));
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_SMARTNIC_META_WID))             axis_c2h      [NUM_CMAC] (.aclk(axis_clk), .aresetn(axis_aresetn));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID)) axis_cmac_igr [NUM_CMAC] (.aclk(axis_clk));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID))                                                  axis_cmac_egr [NUM_CMAC] (.aclk(axis_clk));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID)) axis_h2c      [NUM_CMAC] (.aclk(axis_clk));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_SMARTNIC_META_WID))             axis_c2h      [NUM_CMAC] (.aclk(axis_clk));
 
     tuser_smartnic_meta_t axis_c2h_tuser [NUM_CMAC];
 

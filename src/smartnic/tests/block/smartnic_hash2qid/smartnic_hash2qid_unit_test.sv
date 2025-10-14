@@ -31,8 +31,8 @@ module smartnic_hash2qid_unit_test;
     logic core_clk;
     logic core_rstn;
 
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_in_if (.aclk (core_clk), .aresetn(core_rstn));
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_out_if (.aclk (core_clk), .aresetn (core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_in_if (.aclk (core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID)) axis_out_if (.aclk (core_clk));
 
     axi4l_intf axil_if ();
 

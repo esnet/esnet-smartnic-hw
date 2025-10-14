@@ -22,13 +22,13 @@ module tb;
     axi4l_intf axil_to_extern ();
 
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if  [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if  [NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if [NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_extern (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_extern (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_extern (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_extern (.aclk(clk));
 
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;

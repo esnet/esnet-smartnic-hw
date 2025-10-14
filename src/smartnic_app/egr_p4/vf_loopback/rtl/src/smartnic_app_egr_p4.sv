@@ -20,6 +20,8 @@ module smartnic_app_egr_p4
     axi4s_intf.rx         axis_to_extern,
     axi4s_intf.tx         axis_from_extern
 );
+    logic srst;
+    assign srst = !core_rstn;
 
     // Terminate AXI-L interfaces
     axi4l_intf_peripheral_term axi4l_intf_peripheral_term__p4_proc    (.axi4l_if (axil_to_p4_proc));
@@ -29,7 +31,7 @@ module smartnic_app_egr_p4
     // Pass datapath AXI-S interface directly from input to output
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
-            axi4s_full_pipe axi4s_full_pipe_inst (.from_tx(axis_in[g_port]), .to_rx(axis_out[g_port]));
+            axi4s_full_pipe axi4s_full_pipe_inst (.srst, .from_tx(axis_in[g_port]), .to_rx(axis_out[g_port]));
         end : g__port
     endgenerate
 

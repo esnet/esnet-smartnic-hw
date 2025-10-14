@@ -41,8 +41,8 @@ module smartnic_app_egr_p4
     logic                        user_metadata_out_valid;
 
     // Interfaces
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_to_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_from_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_to_vitisnetp4 (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_from_vitisnetp4 (.aclk(core_clk));
 
     // P4 processor complex
     p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_inst (

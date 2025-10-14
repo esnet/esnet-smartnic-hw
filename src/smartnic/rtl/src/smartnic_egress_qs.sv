@@ -80,11 +80,11 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     axi3_intf #(.DATA_BYTE_WID(HBM_AXI_DATA_BYTE_WID), .ADDR_WID(HBM_AXI_ADDR_WID), .ID_WID(HBM_AXI_ID_WID)) axi_if [HBM_NUM_AXI_CHANNELS] (.aclk (clk));
 
-    packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_in_if  [PHY_NUM_PORTS] (.clk, .srst);
-    packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_out_if [PHY_NUM_PORTS] (.clk, .srst);
+    packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_in_if  [PHY_NUM_PORTS] (.clk);
+    packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_out_if [PHY_NUM_PORTS] (.clk);
 
-    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_in_if  [PHY_NUM_PORTS] (.clk, .srst);
-    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_out_if [PHY_NUM_PORTS] (.clk, .srst);
+    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_in_if  [PHY_NUM_PORTS] (.clk);
+    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_out_if [PHY_NUM_PORTS] (.clk);
 
     mem_wr_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) mem_wr_if [PHY_NUM_PORTS] (.clk);
     mem_rd_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) mem_rd_if [PHY_NUM_PORTS] (.clk);
@@ -172,9 +172,9 @@ module smartnic_egress_qs
     generate
         for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__port_adapter
             // (Local) interfaces
-            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_to_qs (.aclk(clk), .aresetn(!srst));
-            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_from_qs (.aclk(clk), .aresetn(!srst));
-            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_out (.aclk(clk), .aresetn(!srst));
+            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_to_qs (.aclk(clk));
+            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_from_qs (.aclk(clk));
+            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_out (.aclk(clk));
 
             mem_wr_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(HBM_AXI_DATA_WID)) __mem_wr_if [HBM_NUM_AXI_CHANNELS_PER_PORT] (.clk);
             mem_rd_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(HBM_AXI_DATA_WID)) __mem_rd_if [HBM_NUM_AXI_CHANNELS_PER_PORT] (.clk);
@@ -190,6 +190,7 @@ module smartnic_egress_qs
             axi4s_intf_bypass_mux #(
                 .PIPE_STAGES ( 1 )
             ) i_axi4s_intf_bypass_mux (
+                .srst,
                 .from_tx    ( axis_in[g_port] ),
                 .to_block   ( __axis_to_qs ),
                 .from_block ( __axis_from_qs ),
@@ -203,6 +204,7 @@ module smartnic_egress_qs
             axi4s_to_packet_adapter #(
                 .META_WID ( META_WID )
             ) i_axi4s_to_packet_adapter (
+                .srst,
                 .axis_if ( __axis_to_qs ),
                 .packet_if ( packet_in_if[g_port] ),
                 .err ( 1'b0 ),
@@ -214,6 +216,7 @@ module smartnic_egress_qs
                 .TDEST_WID ( PORT_WID ),
                 .TUSER_WID ( EGR_Q_WID )
             ) i_axi4s_from_packet_adapter (
+                .srst,
                 .packet_if ( packet_out_if[g_port] ),
                 .axis_if   ( __axis_from_qs ),
                 .tdest     ( meta_out.egr_port ),
@@ -293,8 +296,10 @@ module smartnic_egress_qs
         for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__scheduler
             // TEMP: send packets out on same port on which they were received
             packet_descriptor_fifo i_packet_descriptor_fifo (
-                .from_tx ( desc_in_if[g_port] ),
-                .to_rx   ( desc_out_if[g_port] )
+                .from_tx      ( desc_in_if[g_port] ),
+                .from_tx_srst ( srst ),
+                .to_rx        ( desc_out_if[g_port] ),
+                .to_rx_srst   ( srst )
             );
         end : g__scheduler
     endgenerate

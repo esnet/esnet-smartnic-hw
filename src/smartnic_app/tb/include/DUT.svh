@@ -18,14 +18,14 @@
     axi4l_intf app_axil_if   ();
 
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if[NUM_PROC_PORTS] (.aclk(clk), .aresetn(!rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if[NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if[NUM_PROC_PORTS] (.aclk(clk), .aresetn(!rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if[NUM_PROC_PORTS] (.aclk(clk));
 
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_h2c_if[NUM_HOST_IFS][NUM_PROC_PORTS] (.aclk(clk), .aresetn(!rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_h2c_if[NUM_HOST_IFS][NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_c2h_if[NUM_HOST_IFS][NUM_PROC_PORTS] (.aclk(clk), .aresetn(!rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_c2h_if[NUM_HOST_IFS][NUM_PROC_PORTS] (.aclk(clk));
 
     logic [NUM_PROC_PORTS-1:0]        axis_app_igr_tvalid;
     logic [NUM_PROC_PORTS-1:0]        axis_app_igr_tready;

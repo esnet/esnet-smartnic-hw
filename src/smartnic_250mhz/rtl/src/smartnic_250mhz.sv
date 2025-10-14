@@ -94,6 +94,7 @@ module smartnic_250mhz #(
 
     logic core_clk;
     logic core_rstn;
+    logic srst;
 
     // ----------------------------------------------------------------
     //  Interfaces
@@ -104,11 +105,11 @@ module smartnic_250mhz #(
 
     smartnic_250mhz_reg_intf smartnic_250mhz_regs ();
 
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__qdma_h2c [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__adap_tx_250mhz [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__qdma_h2c [NUM_INTF] (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__adap_tx_250mhz [NUM_INTF] (.aclk(core_clk));
 
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__qdma_c2h [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__adap_rx_250mhz [NUM_INTF] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__qdma_c2h [NUM_INTF] (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__adap_rx_250mhz [NUM_INTF] (.aclk(core_clk));
 
     // ----------------------------------------------------------------
     //  Clocks/Resets
@@ -122,6 +123,8 @@ module smartnic_250mhz #(
         .core_clk     ( core_clk ),
         .core_rstn    ( core_rstn )
     );
+
+    assign srst = !core_rstn;
 
     // ----------------------------------------------------------------
     //  AXI-L Control
@@ -281,14 +284,15 @@ module smartnic_250mhz #(
     generate
         for (genvar g_if = 0; g_if < NUM_INTF; g_if++) begin : g__if
             // (Local) interfaces
-            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__h2c (.aclk(core_clk), .aresetn(core_rstn));
-            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__c2h (.aclk(core_clk), .aresetn(core_rstn));
+            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_H2C_WID)) axis_if__h2c (.aclk(core_clk));
+            axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TUSER_WID (TUSER_C2H_WID)) axis_if__c2h (.aclk(core_clk));
 
             // H2C register slices (bridge between SLRs)
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__qdma_h2c (
+                .srst,
                 .from_tx ( axis_if__qdma_h2c[g_if] ),
                 .to_rx   ( axis_if__h2c )
             );
@@ -298,6 +302,7 @@ module smartnic_250mhz #(
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__adap_tx (
+                .srst,
         `else
             axi4s_intf_connector axi4s_intf_connector__adap_tx (
         `endif
@@ -311,6 +316,7 @@ module smartnic_250mhz #(
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__adap_rx (
+                .srst,
         `else
             axi4s_intf_connector axi4s_intf_connector__adap_rx (
         `endif
@@ -322,6 +328,7 @@ module smartnic_250mhz #(
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__qdma_c2h (
+                .srst,
                 .from_tx ( axis_if__c2h ),
                 .to_rx   ( axis_if__qdma_c2h[g_if] )
             );

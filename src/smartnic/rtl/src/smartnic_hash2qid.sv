@@ -22,6 +22,10 @@ module smartnic_hash2qid (
        std_pkg::param_check(axi4s_out.TUSER_WID,     TUSER_WID,     "axi4s_out.TUSER_WID");
    end
 
+    logic srst;
+
+    assign srst = !core_rstn;
+
     // ----------------------------------------------------------------
     //  axi4l interface instantiations
     // ----------------------------------------------------------------
@@ -44,9 +48,9 @@ module smartnic_hash2qid (
     );
 
 
-    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p1 (.aclk(axi4s_in.aclk), .aresetn(axi4s_in.aresetn));
-    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p2 (.aclk(axi4s_in.aclk), .aresetn(axi4s_in.aresetn));
-    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p3 (.aclk(axi4s_in.aclk), .aresetn(axi4s_in.aresetn));
+    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p1 (.aclk(axi4s_in.aclk));
+    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p2 (.aclk(axi4s_in.aclk));
+    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  axi4s_in_p3 (.aclk(axi4s_in.aclk));
 
 
     // -- pipe stage 1 --
@@ -60,7 +64,7 @@ module smartnic_hash2qid (
         vf2_table_qid <= smartnic_hash2qid_regs.vf2_table[axi4s_in_tuser.rss_entropy[6:0]];
     end
 
-    axi4s_intf_pipe axi4s_in_pipe_1 (.from_tx(axi4s_in),    .to_rx(axi4s_in_p1));
+    axi4s_intf_pipe axi4s_in_pipe_1 (.srst, .from_tx(axi4s_in),    .to_rx(axi4s_in_p1));
 
 
     // -- pipe stage 2 --
@@ -92,7 +96,7 @@ module smartnic_hash2qid (
     logic [11:0] rss_entropy;
     always @(posedge core_clk) rss_entropy <= qid + base;
 
-    axi4s_intf_pipe axi4s_in_pipe_3 (.from_tx(axi4s_in_p2), .to_rx(axi4s_in_p3));
+    axi4s_intf_pipe axi4s_in_pipe_3 (.srst, .from_tx(axi4s_in_p2), .to_rx(axi4s_in_p3));
 
 
     // -- output stage --
