@@ -6,8 +6,6 @@ blocks:
     !include ../src/xilinx/hbm/regio/xilinx_hbm.yaml
   proxy_reg: &proxy_reg
     !include src/reg/proxy/regio/reg_proxy.yaml
-  mem_proxy: &mem_proxy
-    !include src/mem/proxy/regio/mem_proxy.yaml
 
 interfaces:
   - block: *xilinx_hbm
@@ -20,7 +18,3 @@ interfaces:
     name: xilinx_hbm_apb_proxy
     # Provides register-indirect access to register space
     # described in xilinx_hbm_apb.yaml
-  - block: *mem_proxy
-    address: 0x1000
-    width: 12
-    name: control_proxy
