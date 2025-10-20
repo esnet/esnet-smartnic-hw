@@ -87,7 +87,6 @@ module smartnic_packet_capture_unit_test;
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (2, 12'd1024);
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 12'd1536);
 
-        env.smartnic_reg_blk_agent.write_switch_config({1'b1, 1'b0, 1'b0, 1'b0});  // set 'pkt_capture_enable'.
     endtask
 
     //===================================
@@ -119,6 +118,11 @@ module smartnic_packet_capture_unit_test;
     task automatic pkt_capture_test(input int pkts=2, mode=$urandom_range(64, 512), port_num_t port=P0);
         app_mode(port);
         env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
+
+        if (port==P0)
+            env.smartnic_reg_blk_agent.write_switch_config({1'b0, 1'b1, 1'b0, 1'b0, 1'b0}); // pkt_capture_enable_0=1.
+        else
+            env.smartnic_reg_blk_agent.write_switch_config({1'b1, 1'b0, 1'b0, 1'b0, 1'b0}); // pkt_capture_enable_1=1.
 
         // run packets from PHY to pkt_capture block. Use 'UNSET' codepoint to direct traffic to pkt_capture scoreboard.
         packet_stream(.pkts(pkts), .mode(mode), .bytes(bytes[0]), .tid({PHY,port}), .tdest({UNSET,port}));
