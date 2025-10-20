@@ -93,6 +93,22 @@ regs:
         desc: set to 1 to direct egress 'host' traffic to the 'pkt_capture' block. direct to host by default.
         width: 1
         init : 0
+      - name: cmac_0_lpbk_enable
+        desc: set to 1 to loop 'CMAC0' egress traffic back to 'CMAC0' ingress.
+        width: 1
+        init : 0
+      - name: cmac_1_lpbk_enable
+        desc: set to 1 to loop 'CMAC1' egress traffic back to 'CMAC1' ingress.
+        width: 1
+        init : 0
+      - name: host_0_lpbk_enable
+        desc: set to 1 to loop 'HOST0' egress traffic back to 'HOST0' ingress.
+        width: 1
+        init : 0
+      - name: host_1_lpbk_enable
+        desc: set to 1 to loop 'HOST1' egress traffic back to 'HOST1' ingress.
+        width: 1
+        init : 0
 
   - name: smartnic_demux_out_sel
     access : rw
