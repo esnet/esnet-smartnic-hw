@@ -19,3 +19,8 @@ FW Word to Bytes Endian Test
         Endian Check Packed to Unpacked    dev=${dev}    exp_data=${0x44332211}
         Endian Check Packed to Unpacked    dev=${dev}    exp_data=${0x11223344}
     END
+
+Register Write-Read Test
+    FOR    ${i}    IN RANGE    3
+        Reg Wr Rd Test    dev=${dev}    num_p4_proc=${num_p4_proc}
+    END

@@ -1,5 +1,9 @@
 __all__ = ()
 
+import random
+import json
+
+from typing import List, Dict, Any
 from robot.api.deco import keyword, library
 
 from smartnic.config  import *
@@ -14,6 +18,10 @@ class Library:
     @keyword
     def endian_check_unpacked_to_packed(self, dev, exp_data):
         endian_check_unpacked_to_packed(dev, exp_data)
+
+    @keyword
+    def reg_wr_rd_test(self, dev, num_p4_proc):
+        reg_wr_rd_test(dev, num_p4_proc)
 
     @keyword
     def testcase_setup(self, dev, num_p4_proc):
@@ -54,3 +62,177 @@ def endian_check_unpacked_to_packed(dev, exp_data):
         raise AssertionError(f'Wrote unpacked 0x{exp_data:08x}, got packed 0x{got_data:08x}')
 
 #---------------------------------------------------------------------------------------------------
+def reg_wr_rd_test(dev, num_p4_proc):
+    # extract all 'bar2' register paths
+    paths = str(dev.bar2(formatter='path')).split()
+
+    # list all 'smartnic' blocks, but omit 'open-nic-shell' blocks.
+    smartnic_blocks = reg_blocks(paths, 'bar2', num_p4_proc)
+
+    for block in smartnic_blocks:
+        # list all 'block' register paths.
+        paths = []; vars = locals()
+        exec(f"paths = str(dev.bar2.{block}(formatter='json'))", globals(), vars)
+
+        # extract and test all 'RW' fields in 'block'.
+        fields = parse_reg_json(vars['paths'], 'Field', 'RW')
+        for field in fields:
+            reg_wr_rd(dev, field['path'], field['width'])
+
+        # extract and test remaining 'RW' registers in 'block' (not already covered by 'field' tests).
+        registers = parse_reg_json(vars['paths'], 'Register', 'RW')
+        for register in registers:
+            skip = False
+            for field in fields:
+                if field['path'] and field['path'].startswith(register['path']):
+                    skip = True
+                    break
+
+            if not skip: reg_wr_rd(dev, register['path'], register['width'])
+
+#---------------------------------------------------------------------------------------------------
+def reg_wr(dev, reg, value):
+    exec(f"dev.{reg}={value}")   # writes 'value' to 'reg'.
+
+#---------------------------------------------------------------------------------------------------
+def reg_rd(dev, reg):
+    value = 0
+
+    vars = locals()
+    exec(f"value = dev.{reg}", vars)   # reads 'value' from 'reg'.
+    value = int(vars['value'])
+
+    return value
+
+#---------------------------------------------------------------------------------------------------
+def reg_wr_rd(dev, reg, width):
+    max = (1 << width) - 1;
+    wr_value = random.randint(0, max)   # generates random 'wr_value' of wordlength 'width'.
+
+    reg_wr(dev, reg, wr_value)   # writes 'value' to 'reg'.
+
+    rd_value = reg_rd(dev, reg)   # reads 'value' from 'reg'.
+
+    if rd_value != wr_value:
+        raise AssertionError(f'Register {reg} FAILED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
+    else:
+        print(f'Register {reg} PASSED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
+
+#---------------------------------------------------------------------------------------------------
+def reg_blocks(paths, root, num_p4_proc):
+    # parses path list and extracts list of top-level blocks within specified root block.
+
+    blocks = []
+    prefix = root.rstrip('.') + '.'
+    depth  = len(root.split('.'))
+
+    # omit specified open-nic-shell blocks.
+    omit = ['syscfg','qdma_func0','qdma_func1','qdma_subsystem',
+            'cmac0','qsfp28_i2c0','cmac_adapter0','cmac1','qsfp28_i2c1','cmac_adapter1',
+            'sysmon0','sysmon1','sysmon2','qspi','cms']
+
+    if (num_p4_proc==1): omit.append('p4_proc_egr')
+
+    for path in paths:
+        if path and path.startswith(prefix):
+            levels = path.split('.')
+            if len(levels) >= depth:
+                block = levels[depth]
+                if (block not in blocks) and (block not in omit): blocks.append(block)
+
+    return blocks
+
+#---------------------------------------------------------------------------------------------------
+def parse_reg_json(json_str, record_type=None, access_type=None):
+    # parses reg json string and extracts records of specified type and access.
+    # returns list of dictionaries, each record has keys: 'type','access','path',and 'width'.
+
+    data = json.loads(json_str)
+
+    records = []
+    for record in data:
+        if record_type is None or record.get('type') == record_type:
+            if access_type is None or record.get('access') == access_type:
+                field_info = {
+                    'type':   record.get('type'),
+                    'access': record.get('access'),
+                    'path':   record.get('path'),
+                    'width':  record.get('data', {}).get('width')
+                }
+                records.append(field_info)
+
+    return records
+
+#---------------------------------------------------------------------------------------------------
+
+'''
+    smartnic_blocks = ['app_common',
+                       'drops_err_from_cmac_0',
+                       'drops_err_from_cmac_1',
+                       'drops_ovfl_from_cmac_0',
+                       'drops_ovfl_from_cmac_1',
+                       'drops_ovfl_to_cmac_0',
+                       'drops_ovfl_to_cmac_1',
+                       'drops_ovfl_to_host_0',
+                       'drops_ovfl_to_host_1',
+                       'drops_q_range_fail_0',
+                       'drops_q_range_fail_1',
+                       'drops_to_bypass_0',
+                       'drops_to_bypass_1',
+                       'egr_extern',
+                       'endian_check',
+                       'fifo_to_host_0',
+                       'igr_extern',
+                       'p4_proc_egr',
+                       'p4_proc_igr',
+                       'probe_app0_to_core',
+                       'probe_app1_to_core',
+                       'probe_core_to_app0',
+                       'probe_core_to_app1',
+                       'probe_from_cmac_0',
+                       'probe_from_cmac_1',
+                       'probe_from_host_0',
+                       'probe_from_host_1',
+                       'probe_from_pf0',
+                       'probe_from_pf0_vf0',
+                       'probe_from_pf0_vf1',
+                       'probe_from_pf0_vf2',
+                       'probe_from_pf1',
+                       'probe_from_pf1_vf0',
+                       'probe_from_pf1_vf1',
+                       'probe_from_pf1_vf2',
+                       'probe_to_app_egr_in0',
+                       'probe_to_app_egr_in1',
+                       'probe_to_app_egr_out0',
+                       'probe_to_app_egr_out1',
+                       'probe_to_app_egr_p4_in0',
+                       'probe_to_app_egr_p4_in1',
+                       'probe_to_app_igr_in0',
+                       'probe_to_app_igr_in1',
+                       'probe_to_app_igr_p4_out0',
+                       'probe_to_app_igr_p4_out1',
+                       'probe_to_bypass_0',
+                       'probe_to_bypass_1',
+                       'probe_to_cmac_0',
+                       'probe_to_cmac_1',
+                       'probe_to_host_0',
+                       'probe_to_host_1',
+                       'probe_to_pf0',
+                       'probe_to_pf0_vf0',
+                       'probe_to_pf0_vf1',
+                       'probe_to_pf0_vf2',
+                       'probe_to_pf1',
+                       'probe_to_pf1_vf0',
+                       'probe_to_pf1_vf1',
+                       'probe_to_pf1_vf2',
+                       'smartnic_250mhz_regs',
+                       'smartnic_app_egr',
+                       'smartnic_app_igr',
+                       'smartnic_hash2qid_0',
+                       'smartnic_hash2qid_1',
+                       'smartnic_pkt_capture',
+                       'smartnic_pkt_playback',
+                       'smartnic_regs',
+                       'vitisnetp4_egr',
+                       'vitisnetp4_igr']
+'''

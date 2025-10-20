@@ -78,7 +78,7 @@ def pkt_playback_capture(dev, num, size, port):
     for i in range(num):
         tx_pkt = one_packet(size)
 
-        #print(f'Packet #{i}')
+        print(f'Packet #{i} size: {size}')
         pkt_capture_trigger (dev)
         pkt_playback        (dev, tx_pkt, port, port)
         pkt_capture_read    (dev, tx_pkt)
@@ -87,7 +87,7 @@ def pkt_playback_capture(dev, num, size, port):
 def rnd_playback_capture(dev, num, port):
     bytes = 0
     for i in range(num):
-        #print(f'Packet #{i}')
+        print(f'Packet #{i}')
         size = random.randint(64, 1500)
         bytes = bytes + size
         pkt_playback_capture (dev, 1, size, port)
@@ -112,7 +112,9 @@ def pkt_accelerator_config(dev, port, mux_out_sel):
 def pkt_accelerator_inject(dev, num, pkt, port):
     pkt_playback_config(dev, port)
 
-    for i in range(num): pkt_playback (dev, pkt, port, port)
+    for i in range(num):
+        pkt_playback (dev, pkt, port, port)
+        #print(f'Port {port} - pkt_accelerator_inject - Packet #{i}')
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_extract(dev, num, exp, port):
@@ -128,6 +130,7 @@ def pkt_accelerator_extract(dev, num, exp, port):
     for i in range(num):
         pkt_capture_trigger (dev)
         pkt_capture_read    (dev, exp)
+        #print(f'Port {port} - pkt_accelerator_extract - Packet #{i}')
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_flush(dev, port):
