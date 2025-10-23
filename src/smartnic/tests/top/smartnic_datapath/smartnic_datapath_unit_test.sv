@@ -427,6 +427,8 @@ module smartnic_datapath_unit_test;
                 #500ns;  // 500ns > (3ns/cycle * 5 pkts * 1518/64 cycles/pkt)
             end
 
+            #500ns;
+
             // check scoreboards.
             check_phy0(.pkts(exp_pkts[PHY0])); check_phy1(.pkts(exp_pkts[PHY1]));
             check_pf0 (.pkts(exp_pkts[PF0]));  check_pf1 (.pkts(exp_pkts[PF1]));
@@ -452,7 +454,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
 
-            #1us;
+            #2us;
 
             // check counters and scoreboards.
             latch_probe_counters;
@@ -495,7 +497,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PF0), .tdest(PF0));
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PF1), .tdest(PF1));
 
-            #1us;
+            #2us;
 
             // check counters and scoreboards.
             latch_probe_counters;
