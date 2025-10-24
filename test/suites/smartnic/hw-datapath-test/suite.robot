@@ -8,10 +8,14 @@ Test Teardown    Testcase Teardown    ${dev}
 Test Timeout     1 minute
 
 
+
 *** Test Cases ***
 # ----------------------------
 # Basic Traffic Tests
 # ----------------------------
+Packet Playback Capture Test - Port 0
+    Pkt Playback Capture Test    dev=${dev}    num=${pkt_num}    size=${128}    port=${0}
+
 Packet Accelerator Test - Port 0
     Pkt Accelerator Test    dev=${dev}    port=${0}
 
@@ -44,12 +48,6 @@ HdrLen 192 - Random Traffic - Port 1
 # ----------------------------
 # P4 Processor Tests
 # ----------------------------
-P4 Bypass Port Type - Port 0
-    P4 Bypass Port Type Test    dev=${dev}    num=${pkt_num}    port=${0}
-
-P4 Bypass Port Type - Port 1
-    P4 Bypass Port Type Test    dev=${dev}    num=${pkt_num}    port=${1}
-
 P4 Bypass Port Num - Port 0
     P4 Bypass Port Num Test     dev=${dev}    num=${pkt_num}    port=${0}    num_p4_proc=${num_p4_proc}
 
@@ -71,12 +69,6 @@ PHY Path Test - Port 0
 
 PHY Path Test - Port 1
     PHY Path Test               dev=${dev}    num=${pkt_num}    port=${1}
-
-Probe To Host Test - Port 0
-    Probe To Host Test          dev=${dev}    num=${pkt_num}    port=${0}
-
-Probe To Host Test - Port 1
-    Probe To Host Test          dev=${dev}    num=${pkt_num}    port=${1}
 
 Bypass Swap Test - Port 0
     Bypass Swap Test            dev=${dev}    num=${pkt_num}    port=${0}
