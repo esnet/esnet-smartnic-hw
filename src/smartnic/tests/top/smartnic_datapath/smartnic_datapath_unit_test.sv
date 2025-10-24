@@ -86,6 +86,8 @@ module smartnic_datapath_unit_test;
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (1, 12'd512);
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (2, 12'd1024);
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 12'd1536);
+
+        switch_config = '0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
     endtask
 
     //===================================
@@ -426,6 +428,92 @@ module smartnic_datapath_unit_test;
             // check scoreboards.
             check_phy0(.pkts(exp_pkts[PHY0])); check_phy1(.pkts(exp_pkts[PHY1]));
             check_pf0 (.pkts(exp_pkts[PF0]));  check_pf1 (.pkts(exp_pkts[PF1]));
+        `SVTEST_END
+
+        `SVTEST(host_loopback_test)
+            int pkts = 10;
+
+            // configure datapath for PHY-to-PF path.
+            app_mode(0); app_mode(1); app_mode(2); app_mode(3);
+            env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
+
+            // enable host loopback mode.
+            switch_config.host_0_lpbk_enable = 1;
+            switch_config.host_1_lpbk_enable = 1;
+            env.smartnic_reg_blk_agent.write_switch_config(switch_config);
+
+            // configure igress queues for loopback path.
+            env.smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd1, 12'd0});
+            env.smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd1, 12'd0});
+
+            // launch 2 concurrent traffic streams.
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+
+            #1us;
+
+            // check counters and scoreboards.
+            latch_probe_counters;
+
+            check_probe(PROBE_FROM_CMAC0,   pkts, bytes[0]);
+            check_probe(PROBE_CORE_TO_APP0, pkts, bytes[0]);
+            check_probe(PROBE_TO_PF0,       pkts, bytes[0]);
+            check_probe(PROBE_FROM_PF0,     pkts, bytes[0]);
+            check_probe(PROBE_APP0_TO_CORE, pkts, bytes[0]);
+            check_probe(PROBE_TO_CMAC0,     pkts, bytes[0]);
+
+            check_probe(PROBE_FROM_CMAC1,   pkts, bytes[1]);
+            check_probe(PROBE_CORE_TO_APP1, pkts, bytes[1]);
+            check_probe(PROBE_TO_PF1,       pkts, bytes[1]);
+            check_probe(PROBE_FROM_PF1,     pkts, bytes[1]);
+            check_probe(PROBE_APP1_TO_CORE, pkts, bytes[1]);
+            check_probe(PROBE_TO_CMAC1,     pkts, bytes[1]);
+
+            check_phy0(.pkts(pkts)); check_phy1(.pkts(pkts)); check_pf0 (); check_pf1 ();
+
+        `SVTEST_END
+
+        `SVTEST(cmac_loopback_test)
+            int pkts = 10;
+
+            // configure datapath for PHY-to-PF path.
+            app_mode(0); app_mode(1); app_mode(2); app_mode(3);
+            env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
+
+            // enable cmac loopback mode.
+            switch_config.cmac_0_lpbk_enable = 1;
+            switch_config.cmac_1_lpbk_enable = 1;
+            env.smartnic_reg_blk_agent.write_switch_config(switch_config);
+
+            // configure igress queues for loopback path.
+            //env.smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd1, 12'd0});
+            //env.smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd1, 12'd0});
+
+            // launch 2 concurrent traffic streams.
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PF0), .tdest(PF0));
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PF1), .tdest(PF1));
+
+            #1us;
+
+            // check counters and scoreboards.
+            latch_probe_counters;
+
+            check_probe(PROBE_FROM_PF0,     pkts, bytes[0]);
+            check_probe(PROBE_APP0_TO_CORE, pkts, bytes[0]);
+            check_probe(PROBE_TO_CMAC0,     pkts, bytes[0]);
+            check_probe(PROBE_FROM_CMAC0,   pkts, bytes[0]);
+            check_probe(PROBE_CORE_TO_APP0, pkts, bytes[0]);
+            check_probe(PROBE_TO_PF0,       pkts, bytes[0]);
+
+            check_probe(PROBE_FROM_PF1,     pkts, bytes[1]);
+            check_probe(PROBE_APP1_TO_CORE, pkts, bytes[1]);
+            check_probe(PROBE_TO_CMAC1,     pkts, bytes[1]);
+            check_probe(PROBE_FROM_CMAC1,   pkts, bytes[1]);
+            check_probe(PROBE_CORE_TO_APP1, pkts, bytes[1]);
+            check_probe(PROBE_TO_PF1,       pkts, bytes[1]);
+
+            check_pf0 (.pkts(pkts)); check_pf1 (.pkts(pkts)); check_phy0(); check_phy1();
+
         `SVTEST_END
 
 
