@@ -1,11 +1,10 @@
-import sn_cfg
 import sys
 import time
+import sn_cfg
 
 # Temporary workaround for silencing verbose logging in underlying gRPC C library.
 import os
 os.environ['GRPC_VERBOSITY'] = 'ERROR'
-
 
 #---------------------------------------------------------------------------------------------------
 def clear_switch_stats():
@@ -23,26 +22,35 @@ def clr_switch_stats(client):
     return resp.stats
 
 #---------------------------------------------------------------------------------------------------
-def check_probes(names, pkts, bytes, check_zeros=1):
-    client = sn_cfg.connect_client(tls_insecure=True)
-    stats = get_stats(client)
+def read_probes():
+    client  = sn_cfg.connect_client(tls_insecure=True)
+
+    time.sleep(1) # wait in seconds, for stats collection.
+
+    stats   = get_stats(client)
     metrics = stats_metrics_to_map(stats)
-    #dump_metrics(metrics, 'Metrics')
+
+    return metrics
+
+#---------------------------------------------------------------------------------------------------
+def check_probes(names, pkts, bytes, check_zeros=True):
+    metrics = read_probes()
 
     for name in names:
-        m = metrics[name+'.pkt_count']
-        rx_pkts = m['value']
-        #if (m['value'] != pkts): raise AssertionError(f'Number of packets received {m['value']} did NOT match expected {pkts}!')
-        if (rx_pkts != pkts): raise AssertionError(f'Number of packets received {rx_pkts} did NOT match expected {pkts}!')
+        m = metrics[name+'.pkt_count'];  rx_value = m['value']
+        if (rx_value != pkts):
+            raise AssertionError(f'Number of received packets {rx_value} did NOT match expected {pkts}!')
 
-        m = metrics[name+'.byte_count']
-        if (m['value'] != bytes): raise AssertionError(f'Number of bytes received did NOT match expected!')
+        m = metrics[name+'.byte_count']; rx_value = m['value']
+        if (rx_value != bytes):
+            raise AssertionError(f'Number of received bytes {rx_value} did NOT match expected {bytes}!')
 
-    if check_zeros and (len(metrics) != 2*len(names)):  # each 'non-zero' metric has 'pkt' and 'byte' count.
-        print(metrics)
+    if check_zeros and len(metrics) != 2*len(names):  # metrics include both 'pkt' and 'byte' counts.
+        dump_metrics(metrics, 'Metrics')
         raise AssertionError(f'A counter expected to be ZERO did NOT match!')
 
 #---------------------------------------------------------------------------------------------------
+
 def get_stats(client):
     resp = next(client.GetSwitchStats(sn_cfg.proto.SwitchStatsRequest(
         dev_id=0, filters=sn_cfg.proto.StatsFilters(non_zero=True))))
@@ -126,42 +134,36 @@ def dump_metrics(metrics, label):
 
 #---------------------------------------------------------------------------------------------------
 def check_rates(port, pkts, bytes):
-    client = sn_cfg.connect_client(tls_insecure=True)
+    before = read_probes()
+    #dump_metrics(before, 'Before')
 
-    time.sleep(1) # wait in seconds, for stats collection.
+    time.sleep(4) # wait in seconds, accumulate counts for rate calculation.
 
-    stats = get_stats(client)
-    before = stats_metrics_to_map(stats)
-    dump_metrics(before, 'Before')
-
-    time.sleep(5) # wait in seconds, accumulates counts for rate calculation.
-
-    stats = get_stats(client)
-    after = stats_metrics_to_map(stats)
+    after = read_probes()
     #dump_metrics(after, 'After')
 
     diffs = stats_metrics_diff(before, after)
     rates = stats_metrics_rate(diffs) 
-    dump_metrics(rates, 'Rates')
+    #dump_metrics(rates, 'Rates')
 
     precision = 0.005
 
     if (port==0 or port==2):
         m = rates['probe_to_cmac_0.pkt_count']['rate']
         if (m < (1-precision)*pkts or m > (1+precision)*pkts):
-            raise AssertionError(f'CMAC0 packet rate {m} did NOT match expected {pkts}!')
+            raise AssertionError(f'PHY0: Rx pkt rate {m} Mpps did NOT match expected {pkts} Mpps!')
 
         m = rates['probe_to_cmac_0.byte_count']['rate']
         if (m < (1-precision)*bytes or m > (1+precision)*bytes):
-            raise AssertionError(f'CMAC0 byte rate {m} did NOT match expected {bytes}!')
+            raise AssertionError(f'PHY0: Rx bit rate {m} Mbps did NOT match expected {bytes} Mbps!')
 
     if (port==1 or port==2):
         m = rates['probe_to_cmac_1.pkt_count']['rate']
         if (m < (1-precision)*pkts or m > (1+precision)*pkts):
-            raise AssertionError(f'CMAC1 packet rate {m} did NOT match expected {pkts}!')
+            raise AssertionError(f'PHY1: Rx pkt rate {m} Mpps did NOT match expected {pkts} Mpps!')
 
         m = rates['probe_to_cmac_1.byte_count']['rate']
         if (m < (1-precision)*bytes or m > (1+precision)*bytes):
-            raise AssertionError(f'CMAC1 byte rate {m} did NOT match expected {bytes}!')
+            raise AssertionError(f'PHY1: Rx bit rate {m} Mbps did NOT match expected {bytes} Mbps!')
 
 #---------------------------------------------------------------------------------------------------

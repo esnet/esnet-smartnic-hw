@@ -2,6 +2,7 @@ from robot.api import logger
 
 from regio.regmap.io.methods import FileMmapIOForSpec
 from regio.regmap.proxy import start_io, stop_io
+from regio.regmap.spec import qualname_of
 import regmap_esnet_smartnic.toplevel as top
 
 BAR_INFO = tuple(sorted(top.BAR_INFO.items(), key=lambda pair: pair[0]))
@@ -26,7 +27,8 @@ class Device:
             else:
                 io = None
 
-            proxy = info['new_proxy'](self.pci_id, spec, io)
+            proxy = info['new_proxy'](self.pci_id, spec, io,
+                                      qualbase=(bar, qualname_of(spec), 1))
             start_io(proxy)
             setattr(self, bar, proxy)
 
