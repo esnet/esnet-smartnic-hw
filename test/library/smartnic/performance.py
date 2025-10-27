@@ -39,7 +39,8 @@ def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
         tx_pkt.append(one_packet(size))
 
         if (port==2 or port==_port):
-            pkt_accelerator_config (dev, _port, mux_out_sel)
+            pkt_accelerator_config (dev=dev, port=_port, mux_out_sel=mux_out_sel, gt=False)
+            #pkt_accelerator_config (dev=dev, port=_port, mux_out_sel=mux_out_sel, gt=True)
             pkt_accelerator_inject (dev, num, tx_pkt[_port], _port)
 
     # check packet rates

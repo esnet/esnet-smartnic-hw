@@ -120,9 +120,13 @@ module smartnic_host
     end : g__host_tid
     endgenerate
 
-
     //------------------------ host mux/demux logic --------------
     logic host_to_core_demux_sel [NUM_CMAC];
+
+    logic  pkt_capture_enable[NUM_CMAC];
+    assign pkt_capture_enable[0] = smartnic_regs.switch_config.pkt_capture_enable_0;
+    assign pkt_capture_enable[1] = smartnic_regs.switch_config.pkt_capture_enable_1;
+
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
         port_t axis_host_to_core_mux_out_tid;
 
@@ -177,7 +181,7 @@ module smartnic_host
         axi4s_intf_demux #(.N(2)) core_to_host_demux_inst (
            .from_tx ( axis_core_to_host_demux_in[i] ),
            .to_rx   ( axis_core_to_host_demux_out[i] ),
-           .sel     ( smartnic_regs.switch_config.pkt_capture_enable )
+           .sel     ( pkt_capture_enable[i] )
         );
 
         axi4s_intf_connector core_to_host_demux_pipe_0

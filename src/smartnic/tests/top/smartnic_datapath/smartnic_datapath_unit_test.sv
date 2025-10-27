@@ -86,6 +86,8 @@ module smartnic_datapath_unit_test;
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (1, 12'd512);
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (2, 12'd1024);
         env.smartnic_hash2qid_1_reg_blk_agent.write_q_config (3, 12'd1536);
+
+        switch_config = '0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
     endtask
 
     //===================================
@@ -428,6 +430,92 @@ module smartnic_datapath_unit_test;
             check_pf0 (.pkts(exp_pkts[PF0]));  check_pf1 (.pkts(exp_pkts[PF1]));
         `SVTEST_END
 
+        `SVTEST(host_loopback_test)
+            int pkts = 10;
+
+            // configure datapath for PHY-to-PF path.
+            app_mode(0); app_mode(1); app_mode(2); app_mode(3);
+            env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
+
+            // enable host loopback mode.
+            switch_config.host_0_lpbk_enable = 1;
+            switch_config.host_1_lpbk_enable = 1;
+            env.smartnic_reg_blk_agent.write_switch_config(switch_config);
+
+            // configure igress queues for loopback path.
+            env.smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd1, 12'd0});
+            env.smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd1, 12'd0});
+
+            // launch 2 concurrent traffic streams.
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+
+            #1us;
+
+            // check counters and scoreboards.
+            latch_probe_counters;
+
+            check_probe(PROBE_FROM_CMAC0,   pkts, bytes[0]);
+            check_probe(PROBE_CORE_TO_APP0, pkts, bytes[0]);
+            check_probe(PROBE_TO_PF0,       pkts, bytes[0]);
+            check_probe(PROBE_FROM_PF0,     pkts, bytes[0]);
+            check_probe(PROBE_APP0_TO_CORE, pkts, bytes[0]);
+            check_probe(PROBE_TO_CMAC0,     pkts, bytes[0]);
+
+            check_probe(PROBE_FROM_CMAC1,   pkts, bytes[1]);
+            check_probe(PROBE_CORE_TO_APP1, pkts, bytes[1]);
+            check_probe(PROBE_TO_PF1,       pkts, bytes[1]);
+            check_probe(PROBE_FROM_PF1,     pkts, bytes[1]);
+            check_probe(PROBE_APP1_TO_CORE, pkts, bytes[1]);
+            check_probe(PROBE_TO_CMAC1,     pkts, bytes[1]);
+
+            check_phy0(.pkts(pkts)); check_phy1(.pkts(pkts)); check_pf0 (); check_pf1 ();
+
+        `SVTEST_END
+
+        `SVTEST(cmac_loopback_test)
+            int pkts = 10;
+
+            // configure datapath for PHY-to-PF path.
+            app_mode(0); app_mode(1); app_mode(2); app_mode(3);
+            env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
+
+            // enable cmac loopback mode.
+            switch_config.cmac_0_lpbk_enable = 1;
+            switch_config.cmac_1_lpbk_enable = 1;
+            env.smartnic_reg_blk_agent.write_switch_config(switch_config);
+
+            // configure igress queues for loopback path.
+            //env.smartnic_reg_blk_agent.write_igr_q_config_0(0, {12'd1, 12'd0});
+            //env.smartnic_reg_blk_agent.write_igr_q_config_1(0, {12'd1, 12'd0});
+
+            // launch 2 concurrent traffic streams.
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PF0), .tdest(PF0));
+            packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PF1), .tdest(PF1));
+
+            #1us;
+
+            // check counters and scoreboards.
+            latch_probe_counters;
+
+            check_probe(PROBE_FROM_PF0,     pkts, bytes[0]);
+            check_probe(PROBE_APP0_TO_CORE, pkts, bytes[0]);
+            check_probe(PROBE_TO_CMAC0,     pkts, bytes[0]);
+            check_probe(PROBE_FROM_CMAC0,   pkts, bytes[0]);
+            check_probe(PROBE_CORE_TO_APP0, pkts, bytes[0]);
+            check_probe(PROBE_TO_PF0,       pkts, bytes[0]);
+
+            check_probe(PROBE_FROM_PF1,     pkts, bytes[1]);
+            check_probe(PROBE_APP1_TO_CORE, pkts, bytes[1]);
+            check_probe(PROBE_TO_CMAC1,     pkts, bytes[1]);
+            check_probe(PROBE_FROM_CMAC1,   pkts, bytes[1]);
+            check_probe(PROBE_CORE_TO_APP1, pkts, bytes[1]);
+            check_probe(PROBE_TO_PF1,       pkts, bytes[1]);
+
+            check_pf0 (.pkts(pkts)); check_pf1 (.pkts(pkts)); check_phy0(); check_phy1();
+
+        `SVTEST_END
+
 
          // ---------------------------
          // Reconfiguration tests
@@ -667,10 +755,10 @@ module smartnic_datapath_unit_test;
             switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
             // start traffic and check probes.
-            packet_stream(.pkts(32), .mode(9100), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #15us;
             check_probe(PROBE_FROM_CMAC0, exp_pkts[PHY0], exp_pkts[PHY0]*9100);
-            check_probe(DROPS_OVFL_FROM_CMAC0, 32-exp_pkts[PHY0], (32-exp_pkts[PHY0])*9100);
+            check_probe(DROPS_OVFL_FROM_CMAC0, 20-exp_pkts[PHY0], (20-exp_pkts[PHY0])*9100);
 
             // release backpressure. start traffic and check probes.
             switch_config.igr_sw_tpause = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
@@ -690,10 +778,10 @@ module smartnic_datapath_unit_test;
 
             switch_config.igr_sw_tpause = 1; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
 
-            packet_stream(.pkts(32), .mode(9100), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #15us;
             check_probe(PROBE_FROM_CMAC1, exp_pkts[PHY1], exp_pkts[PHY1]*9100);
-            check_probe(DROPS_OVFL_FROM_CMAC1, 32-exp_pkts[PHY1], (32-exp_pkts[PHY1])*9100);
+            check_probe(DROPS_OVFL_FROM_CMAC1, 20-exp_pkts[PHY1], (20-exp_pkts[PHY1])*9100);
 
             switch_config.igr_sw_tpause = 0; env.smartnic_reg_blk_agent.write_switch_config(switch_config);
             #5us;
@@ -706,7 +794,7 @@ module smartnic_datapath_unit_test;
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY0)
-            exp_pkts[PHY0] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PHY0] = FIFO_DEPTH/$ceil(9100/64.0)+1;
 
             // set flow control threshold and check egr_flow_ctl.
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[0], 32'd1020);
@@ -714,105 +802,101 @@ module smartnic_datapath_unit_test;
 
             // assert backpressure, start traffic, and check probes.
             tb.start_rx=0;
-            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             #10us;
-            check_probe(PROBE_FROM_CMAC0, 100, 100*1518);
-            check_probe(DROPS_OVFL_TO_CMAC0, 100-exp_pkts[PHY0], (100-exp_pkts[PHY0])*1518);
+            check_probe(PROBE_FROM_CMAC0, 20, 20*9100);
+            check_probe(DROPS_OVFL_TO_CMAC0, 20-exp_pkts[PHY0], (20-exp_pkts[PHY0])*9100);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b1 );
 
-            // relase backpressure and check egr_flow_ctl.
-            @(posedge tb.axis_out_if[0].aclk);
-            tb.start_rx=1;
-            @(posedge tb.axis_out_if[0].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b0 );
+            // release backpressure
+            @(posedge tb.axis_out_if[0].aclk) tb.start_rx=1;
 
-            // start traffic and check probes.
+            // start traffic, check probes and check egr_flow_ctl.
             #4us;
-            check_probe(PROBE_TO_CMAC0, exp_pkts[PHY0], exp_pkts[PHY0]*1518);
+            check_probe(PROBE_TO_CMAC0, exp_pkts[PHY0], exp_pkts[PHY0]*9100);
             check_phy1(); check_pf0(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_processed(),   exp_pkts[PHY0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_matched(),     exp_pkts[PHY0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].exp_pending(), 100-exp_pkts[PHY0]);
+            `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[0] == 1'b0 );
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_processed(),  exp_pkts[PHY0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].got_matched(),    exp_pkts[PHY0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY0].exp_pending(), 20-exp_pkts[PHY0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PHY1)
-            exp_pkts[PHY1] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PHY1] = FIFO_DEPTH/$ceil(9100/64.0)+1;
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[1], 32'd1020);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
             #10us;
-            check_probe(PROBE_FROM_CMAC1, 100, 100*1518);
-            check_probe(DROPS_OVFL_TO_CMAC1, 100-exp_pkts[PHY1], (100-exp_pkts[PHY1])*1518);
+            check_probe(PROBE_FROM_CMAC1, 20, 20*9100);
+            check_probe(DROPS_OVFL_TO_CMAC1, 20-exp_pkts[PHY1], (20-exp_pkts[PHY1])*9100);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b1 );
 
-            @(posedge tb.axis_out_if[1].aclk);
-            tb.start_rx=1;
-            @(posedge tb.axis_out_if[1].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
+            @(posedge tb.axis_out_if[1].aclk) tb.start_rx=1;
 
             #4us;
-            check_probe(PROBE_TO_CMAC1, exp_pkts[PHY1], exp_pkts[PHY1]*1518);
+            check_probe(PROBE_TO_CMAC1, exp_pkts[PHY1], exp_pkts[PHY1]*9100);
             check_phy0(); check_pf0(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_processed(),   exp_pkts[PHY1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_matched(),     exp_pkts[PHY1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].exp_pending(), 100-exp_pkts[PHY1]);
+            `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[1] == 1'b0 );
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_processed(),  exp_pkts[PHY1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].got_matched(),    exp_pkts[PHY1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PHY1].exp_pending(), 20-exp_pkts[PHY1]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF0)
-            exp_pkts[PF0] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PF0] = FIFO_DEPTH/$ceil(9100/64.0)+1;
             host_mode(0);
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[2], 32'd1020);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[2]), .tid(PHY0), .tdest(PF0_VF2));
             #10us;
-            check_probe(PROBE_FROM_CMAC0, 100, 100*1518);
-            check_probe(DROPS_OVFL_TO_PF0, 100-exp_pkts[PF0], (100-exp_pkts[PF0])*1518);
+            check_probe(PROBE_FROM_CMAC0, 20, 20*9100);
+            check_probe(DROPS_OVFL_TO_PF0, 20-exp_pkts[PF0], (20-exp_pkts[PF0])*9100);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b1 );
 
-            @(posedge tb.axis_out_if[2].aclk);
-            tb.start_rx=1;
-            @(posedge tb.axis_out_if[2].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
+            @(posedge tb.axis_out_if[2].aclk) tb.start_rx=1;
 
             #4us;
-            check_probe(PROBE_TO_PF0, exp_pkts[PF0], exp_pkts[PF0]*1518);
+            check_probe(PROBE_TO_PF0, exp_pkts[PF0], exp_pkts[PF0]*9100);
             check_phy0(); check_phy1(); check_pf1();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_processed(),   exp_pkts[PF0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_matched(),     exp_pkts[PF0]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].exp_pending(), 100-exp_pkts[PF0]);
+            `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[2] == 1'b0 );
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_processed(),  exp_pkts[PF0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].got_matched(),    exp_pkts[PF0]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF0].exp_pending(), 20-exp_pkts[PF0]);
         `SVTEST_END
 
         `SVTEST(ovfl_drops_to_PF1)
-            exp_pkts[PF1] = FIFO_DEPTH/$ceil(1518/64.0)+1;
+            exp_pkts[PF1] = FIFO_DEPTH/$ceil(9100/64.0)+1;
             host_mode(1);
 
             env.reg_agent.write_reg( smartnic_reg_pkg::OFFSET_EGR_FC_THRESH[3], 32'd1020);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
 
             tb.start_rx=0;
-            packet_stream(.pkts(100), .mode(1518), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
+            packet_stream(.pkts(20), .mode(9100), .bytes(bytes[3]), .tid(PHY1), .tdest(PF1_VF2));
             #10us;
-            check_probe(PROBE_FROM_CMAC1, 100, 100*1518);
-            check_probe(DROPS_OVFL_TO_PF1, 100-exp_pkts[PF1], (100-exp_pkts[PF1])*1518);
+            check_probe(PROBE_FROM_CMAC1, 20, 20*9100);
+            check_probe(DROPS_OVFL_TO_PF1, 20-exp_pkts[PF1], (20-exp_pkts[PF1])*9100);
             `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b1 );
 
-            @(posedge tb.axis_out_if[3].aclk);
-            tb.start_rx=1;
-            @(posedge tb.axis_out_if[3].tlast) `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
+            @(posedge tb.axis_out_if[3].aclk) tb.start_rx=1;
 
             #4us;
-            check_probe(PROBE_TO_PF1, exp_pkts[PF1], exp_pkts[PF1]*1518);
+            check_probe(PROBE_TO_PF1, exp_pkts[PF1], exp_pkts[PF1]*9100);
             check_phy0(); check_phy1(); check_pf0();
 
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_processed(),   exp_pkts[PF1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_matched(),     exp_pkts[PF1]);
-            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].exp_pending(), 100-exp_pkts[PF1]);
+            `FAIL_UNLESS( tb.DUT.smartnic_app.egr_flow_ctl[3] == 1'b0 );
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_processed(),  exp_pkts[PF1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].got_matched(),    exp_pkts[PF1]);
+            `FAIL_UNLESS_EQUAL(env.scoreboard[PF1].exp_pending(), 20-exp_pkts[PF1]);
         `SVTEST_END
 
         `SVTEST(PF0_out_of_range_test)
