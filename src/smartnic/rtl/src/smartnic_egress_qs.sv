@@ -24,7 +24,7 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     //  Parameters
     // ----------------------------------------------------------------
-    localparam xilinx_hbm_pkg::stack_t   HBM_STACK = xilinx_hbm_pkg::STACK_RIGHT;
+    localparam xilinx_hbm_pkg::stack_t   HBM_STACK = xilinx_hbm_pkg::STACK_LEFT;
     localparam xilinx_hbm_pkg::density_t HBM_DENSITY = xilinx_hbm_pkg::DENSITY_4G;
 
     localparam int  HBM_NUM_AXI_CHANNELS = xilinx_hbm_pkg::PSEUDO_CHANNELS_PER_STACK;
@@ -140,7 +140,7 @@ module smartnic_egress_qs
     xilinx_hbm_stack #(
         .STACK   ( HBM_STACK ),
         .DENSITY ( HBM_DENSITY )
-    ) i_xilinx_hbm_stack__right (
+    ) i_xilinx_hbm_stack__left (
         .clk,
         .srst,
         .hbm_ref_clk ( hbm_ref_clk ),
