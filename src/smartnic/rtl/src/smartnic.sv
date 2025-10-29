@@ -86,6 +86,8 @@ module smartnic
 
    logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
 
+   logic                      srst__smartnic_egress_qs;
+
   // Reset is clocked by the 125MHz AXI-Lite clock
 
   smartnic_reset #(
@@ -106,6 +108,13 @@ module smartnic
     .clk_100mhz   (clk_100mhz),
     .hbm_ref_clk  (hbm_ref_clk)
   );
+
+   util_reset_buffer util_reset_buffer__smartnic_egress_qs (
+       .clk ( core_clk ),
+       .srst_in ( core_srst ),
+       .srst_out ( srst__smartnic_egress_qs ),
+       .srstn_out ( )
+   );
 
    // ----------------------------------------------------------------
    //  axil interface instantiations and regmap logic
@@ -966,8 +975,8 @@ module smartnic
 `else
     // HBM queue instantiation
     smartnic_egress_qs smartnic_egress_qs_0 (
-       .core_clk,
-       .core_srst,
+       .clk       ( core_clk ),
+       .srst      ( srst__smartnic_egress_qs ),
        .axis_in   ( axis_to_qs ),
        .axis_out  ( axis_from_qs ),
        .axil_if   ( __axil_to_egr_qs ),
@@ -995,14 +1004,6 @@ module smartnic
             );
 
             // Cross from application SLR to HBM controller
-            axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
-            ) axi4s_pipe_slr__app_to_qs_0 (
-                .srst    ( core_srst ),
-                .from_tx ( __axis_from_app ),
-                .to_rx   ( __axis_to_qs )
-            );
         `ifdef __au280__
             // For U280, only cross one boundary
             axi4s_intf_connector axi4s_intf_connector__app_to_qs_1 (
@@ -1011,9 +1012,18 @@ module smartnic
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 1 ),
                 .POST_PIPE_STAGES ( 1 )
-            ) axi4s_pipe_slr__app_to_qs_1 (
+            ) axi4s_pipe_slr__app_to_qs_0 (
                 .srst    ( core_srst ),
         `endif
+                .from_tx ( __axis_from_app ),
+                .to_rx   ( __axis_to_qs )
+            );
+
+            axi4s_pipe_slr #(
+                .PRE_PIPE_STAGES ( 1 ),
+                .POST_PIPE_STAGES ( 2 )
+            ) axi4s_pipe_slr__app_to_qs_1 (
+                .srst    ( srst__smartnic_egress_qs ),
                 .from_tx ( __axis_to_qs ),
                 .to_rx   ( axis_to_qs[i] )
             );
@@ -1027,11 +1037,12 @@ module smartnic
                 .from_tx ( axis_from_qs[i] ),
                 .to_rx   ( __axis_from_qs )
             );
+
         `ifdef __au280__
             // For U280, need to cross two SLR boundaries
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 1 ),
-                .POST_PIPE_STAGES ( 1 )
+                .POST_PIPE_STAGES ( 3 )
             ) axi4s_pipe_slr__qs_to_phy_1 (
                 .srst    ( core_srst ),
         `else
