@@ -11,8 +11,8 @@
 module smartnic_egress_qs
     import smartnic_pkg::*;
 (
-    input  logic          core_clk,
-    input  logic          core_srst,
+    input  logic          clk,
+    input  logic          srst,
 
     axi4s_intf.rx         axis_in  [PHY_NUM_PORTS],
     axi4s_intf.tx         axis_out [PHY_NUM_PORTS],
@@ -71,17 +71,11 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     //  Signals
     // ----------------------------------------------------------------
-    logic clk;
-    logic srst;
+    logic local_srst;
     logic clk_100mhz;
     logic hbm_ref_clk;
     logic hbm_init_done;
 
-    // ----------------------------------------------------------------
-    //  Clock/reset
-    // ----------------------------------------------------------------
-    assign clk = core_clk;
-    assign srst = core_srst;
 
     // ----------------------------------------------------------------
     //  Interfaces
@@ -129,6 +123,23 @@ module smartnic_egress_qs
     );
 
     // ----------------------------------------------------------------
+    //  Status monitoring
+    // ----------------------------------------------------------------
+    assign reg_if.status_nxt_v = 1'b1;
+    assign reg_if.status_nxt.reset = local_srst;
+    assign reg_if.status_nxt.enabled = 1'b1;
+    assign reg_if.status_nxt.init_done = init_done;
+
+    // ----------------------------------------------------------------
+    //  Reset (including soft reset)
+    // ----------------------------------------------------------------
+    initial local_srst = 1'b0;
+    always @(posedge clk) begin
+        if (srst || reg_if.control.reset) local_srst <= 1'b1;
+        else                              local_srst <= 1'b0;
+    end
+
+    // ----------------------------------------------------------------
     //  HBM controller instantiation
     // ----------------------------------------------------------------
     smartnic_hbm_clk_wiz i_smartnic_hbm_clk_wiz (
@@ -142,7 +153,7 @@ module smartnic_egress_qs
         .DENSITY ( HBM_DENSITY )
     ) i_xilinx_hbm_stack__left (
         .clk,
-        .srst,
+        .srst        ( local_srst ),
         .hbm_ref_clk ( hbm_ref_clk ),
         .clk_100mhz  ( clk_100mhz ),
         .axil_if     ( axil_to_hbm ),
@@ -163,7 +174,7 @@ module smartnic_egress_qs
         .MAX_RD_LATENCY       ( 48 ) // TODO: characterize HBM read latency
     ) i_packet_q_core         (
         .clk,
-        .srst,
+        .srst ( local_srst ),
         .init_done,
         .packet_in_if,
         .desc_mem_wr_if,
@@ -198,7 +209,7 @@ module smartnic_egress_qs
             axi4s_intf_bypass_mux #(
                 .PIPE_STAGES ( 1 )
             ) i_axi4s_intf_bypass_mux (
-                .srst,
+                .srst       ( local_srst ),
                 .from_tx    ( axis_in[g_port] ),
                 .to_block   ( __axis_to_qs ),
                 .from_block ( __axis_from_qs ),
@@ -212,11 +223,11 @@ module smartnic_egress_qs
             axi4s_to_packet_adapter #(
                 .META_WID ( META_WID )
             ) i_axi4s_to_packet_adapter (
-                .srst,
-                .axis_if ( __axis_to_qs ),
+                .srst      ( local_srst ),
+                .axis_if   ( __axis_to_qs ),
                 .packet_if ( packet_in_if[g_port] ),
-                .err ( 1'b0 ),
-                .meta ( meta_in )
+                .err       ( 1'b0 ),
+                .meta      ( meta_in )
             );
 
             assign meta_out = packet_out_if[g_port].meta;
@@ -224,7 +235,7 @@ module smartnic_egress_qs
                 .TDEST_WID ( PORT_WID ),
                 .TUSER_WID ( EGR_Q_WID )
             ) i_axi4s_from_packet_adapter (
-                .srst,
+                .srst      ( local_srst ),
                 .packet_if ( packet_out_if[g_port] ),
                 .axis_if   ( __axis_from_qs ),
                 .tdest     ( meta_out.egr_port ),
@@ -264,7 +275,7 @@ module smartnic_egress_qs
                     .RD_TIMEOUT ( 0 )
                 ) i_axi3_from_mem_adapter (
                     .clk,
-                    .srst,
+                    .srst      ( local_srst ),
                     .init_done (),
                     .mem_wr_if ( __mem_wr_if [g_if] ),
                     .mem_rd_if ( __mem_rd_if [g_if] ),
@@ -283,7 +294,7 @@ module smartnic_egress_qs
         .BASE_ADDR  ( QMEM_CAPACITY )
     ) i_axi3_from_mem_adapter (
         .clk,
-        .srst,
+        .srst      ( local_srst ),
         .init_done (),
         .mem_wr_if ( desc_mem_wr_if ),
         .mem_rd_if ( desc_mem_rd_if ),
@@ -305,9 +316,9 @@ module smartnic_egress_qs
             // TEMP: send packets out on same port on which they were received
             packet_descriptor_fifo i_packet_descriptor_fifo (
                 .from_tx      ( desc_in_if[g_port] ),
-                .from_tx_srst ( srst ),
+                .from_tx_srst ( local_srst ),
                 .to_rx        ( desc_out_if[g_port] ),
-                .to_rx_srst   ( srst )
+                .to_rx_srst   ( local_srst )
             );
         end : g__scheduler
     endgenerate
