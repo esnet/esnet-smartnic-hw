@@ -282,6 +282,8 @@ shell_ip_au55c:
 .bitfile:
   stage: bitfile
   extends: .common
+  variables:
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   tags:
     - ht-synth
   script:
@@ -343,7 +345,6 @@ build_p4_only_u280:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_only
     SN_HW_BOARD: au280
-    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     - ons_ip_au280
     - smartnic_ip_au280
@@ -377,7 +378,6 @@ build_p4_multi_proc_u280:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_multi_proc
     SN_HW_BOARD: au280
-    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     - ons_ip_au280
     - smartnic_ip_au280
@@ -388,7 +388,6 @@ build_p4_multi_proc_u55c:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: p4_multi_proc
     SN_HW_BOARD: au55c
-    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
