@@ -12,8 +12,8 @@ from smartnic.probes  import *
 @library
 class Library:
     @keyword
-    def performance_test(self, dev, port, num, size, mpps, gbps, mux_out_sel=0):
-        performance_test(dev, port, num, size, mpps, gbps, mux_out_sel)
+    def performance_test(self, dev, port, num, size, mpps, gbps, gt=False, mux_out_sel=0):
+        performance_test(dev, port, num, size, mpps, gbps, gt, mux_out_sel)
 
     @keyword
     def testcase_setup(self, dev, num_p4_proc):
@@ -30,7 +30,7 @@ class Library:
 
 
 #---------------------------------------------------------------------------------------------------
-def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
+def performance_test(dev, port, num, size, mpps, gbps, gt=False, mux_out_sel=0):
     tx_pkt = []
     clear_switch_stats()
 
@@ -39,8 +39,7 @@ def performance_test(dev, port, num, size, mpps, gbps, mux_out_sel=0):
         tx_pkt.append(one_packet(size))
 
         if (port==2 or port==_port):
-            pkt_accelerator_config (dev=dev, port=_port, mux_out_sel=mux_out_sel, gt=False)
-            #pkt_accelerator_config (dev=dev, port=_port, mux_out_sel=mux_out_sel, gt=True)
+            pkt_accelerator_config (dev=dev, port=_port, mux_out_sel=mux_out_sel, gt=gt)
             pkt_accelerator_inject (dev, num, tx_pkt[_port], _port)
 
     # check packet rates

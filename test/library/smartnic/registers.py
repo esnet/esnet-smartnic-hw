@@ -1,12 +1,11 @@
 __all__ = ()
 
 import random
-import json
 
 from typing import List, Dict, Any
 from robot.api.deco import keyword, library
 
-from smartnic.config  import *
+from smartnic.config import *
 
 #---------------------------------------------------------------------------------------------------
 @library
@@ -91,20 +90,6 @@ def reg_wr_rd_test(dev, num_p4_proc):
             if not skip: reg_wr_rd(dev, register['path'], register['width'])
 
 #---------------------------------------------------------------------------------------------------
-def reg_wr(dev, reg, value):
-    exec(f"dev.{reg}={value}")   # writes 'value' to 'reg'.
-
-#---------------------------------------------------------------------------------------------------
-def reg_rd(dev, reg):
-    value = 0
-
-    vars = locals()
-    exec(f"value = dev.{reg}", vars)   # reads 'value' from 'reg'.
-    value = int(vars['value'])
-
-    return value
-
-#---------------------------------------------------------------------------------------------------
 def reg_wr_rd(dev, reg, width):
     max = (1 << width) - 1;
     wr_value = random.randint(0, max)   # generates random 'wr_value' of wordlength 'width'.
@@ -117,50 +102,5 @@ def reg_wr_rd(dev, reg, width):
         raise AssertionError(f'Register {reg} FAILED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
     else:
         print(f'Register {reg} PASSED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
-
-#---------------------------------------------------------------------------------------------------
-def reg_blocks(paths, root, num_p4_proc):
-    # parses path list and extracts list of top-level blocks within specified root block.
-
-    blocks = []
-    prefix = root.rstrip('.') + '.'
-    depth  = len(root.split('.'))
-
-    # omit specified open-nic-shell blocks.
-    omit = ['syscfg','qdma_func0','qdma_func1','qdma_subsystem',
-            'cmac0','qsfp28_i2c0','cmac_adapter0','cmac1','qsfp28_i2c1','cmac_adapter1',
-            'sysmon0','sysmon1','sysmon2','qspi','cms']
-
-    if (num_p4_proc==1): omit.append('p4_proc_egr')
-
-    for path in paths:
-        if path and path.startswith(prefix):
-            levels = path.split('.')
-            if len(levels) >= depth:
-                block = levels[depth]
-                if (block not in blocks) and (block not in omit): blocks.append(block)
-
-    return blocks
-
-#---------------------------------------------------------------------------------------------------
-def parse_reg_json(json_str, record_type=None, access_type=None):
-    # parses reg json string and extracts records of specified type and access.
-    # returns list of dictionaries, each record has keys: 'type','access','path',and 'width'.
-
-    data = json.loads(json_str)
-
-    records = []
-    for record in data:
-        if record_type is None or record.get('type') == record_type:
-            if access_type is None or record.get('access') == access_type:
-                field_info = {
-                    'type':   record.get('type'),
-                    'access': record.get('access'),
-                    'path':   record.get('path'),
-                    'width':  record.get('data', {}).get('width')
-                }
-                records.append(field_info)
-
-    return records
 
 #---------------------------------------------------------------------------------------------------

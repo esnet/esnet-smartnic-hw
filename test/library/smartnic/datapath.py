@@ -116,7 +116,7 @@ def pkt_accelerator_test(dev, port):
     pkt_accelerator_config (dev=dev, port=port, mux_out_sel=0, gt=False)  # mux_out_sel=0 (APP).
     pkt_accelerator_inject (dev, num, tx_pkt, port)
 
-    time.sleep(1)  # wait in seconds, pkt_accelerator startup.
+    time.sleep(0.5)  # wait in seconds, pkt_accelerator startup.
 
     _num  = 100
     _size = random.randint(64, 1500)
@@ -148,7 +148,7 @@ def random_traffic_test(dev, port):
         size = size + 5  # spans short and long pkt sizes, and all 'tkeep' values.
         #print(f'Port {_port} - pkt_accelerator_inject - packet #{j} size: {size}')
 
-    time.sleep(1)  # wait in seconds, pkt_accelerator startup.
+    time.sleep(0.5)  # wait in seconds, pkt_accelerator startup.
 
     # run playback capture with random packet sizes.
     pkt_playback_config (dev, port);  pkt_capture_config (dev, port)
@@ -238,12 +238,10 @@ def phy_path_test(dev, num, port):
     if (port==0):
         dev.bar2.smartnic_regs.smartnic_demux_out_sel.port0=0                        # BYPASS to PHY0.
         dev.bar2.smartnic_regs.smartnic_mux_out_sel[0]._r.value=0                    # PHY0 to APP.
-        #dev.bar2.p4_proc_igr.p4_proc.p4_bypass_config.p4_bypass_egr_port_type_0 = 1  # APP to PF0.
 
     else:
         dev.bar2.smartnic_regs.smartnic_demux_out_sel.port1=0                        # BYPASS to PHY1.
         dev.bar2.smartnic_regs.smartnic_mux_out_sel[1]._r.value=0                    # PHY1 to APP.
-        #dev.bar2.p4_proc_igr.p4_proc.p4_bypass_config.p4_bypass_egr_port_type_1 = 1  # APP to PF1.
 
     bytes = rnd_playback_capture(dev, num, port)
 
