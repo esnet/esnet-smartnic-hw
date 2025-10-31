@@ -7,10 +7,10 @@ from scapy.all import *
 
 sys.path.append('.')
 
-from smartnic.config  import *
+from smartnic.lib.config import *
 
-from smartnic.packet_playback_protocol import PacketPlaybackProtocol
-from smartnic.packet_capture_protocol  import PacketCaptureProtocol
+from smartnic.lib.packet_playback_protocol import PacketPlaybackProtocol
+from smartnic.lib.packet_capture_protocol  import PacketCaptureProtocol
 
 #---------------------------------------------------------------------------------------------------
 def one_packet(size):
@@ -82,7 +82,7 @@ def pkt_playback_capture(dev, num, size, port):
     for i in range(num):
         tx_pkt = one_packet(size)
 
-        print(f'Packet #{i} size: {size}')
+        #print(f'Packet #{i} size: {size}')
         pkt_capture_trigger (dev)
         pkt_playback        (dev, tx_pkt, port, port)
         pkt_capture_read    (dev, tx_pkt)
@@ -91,7 +91,7 @@ def pkt_playback_capture(dev, num, size, port):
 def rnd_playback_capture(dev, num, port):
     bytes = 0
     for i in range(num):
-        print(f'Packet #{i}')
+        #print(f'Packet #{i}')
         size = random.randint(64, 1500)
         bytes = bytes + size
         pkt_playback_capture (dev, 1, size, port)
@@ -116,7 +116,7 @@ def pkt_accelerator_config(dev, port, mux_out_sel=0, gt=True):
 def pkt_accelerator_inject(dev, num, pkt, port):
     for i in range(num):
         pkt_playback (dev, pkt, port, port)
-        print(f'Port {port} - pkt_accelerator_inject - Packet #{i} size {len(pkt)}')
+        #print(f'Port {port} - pkt_accelerator_inject - Packet #{i} size {len(pkt)}')
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_extract(dev, num, exp, port):
@@ -132,7 +132,7 @@ def pkt_accelerator_extract(dev, num, exp, port):
     for i in range(num):
         pkt_capture_trigger (dev)
         pkt_capture_read    (dev, exp)
-        print(f'Port {port} - pkt_accelerator_extract - Packet #{i} size {len(exp)}')
+        #print(f'Port {port} - pkt_accelerator_extract - Packet #{i} size {len(exp)}')
 
 #---------------------------------------------------------------------------------------------------
 def pkt_accelerator_flush(dev, port):

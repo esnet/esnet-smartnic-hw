@@ -137,7 +137,7 @@ def check_rates(port, pkts, bytes):
     before = read_probes()
     #dump_metrics(before, 'Before')
 
-    time.sleep(4) # wait in seconds, accumulate counts for rate calculation.
+    time.sleep(3) # wait in seconds, accumulate counts for rate calculation.
 
     after = read_probes()
     #dump_metrics(after, 'After')
