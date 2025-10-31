@@ -5,7 +5,7 @@ import random
 from typing import List, Dict, Any
 from robot.api.deco import keyword, library
 
-from smartnic.config import *
+from smartnic.lib.config import *
 
 #---------------------------------------------------------------------------------------------------
 @library

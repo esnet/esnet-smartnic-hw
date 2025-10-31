@@ -7,10 +7,10 @@ from scapy.all import *
 
 sys.path.append('.')
 
-from smartnic.config import *
+from smartnic.lib.config import *
 
-from smartnic.packet_playback_protocol import PacketPlaybackProtocol
-from smartnic.packet_capture_protocol  import PacketCaptureProtocol
+from smartnic.lib.packet_playback_protocol import PacketPlaybackProtocol
+from smartnic.lib.packet_capture_protocol  import PacketCaptureProtocol
 
 #---------------------------------------------------------------------------------------------------
 def one_packet(size):

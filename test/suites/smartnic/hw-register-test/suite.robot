@@ -1,8 +1,8 @@
 *** Settings ***
 Documentation    Basic register tests.
-Library          smartnic.registers.Library
+Library          smartnic.tests.registers.Library
 Variables        variables
-Variables        smartnic.config
+Variables        smartnic.lib.config
 Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
 Test Timeout     1 minute

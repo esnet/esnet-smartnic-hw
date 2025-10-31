@@ -1,8 +1,8 @@
 *** Settings ***
 Documentation    Smartnic datapath tests.
-Library          smartnic.datapath.Library
+Library          smartnic.tests.datapath.Library
 Variables        variables
-Variables        smartnic.config
+Variables        smartnic.lib.config
 Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
 Test Teardown    Testcase Teardown    ${dev}
 Test Timeout     1 minute

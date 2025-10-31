@@ -1,12 +1,10 @@
 __all__ = ()
 
-import time
-
 from robot.api.deco import keyword, library
 
-from smartnic.config  import *
-from smartnic.packets import *
-from smartnic.probes  import *
+from smartnic.lib.config  import *
+from smartnic.lib.packets import *
+from smartnic.lib.probes  import *
 
 #---------------------------------------------------------------------------------------------------
 @library
