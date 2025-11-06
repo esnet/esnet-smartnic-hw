@@ -11,8 +11,6 @@ package smartnic_pkg;
 
     localparam int NUM_EGR_QS = 128;
 
-    // Derived parameters
-    localparam int EGR_Q_WID = $clog2(NUM_EGR_QS);
 
     // --------------------------------------------------------------
     // Typedefs
@@ -20,7 +18,6 @@ package smartnic_pkg;
     typedef logic [TIMESTAMP_WID-1:0] timestamp_t;
 
     typedef logic [15:0] adpt_tx_tid_t;
-    typedef logic [EGR_Q_WID-1:0] egr_q_t;
 
     typedef enum logic {
         P0 = 1'b0,
@@ -83,6 +80,9 @@ package smartnic_pkg;
         logic [11:0] rss_entropy;
     } tuser_smartnic_meta_t;
 
+    // typedef logic [EGR_Q_WID-1:0] egr_q_t;
+    typedef tuser_smartnic_meta_t egr_q_t; // TEMP: for now, pass entropy through egress qs (required for VF2 extraction)
+
     // --------------------------------------------------------------
     // Derived parameters
     // --------------------------------------------------------------
@@ -90,5 +90,7 @@ package smartnic_pkg;
     localparam int TUSER_SMARTNIC_META_WID = $bits(tuser_smartnic_meta_t);
     localparam int IGR_TDEST_WID           = $bits(igr_tdest_t);
     localparam int ADPT_TX_TID_WID         = $bits(adpt_tx_tid_t);
+    // localparam int EGR_Q_WID               = $clog2(NUM_EGR_QS); 
+    localparam int EGR_Q_WID              = TUSER_SMARTNIC_META_WID; // TEMP: for now, pass entropy through egress qs (required for VF2 extraction)
 
 endpackage : smartnic_pkg

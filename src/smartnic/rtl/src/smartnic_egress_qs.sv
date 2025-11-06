@@ -239,16 +239,18 @@ module smartnic_egress_qs
                 .packet_if ( packet_out_if[g_port] ),
                 .axis_if   ( __axis_from_qs ),
                 .tdest     ( meta_out.egr_port ),
-                .tuser     ( '0 )
+                .tuser     ( meta_out.egr_q )
             );
 
             // Discard unused metadata at output
             axi4s_intf_set_meta #(
-                .TDEST_WID ( PORT_WID )
+                .TDEST_WID ( PORT_WID ),
+                .TUSER_WID ( EGR_Q_WID ) // TEMP: pass to output for now
             ) i_axi4s_intf_set_meta__out (
                 .from_tx ( __axis_out ),
                 .to_rx   ( axis_out[g_port] ),
-                .tdest   ( __axis_out.tdest )
+                .tdest   ( __axis_out.tdest ),
+                .tuser   ( __axis_out.tuser )
             );
 
             // Adapt from 'wide' packet interface to 'narrow' memory interfaces

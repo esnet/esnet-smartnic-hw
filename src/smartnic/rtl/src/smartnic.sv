@@ -434,7 +434,7 @@ module smartnic
    axi4s_intf  #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
                  .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))         axis_from_app__demarc [NUM_CMAC] (.aclk(core_clk));
    axi4s_intf  #(.DATA_BYTE_WID(64), .TDEST_WID (PORT_WID), .TUSER_WID(EGR_Q_WID))     axis_to_qs            [NUM_CMAC] (.aclk(core_clk));
-   axi4s_intf  #(.DATA_BYTE_WID(64), .TDEST_WID (PORT_WID))                            axis_from_qs          [NUM_CMAC] (.aclk(core_clk));
+   axi4s_intf  #(.DATA_BYTE_WID(64), .TDEST_WID (PORT_WID), .TUSER_WID(EGR_Q_WID))     axis_from_qs          [NUM_CMAC] (.aclk(core_clk));
    axi4s_intf  #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
                  .DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))         axis_app_to_core      [NUM_CMAC] (.aclk(core_clk));
 
@@ -969,7 +969,7 @@ module smartnic
         .from_tx   ( axis_to_qs[i] ),
         .to_rx     ( axis_from_qs[i] ),
         .tdest     ( axis_to_qs[i].tdest ),
-        .tuser     ( '0 )
+        .tuser     ( axis_to_qs[i].tuser )
     );
     axi4l_intf_peripheral_term i_axi4l_peripheral_term__egr_qs (.from_controller(__axil_to_egr_qs));
 `else
@@ -989,8 +989,8 @@ module smartnic
         for (genvar i = 0; i < PHY_NUM_PORTS; i++) begin : g__egr_qs_port
             axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_from_app (.aclk(core_clk));
             axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_to_qs (.aclk(core_clk));
-            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID)) __axis_from_qs (.aclk(core_clk));
-            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID)) __axis_app_to_core (.aclk(core_clk));
+            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_from_qs (.aclk(core_clk));
+            axi4s_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .TDEST_WID(PORT_WID), .TUSER_WID(EGR_Q_WID)) __axis_app_to_core (.aclk(core_clk));
             // Convert to metadata format used for egress Qs
             // TODO: fix metadata from app to match downstream requirement
             axi4s_intf_set_meta #(
@@ -1000,7 +1000,7 @@ module smartnic
                 .from_tx ( axis_from_app[i] ),
                 .to_rx   ( __axis_from_app ),
                 .tdest   ( axis_from_app[i].tdest ),
-                .tuser   ( '0 )
+                .tuser   ( axis_from_app[i].tuser )
             );
 
             // Cross from application SLR to HBM controller
@@ -1010,7 +1010,7 @@ module smartnic
         `else
             // For U55C/U250, need to cross two SLR boundaries
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
                 .POST_PIPE_STAGES ( 1 )
             ) axi4s_pipe_slr__app_to_qs_0 (
                 .srst    ( core_srst ),
@@ -1031,7 +1031,11 @@ module smartnic
             // Cross from HBM controller to PHY SLR
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 1 ),
+        `ifdef __au280__
                 .POST_PIPE_STAGES ( 1 )
+        `else
+                .POST_PIPE_STAGES ( 3 )
+        `endif
             ) axi4s_pipe_slr__qs_to_phy_0 (
                 .srst    ( core_srst ),
                 .from_tx ( axis_from_qs[i] ),
@@ -1062,7 +1066,7 @@ module smartnic
                 .from_tx ( __axis_app_to_core ),
                 .to_rx   ( axis_app_to_core[i] ),
                 .tdest   ( __axis_app_to_core.tdest ),
-                .tuser   ( '0 )
+                .tuser   ( __axis_app_to_core.tuser )
             );
         end : g__egr_qs_port
     endgenerate
