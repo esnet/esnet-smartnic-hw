@@ -10,7 +10,8 @@ module smartnic_mux
     axi4s_intf.tx   axis_core_to_app    [NUM_CMAC],
     axi4s_intf.tx   axis_core_to_bypass [NUM_CMAC],
 
-    smartnic_reg_intf.peripheral   smartnic_regs
+    input smartnic_reg_pkg::reg_smartnic_mux_out_sel_t  mux_out_sel [4],
+    input logic     tpause
 );
     import smartnic_pkg::*;
 
@@ -49,10 +50,10 @@ module smartnic_mux
                 smartnic_mux_out_sel[2+i] <= DROP;
             end else begin
                 if (axis_cmac_to_core[i].sop)
-                    smartnic_mux_out_sel[i] <= smartnic_regs.smartnic_mux_out_sel[i].value;
+                    smartnic_mux_out_sel[i] <= mux_out_sel[i].value;
 
                 if (axis_host_to_core[i].sop)
-                    smartnic_mux_out_sel[2+i] <= smartnic_regs.smartnic_mux_out_sel[2+i].value;
+                    smartnic_mux_out_sel[2+i] <= mux_out_sel[2+i].value;
             end
         end
 
@@ -109,9 +110,9 @@ module smartnic_mux
         axi4s_intf_connector axis_core_to_bypass_pipe (.from_tx(igr_demux_out[i][1]), .to_rx(_axis_core_to_bypass[i]));
 
         // tpause logic for bypass ingress traffic (for test purposes).
-        assign _axis_core_to_bypass[i].tready = axis_core_to_bypass[i].tready && !smartnic_regs.switch_config.igr_sw_tpause;
+        assign _axis_core_to_bypass[i].tready = axis_core_to_bypass[i].tready && !tpause;
 
-        assign axis_core_to_bypass[i].tvalid  = _axis_core_to_bypass[i].tvalid && !smartnic_regs.switch_config.igr_sw_tpause;
+        assign axis_core_to_bypass[i].tvalid  = _axis_core_to_bypass[i].tvalid && !tpause;
         assign axis_core_to_bypass[i].tdata   = _axis_core_to_bypass[i].tdata;
         assign axis_core_to_bypass[i].tkeep   = _axis_core_to_bypass[i].tkeep;
         assign axis_core_to_bypass[i].tlast   = _axis_core_to_bypass[i].tlast;
