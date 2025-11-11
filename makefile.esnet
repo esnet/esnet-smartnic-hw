@@ -153,6 +153,12 @@ bitfile : config_check
         )
 	@ test -e $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit || (echo ERROR: bitfile not produced. && false)
 
+prune_build:
+	-@DCP_FILE=$(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell_opt.dcp     && test -e $$DCP_FILE && rm $$DCP_FILE && echo "Removed $$DCP_FILE" || echo "No $$DCP_FILE"
+	-@DCP_FILE=$(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell_placed.dcp  && test -e $$DCP_FILE && rm $$DCP_FILE && echo "Removed $$DCP_FILE" || echo "No $$DCP_FILE"
+	-@DCP_FILE=$(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell_physopt.dcp && test -e $$DCP_FILE && rm $$DCP_FILE && echo "Removed $$DCP_FILE" || echo "No $$DCP_FILE"
+	-@DCP_FILE=$(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell_routed.dcp  && test -e $$DCP_FILE && rm $$DCP_FILE && echo "Removed $$DCP_FILE" || echo "No $$DCP_FILE"
+
 vanilla_bitfile : config_check
 	@echo "Creating vanilla bitfile"
 	( cd $(ONS_ROOT)/script && \

@@ -100,6 +100,17 @@ bitfile : config config_check
 	@echo
 	@echo "Done."
 
+prune_build:
+	@echo "Pruning $(BUILD_NAME)..."
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo "Removing intermediate build checkpoints ..."
+	@echo
+	@$(MAKE) -s -C $(PROJ_ROOT) -f makefile.esnet prune_build \
+	   BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME)
+	@echo
+	@echo "Done."
+
 package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "----------------------------------------------------------"
 	@echo "Packaging build $(BUILD_NAME) ..."
