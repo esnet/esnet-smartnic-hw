@@ -11,7 +11,7 @@ module smartnic_bypass #(
     axi4l_intf.peripheral   axil_to_drops_to_bypass [NUM_CMAC],
     axi4l_intf.peripheral   axil_to_probe_to_bypass [NUM_CMAC],
 
-    smartnic_reg_intf.peripheral   smartnic_regs
+    input logic    bypass_swap_paths
 );
     import smartnic_pkg::*;
 
@@ -94,7 +94,7 @@ module smartnic_bypass #(
                 bypass_demux_sel[i] <= 0;
             else if (axis_from_bypass_fifo[i].tready && axis_from_bypass_fifo[i].tvalid &&
                      axis_from_bypass_fifo[i].sop)
-                bypass_demux_sel[i] <= smartnic_regs.bypass_config.swap_paths;
+                bypass_demux_sel[i] <= bypass_swap_paths;
 
         axi4s_intf_demux #(.N(2)) axi4s_bypass_demux (
             .from_tx (axis_bypass_demux_in[i]),

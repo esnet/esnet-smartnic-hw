@@ -18,7 +18,11 @@ module smartnic_host
     axi4l_intf.peripheral  axil_to_pkt_playback,
     axi4l_intf.peripheral  axil_to_pkt_capture,
 
-    smartnic_reg_intf.peripheral   smartnic_regs
+    input smartnic_reg_pkg::reg_igr_q_config_0_t igr_q_config_0[4],
+    input smartnic_reg_pkg::reg_igr_q_config_1_t igr_q_config_1[4],
+
+    input logic pkt_capture_enable_0,
+    input logic pkt_capture_enable_1
 );
 
     import smartnic_pkg::*;
@@ -60,12 +64,12 @@ module smartnic_host
     generate
         for (genvar j = 0; j < HOST_NUM_IFS+1; j += 1) begin : g__host_if_sel
             always @(posedge core_clk) begin
-                host_if_sel[0][j] <= (        axis_host_to_core[0].tid[11:0]  >=  smartnic_regs.igr_q_config_0[j].base ) &&
-                                     ( {1'b0, axis_host_to_core[0].tid[11:0]} <  (smartnic_regs.igr_q_config_0[j].base +
-                                                                                  smartnic_regs.igr_q_config_0[j].num_q) );
-                host_if_sel[1][j] <= (        axis_host_to_core[1].tid[11:0]  >=  smartnic_regs.igr_q_config_1[j].base ) &&
-                                     ( {1'b0, axis_host_to_core[1].tid[11:0]} <  (smartnic_regs.igr_q_config_1[j].base +
-                                                                                  smartnic_regs.igr_q_config_1[j].num_q) );
+                host_if_sel[0][j] <= (        axis_host_to_core[0].tid[11:0]  >=  igr_q_config_0[j].base ) &&
+                                     ( {1'b0, axis_host_to_core[0].tid[11:0]} <  (igr_q_config_0[j].base +
+                                                                                  igr_q_config_0[j].num_q) );
+                host_if_sel[1][j] <= (        axis_host_to_core[1].tid[11:0]  >=  igr_q_config_1[j].base ) &&
+                                     ( {1'b0, axis_host_to_core[1].tid[11:0]} <  (igr_q_config_1[j].base +
+                                                                                  igr_q_config_1[j].num_q) );
             end
         end : g__host_if_sel
     endgenerate
@@ -124,8 +128,8 @@ module smartnic_host
     logic host_to_core_demux_sel [NUM_CMAC];
 
     logic  pkt_capture_enable[NUM_CMAC];
-    assign pkt_capture_enable[0] = smartnic_regs.switch_config.pkt_capture_enable_0;
-    assign pkt_capture_enable[1] = smartnic_regs.switch_config.pkt_capture_enable_1;
+    assign pkt_capture_enable[0] = pkt_capture_enable_0;
+    assign pkt_capture_enable[1] = pkt_capture_enable_1;
 
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
         port_t axis_host_to_core_mux_out_tid;

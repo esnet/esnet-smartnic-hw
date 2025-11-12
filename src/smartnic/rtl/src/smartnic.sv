@@ -712,7 +712,8 @@ module smartnic
        .axis_host_to_core   (_axis_host_to_core),
        .axis_core_to_app    (axis_core_to_app),
        .axis_core_to_bypass (axis_core_to_bypass),
-       .smartnic_regs       (smartnic_regs)
+       .mux_out_sel         (smartnic_regs.smartnic_mux_out_sel),
+       .tpause              (smartnic_regs.switch_config.igr_sw_tpause)
    );
 
    // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_core_to_app  (.axis_in(axis_core_to_app[0]));
@@ -731,7 +732,7 @@ module smartnic
        .axis_bypass_to_core       (axis_bypass_to_core),
        .axil_to_drops_to_bypass   (axil_to_drops_to_bypass),
        .axil_to_probe_to_bypass   (axil_to_probe_to_bypass),
-       .smartnic_regs             (smartnic_regs)
+       .bypass_swap_paths         (smartnic_regs.bypass_config.swap_paths)
    );
 
    // smartnic_demux instantiation.
@@ -745,7 +746,7 @@ module smartnic
        .axis_app_to_core    (axis_app_to_core),
        .axis_core_to_cmac   (axis_core_to_cmac),
        .axis_core_to_host   (_axis_core_to_host),
-       .smartnic_regs       (smartnic_regs)
+       .demux_out_sel       (smartnic_regs.smartnic_demux_out_sel)
    );
 
    // smartnic_host instantiation.
@@ -763,7 +764,10 @@ module smartnic
        .axil_to_hash2qid        (axil_to_hash2qid),
        .axil_to_pkt_playback    (axil_to_pkt_playback),
        .axil_to_pkt_capture     (axil_to_pkt_capture),
-       .smartnic_regs           (smartnic_regs)
+       .igr_q_config_0          (smartnic_regs.igr_q_config_0),
+       .igr_q_config_1          (smartnic_regs.igr_q_config_1),
+       .pkt_capture_enable_0    (smartnic_regs.switch_config.pkt_capture_enable_0),
+       .pkt_capture_enable_1    (smartnic_regs.switch_config.pkt_capture_enable_1)
    );
 
 

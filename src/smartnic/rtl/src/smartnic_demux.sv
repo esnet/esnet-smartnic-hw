@@ -11,7 +11,7 @@ module smartnic_demux
     axi4s_intf.tx   axis_core_to_cmac   [NUM_CMAC],
     axi4s_intf.tx   axis_core_to_host   [NUM_CMAC],
 
-    smartnic_reg_intf.peripheral   smartnic_regs
+    smartnic_reg_pkg::reg_smartnic_demux_out_sel_t demux_out_sel
 );
     import smartnic_pkg::*;
 
@@ -126,7 +126,7 @@ module smartnic_demux
             if (!core_rstn)
                 smartnic_demux_out_sel[i] <= 0;
 	    else if (egr_mux_out[i].tready && egr_mux_out[i].tvalid && egr_mux_out[i].sop)
-                smartnic_demux_out_sel[i] <= smartnic_regs.smartnic_demux_out_sel[i];
+                smartnic_demux_out_sel[i] <= demux_out_sel[i];
 
         axi4s_intf_demux #(.N(2)) axi4s_egr_demux (
             .from_tx (egr_mux_out_p[i]),
