@@ -99,7 +99,7 @@ IP_SIM_INC_DIRS =
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
-    gtwizard_ultrascale_$(IP_VER_GTWIZARD_ULTRASCALE) \
+    gtwizard_ultrascale_v$(IP_VER_GTWIZARD_ULTRASCALE) \
     cmac_usplus_v$(IP_VER_CMAC_USPLUS) \
     unisims_ver \
     unimacro_ver \

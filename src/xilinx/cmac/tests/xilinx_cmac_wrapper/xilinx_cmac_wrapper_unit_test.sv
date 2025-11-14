@@ -15,7 +15,7 @@ module xilinx_cmac_wrapper_unit_test;
     //===================================
     // Signals
     logic clk;
-    logic srstn;
+    logic srst;
     logic qsfp_refclk_p;
     logic qsfp_refclk_n;
     logic [3:0] qsfp_rxp;
@@ -23,9 +23,17 @@ module xilinx_cmac_wrapper_unit_test;
     logic [3:0] qsfp_txp;
     logic [3:0] qsfp_txn;
 
+    logic cmac_clk;
+
     // Interfaces
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(axis_tx_tuser_t)) axis_rx ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(axis_rx_tuser_t)) axis_tx ();
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(AXIS_TID_WID),
+                 .TDEST_WID    (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) axis_rx (.aclk(cmac_clk));
+
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(AXIS_TID_WID),
+                 .TDEST_WID    (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) axis_tx (.aclk(cmac_clk));
+
     axi4l_intf #() axil_if ();
 
     xilinx_cmac_wrapper #(
@@ -52,7 +60,7 @@ module xilinx_cmac_wrapper_unit_test;
     //===================================
     task setup();
         svunit_ut.setup();
-        srstn = 1'b0;
+        srst = 1'b1;
         
         idle();
 

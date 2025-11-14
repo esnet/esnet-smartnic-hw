@@ -18,9 +18,11 @@ module xilinx_cmac_wrapper #(
     output logic [3:0]    qsfp_txn,
 
     // From/to core
+    // -- Clock
+    output logic          cmac_clk,
     // -- AXI-S
     axi4s_intf.tx         axis_rx,
-    axi4s_intf.rx_async   axis_tx,
+    axi4s_intf.rx         axis_tx,
     // -- AXI-L
     axi4l_intf.peripheral axil_if
 );
@@ -32,9 +34,6 @@ module xilinx_cmac_wrapper #(
     // =========================================================================
     // Signals
     // =========================================================================
-    // (Local) signals
-    logic __cmac_clk;
-
     // CMAC ports
     logic [3 : 0] gt_txp_out;
     logic [3 : 0] gt_txn_out;
@@ -320,9 +319,9 @@ module xilinx_cmac_wrapper #(
 
     assign init_clk = axil_if.aclk;      // input wire init_clk
 
-    assign __cmac_clk = gt_txusrclk2;           // output wire gt_txusrclk2
+    assign cmac_clk = gt_txusrclk2;      // output wire gt_txusrclk2
 
-    assign rx_clk = __cmac_clk;            // input wire rx_clk
+    assign rx_clk = cmac_clk;            // input wire rx_clk
 
     // output wire gt_rxusrclk2
     // output wire gt_ref_clk_out
@@ -334,9 +333,9 @@ module xilinx_cmac_wrapper #(
     sync_reset #(
         .INPUT_ACTIVE_HIGH ( 1 )
     ) i_sync_reset__sys_reset (
-        .clk_in ( clk ),
-        .rst_in ( srst ),
-        .clk_out ( __cmac_clk ),
+        .clk_in  ( clk ),
+        .rst_in  ( srst ),
+        .clk_out ( cmac_clk ),
         .rst_out ( sys_reset )
     );
 
@@ -416,8 +415,6 @@ module xilinx_cmac_wrapper #(
     axis_tuser_t __axis_rx_tuser;
     axis_tid_t   __axis_rx_tid;
 
-    assign axis_rx.aclk = __cmac_clk;
-    assign axis_rx.aresetn = ~sys_reset;
     assign axis_rx.tvalid = rx_axis_tvalid;     // output wire rx_axis_tvalid
     assign axis_rx.tdata = rx_axis_tdata;       // output wire [511 : 0] rx_axis_tdata
     assign axis_rx.tlast = rx_axis_tlast;       // output wire rx_axis_tlast
@@ -435,8 +432,6 @@ module xilinx_cmac_wrapper #(
     // (Local) signals
     axis_tuser_t __axis_tx_tuser;
 
-    assign axis_tx.aclk = __cmac_clk;
-    assign axis_tx.aresetn = ~sys_reset;
     assign axis_tx.tready = tx_axis_tready;     // output wire tx_axis_tready
     assign tx_axis_tvalid = axis_tx.tvalid;     // input wire tx_axis_tvalid
     assign tx_axis_tdata = axis_tx.tdata;       // input wire [511 : 0] tx_axis_tdata
