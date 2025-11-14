@@ -23,11 +23,11 @@ module core
     // Signals
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
 
     // Convert flat signal representation to interfaces
     shell_adapter__core i_shell_adapter__core (.*);
@@ -185,7 +185,6 @@ module smartnic_wrapper
     assign axis_c2h.tuser  = axis_c2h_tuser;
     assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h.tready;
     assign axis_c2h.aclk = clk;
-    assign axis_c2h.aresetn = !srst;
 
     // Tie off redunandant SmartNIC QDMA channel(s)
     generate
