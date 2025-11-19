@@ -6,7 +6,7 @@
     parameter int NUM_P4_PROC = 2       // Number of vitisnetp4 processors.
 ) (
     input  logic         core_clk,
-    input  logic         core_rstn,
+    input  logic         core_srst,
     input  logic         axil_aclk,
     input  logic [63:0]  timestamp,
 

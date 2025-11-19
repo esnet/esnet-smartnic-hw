@@ -53,6 +53,9 @@ def reg_blocks(paths, root, num_p4_proc):
             'cmac0','qsfp28_i2c0','cmac_adapter0','cmac1','qsfp28_i2c1','cmac_adapter1',
             'sysmon0','sysmon1','sysmon2','qspi','cms']
 
+    # omit HBM blocks
+    omit.append('smartnic_egr_qs')
+
     if (num_p4_proc==1): omit.append('p4_proc_egr')
 
     for path in paths:

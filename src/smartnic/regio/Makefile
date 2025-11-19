@@ -12,12 +12,14 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML = \
     smartnic.yaml \
+    smartnic_qs.yaml \
     smartnic_hash2qid.yaml
 
 REG_DECODER_YAML = \
     smartnic_cmac_decoder.yaml \
     smartnic_host_decoder.yaml \
     smartnic_bypass_decoder.yaml \
+    smartnic_qs_decoder.yaml \
     smartnic_to_app_decoder.yaml \
     smartnic_decoder.yaml
 

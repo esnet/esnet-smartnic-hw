@@ -4,7 +4,7 @@ module smartnic_app_egr_p4
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic          core_clk,
-    input  logic          core_rstn,
+    input  logic          core_srst,
 
     input  timestamp_t    timestamp,
 
@@ -41,13 +41,13 @@ module smartnic_app_egr_p4
     logic                        user_metadata_out_valid;
 
     // Interfaces
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_to_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_from_vitisnetp4 (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_to_vitisnetp4 (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID)) axis_from_vitisnetp4 (.aclk(core_clk));
 
     // P4 processor complex
     p4_proc #(.NUM_PORTS(NUM_PORTS)) p4_proc_inst (
-        .core_clk                       ( core_clk ),
-        .core_rstn                      ( core_rstn ),
+        .core_clk,
+        .core_srst,
         .timestamp                      ( timestamp ),
         .axil_if                        ( axil_to_p4_proc ),
         .axis_in                        ( axis_in ),
@@ -62,8 +62,8 @@ module smartnic_app_egr_p4
 
     // P4 pipeline wrapper
     vitisnetp4_egr_wrapper vitisnetp4_egr_wrapper_inst (
-        .core_clk                ( core_clk ),
-        .core_rstn               ( core_rstn ),
+        .core_clk,
+        .core_srst,
         .axil_if                 ( axil_to_vitisnetp4 ),
         .axis_rx                 ( axis_to_vitisnetp4 ),
         .axis_tx                 ( axis_from_vitisnetp4 ),

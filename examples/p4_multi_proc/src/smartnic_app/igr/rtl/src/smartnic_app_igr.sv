@@ -3,7 +3,7 @@ module smartnic_app_igr
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic      core_clk,
-    input  logic      core_rstn,
+    input  logic      core_srst,
 
     axi4s_intf.rx     axi4s_in  [NUM_PORTS],
     axi4s_intf.tx     axi4s_out [NUM_PORTS],
@@ -16,6 +16,9 @@ module smartnic_app_igr
     localparam int TID_WID       = axi4s_in[0].TID_WID;
     localparam int TDEST_WID     = axi4s_in[0].TDEST_WID;
     localparam int TUSER_WID     = axi4s_in[0].TUSER_WID;
+
+    logic srst;
+    assign srst = core_srst;
 
     // ----------------------------------------------------------------------
     //  axil register map. axil intf, regio block and decoder instantiations.
@@ -42,17 +45,18 @@ module smartnic_app_igr
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID),
-        .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  demux_out [NUM_PORTS][2] (.aclk(core_clk), .aresetn(core_rstn));
+        .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  demux_out [NUM_PORTS][2] (.aclk(core_clk));
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         axi4s_intf_demux #(.N(2)) axi4s_demux_inst (
+            .srst,
             .from_tx (axi4s_in[i]),
             .to_rx   (demux_out[i]),
             .sel     (smartnic_app_igr_regs.app_igr_config.demux_sel)
         );
 
-        axi4s_full_pipe axi4s_full_pipe_0 (.from_tx(demux_out[i][0]), .to_rx(axi4s_out[i]));
-        axi4s_full_pipe axi4s_full_pipe_1 (.from_tx(demux_out[i][1]), .to_rx(axi4s_c2h[i]));
+        axi4s_full_pipe axi4s_full_pipe_0 (.srst, .from_tx(demux_out[i][0]), .to_rx(axi4s_out[i]));
+        axi4s_full_pipe axi4s_full_pipe_1 (.srst, .from_tx(demux_out[i][1]), .to_rx(axi4s_c2h[i]));
 
     end endgenerate
 

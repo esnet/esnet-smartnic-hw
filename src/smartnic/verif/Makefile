@@ -24,6 +24,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    smartnic.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic.regio.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic_app.regio.rtl$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
     smartnic_app.regio.verif$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \

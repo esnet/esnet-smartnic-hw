@@ -102,11 +102,11 @@ module tb;
 
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_in_if  [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_out_if [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_in_if  [NUM_INTF] (.aclk(axis_aclk));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_C2H_WID)) axis_c2h_out_if [NUM_INTF] (.aclk(axis_aclk));
 
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_in_if  [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_out_if [NUM_INTF] (.aclk(axis_aclk), .aresetn(!rst));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_in_if  [NUM_INTF] (.aclk(axis_aclk));
+    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_H2C_WID)) axis_h2c_out_if [NUM_INTF] (.aclk(axis_aclk));
 
     // Generate datapath clock (250MHz)
     initial clk = 1'b0;
@@ -119,7 +119,6 @@ module tb;
     assign mod_rstn = ~rst;
     
     assign axis_aclk = clk;
-    assign axis_aresetn = ~rst;
 
     // Generate AXI management clock (125MHz)
     initial axil_if.aclk = 1'b0;

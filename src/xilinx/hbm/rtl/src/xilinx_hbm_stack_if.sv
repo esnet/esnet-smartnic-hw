@@ -12,14 +12,13 @@ module xilinx_hbm_stack_if
 
     // AXI3 memory channel interfaces (16 pseudochannels per stack)
     axi3_intf.peripheral        axi_if [PSEUDO_CHANNELS_PER_STACK],
+    input wire logic            srst,
     
     // APB (management) interface
     apb_intf.peripheral         apb_if,
 
-    // Status
-    output wire logic           init_done,
-    
-    // DRAM status monitoring
+    // DRAM status monitoring (APB PCLK domain)
+    output wire logic           apb_complete,
     output wire logic           dram_status_cattrip,
     output wire logic [6:0]     dram_status_temp,
 
@@ -618,7 +617,7 @@ module xilinx_hbm_stack_if
         .pslverr ( APB_0_PSLVERR )
     );
 
-    assign init_done = apb_complete_0;
+    assign apb_complete = apb_complete_0;
 
     // Memory Channel 0
     axi3_intf_to_signals #(
@@ -627,6 +626,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch0 (
         .axi3_if  ( axi_if[0] ),
+        .srst,
         .aclk     ( AXI_00_ACLK ),
         .aresetn  ( AXI_00_ARESET_N ),
         .awid     ( AXI_00_AWID ),
@@ -685,6 +685,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch1 (
         .axi3_if  ( axi_if[1] ),
+        .srst,
         .aclk     ( AXI_01_ACLK ),
         .aresetn  ( AXI_01_ARESET_N ),
         .awid     ( AXI_01_AWID ),
@@ -743,6 +744,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch2 (
         .axi3_if  ( axi_if[2] ),
+        .srst,
         .aclk     ( AXI_02_ACLK ),
         .aresetn  ( AXI_02_ARESET_N ),
         .awid     ( AXI_02_AWID ),
@@ -801,6 +803,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch3 (
         .axi3_if  ( axi_if[3] ),
+        .srst,
         .aclk     ( AXI_03_ACLK ),
         .aresetn  ( AXI_03_ARESET_N ),
         .awid     ( AXI_03_AWID ),
@@ -859,6 +862,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch4 (
         .axi3_if  ( axi_if[4] ),
+        .srst,
         .aclk     ( AXI_04_ACLK ),
         .aresetn  ( AXI_04_ARESET_N ),
         .awid     ( AXI_04_AWID ),
@@ -917,6 +921,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch5 (
         .axi3_if  ( axi_if[5] ),
+        .srst,
         .aclk     ( AXI_05_ACLK ),
         .aresetn  ( AXI_05_ARESET_N ),
         .awid     ( AXI_05_AWID ),
@@ -975,6 +980,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch6 (
         .axi3_if  ( axi_if[6] ),
+        .srst,
         .aclk     ( AXI_06_ACLK ),
         .aresetn  ( AXI_06_ARESET_N ),
         .awid     ( AXI_06_AWID ),
@@ -1033,6 +1039,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch7 (
         .axi3_if  ( axi_if[7] ),
+        .srst,
         .aclk     ( AXI_07_ACLK ),
         .aresetn  ( AXI_07_ARESET_N ),
         .awid     ( AXI_07_AWID ),
@@ -1091,6 +1098,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch8 (
         .axi3_if  ( axi_if[8] ),
+        .srst,
         .aclk     ( AXI_08_ACLK ),
         .aresetn  ( AXI_08_ARESET_N ),
         .awid     ( AXI_08_AWID ),
@@ -1149,6 +1157,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch9 (
         .axi3_if  ( axi_if[9] ),
+        .srst,
         .aclk     ( AXI_09_ACLK ),
         .aresetn  ( AXI_09_ARESET_N ),
         .awid     ( AXI_09_AWID ),
@@ -1207,6 +1216,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch10 (
         .axi3_if  ( axi_if[10] ),
+        .srst,
         .aclk     ( AXI_10_ACLK ),
         .aresetn  ( AXI_10_ARESET_N ),
         .awid     ( AXI_10_AWID ),
@@ -1265,6 +1275,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch11 (
         .axi3_if  ( axi_if[11] ),
+        .srst,
         .aclk     ( AXI_11_ACLK ),
         .aresetn  ( AXI_11_ARESET_N ),
         .awid     ( AXI_11_AWID ),
@@ -1323,6 +1334,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch12 (
         .axi3_if  ( axi_if[12] ),
+        .srst,
         .aclk     ( AXI_12_ACLK ),
         .aresetn  ( AXI_12_ARESET_N ),
         .awid     ( AXI_12_AWID ),
@@ -1381,6 +1393,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch13 (
         .axi3_if  ( axi_if[13] ),
+        .srst,
         .aclk     ( AXI_13_ACLK ),
         .aresetn  ( AXI_13_ARESET_N ),
         .awid     ( AXI_13_AWID ),
@@ -1439,6 +1452,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch14 (
         .axi3_if  ( axi_if[14] ),
+        .srst,
         .aclk     ( AXI_14_ACLK ),
         .aresetn  ( AXI_14_ARESET_N ),
         .awid     ( AXI_14_AWID ),
@@ -1497,6 +1511,7 @@ module xilinx_hbm_stack_if
         .ID_WID        ( AXI_ID_WID )
     ) i_axi3_intf_to_signals__ch15 (
         .axi3_if  ( axi_if[15] ),
+        .srst,
         .aclk     ( AXI_15_ACLK ),
         .aresetn  ( AXI_15_ARESET_N ),
         .awid     ( AXI_15_AWID ),

@@ -3,7 +3,7 @@ module smartnic_app_egr
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic      core_clk,
-    input  logic      core_rstn,
+    input  logic      core_srst,
 
     axi4s_intf.rx     axi4s_in  [NUM_PORTS],
     axi4s_intf.rx     axi4s_h2c [NUM_PORTS],
@@ -24,6 +24,9 @@ module smartnic_app_egr
 
     smartnic_app_egr_reg_intf  smartnic_app_egr_regs ();
 
+    logic srst;
+    assign srst = core_srst;
+
     // pass AXI-L interface from aclk (AXI-L clock) to core clk domain
     axi4l_intf_cdc i_axil_intf_cdc (
         .axi4l_if_from_controller  ( axil_if ),
@@ -42,21 +45,22 @@ module smartnic_app_egr
     // APPLICATION-SPECIFIC CONNECTIVITY
     // -------------------------------------------------------------------------------------------------------
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID),
-                  .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  mux_in  [NUM_PORTS][2] (.aclk(core_clk), .aresetn(core_rstn));
+                  .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  mux_in  [NUM_PORTS][2] (.aclk(core_clk));
 
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID),
-                  .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  mux_out [NUM_PORTS]    (.aclk(core_clk), .aresetn(core_rstn));
+                  .TID_WID(TID_WID), .TDEST_WID(TDEST_WID), .TUSER_WID(TUSER_WID))  mux_out [NUM_PORTS]    (.aclk(core_clk));
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin : g__port
-        axi4s_intf_pipe axi4s_mux_in_pipe_0 ( .from_tx(axi4s_in[i]),  .to_rx(mux_in[i][0]) );
-        axi4s_intf_pipe axi4s_mux_in_pipe_1 ( .from_tx(axi4s_h2c[i]), .to_rx(mux_in[i][1]) );
+        axi4s_intf_pipe axi4s_mux_in_pipe_0 ( .srst, .from_tx(axi4s_in[i]),  .to_rx(mux_in[i][0]) );
+        axi4s_intf_pipe axi4s_mux_in_pipe_1 ( .srst, .from_tx(axi4s_h2c[i]), .to_rx(mux_in[i][1]) );
 
         axi4s_mux #(.N(2)) axi4s_mux_inst (
+            .srst,
             .axi4s_in  (mux_in[i]),
             .axi4s_out (mux_out[i])
         );
 
-        axi4s_full_pipe axis4s_full_pipe_inst (.from_tx(mux_out[i]), .to_rx(axi4s_out[i]));
+        axi4s_full_pipe axis4s_full_pipe_inst (.srst, .from_tx(mux_out[i]), .to_rx(axi4s_out[i]));
 
     end : g__port
     endgenerate

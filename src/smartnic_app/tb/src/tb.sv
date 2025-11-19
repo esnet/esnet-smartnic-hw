@@ -19,20 +19,20 @@ module tb;
 
     // Resets
     std_reset_intf reset_if (.clk(clk));
-    assign rstn = ~reset_if.reset;
+    assign srst = reset_if.reset;
     initial begin
        reset_if.ready = 1'b0;
        reset_if._wait(10); reset_if.ready = 1'b1;
     end
 
-    assign axil_if.aresetn = rstn;
+    assign axil_if.aresetn = !srst;
 
     // App AXI-L interface shares common AXI-L clock/reset
     assign app_axil_if.aclk    = axil_if.aclk;
     assign app_axil_if.aresetn = axil_if.aresetn;
 
     // Timestamp interface
-    timestamp_intf #() timestamp_if (.clk(clk), .srst(~rstn));
+    timestamp_intf #() timestamp_if (.clk, .srst);
     assign timestamp = timestamp_if.timestamp;
 
 

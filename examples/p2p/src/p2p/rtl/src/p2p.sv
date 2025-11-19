@@ -1,7 +1,7 @@
 module p2p #(
 ) (
     input logic           core_clk,
-    input logic           core_rstn,
+    input logic           core_srst,
 
     axi4l_intf.peripheral axil_if,
 
@@ -31,7 +31,7 @@ module p2p #(
        .rdy_in  ( ),
        .lvl_in  (p2p_regs.tpause),
        .clk_out (core_clk),
-       .rst_out (!core_rstn),
+       .rst_out (core_srst),
        .lvl_out (tpause)
    );
 

@@ -5,7 +5,7 @@ module smartnic_app_igr_p4
     parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
  ) (
     input  logic          core_clk,
-    input  logic          core_rstn,
+    input  logic          core_srst,
 
     input  timestamp_t    timestamp,
 
@@ -26,10 +26,13 @@ module smartnic_app_igr_p4
     axi4l_intf_peripheral_term axi4l_intf_peripheral_term__vitisnetp4 (.axi4l_if (axil_to_vitisnetp4));
     axi4l_intf_peripheral_term axi4l_intf_peripheral_term__extern     (.axi4l_if (axil_to_extern));
 
+    logic srst;
+    assign srst = core_srst;
+
     // Pass datapath AXI-S interface directly from input to output
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
-            axi4s_full_pipe axi4s_full_pipe_inst (.from_tx(axis_in[g_port]), .to_rx(axis_out[g_port]));
+            axi4s_full_pipe axi4s_full_pipe_inst (.srst, .from_tx(axis_in[g_port]), .to_rx(axis_out[g_port]));
         end : g__port
     endgenerate
 

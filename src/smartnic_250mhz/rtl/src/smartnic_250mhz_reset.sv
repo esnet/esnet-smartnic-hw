@@ -7,7 +7,7 @@ module smartnic_250mhz_reset (
     input  logic axil_aclk,
     output logic axil_aresetn,
 
-    output logic core_rstn,
+    output logic core_srst,
     output logic core_clk
 );
 
@@ -84,13 +84,11 @@ module smartnic_250mhz_reset (
     always @(posedge axil_aclk) axil_aresetn <= mod_rst_done;
 
     // Synchronize reset to core_clk domain
-    sync_reset #(
-        .OUTPUT_ACTIVE_LOW ( 1 )
-    ) i_sync_reset_core_clk (
+    sync_reset i_sync_reset_core_clk (
         .clk_in  ( axil_aclk ),
         .rst_in  ( axil_aresetn ),
         .clk_out ( core_clk ),
-        .rst_out ( core_rstn )
+        .rst_out ( core_srst )
     );
 
 endmodule: smartnic_250mhz_reset

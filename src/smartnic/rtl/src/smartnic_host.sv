@@ -4,7 +4,7 @@ module smartnic_host
     parameter int  HOST_NUM_IFS = 3
 ) (
     input logic        core_clk,
-    input logic        core_rstn,
+    input logic        core_srst,
 
     axi4s_intf.rx   axis_host_to_core [NUM_CMAC],
     axi4s_intf.tx   axis_core_to_host [NUM_CMAC],
@@ -30,11 +30,10 @@ module smartnic_host
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
+    logic srst;
     logic aclk;
-    logic aresetn;
 
     assign aclk = core_clk;
-    assign aresetn = core_rstn;
 
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_host_to_core_p [NUM_CMAC] (.*);
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID))  axis_q_range_fail   [NUM_CMAC] (.*);
@@ -58,6 +57,8 @@ module smartnic_host
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID),
                   .TDEST_WID(PORT_WID),   .TUSER_WID(TUSER_SMARTNIC_META_WID))  axis_pkt_capture (.*);
 
+    //------------------------ reset ----------------------------
+    assign srst = core_srst;
 
     //------------------------ tid assignment logic --------------
     logic host_if_sel [NUM_CMAC][HOST_NUM_IFS+1];
@@ -77,7 +78,7 @@ module smartnic_host
 
     logic  host_q_in_range [NUM_CMAC];
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_tid
-        axi4s_intf_pipe axi4s_host_to_core_pipe (.from_tx(axis_host_to_core[i]), .to_rx(axis_host_to_core_p[i]));
+        axi4s_intf_pipe axi4s_host_to_core_pipe (.srst, .from_tx(axis_host_to_core[i]), .to_rx(axis_host_to_core_p[i]));
         port_t axis_host_tid_tid;
         assign axis_host_tid_tid.encoded.num = (i == 1) ? P1 : P0;
         assign axis_host_tid_tid.encoded.typ = (host_if_sel[i][0] ? PF  :
@@ -97,7 +98,7 @@ module smartnic_host
         assign axis_q_range_fail[i].tuser   = axis_host_to_core_p[i].tuser;
         assign axis_q_range_fail[i].tid     = axis_host_to_core_p[i].tid;
 
-        axi4s_probe q_range_fail_probe (.axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
+        axi4s_probe q_range_fail_probe (.srst, .axi4l_if(axil_q_range_fail[i]), .axi4s_if(axis_q_range_fail[i]));
 
         // host port tid assignments
         assign axis_host_to_core_p[i].tready = axis_host_tid[i].tready;
@@ -110,7 +111,7 @@ module smartnic_host
         assign axis_host_tid[i].tuser   = axis_host_to_core_p[i].tuser;
         //     axis_host_tid[i].tid assigned above.
 
-        axi4s_intf_pipe axi4s_host_tid_pipe (.from_tx(axis_host_tid[i]), .to_rx(axis_host_tid_p[i]));
+        axi4s_intf_pipe axi4s_host_tid_pipe (.srst, .from_tx(axis_host_tid[i]), .to_rx(axis_host_tid_p[i]));
 
         //ila_axi4s ila_host_tid (
         //   .clk    (axis_host_tid_p[i].aclk),
@@ -133,6 +134,7 @@ module smartnic_host
 
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__host_mux_core  // core-side host mux logic
         port_t axis_host_to_core_mux_out_tid;
+        logic  axis_host_to_core_mux_out_sop;
 
         // host_to_core mux logic.
         axi4s_intf_connector host_to_core_mux_in_pipe_0
@@ -141,25 +143,35 @@ module smartnic_host
                              (.from_tx(axis_pkt_playback_demux[i]), .to_rx(axis_host_to_core_mux_in[i][1]));
 
         axi4s_mux #(.N(2)) host_to_core_mux_inst (
+            .srst,
             .axi4s_in   ( axis_host_to_core_mux_in[i] ),
             .axi4s_out  ( axis_host_to_core_mux_out[i] )
         );
         assign axis_host_to_core_mux_out_tid = axis_host_to_core_mux_out[i].tid;
 
         axi4s_intf_pipe axi4s_host_to_core_mux_out_pipe
-                        (.from_tx(axis_host_to_core_mux_out[i]), .to_rx(axis_host_to_core_mux_out_p[i]));
+                        (.srst, .from_tx(axis_host_to_core_mux_out[i]), .to_rx(axis_host_to_core_mux_out_p[i]));
 
+        packet_sop packet_sop_host_to_core_mux_out (
+            .clk (core_clk),
+            .srst,
+            .vld (axis_host_to_core_mux_out[i].tvalid),
+            .rdy (axis_host_to_core_mux_out[i].tready),
+            .eop (axis_host_to_core_mux_out[i].tlast),
+            .sop (axis_host_to_core_mux_out_sop)
+        );
 
         // host_to_core demux logic.
         always @(posedge core_clk)
-            if (!core_rstn)
+            if (srst)
                 host_to_core_demux_sel[i] <= 0;
-            else if (axis_host_to_core_mux_out[i].tready && axis_host_to_core_mux_out[i].tvalid && axis_host_to_core_mux_out[i].sop)
+            else if (axis_host_to_core_mux_out[i].tready && axis_host_to_core_mux_out[i].tvalid && axis_host_to_core_mux_out_sop)
                 host_to_core_demux_sel[i] <= axis_host_to_core_mux_out_tid.encoded.typ == PF  ||
                                              axis_host_to_core_mux_out_tid.encoded.typ == VF0 ||
                                              axis_host_to_core_mux_out_tid.encoded.typ == VF1;
 
         axi4s_intf_demux #(.N(2)) host_to_core_demux_inst (
+           .srst,
            .from_tx ( axis_host_to_core_mux_out_p[i] ),
            .to_rx   ( axis_host_to_core_demux[i] ),
            .sel     ( host_to_core_demux_sel[i] )
@@ -168,13 +180,14 @@ module smartnic_host
 
         // core_to_host mux logic.
         axi4s_mux #(.N(2)) core_to_host_mux_inst (
+            .srst,
             .axi4s_in   ( axis_core_to_host_mux[i] ),
             .axi4s_out  ( axis_hash2qid[i] )
         );
 
         smartnic_hash2qid smartnic_hash2qid_inst (
-            .core_clk       (core_clk),
-            .core_rstn      (core_rstn),
+            .core_clk,
+            .core_srst,
             .axi4s_in       (axis_hash2qid[i]),
             .axi4s_out      (axis_core_to_host_demux_in[i]),
             .axil_if        (axil_to_hash2qid[i])
@@ -183,6 +196,7 @@ module smartnic_host
 
         // core_to_host demux logic.
         axi4s_intf_demux #(.N(2)) core_to_host_demux_inst (
+           .srst,
            .from_tx ( axis_core_to_host_demux_in[i] ),
            .to_rx   ( axis_core_to_host_demux_out[i] ),
            .sel     ( pkt_capture_enable[i] )
@@ -203,7 +217,7 @@ module smartnic_host
 
     axi4s_packet_playback axi4s_packet_playback_inst (
        .clk     ( core_clk ),
-       .srst    (~core_rstn ),
+       .srst,
        .en      ( ),
        .axil_if ( axil_to_pkt_playback ),
        .axis_if ( axis_pkt_playback )
@@ -211,6 +225,7 @@ module smartnic_host
     assign axis_pkt_playback_tid = axis_pkt_playback.tid;
 
     axi4s_intf_demux #(.N(NUM_CMAC)) pkt_playback_demux_inst (
+       .srst,
        .from_tx ( axis_pkt_playback ),
        .to_rx   ( axis_pkt_playback_demux ),
        .sel     ( get_port_idx(axis_pkt_playback_tid) )
@@ -218,13 +233,14 @@ module smartnic_host
 
 
     axi4s_mux #(.N(NUM_CMAC)) pkt_capture_mux_inst (
+        .srst,
         .axi4s_in   ( axis_pkt_capture_mux ),
         .axi4s_out  ( axis_pkt_capture )
     );
 
     axi4s_packet_capture axi4s_packet_capture_inst (
        .clk     ( core_clk ),
-       .srst    (~core_rstn ),
+       .srst,
        .en      ( ),
        .axil_if ( axil_to_pkt_capture ),
        .axis_if ( axis_pkt_capture )

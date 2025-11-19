@@ -21,7 +21,7 @@ package xilinx_hbm_pkg;
     typedef logic [AXI_ID_WID-1:0] axi_id_t;
 
     // Functions
-    function automatic int get_size(input density_t DENSITY);
+    function automatic longint get_size(input density_t DENSITY);
         case (DENSITY)
             DENSITY_4G : return 4*1024**3;
             DENSITY_8G : return 8*1024**3;
@@ -35,6 +35,16 @@ package xilinx_hbm_pkg;
             DENSITY_8G : return 33;
             default    : return 32;
         endcase
+    endfunction
+
+    // Per-pseudochannel capacity
+    function automatic longint get_ps_capacity(input density_t DENSITY);
+        return get_size(DENSITY)/PSEUDO_CHANNELS_PER_STACK;
+    endfunction
+
+    // Per-pseudochannel address width
+    function automatic int get_ps_addr_wid(input density_t DENSITY);
+        return $clog2(get_ps_capacity(DENSITY));
     endfunction
 
 endpackage : xilinx_hbm_pkg

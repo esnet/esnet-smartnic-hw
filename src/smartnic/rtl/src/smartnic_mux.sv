@@ -2,8 +2,8 @@ module smartnic_mux
 #(
     parameter int  NUM_CMAC = 2
 ) (
-    input logic        core_clk,
-    input logic        core_rstn,
+    input logic     core_clk,
+    input logic     core_srst,
 
     axi4s_intf.rx   axis_cmac_to_core   [NUM_CMAC],
     axi4s_intf.rx   axis_host_to_core   [NUM_CMAC],
@@ -18,41 +18,64 @@ module smartnic_mux
     // ----------------------------------------------------------------
     //  axi4s interface instantiations
     // ----------------------------------------------------------------
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))        axis_cmac_to_core_p [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))        axis_host_to_core_p [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))        axis_cmac_to_core_p [NUM_CMAC]    (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))        axis_host_to_core_p [NUM_CMAC]    (.aclk(core_clk));
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_cmac_to_core_p [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_host_to_core_p [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_mux_in           [NUM_CMAC][2] (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_mux_out          [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_demux_out        [NUM_CMAC][2] (.aclk(core_clk), .aresetn(core_rstn));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_cmac_to_core_p [NUM_CMAC]    (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_host_to_core_p [NUM_CMAC]    (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_mux_in           [NUM_CMAC][2] (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_mux_out          [NUM_CMAC]    (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  igr_demux_out        [NUM_CMAC][2] (.aclk(core_clk));
 
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_app    [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_bypass [NUM_CMAC]    (.aclk(core_clk), .aresetn(core_rstn));
-
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_app    [NUM_CMAC]    (.aclk(core_clk));
+    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(IGR_TDEST_WID))  _axis_core_to_bypass [NUM_CMAC]    (.aclk(core_clk));
 
     igr_tdest_t smartnic_mux_out_sel [2*NUM_CMAC];
 
+    logic srst;
     logic  igr_demux_sel  [NUM_CMAC];
 
+    // Reset
+    assign srst = core_srst;
 
     // ingress mux/demux logic.
     generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__mux_demux
-        axi4s_intf_pipe cmac_to_core_pipe (.from_tx(axis_cmac_to_core[i]), .to_rx(axis_cmac_to_core_p[i]));
-        axi4s_intf_pipe host_to_core_pipe (.from_tx(axis_host_to_core[i]), .to_rx(axis_host_to_core_p[i]));
+        axi4s_intf_pipe cmac_to_core_pipe (.srst, .from_tx(axis_cmac_to_core[i]), .to_rx(axis_cmac_to_core_p[i]));
+        axi4s_intf_pipe host_to_core_pipe (.srst, .from_tx(axis_host_to_core[i]), .to_rx(axis_host_to_core_p[i]));
+
+        logic axis_cmac_to_core_sop;
+        logic axis_host_to_core_sop;
 
         igr_tdest_t igr_mux_out_tdest;
 
+        packet_sop packet_sop_cmac_to_core (
+            .clk (core_clk),
+            .srst,
+            .vld (axis_cmac_to_core[i].tvalid),
+            .rdy (axis_cmac_to_core[i].tready),
+            .eop (axis_cmac_to_core[i].tlast),
+            .sop (axis_cmac_to_core_sop)
+        );
+
+        packet_sop packet_sop_host_to_core (
+            .clk (core_clk),
+            .srst,
+            .vld (axis_host_to_core[i].tvalid),
+            .rdy (axis_host_to_core[i].tready),
+            .eop (axis_host_to_core[i].tlast),
+            .sop (axis_host_to_core_sop)
+        );
+
         // ingress tdest configuration logic.
         always @(posedge core_clk) begin
-            if (!core_rstn) begin
+            if (srst) begin
                 smartnic_mux_out_sel[i]   <= DROP;
                 smartnic_mux_out_sel[2+i] <= DROP;
             end else begin
-                if (axis_cmac_to_core[i].sop)
+                if (axis_cmac_to_core_sop)
                     smartnic_mux_out_sel[i] <= mux_out_sel[i].value;
 
-                if (axis_host_to_core[i].sop)
+                if (axis_host_to_core_sop)
                     smartnic_mux_out_sel[2+i] <= mux_out_sel[2+i].value;
             end
         end
@@ -81,6 +104,7 @@ module smartnic_mux
         axi4s_intf_connector axi4s_igr_mux_in_pipe_1 (.from_tx(_axis_host_to_core_p[i]), .to_rx(igr_mux_in[i][1]));
 
         axi4s_mux #(.N(2)) axi4s_igr_mux (
+            .srst,
             .axi4s_in  (igr_mux_in[i]),
             .axi4s_out (igr_mux_out[i])
         ); 
@@ -90,6 +114,7 @@ module smartnic_mux
         assign igr_demux_sel[i] = (igr_mux_out_tdest.encoded == BYPASS) || (igr_mux_out_tdest.encoded == DROP);
 
         axi4s_intf_demux #(.N(2)) axi4s_igr_demux (
+            .srst,
             .from_tx (igr_mux_out[i]),
             .to_rx   (igr_demux_out[i]),
             .sel     (igr_demux_sel[i])

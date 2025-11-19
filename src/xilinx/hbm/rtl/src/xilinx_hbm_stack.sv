@@ -27,6 +27,7 @@ module xilinx_hbm_stack
     localparam int ADDR_WID = get_addr_wid(DENSITY);
 
     // Signals
+    logic       apb_complete;
     logic       dram_status_cattrip;
     logic [6:0] dram_status_temp;
 
@@ -34,8 +35,6 @@ module xilinx_hbm_stack
     // Interfaces
     // -------------------------------------------
     apb_intf   apb_if ();
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_WID(AXI_ID_WID)) __axi_if [PSEUDO_CHANNELS_PER_STACK] (.aclk(clk), .aresetn(!srst));
-    axi3_intf #(.DATA_BYTE_WID(AXI_DATA_BYTE_WID), .ADDR_WID(ADDR_WID), .ID_WID(AXI_ID_WID)) axi_if__ctrl (.aclk(clk), .aresetn(!srst));
 
     // -------------------------------------------
     // Instantiations
@@ -45,21 +44,8 @@ module xilinx_hbm_stack
         .DENSITY ( DENSITY )  
     ) i_xilinx_hbm_stack_ctrl (
         .apb_clk ( clk_100mhz ),
-        .control_proxy_axi_if  ( axi_if__ctrl ),
         .*
     );
-
-    // Connect AXI-3 interfaces
-    generate
-        for (genvar g_ch = 0; g_ch < PSEUDO_CHANNELS_PER_STACK-1; g_ch++) begin : g__ps
-            // Connect external AXI-3 interface directly
-            axi3_intf_connector i_axi3_connector (.from_controller(axi_if[g_ch]), .to_peripheral(__axi_if[g_ch]));
-        end : g__ps
-    endgenerate
-    // On channel N-1, isolate and tie off external interface
-    axi3_intf_peripheral_term i_axi3_peripheral_term__ctrl (.from_controller (axi_if[PSEUDO_CHANNELS_PER_STACK-1]));
-    // .. and drive memory accesses from register proxy
-    axi3_intf_connector i_axi3_connector__ctrl (.from_controller(axi_if__ctrl), .to_peripheral(__axi_if[PSEUDO_CHANNELS_PER_STACK-1]));
 
     // Xilinx HBM IP (single stack) ports
     // -----------------------------------------
@@ -629,7 +615,6 @@ module xilinx_hbm_stack
     xilinx_hbm_stack_if #(
         .DENSITY ( DENSITY )
     ) i_xilinx_hbm_stack_if (
-        .axi_if ( __axi_if ),
         .*
     );
  

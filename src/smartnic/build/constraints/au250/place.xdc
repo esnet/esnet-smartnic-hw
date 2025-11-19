@@ -26,22 +26,57 @@ resize_pblock       pblock_smartnic_appcore -add {SLR3}
 
 # Smartnic platform-to-app interfaces
 create_pblock       pblock_smartnic_platform_to_app_if
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_master*"]
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_p4*slr_master*"]
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_source*"]
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__h2c_demux_out*slr_source*"]
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_dest*"]
-add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__c2h_mux_out*slr_dest*"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_app*g__fwd*tx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_app*g__rev*rx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_p4*g__fwd*tx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_p4*g__rev*rx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__core_to_app*tx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__h2c_demux_out*tx"]
+add_cells_to_pblock pblock_smartnic_platform_to_app_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__c2h_mux_out*rx"]
 resize_pblock       pblock_smartnic_platform_to_app_if -add {CLOCKREGION_X3Y11:CLOCKREGION_X6Y11}
 set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_platform_to_app_if]
 
 # Smartnic app-to-platform interfaces
 create_pblock       pblock_smartnic_app_to_platform_if
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_app*slr_slave*"]
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_reg_slice__core_to_p4*slr_slave*"]
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__app_to_core*slr_source*"]
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__c2h_mux_out*slr_source*"]
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__core_to_app*slr_dest*"]
-add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_reg_slice__h2c_demux_out*slr_dest*"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_app*g__fwd*rx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_app*g__rev*tx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_p4*g__fwd*rx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__core_to_p4*g__rev*tx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__core_to_app*rx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__h2c_demux_out*rx"]
+add_cells_to_pblock pblock_smartnic_app_to_platform_if [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__c2h_mux_out*tx"]
 resize_pblock       pblock_smartnic_app_to_platform_if -add {CLOCKREGION_X3Y12:CLOCKREGION_X6Y12}
 set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_app_to_platform_if]
+
+# Smartnic SLR2-to-SLR1-to-SLR0 pipelining
+create_pblock        pblock_slr_3_to_2
+add_cells_to_pblock  pblock_slr_3_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__app_to_qs_0*tx"]
+resize_pblock        pblock_slr_3_to_2 -add {CLOCKREGION_X0Y12:CLOCKREGION_X3Y13}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_3_to_2]
+
+create_pblock        pblock_slr_2_to_3
+add_cells_to_pblock  pblock_slr_2_to_3 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__app_to_qs_0*rx"]
+resize_pblock        pblock_slr_2_to_3 -add {CLOCKREGION_X0Y10:CLOCKREGION_X1Y11}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_2_to_3]
+
+create_pblock        pblock_slr_2_to_1
+add_cells_to_pblock  pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__to_qs_1*g__fwd*tx"]
+add_cells_to_pblock  pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__to_qs_1*g__rev*rx"]
+add_cells_to_pblock  pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__app_to_qs_1*tx"]
+add_cells_to_pblock  pblock_slr_2_to_1 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__qs_to_phy_0*rx"]
+resize_pblock        pblock_slr_2_to_1 -add {CLOCKREGION_X0Y8:CLOCKREGION_X1Y9}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_2_to_1]
+
+create_pblock        pblock_slr_1_to_2
+add_cells_to_pblock  pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__to_qs_1*g__fwd*rx"]
+add_cells_to_pblock  pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4l_pipe_slr__to_qs_1*g__rev*tx"]
+add_cells_to_pblock  pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__app_to_qs_1*rx"]
+add_cells_to_pblock  pblock_slr_1_to_2 [get_cells -hierarchical -filter "NAME=~*axi4s_pipe_slr__qs_to_phy_0*tx"]
+resize_pblock        pblock_slr_1_to_2 -add {CLOCKREGION_X0Y6:CLOCKREGION_X1Y7}
+set_property IS_SOFT FALSE [get_pblocks pblock_slr_1_to_2]
+
+# Smartnic egress qs
+create_pblock       pblock_smartnic_egress_qs
+add_cells_to_pblock pblock_smartnic_egress_qs [get_cells -hierarchical -filter "NAME=~*smartnic_egress_qs_0"]
+resize_pblock       pblock_smartnic_egress_qs -add {SLR1}
+set_property IS_SOFT FALSE [get_pblocks pblock_smartnic_egress_qs]

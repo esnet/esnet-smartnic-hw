@@ -2,8 +2,14 @@ package smartnic_pkg;
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
-    // Timestamp
+    localparam int PHY_NUM_PORTS = 2;
+    localparam int PHY_DATA_BYTE_WID = 64;
+
     localparam int TIMESTAMP_WID = 64;
+
+    localparam int MAX_PKT_LEN = 9200;
+
+    localparam int NUM_EGR_QS = 128;
 
 
     // --------------------------------------------------------------
@@ -74,6 +80,9 @@ package smartnic_pkg;
         logic [11:0] rss_entropy;
     } tuser_smartnic_meta_t;
 
+    // typedef logic [EGR_Q_WID-1:0] egr_q_t;
+    typedef tuser_smartnic_meta_t egr_q_t; // TEMP: for now, pass entropy through egress qs (required for VF2 extraction)
+
     // --------------------------------------------------------------
     // Derived parameters
     // --------------------------------------------------------------
@@ -81,5 +90,7 @@ package smartnic_pkg;
     localparam int TUSER_SMARTNIC_META_WID = $bits(tuser_smartnic_meta_t);
     localparam int IGR_TDEST_WID           = $bits(igr_tdest_t);
     localparam int ADPT_TX_TID_WID         = $bits(adpt_tx_tid_t);
+    // localparam int EGR_Q_WID               = $clog2(NUM_EGR_QS); 
+    localparam int EGR_Q_WID              = TUSER_SMARTNIC_META_WID; // TEMP: for now, pass entropy through egress qs (required for VF2 extraction)
 
 endpackage : smartnic_pkg

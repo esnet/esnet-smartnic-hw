@@ -31,7 +31,7 @@ module proxy_test_packet_fifo_unit_test;
     //===================================
     // Parameters
     //===================================
-    localparam int DATA_BYTE_WID = 64;
+    localparam int DATA_BYTE_WID = 32;
     localparam int DATA_WID = DATA_BYTE_WID*8;
     localparam int PACKET_MEM_SIZE = 16384;
 

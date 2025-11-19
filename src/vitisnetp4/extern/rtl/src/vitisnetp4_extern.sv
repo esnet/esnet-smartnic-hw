@@ -6,7 +6,7 @@ module `VITISNETP4_EXTERN_NAME
     parameter type EXTERN_IN_T = logic[3:0]
 ) (
     input   logic clk,
-    input   logic rstn,
+    input   logic srst,
 
     input   EXTERN_OUT_T   extern_from_vitisnetp4,
     input   EXTERN_VALID_T extern_from_vitisnetp4_valid,

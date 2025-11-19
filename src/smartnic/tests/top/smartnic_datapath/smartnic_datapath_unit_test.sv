@@ -62,6 +62,8 @@ module smartnic_datapath_unit_test;
         // start environment
         env.run();
 
+        env.disable_egress_qs();
+
         // configure all ingress ports for BYPASS mode.
         bypass_mode(0); bypass_mode(1); bypass_mode(2); bypass_mode(3);
 
@@ -425,6 +427,8 @@ module smartnic_datapath_unit_test;
                 #500ns;  // 500ns > (3ns/cycle * 5 pkts * 1518/64 cycles/pkt)
             end
 
+            #500ns;
+
             // check scoreboards.
             check_phy0(.pkts(exp_pkts[PHY0])); check_phy1(.pkts(exp_pkts[PHY1]));
             check_pf0 (.pkts(exp_pkts[PF0]));  check_pf1 (.pkts(exp_pkts[PF1]));
@@ -450,7 +454,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PHY0));
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PHY1));
 
-            #1us;
+            #2us;
 
             // check counters and scoreboards.
             latch_probe_counters;
@@ -493,7 +497,7 @@ module smartnic_datapath_unit_test;
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[0]), .tid(PF0), .tdest(PF0));
             packet_stream(.pkts(pkts), .mode(0), .bytes(bytes[1]), .tid(PF1), .tdest(PF1));
 
-            #1us;
+            #2us;
 
             // check counters and scoreboards.
             latch_probe_counters;
@@ -768,7 +772,7 @@ module smartnic_datapath_unit_test;
             // send packets to PF0_VF2 and check scoreboards.
             app_mode(0); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[0]), .tid(PHY0), .tdest(PF0_VF2));
-            #1us;
+            #2us;
             check_phy0();  check_phy1(); check_pf0(.pkts(10)); check_pf1();
         `SVTEST_END
 
@@ -789,7 +793,7 @@ module smartnic_datapath_unit_test;
 
             app_mode(1); env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
             packet_stream(.pkts(10), .mode(0), .bytes(bytes[1]), .tid(PHY1), .tdest(PF1_VF2));
-            #1us;
+            #2us;
             check_phy0();  check_phy1(); check_pf0(); check_pf1(.pkts(10));
         `SVTEST_END
 

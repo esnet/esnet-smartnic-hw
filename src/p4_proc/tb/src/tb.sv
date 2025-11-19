@@ -13,7 +13,7 @@ module tb;
     //===================================
     // Signals
     logic        clk;
-    logic        rstn;
+    logic        srst;
 
     logic [63:0] timestamp;
 
@@ -22,13 +22,13 @@ module tb;
     axi4l_intf axil_to_extern ();
 
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if  [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_in_if  [NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if [NUM_PROC_PORTS] (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_out_if [NUM_PROC_PORTS] (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_extern (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_extern (.aclk(clk));
     axi4s_intf #(.TUSER_WID(TUSER_SMARTNIC_META_WID),
-                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_extern (.aclk(clk), .aresetn(rstn));
+                 .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_extern (.aclk(clk));
 
     user_metadata_t user_metadata_in;
     logic           user_metadata_in_valid;
@@ -38,7 +38,7 @@ module tb;
     // DUT instance - 'smartnic_app_igr_p4' instantiates the 'p4_proc' and 'vitisnetp4_wrapper' complex.
     smartnic_app_igr_p4 #(.NUM_PORTS(NUM_PROC_PORTS)) DUT (
         .core_clk                ( clk ),
-        .core_rstn               ( rstn ),
+        .core_srst               ( srst ),
         .timestamp               ( timestamp ),
         .axil_to_p4_proc         ( axil_if ),
         .axil_to_vitisnetp4      ( axil_to_vitisnetp4 ),
@@ -71,15 +71,15 @@ module tb;
        reset_if._wait(10); reset_if.ready = 1'b1;
     end
 
-    assign rstn = ~reset_if.reset;
-    assign axil_if.aresetn = rstn;
+    assign srst = reset_if.reset;
+    assign axil_if.aresetn = !srst;
 
     // SDNet AXI-L interface shares common AXI-L clock/reset
     assign axil_to_vitisnetp4.aclk = axil_if.aclk;
     assign axil_to_vitisnetp4.aresetn = axil_if.aresetn;
 
     // Timestamp
-    timestamp_intf #() timestamp_if (.clk(clk), .srst(~rstn));
+    timestamp_intf #() timestamp_if (.clk, .srst);
     assign timestamp = timestamp_if.timestamp;
 
     //===================================

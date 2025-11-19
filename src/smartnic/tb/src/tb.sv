@@ -7,9 +7,9 @@ module tb;
     //===================================
     `include "../include/DUT.svh"
 
-    axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID), .TUSER_WID(1))  axis_in_if  [4] (.aclk(axis_clk), .aresetn(axis_aresetn));
+    axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID), .TUSER_WID(1))  axis_in_if  [4] (.aclk(axis_clk));
     axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID),
-                 .TUSER_WID(TUSER_SMARTNIC_META_WID))                                                 axis_out_if [4] (.aclk(axis_clk), .aresetn(axis_aresetn));
+                 .TUSER_WID(TUSER_SMARTNIC_META_WID))                                                 axis_out_if [4] (.aclk(axis_clk));
 
     generate for (genvar i = 0; i < 2; i += 1) begin : g__port
         port_t axis_in_if_tdest_cmac_igr;
@@ -89,7 +89,6 @@ module tb;
     assign reset_if.ready = mod_rst_done;
 
     assign axil_if.aresetn = ~reset_if.reset;
-    assign axis_aresetn = ~reset_if.reset;
 
 
     // output monitors
