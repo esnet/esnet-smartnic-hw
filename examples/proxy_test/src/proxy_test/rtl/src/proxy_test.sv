@@ -311,6 +311,8 @@ module proxy_test
     mem_wr_intf #(.ADDR_WID(PACKET_Q_BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_q_desc_mem_wr_if (.clk);
     mem_rd_intf #(.ADDR_WID(PACKET_Q_BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_q_desc_mem_rd_if (.clk);
 
+    axi4l_intf axil_if__packet_q ();
+
     packet_playback i_packet_playback (
         .clk,
         .srst,
@@ -338,8 +340,11 @@ module proxy_test
         .packet_out_if  ( packet_if__capture ),
         .desc_mem_rd_if ( packet_q_desc_mem_rd_if ),
         .mem_rd_if      ( packet_q_mem_rd_if ),
-        .mem_init_done  ( 1'b1 )
+        .mem_init_done  ( 1'b1 ),
+        .axil_if        ( axil_if__packet_q )
     );
+
+    axi4l_intf_controller_term i_axi4l_intf_controller_term__packet_q (.axi4l_if(axil_if__packet_q));
 
     packet_capture i_packet_capture (
         .clk,
