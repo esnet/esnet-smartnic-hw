@@ -4,6 +4,8 @@ visible: true
 blocks:
   smartnic_qs: &smartnic_qs
     !include ../src/smartnic/regio/smartnic_qs.yaml
+  alloc: &alloc
+    !include src/alloc/regio/alloc.yaml
 decoders:
   hbm_stack: &hbm_stack
     !include ../src/xilinx/hbm/regio/xilinx_hbm_decoder.yaml 
@@ -14,8 +16,13 @@ interfaces:
     width: 12
     name: control
 
-  - decoder: *hbm_stack
+  - block: *alloc
     address: 0x1000
+    width: 12
+    name: alloc
+
+  - decoder: *hbm_stack
+    address: 0x2000
     width: 13
     name: hbm
 
