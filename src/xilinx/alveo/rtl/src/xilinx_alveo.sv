@@ -49,6 +49,9 @@ module xilinx_alveo
 
     logic jtag_reset;
 
+    logic axis_qdma_aclk;
+    logic axis_qdma_aresetn;
+
     // =========================================================================
     // Interfaces
     // =========================================================================
@@ -62,10 +65,25 @@ module xilinx_alveo
     // Host
     // =========================================================================
     // (Local) interfaces
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_T(xilinx_qdma_pkg::axis_tid_t), .TDEST_T(xilinx_qdma_pkg::axis_tdest_t), .TUSER_T(xilinx_qdma_pkg::axis_tuser_t)) __axis_h2c ();
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_T(xilinx_qdma_pkg::axis_tid_t), .TDEST_T(xilinx_qdma_pkg::axis_tdest_t), .TUSER_T(xilinx_qdma_pkg::axis_tuser_t)) __axis_h2c__async ();
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_T(xilinx_qdma_pkg::axis_tid_t), .TDEST_T(xilinx_qdma_pkg::axis_tdest_t), .TUSER_T(xilinx_qdma_pkg::axis_tuser_t)) __axis_c2h__async ();
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_T(xilinx_qdma_pkg::axis_tid_t), .TDEST_T(xilinx_qdma_pkg::axis_tdest_t), .TUSER_T(xilinx_qdma_pkg::axis_tuser_t)) __axis_c2h ();
+    axi4s_intf #(
+        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
+        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
+    ) __axis_h2c (.aclk(axis_qdma_aclk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
+        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
+    ) __axis_h2c__core_clk (.aclk(core_clk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
+        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
+    ) __axis_c2h__core_clk (.aclk(core_clk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
+        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
+    ) __axis_c2h (.aclk(axis_qdma_aclk));
 
     // (Local) signals
     xilinx_qdma_pkg::axis_tid_t   __axis_h2c_tid;
@@ -99,6 +117,8 @@ module xilinx_alveo
         .clk_250mhz,
         .axil_if       ( axil_top ),
         .axil_qdma,
+        .axis_aclk     ( axis_qdma_aclk ),
+        .axis_aresetn  ( axis_qdma_aresetn ),
         .axis_h2c      ( __axis_h2c ),
         .axis_c2h      ( __axis_c2h )
     );
@@ -107,65 +127,61 @@ module xilinx_alveo
     axi4s_fifo_async #(
         .DEPTH        ( 32 )
     ) i_axi4s_fifo_async__h2c (
-        .axi4s_in     ( __axis_h2c ),
-        .axi4s_out    ( __axis_h2c__async )
+        .from_tx      ( __axis_h2c ),
+        .from_tx_srst ( !axis_qdma_aresetn ),
+        .to_rx        ( __axis_h2c__core_clk ),
+        .to_rx_srst   ( core_srst )
     );
 
     axi4s_fifo_async #(
         .DEPTH        ( 32 )
     ) i_axi4s_fifo_async__c2h (
-        .axi4s_in     ( __axis_c2h__async ),
-        .axi4s_out    ( __axis_c2h )
+        .from_tx      ( __axis_c2h__core_clk ),
+        .from_tx_srst ( core_srst ),
+        .to_rx        ( __axis_c2h ),
+        .to_rx_srst   ( !axis_qdma_aresetn )
     );
 
     // Map between Alveo interfaces and QDMA interfaces
     // -- H2C
-    assign __axis_h2c__async.aclk = core_clk;
-    assign __axis_h2c__async.aresetn = !core_srst;
+    assign axis_h2c.tvalid  = __axis_h2c__core_clk.tvalid;
+    assign axis_h2c.tlast   = __axis_h2c__core_clk.tlast;
+    assign axis_h2c.tkeep   = __axis_h2c__core_clk.tkeep;
+    assign axis_h2c.tdata   = __axis_h2c__core_clk.tdata;
 
-    assign axis_h2c.aclk    = __axis_h2c__async.aclk;
-    assign axis_h2c.aresetn = __axis_h2c__async.aresetn;
-    assign axis_h2c.tvalid  = __axis_h2c__async.tvalid;
-    assign axis_h2c.tlast   = __axis_h2c__async.tlast;
-    assign axis_h2c.tkeep   = __axis_h2c__async.tkeep;
-    assign axis_h2c.tdata   = __axis_h2c__async.tdata;
-
-    assign __axis_h2c_tid   = __axis_h2c__async.tid;
+    assign __axis_h2c_tid   = __axis_h2c__core_clk.tid;
     assign axis_h2c_tid.qid = __axis_h2c_tid.qid;
     assign axis_h2c.tid     = axis_h2c_tid;
 
-    assign __axis_h2c_tdest      = __axis_h2c__async.tdest;
+    assign __axis_h2c_tdest      = __axis_h2c__core_clk.tdest;
     assign axis_h2c_tdest.unused = '0;
     assign axis_h2c.tdest        = axis_h2c_tdest;
 
-    assign __axis_h2c_tuser   = __axis_h2c__async.tuser;
+    assign __axis_h2c_tuser   = __axis_h2c__core_clk.tuser;
     assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
     assign axis_h2c.tuser     = axis_h2c_tuser;
 
-    assign __axis_h2c__async.tready = axis_h2c.tready;
+    assign __axis_h2c__core_clk.tready = axis_h2c.tready;
 
     // -- C2H
-    assign __axis_c2h__async.aclk = core_clk;
-    assign __axis_c2h__async.aresetn = !core_srst;
+    assign __axis_c2h__core_clk.tvalid = axis_c2h.tvalid;
+    assign __axis_c2h__core_clk.tlast  = axis_c2h.tlast;
+    assign __axis_c2h__core_clk.tkeep  = axis_c2h.tkeep;
+    assign __axis_c2h__core_clk.tdata  = axis_c2h.tdata;
 
-    assign __axis_c2h__async.tvalid = axis_c2h.tvalid;
-    assign __axis_c2h__async.tlast  = axis_c2h.tlast;
-    assign __axis_c2h__async.tkeep  = axis_c2h.tkeep;
-    assign __axis_c2h__async.tdata  = axis_c2h.tdata;
+    assign axis_c2h_tid             = axis_c2h.tid;
+    assign __axis_c2h_tid.qid       = axis_c2h_tid.qid;
+    assign __axis_c2h__core_clk.tid = __axis_c2h_tid;
 
-    assign axis_c2h_tid          = axis_c2h.tid;
-    assign __axis_c2h_tid.qid    = axis_c2h_tid.qid;
-    assign __axis_c2h__async.tid = __axis_c2h_tid;
+    assign axis_c2h_tdest             = axis_c2h.tdest;
+    assign __axis_c2h_tdest.unused    = 1'b0;
+    assign __axis_c2h__core_clk.tdest = __axis_c2h_tdest;
 
-    assign axis_c2h_tdest          = axis_c2h.tdest;
-    assign __axis_c2h_tdest.unused = 1'b0;
-    assign __axis_c2h__async.tdest = __axis_c2h_tdest;
+    assign axis_c2h_tuser             = axis_c2h.tuser;
+    assign __axis_c2h_tuser.err       = axis_c2h_tuser.err;
+    assign __axis_c2h__core_clk.tuser = __axis_c2h_tuser;
 
-    assign axis_c2h_tuser          = axis_c2h.tuser;
-    assign __axis_c2h_tuser.err    = axis_c2h_tuser.err;
-    assign __axis_c2h__async.tuser = __axis_c2h_tuser;
-
-    assign axis_c2h.tready = __axis_c2h__async.tready;
+    assign axis_c2h.tready = __axis_c2h__core_clk.tready;
 
     // =========================================================================
     // Clock/reset generators
@@ -270,11 +286,29 @@ module xilinx_alveo
     // =========================================================================
     generate
         for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
+            // (Local) signals
+            logic cmac_clk;
+
             // (Local) interfaces
-            axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_T(xilinx_cmac_pkg::axis_tid_t), .TDEST_T(xilinx_cmac_pkg::axis_tdest_t), .TUSER_T(xilinx_cmac_pkg::axis_tuser_t)) __axis_cmac_rx ();
-            axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_T(xilinx_cmac_pkg::axis_tid_t), .TDEST_T(xilinx_cmac_pkg::axis_tdest_t), .TUSER_T(xilinx_cmac_pkg::axis_tuser_t)) __axis_cmac_rx__async ();
-            axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_T(xilinx_cmac_pkg::axis_tid_t), .TDEST_T(xilinx_cmac_pkg::axis_tdest_t), .TUSER_T(xilinx_cmac_pkg::axis_tuser_t)) __axis_cmac_tx__async ();
-            axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_T(xilinx_cmac_pkg::axis_tid_t), .TDEST_T(xilinx_cmac_pkg::axis_tdest_t), .TUSER_T(xilinx_cmac_pkg::axis_tuser_t)) __axis_cmac_tx ();
+            axi4s_intf #(
+                .DATA_BYTE_WID(CMAC_DATA_BYTE_WID),              .TID_WID  (xilinx_cmac_pkg::AXIS_TID_WID),
+                .TDEST_WID    (xilinx_cmac_pkg::AXIS_TDEST_WID), .TUSER_WID(xilinx_cmac_pkg::AXIS_TUSER_WID)
+            ) __axis_cmac_rx (.aclk(cmac_clk));
+
+            axi4s_intf #(
+                .DATA_BYTE_WID(CMAC_DATA_BYTE_WID),              .TID_WID  (xilinx_cmac_pkg::AXIS_TID_WID),
+                .TDEST_WID    (xilinx_cmac_pkg::AXIS_TDEST_WID), .TUSER_WID(xilinx_cmac_pkg::AXIS_TUSER_WID)
+            ) __axis_cmac_rx__core_clk (.aclk(core_clk));
+
+            axi4s_intf #(
+                .DATA_BYTE_WID(CMAC_DATA_BYTE_WID),              .TID_WID  (xilinx_cmac_pkg::AXIS_TID_WID),
+                .TDEST_WID    (xilinx_cmac_pkg::AXIS_TDEST_WID), .TUSER_WID(xilinx_cmac_pkg::AXIS_TUSER_WID)
+            ) __axis_cmac_tx__core_clk (.aclk(core_clk));
+
+            axi4s_intf #(
+                .DATA_BYTE_WID(CMAC_DATA_BYTE_WID),              .TID_WID  (xilinx_cmac_pkg::AXIS_TID_WID),
+                .TDEST_WID    (xilinx_cmac_pkg::AXIS_TDEST_WID), .TUSER_WID(xilinx_cmac_pkg::AXIS_TUSER_WID)
+            ) __axis_cmac_tx (.aclk(cmac_clk));
 
             // (Local) signals
             xilinx_cmac_pkg::axis_tid_t   __axis_cmac_rx_tid;
@@ -307,6 +341,7 @@ module xilinx_alveo
                 .qsfp_txn      ( alveo_hw_if.qsfp_txn     [g_cmac] ),
                 .axis_rx       ( __axis_cmac_rx ),
                 .axis_tx       ( __axis_cmac_tx ),
+                .cmac_clk      ( cmac_clk ),
                 .axil_if       ( axil_cmac    [g_cmac] )
             );
 
@@ -314,65 +349,61 @@ module xilinx_alveo
             axi4s_fifo_async #(
                 .DEPTH        ( 32 )
             ) i_axi4s_fifo_async__cmac_rx (
-                .axi4s_in     ( __axis_cmac_rx ),
-                .axi4s_out    ( __axis_cmac_rx__async )
+                .from_tx      ( __axis_cmac_rx ),
+                .from_tx_srst ( 1'b0 ),
+                .to_rx        ( __axis_cmac_rx__core_clk ),
+                .to_rx_srst   ( core_srst )
             );
 
             axi4s_fifo_async #(
                 .DEPTH        ( 32 )
             ) i_axi4s_fifo_async__cmac_tx (
-                .axi4s_in     ( __axis_cmac_tx__async ),
-                .axi4s_out    ( __axis_cmac_tx )
+                .from_tx      ( __axis_cmac_tx__core_clk ),
+                .from_tx_srst ( core_srst ),
+                .to_rx        ( __axis_cmac_tx ),
+                .to_rx_srst   ( 1'b0 )
             );
 
             // Map between Alveo interfaces and QDMA interfaces
             // -- CMAC Rx
-            assign __axis_cmac_rx__async.aclk = core_clk;
-            assign __axis_cmac_rx__async.aresetn = !core_srst;
+            assign axis_cmac_rx[g_cmac].tvalid  = __axis_cmac_rx__core_clk.tvalid;
+            assign axis_cmac_rx[g_cmac].tlast   = __axis_cmac_rx__core_clk.tlast;
+            assign axis_cmac_rx[g_cmac].tkeep   = __axis_cmac_rx__core_clk.tkeep;
+            assign axis_cmac_rx[g_cmac].tdata   = __axis_cmac_rx__core_clk.tdata;
 
-            assign axis_cmac_rx[g_cmac].aclk    = __axis_cmac_rx__async.aclk;
-            assign axis_cmac_rx[g_cmac].aresetn = __axis_cmac_rx__async.aresetn;
-            assign axis_cmac_rx[g_cmac].tvalid  = __axis_cmac_rx__async.tvalid;
-            assign axis_cmac_rx[g_cmac].tlast   = __axis_cmac_rx__async.tlast;
-            assign axis_cmac_rx[g_cmac].tkeep   = __axis_cmac_rx__async.tkeep;
-            assign axis_cmac_rx[g_cmac].tdata   = __axis_cmac_rx__async.tdata;
-
-            assign __axis_cmac_rx_tid       = __axis_cmac_rx__async.tid;
+            assign __axis_cmac_rx_tid       = __axis_cmac_rx__core_clk.tid;
             assign axis_cmac_rx_tid.unused  = 1'b0;
             assign axis_cmac_rx[g_cmac].tid = axis_cmac_rx_tid;
 
-            assign __axis_cmac_rx_tdest       = __axis_cmac_rx__async.tdest;
+            assign __axis_cmac_rx_tdest       = __axis_cmac_rx__core_clk.tdest;
             assign axis_cmac_rx_tdest.unused  = 1'b0;
             assign axis_cmac_rx[g_cmac].tdest = axis_cmac_rx_tdest;
 
-            assign __axis_cmac_rx_tuser       = __axis_cmac_rx__async.tuser;
+            assign __axis_cmac_rx_tuser       = __axis_cmac_rx__core_clk.tuser;
             assign axis_cmac_rx_tuser.err     = __axis_cmac_rx_tuser.err;
             assign axis_cmac_rx[g_cmac].tuser = axis_cmac_rx_tuser;
 
-            assign __axis_cmac_rx__async.tready = axis_cmac_rx[g_cmac].tready;
+            assign __axis_cmac_rx__core_clk.tready = axis_cmac_rx[g_cmac].tready;
 
             // -- CMAC Tx
-            assign __axis_cmac_tx__async.aclk    = core_clk;
-            assign __axis_cmac_tx__async.aresetn = !core_srst;
+            assign __axis_cmac_tx__core_clk.tvalid = axis_cmac_tx[g_cmac].tvalid;
+            assign __axis_cmac_tx__core_clk.tlast  = axis_cmac_tx[g_cmac].tlast;
+            assign __axis_cmac_tx__core_clk.tkeep  = axis_cmac_tx[g_cmac].tkeep;
+            assign __axis_cmac_tx__core_clk.tdata  = axis_cmac_tx[g_cmac].tdata;
 
-            assign __axis_cmac_tx__async.tvalid = axis_cmac_tx[g_cmac].tvalid;
-            assign __axis_cmac_tx__async.tlast  = axis_cmac_tx[g_cmac].tlast;
-            assign __axis_cmac_tx__async.tkeep  = axis_cmac_tx[g_cmac].tkeep;
-            assign __axis_cmac_tx__async.tdata  = axis_cmac_tx[g_cmac].tdata;
+            assign axis_cmac_tx_tid              = axis_cmac_tx[g_cmac].tid;
+            assign __axis_cmac_tx_tid.unused     = 1'b0;
+            assign __axis_cmac_tx__core_clk.tid  = __axis_cmac_tx_tid;
 
-            assign axis_cmac_tx_tid           = axis_cmac_tx[g_cmac].tid;
-            assign __axis_cmac_tx_tid.unused  = 1'b0;
-            assign __axis_cmac_tx__async.tid  = __axis_cmac_tx_tid;
+            assign axis_cmac_tx_tdest             = axis_cmac_tx[g_cmac].tdest;
+            assign __axis_cmac_tx_tdest.unused    = 1'b0;
+            assign __axis_cmac_tx__core_clk.tdest = __axis_cmac_tx_tdest;
 
-            assign axis_cmac_tx_tdest          = axis_cmac_tx[g_cmac].tdest;
-            assign __axis_cmac_tx_tdest.unused = 1'b0;
-            assign __axis_cmac_tx__async.tdest = __axis_cmac_tx_tdest;
+            assign axis_cmac_tx_tuser             = axis_cmac_tx[g_cmac].tuser;
+            assign __axis_cmac_tx_tuser.err       = axis_cmac_tx_tuser.err;
+            assign __axis_cmac_tx__core_clk.tuser = __axis_cmac_tx_tuser;
 
-            assign axis_cmac_tx_tuser          = axis_cmac_tx[g_cmac].tuser;
-            assign __axis_cmac_tx_tuser.err    = axis_cmac_tx_tuser.err;
-            assign __axis_cmac_tx__async.tuser = __axis_cmac_tx_tuser;
-
-            assign axis_cmac_tx[g_cmac].tready = __axis_cmac_tx__async.tready;
+            assign axis_cmac_tx[g_cmac].tready = __axis_cmac_tx__core_clk.tready;
 
         end : g__cmac
     endgenerate

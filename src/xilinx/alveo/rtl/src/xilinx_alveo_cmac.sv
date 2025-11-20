@@ -19,7 +19,8 @@ module xilinx_alveo_cmac #(
     axi4l_intf.peripheral  axil_if,
     // -- AXI-S
     axi4s_intf.tx          axis_rx,
-    axi4s_intf.rx_async    axis_tx
+    axi4s_intf.rx          axis_tx,
+    output logic           cmac_clk
 );
 
     // =========================================================================
@@ -31,8 +32,16 @@ module xilinx_alveo_cmac #(
     // Interfaces
     // =========================================================================
     axi4l_intf #() axil_cmac ();
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(axis_tid_t), .TUSER_T(axis_tuser_t)) __axis_rx ();
-    axi4s_intf #(.DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_T(axis_tid_t), .TUSER_T(axis_tuser_t)) __axis_tx ();
+
+    axi4s_intf #(
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_WID  (AXIS_TID_WID),
+        .TDEST_WID     (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) __axis_rx (.aclk(cmac_clk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID (AXIS_DATA_BYTE_WID), .TID_WID  (AXIS_TID_WID),
+        .TDEST_WID     (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) __axis_tx (.aclk(cmac_clk));
 
     // =========================================================================
     // CMAC IP
@@ -50,6 +59,7 @@ module xilinx_alveo_cmac #(
         .qsfp_txn,
         .axis_rx ( __axis_rx ),
         .axis_tx ( __axis_tx ),
+        .cmac_clk,
         .axil_if ( axil_cmac )
     );
 
@@ -64,11 +74,9 @@ module xilinx_alveo_cmac #(
 
     // AXI-S
     axi4s_intf_connector i_axi4s_intf_connector__rx (
-        .axi4s_from_tx ( __axis_rx ),
-        .axi4s_to_rx   ( axis_rx )
+        .from_tx ( __axis_rx ),
+        .to_rx   ( axis_rx )
     );
-    assign axis_tx.aclk = __axis_tx.aclk;
-    assign axis_tx.aresetn = __axis_tx.aresetn;
     assign __axis_tx.tvalid = axis_tx.tvalid;
     assign __axis_tx.tlast = axis_tx.tlast;
     assign __axis_tx.tkeep = axis_tx.tkeep;

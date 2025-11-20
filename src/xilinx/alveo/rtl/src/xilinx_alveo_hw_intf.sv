@@ -39,7 +39,7 @@ interface xilinx_alveo_hw_intf #(
         output pcie_rxn,
         input  pcie_txp,
         input  pcie_txn,
-        input  clk_100mhz,
+        output clk_100mhz,
         input  clk_125mhz,
         input  clk_250mhz,
         input  clk_333mhz
@@ -59,7 +59,7 @@ interface xilinx_alveo_hw_intf #(
         input  pcie_rxn,
         output pcie_txp,
         output pcie_txn,
-        output clk_100mhz,
+        input  clk_100mhz,
         output clk_125mhz,
         output clk_250mhz,
         output clk_333mhz
