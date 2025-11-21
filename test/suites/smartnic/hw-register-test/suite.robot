@@ -24,3 +24,8 @@ Registers - Write-Read Test
     FOR    ${i}    IN RANGE    3
         Reg Wr Rd Test    dev=${dev}    num_p4_proc=${num_p4_proc}
     END
+
+Registers - Timestamp Test
+    FOR    ${i}    IN RANGE    3
+        Timestamp Test    dev=${dev}
+    END

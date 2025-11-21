@@ -1,6 +1,7 @@
 __all__ = ()
 
 import random
+import time
 
 from typing import List, Dict, Any
 from robot.api.deco import keyword, library
@@ -21,6 +22,10 @@ class Library:
     @keyword
     def reg_wr_rd_test(self, dev, num_p4_proc):
         reg_wr_rd_test(dev, num_p4_proc)
+
+    @keyword
+    def timestamp_test(self, dev):
+        timestamp_test(dev)
 
     @keyword
     def testcase_setup(self, dev, num_p4_proc):
@@ -102,5 +107,76 @@ def reg_wr_rd(dev, reg, width):
         raise AssertionError(f'Register {reg} FAILED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
     else:
         print(f'Register {reg} PASSED.  Wrote 0x{wr_value:x}, Read 0x{rd_value:x}')
+
+#---------------------------------------------------------------------------------------------------
+def timestamp_test(dev):
+    # test free-running timestamp counter.  expect delta = 2.00 sec (200 x 10ms).
+    check_rd_timestamp(dev, 'bar2.smartnic_regs.freerun_rd', 200)
+
+    # test programmable timestamp counter (including programmable increment).
+    cases = [ {'incr': 0x2dbed634, 'exp': 196},    # incr = 2.859091 ns/clk, exp = 1.96 sec.
+              {'incr': 0x2e8ba2e9, 'exp': 200},    # incr = 2.909091 ns/clk, exp = 2.00 sec.
+              {'incr': 0x2f586fce, 'exp': 203} ]   # incr = 2.959091 ns/clk, exp = 2.03 sec.
+
+    for case in cases:
+        dev.bar2.smartnic_regs.timestamp_incr = case['incr']  # write timestamp increment.
+
+        check_rd_timestamp(dev, 'bar2.smartnic_regs.timestamp_rd', case['exp'])
+
+    # test timestamp write logic.
+    check_wr_timestamp(dev)
+
+#---------------------------------------------------------------------------------------------------
+def check_rd_timestamp(dev, reg, exp):
+    # read t0, wait (in seconds), read t1.
+    t0 = rd_timestamp(dev, reg); time.sleep(2)
+    t1 = rd_timestamp(dev, reg)
+
+    delta = int((t1-t0)/10000000)  # calculate timestamp delta (10ms units).
+
+    if delta != exp:
+        raise AssertionError(f"Timestamp {reg} FAILED.  Expected delta={exp}, got delta={delta}.")
+    else:
+        print(f"Timestamp {reg} PASSED.  Expected delta={exp}, got delta={delta}.")
+
+#---------------------------------------------------------------------------------------------------
+def rd_timestamp(dev, reg):
+    dev.bar2.smartnic_regs.timestamp_rd_latch = 1
+
+    upper = reg_rd(dev, reg + '_upper')
+    lower = reg_rd(dev, reg + '_lower')
+
+    #print(f'Read timestamp: {upper << 32 | lower}. upper: 0x{upper:x}, lower: 0x{lower:x}')
+
+    return upper << 32 | lower
+
+#---------------------------------------------------------------------------------------------------
+def check_wr_timestamp(dev):
+    wr_upper = random.randint(0, ((1 << 32) - 1))
+    wr_lower = random.randint(0, ((1 << 28) - 1)) << 4
+
+    dev.bar2.smartnic_regs.timestamp_incr = 0
+    dev.bar2.smartnic_regs.timestamp_wr_upper = wr_upper
+    dev.bar2.smartnic_regs.timestamp_wr_lower = wr_lower
+
+    dev.bar2.smartnic_regs.timestamp_rd_latch = 1
+    rd_freerun = reg_rd(dev, 'bar2.smartnic_regs.freerun_rd_upper')
+    rd_upper = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_upper')
+    rd_lower = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_lower')
+
+    if rd_freerun != wr_upper:
+        raise AssertionError(f"Timestamp write FAILED. Expected wr_upper=0x{wr_upper:x}, got rd_freerun=0x{rd_freerun:x}.")
+    else:
+        print(f"Timestamp write PASSED. Expected wr_upper=0x{wr_upper:x}, got rd_freerun=0x{rd_freerun:x}.")
+
+    if rd_upper != wr_upper:
+        raise AssertionError(f"Timestamp write FAILED. Expected wr_upper=0x{wr_upper:x}, got rd_upper=0x{rd_upper:x}.")
+    else:
+        print(f"Timestamp write PASSED. Expected wr_upper=0x{wr_upper:x}, got rd_upper=0x{rd_upper:x}.")
+
+    if rd_lower != wr_lower:
+        raise AssertionError(f"Timestamp write FAILED. Expected wr_lower=0x{wr_lower:x}, got rd_lower=0x{rd_lower:x}.")
+    else:
+        print (f"Timestamp write PASSED. Expected wr_lower=0x{wr_lower:x}, got rd_lower=0x{rd_lower:x}.")
 
 #---------------------------------------------------------------------------------------------------
