@@ -327,7 +327,7 @@ module smartnic_egress_qs
             );
 
             // TEMP: send packets out on same port on which they were received
-            packet_descriptor_fifo i_packet_descriptor_fifo (
+            packet_descriptor_fifo #(.DEPTH(512)) i_packet_descriptor_fifo (
                 .from_tx      ( __desc_in_if ),
                 .from_tx_srst ( local_srst ),
                 .to_rx        ( desc_out_if[g_port] ),
