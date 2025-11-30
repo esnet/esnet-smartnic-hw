@@ -18,7 +18,7 @@ interface xilinx_alveo_hw_intf #(
     wire logic[PCIE_LINK_WID-1:0]   pcie_txp;
     wire logic[PCIE_LINK_WID-1:0]   pcie_txn;
     // Clocks
-    wire logic                      clk_100mhz;
+    wire logic                      sys_clk_100mhz;
     wire logic                      clk_125mhz;
     wire logic                      clk_250mhz;
     wire logic                      clk_333mhz;
@@ -39,7 +39,7 @@ interface xilinx_alveo_hw_intf #(
         output pcie_rxn,
         input  pcie_txp,
         input  pcie_txn,
-        output clk_100mhz,
+        output sys_clk_100mhz,
         input  clk_125mhz,
         input  clk_250mhz,
         input  clk_333mhz
@@ -59,7 +59,7 @@ interface xilinx_alveo_hw_intf #(
         input  pcie_rxn,
         output pcie_txp,
         output pcie_txn,
-        input  clk_100mhz,
+        input  sys_clk_100mhz,
         output clk_125mhz,
         output clk_250mhz,
         output clk_333mhz

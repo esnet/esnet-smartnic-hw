@@ -52,6 +52,8 @@ module xilinx_alveo
     logic axis_qdma_aclk;
     logic axis_qdma_aresetn;
 
+    logic clk_100mhz_freerun;
+
     // =========================================================================
     // Interfaces
     // =========================================================================
@@ -189,8 +191,7 @@ module xilinx_alveo
     // Clock gen (250MHz to 100MHz/333MHz)
     xilinx_alveo_clk i_xilinx_alveo_clk (
         .clk_in1  ( clk_250mhz ),
-        .clk_out1 ( clk_100mhz ),
-        .clk_out2 ( clk_333mhz )
+        .clk_out1 ( clk_333mhz )
     );
 
     // Establish core clock domain
@@ -203,8 +204,12 @@ module xilinx_alveo
         .rst_out ( core_srst )
     );
 
+    // Import free-running 100Mhz clock (from hardware layer)
+    assign clk_100mhz_freerun = alveo_hw_if.sys_clk_100mhz;
+
+    assign clk_100mhz = clk_100mhz_freerun;
+
     // Export derived clocks to physical layer (hardware)
-    assign alveo_hw_if.clk_100mhz = clk_100mhz;
     assign alveo_hw_if.clk_125mhz = clk_125mhz;
     assign alveo_hw_if.clk_250mhz = clk_250mhz;
     assign alveo_hw_if.clk_333mhz = clk_333mhz;
@@ -429,7 +434,7 @@ module xilinx_alveo
     // JTAG debug (VIO)
     // =========================================================================
     xilinx_alveo_debug i_xilinx_alveo_debug (
-        .clk       ( clk_100mhz ),
+        .clk       ( clk_100mhz_freerun ),
         .reset_in  ( axil_top.aresetn ),
         .reset_out ( jtag_reset )
     );
