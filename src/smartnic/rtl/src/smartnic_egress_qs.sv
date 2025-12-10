@@ -173,6 +173,8 @@ module smartnic_egress_qs
         .MAX_PKT_SIZE         ( MAX_PKT_SIZE ),
         .NUM_BUFFERS          ( NUM_BUFFERS ),
         .BUFFER_SIZE          ( BUFFER_SIZE ),
+        .N_ALLOC              ( 4 ),
+        .N_GATHER             ( 4 ),
         .MAX_RD_LATENCY       ( 48 ) // TODO: characterize HBM read latency
     ) i_packet_q_core         (
         .clk,
@@ -277,7 +279,8 @@ module smartnic_egress_qs
                 axi3_from_mem_adapter #(
                     .SIZE ( axi3_pkg::SIZE_32BYTES ),
                     .WR_TIMEOUT ( 0 ),
-                    .RD_TIMEOUT ( 0 )
+                    .RD_TIMEOUT ( 0 ),
+                    .BURST_SUPPORT ( 1 )
                 ) i_axi3_from_mem_adapter (
                     .clk,
                     .srst      ( local_srst ),
@@ -296,7 +299,8 @@ module smartnic_egress_qs
         .SIZE ( axi3_pkg::SIZE_32BYTES ),
         .WR_TIMEOUT ( 0 ),
         .RD_TIMEOUT ( 0 ),
-        .BASE_ADDR  ( QMEM_CAPACITY )
+        .BASE_ADDR  ( QMEM_CAPACITY ),
+        .BURST_SUPPORT ( 0 )
     ) i_axi3_from_mem_adapter (
         .clk,
         .srst      ( local_srst ),
@@ -318,17 +322,9 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     generate
         for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__scheduler
-            packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) __desc_in_if (.clk);
-
-            // Delay descriptor processing to ensure write occurs ahead of read
-            packet_descriptor_intf_delay #(.STAGES(4)) i_packet_descriptor_intf_delay (
-                .from_tx (desc_in_if[g_port]),
-                .to_rx   (__desc_in_if)
-            );
-
             // TEMP: send packets out on same port on which they were received
             packet_descriptor_fifo #(.DEPTH(512)) i_packet_descriptor_fifo (
-                .from_tx      ( __desc_in_if ),
+                .from_tx      ( desc_in_if[g_port] ),
                 .from_tx_srst ( local_srst ),
                 .to_rx        ( desc_out_if[g_port] ),
                 .to_rx_srst   ( local_srst )
