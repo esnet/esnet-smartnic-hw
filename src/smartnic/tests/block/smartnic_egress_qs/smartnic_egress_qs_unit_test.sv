@@ -188,6 +188,19 @@ module smartnic_egress_qs_unit_test;
             passthru_test(.usec(20));
         `SVTEST_END
 
+        `SVTEST(backpressure_test)
+            env.monitor[PHY0].set_tpause(2);
+            env.monitor[PHY1].set_tpause(2);
+            passthru_test(.pkts(128), .usec(20));
+        `SVTEST_END
+
+        `SVTEST(stress_test)
+            passthru_test(.pkts(2048), .usec(200));
+        `SVTEST_END
+
+
+
+
     `SVUNIT_TESTS_END
 
 endmodule
