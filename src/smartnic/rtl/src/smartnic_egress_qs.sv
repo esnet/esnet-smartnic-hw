@@ -76,7 +76,6 @@ module smartnic_egress_qs
     logic hbm_ref_clk;
     logic hbm_init_done;
 
-
     // ----------------------------------------------------------------
     //  Interfaces
     // ----------------------------------------------------------------
@@ -280,7 +279,9 @@ module smartnic_egress_qs
                     .SIZE ( axi3_pkg::SIZE_32BYTES ),
                     .WR_TIMEOUT ( 0 ),
                     .RD_TIMEOUT ( 0 ),
-                    .BURST_SUPPORT ( 1 )
+                    .BURST_SUPPORT ( 1 ),
+                    .WR_ID ( g_port * 2 ),
+                    .RD_ID ( g_port * 2 + 1)
                 ) i_axi3_from_mem_adapter (
                     .clk,
                     .srst      ( local_srst ),
@@ -300,7 +301,9 @@ module smartnic_egress_qs
         .WR_TIMEOUT ( 0 ),
         .RD_TIMEOUT ( 0 ),
         .BASE_ADDR  ( QMEM_CAPACITY ),
-        .BURST_SUPPORT ( 0 )
+        .BURST_SUPPORT ( 0 ),
+        .WR_ID ( PHY_NUM_PORTS * 2 ),
+        .RD_ID ( PHY_NUM_PORTS * 2 )
     ) i_axi3_from_mem_adapter (
         .clk,
         .srst      ( local_srst ),
