@@ -174,7 +174,8 @@ module smartnic_egress_qs
         .BUFFER_SIZE          ( BUFFER_SIZE ),
         .N_ALLOC              ( 4 ),
         .N_GATHER             ( 4 ),
-        .MAX_RD_LATENCY       ( 48 ) // TODO: characterize HBM read latency
+        .MAX_RD_LATENCY       ( 232 ),// TODO: characterize HBM read latency
+        .MAX_BURST_LEN        ( 16 )
     ) i_packet_q_core         (
         .clk,
         .srst ( local_srst ),
@@ -260,14 +261,14 @@ module smartnic_egress_qs
             // Adapt from 'wide' packet interface to 'narrow' memory interfaces
             mem_wr_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 8 )
+                .ALIGNMENT_DEPTH ( 256 )
             ) i_mem_wr_aggregate (
                 .from_controller ( mem_wr_if [g_port] ),
                 .to_peripheral   ( __mem_wr_if )
             );
             mem_rd_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 8 )
+                .ALIGNMENT_DEPTH ( 256 )
             ) i_mem_rd_aggregate (
                 .from_controller ( mem_rd_if [g_port] ),
                 .to_peripheral   ( __mem_rd_if )
@@ -277,8 +278,6 @@ module smartnic_egress_qs
             for (genvar g_if = 0; g_if < HBM_NUM_AXI_CHANNELS_PER_PORT; g_if++) begin : g__mem_if
                 axi3_from_mem_adapter #(
                     .SIZE ( axi3_pkg::SIZE_32BYTES ),
-                    .WR_TIMEOUT ( 0 ),
-                    .RD_TIMEOUT ( 0 ),
                     .BURST_SUPPORT ( 1 ),
                     .WR_ID ( g_port * 2 ),
                     .RD_ID ( g_port * 2 + 1)
@@ -298,8 +297,6 @@ module smartnic_egress_qs
     // Connect descriptor wr/rd interface
     axi3_from_mem_adapter #(
         .SIZE ( axi3_pkg::SIZE_32BYTES ),
-        .WR_TIMEOUT ( 0 ),
-        .RD_TIMEOUT ( 0 ),
         .BASE_ADDR  ( QMEM_CAPACITY ),
         .BURST_SUPPORT ( 0 ),
         .WR_ID ( PHY_NUM_PORTS * 2 ),
