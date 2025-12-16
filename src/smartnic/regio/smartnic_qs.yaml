@@ -33,3 +33,115 @@ regs:
           desc:  queues enabled
           width: 1
 
+  - name: port_status
+    access: rd_evt
+    desc: debug status for logic in packet data processing path
+    count: 2
+    fields:
+        - name: wr_agg_req_oflow_0
+          desc: status bit indicating that an overflow condition was detected during write request aggregation
+          width: 1
+        - name: wr_agg_req_pending_0
+          desc: status bit indicating that at least one aggregated write request is pending for this port
+          width: 1
+        - name: wr_agg_resp_oflow_0
+          desc: status bit indicating that an overflow condition was detected during write response aggregation
+          width: 1
+        - name: wr_agg_resp_pending_0
+          desc: status bit indicating that at least one aggregated write response is pending for this port
+          width: 1
+        - name: rd_agg_req_oflow_0
+          desc: status bit indicating that an overflow condition was detected during read request aggregation
+          width: 1
+        - name: rd_agg_req_pending_0
+          desc: status bit indicating that at least one aggregated read request is pending for this port
+          width: 1
+        - name: rd_agg_resp_oflow_0
+          desc: status bit indicating that an overflow condition was detected during read response aggregation
+          width: 1
+        - name: rd_agg_resp_pending_0
+          desc: status bit indicating that at least one aggregated read response is pending for this port
+          width: 1
+        - name: axi3_wr_data_oflow_0
+          desc: status bit indicating that an overflow condition was detected while converting writes to AXI-3 transactions
+          width: 1
+        - name: axi3_wr_data_pending_0
+          desc: status bit indicating that at least one write is pending conversion to AXI-3
+          width: 1
+        - name: axi3_wr_burst_oflow_0
+          desc: status bit indicating that an overflow condition was detected while converting writes to bursts
+          width: 1
+        - name: axi3_wr_burst_pending_0
+          desc: status bit indicating that at least one write burst is pending
+          width: 1
+        - name: axi3_rd_burst_oflow_0
+          desc: status bit indicating that an overflow condition was detected while converting reads to bursts
+          width: 1
+        - name: axi3_rd_burst_pending_0
+          desc: status bit indicating that at least one read burst is pending
+          width: 1
+        - name: wr_agg_req_oflow_1
+          desc: status bit indicating that an overflow condition was detected during write request aggregation
+          width: 1
+        - name: wr_agg_req_pending_1
+          desc: status bit indicating that at least one aggregated write request is pending for this port
+          width: 1
+        - name: wr_agg_resp_oflow_1
+          desc: status bit indicating that an overflow condition was detected during write response aggregation
+          width: 1
+        - name: wr_agg_resp_pending_1
+          desc: status bit indicating that at least one aggregated write response is pending for this port
+          width: 1
+        - name: rd_agg_req_oflow_1
+          desc: status bit indicating that an overflow condition was detected during read request aggregation
+          width: 1
+        - name: rd_agg_req_pending_1
+          desc: status bit indicating that at least one aggregated read request is pending for this port
+          width: 1
+        - name: rd_agg_resp_oflow_1
+          desc: status bit indicating that an overflow condition was detected during read response aggregation
+          width: 1
+        - name: rd_agg_resp_pending_1
+          desc: status bit indicating that at least one aggregated read response is pending for this port
+          width: 1
+        - name: axi3_wr_data_oflow_1
+          desc: status bit indicating that an overflow condition was detected while converting writes to AXI-3 transactions
+          width: 1
+        - name: axi3_wr_data_pending_1
+          desc: status bit indicating that at least one write is pending conversion to AXI-3
+          width: 1
+        - name: axi3_wr_burst_oflow_1
+          desc: status bit indicating that an overflow condition was detected while converting writes to bursts
+          width: 1
+        - name: axi3_wr_burst_pending_1
+          desc: status bit indicating that at least one write burst is pending
+          width: 1
+        - name: axi3_rd_burst_oflow_1
+          desc: status bit indicating that an overflow condition was detected while converting reads to bursts
+          width: 1
+        - name: axi3_rd_burst_pending_1
+          desc: status bit indicating that at least one read burst is pending
+          width: 1
+
+  - name: desc_status
+    access: rd_evt
+    desc: debug status for logic in descriptor processing path
+    fields:
+        - name: axi3_wr_data_oflow
+          desc: status bit indicating that an overflow condition was detected while converting writes to AXI-3 transactions
+          width: 1
+        - name: axi3_wr_data_pending
+          desc: status bit indicating that at least one write is pending conversion to AXI-3
+          width: 1
+        - name: axi3_wr_burst_oflow
+          desc: status bit indicating that an overflow condition was detected while converting writes to bursts
+          width: 1
+        - name: axi3_wr_burst_pending
+          desc: status bit indicating that at least one write burst is pending
+          width: 1
+        - name: axi3_rd_burst_oflow
+          desc: status bit indicating that an overflow condition was detected while converting reads to bursts
+          width: 1
+        - name: axi3_rd_burst_pending
+          desc: status bit indicating that at least one read burst is pending
+          width: 1
