@@ -37,3 +37,87 @@ regs:
         - name: cattrip
           desc: catastrophic temperature tripped flag
           width: 1
+
+  - name: wr_status
+    desc: Write transaction status register for HBM pseudochannel
+    access: rd_evt
+    count: 16
+    fields:
+        - name: okay
+          desc: sticky bit indicating that one or more writes returned with AXI code OKAY
+          width: 1
+        - name: exokay
+          desc: sticky bit indicating that one or more writes returned with AXI code EXOKAY
+          width: 1
+        - name: slverr
+          desc: sticky bit indicating that one or more writes returned with AXI code SLVERR
+          width: 1
+        - name: decerr
+          desc: sticky bit indicating that one or more writes returned with AXI code DECERR
+          width: 1
+        - name: timeout
+          desc: sticky bit indicating that one or more writes timed out
+          width: 1
+
+  - name: wr_latency
+    desc: Write transaction latency debug register for HBM pseudochannel
+    access: rd_evt
+    count: 16
+    fields:
+        - name: timer_oflow
+          desc: sticky bit indicating that the buffer tracking write timestamps reported an overflow
+          width: 1
+        - name: timer_uflow
+          desc: sticky bit indicating that the buffer tracking write timestamps reported an underflow
+          width: 1
+        - name: latency_last
+          desc: latency (in AXI clock cycles) of most-recently-completed write tranaction
+          width: 10
+        - name: latency_min
+          desc: minimum write latency (in AXI clock cycles) in interval
+          width: 10
+        - name: latency_max
+          width: 10
+          desc: maximum write latency (in AXI clock cycles) in interval
+
+  - name: rd_status
+    desc: read transaction status register for HBM pseudochannel
+    access: rd_evt
+    count: 16
+    fields:
+        - name: okay
+          desc: sticky bit indicating that one or more reads returned with AXI code OKAY
+          width: 1
+        - name: exokay
+          desc: sticky bit indicating that one or more reads returned with AXI code EXOKAY
+          width: 1
+        - name: slverr
+          desc: sticky bit indicating that one or more reads returned with AXI code SLVERR
+          width: 1
+        - name: decerr
+          desc: sticky bit indicating that one or more reads returned with AXI code DECERR
+          width: 1
+        - name: timeout
+          desc: sticky bit indicating that one or more reads timed out
+          width: 1
+
+  - name: rd_latency
+    desc: read transaction latency degubg register for HBM pseudochannel
+    access: rd_evt
+    count: 16
+    fields:
+        - name: timer_oflow
+          desc: sticky bit indicating that the buffer tracking write timestamps reported an overflow
+          width: 1
+        - name: timer_uflow
+          desc: sticky bit indicating that the buffer tracking write timestamps reported an underflow
+          width: 1
+        - name: latency_last
+          desc: latency (in AXI clock cycles) of most-recently-completed read tranaction
+          width: 10
+        - name: latency_min
+          desc: minimum read latency (in AXI clock cycles) in interval
+          width: 10
+        - name: latency_max
+          width: 10
+          desc: maximum read latency (in AXI clock cycles) in interval
