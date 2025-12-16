@@ -630,7 +630,9 @@ module xilinx_hbm_4g_bfm #(
     // HBM model
     axi3_mem_bfm #(
         .CHANNELS ( 16 ),
-        .DEBUG    ( DEBUG )
+        .DEBUG    ( DEBUG ),
+        .WR_LATENCY ( 6 ),
+        .RD_LATENCY ( 50 )
     ) i_axi3_mem_bfm  (
         .srst,
         .axi3_if  ( axi_if )
