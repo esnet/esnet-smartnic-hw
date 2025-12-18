@@ -295,7 +295,7 @@ module smartnic_egress_qs
             // Adapt from 'wide' packet interface to 'narrow' memory interfaces
             mem_wr_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 256 )
+                .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_wr_aggregate (
                 .from_controller ( mem_wr_if [g_port] ),
                 .to_peripheral   ( __mem_wr_if ),
@@ -306,7 +306,7 @@ module smartnic_egress_qs
             );
             mem_rd_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 256 )
+                .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_rd_aggregate (
                 .from_controller ( mem_rd_if [g_port] ),
                 .to_peripheral   ( __mem_rd_if ),
