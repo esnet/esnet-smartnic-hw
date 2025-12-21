@@ -5,7 +5,7 @@ class xilinx_hbm_reg_agent extends xilinx_hbm_reg_blk_agent;
     //===================================
     function new(
             input string name="xilinx_hbm_reg_agent",
-            const ref reg_verif_pkg::reg_agent reg_agent,
+            reg_verif_pkg::reg_agent reg_agent,
             input int BASE_OFFSET=0
     );
         super.new(name, BASE_OFFSET);

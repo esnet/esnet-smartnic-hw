@@ -7,7 +7,7 @@ class p4_and_verilog_reg_agent #(
     // Constructor
     function new(
             input string name="p4_and_verilog_reg_agent",
-            const ref reg_verif_pkg::reg_agent reg_agent,
+            reg_verif_pkg::reg_agent reg_agent,
             input int BASE_OFFSET=0
         );
         super.new(name, BASE_OFFSET);
