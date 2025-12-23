@@ -1019,7 +1019,7 @@ module smartnic
             // For U55C/U250, need to cross two SLR boundaries
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 2 ),
-                .POST_PIPE_STAGES ( 1 )
+                .POST_PIPE_STAGES ( 2 )
             ) axi4s_pipe_slr__app_to_qs_0 (
                 .srst    ( core_srst ),
         `endif
@@ -1028,7 +1028,7 @@ module smartnic
             );
 
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
                 .POST_PIPE_STAGES ( 2 )
             ) axi4s_pipe_slr__app_to_qs_1 (
                 .srst    ( srst__smartnic_egress_qs ),
@@ -1038,9 +1038,9 @@ module smartnic
 
             // Cross from HBM controller to PHY SLR
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
         `ifdef __au280__
-                .POST_PIPE_STAGES ( 1 )
+                .POST_PIPE_STAGES ( 2 )
         `else
                 .POST_PIPE_STAGES ( 3 )
         `endif
@@ -1053,7 +1053,7 @@ module smartnic
         `ifdef __au280__
             // For U280, need to cross two SLR boundaries
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
                 .POST_PIPE_STAGES ( 3 )
             ) axi4s_pipe_slr__qs_to_phy_1 (
                 .srst    ( core_srst ),
