@@ -35,7 +35,7 @@ module smartnic_egress_qs
 
     localparam int  HBM_NUM_AXI_CHANNELS_PER_PORT = 2; // AXI-S interfaces are 512B wide; AXI-3 interfaces are 256B wide.
 
-    localparam longint QMEM_CAPACITY = HBM_NUM_AXI_CHANNELS_PER_PORT*xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
+    localparam longint QMEM_CAPACITY = PHY_NUM_PORTS * HBM_NUM_AXI_CHANNELS_PER_PORT*xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
     localparam int     QMEM_ADDR_WID = $clog2(QMEM_CAPACITY);
     localparam int     QMEM_ROW_ADDR_WID = QMEM_ADDR_WID - $clog2(PHY_DATA_BYTE_WID); // Memory interface uses row addressing
 
@@ -318,6 +318,8 @@ module smartnic_egress_qs
 
             // Adapt memory interfaces to/from AXI3
             for (genvar g_if = 0; g_if < HBM_NUM_AXI_CHANNELS_PER_PORT; g_if++) begin : g__mem_if
+                // (Local) parameters
+                localparam longint BASE_ADDR = (g_port * HBM_NUM_AXI_CHANNELS_PER_PORT + g_if) * xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
                 // (Local) signals
                 logic __axi3_wr_data_oflow_evt;
                 logic __axi3_wr_burst_oflow_evt;
@@ -325,6 +327,7 @@ module smartnic_egress_qs
 
                 axi3_from_mem_adapter #(
                     .SIZE ( axi3_pkg::SIZE_32BYTES ),
+                    .BASE_ADDR ( BASE_ADDR ),
                     .BURST_SUPPORT ( 1 ),
                     .WR_ID ( g_port * 2 ),
                     .RD_ID ( g_port * 2 + 1)
