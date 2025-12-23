@@ -87,6 +87,7 @@ module smartnic
    logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
 
    logic                      srst__smartnic_egress_qs;
+   logic                      srst__smartnic_app;
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -113,6 +114,13 @@ module smartnic
        .clk ( core_clk ),
        .srst_in ( core_srst ),
        .srst_out ( srst__smartnic_egress_qs ),
+       .srstn_out ( )
+   );
+
+   util_reset_buffer util_reset_buffer__smartnic_app (
+       .clk ( core_clk ),
+       .srst_in ( core_srst ),
+       .srst_out ( srst__smartnic_app ),
        .srstn_out ( )
    );
 
@@ -868,7 +876,7 @@ module smartnic
                                     (axis_h2c_demux_tid.encoded.typ == VF0) ? H2C_VF0 : H2C_VF1;
 
        axi4s_intf_demux #(.N(HOST_NUM_IFS)) axis_h2c_demux_inst (
-           .srst    ( core_srst ),
+           .srst    ( srst__smartnic_app ),
            .from_tx ( axis_h2c_demux_p[i] ),
            .to_rx   ( axis_h2c[i] ),
            .sel     ( h2c_demux_sel[i] )
@@ -903,7 +911,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ),
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__core_to_app (
-           .srst    (core_srst),
+           .srst    (srst__smartnic_app),
            .from_tx (axis_to_app__demarc[i]),
            .to_rx   (axis_to_app[i])
        );
@@ -1180,7 +1188,7 @@ module smartnic
 
    smartnic_app smartnic_app (
     .core_clk,
-    .core_srst,
+    .core_srst           (srst__smartnic_app),
     .axil_aclk           (axil_aclk),
     .timestamp           (timestamp),
     // P4 AXI-L control interface
