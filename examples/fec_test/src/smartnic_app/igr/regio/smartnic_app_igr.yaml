@@ -1,0 +1,29 @@
+# fec_test
+name: smartnic_app_igr
+info: |
+  smartnic_app_igr is the regio block for the customizable ingress datapath block used in p4_only application core for the Esnet SmartNIC platform.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: status
+    init: 0xdeafbeef
+
+  - name: app_igr_config
+    access: rw
+    fields:
+      - name: demux_sel
+        desc: directs ingress traffic to selected egress port. 0=axi4s_out, 1=axi4s_c2h.
+        width: 1
+        init : 0
+      - name: err_loc_inj
+        desc: specifies the erasure injection locations.
+        width: 6
+        init : 0
+      - name: err_loc_dec
+        desc: specifies the erasure decoding locations.
+        width: 6
+        init : 0
