@@ -84,6 +84,10 @@ class Library:
     def hdr_length_config(self, dev, num_p4_proc, length):
         hdr_length_config(dev, num_p4_proc, length)
 
+    @keyword
+    def smartnic_app_fec_test(self, dev, num, port):
+        smartnic_app_fec_test(dev, num, port)
+
 
 #===================================================================================================
 # Basic traffic tests
@@ -501,5 +505,17 @@ def drops_to_cmac_test(dev, num, size, port):
 
     bytes = _num * size
     check_probes (names, _num, bytes, False)  # disable ZERO checks.
+
+
+#===================================================================================================
+# FEC application test.  Tests 'fec_test' example design.
+#===================================================================================================
+def smartnic_app_fec_test(dev, num, port):
+    err_loc = random.randint(0, 44)
+    dev.bar2.smartnic_app_igr.app_igr_config.err_loc_inj = err_loc
+    dev.bar2.smartnic_app_igr.app_igr_config.err_loc_dec = err_loc
+    print(f'err_loc: {err_loc}')
+
+    smartnic_app_probes_test(dev, num, port)
 
 #---------------------------------------------------------------------------------------------------
