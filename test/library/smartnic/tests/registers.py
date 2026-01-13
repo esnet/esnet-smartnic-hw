@@ -129,7 +129,7 @@ def timestamp_test(dev):
 #---------------------------------------------------------------------------------------------------
 def check_rd_timestamp(dev, reg, exp):
     # read t0, wait (in seconds), read t1.
-    t0 = rd_timestamp(dev, reg); time.sleep(2)
+    t0 = rd_timestamp(dev, reg); time.sleep(2.005)
     t1 = rd_timestamp(dev, reg)
 
     delta = int((t1-t0)/10000000)  # calculate timestamp delta (10ms units).
@@ -161,8 +161,8 @@ def check_wr_timestamp(dev):
 
     dev.bar2.smartnic_regs.timestamp_rd_latch = 1
     rd_freerun = reg_rd(dev, 'bar2.smartnic_regs.freerun_rd_upper')
-    rd_upper = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_upper')
-    rd_lower = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_lower')
+    rd_upper   = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_upper')
+    rd_lower   = reg_rd(dev, 'bar2.smartnic_regs.timestamp_rd_lower')
 
     if rd_freerun != wr_upper:
         raise AssertionError(f"Timestamp write FAILED. Expected wr_upper=0x{wr_upper:x}, got rd_freerun=0x{rd_freerun:x}.")
