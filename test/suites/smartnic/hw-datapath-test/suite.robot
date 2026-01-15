@@ -122,6 +122,13 @@ Datapath - Drops To CMAC Test - Port 1
     Drops To CMAC Test      dev=${dev}    num=${75}    size=${1500}    port=${1}
 
 
+# ----------------------------
+# FEC Application Test - Not included in smartnic hw regression suite.
+# ----------------------------
+#Datapath - FEC Application Test - Port 0
+#    Smartnic App FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
+
+
 
 *** Comments ***
 Zero Length Packet Test - Port 0
