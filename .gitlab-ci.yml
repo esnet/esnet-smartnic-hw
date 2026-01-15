@@ -316,7 +316,7 @@ shell_ip_au55c:
       dotenv:
         bitfile.env
     expire_in: 2 weeks
-  timeout: 8h
+  timeout: 10h
 
 build_p4_and_verilog:
   extends: .bitfile
