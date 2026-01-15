@@ -174,47 +174,20 @@ ons_ip_au250:
     - when: manual
       allow_failure: true
 
-smartnic_ip_cache_key:
-  stage: ip
-  extends: .common
-  tags:
-    - ht-sim
-  script:
-    - |
-      cat <<_EOF | tee dependencies.txt
-      VIVADO_VERSION=$VIVADO_VERSION
-      $(git submodule status --recursive | awk '{ print $1,$2 }')
-      _EOF
-    - |
-      cat <<_EOF | tee cache_key.env
-      SMARTNIC_IP_CACHE_KEY=$(sha1sum dependencies.txt | awk '{ print $1 }')
-      _EOF
-  artifacts:
-    reports:
-      dotenv:
-        cache_key.env
-  needs: []
-
 .smartnic_ip:
   stage: ip
   extends: .common
   tags:
     - ht-synth
   script:
-    - make -s -C src refresh
     - make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
     - make -s -C src synth COMPONENT=smartnic.build BOARD=$SN_HW_BOARD
     - make -s -C src synth COMPONENT=smartnic_app.build BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
-  cache:
-    - key: cache-smartnic_ip-$SN_HW_BOARD-$SMARTNIC_IP_CACHE_KEY
-      paths:
-        - .out
-  timeout: 4h
-  needs:
-    - smartnic_ip_cache_key
+  timeout: 2h
+  needs: []
 
 shell_ip_cache_key:
   stage: ip
