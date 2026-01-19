@@ -77,7 +77,7 @@ module smartnic
    wire [NUM_CMAC-1:0]        cmac_srst;
 
    wire                       core_clk;
-   wire                       core_srst;
+   wire                       __srst;
 
    wire                       clk_100mhz;
    wire                       hbm_ref_clk;
@@ -86,7 +86,12 @@ module smartnic
 
    logic [2*NUM_CMAC-1:0]     egr_flow_ctl, egr_flow_ctl_pipe[3];
 
+   (* DONT_TOUCH = "TRUE" *) logic __srst__smartnic_core;
+   (* DONT_TOUCH = "TRUE" *) logic __srst__smartnic_app;
+   (* DONT_TOUCH = "TRUE" *) logic __srst__smartnic_egress_qs;
+   logic                      core_srst;
    logic                      srst__smartnic_egress_qs;
+   logic                      srst__smartnic_app;
 
   // Reset is clocked by the 125MHz AXI-Lite clock
 
@@ -103,15 +108,36 @@ module smartnic
     .cmac_srst    (cmac_srst),
 
     .core_clk     (core_clk),
-    .core_srst    (core_srst),
+    .core_srst    (__srst),
 
     .clk_100mhz   (clk_100mhz),
     .hbm_ref_clk  (hbm_ref_clk)
   );
 
+   always @(posedge core_clk) begin
+       __srst__smartnic_core      <= __srst;
+       __srst__smartnic_app       <= __srst;
+       __srst__smartnic_egress_qs <= __srst;
+   end
+
+
+   util_reset_buffer util_reset_buffer__smartnic_core (
+       .clk ( core_clk ),
+       .srst_in ( __srst__smartnic_core ),
+       .srst_out ( core_srst ),
+       .srstn_out ( )
+   );
+
+   util_reset_buffer util_reset_buffer__smartnic_app (
+       .clk ( core_clk ),
+       .srst_in ( __srst__smartnic_app ),
+       .srst_out ( srst__smartnic_app ),
+       .srstn_out ( )
+   );
+
    util_reset_buffer util_reset_buffer__smartnic_egress_qs (
        .clk ( core_clk ),
-       .srst_in ( core_srst ),
+       .srst_in ( __srst__smartnic_egress_qs ),
        .srst_out ( srst__smartnic_egress_qs ),
        .srstn_out ( )
    );
@@ -842,17 +868,17 @@ module smartnic
        logic  axis_h2c_demux_sop;
 
        axi4s_mux #(.N(HOST_NUM_IFS)) axis_c2h_mux (
-           .srst       ( core_srst ),
+           .srst       ( srst__smartnic_app ),
            .axi4s_in   ( axis_c2h[i] ),
            .axi4s_out  ( axis_c2h_mux_out[i] )
        );
 
 
-       axi4s_intf_pipe axis_h2c_demux_pipe (.srst (core_srst), .from_tx(axis_h2c_demux[i]), .to_rx(axis_h2c_demux_p[i]));
+       axi4s_intf_pipe axis_h2c_demux_pipe (.srst (srst__smartnic_app), .from_tx(axis_h2c_demux[i]), .to_rx(axis_h2c_demux_p[i]));
 
        packet_sop packet_sop_axis_h2c_demux (
            .clk ( core_clk ),
-           .srst( core_srst ),
+           .srst( srst__smartnic_app ),
            .vld ( axis_h2c_demux[i].tvalid ),
            .rdy ( axis_h2c_demux[i].tready ),
            .eop ( axis_h2c_demux[i].tlast ),
@@ -861,14 +887,14 @@ module smartnic
 
        assign axis_h2c_demux_tid = axis_h2c_demux[i].tid;
        always @(posedge core_clk)
-            if (core_srst)
+            if (srst__smartnic_app)
                 h2c_demux_sel[i] <= H2C_PF;
             else if (axis_h2c_demux[i].tready && axis_h2c_demux[i].tvalid && axis_h2c_demux_sop)
                 h2c_demux_sel[i] <= (axis_h2c_demux_tid.encoded.typ == PF)  ? H2C_PF :
                                     (axis_h2c_demux_tid.encoded.typ == VF0) ? H2C_VF0 : H2C_VF1;
 
        axi4s_intf_demux #(.N(HOST_NUM_IFS)) axis_h2c_demux_inst (
-           .srst    ( core_srst ),
+           .srst    ( srst__smartnic_app ),
            .from_tx ( axis_h2c_demux_p[i] ),
            .to_rx   ( axis_h2c[i] ),
            .sel     ( h2c_demux_sel[i] )
@@ -903,7 +929,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ),
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__core_to_app (
-           .srst    (core_srst),
+           .srst    (srst__smartnic_app),
            .from_tx (axis_to_app__demarc[i]),
            .to_rx   (axis_to_app[i])
        );
@@ -921,7 +947,7 @@ module smartnic
            .PRE_PIPE_STAGES ( 1 ),
            .POST_PIPE_STAGES ( 1 )
        ) axi4s_pipe_slr__h2c_demux_out (
-           .srst    (core_srst),
+           .srst    (srst__smartnic_app),
            .from_tx (axis_h2c_demux__demarc[i]),
            .to_rx   (axis_h2c_demux[i])
        );
@@ -1011,7 +1037,7 @@ module smartnic
             // For U55C/U250, need to cross two SLR boundaries
             axi4s_pipe_slr #(
                 .PRE_PIPE_STAGES ( 2 ),
-                .POST_PIPE_STAGES ( 1 )
+                .POST_PIPE_STAGES ( 2 )
             ) axi4s_pipe_slr__app_to_qs_0 (
                 .srst    ( core_srst ),
         `endif
@@ -1020,7 +1046,7 @@ module smartnic
             );
 
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
                 .POST_PIPE_STAGES ( 2 )
             ) axi4s_pipe_slr__app_to_qs_1 (
                 .srst    ( srst__smartnic_egress_qs ),
@@ -1030,9 +1056,9 @@ module smartnic
 
             // Cross from HBM controller to PHY SLR
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
         `ifdef __au280__
-                .POST_PIPE_STAGES ( 1 )
+                .POST_PIPE_STAGES ( 2 )
         `else
                 .POST_PIPE_STAGES ( 3 )
         `endif
@@ -1045,7 +1071,7 @@ module smartnic
         `ifdef __au280__
             // For U280, need to cross two SLR boundaries
             axi4s_pipe_slr #(
-                .PRE_PIPE_STAGES ( 1 ),
+                .PRE_PIPE_STAGES ( 2 ),
                 .POST_PIPE_STAGES ( 3 )
             ) axi4s_pipe_slr__qs_to_phy_1 (
                 .srst    ( core_srst ),
@@ -1180,7 +1206,7 @@ module smartnic
 
    smartnic_app smartnic_app (
     .core_clk,
-    .core_srst,
+    .core_srst           (srst__smartnic_app),
     .axil_aclk           (axil_aclk),
     .timestamp           (timestamp),
     // P4 AXI-L control interface
