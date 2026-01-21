@@ -35,7 +35,7 @@ module smartnic_egress_qs
 
     localparam int  HBM_NUM_AXI_CHANNELS_PER_PORT = 2; // AXI-S interfaces are 512B wide; AXI-3 interfaces are 256B wide.
 
-    localparam longint QMEM_CAPACITY = HBM_NUM_AXI_CHANNELS_PER_PORT*xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
+    localparam longint QMEM_CAPACITY = PHY_NUM_PORTS * HBM_NUM_AXI_CHANNELS_PER_PORT*xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
     localparam int     QMEM_ADDR_WID = $clog2(QMEM_CAPACITY);
     localparam int     QMEM_ROW_ADDR_WID = QMEM_ADDR_WID - $clog2(PHY_DATA_BYTE_WID); // Memory interface uses row addressing
 
@@ -44,6 +44,8 @@ module smartnic_egress_qs
     localparam int  BUFFER_PTR_WID = $clog2(NUM_BUFFERS);
 
     localparam int  MAX_PKT_SIZE = 9200;
+
+    localparam int  HBM_MAX_LATENCY = 256; // Typical latency is ~160ns (~5)
 
     // ----------------------------------------------------------------
     //  Parameter Checking
@@ -76,6 +78,16 @@ module smartnic_egress_qs
     logic hbm_ref_clk;
     logic hbm_init_done;
 
+    logic desc_status_clear;
+    logic __axi3_desc_wr_data_oflow_evt;
+    logic axi3_desc_wr_data_oflow;
+    logic axi3_desc_wr_data_pending;
+    logic __axi3_desc_wr_burst_oflow_evt;
+    logic axi3_desc_wr_burst_oflow;
+    logic axi3_desc_wr_burst_pending;
+    logic __axi3_desc_rd_burst_oflow_evt;
+    logic axi3_desc_rd_burst_oflow;
+    logic axi3_desc_rd_burst_pending;
 
     // ----------------------------------------------------------------
     //  Interfaces
@@ -99,6 +111,7 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     axi4l_intf axil_to_hbm ();
     axi4l_intf axil_to_regs ();
+    axi4l_intf axil_to_alloc ();
     axi4l_intf axil_to_regs__clk ();
 
     smartnic_qs_reg_intf reg_if();
@@ -106,6 +119,7 @@ module smartnic_egress_qs
     smartnic_qs_decoder i_smartnic_qs_decoder (
         .axil_if         ( axil_if ),
         .control_axil_if ( axil_to_regs ),
+        .alloc_axil_if   ( axil_to_alloc ),
         .hbm_axil_if     ( axil_to_hbm )
     );
 
@@ -127,7 +141,7 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     assign reg_if.status_nxt_v = 1'b1;
     assign reg_if.status_nxt.reset = local_srst;
-    assign reg_if.status_nxt.enabled = 1'b1;
+    assign reg_if.status_nxt.enabled = reg_if.control.enable;
     assign reg_if.status_nxt.init_done = init_done;
 
     // ----------------------------------------------------------------
@@ -165,13 +179,17 @@ module smartnic_egress_qs
     //  Queuing Logic
     // ----------------------------------------------------------------
     packet_q_core            #(
+        .IGNORE_RDY_IN        ( 1 ),
         .NUM_INPUT_IFS        ( PHY_NUM_PORTS ),
         .NUM_OUTPUT_IFS       ( PHY_NUM_PORTS ),
         .MIN_PKT_SIZE         ( 40 ),
         .MAX_PKT_SIZE         ( MAX_PKT_SIZE ),
         .NUM_BUFFERS          ( NUM_BUFFERS ),
         .BUFFER_SIZE          ( BUFFER_SIZE ),
-        .MAX_RD_LATENCY       ( 48 ) // TODO: characterize HBM read latency
+        .N_ALLOC              ( 4 ),
+        .N_GATHER             ( 4 ),
+        .MAX_RD_LATENCY       ( 240 ),
+        .MAX_BURST_LEN        ( 16 )
     ) i_packet_q_core         (
         .clk,
         .srst ( local_srst ),
@@ -184,7 +202,8 @@ module smartnic_egress_qs
         .packet_out_if,
         .desc_mem_rd_if,
         .mem_rd_if,
-        .mem_init_done  ( hbm_init_done )
+        .mem_init_done  ( hbm_init_done ),
+        .axil_if ( axil_to_alloc )
     );
 
     // Per-port logic
@@ -202,6 +221,26 @@ module smartnic_egress_qs
             logic   bypass_en;
             META_T  meta_in;
             META_T  meta_out;
+
+            logic   port_status_clear;
+            logic   __wr_agg_req_oflow_evt   [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   wr_agg_req_oflow         [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   wr_agg_req_pending       [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   __wr_agg_resp_oflow_evt  [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   wr_agg_resp_oflow        [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   wr_agg_resp_pending      [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   __rd_agg_req_oflow_evt   [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   rd_agg_req_oflow         [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   rd_agg_req_pending       [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   __rd_agg_resp_oflow_evt  [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   rd_agg_resp_oflow        [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   rd_agg_resp_pending      [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_wr_data_oflow   [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_wr_data_pending [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_wr_burst_oflow  [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_wr_burst_pending[HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_rd_burst_oflow  [HBM_NUM_AXI_CHANNELS_PER_PORT];
+            logic   axi3_rd_burst_pending[HBM_NUM_AXI_CHANNELS_PER_PORT];
 
             // Bypass mux (allow queues to be bypassed under register control)
             assign bypass_en = (reg_if.control.enable == 1'b0);
@@ -256,34 +295,126 @@ module smartnic_egress_qs
             // Adapt from 'wide' packet interface to 'narrow' memory interfaces
             mem_wr_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 8 )
+                .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_wr_aggregate (
                 .from_controller ( mem_wr_if [g_port] ),
-                .to_peripheral   ( __mem_wr_if )
+                .to_peripheral   ( __mem_wr_if ),
+                .req_oflow       ( __wr_agg_req_oflow_evt ),
+                .req_pending     ( wr_agg_req_pending ),
+                .resp_oflow      ( __wr_agg_resp_oflow_evt ),
+                .resp_pending    ( wr_agg_resp_pending )
             );
             mem_rd_aggregate #(
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
-                .ALIGNMENT_DEPTH ( 8 )
+                .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_rd_aggregate (
                 .from_controller ( mem_rd_if [g_port] ),
-                .to_peripheral   ( __mem_rd_if )
+                .to_peripheral   ( __mem_rd_if ),
+                .req_oflow       ( __rd_agg_req_oflow_evt ),
+                .req_pending     ( rd_agg_req_pending ),
+                .resp_oflow      ( __rd_agg_resp_oflow_evt ),
+                .resp_pending    ( rd_agg_resp_pending )
             );
 
             // Adapt memory interfaces to/from AXI3
             for (genvar g_if = 0; g_if < HBM_NUM_AXI_CHANNELS_PER_PORT; g_if++) begin : g__mem_if
+                // (Local) parameters
+                localparam longint BASE_ADDR = (g_port * HBM_NUM_AXI_CHANNELS_PER_PORT + g_if) * xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
+                // (Local) signals
+                logic __axi3_wr_data_oflow_evt;
+                logic __axi3_wr_burst_oflow_evt;
+                logic __axi3_rd_burst_oflow_evt;
+
                 axi3_from_mem_adapter #(
                     .SIZE ( axi3_pkg::SIZE_32BYTES ),
-                    .WR_TIMEOUT ( 0 ),
-                    .RD_TIMEOUT ( 0 )
+                    .BASE_ADDR ( BASE_ADDR ),
+                    .BURST_SUPPORT ( 1 ),
+                    .WR_ID ( g_port * 2 ),
+                    .RD_ID ( g_port * 2 + 1)
                 ) i_axi3_from_mem_adapter (
                     .clk,
                     .srst      ( local_srst ),
                     .init_done (),
                     .mem_wr_if ( __mem_wr_if [g_if] ),
                     .mem_rd_if ( __mem_rd_if [g_if] ),
-                    .axi3_if   ( axi_if[g_port*HBM_NUM_AXI_CHANNELS_PER_PORT + g_if] )
+                    .axi3_if   ( axi_if[g_port*HBM_NUM_AXI_CHANNELS_PER_PORT + g_if] ),
+                    // Status
+                    .wr_data_oflow   ( __axi3_wr_data_oflow_evt ),
+                    .wr_data_pending ( axi3_wr_data_pending[g_if] ),
+                    .wr_burst_oflow   ( __axi3_wr_burst_oflow_evt ),
+                    .wr_burst_pending ( axi3_wr_burst_pending[g_if] ),
+                    .rd_burst_oflow   ( __axi3_rd_burst_oflow_evt ),
+                    .rd_burst_pending ( axi3_rd_burst_pending[g_if] )
                 );
+
+                // Track oflow status
+                initial begin
+                    wr_agg_req_oflow[g_if]  = 1'b0;
+                    wr_agg_resp_oflow[g_if] = 1'b0;
+                    rd_agg_req_oflow[g_if]  = 1'b0;
+                    rd_agg_resp_oflow[g_if] = 1'b0;
+                    axi3_wr_data_oflow[g_if] = 1'b0;
+                    axi3_wr_burst_oflow[g_if] = 1'b0;
+                    axi3_rd_burst_oflow[g_if] = 1'b0;
+                end
+                always @(posedge clk) begin
+                    if (port_status_clear) begin
+                        wr_agg_req_oflow[g_if]  <= 1'b0;
+                        wr_agg_resp_oflow[g_if] <= 1'b0;
+                        rd_agg_req_oflow[g_if]  <= 1'b0;
+                        rd_agg_resp_oflow[g_if] <= 1'b0;
+                        axi3_wr_data_oflow[g_if]  <= 1'b0;
+                        axi3_wr_burst_oflow[g_if] <= 1'b0;
+                        axi3_rd_burst_oflow[g_if] <= 1'b0;
+                    end else begin
+                        if (__wr_agg_req_oflow_evt[g_if])  wr_agg_req_oflow[g_if]  <= 1'b1;
+                        if (__wr_agg_resp_oflow_evt[g_if]) wr_agg_resp_oflow[g_if] <= 1'b1;
+                        if (__rd_agg_req_oflow_evt[g_if])  rd_agg_req_oflow[g_if]  <= 1'b1;
+                        if (__rd_agg_resp_oflow_evt[g_if]) rd_agg_resp_oflow[g_if] <= 1'b1;
+                        if (__axi3_wr_data_oflow_evt) axi3_wr_data_oflow[g_if]   <= 1'b1;
+                        if (__axi3_wr_burst_oflow_evt) axi3_wr_burst_oflow[g_if] <= 1'b1;
+                        if (__axi3_rd_burst_oflow_evt) axi3_rd_burst_oflow[g_if] <= 1'b1;
+                    end
+                end
             end : g__mem_if
+
+            // Report status
+            initial port_status_clear = 1'b1;
+            always @(posedge clk) begin
+                if (local_srst || reg_if.port_status_rd_evt[g_port]) port_status_clear <= 1'b1;
+                else                                                 port_status_clear <= 1'b0;
+            end
+
+            // Report status
+            assign reg_if.port_status_nxt_v[g_port] = 1'b1;
+            assign reg_if.port_status_nxt[g_port].wr_agg_req_oflow_0    = wr_agg_req_oflow[0];
+            assign reg_if.port_status_nxt[g_port].wr_agg_req_pending_0  = wr_agg_req_pending[0];
+            assign reg_if.port_status_nxt[g_port].wr_agg_resp_oflow_0   = wr_agg_resp_oflow[0];
+            assign reg_if.port_status_nxt[g_port].wr_agg_resp_pending_0 = wr_agg_resp_pending[0];
+            assign reg_if.port_status_nxt[g_port].wr_agg_req_oflow_1    = wr_agg_req_oflow[1];
+            assign reg_if.port_status_nxt[g_port].wr_agg_req_pending_1  = wr_agg_req_pending[1];
+            assign reg_if.port_status_nxt[g_port].wr_agg_resp_oflow_1   = wr_agg_resp_oflow[1];
+            assign reg_if.port_status_nxt[g_port].wr_agg_resp_pending_1 = wr_agg_resp_pending[1];
+            assign reg_if.port_status_nxt[g_port].rd_agg_req_oflow_0    = rd_agg_req_oflow[0];
+            assign reg_if.port_status_nxt[g_port].rd_agg_req_pending_0  = rd_agg_req_pending[0];
+            assign reg_if.port_status_nxt[g_port].rd_agg_resp_oflow_0   = rd_agg_resp_oflow[0];
+            assign reg_if.port_status_nxt[g_port].rd_agg_resp_pending_0 = rd_agg_resp_pending[0];
+            assign reg_if.port_status_nxt[g_port].rd_agg_req_oflow_1    = rd_agg_req_oflow[1];
+            assign reg_if.port_status_nxt[g_port].rd_agg_req_pending_1  = rd_agg_req_pending[1];
+            assign reg_if.port_status_nxt[g_port].rd_agg_resp_oflow_1   = rd_agg_resp_oflow[1];
+            assign reg_if.port_status_nxt[g_port].rd_agg_resp_pending_1 = rd_agg_resp_pending[1];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_data_oflow_0    = axi3_wr_data_oflow[0];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_data_pending_0  = axi3_wr_data_pending[0];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_data_oflow_1    = axi3_wr_data_oflow[1];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_data_pending_1  = axi3_wr_data_pending[1];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_burst_oflow_0   = axi3_wr_burst_oflow[0];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_burst_pending_0 = axi3_wr_burst_pending[0];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_burst_oflow_1   = axi3_wr_burst_oflow[1];
+            assign reg_if.port_status_nxt[g_port].axi3_wr_burst_pending_1 = axi3_wr_burst_pending[1];
+            assign reg_if.port_status_nxt[g_port].axi3_rd_burst_oflow_0   = axi3_rd_burst_oflow[0];
+            assign reg_if.port_status_nxt[g_port].axi3_rd_burst_pending_0 = axi3_rd_burst_pending[0];
+            assign reg_if.port_status_nxt[g_port].axi3_rd_burst_oflow_1   = axi3_rd_burst_oflow[1];
+            assign reg_if.port_status_nxt[g_port].axi3_rd_burst_pending_1 = axi3_rd_burst_pending[1];
 
         end : g__port_adapter
     endgenerate
@@ -291,17 +422,58 @@ module smartnic_egress_qs
     // Connect descriptor wr/rd interface
     axi3_from_mem_adapter #(
         .SIZE ( axi3_pkg::SIZE_32BYTES ),
-        .WR_TIMEOUT ( 0 ),
-        .RD_TIMEOUT ( 0 ),
-        .BASE_ADDR  ( QMEM_CAPACITY )
+        .BASE_ADDR  ( QMEM_CAPACITY ),
+        .BURST_SUPPORT ( 0 ),
+        .WR_ID ( PHY_NUM_PORTS * 2 ),
+        .RD_ID ( PHY_NUM_PORTS * 2 )
     ) i_axi3_from_mem_adapter (
         .clk,
         .srst      ( local_srst ),
         .init_done (),
         .mem_wr_if ( desc_mem_wr_if ),
         .mem_rd_if ( desc_mem_rd_if ),
-        .axi3_if   ( axi_if[HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS] )
+        .axi3_if   ( axi_if[HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS] ),
+        // Status
+        .wr_data_oflow   ( __axi3_desc_wr_data_oflow_evt ),
+        .wr_data_pending ( axi3_desc_wr_data_pending ),
+        .wr_burst_oflow   ( __axi3_desc_wr_burst_oflow_evt ),
+        .wr_burst_pending ( axi3_desc_wr_burst_pending ),
+        .rd_burst_oflow   ( __axi3_desc_rd_burst_oflow_evt ),
+        .rd_burst_pending ( axi3_desc_rd_burst_pending )
     );
+
+    // Report descriptor path status
+    initial desc_status_clear = 1'b1;
+    always @(posedge clk) begin
+        if (local_srst || reg_if.desc_status_rd_evt) desc_status_clear <= 1'b1;
+        else                                         desc_status_clear <= 1'b0;
+    end
+
+    initial begin
+        axi3_desc_wr_data_oflow = 1'b0;
+        axi3_desc_wr_burst_oflow = 1'b0;
+        axi3_desc_rd_burst_oflow = 1'b0;
+    end
+    always @(posedge clk) begin
+        if (desc_status_clear) begin
+            axi3_desc_wr_data_oflow  <= 1'b0;
+            axi3_desc_wr_burst_oflow <= 1'b0;
+            axi3_desc_rd_burst_oflow <= 1'b0;
+        end else begin
+            if (__axi3_desc_wr_data_oflow_evt)  axi3_desc_wr_data_oflow  <= 1'b1;
+            if (__axi3_desc_wr_burst_oflow_evt) axi3_desc_wr_burst_oflow <= 1'b1;
+            if (__axi3_desc_rd_burst_oflow_evt) axi3_desc_rd_burst_oflow <= 1'b1;
+        end
+    end
+
+    // Report status
+    assign reg_if.desc_status_nxt_v = 1'b1;
+    assign reg_if.desc_status_nxt.axi3_wr_data_oflow    = axi3_desc_wr_data_oflow;
+    assign reg_if.desc_status_nxt.axi3_wr_data_pending  = axi3_desc_wr_data_pending;
+    assign reg_if.desc_status_nxt.axi3_wr_burst_oflow   = axi3_desc_wr_burst_oflow;
+    assign reg_if.desc_status_nxt.axi3_wr_burst_pending = axi3_desc_wr_burst_pending;
+    assign reg_if.desc_status_nxt.axi3_rd_burst_oflow   = axi3_desc_rd_burst_oflow;
+    assign reg_if.desc_status_nxt.axi3_rd_burst_pending = axi3_desc_rd_burst_pending;
 
     // Tie off unused AXI-3 interfaces
     generate
@@ -315,17 +487,9 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     generate
         for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__scheduler
-            packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) __desc_in_if (.clk);
-
-            // Delay descriptor processing to ensure write occurs ahead of read
-            packet_descriptor_intf_delay #(.STAGES(4)) i_packet_descriptor_intf_delay (
-                .from_tx (desc_in_if[g_port]),
-                .to_rx   (__desc_in_if)
-            );
-
             // TEMP: send packets out on same port on which they were received
-            packet_descriptor_fifo i_packet_descriptor_fifo (
-                .from_tx      ( __desc_in_if ),
+            packet_descriptor_fifo #(.DEPTH(512)) i_packet_descriptor_fifo (
+                .from_tx      ( desc_in_if[g_port] ),
                 .from_tx_srst ( local_srst ),
                 .to_rx        ( desc_out_if[g_port] ),
                 .to_rx_srst   ( local_srst )

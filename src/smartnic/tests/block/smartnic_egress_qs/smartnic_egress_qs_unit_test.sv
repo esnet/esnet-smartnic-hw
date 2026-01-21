@@ -168,6 +168,11 @@ module smartnic_egress_qs_unit_test;
         `SVTEST_END
 
         `SVTEST(min_size_test)
+            env.driver[PHY0].set_min_gap(8); // set gap to 50 cycles
+            env.driver[PHY1].set_min_gap(8);
+            env.driver[PF0].set_min_gap(8);
+            env.driver[PF1].set_min_gap(8);
+
             passthru_test(.mode(64));
         `SVTEST_END
 
@@ -176,7 +181,12 @@ module smartnic_egress_qs_unit_test;
         `SVTEST_END
 
         `SVTEST(tkeep_stress_test)
-            passthru_test(.mode(1), .pkts(192), .usec(10));
+            env.driver[PHY0].set_min_gap(8); // set gap to 50 cycles
+            env.driver[PHY1].set_min_gap(8);
+            env.driver[PF0].set_min_gap(8);
+            env.driver[PF1].set_min_gap(8);
+
+            passthru_test(.mode(1), .pkts(192), .usec(20));
         `SVTEST_END
 
         `SVTEST(single_pkts_test)
@@ -187,6 +197,19 @@ module smartnic_egress_qs_unit_test;
 
             passthru_test(.usec(20));
         `SVTEST_END
+
+        `SVTEST(backpressure_test)
+            env.monitor[PHY0].set_tpause(2);
+            env.monitor[PHY1].set_tpause(2);
+            passthru_test(.pkts(128), .usec(20));
+        `SVTEST_END
+
+        `SVTEST(stress_test)
+            passthru_test(.pkts(2048), .usec(200));
+        `SVTEST_END
+
+
+
 
     `SVUNIT_TESTS_END
 

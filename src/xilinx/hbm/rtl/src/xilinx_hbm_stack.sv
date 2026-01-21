@@ -25,11 +25,26 @@ module xilinx_hbm_stack
 );
     // Parameters
     localparam int ADDR_WID = get_addr_wid(DENSITY);
+    localparam int TIMESTAMP_WID = 16;
 
     // Signals
     logic       apb_complete;
     logic       dram_status_cattrip;
     logic [6:0] dram_status_temp;
+    logic [TIMESTAMP_WID-1:0] timestamp;
+
+    logic            wr_done        [PSEUDO_CHANNELS_PER_STACK];
+    axi3_pkg::resp_t wr_status      [PSEUDO_CHANNELS_PER_STACK];
+    logic            wr_timeout     [PSEUDO_CHANNELS_PER_STACK];
+    logic [9:0]      wr_latency     [PSEUDO_CHANNELS_PER_STACK];
+    logic            wr_timer_oflow [PSEUDO_CHANNELS_PER_STACK];
+    logic            wr_timer_uflow [PSEUDO_CHANNELS_PER_STACK];
+    logic            rd_done        [PSEUDO_CHANNELS_PER_STACK];
+    axi3_pkg::resp_t rd_status      [PSEUDO_CHANNELS_PER_STACK];
+    logic            rd_timeout     [PSEUDO_CHANNELS_PER_STACK];
+    logic [9:0]      rd_latency     [PSEUDO_CHANNELS_PER_STACK];
+    logic            rd_timer_oflow [PSEUDO_CHANNELS_PER_STACK];
+    logic            rd_timer_uflow [PSEUDO_CHANNELS_PER_STACK];
 
     // -------------------------------------------
     // Interfaces
@@ -41,7 +56,7 @@ module xilinx_hbm_stack
     // -------------------------------------------
     xilinx_hbm_stack_ctrl #(
         .STACK   ( STACK ),
-        .DENSITY ( DENSITY )  
+        .DENSITY ( DENSITY )
     ) i_xilinx_hbm_stack_ctrl (
         .apb_clk ( clk_100mhz ),
         .*
@@ -610,16 +625,16 @@ module xilinx_hbm_stack
     // DRAM status
     wire logic                         DRAM_0_STAT_CATTRIP;
     wire logic [6:0]                   DRAM_0_STAT_TEMP;
-  
+
     // Xilinx HBM controller wrapper interface
     xilinx_hbm_stack_if #(
         .DENSITY ( DENSITY )
     ) i_xilinx_hbm_stack_if (
         .*
     );
- 
+
 `ifndef SYNTHESIS
-    
+
     // HBM simulations not supported in Vivado Simulator
     // (instantiate functional model instead)
     xilinx_hbm_4g_bfm i_hbm_4g_bfm (
@@ -659,7 +674,7 @@ module xilinx_hbm_stack
     );
 
 `else // SYNTHESIS
-   
+
     // Xilinx HBM controller instantiation
     generate
         if (STACK == STACK_LEFT) begin : g__hbm_left
@@ -738,5 +753,95 @@ module xilinx_hbm_stack
         end : g__hbm_right
     endgenerate
 `endif
+
+    // Latency tracking
+    initial timestamp = 0;
+    always @(posedge clk) timestamp <= timestamp + 1;
+
+    generate
+        for (genvar g_ch = 0; g_ch < PSEUDO_CHANNELS_PER_STACK; g_ch++) begin : g__ch
+            // (Local) signals
+            logic [TIMESTAMP_WID-1:0] wr_timestamp;
+            logic [TIMESTAMP_WID-1:0] rd_timestamp;
+
+            // Write transaction monitoring
+            fifo_ctxt #(
+                .DATA_WID ( TIMESTAMP_WID ),
+                .DEPTH    ( 512 ),
+                .REPORT_OFLOW ( 1 ),
+                .REPORT_UFLOW ( 1 )
+            ) i_fifo_ctxt__wr (
+                .clk,
+                .srst,
+                .wr      ( axi_if[g_ch].awvalid && axi_if[g_ch].awready ),
+                .wr_rdy  ( ),
+                .wr_data ( timestamp ),
+                .rd      ( axi_if[g_ch].bvalid && axi_if[g_ch].bready ),
+                .rd_vld  ( ),
+                .rd_data ( wr_timestamp ),
+                .oflow   ( wr_timer_oflow[g_ch] ),
+                .uflow   ( wr_timer_uflow[g_ch] )
+            );
+
+            initial wr_done[g_ch] = 1'b0;
+            always @(posedge clk) begin
+                if (srst) wr_done[g_ch] <= 1'b0;
+                else begin
+                    if (axi_if[g_ch].bvalid && axi_if[g_ch].bready) wr_done[g_ch] <= 1'b1;
+                    else                                            wr_done[g_ch] <= 1'b0;
+                end
+            end
+
+            always_ff @(posedge clk) begin
+                wr_status[g_ch] <= axi_if[g_ch].bresp;
+                if (axi_if[g_ch].bvalid && axi_if[g_ch].bready) begin
+                    if (timestamp-wr_timestamp > 10'd1023) wr_latency[g_ch] <= 10'd1023;
+                    else                                   wr_latency[g_ch] <= timestamp-wr_timestamp;
+                end
+            end
+
+            // TODO: support timeout monitoring
+            assign wr_timeout[g_ch] = 1'b0;
+
+            // Read transaction monitoring
+            fifo_ctxt #(
+                .DATA_WID ( TIMESTAMP_WID ),
+                .DEPTH    ( 512 ),
+                .REPORT_OFLOW ( 1 ),
+                .REPORT_UFLOW ( 1 )
+            ) i_fifo_ctxt__rd (
+                .clk,
+                .srst,
+                .wr      ( axi_if[g_ch].arvalid && axi_if[g_ch].arready ),
+                .wr_rdy  ( ),
+                .wr_data ( timestamp ),
+                .rd      ( axi_if[g_ch].rvalid && axi_if[g_ch].rready && axi_if[g_ch].rlast ),
+                .rd_vld  ( ),
+                .rd_data ( rd_timestamp ),
+                .oflow   ( rd_timer_oflow[g_ch] ),
+                .uflow   ( rd_timer_uflow[g_ch] )
+            );
+
+            initial rd_done[g_ch] = 1'b0;
+            always @(posedge clk) begin
+                if (srst) rd_done[g_ch] <= 1'b0;
+                else begin
+                    if (axi_if[g_ch].rvalid && axi_if[g_ch].rready) rd_done[g_ch] <= 1'b1;
+                    else                                            rd_done[g_ch] <= 1'b0;
+                end
+            end
+
+            always_ff @(posedge clk) begin
+                rd_status[g_ch] <= axi_if[g_ch].rresp;
+                if (axi_if[g_ch].rvalid && axi_if[g_ch].rready) begin
+                    if (timestamp-rd_timestamp > 10'd1023) rd_latency[g_ch] <= 10'd1023;
+                    else                                   rd_latency[g_ch] <= timestamp-rd_timestamp;
+                end
+            end
+
+            // TODO: support wr/rd timeout monitoring
+            assign rd_timeout[g_ch] = 1'b0;
+        end : g__ch
+    endgenerate
 
 endmodule : xilinx_hbm_stack
