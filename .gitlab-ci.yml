@@ -114,7 +114,7 @@ sim_platform:
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml
     when: always
-  timeout: 5h
+  timeout: 6h
   needs: []
 
 ons_ip_cache_key:
