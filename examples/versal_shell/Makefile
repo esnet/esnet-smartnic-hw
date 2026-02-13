@@ -21,8 +21,8 @@ export P4_IGR_FILE = $(CURDIR)/p4/$(APP_NAME).p4
 #export BUILD_NAME := esnet-smartnic-$(APP_NAME)
 
 # BOARD - Name of AMD (Xilinx) Alveo board used for target application.
-# Supports 'au280', 'au250' and 'au55c'.  Default is 'au280'.
-#export BOARD ?= au280
+# Supports 'au280', 'au250' and 'au55c'.  Default is 'au55c'.
+#export BOARD ?= au55c
 
 # EXAMPLE_TEST_DIR - Full pathname of p4 test directory used for example design generation.
 

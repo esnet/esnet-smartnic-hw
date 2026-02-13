@@ -25,8 +25,8 @@ export APP_NAME := $(notdir $(abspath $(CURDIR)))
 #export BUILD_NAME := esnet-smartnic-$(APP_NAME)
 
 # BOARD - Name of AMD (Xilinx) Alveo board used for target application.
-# Supports 'au280', 'au250' and 'au55c'.  Default is 'au280'.
-#export BOARD := au280
+# Supports 'au280', 'au250' and 'au55c'.  Default is 'au55c'.
+#export BOARD := au55c
 
 # AMD example design variables - used to generate the AMD example design (for xsim verilog simulation).
 # EXAMPLE_P4_FILE - Full pathname of p4 file used for example design generation (selects ingress or egress p4 program).
