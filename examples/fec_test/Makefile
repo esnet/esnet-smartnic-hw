@@ -22,8 +22,8 @@ SMARTNIC_DIR := ../..
 #export BUILD_NAME := esnet-smartnic-$(APP_NAME)
 
 # BOARD - Name of AMD (Xilinx) Alveo board used for target application.
-# Supports 'au280', 'au250' and 'au55c'.  Default is 'au280'.
-#export BOARD := au280
+# Supports 'au280', 'au250' and 'au55c'.  Default is 'au55c'.
+#export BOARD := au55c
 
 #------- Targets -------
 build:

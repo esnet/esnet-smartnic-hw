@@ -8,7 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # Board setup
 # -----------------------------------------------
-BOARD ?= au280 # Default of au280 can be overriden using make BOARD={au55c|au250}
+BOARD ?= au55c # Default of au55c can be overriden using make BOARD={au280|au250}
 
 # -----------------------------------------------
 # Specify top-level module

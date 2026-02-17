@@ -63,7 +63,7 @@ P4_OPTS ?= $(P4_OPTS_DEFAULT)
 # ----------------------------------------------------
 # Specifies name of AMD (Xilinx) Alveo board used for application.
 # Supports 'au280', 'au250' and 'au55c'.
-BOARD_DEFAULT := au280
+BOARD_DEFAULT := au55c
 BOARD ?= $(BOARD_DEFAULT)
 
 # Build name

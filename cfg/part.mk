@@ -7,13 +7,13 @@ BOARD_REPO = $(abspath $(CFG_ROOT)/../open-nic-shell/board_files/Xilinx)
 # -----------------------------------------
 # Device configuration
 # -----------------------------------------
-# select xcu280 by default.
-PART = xcu280-fsvh2892-2L-e
-BOARD_PART = xilinx.com:au280:part0:1.1
-
-ifeq ($(BOARD), au55c)
+# select xcu55c by default.
 PART = xcu55c-fsvh2892-2L-e
 BOARD_PART = xilinx.com:au55c:part0:1.0
+
+ifeq ($(BOARD), au280)
+PART = xcu280-fsvh2892-2L-e
+BOARD_PART = xilinx.com:au280:part0:1.1
 endif
 
 ifeq ($(BOARD), au250)
