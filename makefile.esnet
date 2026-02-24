@@ -2,7 +2,7 @@
 PROJ_ROOT := $(CURDIR)
 include $(PROJ_ROOT)/config.mk
 
-BOARD ?= au280
+BOARD ?= au55c
 BUILD_NAME ?= open-nic-ci
 
 vanilla_build_name = vanilla

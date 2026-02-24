@@ -12,7 +12,7 @@ include $(SMARTNIC_ROOT)/paths.mk
 LIB_ROOT := $(SMARTNIC_ROOT)/esnet-fpga-library
 include $(LIB_ROOT)/paths.mk
 
-BOARD ?= au280
+BOARD ?= au55c
 
 # Device configuration
 CFG_ROOT := $(SMARTNIC_ROOT)/cfg

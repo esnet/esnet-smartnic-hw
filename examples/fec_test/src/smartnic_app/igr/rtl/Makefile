@@ -25,6 +25,8 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     smartnic_app.igr.regio.rtl \
     smartnic.pkg$(if $(SMARTNIC_LIB_NAME),@$(SMARTNIC_LIB_NAME),) \
+    bus.rtl@$(COMMON_LIB_NAME) \
+    fifo.rtl@$(COMMON_LIB_NAME) \
     fec.pkg@$(COMMON_LIB_NAME) \
     fec.rtl@$(COMMON_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
