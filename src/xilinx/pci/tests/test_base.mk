@@ -20,7 +20,9 @@ waves ?= OFF
 # ----------------------------------------------------
 # Additional sources
 # ----------------------------------------------------
-SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv
+SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv \
+            $(ONS_ROOT)/src/qdma_subsystem/qdma_pci_cfg_ext_vpd.sv \
+            $(ONS_ROOT)/src/utility/level_trigger_cdc.sv
 
 # ----------------------------------------------------
 # Dependencies
@@ -32,7 +34,14 @@ SUBCOMPONENTS = \
     sync.rtl@common \
     axi4l.rtl@common \
     axi4s.rtl@common \
-    axi4l.verif@common
+    axi4l.verif@common \
+    pci.vpd.pkg@common \
+    pci.vpd.verif@common \
+    xilinx.cms.rtl \
+    xilinx.cms.verif \
+    xilinx.pci.pkg \
+    xilinx.pci.rtl \
+    xilinx.pci.verif
 
 EXT_LIBS =
 
