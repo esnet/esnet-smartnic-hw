@@ -27,7 +27,8 @@ SUBCOMPONENTS = \
     axi4l.verif@$(COMMON_LIB_NAME) \
     xilinx.cms.regio.rtl \
     xilinx.cms.regio.verif \
-    xilinx.cms.rtl
+    xilinx.cms.rtl \
+    xilinx.cms.verif
 EXT_LIBS =
 
 # ----------------------------------------------------

@@ -1,4 +1,4 @@
-module xilinx_cms_sn_fetch_fsm (
+module xilinx_cms_cardinfo_fetch_fsm (
   input logic              cms_clk,
   input logic              cms_srst,
   // From controller
@@ -6,14 +6,16 @@ module xilinx_cms_sn_fetch_fsm (
   // To CMS
   axi4l_intf.controller    axil_to_cms,
   // Card Serial Number Info
-  output logic             card_sn_vld,
-  output logic [0:15][7:0] card_sn,
-  output logic [7:0]       card_sn_len,
+  output logic             card_info_vld,
+  output logic [7:0]       card_info_len,
+  input  logic             card_info_rd,
+  input  logic [7:0]       card_info_rd_addr,
+  output logic [7:0]       card_info_rd_data,
+  output logic             card_info_rd_vld,
   // Error status
   output logic             error_boot_timeout,
   output logic             error_bad_axil_transaction,
-  output logic             error_card_info_length,
-  output logic             error_bad_info_parse
+  output logic             error_card_info_length
 );
 
   localparam int CMS_ADDR_WID = $clog2(256*1024); // 256kB
@@ -21,7 +23,7 @@ module xilinx_cms_sn_fetch_fsm (
   logic [CMS_ADDR_WID-1:0] m_awaddr;
   logic [CMS_ADDR_WID-1:0] m_araddr;
 
-  cms_sn_fetch_fsm      i_cms_sn_fetch_fsm (
+  cms_cardinfo_fetch_fsm      i_cms_sn_fetch_fsm (
     .aclk               ( cms_clk ),
     .aresetn            ( !cms_srst ),
     .s_axi_ctrl_AWVALID ( axil_from_controller.awvalid ),
@@ -71,4 +73,4 @@ module xilinx_cms_sn_fetch_fsm (
   assign axil_to_cms.aclk = axil_from_controller.aclk;
   assign axil_to_cms.aresetn = axil_from_controller.aresetn;
 
-endmodule :  xilinx_cms_sn_fetch_fsm
+endmodule :  xilinx_cms_cardinfo_fetch_fsm
