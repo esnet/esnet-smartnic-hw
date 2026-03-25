@@ -18,6 +18,11 @@ SEED ?= 0
 waves ?= OFF
 
 # ----------------------------------------------------
+# Additional sources
+# ----------------------------------------------------
+SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv
+
+# ----------------------------------------------------
 # Dependencies
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
@@ -26,7 +31,8 @@ SUBCOMPONENTS = \
     xilinx.qdma.rtl \
     sync.rtl@common \
     axi4l.rtl@common \
-    axi4s.rtl@common
+    axi4s.rtl@common \
+    axi4l.verif@common
 
 EXT_LIBS =
 

@@ -18,17 +18,31 @@ SEED ?= 0
 waves ?= OFF
 
 # ----------------------------------------------------
+# Additional sources
+# ----------------------------------------------------
+SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv \
+            $(ONS_ROOT)/src/qdma_subsystem/qdma_pci_cfg_ext_vpd.sv \
+            $(ONS_ROOT)/src/utility/level_trigger_cdc.sv
+
+# ----------------------------------------------------
 # Dependencies
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    axi4l.rtl@$(COMMON_LIB_NAME) \
-    axi4l.verif@$(COMMON_LIB_NAME) \
-    xilinx.cms.regio.rtl \
-    xilinx.cms.regio.verif \
+    xilinx.qdma.rtl \
+    sync.rtl@common \
+    axi4l.rtl@common \
+    axi4s.rtl@common \
+    axi4l.verif@common \
+    pci.vpd.pkg@common \
+    pci.vpd.verif@common \
     xilinx.cms.rtl \
-    xilinx.cms.verif
+    xilinx.cms.verif \
+    xilinx.pci.pkg \
+    xilinx.pci.rtl \
+    xilinx.pci.verif
+
 EXT_LIBS =
 
 # ----------------------------------------------------
