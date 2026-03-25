@@ -15,9 +15,14 @@ module xilinx_pci_vpd_unit_test;
     //===================================
     // Parameters
     //===================================
-    localparam logic[31:0] BUILD_ID         = 92999;
-    localparam logic[31:0] FLASH_REG_OFFSET = 32'habcdef01;
-    localparam logic[31:0] CMS_REG_OFFSET   = 32'h56782345;
+    localparam             PRODUCT_ID          = "ESnet SmartNIC";
+    localparam             APPLICATION_ID      = "p4_only";
+    localparam logic[31:0] BUILD_ID            = 92999;
+    localparam             BUILD_GIT_REPO      = "esnet-smartnic-hw";
+    localparam             BUILD_GIT_HASH      = "ab12cd34";
+    localparam             BUILD_TIMESTAMP_STR = "1969-12-31T19:00:00Z";
+    localparam logic[31:0] FLASH_REG_OFFSET    = 32'habcdef01;
+    localparam logic[31:0] CMS_REG_OFFSET      = 32'h56782345;
 
     //===================================
     // DUT
@@ -29,6 +34,9 @@ module xilinx_pci_vpd_unit_test;
 
     logic             init_done;
     logic             init_error;
+    logic             init_early_read;
+    logic [13:0]      init_time_ms;
+    logic             init_done_mask;
 
     logic             card_info_vld;
     logic [7:0]       card_info_len;
@@ -49,10 +57,15 @@ module xilinx_pci_vpd_unit_test;
     logic             error_card_info_length;
 
     xilinx_cms_cardinfo_fetch_fsm DUT0(.*);
-    system_config_vpd    #(
-        .BUILD_ID         (BUILD_ID),
-        .FLASH_REG_OFFSET (FLASH_REG_OFFSET),
-        .CMS_REG_OFFSET   (CMS_REG_OFFSET)
+    system_config_vpd       #(
+        .PRODUCT_ID          (PRODUCT_ID),
+        .APPLICATION_ID      (APPLICATION_ID),
+        .BUILD_ID            (BUILD_ID),
+        .BUILD_GIT_REPO      (BUILD_GIT_REPO),
+        .BUILD_GIT_HASH      (BUILD_GIT_HASH),
+        .BUILD_TIMESTAMP_STR (BUILD_TIMESTAMP_STR),
+        .FLASH_REG_OFFSET    (FLASH_REG_OFFSET),
+        .CMS_REG_OFFSET      (CMS_REG_OFFSET)
     ) DUT1 (
         .clk ( cms_clk ),
         .srst (cms_srst),
@@ -131,6 +144,8 @@ module xilinx_pci_vpd_unit_test;
         /* Place Setup Code Here */
         vpd_agent.idle();
         reset();
+
+        init_done_mask = 1'b0;
     endtask
 
 
@@ -205,6 +220,26 @@ module xilinx_pci_vpd_unit_test;
             vpd_r = vpd_parse_vpd_r(vpd);
             `FAIL_UNLESS(vpd_r.valid);
             `FAIL_UNLESS(vpd_r.checksum_ok);
+        `SVTEST_END
+
+        `SVTEST(vpd_r_default_check)
+            vpd_t vpd;
+            vpd_r_t vpd_r;
+            bit parse_error, checksum_error;
+            byte sn [];
+            wait (init_done || init_error);
+            `FAIL_UNLESS(init_done);
+            `FAIL_IF(init_error);
+            // Force static VPD data reporting only (no card info)
+            init_done_mask = 1'b1;
+            vpd_agent.read();
+            vpd = vpd_agent.get_vpd();
+            `FAIL_UNLESS(vpd_agent.is_valid());
+            vpd_r = vpd_parse_vpd_r(vpd);
+            `FAIL_UNLESS(vpd_r.valid);
+            `FAIL_UNLESS(vpd_r.checksum_ok);
+            sn = vpd_r_get_record_value(vpd_r, "SN");
+            `FAIL_UNLESS_EQUAL(sn.size(), 0);
         `SVTEST_END
 
         `SVTEST(sn_check)

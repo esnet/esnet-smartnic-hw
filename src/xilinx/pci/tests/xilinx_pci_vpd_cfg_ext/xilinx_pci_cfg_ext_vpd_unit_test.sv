@@ -34,6 +34,9 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
 
     logic             init_done;
     logic             init_error;
+    logic             init_early_read;
+    logic [13:0]      init_time_ms;
+    logic             init_done_mask;
 
     logic             card_info_vld;
     logic [7:0]       card_info_len;
@@ -160,6 +163,8 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
         /* Place Setup Code Here */
         foreach(vpd_agent[i]) vpd_agent[i].idle();
         reset();
+
+        init_done_mask = 1'b0;
     endtask
 
 
