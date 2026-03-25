@@ -17,7 +17,23 @@ vanilla_build_dir = $(ONS_ROOT)/build/$(BOARD)_$(vanilla_build_name)
 artifact_dir = $(open_nic_build)/$(BUILD_NAME)/esnet-smartnic-hwapi
 bitfile_dir  = $(artifact_dir)/bitfiles
 
-CI_PIPELINE_ID       ?= $(shell date +"%s")
+# Build metadata
+PRODUCT_ID = "ESnet SmartNIC"
+ifdef CI_PIPELINE_ID
+	APPLICATION_ID = $(SN_HW_APP_NAME)
+	BUILD_ID = $(CI_PIPELINE_ID)
+	BUILD_GIT_REPO = $(CI_PROJECT_NAME)
+	BUILD_GIT_HASH = $(CI_COMMIT_SHORT_SHA)
+else
+	APP_NAME ?= (empty)
+	APPLICATION_ID = $(APP_NAME)
+	BUILD_ID ?= 0
+	BUILD_GIT_REPO ?= (empty)
+	BUILD_GIT_HASH ?= (empty)
+endif
+
+BUILD_TIMESTAMP = $(shell date +"%s")
+CI_PIPELINE_ID       ?= $(BUILD_TIMESTAMP)
 bitstream_userid     ?= $(shell printf "0x%08x" $(CI_PIPELINE_ID))
 bitstream_usr_access ?= $(bitstream_userid)
 
@@ -28,7 +44,9 @@ jobs ?= 32
 max_pkt_len   ?= 9100
 vivado_tclargs = -board $(BOARD) -jobs $(jobs) -tag $(BUILD_NAME) -num_phys_func 2 -num_cmac_port 2 -num_queue 512 \
              -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -max_pkt_len $(max_pkt_len) \
-             -impl_strategy {$(IMPL_STRATEGY)}
+             -impl_strategy {$(IMPL_STRATEGY)} \
+			 -product_id {$(PRODUCT_ID)} -application_id {$(APPLICATION_ID)} \
+			 -build_id $(BUILD_ID) -build_git_repo $(BUILD_GIT_REPO) -build_git_hash $(BUILD_GIT_HASH) -timestamp $(BUILD_TIMESTAMP)
 
 VALIDATE_WNS_MIN ?= 0
 VALIDATE_TNS_MIN ?= 0
@@ -44,6 +62,8 @@ echo_vars:
 	@echo "ARTIFACTS_BUILD_DIR: $(ARTIFACTS_BUILD_DIR)"
 	@echo "        max_pkt_len: $(max_pkt_len)"
 	@echo "               jobs: $(jobs)"
+	@echo "     vivado_tclargs: $(vivado_tclargs)"
+	@echo "     CI_PIPELINE_ID: $(CI_PIPELINE_ID)"
 
 # Include targets for config validation
 # - checks Vivado version
@@ -162,8 +182,7 @@ prune_build:
 vanilla_bitfile : config_check
 	@echo "Creating vanilla bitfile"
 	( cd $(ONS_ROOT)/script && \
-	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 -rebuild 1 -board $(BOARD) -num_phys_func 2 -num_cmac_port 2 -num_queue 512  \
-	  -bitstream_userid $(bitstream_userid) -bitstream_usr_access $(bitstream_usr_access) -tag $(BUILD_NAME) \
+	  vivado -mode batch -source build.tcl -tclargs -synth_ip 1 -impl 1 -post_impl 1 -sim 0 -rebuild 1 -board $(BOARD) $(vivado_tclargs) \
         )
 	@ test -e $(open_nic_build)/open_nic_shell/open_nic_shell.runs/impl_1/open_nic_shell.bit || (echo ERROR: bitfile not produced. && false)
 	mkdir vanilla_artifact
