@@ -88,6 +88,10 @@ class Library:
     def smartnic_app_fec_test(self, dev, num, port):
         smartnic_app_fec_test(dev, num, port)
 
+    @keyword
+    def smartnic_app_udplb_fec_test(self, dev, num, port):
+        smartnic_app_udplb_fec_test(dev, num, port)
+
 
 #===================================================================================================
 # Basic traffic tests
@@ -518,4 +522,85 @@ def smartnic_app_fec_test(dev, num, port):
 
     smartnic_app_probes_test(dev, num, port)
 
+
+#===================================================================================================
+# FEC application test.  Tests 'udplb_fec' example design.
+#===================================================================================================
+def smartnic_app_udplb_fec_test(dev, num, port):
+    #num=8
+    err_loc = random.randint(0, 44)
+    dev.bar2.smartnic_app_igr.app_igr_config.err_loc_inj = err_loc
+    dev.bar2.smartnic_app_igr.app_igr_config.err_loc_dec = err_loc
+    print(f'err_loc: {err_loc}')
+
+    dev.bar2.smartnic_app_egr.app_egr_config.blk_size_enc = 255
+    dev.bar2.smartnic_app_igr.app_igr_config.blk_size_dec = 255
+
+    if (port==0):
+        dev.bar2.smartnic_regs.smartnic_demux_out_sel.port0=0  # P0 to PHY0
+        dev.bar2.smartnic_regs.switch_config.pkt_capture_enable_0=1
+    else:
+        dev.bar2.smartnic_regs.smartnic_demux_out_sel.port1=0  # P1 to PHY1
+        dev.bar2.smartnic_regs.switch_config.pkt_capture_enable_1=1
+
+    cmac_loopback_config(dev=dev, port=port, enable=1, gt=False)
+
+    mux_out_sel=0  # APP (default=3 DROP).
+    if (port==0):
+        dev.bar2.smartnic_regs.smartnic_mux_out_sel[0]._r.value=int(mux_out_sel)
+    else:
+        dev.bar2.smartnic_regs.smartnic_mux_out_sel[1]._r.value=int(mux_out_sel)
+
+    if (port==0): dev.bar2.p4_proc_igr.p4_proc.p4_bypass_config.p4_bypass_egr_port_type_0 = 2 # PF0 VF0
+    #if (port==0): dev.bar2.p4_proc_igr.p4_proc.p4_bypass_config.p4_bypass_egr_port_type_0 = 1 # PF0
+    else:         dev.bar2.p4_proc_igr.p4_proc.p4_bypass_config.p4_bypass_egr_port_type_1 = 2 # PF1 VF0
+
+    playback = PacketPlaybackProtocol(dev.bar2.smartnic_pkt_playback, 'Playback')
+    playback.enable()
+
+    capture  = PacketCaptureProtocol(dev.bar2.smartnic_pkt_capture, 'Capture')
+    capture.enable()
+
+
+    size = 512
+    bytes = size*num
+    tx_pkts = []
+    for i in range(num):
+        tx_pkt = one_packet(size)
+        tx_pkts.append(tx_pkt)
+
+        #print(f'Packet #{i} size: {size}')
+        pkt = tx_pkt
+        tid = 4+port  # VF0
+        #tid = 2+port  # PF
+        tdest = port
+        playback = PacketPlaybackProtocol(dev.bar2.smartnic_pkt_playback, 'Playback')
+        playback.send(pkt, tid << 5 | tdest << 1)   # meta = {tid[3:0], tdest[3:0], tuser}
+
+
+    print(tx_pkts)
+    for i in range(num):
+        pkt_capture_trigger (dev)
+        print(i)
+        pkt_capture_read    (dev, tx_pkts[i])
+
+
+    # compare expected pkt and byte counts.
+    if (port==0):
+        names = ['probe_from_pf0_vf0', 'probe_to_pf0_vf0']
+    else:
+        names = ['probe_from_pf1_vf0', 'probe_to_pf1_vf0']
+
+    check_probes (names, num, bytes, check_zeros=False)
+
+    if (port==0):
+        names = ['probe_to_app_egr_out0', 'probe_to_app_egr_p4_in0', 'probe_app0_to_core',
+                 'probe_to_cmac_0', 'probe_from_cmac_0', 'probe_core_to_app0',
+                 'probe_to_app_igr_p4_out0', 'probe_to_app_igr_in0']
+    else:
+        names = ['probe_to_app_egr_out1', 'probe_to_app_egr_p4_in1', 'probe_app1_to_core',
+                 'probe_to_cmac_1', 'probe_from_cmac_1', 'probe_core_to_app1',
+                 'probe_to_app_igr_p4_out1', 'probe_to_app_igr_in1']
+
+    check_probes (names, num*10/8, bytes*10/8, check_zeros=False)
 #---------------------------------------------------------------------------------------------------

@@ -123,10 +123,13 @@ Datapath - Drops To CMAC Test - Port 1
 
 
 # ----------------------------
-# FEC Application Test - Not included in smartnic hw regression suite.
+# FEC Application Tests - Not included in smartnic hw regression suite.
 # ----------------------------
 #Datapath - FEC Application Test - Port 0
 #    Smartnic App FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
+#
+#Datapath - UDPLB FEC Application Test - Port 0
+#    Smartnic App UDPLB FEC Test    dev=${dev}    num=${64}    port=${0}
 
 
 
