@@ -65,6 +65,7 @@ module smartnic_app_igr
 
     end endgenerate
 
+    // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_fec_in (.axis_in(fec_in[0]));
 
     axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID), .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))
                _axi4s_c2h [NUM_PORTS] (.aclk(core_clk));
@@ -76,6 +77,17 @@ module smartnic_app_igr
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_out [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) inj_out [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) dec_out [NUM_PORTS] (.clk(core_clk));
+
+    /*
+    axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TUSER_WID(TUSER_WID), .TID_WID(TID_WID),
+                  .TDEST_WID(TDEST_WID))  axi4s_dec_in (.aclk(core_clk));
+
+    assign axi4s_dec_in.tdata  = inj_out[0].data;
+    assign axi4s_dec_in.tkeep  = {'0, inj_out[0].blk_size};
+    assign axi4s_dec_in.tvalid = inj_out[0].valid;
+    assign axi4s_dec_in.tready = inj_out[0].ready;
+    */
+    // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_dec_in (.axis_in(axi4s_dec_in));
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         assign col_in[i].data     = fec_in[i].tdata;
