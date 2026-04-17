@@ -1,0 +1,34 @@
+*~
+\#*\#
+
+# Xilinx             #
+######################
+xsim.jou
+xsim.log
+*.backup.jou
+*.backup.log
+vivado*.jou
+vivado*.log
+vivado_*.str
+xvlog.pb
+hs_err_pid*.log
+webtalk*.log
+webtalk*.jou
+
+# Precompiled libraries
+*.sdb
+*.rlx
+
+# Simulation
+**/lib/sub.libs
+**/lib/compile*.log
+**/lib/compile*.sh
+**/run_[0-9]*/
+.sim_waves.tcl
+**/tests*/*/*.wcfg
+
+**/.Xil
+
+# SVUnit             #
+######################
+**/.svunit

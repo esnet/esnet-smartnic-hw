@@ -65,15 +65,17 @@ endtask
 task automatic write_p4_tables (input string testdir);
     string filename;
 
-   `INFO("Writing VitisNetP4 tables...");
-    filename = {p4_sim_dir, testdir, "/cli_commands.txt"};
-    vitisnetp4_agent.table_init_from_file(filename);
+   `ifndef NO_P4_AGENT
+       `INFO("Writing VitisNetP4 tables...");
+        filename = {p4_sim_dir, testdir, "/cli_commands.txt"};
+        vitisnetp4_agent.table_init_from_file(filename);
+   `endif
 endtask
 
 
 task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0, tid=0, tdest=0,
                              tuser_smartnic_meta_t tuser='{rss_enable: 1'b0, rss_entropy: '0},
-                             bit write_tables=1);
+                             bit write_tables=1, int iter=1);
     string filename;
     bit    rx_done=0;
 
@@ -82,12 +84,14 @@ task automatic run_pkt_test (input string testdir, port_t in_port=0, out_port=0,
    `INFO("Writing expected pcap data to scoreboard...");
     filename = {p4_sim_dir, testdir, "/packets_out.pcap"};
 
-    env.pcap_to_scoreboard (.filename(filename), .tid(tid), .tdest(tdest), .tuser(tuser),
-                            .scoreboard(env.scoreboard[out_port]) );
+    repeat (iter)
+        env.pcap_to_scoreboard (.filename(filename), .tid(tid), .tdest(tdest), .tuser(tuser),
+                                .scoreboard(env.scoreboard[out_port]) );
 
    `INFO("Starting simulation...");
     filename = {p4_sim_dir, testdir, "/packets_in.pcap"};
-    env.pcap_to_driver     (.filename(filename), .driver(env.driver[in_port]));
+    repeat (iter)
+        env.pcap_to_driver (.filename(filename), .driver(env.driver[in_port]));
 
     #1us;
     fork

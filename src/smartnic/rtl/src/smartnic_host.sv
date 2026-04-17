@@ -113,15 +113,6 @@ module smartnic_host
 
         axi4s_intf_pipe axi4s_host_tid_pipe (.srst, .from_tx(axis_host_tid[i]), .to_rx(axis_host_tid_p[i]));
 
-        //ila_axi4s ila_host_tid (
-        //   .clk    (axis_host_tid_p[i].aclk),
-        //   .probe0 (axis_host_tid_p[i].tdata),
-        //   .probe1 (axis_host_tid_p[i].tvalid),
-        //   .probe2 (axis_host_tid_p[i].tlast),
-        //   .probe3 (axis_host_tid_p[i].tkeep),
-        //   .probe4 (axis_host_tid_p[i].tready),
-        //   .probe5 ({30'd0, axis_host_tid_p[i].tid})
-        //);
     end : g__host_tid
     endgenerate
 
@@ -245,5 +236,7 @@ module smartnic_host
        .axil_if ( axil_to_pkt_capture ),
        .axis_if ( axis_pkt_capture )
     );
+
+    // xilinx_axi4s_ila #(.PIPE_STAGES(2)) xilinx_axi4s_ila_pkt_capture   (.axis_in(axis_pkt_capture));
 
 endmodule // smartnic_host
