@@ -196,7 +196,7 @@ versal_shell: versal_shell_bitfile
 
 versal_shell_bitfile:
 	@echo "Building ESnet Versal shell bitfile ($(BUILD_ID))..."
-	@cd $(AVED_ROOT)/hw/amd_v80_gen5x8_23.2_exdes_2 && ./build_all.sh
+	@cd $(AVED_ROOT)/hw/amd_v80_gen5x8_25.1 && PATH=$(PATH):$(XILINX_VITIS)/gnu/armr5/lin/gcc-arm-none-eabi/bin ./build_all.sh
 
 .PHONY: versal_shell versal_shell_bitfile
 
