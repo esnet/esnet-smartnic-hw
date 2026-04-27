@@ -5,7 +5,7 @@ localparam NUM_PORTS = 4;
 
 import smartnic_pkg::*;
 
-localparam P4_DECODER_BASE = 'h80000;
+localparam P4_DECODER_BASE = 'h100000;
 
 typedef enum logic [31:0] {
     PROBE_CORE_TO_APP0    = 'h0c00,
@@ -42,12 +42,12 @@ typedef enum logic [31:0] {
     PROBE_TO_BYPASS1      = 'h4300,
     DROPS_TO_BYPASS1      = 'h4400,
 
-    PROBE_FROM_APP_PF0      = P4_DECODER_BASE + 'h65000,
-    PROBE_FROM_APP_PF1      = P4_DECODER_BASE + 'h65100,
-    PROBE_FROM_APP_PF0_VF0  = P4_DECODER_BASE + 'h65200,
-    PROBE_FROM_APP_PF1_VF0  = P4_DECODER_BASE + 'h65300,
-    PROBE_FROM_APP_PF0_VF1  = P4_DECODER_BASE + 'h65400,
-    PROBE_FROM_APP_PF1_VF1  = P4_DECODER_BASE + 'h65500
+    PROBE_FROM_APP_PF0      = P4_DECODER_BASE + 'hc5000,
+    PROBE_FROM_APP_PF1      = P4_DECODER_BASE + 'hc5100,
+    PROBE_FROM_APP_PF0_VF0  = P4_DECODER_BASE + 'hc5200,
+    PROBE_FROM_APP_PF1_VF0  = P4_DECODER_BASE + 'hc5300,
+    PROBE_FROM_APP_PF0_VF1  = P4_DECODER_BASE + 'hc5400,
+    PROBE_FROM_APP_PF1_VF1  = P4_DECODER_BASE + 'hc5500
 
     } cntr_addr_encoding_t;
 
