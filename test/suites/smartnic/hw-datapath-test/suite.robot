@@ -129,8 +129,11 @@ Datapath - Drops To CMAC Test - Port 1
 #    Smartnic App FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
 #
 #Datapath - UDPLB FEC Application Test - Port 0
-#    Smartnic App UDPLB FEC Test    dev=${dev}    num=${64}    port=${0}
-
+#    [Timeout]    5 minutes
+#    FOR    ${i}    IN RANGE    10 #100
+#        Smartnic App UDPLB FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
+#        ${pkt_num}=    Evaluate    ${pkt_num} + 1
+#    END
 
 
 *** Comments ***
