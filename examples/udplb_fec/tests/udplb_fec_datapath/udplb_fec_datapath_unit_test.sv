@@ -104,7 +104,7 @@ module udplb_fec_datapath_unit_test;
     //   `SVTEST_END
     //===================================
 
-    int iter=8;  // number of pcap iterations.
+    int iter=16;  // number of pcap iterations.
     int pkts=4*iter, bytes=2048*iter; // pkt and byte counts for 'test-fwd-p0'.
     int offset;
 
@@ -150,7 +150,7 @@ module udplb_fec_datapath_unit_test;
             for (int i=0; i<1; i++) begin
                 debug_msg($sformatf("Testing PF%0b VF0 igr -> loopback -> PF%0b VF0...", i, i), 1);
                 run_pkt_test(.testdir("test-fwd-p0"), .in_port(PF0_VF0+i), .out_port(PF0_VF0+i), .write_tables(0),
-                             .tuser(tuser), .iter(8));
+                             .tuser(tuser), .iter(iter));
                 offset = 'h100 * i;
 
                 check_probe (offset + PROBE_FROM_PF0_VF0,        pkts, bytes);

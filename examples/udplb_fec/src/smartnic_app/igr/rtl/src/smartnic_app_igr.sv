@@ -76,6 +76,7 @@ module smartnic_app_igr
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_in  [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_out [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) inj_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) frm_out [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) dec_out [NUM_PORTS] (.clk(core_clk));
 
     /*
@@ -83,7 +84,7 @@ module smartnic_app_igr
                   .TDEST_WID(TDEST_WID))  axi4s_dec_in (.aclk(core_clk));
 
     assign axi4s_dec_in.tdata  = inj_out[0].data;
-    assign axi4s_dec_in.tkeep  = {'0, inj_out[0].blk_size};
+    assign axi4s_dec_in.tkeep  = {'0, inj_out[0].meta.fec_blk_size};
     assign axi4s_dec_in.tvalid = inj_out[0].valid;
     assign axi4s_dec_in.tready = inj_out[0].ready;
     */
@@ -92,7 +93,6 @@ module smartnic_app_igr
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         assign col_in[i].data     = fec_in[i].tdata;
         assign col_in[i].valid    = fec_in[i].tvalid;
-        assign col_in[i].blk_size = smartnic_app_igr_regs.app_igr_config.blk_size_dec;
 
         assign fec_in[i].tready = col_in[i].ready;
 
@@ -116,11 +116,20 @@ module smartnic_app_igr
             .data_out      (inj_out[i])
         );
 
+        rs_acc_framer #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN), .MODE(RX)) rs_acc_framer_0 (
+            .clk            (core_clk),
+            .srst           (core_srst),
+            .fec_evt_size   (smartnic_app_igr_regs.fec_evt_size_dec),
+
+            .data_in        (inj_out[i]),
+            .data_out       (frm_out[i])
+        );
+
         rs_acc_decode #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_decode_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .err_loc        (smartnic_app_igr_regs.app_igr_config.err_loc_dec),
-            .data_in        (inj_out[i]),
+            .data_in        (frm_out[i]),
             .data_out       (dec_out[i])
         );
 
@@ -130,7 +139,7 @@ module smartnic_app_igr
         assign _axi4s_c2h[i].tid    = '0;
         assign _axi4s_c2h[i].tdest  = '0;
         assign _axi4s_c2h[i].tuser  = '0;
-        assign _axi4s_c2h[i].tlast  = dec_out[i].eos;
+        assign _axi4s_c2h[i].tlast  = dec_out[i].meta.eos;
 
         assign dec_out[i].ready = _axi4s_c2h[i].tready;
 

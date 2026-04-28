@@ -31,3 +31,8 @@ regs:
         desc: specifies the decoder block size.
         width: 8
         init : 0xff
+
+  - name: fec_evt_size_dec
+    desc: specifies the decoder fec event size.
+    access: rw
+    init: 0xffff
