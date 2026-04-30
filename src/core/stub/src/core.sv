@@ -33,15 +33,18 @@ module core
     axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (axil_if));
 
     // -- CMAC
+    // shell_adapter__core drives axis_cmac_rx (.tx) and receives axis_cmac_tx (.rx),
+    // so the stub provides the complementary sides.
     generate
         for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            axi4s_intf_tx_term i_axi4s_intf_tx_term__cmac_rx (.to_rx   (axis_cmac_rx[g_cmac]));
-            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__cmac_tx (.from_tx (axis_cmac_tx[g_cmac]));
+            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__cmac_rx (.from_tx (axis_cmac_rx[g_cmac]));
+            axi4s_intf_tx_term i_axi4s_intf_tx_term__cmac_tx (.to_rx   (axis_cmac_tx[g_cmac]));
         end : g__cmac
     endgenerate
 
-    // -- H2C
-    axi4s_intf_tx_term i_axi4s_intf_tx_term__h2c (.to_rx   (axis_h2c));
-    axi4s_intf_rx_term i_axi4s_intf_rx_sink__c2h (.from_rx (axis_c2h));
+    // -- H2C/C2H
+    // shell_adapter__core drives axis_h2c (.tx) and receives axis_c2h (.rx).
+    axi4s_intf_rx_sink i_axi4s_intf_rx_sink__h2c (.from_tx (axis_h2c));
+    axi4s_intf_tx_term i_axi4s_intf_tx_term__c2h (.to_rx   (axis_c2h));
 
 endmodule : core
