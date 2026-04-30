@@ -22,7 +22,6 @@ module xilinx_cms_model (
     );
 
     assign cms_reg_if.host_status2_reg_nxt_v = 1'b1;
-    assign cms_reg_if.host_status2_reg_nxt[0] = cms_reg_if.mb_resetn_reg[0];
 
     initial begin
         cms_reg_if.reg_map_id_reg_nxt = 32'h0;
