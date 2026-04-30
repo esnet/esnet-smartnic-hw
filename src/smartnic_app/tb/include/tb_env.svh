@@ -11,7 +11,7 @@ class tb_env extends std_verif_pkg::basic_env;
     localparam type TDEST_T       = port_t;
     localparam type TUSER_T       = tuser_smartnic_meta_t;
 
-    localparam int  TID_WID = $bits(TID_T);
+    localparam int  TID_WID   = $bits(TID_T);
     localparam int  TDEST_WID = $bits(TDEST_T);
     localparam int  TUSER_WID = $bits(TUSER_T);
 
@@ -186,6 +186,34 @@ class tb_env extends std_verif_pkg::basic_env;
         trace_msg("Running...");
 
         trace_msg("_run() Done.");
+    endtask
+
+
+    task automatic send_packets (
+        input int          num=1, len=512,
+        input TID_T        tid=0,
+        input TDEST_T      tdest=0,
+        input TUSER_T      tuser=0,
+        input DRIVER_T     driver,
+        input SCOREBOARD_T scoreboard );
+
+        axi4s_transaction#(TID_T, TDEST_T, TUSER_T) transaction;
+        byte data[];
+
+        for (int i = 0; i < num; i++) begin
+            if (!std::randomize(data) with {data.size() == len;}) $fatal("Failed to randomize packet data.");
+
+            transaction = axi4s_transaction#(TID_T, TDEST_T, TUSER_T)::create_from_bytes(
+                $sformatf("Packet %0d", i),
+                data,
+                tid,
+                tdest,
+                tuser
+            );
+
+            scoreboard.exp_inbox.put(transaction);
+            driver.inbox.put(transaction);
+        end
     endtask
 
 
