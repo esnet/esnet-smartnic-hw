@@ -46,21 +46,21 @@ module xilinx_aved_shell_adapter
     // Network port interfaces (CMAC) — terminated pending AVED DCMAC wiring
     // =========================================================================
     axi4s_intf #(
-        .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
         .TID_WID       ( PORT_AXIS_TID_WID  ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID )
-    ) axis_port_rx [NUM_PORTS] (.aclk(app_if.clk));
+    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(app_if.clk));
 
     axi4s_intf #(
-        .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
         .TID_WID       ( PORT_AXIS_TID_WID  ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID )
-    ) axis_port_tx [NUM_PORTS] (.aclk(app_if.clk));
+    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(app_if.clk));
 
     generate
-        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
+        for (genvar g_port = 0; g_port < shell_if.NUM_PORTS; g_port++) begin : g__port
             axi4s_intf_tx_term i_axi4s_intf_tx_term__port_rx (
                 .to_rx ( axis_port_rx[g_port] )
             );
@@ -74,14 +74,14 @@ module xilinx_aved_shell_adapter
     // DMA streaming interfaces — terminated pending AVED DMA wiring
     // =========================================================================
     axi4s_intf #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
     ) axis_h2c (.aclk(app_if.clk));
 
     axi4s_intf #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )

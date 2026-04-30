@@ -1,7 +1,7 @@
 module shell_adapter__core
     import shell_pkg::*;
 #(
-    parameter int NUM_PORTS = shell_pkg::NUM_PORTS
+    parameter int NUM_PORTS = 2
 ) (
     shell_intf.core shell_if,
 
@@ -15,7 +15,7 @@ module shell_adapter__core
 );
     // AXI-L
     axi4l_intf_from_signals #(
-        .ADDR_WID ( AXIL_ADDR_WID )
+        .ADDR_WID ( shell_if.AXIL_ADDR_WID )
     ) i_axi4l_intf_from_signals (
         .aclk    ( axil_if.aclk ),
         .aresetn ( axil_if.aresetn ),
@@ -45,7 +45,7 @@ module shell_adapter__core
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+                .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
                 .TID_WID       ( PORT_AXIS_TID_WID  ),
                 .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
                 .TUSER_WID     ( PORT_AXIS_TUSER_WID )
@@ -62,7 +62,7 @@ module shell_adapter__core
             );
 
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+                .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
                 .TID_WID       ( PORT_AXIS_TID_WID  ),
                 .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
                 .TUSER_WID     ( PORT_AXIS_TUSER_WID )
@@ -82,7 +82,7 @@ module shell_adapter__core
 
     // H2C
     axi4s_intf_from_signals #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
@@ -100,7 +100,7 @@ module shell_adapter__core
 
     // C2H
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )

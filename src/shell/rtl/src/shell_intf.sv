@@ -16,11 +16,11 @@
 interface shell_intf
     import shell_pkg::*;
 #(
-    parameter int NUM_PORTS            = shell_pkg::NUM_PORTS,
-    parameter int PORT_DATA_BYTE_WID   = shell_pkg::PORT_DATA_BYTE_WID,
-    parameter int DMA_ST_DATA_BYTE_WID = shell_pkg::DMA_ST_DATA_BYTE_WID,
+    parameter int NUM_PORTS            = 2,
+    parameter int PORT_DATA_BYTE_WID   = 64,
+    parameter int DMA_ST_DATA_BYTE_WID = 64,
     parameter int DMA_ST_QUEUES        = shell_pkg::DMA_ST_QUEUES,
-    parameter int AXIL_ADDR_WID        = shell_pkg::AXIL_ADDR_WID
+    parameter int AXIL_ADDR_WID        = 32
 ) ();
     // -------------------------------------------------------------------------
     // Derived constants (accessible from both sides via shell_if.PORT_DATA_WID etc.)
@@ -28,7 +28,7 @@ interface shell_intf
     localparam int PORT_DATA_WID      = PORT_DATA_BYTE_WID * 8;
     localparam int DMA_ST_DATA_WID    = DMA_ST_DATA_BYTE_WID * 8;
     localparam int DMA_ST_QID_WID     = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
-    localparam int AXIL_DATA_BYTE_WID = shell_pkg::AXIL_DATA_BYTE_WID;
+    localparam int AXIL_DATA_BYTE_WID = 4;
     localparam int AXIL_DATA_WID      = AXIL_DATA_BYTE_WID * 8;
 
     // -------------------------------------------------------------------------
