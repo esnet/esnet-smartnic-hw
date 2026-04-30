@@ -16,6 +16,11 @@ BOARD ?= au55c # Default of au55c can be overriden using make BOARD={au280|au250
 TOP = esnet_shell
 
 # -----------------------------------------------
+# Source directory (board-specific top-level)
+# -----------------------------------------------
+SRC_DIR = $(BOARD)/src
+
+# -----------------------------------------------
 # Build config
 # -----------------------------------------------
 BUILD_TIMESTAMP = $(shell date +"%s")
