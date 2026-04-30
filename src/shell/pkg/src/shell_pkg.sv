@@ -3,9 +3,9 @@ package shell_pkg;
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
-    // CMAC
-    localparam int NUM_CMAC = 2;
-    localparam int CMAC_DATA_BYTE_WID = 64;
+    // Network ports
+    localparam int NUM_PORTS = 2;
+    localparam int PORT_DATA_BYTE_WID = 64;
 
     // DMA (streaming)
     localparam int DMA_ST_DATA_BYTE_WID = 64;
@@ -57,35 +57,35 @@ package shell_pkg;
     } dma_st_axis_rev_t;
     localparam int DMA_ST_AXIS_REV_WID = $bits(dma_st_axis_rev_t);
 
-    // CMAC
+    // Network port
     // ------------------------------
-    typedef logic [CMAC_DATA_BYTE_WID-1:0]        cmac_axis_tkeep_t;
-    typedef logic [CMAC_DATA_BYTE_WID-1:0][7:0]   cmac_axis_tdata_t;
-    typedef unused_t                              cmac_axis_tid_t;
-    typedef unused_t                              cmac_axis_tdest_t;
-    typedef struct packed {logic err;}            cmac_axis_tuser_t;
+    typedef logic [PORT_DATA_BYTE_WID-1:0]        port_axis_tkeep_t;
+    typedef logic [PORT_DATA_BYTE_WID-1:0][7:0]   port_axis_tdata_t;
+    typedef unused_t                              port_axis_tid_t;
+    typedef unused_t                              port_axis_tdest_t;
+    typedef struct packed {logic err;}            port_axis_tuser_t;
 
-    localparam int CMAC_AXIS_TKEEP_WID = $bits(cmac_axis_tkeep_t);
-    localparam int CMAC_AXIS_TDATA_WID = $bits(cmac_axis_tdata_t);
-    localparam int CMAC_AXIS_TID_WID   = $bits(cmac_axis_tid_t);
-    localparam int CMAC_AXIS_TDEST_WID = $bits(cmac_axis_tdest_t);
-    localparam int CMAC_AXIS_TUSER_WID = $bits(cmac_axis_tuser_t);
+    localparam int PORT_AXIS_TKEEP_WID = $bits(port_axis_tkeep_t);
+    localparam int PORT_AXIS_TDATA_WID = $bits(port_axis_tdata_t);
+    localparam int PORT_AXIS_TID_WID   = $bits(port_axis_tid_t);
+    localparam int PORT_AXIS_TDEST_WID = $bits(port_axis_tdest_t);
+    localparam int PORT_AXIS_TUSER_WID = $bits(port_axis_tuser_t);
 
     typedef struct packed {
         logic                           tvalid;
         logic                           tlast;
-        logic [CMAC_AXIS_TKEEP_WID-1:0] tkeep;
-        logic [CMAC_AXIS_TDATA_WID-1:0] tdata;
-        logic [CMAC_AXIS_TID_WID-1:0]   tid;
-        logic [CMAC_AXIS_TDEST_WID-1:0] tdest;
-        logic [CMAC_AXIS_TUSER_WID-1:0] tuser;
-    } cmac_axis_fwd_t;
-    localparam int CMAC_AXIS_FWD_WID = $bits(cmac_axis_fwd_t);
+        logic [PORT_AXIS_TKEEP_WID-1:0] tkeep;
+        logic [PORT_AXIS_TDATA_WID-1:0] tdata;
+        logic [PORT_AXIS_TID_WID-1:0]   tid;
+        logic [PORT_AXIS_TDEST_WID-1:0] tdest;
+        logic [PORT_AXIS_TUSER_WID-1:0] tuser;
+    } port_axis_fwd_t;
+    localparam int PORT_AXIS_FWD_WID = $bits(port_axis_fwd_t);
 
     typedef struct packed {
         logic tready;
-    } cmac_axis_rev_t;
-    localparam int CMAC_AXIS_REV_WID = $bits(cmac_axis_rev_t);
+    } port_axis_rev_t;
+    localparam int PORT_AXIS_REV_WID = $bits(port_axis_rev_t);
 
     // AXI-L
     // ------------------------------
@@ -127,20 +127,20 @@ package shell_pkg;
     // Interface definition
     // ------------------------------
     typedef struct packed {
-        logic [AXIL_FWD_WID-1:0]                    axil;
-        logic [NUM_CMAC-1:0][CMAC_AXIS_FWD_WID-1:0] cmac_rx;
-        logic [NUM_CMAC-1:0][CMAC_AXIS_REV_WID-1:0] cmac_tx;
-        logic [DMA_ST_AXIS_FWD_WID-1:0]             h2c;
-        logic [DMA_ST_AXIS_REV_WID-1:0]             c2h;
+        logic [AXIL_FWD_WID-1:0]                     axil;
+        logic [NUM_PORTS-1:0][PORT_AXIS_FWD_WID-1:0] port_rx;
+        logic [NUM_PORTS-1:0][PORT_AXIS_REV_WID-1:0] port_tx;
+        logic [DMA_ST_AXIS_FWD_WID-1:0]              h2c;
+        logic [DMA_ST_AXIS_REV_WID-1:0]              c2h;
     } shell_to_core_t;
     localparam int SHELL_TO_CORE_WID = $bits(shell_to_core_t);
 
     typedef struct packed {
-        logic [AXIL_REV_WID-1:0]                    axil;
-        logic [NUM_CMAC-1:0][CMAC_AXIS_REV_WID-1:0] cmac_rx;
-        logic [NUM_CMAC-1:0][CMAC_AXIS_FWD_WID-1:0] cmac_tx;
-        logic [DMA_ST_AXIS_REV_WID-1:0]             h2c;
-        logic [DMA_ST_AXIS_FWD_WID-1:0]             c2h;
+        logic [AXIL_REV_WID-1:0]                     axil;
+        logic [NUM_PORTS-1:0][PORT_AXIS_REV_WID-1:0] port_rx;
+        logic [NUM_PORTS-1:0][PORT_AXIS_FWD_WID-1:0] port_tx;
+        logic [DMA_ST_AXIS_REV_WID-1:0]              h2c;
+        logic [DMA_ST_AXIS_FWD_WID-1:0]              c2h;
     } core_to_shell_t;
     localparam int CORE_TO_SHELL_WID = $bits(core_to_shell_t);
 

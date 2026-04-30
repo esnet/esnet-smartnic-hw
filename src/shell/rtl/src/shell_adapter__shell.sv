@@ -16,9 +16,9 @@ module shell_adapter__shell
     // AXI-L
     axi4l_intf.peripheral axil_if,
 
-    // CMAC
-    axi4s_intf.rx axis_cmac_rx [NUM_CMAC],
-    axi4s_intf.tx axis_cmac_tx [NUM_CMAC],
+    // Network ports
+    axi4s_intf.rx axis_port_rx [NUM_PORTS],
+    axi4s_intf.tx axis_port_tx [NUM_PORTS],
 
     // DMA (streaming)
     axi4s_intf.rx axis_h2c,
@@ -70,54 +70,54 @@ module shell_adapter__shell
         .axi4l_if( axil_if )
     );
 
-    // CMAC
+    // Network ports
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             // -- Rx
-            cmac_axis_fwd_t shell_to_core_cmac_rx;
-            cmac_axis_rev_t core_to_shell_cmac_rx;
+            port_axis_fwd_t shell_to_core_port_rx;
+            port_axis_rev_t core_to_shell_port_rx;
 
-            assign __shell_to_core.cmac_rx[g_cmac] = shell_to_core_cmac_rx;
-            assign core_to_shell_cmac_rx = __core_to_shell.cmac_rx[g_cmac];
+            assign __shell_to_core.port_rx[g_port] = shell_to_core_port_rx;
+            assign core_to_shell_port_rx = __core_to_shell.port_rx[g_port];
 
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-                .TID_WID       ( CMAC_AXIS_TID_WID ),
-                .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
+                .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+                .TID_WID       ( PORT_AXIS_TID_WID ),
+                .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+                .TUSER_WID     ( PORT_AXIS_TUSER_WID )
             ) i_axi4s_intf_to_signals (
-                .tvalid   ( shell_to_core_cmac_rx.tvalid ),
-                .tready   ( core_to_shell_cmac_rx.tready ),
-                .tdata    ( shell_to_core_cmac_rx.tdata ),
-                .tkeep    ( shell_to_core_cmac_rx.tkeep ),
-                .tlast    ( shell_to_core_cmac_rx.tlast ),
-                .tid      ( shell_to_core_cmac_rx.tid ),
-                .tdest    ( shell_to_core_cmac_rx.tdest ),
-                .tuser    ( shell_to_core_cmac_rx.tuser ),
-                .axi4s_if ( axis_cmac_rx[g_cmac] )
+                .tvalid   ( shell_to_core_port_rx.tvalid ),
+                .tready   ( core_to_shell_port_rx.tready ),
+                .tdata    ( shell_to_core_port_rx.tdata ),
+                .tkeep    ( shell_to_core_port_rx.tkeep ),
+                .tlast    ( shell_to_core_port_rx.tlast ),
+                .tid      ( shell_to_core_port_rx.tid ),
+                .tdest    ( shell_to_core_port_rx.tdest ),
+                .tuser    ( shell_to_core_port_rx.tuser ),
+                .axi4s_if ( axis_port_rx[g_port] )
             );
             // -- Tx
-            cmac_axis_rev_t shell_to_core_cmac_tx;
-            cmac_axis_fwd_t core_to_shell_cmac_tx;
+            port_axis_rev_t shell_to_core_port_tx;
+            port_axis_fwd_t core_to_shell_port_tx;
 
-            assign shell_to_core_cmac_tx = __shell_to_core.cmac_tx[g_cmac];
-            assign __core_to_shell.cmac_tx[g_cmac] = core_to_shell_cmac_tx;
+            assign shell_to_core_port_tx = __shell_to_core.port_tx[g_port];
+            assign __core_to_shell.port_tx[g_port] = core_to_shell_port_tx;
 
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-                .TID_WID       ( CMAC_AXIS_TID_WID ),
-                .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
+                .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+                .TID_WID       ( PORT_AXIS_TID_WID ),
+                .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+                .TUSER_WID     ( PORT_AXIS_TUSER_WID )
             ) i_axi4s_intf_from_signals (
-                .tvalid   ( core_to_shell_cmac_tx.tvalid ),
-                .tready   ( shell_to_core_cmac_tx.tready ),
-                .tdata    ( core_to_shell_cmac_tx.tdata ),
-                .tkeep    ( core_to_shell_cmac_tx.tkeep ),
-                .tlast    ( core_to_shell_cmac_tx.tlast ),
-                .tid      ( core_to_shell_cmac_tx.tid ),
-                .tdest    ( core_to_shell_cmac_tx.tdest ),
-                .tuser    ( core_to_shell_cmac_tx.tuser ),
-                .axi4s_if ( axis_cmac_tx[g_cmac] )
+                .tvalid   ( core_to_shell_port_tx.tvalid ),
+                .tready   ( shell_to_core_port_tx.tready ),
+                .tdata    ( core_to_shell_port_tx.tdata ),
+                .tkeep    ( core_to_shell_port_tx.tkeep ),
+                .tlast    ( core_to_shell_port_tx.tlast ),
+                .tid      ( core_to_shell_port_tx.tid ),
+                .tdest    ( core_to_shell_port_tx.tdest ),
+                .tuser    ( core_to_shell_port_tx.tuser ),
+                .axi4s_if ( axis_port_tx[g_port] )
             );
         end
     endgenerate

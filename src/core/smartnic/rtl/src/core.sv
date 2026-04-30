@@ -3,7 +3,7 @@
 //
 // Wraps SmartNIC platform logic as a standard ESnet core.
 // =========================================================================
-module core 
+module core
     import shell_pkg::*;
 (
     // Clock/reset
@@ -23,8 +23,8 @@ module core
     // Signals
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(clk));
 
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
@@ -49,50 +49,50 @@ module smartnic_wrapper
     input wire logic      clk,
     input wire logic      srst,
     axi4l_intf.peripheral axil_if,
-    axi4s_intf.rx         axis_cmac_rx [NUM_CMAC],
-    axi4s_intf.tx         axis_cmac_tx [NUM_CMAC],
+    axi4s_intf.rx         axis_port_rx [NUM_PORTS],
+    axi4s_intf.tx         axis_port_tx [NUM_PORTS],
     axi4s_intf.rx         axis_h2c,
     axi4s_intf.tx         axis_c2h
 );
     // =========================================================================
     // Signals
     // =========================================================================
-    wire logic [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tvalid;
-    wire logic [(512*NUM_CMAC)-1:0] s_axis_adpt_tx_322mhz_tdata;
-    wire logic [(64*NUM_CMAC)-1:0]  s_axis_adpt_tx_322mhz_tkeep;
-    wire logic [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tlast;
-    wire logic [(16*NUM_CMAC)-1:0]  s_axis_adpt_tx_322mhz_tid;
-    wire logic [(4*NUM_CMAC)-1:0]   s_axis_adpt_tx_322mhz_tdest;
-    wire logic [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tuser_err;
-    wire logic [NUM_CMAC-1:0]       s_axis_adpt_tx_322mhz_tready;
+    wire logic [NUM_PORTS-1:0]       s_axis_adpt_tx_322mhz_tvalid;
+    wire logic [(512*NUM_PORTS)-1:0] s_axis_adpt_tx_322mhz_tdata;
+    wire logic [(64*NUM_PORTS)-1:0]  s_axis_adpt_tx_322mhz_tkeep;
+    wire logic [NUM_PORTS-1:0]       s_axis_adpt_tx_322mhz_tlast;
+    wire logic [(16*NUM_PORTS)-1:0]  s_axis_adpt_tx_322mhz_tid;
+    wire logic [(4*NUM_PORTS)-1:0]   s_axis_adpt_tx_322mhz_tdest;
+    wire logic [NUM_PORTS-1:0]       s_axis_adpt_tx_322mhz_tuser_err;
+    wire logic [NUM_PORTS-1:0]       s_axis_adpt_tx_322mhz_tready;
 
-    wire logic [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tvalid;
-    wire logic [(512*NUM_CMAC)-1:0] m_axis_adpt_rx_322mhz_tdata;
-    wire logic [(64*NUM_CMAC)-1:0]  m_axis_adpt_rx_322mhz_tkeep;
-    wire logic [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tlast;
-    wire logic [(4*NUM_CMAC)-1:0]   m_axis_adpt_rx_322mhz_tdest;
-    wire logic [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tuser_err;
-    wire logic [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tuser_rss_enable;
-    wire logic [(12*NUM_CMAC)-1:0]  m_axis_adpt_rx_322mhz_tuser_rss_entropy;
-    wire logic [NUM_CMAC-1:0]       m_axis_adpt_rx_322mhz_tready;
+    wire logic [NUM_PORTS-1:0]       m_axis_adpt_rx_322mhz_tvalid;
+    wire logic [(512*NUM_PORTS)-1:0] m_axis_adpt_rx_322mhz_tdata;
+    wire logic [(64*NUM_PORTS)-1:0]  m_axis_adpt_rx_322mhz_tkeep;
+    wire logic [NUM_PORTS-1:0]       m_axis_adpt_rx_322mhz_tlast;
+    wire logic [(4*NUM_PORTS)-1:0]   m_axis_adpt_rx_322mhz_tdest;
+    wire logic [NUM_PORTS-1:0]       m_axis_adpt_rx_322mhz_tuser_err;
+    wire logic [NUM_PORTS-1:0]       m_axis_adpt_rx_322mhz_tuser_rss_enable;
+    wire logic [(12*NUM_PORTS)-1:0]  m_axis_adpt_rx_322mhz_tuser_rss_entropy;
+    wire logic [NUM_PORTS-1:0]       m_axis_adpt_rx_322mhz_tready;
 
-    wire logic [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tvalid;
-    wire logic [(512*NUM_CMAC)-1:0] m_axis_cmac_tx_322mhz_tdata;
-    wire logic [(64*NUM_CMAC)-1:0]  m_axis_cmac_tx_322mhz_tkeep;
-    wire logic [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tlast;
-    wire logic [(4*NUM_CMAC)-1:0]   m_axis_cmac_tx_322mhz_tdest;
-    wire logic [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tuser_err;
-    wire logic [NUM_CMAC-1:0]       m_axis_cmac_tx_322mhz_tready;
+    wire logic [NUM_PORTS-1:0]       m_axis_cmac_tx_322mhz_tvalid;
+    wire logic [(512*NUM_PORTS)-1:0] m_axis_cmac_tx_322mhz_tdata;
+    wire logic [(64*NUM_PORTS)-1:0]  m_axis_cmac_tx_322mhz_tkeep;
+    wire logic [NUM_PORTS-1:0]       m_axis_cmac_tx_322mhz_tlast;
+    wire logic [(4*NUM_PORTS)-1:0]   m_axis_cmac_tx_322mhz_tdest;
+    wire logic [NUM_PORTS-1:0]       m_axis_cmac_tx_322mhz_tuser_err;
+    wire logic [NUM_PORTS-1:0]       m_axis_cmac_tx_322mhz_tready;
 
-    wire logic [NUM_CMAC-1:0]       s_axis_cmac_rx_322mhz_tvalid;
-    wire logic [(512*NUM_CMAC)-1:0] s_axis_cmac_rx_322mhz_tdata;
-    wire logic [(64*NUM_CMAC)-1:0]  s_axis_cmac_rx_322mhz_tkeep;
-    wire logic [NUM_CMAC-1:0]       s_axis_cmac_rx_322mhz_tlast;
-    wire logic [(4*NUM_CMAC)-1:0]   s_axis_cmac_rx_322mhz_tdest;
-    wire logic [NUM_CMAC-1:0]       s_axis_cmac_rx_322mhz_tuser_err;
-    wire logic [NUM_CMAC-1:0]       s_axis_cmac_rx_322mhz_tready;
+    wire logic [NUM_PORTS-1:0]       s_axis_cmac_rx_322mhz_tvalid;
+    wire logic [(512*NUM_PORTS)-1:0] s_axis_cmac_rx_322mhz_tdata;
+    wire logic [(64*NUM_PORTS)-1:0]  s_axis_cmac_rx_322mhz_tkeep;
+    wire logic [NUM_PORTS-1:0]       s_axis_cmac_rx_322mhz_tlast;
+    wire logic [(4*NUM_PORTS)-1:0]   s_axis_cmac_rx_322mhz_tdest;
+    wire logic [NUM_PORTS-1:0]       s_axis_cmac_rx_322mhz_tuser_err;
+    wire logic [NUM_PORTS-1:0]       s_axis_cmac_rx_322mhz_tready;
 
-    wire logic [NUM_CMAC-1:0]       cmac_clk;
+    wire logic [NUM_PORTS-1:0]       cmac_clk;
 
     dma_st_axis_tuser_t axis_h2c_tuser;
     dma_st_axis_tid_t   axis_h2c_tid;
@@ -103,7 +103,7 @@ module smartnic_wrapper
     // Smartnic instance
     // =========================================================================
     smartnic        #(
-        .NUM_CMAC    ( NUM_CMAC ),
+        .NUM_CMAC    ( NUM_PORTS ),
         .MAX_PKT_LEN ( 9600 )
     ) smartnic (
         .s_axil_awvalid ( axil_if.awvalid ),
@@ -132,33 +132,33 @@ module smartnic_wrapper
     );
 
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             // (Local) signals
-            cmac_axis_tuser_t axis_cmac_rx_tuser;
-            cmac_axis_tuser_t axis_cmac_tx_tuser;
+            port_axis_tuser_t axis_port_rx_tuser;
+            port_axis_tuser_t axis_port_tx_tuser;
 
             // CMAC Rx
-            assign s_axis_cmac_rx_322mhz_tvalid[g_cmac]            = axis_cmac_rx[g_cmac].tvalid;
-            assign s_axis_cmac_rx_322mhz_tdata [g_cmac*512 +: 512] = axis_cmac_rx[g_cmac].tdata;
-            assign s_axis_cmac_rx_322mhz_tkeep [g_cmac*64  +: 64]  = axis_cmac_rx[g_cmac].tkeep;
-            assign s_axis_cmac_rx_322mhz_tlast [g_cmac]            = axis_cmac_rx[g_cmac].tlast;
-            assign s_axis_cmac_rx_322mhz_tdest [g_cmac*4   +: 4]   = '0;
-            assign axis_cmac_rx_tuser = axis_cmac_rx[g_cmac].tuser;
-            assign s_axis_cmac_rx_322mhz_tuser_err [g_cmac] = axis_cmac_rx_tuser.err;
-            assign axis_cmac_rx[g_cmac].tready = s_axis_cmac_rx_322mhz_tready[g_cmac];
-            assign cmac_clk[g_cmac] = axis_cmac_rx[g_cmac].aclk;
+            assign s_axis_cmac_rx_322mhz_tvalid[g_port]            = axis_port_rx[g_port].tvalid;
+            assign s_axis_cmac_rx_322mhz_tdata [g_port*512 +: 512] = axis_port_rx[g_port].tdata;
+            assign s_axis_cmac_rx_322mhz_tkeep [g_port*64  +: 64]  = axis_port_rx[g_port].tkeep;
+            assign s_axis_cmac_rx_322mhz_tlast [g_port]            = axis_port_rx[g_port].tlast;
+            assign s_axis_cmac_rx_322mhz_tdest [g_port*4   +: 4]   = '0;
+            assign axis_port_rx_tuser = axis_port_rx[g_port].tuser;
+            assign s_axis_cmac_rx_322mhz_tuser_err [g_port] = axis_port_rx_tuser.err;
+            assign axis_port_rx[g_port].tready = s_axis_cmac_rx_322mhz_tready[g_port];
+            assign cmac_clk[g_port] = axis_port_rx[g_port].aclk;
 
             // CMAC Tx
-            assign axis_cmac_tx[g_cmac].tvalid = m_axis_cmac_tx_322mhz_tvalid[g_cmac];
-            assign axis_cmac_tx[g_cmac].tdata  = m_axis_cmac_tx_322mhz_tdata [g_cmac*512 +: 512];
-            assign axis_cmac_tx[g_cmac].tkeep  = m_axis_cmac_tx_322mhz_tkeep [g_cmac*64  +: 64];
-            assign axis_cmac_tx[g_cmac].tlast  = m_axis_cmac_tx_322mhz_tlast [g_cmac];
-            assign axis_cmac_tx[g_cmac].tid = '0;
-            assign axis_cmac_tx[g_cmac].tdest = '0;
-            assign axis_cmac_tx_tuser.err = m_axis_cmac_tx_322mhz_tuser_err[g_cmac];
-            assign axis_cmac_tx[g_cmac].tuser  = axis_cmac_tx_tuser;
-            assign m_axis_cmac_tx_322mhz_tready[g_cmac] = axis_cmac_tx[g_cmac].tready;
-        end : g__cmac
+            assign axis_port_tx[g_port].tvalid = m_axis_cmac_tx_322mhz_tvalid[g_port];
+            assign axis_port_tx[g_port].tdata  = m_axis_cmac_tx_322mhz_tdata [g_port*512 +: 512];
+            assign axis_port_tx[g_port].tkeep  = m_axis_cmac_tx_322mhz_tkeep [g_port*64  +: 64];
+            assign axis_port_tx[g_port].tlast  = m_axis_cmac_tx_322mhz_tlast [g_port];
+            assign axis_port_tx[g_port].tid = '0;
+            assign axis_port_tx[g_port].tdest = '0;
+            assign axis_port_tx_tuser.err = m_axis_cmac_tx_322mhz_tuser_err[g_port];
+            assign axis_port_tx[g_port].tuser  = axis_port_tx_tuser;
+            assign m_axis_cmac_tx_322mhz_tready[g_port] = axis_port_tx[g_port].tready;
+        end : g__port
     endgenerate
 
     // H2C
@@ -186,9 +186,9 @@ module smartnic_wrapper
     assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h.tready;
     assign axis_c2h.aclk = clk;
 
-    // Tie off redunandant SmartNIC QDMA channel(s)
+    // Tie off redundant SmartNIC QDMA channel(s)
     generate
-        for (genvar g_ch = 1; g_ch < NUM_CMAC; g_ch++) begin : g__ch
+        for (genvar g_ch = 1; g_ch < NUM_PORTS; g_ch++) begin : g__ch
             assign s_axis_adpt_tx_322mhz_tvalid[g_ch]            = 1'b0;
             assign s_axis_adpt_tx_322mhz_tdata [g_ch*512 +: 512] = '0;
             assign s_axis_adpt_tx_322mhz_tkeep [g_ch*64  +: 64]  = '0;

@@ -37,8 +37,8 @@ module xilinx_alveo_shell
     axi4l_intf #() axil_top ();
     axi4l_intf #() axil_hw ();
 
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(clk));
 
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
@@ -100,68 +100,68 @@ module xilinx_alveo_shell
     // Map between shell and Alveo
     // =========================================================================
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            // CMAC (Rx)
-            shell_pkg::cmac_axis_tid_t   axis_cmac_rx_tid;
-            shell_pkg::cmac_axis_tdest_t axis_cmac_rx_tdest;
-            shell_pkg::cmac_axis_tuser_t axis_cmac_rx_tuser;
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
+            // Port (Rx)
+            shell_pkg::port_axis_tid_t   axis_port_rx_tid;
+            shell_pkg::port_axis_tdest_t axis_port_rx_tdest;
+            shell_pkg::port_axis_tuser_t axis_port_rx_tuser;
 
             xilinx_alveo_pkg::cmac_axis_tid_t   __axis_cmac_rx_tid;
             xilinx_alveo_pkg::cmac_axis_tdest_t __axis_cmac_rx_tdest;
             xilinx_alveo_pkg::cmac_axis_tuser_t __axis_cmac_rx_tuser;
 
-            assign __axis_cmac_rx_tid           = __axis_cmac_rx[g_cmac].tid;
-            assign axis_cmac_rx_tid.unused      = 1'b0;
+            assign __axis_cmac_rx_tid           = __axis_cmac_rx[g_port].tid;
+            assign axis_port_rx_tid.unused      = 1'b0;
 
-            assign __axis_cmac_rx_tdest         = __axis_cmac_rx[g_cmac].tdest;
-            assign axis_cmac_rx_tdest.unused    = 1'b0;
+            assign __axis_cmac_rx_tdest         = __axis_cmac_rx[g_port].tdest;
+            assign axis_port_rx_tdest.unused    = 1'b0;
 
-            assign __axis_cmac_rx_tuser         = __axis_cmac_rx[g_cmac].tuser;
-            assign axis_cmac_rx_tuser.err       = __axis_cmac_rx_tuser.err;
+            assign __axis_cmac_rx_tuser         = __axis_cmac_rx[g_port].tuser;
+            assign axis_port_rx_tuser.err       = __axis_cmac_rx_tuser.err;
 
             axi4s_intf_set_meta #(
-                .TID_WID    ( shell_pkg::CMAC_AXIS_TID_WID ),
-                .TDEST_WID  ( shell_pkg::CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID  ( shell_pkg::CMAC_AXIS_TUSER_WID )
-            ) i_axi4s_set_meta__cmac_rx (
-                .from_tx ( __axis_cmac_rx[g_cmac] ),
-                .to_rx   ( axis_cmac_rx[g_cmac] ),
-                .tid     ( axis_cmac_rx_tid ),
-                .tdest   ( axis_cmac_rx_tdest ),
-                .tuser   ( axis_cmac_rx_tuser )
+                .TID_WID    ( shell_pkg::PORT_AXIS_TID_WID ),
+                .TDEST_WID  ( shell_pkg::PORT_AXIS_TDEST_WID ),
+                .TUSER_WID  ( shell_pkg::PORT_AXIS_TUSER_WID )
+            ) i_axi4s_set_meta__port_rx (
+                .from_tx ( __axis_cmac_rx[g_port] ),
+                .to_rx   ( axis_port_rx[g_port] ),
+                .tid     ( axis_port_rx_tid ),
+                .tdest   ( axis_port_rx_tdest ),
+                .tuser   ( axis_port_rx_tuser )
             );
 
-            // CMAC (Tx)
+            // Port (Tx)
             xilinx_alveo_pkg::cmac_axis_tid_t   __axis_cmac_tx_tid;
             xilinx_alveo_pkg::cmac_axis_tdest_t __axis_cmac_tx_tdest;
             xilinx_alveo_pkg::cmac_axis_tuser_t __axis_cmac_tx_tuser;
 
-            shell_pkg::cmac_axis_tid_t   axis_cmac_tx_tid;
-            shell_pkg::cmac_axis_tdest_t axis_cmac_tx_tdest;
-            shell_pkg::cmac_axis_tuser_t axis_cmac_tx_tuser;
+            shell_pkg::port_axis_tid_t   axis_port_tx_tid;
+            shell_pkg::port_axis_tdest_t axis_port_tx_tdest;
+            shell_pkg::port_axis_tuser_t axis_port_tx_tuser;
 
-            assign axis_cmac_tx_tid               = axis_cmac_tx[g_cmac].tid;
+            assign axis_port_tx_tid               = axis_port_tx[g_port].tid;
             assign __axis_cmac_tx_tid.unused      = 1'b0;
 
-            assign axis_cmac_tx_tdest             = axis_cmac_tx[g_cmac].tdest;
+            assign axis_port_tx_tdest             = axis_port_tx[g_port].tdest;
             assign __axis_cmac_tx_tdest.unused    = 1'b0;
 
-            assign axis_cmac_tx_tuser             = axis_cmac_tx[g_cmac].tuser;
-            assign __axis_cmac_tx_tuser.err       = axis_cmac_tx_tuser.err;
+            assign axis_port_tx_tuser             = axis_port_tx[g_port].tuser;
+            assign __axis_cmac_tx_tuser.err       = axis_port_tx_tuser.err;
 
             axi4s_intf_set_meta #(
                 .TID_WID    ( xilinx_alveo_pkg::CMAC_AXIS_TID_WID ),
                 .TDEST_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID ),
                 .TUSER_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID )
-            ) i_axi4s_set_meta__cmac_tx (
-                .from_tx ( axis_cmac_tx[g_cmac] ),
-                .to_rx   ( __axis_cmac_tx[g_cmac] ),
+            ) i_axi4s_set_meta__port_tx (
+                .from_tx ( axis_port_tx[g_port] ),
+                .to_rx   ( __axis_cmac_tx[g_port] ),
                 .tid     ( __axis_cmac_tx_tid ),
                 .tdest   ( __axis_cmac_tx_tdest ),
                 .tuser   ( __axis_cmac_tx_tuser )
             );
 
-        end : g__cmac
+        end : g__port
     endgenerate
 
     // -- DMA (H2C)

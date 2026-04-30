@@ -1,6 +1,6 @@
 // Application core (stub version)
 // (used for OOC simulation of shell)
-module core 
+module core
     import shell_pkg::*;
 (
     // Clock/reset
@@ -19,8 +19,8 @@ module core
     // Signals
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(clk));
 
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
     axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
@@ -32,14 +32,14 @@ module core
     // -- AXI-L
     axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (axil_if));
 
-    // -- CMAC
-    // shell_adapter__core drives axis_cmac_rx (.tx) and receives axis_cmac_tx (.rx),
+    // -- Network ports
+    // shell_adapter__core drives axis_port_rx (.tx) and receives axis_port_tx (.rx),
     // so the stub provides the complementary sides.
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__cmac_rx (.from_tx (axis_cmac_rx[g_cmac]));
-            axi4s_intf_tx_term i_axi4s_intf_tx_term__cmac_tx (.to_rx   (axis_cmac_tx[g_cmac]));
-        end : g__cmac
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
+            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__port_rx (.from_tx (axis_port_rx[g_port]));
+            axi4s_intf_tx_term i_axi4s_intf_tx_term__port_tx (.to_rx   (axis_port_tx[g_port]));
+        end : g__port
     endgenerate
 
     // -- H2C/C2H

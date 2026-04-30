@@ -52,28 +52,28 @@ module xilinx_aved_shell_adapter
     // Network port interfaces (CMAC) — terminated pending AVED DCMAC wiring
     // =========================================================================
     axi4s_intf #(
-        .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-        .TID_WID       ( CMAC_AXIS_TID_WID  ),
-        .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-        .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
-    ) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
+        .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+        .TID_WID       ( PORT_AXIS_TID_WID  ),
+        .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+        .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+    ) axis_port_rx [NUM_PORTS] (.aclk(clk));
 
     axi4s_intf #(
-        .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-        .TID_WID       ( CMAC_AXIS_TID_WID  ),
-        .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-        .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
-    ) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
+        .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
+        .TID_WID       ( PORT_AXIS_TID_WID  ),
+        .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+        .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+    ) axis_port_tx [NUM_PORTS] (.aclk(clk));
 
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            axi4s_intf_tx_term i_axi4s_intf_tx_term__cmac_rx (
-                .to_rx ( axis_cmac_rx[g_cmac] )
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
+            axi4s_intf_tx_term i_axi4s_intf_tx_term__port_rx (
+                .to_rx ( axis_port_rx[g_port] )
             );
-            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__cmac_tx (
-                .from_tx ( axis_cmac_tx[g_cmac] )
+            axi4s_intf_rx_sink i_axi4s_intf_rx_sink__port_tx (
+                .from_tx ( axis_port_tx[g_port] )
             );
-        end : g__cmac
+        end : g__port
     endgenerate
 
     // =========================================================================
