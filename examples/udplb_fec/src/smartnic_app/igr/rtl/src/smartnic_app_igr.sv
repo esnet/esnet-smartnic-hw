@@ -18,7 +18,7 @@ module smartnic_app_igr
     localparam int TDEST_WID     = axi4s_in[0].TDEST_WID;
     localparam int TUSER_WID     = axi4s_in[0].TUSER_WID;
 
-    logic srst;
+    logic  srst;
     assign srst = core_srst;
 
     // ----------------------------------------------------------------------
@@ -79,6 +79,8 @@ module smartnic_app_igr
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) frm_out [NUM_PORTS] (.clk(core_clk));
     rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) dec_out [NUM_PORTS] (.clk(core_clk));
 
+    logic [$clog2(DATA_BYTE_WID):0] keep [NUM_PORTS];
+
     /*
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TUSER_WID(TUSER_WID), .TID_WID(TID_WID),
                   .TDEST_WID(TDEST_WID))  axi4s_dec_in (.aclk(core_clk));
@@ -129,23 +131,26 @@ module smartnic_app_igr
             .clk            (core_clk),
             .srst           (core_srst),
             .err_loc        (smartnic_app_igr_regs.app_igr_config.err_loc_dec),
+            .keep           (keep[i]),
             .data_in        (frm_out[i]),
             .data_out       (dec_out[i])
         );
 
-        assign _axi4s_c2h[i].tdata  = dec_out[i].data;
-        assign _axi4s_c2h[i].tvalid = dec_out[i].valid;
-        assign _axi4s_c2h[i].tkeep  = '1;  // temporily (?) tie metadata signals.
-        assign _axi4s_c2h[i].tid    = '0;
-        assign _axi4s_c2h[i].tdest  = '0;
-        assign _axi4s_c2h[i].tuser  = '0;
-        assign _axi4s_c2h[i].tlast  = dec_out[i].meta.eos;
+        always_comb begin
+            for (int j = 0; j < DATA_BYTE_WID; j++) _axi4s_c2h[i].tkeep[j] = keep[i] > j ? 1'b1 : 1'b0;
 
-        assign dec_out[i].ready = _axi4s_c2h[i].tready;
+            _axi4s_c2h[i].tdata  = dec_out[i].data;
+            _axi4s_c2h[i].tvalid = dec_out[i].valid;
+            _axi4s_c2h[i].tid    = '0;  // tie to 0
+            _axi4s_c2h[i].tdest  = '0;  // tie to 0
+            _axi4s_c2h[i].tuser  = '0;  // TODO: plumb tuser metadata for egr q selection.
+            _axi4s_c2h[i].tlast  = dec_out[i].meta.eos;
+
+            dec_out[i].ready = _axi4s_c2h[i].tready;
+        end
 
         axi4s_full_pipe axis4s_full_pipe_inst (.srst, .from_tx(_axi4s_c2h[i]), .to_rx(axi4s_c2h[i]));
 
     end endgenerate
-
 
 endmodule // smartnic_app_igr

@@ -87,10 +87,14 @@ module smartnic_app_egr
             axi4s_h2c_reg[i].tuser <= axi4s_h2c[i].tuser;
         end
 
-        assign frm_in[i].data     = axi4s_h2c[i].tdata;
-        assign frm_in[i].valid    = axi4s_h2c[i].tvalid;
+        always_comb begin
+            for (int j=0; j<DATA_BYTE_WID; j++)
+                frm_in[i].data[j*8 +: 8] = axi4s_h2c[i].tkeep[j] ? axi4s_h2c[i].tdata[j] : '0;
 
-        assign axi4s_h2c[i].tready = frm_in[i].ready;
+            frm_in[i].valid = axi4s_h2c[i].tvalid;
+
+            axi4s_h2c[i].tready = frm_in[i].ready;
+        end
 
         rs_acc_framer #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_framer_0 (
             .clk            (core_clk),
@@ -121,7 +125,7 @@ module smartnic_app_egr
 
         assign _axi4s_out[i].tdata  = col_out[i].data;
         assign _axi4s_out[i].tvalid = col_out[i].valid;
-        assign _axi4s_out[i].tkeep  = axi4s_h2c_reg[i].tkeep;
+        assign _axi4s_out[i].tkeep  = '1;
         assign _axi4s_out[i].tid    = axi4s_h2c_reg[i].tid;   // assume ALL encoded pkts share common tid, tdest, tuser.
         assign _axi4s_out[i].tdest  = axi4s_h2c_reg[i].tdest;
         assign _axi4s_out[i].tuser  = axi4s_h2c_reg[i].tuser;
