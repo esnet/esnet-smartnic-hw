@@ -18,15 +18,7 @@ module xilinx_alveo_shell
     // To/from physical layer (hardware)
     xilinx_alveo_hw_intf.alveo alveo_hw_if,
     // To/from core (application)
-    // -- Clock/reset
-    output wire logic clk,
-    output wire logic srst,
-    output wire logic mgmt_clk,
-    output wire logic mgmt_srst,
-    output wire logic clk_100mhz,
-    // -- Signals/interfaces
-    output wire logic [SHELL_TO_CORE_WID-1:0] shell_to_core,
-    input  wire logic [CORE_TO_SHELL_WID-1:0] core_to_shell
+    shell_intf.shell shell_if
 );
 
     // =========================================================================
@@ -37,34 +29,46 @@ module xilinx_alveo_shell
     axi4l_intf #() axil_top ();
     axi4l_intf #() axil_hw ();
 
-    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [NUM_CMAC] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [NUM_CMAC] (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [NUM_CMAC] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(shell_if.clk));
 
     // =========================================================================
     // Signals
     // =========================================================================
+    logic clk;
+    logic srst;
+    logic clk_100mhz;
     logic clk_125mhz;
     logic clk_250mhz;
     logic clk_333mhz;
 
+    assign shell_if.clk       = clk;
+    assign shell_if.srst      = srst;
+    assign shell_if.mgmt_clk  = axil_if.aclk;
+    assign shell_if.mgmt_srst = !axil_if.aresetn;
+    assign shell_if.clk_100mhz = clk_100mhz;
+
     // =========================================================================
     // Shell adaptation layer
-    // (maps shell interface signals in flattened struct representation
-    //  to/from interface representation)
+    // (maps shell_intf signals to/from axi4l_intf / axi4s_intf)
     // =========================================================================
-    shell_adapter__shell i_shell_adapter__shell (.*);
-
-    assign mgmt_clk = axil_if.aclk;
-    assign mgmt_srst = !axil_if.aresetn;
+    shell_adapter__shell i_shell_adapter__shell (
+        .shell_if,
+        .axil_if,
+        .axis_port_rx,
+        .axis_port_tx,
+        .axis_h2c,
+        .axis_c2h
+    );
 
     // =========================================================================
     // Common Alveo core
@@ -175,10 +179,10 @@ module xilinx_alveo_shell
 
     assign __axis_h2c_tid   = __axis_h2c.tid;
     assign axis_h2c_tid.qid = __axis_h2c_tid.qid;
-    
+
     assign __axis_h2c_tdest = __axis_h2c.tdest;
     assign axis_h2c_tdest.unused = 1'b0;
-    
+
     assign __axis_h2c_tuser   = __axis_h2c.tuser;
     assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
 
@@ -224,4 +228,3 @@ module xilinx_alveo_shell
         .tuser   ( __axis_c2h_tuser )
     );
 endmodule : xilinx_alveo_shell
-

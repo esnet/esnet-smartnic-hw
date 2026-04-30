@@ -6,34 +6,38 @@
 module core
     import shell_pkg::*;
 (
-    // Clock/reset
-    input  wire logic clk,
-    input  wire logic srst,
-
-    input  wire logic mgmt_clk,
-    input  wire logic mgmt_srst,
-
-    input  wire logic clk_100mhz,
-
-    // Shell interface
-    input  wire logic [SHELL_TO_CORE_WID-1:0] shell_to_core,
-    output wire logic [CORE_TO_SHELL_WID-1:0] core_to_shell
+    shell_intf.core shell_if
 );
 
     // Signals
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [NUM_PORTS] (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [NUM_PORTS] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(shell_if.clk));
 
-    // Convert flat signal representation to interfaces
-    shell_adapter__core i_shell_adapter__core (.*);
+    // Convert shell_intf to SV interfaces
+    shell_adapter__core i_shell_adapter__core (
+        .shell_if,
+        .axil_if,
+        .axis_port_rx,
+        .axis_port_tx,
+        .axis_h2c,
+        .axis_c2h
+    );
 
     // Instantiate SmartNIC logic
-    smartnic_wrapper  i_smartnic_wrapper (.*);
+    smartnic_wrapper  i_smartnic_wrapper (
+        .clk  ( shell_if.clk ),
+        .srst ( shell_if.srst ),
+        .axil_if,
+        .axis_port_rx,
+        .axis_port_tx,
+        .axis_h2c,
+        .axis_c2h
+    );
 
 endmodule : core
 

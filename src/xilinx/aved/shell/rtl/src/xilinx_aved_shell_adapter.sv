@@ -2,7 +2,7 @@
 // Xilinx AVED shell adapter
 //
 //   Adapts Xilinx AVED application interface to the ESnet standard
-//   shell-core boundary (flat packed struct representation).
+//   shell-core boundary (shell_intf).
 //
 //   Mirrors the port signature of xilinx_alveo_shell so that the same
 //   core module can be instantiated on both Alveo and AVED platforms.
@@ -21,22 +21,16 @@ module xilinx_aved_shell_adapter
     xilinx_aved_app_intf.app app_if,
 
     // To/from core (application) — identical boundary to xilinx_alveo_shell
-    output wire logic clk,
-    output wire logic srst,
-    output wire logic mgmt_clk,
-    output wire logic mgmt_srst,
-    output wire logic clk_100mhz,
-    output wire logic [SHELL_TO_CORE_WID-1:0] shell_to_core,
-    input  wire logic [CORE_TO_SHELL_WID-1:0] core_to_shell
+    shell_intf.shell shell_if
 );
     // =========================================================================
     // Clock/reset
     // =========================================================================
-    assign clk       = app_if.clk;
-    assign srst      = app_if.srst;
-    assign mgmt_clk  = app_if.clk;
-    assign mgmt_srst = app_if.srst;
-    assign clk_100mhz = app_if.clk;  // placeholder until 100MHz export added
+    assign shell_if.clk        = app_if.clk;
+    assign shell_if.srst       = app_if.srst;
+    assign shell_if.mgmt_clk   = app_if.clk;
+    assign shell_if.mgmt_srst  = app_if.srst;
+    assign shell_if.clk_100mhz = app_if.clk;  // placeholder until 100MHz export added
 
     // =========================================================================
     // AXI-L
@@ -56,14 +50,14 @@ module xilinx_aved_shell_adapter
         .TID_WID       ( PORT_AXIS_TID_WID  ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID )
-    ) axis_port_rx [NUM_PORTS] (.aclk(clk));
+    ) axis_port_rx [NUM_PORTS] (.aclk(app_if.clk));
 
     axi4s_intf #(
         .DATA_BYTE_WID ( PORT_DATA_BYTE_WID ),
         .TID_WID       ( PORT_AXIS_TID_WID  ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID )
-    ) axis_port_tx [NUM_PORTS] (.aclk(clk));
+    ) axis_port_tx [NUM_PORTS] (.aclk(app_if.clk));
 
     generate
         for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
@@ -84,22 +78,28 @@ module xilinx_aved_shell_adapter
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
-    ) axis_h2c (.aclk(clk));
+    ) axis_h2c (.aclk(app_if.clk));
 
     axi4s_intf #(
         .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
         .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
-    ) axis_c2h (.aclk(clk));
+    ) axis_c2h (.aclk(app_if.clk));
 
     axi4s_intf_tx_term i_axi4s_intf_tx_term__h2c (.to_rx   (axis_h2c));
     axi4s_intf_rx_sink i_axi4s_intf_rx_sink__c2h (.from_tx (axis_c2h));
 
     // =========================================================================
-    // Convert SV interfaces to flat shell-core packed struct representation
+    // Convert SV interfaces to flat shell_intf representation
     // =========================================================================
-    shell_adapter__shell i_shell_adapter__shell (.*);
+    shell_adapter__shell i_shell_adapter__shell (
+        .shell_if,
+        .axil_if,
+        .axis_port_rx,
+        .axis_port_tx,
+        .axis_h2c,
+        .axis_c2h
+    );
 
 endmodule : xilinx_aved_shell_adapter
-

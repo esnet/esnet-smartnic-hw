@@ -1,147 +1,53 @@
 package shell_pkg;
 
     // --------------------------------------------------------------
-    // Parameters
+    // Default platform parameters
+    // (used as default values for shell_intf parameters)
     // --------------------------------------------------------------
-    // Network ports
-    localparam int NUM_PORTS = 2;
-    localparam int PORT_DATA_BYTE_WID = 64;
+    localparam int NUM_PORTS            = 2;
+    localparam int PORT_DATA_BYTE_WID   = 64;
 
-    // DMA (streaming)
     localparam int DMA_ST_DATA_BYTE_WID = 64;
-    localparam int DMA_ST_DATA_WID = DMA_ST_DATA_BYTE_WID*8;
-    localparam int DMA_ST_QUEUES = 2048;
-    localparam int DMA_ST_QID_WID = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
+    localparam int DMA_ST_DATA_WID      = DMA_ST_DATA_BYTE_WID * 8;
+    localparam int DMA_ST_QUEUES        = 2048;
+    localparam int DMA_ST_QID_WID       = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
 
-    // AXI-L
-    localparam int AXIL_ADDR_WID      = 32;
-    localparam int AXIL_DATA_BYTE_WID = 4;
-    localparam int AXIL_DATA_WID      = AXIL_DATA_BYTE_WID*8;
+    localparam int AXIL_ADDR_WID        = 32;
+    localparam int AXIL_DATA_BYTE_WID   = 4;
+    localparam int AXIL_DATA_WID        = AXIL_DATA_BYTE_WID * 8;
 
     // --------------------------------------------------------------
-    // Typedefs
+    // Semantic typedefs
+    // (used by shell adapters for metadata field packing/unpacking)
     // --------------------------------------------------------------
-    // Generic
-    // ------------------------------
     typedef struct packed {logic unused;} unused_t;
 
-    // DMA (streaming)
-    // ------------------------------
-    typedef logic [DMA_ST_QID_WID-1:0] dma_st_qid_t;
-
-    typedef logic [DMA_ST_DATA_BYTE_WID-1:0]      dma_st_axis_tkeep_t;
-    typedef logic [DMA_ST_DATA_BYTE_WID-1:0][7:0] dma_st_axis_tdata_t;
+    // DMA streaming
+    typedef logic [DMA_ST_QID_WID-1:0]           dma_st_qid_t;
     typedef struct packed {dma_st_qid_t qid;}     dma_st_axis_tid_t;
     typedef unused_t                              dma_st_axis_tdest_t;
     typedef struct packed {logic err;}            dma_st_axis_tuser_t;
 
-    localparam int DMA_ST_AXIS_TKEEP_WID = $bits(dma_st_axis_tkeep_t);
-    localparam int DMA_ST_AXIS_TDATA_WID = $bits(dma_st_axis_tdata_t);
     localparam int DMA_ST_AXIS_TID_WID   = $bits(dma_st_axis_tid_t);
     localparam int DMA_ST_AXIS_TDEST_WID = $bits(dma_st_axis_tdest_t);
     localparam int DMA_ST_AXIS_TUSER_WID = $bits(dma_st_axis_tuser_t);
 
-    typedef struct packed {
-        logic                             tvalid;
-        logic                             tlast;
-        logic [DMA_ST_AXIS_TKEEP_WID-1:0] tkeep;
-        logic [DMA_ST_AXIS_TDATA_WID-1:0] tdata;
-        logic [DMA_ST_AXIS_TID_WID-1:0]   tid;
-        logic [DMA_ST_AXIS_TDEST_WID-1:0] tdest;
-        logic [DMA_ST_AXIS_TUSER_WID-1:0] tuser;
-    } dma_st_axis_fwd_t;
-    localparam int DMA_ST_AXIS_FWD_WID = $bits(dma_st_axis_fwd_t);
-
-    typedef struct packed {
-        logic tready;
-    } dma_st_axis_rev_t;
-    localparam int DMA_ST_AXIS_REV_WID = $bits(dma_st_axis_rev_t);
-
     // Network port
-    // ------------------------------
-    typedef logic [PORT_DATA_BYTE_WID-1:0]        port_axis_tkeep_t;
-    typedef logic [PORT_DATA_BYTE_WID-1:0][7:0]   port_axis_tdata_t;
     typedef unused_t                              port_axis_tid_t;
     typedef unused_t                              port_axis_tdest_t;
     typedef struct packed {logic err;}            port_axis_tuser_t;
 
-    localparam int PORT_AXIS_TKEEP_WID = $bits(port_axis_tkeep_t);
-    localparam int PORT_AXIS_TDATA_WID = $bits(port_axis_tdata_t);
     localparam int PORT_AXIS_TID_WID   = $bits(port_axis_tid_t);
     localparam int PORT_AXIS_TDEST_WID = $bits(port_axis_tdest_t);
     localparam int PORT_AXIS_TUSER_WID = $bits(port_axis_tuser_t);
 
-    typedef struct packed {
-        logic                           tvalid;
-        logic                           tlast;
-        logic [PORT_AXIS_TKEEP_WID-1:0] tkeep;
-        logic [PORT_AXIS_TDATA_WID-1:0] tdata;
-        logic [PORT_AXIS_TID_WID-1:0]   tid;
-        logic [PORT_AXIS_TDEST_WID-1:0] tdest;
-        logic [PORT_AXIS_TUSER_WID-1:0] tuser;
-    } port_axis_fwd_t;
-    localparam int PORT_AXIS_FWD_WID = $bits(port_axis_fwd_t);
-
-    typedef struct packed {
-        logic tready;
-    } port_axis_rev_t;
-    localparam int PORT_AXIS_REV_WID = $bits(port_axis_rev_t);
-
     // AXI-L
-    // ------------------------------
+    localparam int AXIL_PROT_WID = 3;
+    localparam int AXIL_RESP_WID = $bits(axi4l_pkg::resp_t);
+
     typedef logic [AXIL_ADDR_WID-1:0]           axil_addr_t;
     typedef logic [AXIL_DATA_BYTE_WID-1:0]      axil_strb_t;
     typedef logic [AXIL_DATA_BYTE_WID-1:0][7:0] axil_data_t;
     typedef logic [2:0]                         axil_prot_t;
-
-    localparam int AXIL_PROT_WID = $bits(axil_prot_t);
-    localparam int AXIL_RESP_WID = $bits(axi4l_pkg::resp_t);
-
-    typedef struct packed {
-        logic                          awvalid;
-        logic [AXIL_ADDR_WID-1:0]      awaddr;
-        logic [AXIL_PROT_WID-1:0]      awprot;
-        logic                          wvalid;
-        logic [AXIL_DATA_WID-1:0]      wdata;
-        logic [AXIL_DATA_BYTE_WID-1:0] wstrb;
-        logic                          bready;
-        logic                          arvalid;
-        logic [AXIL_ADDR_WID-1:0]      araddr;
-        logic [AXIL_PROT_WID-1:0]      arprot;
-        logic                          rready;
-    } axil_fwd_t;
-    localparam int AXIL_FWD_WID = $bits(axil_fwd_t);
-
-    typedef struct packed {
-        logic                     awready;
-        logic                     wready;
-        logic                     bvalid;
-        logic [AXIL_RESP_WID-1:0] bresp;
-        logic                     arready;
-        logic                     rvalid;
-        logic [AXIL_DATA_WID-1:0] rdata;
-        logic [AXIL_RESP_WID-1:0] rresp;
-    } axil_rev_t;
-    localparam int AXIL_REV_WID = $bits(axil_rev_t);
-
-    // Interface definition
-    // ------------------------------
-    typedef struct packed {
-        logic [AXIL_FWD_WID-1:0]                     axil;
-        logic [NUM_PORTS-1:0][PORT_AXIS_FWD_WID-1:0] port_rx;
-        logic [NUM_PORTS-1:0][PORT_AXIS_REV_WID-1:0] port_tx;
-        logic [DMA_ST_AXIS_FWD_WID-1:0]              h2c;
-        logic [DMA_ST_AXIS_REV_WID-1:0]              c2h;
-    } shell_to_core_t;
-    localparam int SHELL_TO_CORE_WID = $bits(shell_to_core_t);
-
-    typedef struct packed {
-        logic [AXIL_REV_WID-1:0]                     axil;
-        logic [NUM_PORTS-1:0][PORT_AXIS_REV_WID-1:0] port_rx;
-        logic [NUM_PORTS-1:0][PORT_AXIS_FWD_WID-1:0] port_tx;
-        logic [DMA_ST_AXIS_REV_WID-1:0]              h2c;
-        logic [DMA_ST_AXIS_FWD_WID-1:0]              c2h;
-    } core_to_shell_t;
-    localparam int CORE_TO_SHELL_WID = $bits(core_to_shell_t);
 
 endpackage : shell_pkg
