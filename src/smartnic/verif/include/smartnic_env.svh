@@ -21,8 +21,8 @@ class smartnic_env extends std_verif_pkg::basic_env;
     local static const string __CLASS_NAME = "tb_pkg::smartnic_env";
 
     // -- AXI-L
-    localparam int AXIL_APP_OFFSET = 'h100000;
-    localparam int AXIL_VITISNET_OFFSET = 'h80000;
+    localparam int AXIL_APP_OFFSET = 'h200000;
+    localparam int AXIL_VITISNET_OFFSET = 'h100000;
 
     //===================================
     // Properties
@@ -172,7 +172,7 @@ class smartnic_env extends std_verif_pkg::basic_env;
         smartnic_hash2qid_1_reg_blk_agent = new("smartnic_hash2qid_1_reg_blk_agent", 'h13000);
         egress_qs_reg_blk_agent           = new("egress_qs_reg_blk_agent",           'h18000);
         reg_endian_check_reg_blk_agent    = new("reg_endian_check_reg_blk_agent",    'h00400);
-        smartnic_app_reg_blk_agent        = new("smartnic_app_reg_blk_agent",        'he4000);
+        smartnic_app_reg_blk_agent        = new("smartnic_app_reg_blk_agent",        'h1c4000);
 
         smartnic_reg_blk_agent.reg_agent            = reg_agent;
         smartnic_hash2qid_0_reg_blk_agent.reg_agent = reg_agent;
