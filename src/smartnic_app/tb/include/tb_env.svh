@@ -172,7 +172,7 @@ class tb_env extends std_verif_pkg::basic_env;
 
         ts_agent.timestamp_vif = timestamp_vif;
 
-        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'h64000);
+        smartnic_app_reg_agent = new("smartnic_app_reg_agent", reg_agent, 'hc4000);
 
         trace_msg("_build() Done.");
     endfunction

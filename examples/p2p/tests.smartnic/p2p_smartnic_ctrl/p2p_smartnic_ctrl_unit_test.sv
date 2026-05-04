@@ -42,7 +42,7 @@ module p2p_smartnic_ctrl_unit_test;
         // Build testbench
         env = tb.build();
 
-        p2p_reg_blk_agent = new("p2p_reg_blk", 'h100000 + 'h20000);
+        p2p_reg_blk_agent = new("p2p_reg_blk", 'h200000 + 'h20000);
         p2p_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 

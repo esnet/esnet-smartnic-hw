@@ -5,31 +5,31 @@ import axi4s_verif_pkg::*;
 // Global variables
 //=======================================================================
 typedef enum logic [31:0] {
-    PROBE_FROM_PF0      = 'h65000,
-    PROBE_FROM_PF1      = 'h65100,
-    PROBE_FROM_PF0_VF0  = 'h65200,
-    PROBE_FROM_PF1_VF0  = 'h65300,
-    PROBE_FROM_PF0_VF1  = 'h65400,
-    PROBE_FROM_PF1_VF1  = 'h65500,
+    PROBE_FROM_PF0      = 'hc5000,
+    PROBE_FROM_PF1      = 'hc5100,
+    PROBE_FROM_PF0_VF0  = 'hc5200,
+    PROBE_FROM_PF1_VF0  = 'hc5300,
+    PROBE_FROM_PF0_VF1  = 'hc5400,
+    PROBE_FROM_PF1_VF1  = 'hc5500,
 
-    PROBE_TO_PF0        = 'h65600,
-    PROBE_TO_PF1        = 'h65700,
-    PROBE_TO_PF0_VF0    = 'h65800,
-    PROBE_TO_PF1_VF0    = 'h65900,
-    PROBE_TO_PF0_VF1    = 'h65a00,
-    PROBE_TO_PF1_VF1    = 'h65b00,
+    PROBE_TO_PF0        = 'hc5600,
+    PROBE_TO_PF1        = 'hc5700,
+    PROBE_TO_PF0_VF0    = 'hc5800,
+    PROBE_TO_PF1_VF0    = 'hc5900,
+    PROBE_TO_PF0_VF1    = 'hc5a00,
+    PROBE_TO_PF1_VF1    = 'hc5b00,
 
-    PROBE_TO_APP_IGR_IN0  = 'h65c00,
-    PROBE_TO_APP_IGR_IN1  = 'h65d00,
-    PROBE_TO_APP_EGR_IN0  = 'h65e00,
-    PROBE_TO_APP_EGR_IN1  = 'h65f00,
-    PROBE_TO_APP_EGR_OUT0 = 'h66000,
-    PROBE_TO_APP_EGR_OUT1 = 'h66100,
+    PROBE_TO_APP_IGR_IN0  = 'hc5c00,
+    PROBE_TO_APP_IGR_IN1  = 'hc5d00,
+    PROBE_TO_APP_EGR_IN0  = 'hc5e00,
+    PROBE_TO_APP_EGR_IN1  = 'hc5f00,
+    PROBE_TO_APP_EGR_OUT0 = 'hc6000,
+    PROBE_TO_APP_EGR_OUT1 = 'hc6100,
 
-    PROBE_TO_APP_IGR_P4_OUT0 = 'h66200,
-    PROBE_TO_APP_IGR_P4_OUT1 = 'h66300,
-    PROBE_TO_APP_EGR_P4_IN0  = 'h66400,
-    PROBE_TO_APP_EGR_P4_IN1  = 'h66500
+    PROBE_TO_APP_IGR_P4_OUT0 = 'hc6200,
+    PROBE_TO_APP_IGR_P4_OUT1 = 'hc6300,
+    PROBE_TO_APP_EGR_P4_IN0  = 'hc6400,
+    PROBE_TO_APP_EGR_P4_IN1  = 'hc6500
     } cntr_addr_encoding_t;
 
 typedef union packed {

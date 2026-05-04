@@ -19,3 +19,8 @@ regs:
         desc: specifies the encoder block size.
         width: 8
         init : 0xff
+
+  - name: fec_evt_size_enc
+    desc: specifies the encoder fec event size.
+    access: rw
+    init: 0xffff

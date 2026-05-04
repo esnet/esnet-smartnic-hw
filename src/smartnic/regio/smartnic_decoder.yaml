@@ -107,6 +107,6 @@ interfaces:
     name: smartnic_egr_qs
 
   - decoder: *smartnic_p4
-    address: 0x80000
-    width: 19
+    address: 0x100000
+    width: 20
     name: smartnic_p4
