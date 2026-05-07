@@ -15,7 +15,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # Export environment variables required by Tcl scripts
 export AVED_ROOT = $(abspath $(COMPONENT_ROOT)/aved/hw)
-export AVED_BASE_DESIGN = amd_v80_gen5x8_23.2_exdes_2
+export AVED_BASE_DESIGN = amd_v80_gen5x8_25.1
 
 IP_REPO_PATHS = \
 	$(AVED_ROOT)/hw/$(AVED_BASE_DESIGN)/src/iprepo
