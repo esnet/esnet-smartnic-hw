@@ -71,15 +71,12 @@ module smartnic_app_igr
                _axi4s_c2h [NUM_PORTS] (.aclk(core_clk));
 
     localparam int DATA_WID = DATA_BYTE_WID*8;
-    localparam int COL_LEN  = 4096;
 
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_in  [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_out [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) inj_out [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) frm_out [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) dec_out [NUM_PORTS] (.clk(core_clk));
-
-    logic [$clog2(DATA_BYTE_WID):0] keep [NUM_PORTS];
+    rs_acc_intf #(.DATA_WID(DATA_WID)) col_in  [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) col_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) inj_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) dec_out [NUM_PORTS] (.clk(core_clk));
 
     /*
     axi4s_intf  #(.DATA_BYTE_WID(DATA_BYTE_WID), .TUSER_WID(TUSER_WID), .TID_WID(TID_WID),
@@ -101,7 +98,6 @@ module smartnic_app_igr
         fec_col_transpose #(
             .DATA_WID      (DATA_WID),
             .COL_WID       (SYM_SIZE),
-            .COL_LEN       (COL_LEN),
             .MODE          (BIT_TO_SYM)
         ) fec_sym_to_bit_0 (
             .clk           (core_clk),
@@ -110,7 +106,7 @@ module smartnic_app_igr
             .data_out      (col_out[i])
         );
 
-        rs_acc_err_inj #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_err_inj_0 (
+        rs_acc_err_inj #(.DATA_WID(DATA_WID)) rs_acc_err_inj_0 (
             .clk           (core_clk),
             .srst          (core_srst),
             .err_loc_vec   (RS_ERR_LOC_LUT[smartnic_app_igr_regs.app_igr_config.err_loc_inj]),
@@ -118,7 +114,7 @@ module smartnic_app_igr
             .data_out      (inj_out[i])
         );
 
-        rs_acc_framer #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN), .MODE(RX)) rs_acc_framer_0 (
+        rs_acc_framer #(.DATA_WID(DATA_WID), .MODE(RX)) rs_acc_framer_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .fec_evt_size   (smartnic_app_igr_regs.fec_evt_size_dec),
@@ -127,17 +123,16 @@ module smartnic_app_igr
             .data_out       (frm_out[i])
         );
 
-        rs_acc_decode #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_decode_0 (
+        rs_acc_decode #(.DATA_WID(DATA_WID)) rs_acc_decode_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .err_loc        (smartnic_app_igr_regs.app_igr_config.err_loc_dec),
-            .keep           (keep[i]),
             .data_in        (frm_out[i]),
             .data_out       (dec_out[i])
         );
 
         always_comb begin
-            for (int j = 0; j < DATA_BYTE_WID; j++) _axi4s_c2h[i].tkeep[j] = keep[i] > j ? 1'b1 : 1'b0;
+            for (int j = 0; j < DATA_BYTE_WID; j++) _axi4s_c2h[i].tkeep[j] = dec_out[i].meta.keep > j ? 1'b1 : 1'b0;
 
             _axi4s_c2h[i].tdata  = dec_out[i].data;
             _axi4s_c2h[i].tvalid = dec_out[i].valid;

@@ -72,12 +72,11 @@ module smartnic_app_egr
 
 
     localparam int DATA_WID = DATA_BYTE_WID*8;
-    localparam int COL_LEN  = 4096;
 
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) frm_in  [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) enc_in  [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) enc_out [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_in  [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) enc_in  [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) enc_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) col_out [NUM_PORTS] (.clk(core_clk));
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         always_ff @(posedge core_clk) if (axi4s_h2c[i].tvalid && axi4s_h2c[i].tready) begin
@@ -96,7 +95,7 @@ module smartnic_app_egr
             axi4s_h2c[i].tready = frm_in[i].ready;
         end
 
-        rs_acc_framer #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_framer_0 (
+        rs_acc_framer #(.DATA_WID(DATA_WID)) rs_acc_framer_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .fec_evt_size   (smartnic_app_egr_regs.fec_evt_size_enc),
@@ -104,7 +103,7 @@ module smartnic_app_egr
             .data_out       (enc_in[i])
         );
 
-        rs_acc_encode #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_encode_0 (
+        rs_acc_encode #(.DATA_WID(DATA_WID)) rs_acc_encode_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .data_in        (enc_in[i]),
@@ -114,7 +113,6 @@ module smartnic_app_egr
         fec_col_transpose #(
             .DATA_WID      (DATA_WID),
             .COL_WID       (SYM_SIZE),
-            .COL_LEN       (COL_LEN),
             .MODE          (SYM_TO_BIT)
         ) fec_sym_to_bit_0 (
             .clk           (core_clk),
