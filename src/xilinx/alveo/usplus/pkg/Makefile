@@ -1,17 +1,12 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
 # ----------------------------------------------------
 # Sources
-#   List source files and include directories for component.
-#   (see $(SCRIPTS_ROOT)/Makefiles/templates/sources.mk)
-#   NOTE: along with explicitly-listed sources, all
-#   source files from ./src are added automatically, and
-#   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
 INC_DIRS =
@@ -19,20 +14,14 @@ SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
-#   List subcomponent and external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    sync.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
     xilinx.alveo.pkg
 
 EXT_LIBS =
 
 # ----------------------------------------------------
 # Defines
-#   List macro definitions.
 # ----------------------------------------------------
 DEFINES =
 
