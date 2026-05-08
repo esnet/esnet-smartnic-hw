@@ -12,4 +12,4 @@
 # Set relative to SMARTNIC__ROOT (current) directory
 # Note: SMARTNIC_ROOT is configured in calling (parent) Makefile
 ONS_ROOT  := $(abspath $(SMARTNIC_ROOT)/open-nic-shell)
-AVED_ROOT := $(abspath $(SMARTNIC_ROOT)/src/xilinx/aved/hw)
+AVED_ROOT := $(abspath $(SMARTNIC_ROOT)/src/xilinx/aved)
