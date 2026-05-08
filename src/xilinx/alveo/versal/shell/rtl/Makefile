@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -14,7 +14,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = ../../rtl/include
+INC_DIRS = ../rtl/include
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -25,9 +25,9 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi4s.rtl@common \
-	shell.pkg \
+    shell.pkg \
     shell.rtl \
-    xilinx.aved.rtl
+    xilinx.alveo.versal.rtl
 
 EXT_LIBS =
 

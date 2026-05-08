@@ -233,7 +233,7 @@ shell_ip_cache_key:
     - ht-synth
   script:
     - make -s -C src refresh
-    - make -s -C src synth COMPONENT=xilinx.alveo.rtl BOARD=$SN_HW_BOARD
+    - make -s -C src synth COMPONENT=xilinx.alveo.usplus.rtl BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out

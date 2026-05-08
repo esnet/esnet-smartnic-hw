@@ -6,7 +6,7 @@ BOARD ?= av80
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -28,7 +28,7 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.aved.bd
+    xilinx.alveo.versal.bd
 
 EXT_LIBS =
 

@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -23,7 +23,7 @@ waves ?= OFF
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.alveo.rtl
+    xilinx.alveo.usplus.rtl
 
 EXT_LIBS =
 

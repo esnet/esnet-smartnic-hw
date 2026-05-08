@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../../..
+COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -27,7 +27,7 @@ SUBCOMPONENTS = \
     shell.rtl \
     shell.regio.rtl \
     xilinx.alveo.pkg \
-    xilinx.alveo.rtl \
+    xilinx.alveo.usplus.rtl \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)
 
