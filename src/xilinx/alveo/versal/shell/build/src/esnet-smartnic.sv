@@ -22,6 +22,12 @@ module esnet_smartnic
         .*
     );
 
+    // SMBus tristate: bridge BD i/o/t split signals to physical inout pins
+    assign smbus_0_scl_i  = smbus_0_scl_io;
+    assign smbus_0_scl_io = smbus_0_scl_t ? 1'bz : smbus_0_scl_o;
+    assign smbus_0_sda_i  = smbus_0_sda_io;
+    assign smbus_0_sda_io = smbus_0_sda_t ? 1'bz : smbus_0_sda_o;
+
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*

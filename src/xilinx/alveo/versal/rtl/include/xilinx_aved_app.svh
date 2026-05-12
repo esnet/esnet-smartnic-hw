@@ -1,39 +1,41 @@
-    // AXI4 interface (signals)
-    wire        axi_clk;
-    wire        axi_resetn;
-    wire [41:0] APP_AXI_araddr;
-    wire [1:0]  APP_AXI_arburst;
-    wire [3:0]  APP_AXI_arcache;
-    wire [7:0]  APP_AXI_arlen;
-    wire [0:0]  APP_AXI_arlock;
-    wire [2:0]  APP_AXI_arprot;
-    wire [3:0]  APP_AXI_arqos;
-    wire        APP_AXI_arready;
-    wire [2:0]  APP_AXI_arsize;
-    wire [17:0] APP_AXI_aruser;
-    wire        APP_AXI_arvalid;
-    wire [41:0] APP_AXI_awaddr;
-    wire [1:0]  APP_AXI_awburst;
-    wire [3:0]  APP_AXI_awcache;
-    wire [7:0]  APP_AXI_awlen;
-    wire [0:0]  APP_AXI_awlock;
-    wire [2:0]  APP_AXI_awprot;
-    wire [3:0]  APP_AXI_awqos;
-    wire        APP_AXI_awready;
-    wire [2:0]  APP_AXI_awsize;
-    wire [17:0] APP_AXI_awuser;
-    wire        APP_AXI_awvalid;
-    wire        APP_AXI_bready;
-    wire [1:0]  APP_AXI_bresp;
-    wire        APP_AXI_bvalid;
-    wire [31:0] APP_AXI_rdata;
-    wire        APP_AXI_rlast;
-    wire        APP_AXI_rready;
-    wire [1:0]  APP_AXI_rresp;
-    wire        APP_AXI_rvalid;
-    wire [31:0] APP_AXI_wdata;
-    wire        APP_AXI_wlast;
-    wire        APP_AXI_wready;
-    wire [3:0]  APP_AXI_wstrb;
-    wire        APP_AXI_wvalid;
+    // Clocks from BD
+    wire        clk_pl;
+    wire        clk_usr_0;
+    wire        clk_usr_1;
 
+    // Resets from BD (active-low)
+    wire        resetn_pl_ic;
+    wire        resetn_pl_periph;
+    wire        resetn_usr_0_ic;
+    wire        resetn_usr_0_periph;
+    wire        resetn_usr_1_ic;
+    wire        resetn_usr_1_periph;
+
+    // Management AXI4-Lite interface (BD master -> adapter slave)
+    wire [31:0] m_axi_usr_mgmt_awaddr;
+    wire [2:0]  m_axi_usr_mgmt_awprot;
+    wire        m_axi_usr_mgmt_awvalid;
+    wire        m_axi_usr_mgmt_awready;
+    wire [31:0] m_axi_usr_mgmt_wdata;
+    wire [3:0]  m_axi_usr_mgmt_wstrb;
+    wire        m_axi_usr_mgmt_wvalid;
+    wire        m_axi_usr_mgmt_wready;
+    wire [1:0]  m_axi_usr_mgmt_bresp;
+    wire        m_axi_usr_mgmt_bvalid;
+    wire        m_axi_usr_mgmt_bready;
+    wire [31:0] m_axi_usr_mgmt_araddr;
+    wire [2:0]  m_axi_usr_mgmt_arprot;
+    wire        m_axi_usr_mgmt_arvalid;
+    wire        m_axi_usr_mgmt_arready;
+    wire [31:0] m_axi_usr_mgmt_rdata;
+    wire [1:0]  m_axi_usr_mgmt_rresp;
+    wire        m_axi_usr_mgmt_rvalid;
+    wire        m_axi_usr_mgmt_rready;
+
+    // SMBus tristate signals (BD -> IOBUF)
+    wire        smbus_0_scl_i;
+    wire        smbus_0_scl_o;
+    wire        smbus_0_scl_t;
+    wire        smbus_0_sda_i;
+    wire        smbus_0_sda_o;
+    wire        smbus_0_sda_t;

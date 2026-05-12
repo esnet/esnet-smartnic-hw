@@ -1,38 +1,33 @@
-    // AXI4 interface (signals)
-    input         axi_clk;
-    input         axi_resetn;
-    input  [41:0] APP_AXI_araddr;
-    input  [1:0]  APP_AXI_arburst;
-    input  [3:0]  APP_AXI_arcache;
-    input  [7:0]  APP_AXI_arlen;
-    input  [0:0]  APP_AXI_arlock;
-    input  [2:0]  APP_AXI_arprot;
-    input  [3:0]  APP_AXI_arqos;
-    output        APP_AXI_arready;
-    input  [2:0]  APP_AXI_arsize;
-    input  [17:0] APP_AXI_aruser;
-    input         APP_AXI_arvalid;
-    input  [41:0] APP_AXI_awaddr;
-    input  [1:0]  APP_AXI_awburst;
-    input  [3:0]  APP_AXI_awcache;
-    input  [7:0]  APP_AXI_awlen;
-    input  [0:0]  APP_AXI_awlock;
-    input  [2:0]  APP_AXI_awprot;
-    input  [3:0]  APP_AXI_awqos;
-    output        APP_AXI_awready;
-    input  [2:0]  APP_AXI_awsize;
-    input  [17:0] APP_AXI_awuser;
-    input         APP_AXI_awvalid;
-    input         APP_AXI_bready;
-    output [1:0]  APP_AXI_bresp;
-    output        APP_AXI_bvalid;
-    output [31:0] APP_AXI_rdata;
-    output        APP_AXI_rlast;
-    input         APP_AXI_rready;
-    output [1:0]  APP_AXI_rresp;
-    output        APP_AXI_rvalid;
-    input  [31:0] APP_AXI_wdata;
-    input         APP_AXI_wlast;
-    output        APP_AXI_wready;
-    input  [3:0]  APP_AXI_wstrb;
-    input         APP_AXI_wvalid;
+    // Clocks from BD
+    input         clk_pl;
+    input         clk_usr_0;
+    input         clk_usr_1;
+
+    // Resets from BD (active-low)
+    input         resetn_pl_ic;
+    input         resetn_pl_periph;
+    input         resetn_usr_0_ic;
+    input         resetn_usr_0_periph;
+    input         resetn_usr_1_ic;
+    input         resetn_usr_1_periph;
+
+    // Management AXI4-Lite interface (BD master -> adapter slave)
+    input  [31:0] m_axi_usr_mgmt_awaddr;
+    input  [2:0]  m_axi_usr_mgmt_awprot;
+    input         m_axi_usr_mgmt_awvalid;
+    output        m_axi_usr_mgmt_awready;
+    input  [31:0] m_axi_usr_mgmt_wdata;
+    input  [3:0]  m_axi_usr_mgmt_wstrb;
+    input         m_axi_usr_mgmt_wvalid;
+    output        m_axi_usr_mgmt_wready;
+    output [1:0]  m_axi_usr_mgmt_bresp;
+    output        m_axi_usr_mgmt_bvalid;
+    input         m_axi_usr_mgmt_bready;
+    input  [31:0] m_axi_usr_mgmt_araddr;
+    input  [2:0]  m_axi_usr_mgmt_arprot;
+    input         m_axi_usr_mgmt_arvalid;
+    output        m_axi_usr_mgmt_arready;
+    output [31:0] m_axi_usr_mgmt_rdata;
+    output [1:0]  m_axi_usr_mgmt_rresp;
+    output        m_axi_usr_mgmt_rvalid;
+    input         m_axi_usr_mgmt_rready;
