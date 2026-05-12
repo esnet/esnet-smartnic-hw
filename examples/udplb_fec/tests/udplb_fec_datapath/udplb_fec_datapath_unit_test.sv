@@ -163,10 +163,10 @@ module udplb_fec_datapath_unit_test;
         bit rx_done=0;
 
        `INFO("Starting simulation...");
-        for (int i=0; i<3; i++) begin
+        for (int i=0; i<10; i++) begin
             rx_done=0;
-            //send_fec_event (.size(2*BLK_SIZE-1+i), .in_port(in_port), .out_port(out_port), .tuser(tuser));
-            send_fec_event (.size($urandom_range(2*BLK_SIZE, BLK_SIZE)), .in_port(in_port), .out_port(out_port), .tuser(tuser));
+            send_fec_event (.size($urandom_range(3*BLK_SIZE, BLK_SIZE/3)), .in_port(in_port), .out_port(out_port), .tuser(tuser));
+            //send_fec_event (.size(BLK_SIZE+(i*SGMT_SIZE)+1+i), .in_port(in_port), .out_port(out_port), .tuser(tuser));
 
             #1us;
             fork
