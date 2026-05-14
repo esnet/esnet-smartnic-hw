@@ -26,6 +26,7 @@ SUBCOMPONENTS = \
     smartnic_app.igr.rtl \
     smartnic_app.igr.regio.verif \
     smartnic_app.egr.rtl \
+    smartnic_app.egr.regio.verif \
     smartnic_app.igr_p4.passthru.rtl@$(SMARTNIC_LIB_NAME) \
     smartnic_app.egr_p4.passthru.rtl@$(SMARTNIC_LIB_NAME) \
     smartnic_app.verif@$(SMARTNIC_LIB_NAME) \

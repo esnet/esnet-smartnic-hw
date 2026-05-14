@@ -89,8 +89,8 @@ class Library:
         smartnic_app_fec_test(dev, num, port)
 
     @keyword
-    def smartnic_app_udplb_fec_test(self, dev, num, port):
-        smartnic_app_udplb_fec_test(dev, num, port)
+    def smartnic_app_udplb_fec_test(self, dev, size, port):
+        smartnic_app_udplb_fec_test(dev, size, port)
 
 
 #===================================================================================================
@@ -526,8 +526,9 @@ def smartnic_app_fec_test(dev, num, port):
 #===================================================================================================
 # FEC application test.  Tests 'udplb_fec' example design.
 #===================================================================================================
-def smartnic_app_udplb_fec_test(dev, num, port):
-    num = random.randint(1, 160)  # override the input num parameter
+def smartnic_app_udplb_fec_test(dev, size, port):
+    size = random.randint(64, 81920)  # override the input event size parameter (in bytes)
+    #size = 51200   # 100 x 512
 
     events = 1
     exp_pkts = 0
@@ -562,43 +563,62 @@ def smartnic_app_udplb_fec_test(dev, num, port):
 
     #--- packet playback and capture ---
     for i in range(events):
-        #num = random.randint(1, 160)
-        print(f'num: {num}')
+        #size = random.randint(64, 81920)  # in bytes. 81920B = 160 pkts x 512B/pkt
+
+        sgmt_size = 512 # all non-last segments (columns) are 4096 bits deep (512B).
+        blk_size = sgmt_size * 32
+        num_full_sgmts = size // sgmt_size # round down.
+        num_blks = -(-size // blk_size) # round up.
+        last_sgmt_size = size % sgmt_size
+        print(f'size: {size}, sgmt_size: {sgmt_size}, blk_size: {blk_size}')
+        print(f'num_full_sgmts: {num_full_sgmts}, num_blks: {num_blks}, last_sgmt_size: {last_sgmt_size}')
 
         err_loc = random.randint(0, 44)
         dev.bar2.smartnic_app_igr.app_igr_config.err_loc_inj = err_loc
         dev.bar2.smartnic_app_igr.app_igr_config.err_loc_dec = err_loc
         print(f'err_loc: {err_loc}')
 
-        size  = 512 # all non-last segments (columns) are 4096 bits deep (512B).
-        bytes = num*size
-        fec_blks = -(-num//32)
+        dev.bar2.smartnic_app_egr.fec_evt_size_enc = size
+        dev.bar2.smartnic_app_igr.fec_evt_size_dec = size
 
-        dev.bar2.smartnic_app_egr.fec_evt_size_enc = bytes
-        dev.bar2.smartnic_app_igr.fec_evt_size_dec = bytes
-
+        # send all full-sized segments.
         tx_pkts = []
-        for i in range(num):
-            tx_pkt = one_packet(size)
+        for i in range(num_full_sgmts):
+            tx_pkt = one_packet(sgmt_size)
             tx_pkts.append(tx_pkt)
 
-            #print(f'Packet #{i} size: {size}')
+            #print(f'Packet #{i} size: {sgmt_size}')
             pkt = tx_pkt
             tid = 4+port # VF0=4, PF=2
             tdest = port
             playback = PacketPlaybackProtocol(dev.bar2.smartnic_pkt_playback, 'Playback')
             playback.send(pkt, tid << 5 | tdest << 1)   # meta = {tid[3:0], tdest[3:0], tuser}
 
+        exp_pkts = exp_pkts + num_full_sgmts
+
+        # send last segment.
+        if (last_sgmt_size != 0):
+            tx_pkt = one_packet(last_sgmt_size)
+            tx_pkts.append(tx_pkt)
+
+            pkt = tx_pkt
+            tid = 4+port # VF0=4, PF=2
+            tdest = port
+            playback = PacketPlaybackProtocol(dev.bar2.smartnic_pkt_playback, 'Playback')
+            playback.send(pkt, tid << 5 | tdest << 1)   # meta = {tid[3:0], tdest[3:0], tuser}
+
+            exp_pkts = exp_pkts + 1
+
+        # capture all received and corrected segments.
         #print(tx_pkts)
-        for i in range(num):
+        for i in range(exp_pkts):
             pkt_capture_trigger (dev)
             pkt_capture_read    (dev, tx_pkts[i])
             #print(i)
 
-        exp_pkts     = exp_pkts     + num
-        exp_bytes    = exp_bytes    + bytes
-        exp_fec_blks = exp_fec_blks + fec_blks
-        #print(exp_pkts, num, exp_bytes, bytes, exp_fec_blks)
+        exp_bytes = exp_bytes + size
+        exp_fec_blks = exp_fec_blks + num_blks
+        #print(exp_pkts, num_full_sgmts, exp_bytes, size, exp_fec_blks)
 
 
     # compare expected pkt and byte counts.
@@ -610,7 +630,7 @@ def smartnic_app_udplb_fec_test(dev, num, port):
     check_probes (names, exp_pkts, exp_bytes, check_zeros=False)
 
     exp_pkts  = exp_fec_blks * 40
-    exp_bytes = exp_fec_blks * 40 * size
+    exp_bytes = exp_fec_blks * 40 * sgmt_size
 
     if (port==0):
         names = ['probe_to_app_egr_out0', 'probe_to_app_egr_p4_in0', 'probe_app0_to_core',

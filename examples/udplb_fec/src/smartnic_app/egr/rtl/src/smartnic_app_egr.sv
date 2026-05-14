@@ -72,12 +72,13 @@ module smartnic_app_egr
 
 
     localparam int DATA_WID = DATA_BYTE_WID*8;
-    localparam int COL_LEN  = 4096;
 
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) frm_in  [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) enc_in  [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) enc_out [NUM_PORTS] (.clk(core_clk));
-    rs_acc_intf #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) col_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_in  [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) pad_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) b2s_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) enc_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) s2b_out [NUM_PORTS] (.clk(core_clk));
 
     generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
         always_ff @(posedge core_clk) if (axi4s_h2c[i].tvalid && axi4s_h2c[i].tready) begin
@@ -87,47 +88,68 @@ module smartnic_app_egr
             axi4s_h2c_reg[i].tuser <= axi4s_h2c[i].tuser;
         end
 
-        assign frm_in[i].data     = axi4s_h2c[i].tdata;
-        assign frm_in[i].valid    = axi4s_h2c[i].tvalid;
+        always_comb begin
+            for (int j=0; j<DATA_BYTE_WID; j++)
+                frm_in[i].data[j*8 +: 8] = axi4s_h2c[i].tkeep[j] ? axi4s_h2c[i].tdata[j] : '0;
 
-        assign axi4s_h2c[i].tready = frm_in[i].ready;
+            frm_in[i].valid = axi4s_h2c[i].tvalid;
 
-        rs_acc_framer #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_framer_0 (
+            axi4s_h2c[i].tready = frm_in[i].ready;
+        end
+
+        rs_acc_framer #(.DATA_WID(DATA_WID)) rs_acc_framer_0 (
             .clk            (core_clk),
             .srst           (core_srst),
             .fec_evt_size   (smartnic_app_egr_regs.fec_evt_size_enc),
             .data_in        (frm_in[i]),
-            .data_out       (enc_in[i])
+            .data_out       (frm_out[i])
         );
 
-        rs_acc_encode #(.DATA_WID(DATA_WID), .COL_LEN(COL_LEN)) rs_acc_encode_0 (
+        rs_acc_pad #(.DATA_WID(DATA_WID), .MODE(INSERT)) rs_acc_pad_0 (
             .clk            (core_clk),
             .srst           (core_srst),
-            .data_in        (enc_in[i]),
+            .data_in        (frm_out[i]),
+            .data_out       (pad_out[i])
+        );
+
+        fec_col_transpose #(
+            .DATA_WID      (DATA_WID),
+            .COL_WID       (SYM_SIZE),
+            .MODE          (BIT_TO_SYM)
+        ) fec_bit_to_sym_0 (
+            .clk           (core_clk),
+            .srst          (core_srst),
+            .data_in       (pad_out[i]),
+            .data_out      (b2s_out[i])
+        );
+
+        rs_acc_encode #(.DATA_WID(DATA_WID)) rs_acc_encode_0 (
+            .clk            (core_clk),
+            .srst           (core_srst),
+            .data_in        (b2s_out[i]),
             .data_out       (enc_out[i])
         );
 
         fec_col_transpose #(
             .DATA_WID      (DATA_WID),
             .COL_WID       (SYM_SIZE),
-            .COL_LEN       (COL_LEN),
             .MODE          (SYM_TO_BIT)
         ) fec_sym_to_bit_0 (
             .clk           (core_clk),
             .srst          (core_srst),
             .data_in       (enc_out[i]),
-            .data_out      (col_out[i])
+            .data_out      (s2b_out[i])
         );
 
-        assign _axi4s_out[i].tdata  = col_out[i].data;
-        assign _axi4s_out[i].tvalid = col_out[i].valid;
-        assign _axi4s_out[i].tkeep  = axi4s_h2c_reg[i].tkeep;
+        assign _axi4s_out[i].tdata  = s2b_out[i].data;
+        assign _axi4s_out[i].tvalid = s2b_out[i].valid;
+        assign _axi4s_out[i].tkeep  = '1;
         assign _axi4s_out[i].tid    = axi4s_h2c_reg[i].tid;   // assume ALL encoded pkts share common tid, tdest, tuser.
         assign _axi4s_out[i].tdest  = axi4s_h2c_reg[i].tdest;
         assign _axi4s_out[i].tuser  = axi4s_h2c_reg[i].tuser;
-        assign _axi4s_out[i].tlast  = col_out[i].meta.eos;
+        assign _axi4s_out[i].tlast  = s2b_out[i].meta.eos;
 
-        assign col_out[i].ready = _axi4s_out[i].tready;
+        assign s2b_out[i].ready = _axi4s_out[i].tready;
 
     end endgenerate
 
