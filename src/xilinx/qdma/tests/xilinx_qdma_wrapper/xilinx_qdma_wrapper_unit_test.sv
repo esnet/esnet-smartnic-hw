@@ -13,7 +13,6 @@ module xilinx_qdma_wrapper_unit_test;
     // DUT
     //===================================
     // Signals
-    logic board_rstn;
     logic pcie_rstn;
     logic pcie_refclk_p;
     logic pcie_refclk_n;
@@ -23,8 +22,16 @@ module xilinx_qdma_wrapper_unit_test;
     logic [PCIE_LINK_WID-1:0] pcie_txn;
 
     // Interfaces
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(axis_h2c_tuser_t)) axis_h2c ();
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_T(axis_c2h_tuser_t)) axis_c2h ();
+    axi4s_intf #(
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID  (AXIS_TID_WID),
+        .TDEST_WID    (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) axis_h2c (.aclk(axis_aclk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID  (AXIS_TID_WID),
+        .TDEST_WID    (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) axis_c2h (.aclk(axis_aclk));
+
     axi4l_intf #() axil_if ();
 
     xilinx_qdma_wrapper #(
@@ -37,6 +44,8 @@ module xilinx_qdma_wrapper_unit_test;
     `SVUNIT_CLK_GEN(pcie_refclk_p, 5ns);
 
     assign pcie_refclk_n = ~pcie_refclk_p;
+
+    assign axis_aclk = axil_if.aclk;
 
     //===================================
     // Build
@@ -51,7 +60,6 @@ module xilinx_qdma_wrapper_unit_test;
     //===================================
     task setup();
         svunit_ut.setup();
-        board_rstn = 1'b0;
         pcie_rstn = 1'b0;
         
         idle();

@@ -14,6 +14,13 @@ module xilinx_alveo_au280
     localparam bit INCLUDE_CMS = 0;
 
     // =========================================================================
+    // HBM cattrip
+    // =========================================================================
+    // This pin must be tied to 0; otherwise the board might be unrecoverable
+    // after programming
+    OBUF i_obuf_hbm_cattrip (.I(1'b0), .O(hbm_cattrip));
+
+    // =========================================================================
     // Port assignments
     // =========================================================================
     // QSFP
@@ -33,11 +40,9 @@ module xilinx_alveo_au280
     assign pcie_txn = alveo_hw_if.pcie_txn;
 
     // =========================================================================
-    // HBM cattrip
+    // 100MHz SYS_CLK (free-running)
     // =========================================================================
-    // This pin must be tied to 0; otherwise the board might be unrecoverable
-    // after programming
-    OBUF i_obuf_hbm_cattrip (.I(1'b0), .O(hbm_cattrip));
+    IBUFDS sys_clk_ibuf_inst (.I(sys_clk_3_p), .IB(sys_clk_3_n), .O(alveo_hw_if.sys_clk_100mhz));
 
     // =========================================================================
     // Card management subsystem

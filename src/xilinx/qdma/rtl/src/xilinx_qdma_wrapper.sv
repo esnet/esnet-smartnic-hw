@@ -16,7 +16,7 @@ module xilinx_qdma_wrapper #(
     axi4l_intf.controller             axil_if,
     // -- AXI-S (streaming DMA)
     axi4s_intf.tx                     axis_h2c,
-    axi4s_intf.rx_async               axis_c2h
+    axi4s_intf.rx                     axis_c2h
 );
     // =========================================================================
     // Imports
@@ -356,8 +356,6 @@ module xilinx_qdma_wrapper #(
     axis_tdest_t __h2c_tdest;
     axis_tuser_t __h2c_tuser;
 
-    assign axis_h2c.aclk = axi_aclk;                           // output wire axi_aclk
-    assign axis_h2c.aresetn = axi_aresetn;                     // output wire axi_aresetn
     assign axis_h2c.tvalid = m_axis_h2c_tvalid;                // output wire m_axis_h2c_tvalid
     assign axis_h2c.tdata = m_axis_h2c_tdata;                  // output wire [511 : 0] m_axis_h2c_tdata
     assign axis_h2c.tlast = m_axis_h2c_tlast;                  // output wire m_axis_h2c_tlast
@@ -393,15 +391,13 @@ module xilinx_qdma_wrapper #(
     axis_tuser_t __c2h_tuser;
 
     // (Local) interfaces
-    axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_T (axis_tid_t), .TDEST_T(axis_tdest_t), .TUSER_T(axis_tuser_t)) __axis_c2h ();
+    axi4s_intf #(
+        .DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TID_WID (AXIS_TID_WID),
+        .TDEST_WID    (AXIS_TDEST_WID),     .TUSER_WID(AXIS_TUSER_WID)
+    ) __axis_c2h ();
 
     // Store/forward FIFO
-    assign axis_c2h.aclk = axi_aclk;                // output wire axi_aclk
-    assign axis_c2h.aresetn = axi_aresetn;          // output wire axi_aresetn
-
     // TODO: add store/forward FIFO
-    assign __axis_c2h.aclk = axis_c2h.aclk;
-    assign __axis_c2h.aresetn = axis_c2h.aresetn;
     assign __axis_c2h.tvalid = axis_c2h.tvalid;
     assign __axis_c2h.tkeep = axis_c2h.tkeep;
     assign __axis_c2h.tlast = axis_c2h.tlast;

@@ -37,17 +37,17 @@ module xilinx_alveo_shell
     axi4l_intf #() axil_top ();
     axi4l_intf #() axil_hw ();
 
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_rx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(CMAC_DATA_BYTE_WID), .TID_WID(CMAC_AXIS_TID_WID), .TDEST_WID(CMAC_AXIS_TDEST_WID), .TUSER_WID(CMAC_AXIS_TUSER_WID)) axis_cmac_tx [NUM_CMAC] (.aclk(clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [NUM_CMAC] (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [NUM_CMAC] (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [NUM_CMAC] (.aclk(clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(clk), .aresetn(!srst));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(clk), .aresetn(!srst));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(clk));
 
     // =========================================================================
     // Signals
@@ -119,7 +119,7 @@ module xilinx_alveo_shell
             assign __axis_cmac_rx_tuser         = __axis_cmac_rx[g_cmac].tuser;
             assign axis_cmac_rx_tuser.err       = __axis_cmac_rx_tuser.err;
 
-            axi4s_set_meta #(
+            axi4s_intf_set_meta #(
                 .TID_WID    ( shell_pkg::CMAC_AXIS_TID_WID ),
                 .TDEST_WID  ( shell_pkg::CMAC_AXIS_TDEST_WID ),
                 .TUSER_WID  ( shell_pkg::CMAC_AXIS_TUSER_WID )
@@ -149,7 +149,7 @@ module xilinx_alveo_shell
             assign axis_cmac_tx_tuser             = axis_cmac_tx[g_cmac].tuser;
             assign __axis_cmac_tx_tuser.err       = axis_cmac_tx_tuser.err;
 
-            axi4s_set_meta #(
+            axi4s_intf_set_meta #(
                 .TID_WID    ( xilinx_alveo_pkg::CMAC_AXIS_TID_WID ),
                 .TDEST_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID ),
                 .TUSER_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID )
@@ -182,11 +182,11 @@ module xilinx_alveo_shell
     assign __axis_h2c_tuser   = __axis_h2c.tuser;
     assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
 
-    axi4s_set_meta #(
+    axi4s_intf_set_meta #(
         .TID_WID    ( shell_pkg::DMA_ST_AXIS_TID_WID ),
         .TDEST_WID  ( shell_pkg::DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID  ( shell_pkg::DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_set_meta__h2c (
+    ) i_axi4s_intf_set_meta__h2c (
         .from_tx ( __axis_h2c ),
         .to_rx   ( axis_h2c ),
         .tid     ( axis_h2c_tid ),
@@ -212,11 +212,11 @@ module xilinx_alveo_shell
     assign axis_c2h_tuser       = axis_c2h.tuser;
     assign __axis_c2h_tuser.err = axis_c2h_tuser.err;
 
-    axi4s_set_meta #(
+    axi4s_intf_set_meta #(
         .TID_WID    ( xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID ),
         .TDEST_WID  ( xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID  ( xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_set_meta__c2h (
+    ) i_axi4s_intf_set_meta__c2h (
         .from_tx ( axis_c2h ),
         .to_rx   ( __axis_c2h ),
         .tid     ( __axis_c2h_tid ),

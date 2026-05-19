@@ -15,13 +15,16 @@ module xilinx_alveo_host
     // Clocks (output)
     output logic                     clk_125mhz,
     output logic                     clk_250mhz,
+    output logic                     srst_250mhz,
     // -- AXI-L (Controller)
     axi4l_intf.controller            axil_if,
     // -- AXI-L (Peripheral)
     axi4l_intf.peripheral            axil_qdma,
     // -- DMA (streaming)
+    output logic                     axis_aclk,
+    output logic                     axis_aresetn,
     axi4s_intf.tx                    axis_h2c,
-    axi4s_intf.rx_async              axis_c2h
+    axi4s_intf.rx                    axis_c2h
 );
 
     // =========================================================================
@@ -97,6 +100,9 @@ module xilinx_alveo_host
         .clk_in1  ( clk_250mhz ),
         .clk_out1 ( clk_125mhz )
     );
+
+    assign axis_aclk = clk_250mhz;
+    assign axis_aresetn = __axil_if__250mhz.aresetn;
 
     // =========================================================================
     // AXI-L synchronizer (250Mhz to 125MHz)

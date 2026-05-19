@@ -21,4 +21,8 @@
     // Satellite controller
     input  wire logic                     satellite_uart_0_rxd,
     output wire logic                     satellite_uart_0_txd,
-    input  wire logic      [3:0]          satellite_gpio
+    input  wire logic      [3:0]          satellite_gpio,
+
+    // Free-run clock
+    input  wire logic                     sys_clk_3_p,
+    input  wire logic                     sys_clk_3_n

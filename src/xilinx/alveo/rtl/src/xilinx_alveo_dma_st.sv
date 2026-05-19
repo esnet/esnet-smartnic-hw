@@ -5,13 +5,13 @@ module xilinx_alveo_dma_st
 ) (
     // From DMA controller
     axi4s_intf.tx          axis_dma_h2c,
-    axi4s_intf.rx_async    axis_dma_c2h,
+    axi4s_intf.rx          axis_dma_c2h,
     // From/to core
     // -- AXI-L
     axi4l_intf.controller  axil_if,
     // -- AXI-S (streaming DMA)
     axi4s_intf.tx          axis_h2c,
-    axi4s_intf.rx_async    axis_c2h
+    axi4s_intf.rx          axis_c2h
 
 );
     // =========================================================================

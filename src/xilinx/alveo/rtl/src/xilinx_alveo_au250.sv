@@ -32,6 +32,13 @@ module xilinx_alveo_au250
     assign pcie_txp = alveo_hw_if.pcie_txp;
     assign pcie_txn = alveo_hw_if.pcie_txn;
 
+    // Clock gen (250MHz to 100MHz)
+    // TODO: derive sys_clk from free-running source
+    xilinx_alveo_clk_100mhz i_xilinx_alveo_clk_100mhz (
+        .clk_in1  ( alveo_hw_if.clk_250mhz ),
+        .clk_out1 ( alveo_hw_if.sys_clk_100mhz )
+    );
+
     // =========================================================================
     // Card management subsystem
     // =========================================================================

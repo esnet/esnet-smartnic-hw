@@ -14,13 +14,6 @@ module xilinx_alveo_au55c
     localparam bit INCLUDE_CMS = 0;
 
     // =========================================================================
-    // Signals
-    // =========================================================================
-    (* keep = "true" *) logic ref_clk_100mhz; // Required for JTAG clock constraint
-
-    assign ref_clk_100mhz = alveo_hw_if.clk_100mhz;
-
-    // =========================================================================
     // HBM cattrip
     // =========================================================================
     // This pin must be tied to 0; otherwise the board might be unrecoverable
@@ -45,6 +38,11 @@ module xilinx_alveo_au55c
     assign alveo_hw_if.pcie_rxn = pcie_rxn;
     assign pcie_txp = alveo_hw_if.pcie_txp;
     assign pcie_txn = alveo_hw_if.pcie_txn;
+
+    // =========================================================================
+    // 100MHz SYS_CLK (free-running)
+    // =========================================================================
+    IBUFDS sys_clk_ibuf_inst (.I(sys_clk_3_p), .IB(sys_clk_3_n), .O(alveo_hw_if.sys_clk_100mhz));
 
     // =========================================================================
     // Card management subsystem
