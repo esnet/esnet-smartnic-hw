@@ -20,26 +20,18 @@ export P4_IGR_FILE = $(CURDIR)/p4/$(APP_NAME).p4
 # BUILD_NAME - Name of subdirectory for artifacts of latest build i.e. artifacts go to $(ARTIFACTS_DIR)/$(BUILD_NAME)
 #export BUILD_NAME := esnet-smartnic-$(APP_NAME)
 
-# BOARD - Name of AMD (Xilinx) Alveo board used for target application.
-# Supports 'au280', 'au250' and 'au55c'.  Default is 'au55c'.
-#export BOARD ?= au55c
+# BOARD - Name of AMD (Xilinx) Alveo board for Versal builds.
+#export VERSAL_BOARD ?= av80
 
-# EXAMPLE_TEST_DIR - Full pathname of p4 test directory used for example design generation.
+# CORE - Name of core implementation to assemble into the shell.
+# Default is 'stub'.
+CORE ?= stub
 
 #------- Targets -------
 build:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_shell APP_DIR=$(CURDIR)
+	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_design CORE=$(CORE)
 
-config:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) config APP_DIR=$(CURDIR)
+shell_ooc:
+	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_shell_ooc
 
-example:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) example APP_DIR=$(CURDIR)
-
-clean:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) clean_build APP_DIR=$(CURDIR)
-
-clean_artifacts:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) clean_artifacts APP_DIR=$(CURDIR)
-
-.PHONY: build example config clean clean_artifacts
+.PHONY: build shell_ooc

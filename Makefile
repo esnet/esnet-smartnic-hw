@@ -192,11 +192,22 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 
 .PHONY: shell shell_bitfile shell_package shell_clean_artifacts
 
-versal_shell: versal_shell_bitfile
+VERSAL_BOARD ?= av80
+CORE ?= stub
 
-versal_shell_bitfile:
-	@echo "Building ESnet Versal shell bitfile ($(BUILD_ID))..."
-	@cd $(AVED_ROOT)/hw/amd_v80_gen5x8_25.1 && PATH=$(PATH):$(XILINX_VITIS)/gnu/armr5/lin/gcc-arm-none-eabi/bin ./build_all.sh
+versal_shell_ooc:
+	@echo "Building Versal shell OOC DCP ($(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT) build \
+		COMPONENT=xilinx.alveo.versal.shell.v80.build \
+		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
 
-.PHONY: versal_shell versal_shell_bitfile
+versal_design:
+	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT) build \
+		COMPONENT=xilinx.alveo.versal.design.v80.build \
+		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
+
+.PHONY: versal_shell_ooc versal_design
 
