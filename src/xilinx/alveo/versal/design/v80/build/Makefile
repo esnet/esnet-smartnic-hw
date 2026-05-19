@@ -1,6 +1,8 @@
 # -----------------------------------------------
-# Component setup
+# Board / component setup
 # -----------------------------------------------
+export BOARD = av80
+
 COMPONENT_ROOT := ../../../../..
 
 include $(COMPONENT_ROOT)/config.mk
@@ -16,8 +18,6 @@ TOP = esnet_smartnic
 BUILD_TIMESTAMP = $(shell date +"%s")
 BUILD_ID ?= $(BUILD_TIMESTAMP)
 CORE ?= stub
-
-DEFINES = BOARD=av80 __av80__
 
 AVED_BASE_DESIGN = amd_v80_gen5x8_25.1
 
