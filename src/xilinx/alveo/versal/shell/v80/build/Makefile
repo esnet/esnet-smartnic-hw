@@ -1,5 +1,5 @@
 # -----------------------------------------------
-# Board / component setup
+# Component setup
 # -----------------------------------------------
 export BOARD = av80
 
@@ -57,13 +57,20 @@ SUBCOMPONENTS = \
 # ----------------------------------------------------
 all: synth
 
-synth:  _build_core_synth
-opt:    _build_core_opt
-place:  _build_core_place
-info:   _build_core_info
-clean:  _build_clean
+pre_synth: _pre_synth
+synth:
+	@if [ -f "$(SYNTH_DCP_FILE)" ]; then \
+		echo "Shell OOC DCP already built — refreshing manifest only."; \
+		$(MAKE) -s _build_core_synth_lib; \
+	else \
+		$(MAKE) -s _build_core_synth; \
+	fi
+opt:       _build_core_opt
+place:     _build_core_place
+info:      _build_core_info
+clean:     _build_clean
 
-.PHONY: synth opt place info clean
+.PHONY: pre_synth synth opt place info clean
 
 # -----------------------------------------------
 # Include Vivado OOC build definitions/targets
