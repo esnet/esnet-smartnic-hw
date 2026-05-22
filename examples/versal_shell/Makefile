@@ -34,4 +34,7 @@ build:
 shell_ooc:
 	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_shell_ooc
 
-.PHONY: build shell_ooc
+core_ooc:
+	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_core_ooc CORE=$(CORE)
+
+.PHONY: build shell_ooc core_ooc
