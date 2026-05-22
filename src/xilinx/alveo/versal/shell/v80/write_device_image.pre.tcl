@@ -15,15 +15,15 @@ set _outdir $::NP_OUT_DIR
 # going through the IP catalog (no project context needed this way).
 set _script_dir [file dirname [info script]]
 set _update_uuid_rom [file normalize \
-    "$_script_dir/../../../../../aved/hw/amd_v80_gen5x8_25.1/src/iprepo/shell_utils_uuid_rom_v2_0/tcl/update_uuid_rom.tcl"]
+    "$_script_dir/../../../../aved/hw/amd_v80_gen5x8_25.1/src/iprepo/shell_utils_uuid_rom_v2_0/tcl/update_uuid_rom.tcl"]
 
 if {![file exists $_update_uuid_rom]} {
     return -code error "ERROR: update_uuid_rom.tcl not found at $_update_uuid_rom"
 }
 source $_update_uuid_rom
 
-# Logic-UUID: md5 of the synthesized checkpoint
-set _synth_dcp "$_outdir/${_top}.synth.dcp"
+# Logic-UUID: md5 of the shell synth DCP (passed to Vivado via -top_dcp)
+set _synth_dcp $::NP_TOP_DCP
 if {![file exists $_synth_dcp]} {
     return -code error "ERROR: synth DCP not found: $_synth_dcp"
 }
