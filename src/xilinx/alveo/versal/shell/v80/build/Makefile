@@ -52,6 +52,15 @@ SUBCOMPONENTS = \
     xilinx.alveo.versal.shell.rtl \
     core.blackbox
 
+# Full-device synthesis (no OOC) — core is a black_box stub.
+# OOC_per_BD is applied to BD files inside build_non_proj.tcl so the
+# CIPS/NOC partition context is correctly embedded in the shell DCP.
+OOC = 0
+
+CONSTRAINTS_XDC_SYNTH = $(abspath timing_ooc.xdc)
+
+BUILD_STAGES = synth
+
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
@@ -60,19 +69,17 @@ all: synth
 pre_synth: _pre_synth
 synth:
 	@if [ -f "$(SYNTH_DCP_FILE)" ]; then \
-		echo "Shell OOC DCP already built — refreshing manifest only."; \
-		$(MAKE) -s _build_core_synth_lib; \
+		echo "Shell synth DCP already built — refreshing manifest only."; \
 	else \
-		$(MAKE) -s _build_core_synth; \
+		$(MAKE) -s _np_synth; \
 	fi
-opt:       _build_core_opt
-place:     _build_core_place
-info:      _build_core_info
-clean:     _build_clean
+	@$(MAKE) -s _build_np_synth_lib
+info:  _build_info
+clean: _build_clean
 
-.PHONY: pre_synth synth opt place info clean
+.PHONY: pre_synth synth info clean
 
 # -----------------------------------------------
-# Include Vivado OOC build definitions/targets
+# Include non-project build definitions/targets
 # -----------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk
+include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
