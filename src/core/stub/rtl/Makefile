@@ -16,6 +16,7 @@ SRC_LIST_FILES =
 # Dependencies
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    core.stub.regio.rtl \
     shell.pkg \
     shell.rtl \
     axi4l.rtl@$(COMMON_LIB_NAME) \

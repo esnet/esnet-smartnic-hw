@@ -24,9 +24,17 @@ module core
         .axis_c2h
     );
 
-    // Terminate interfaces
-    // -- AXI-L
-    axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (axil_if));
+    // Register map
+    core_reg_intf regs ();
+
+    core_reg_blk i_core_reg_blk (
+        .axil_if    (axil_if),
+        .reg_blk_if (regs)
+    );
+
+    // id: read-only constant — holds INIT value, no hardware update
+    assign regs.id_nxt_v = 1'b0;
+    assign regs.id_nxt   = '0;
 
     // -- Network ports
     // shell_adapter__core drives axis_port_rx (.tx) and receives axis_port_tx (.rx),
