@@ -22,14 +22,14 @@ CORE ?= stub
 AVED_BASE_DESIGN = amd_v80_gen5x8_25.1
 
 # Board-specific shell directory (provides impl constraints and hook TCL files)
-SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/v80
+SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/av80
 
-# Shell synth DCP: produced by xilinx.alveo.versal.shell.v80.build (non-project flow)
-SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.v80.build
+# Shell synth DCP: produced by xilinx.alveo.versal.shell.av80.build (non-project flow)
+SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.av80.build
 SHELL_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(SHELL_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/$(TOP).synth.dcp
 
-# Core OOC DCP: produced by core.<CORE>.build.v80 (non-project flow)
-CORE_SUBCOMPONENT_REF = core.$(CORE).build.v80
+# Core OOC DCP: produced by core.<CORE>.build.av80 (non-project flow)
+CORE_SUBCOMPONENT_REF = core.$(CORE).build.av80
 CORE_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(CORE_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/core.synth.dcp
 
 # Map to the generic assembly interface (shell=top-level, core fills i_core cell)

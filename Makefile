@@ -198,21 +198,21 @@ CORE ?= stub
 versal_shell_ooc:
 	@echo "Building Versal shell OOC DCP ($(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=xilinx.alveo.versal.shell.v80.build \
+		COMPONENT=xilinx.alveo.versal.shell.av80.build \
 		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 
 versal_core_ooc:
 	@echo "Building Versal core OOC DCP (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=core.$(CORE).build.v80 \
+		COMPONENT=core.$(CORE).build.av80 \
 		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 
 versal_design:
 	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=xilinx.alveo.versal.design.v80.build \
+		COMPONENT=xilinx.alveo.versal.design.av80.build \
 		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 
