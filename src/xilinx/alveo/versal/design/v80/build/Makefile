@@ -36,6 +36,9 @@ CORE_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(CORE_SUBCOMPONENT_R
 TOP_DCP_FILE = $(SHELL_DCP_FILE)
 CELL_DCPS    = i_core:$(CORE_DCP_FILE)
 
+# Re-run from link if either input DCP changes
+STAGE_DEPS = $(SHELL_DCP_FILE) $(CORE_DCP_FILE)
+
 # Implementation-only constraints from the shell board directory
 CONSTRAINTS_XDC_IMPL = \
     $(abspath $(SHELL_BOARD_DIR)/impl.pins.xdc) \
