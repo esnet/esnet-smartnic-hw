@@ -31,8 +31,10 @@ CONSTRAINTS_XDC_SYNTH = $(abspath timing_ooc.xdc)
 
 BUILD_STAGES = synth
 
-# Re-synthesize when sources change (sources.tcl is a real file target, rebuilt when deps change)
-STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl
+# Re-synthesize when sources change. $(wildcard ...) omits the path when the
+# file doesn't yet exist (no rule for sources.tcl), so Make won't error on
+# first build; freshness tracking still works once the file is present.
+STAGE_DEPS = $(wildcard $(COMPONENT_OUT_PATH)/synth/sources.tcl)
 
 # ----------------------------------------------------
 # Targets
