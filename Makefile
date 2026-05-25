@@ -212,7 +212,7 @@ versal_core_ooc:
 versal_design:
 	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=xilinx.alveo.versal.design.av80.build \
+		COMPONENT=xilinx.alveo.versal.design.build \
 		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 

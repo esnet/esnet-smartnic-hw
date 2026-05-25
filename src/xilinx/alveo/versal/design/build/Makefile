@@ -1,9 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-export BOARD = av80
-
-COMPONENT_ROOT := ../../../../..
+COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -22,10 +20,10 @@ CORE ?= stub
 AVED_BASE_DESIGN = amd_v80_gen5x8_25.1
 
 # Board-specific shell directory (provides impl constraints and hook TCL files)
-SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/av80
+SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/$(BOARD)
 
-# Shell synth DCP: produced by xilinx.alveo.versal.shell.av80.build (non-project flow)
-SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.av80.build
+# Shell synth DCP: produced by xilinx.alveo.versal.shell.<BOARD>.build (non-project flow)
+SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.$(BOARD).build
 SHELL_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(SHELL_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/$(TOP).synth.dcp
 
 # Core OOC DCP: produced by core.<CORE>.build (non-project flow)
