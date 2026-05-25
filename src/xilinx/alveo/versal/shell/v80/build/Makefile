@@ -61,18 +61,16 @@ CONSTRAINTS_XDC_SYNTH = $(abspath timing_ooc.xdc)
 
 BUILD_STAGES = synth
 
+# Re-synthesize when sources change (sources.tcl is a real file target, rebuilt when deps change)
+STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl
+
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
 all: synth
 
 pre_synth: _pre_synth
-synth:
-	@if [ -f "$(SYNTH_DCP_FILE)" ]; then \
-		echo "Shell synth DCP already built — refreshing manifest only."; \
-	else \
-		$(MAKE) -s _np_synth; \
-	fi
+synth: _np_synth
 	@$(MAKE) -s _build_np_synth_lib
 info:  _build_info
 clean: _build_clean
