@@ -16,11 +16,11 @@ SRC_LIST_FILES =
 
 # ----------------------------------------------------
 # Dependencies
-#   core.stub transitively includes shell.pkg, shell.rtl,
+#   core.stub.rtl transitively includes shell.pkg, shell.rtl,
 #   axi4l.rtl@common, axi4s.rtl@common via its own Makefile.
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    core.stub
+    core.stub.rtl
 
 OOC = 1
 

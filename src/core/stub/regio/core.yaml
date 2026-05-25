@@ -1,0 +1,16 @@
+name: core
+info: |
+  Stub core base registers.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: id
+    access: ro
+    init: 0x424F5245
+
+  - name: scratchpad
+    access: rw
