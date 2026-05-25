@@ -28,8 +28,8 @@ SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/av80
 SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.av80.build
 SHELL_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(SHELL_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/$(TOP).synth.dcp
 
-# Core OOC DCP: produced by core.<CORE>.build.av80 (non-project flow)
-CORE_SUBCOMPONENT_REF = core.$(CORE).build.av80
+# Core OOC DCP: produced by core.<CORE>.build (non-project flow)
+CORE_SUBCOMPONENT_REF = core.$(CORE).build
 CORE_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(CORE_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/core.synth.dcp
 
 # Map to the generic assembly interface (shell=top-level, core fills i_core cell)

@@ -1,6 +1,9 @@
-# Board-agnostic core OOC build logic.
-# Include from a board-specific Makefile that sets BOARD, COMPONENT_ROOT,
-# and includes config.mk before this file.
+# -----------------------------------------------
+# Component setup
+# -----------------------------------------------
+COMPONENT_ROOT := ../..
+
+include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Specify top-level module

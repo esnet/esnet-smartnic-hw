@@ -205,7 +205,7 @@ versal_shell_ooc:
 versal_core_ooc:
 	@echo "Building Versal core OOC DCP (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=core.$(CORE).build.av80 \
+		COMPONENT=core.$(CORE).build \
 		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 
