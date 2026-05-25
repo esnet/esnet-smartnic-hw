@@ -23,4 +23,4 @@ regs:
   - name: fec_evt_size_enc
     desc: specifies the encoder fec event size.
     access: rw
-    init: 0xffff
+    init: 0xffffffff

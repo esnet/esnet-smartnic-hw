@@ -28,6 +28,7 @@ IP_LIST = \
     xilinx_alveo_vio \
     xilinx_alveo_clk_axil \
     xilinx_alveo_clk \
+    xilinx_alveo_clk_100mhz \
     xilinx_alveo_axil_ila
 
 # ----------------------------------------------------
@@ -55,6 +56,8 @@ IP_LIST = \
 IP_SIM_SRC_FILES = \
     xilinx_alveo_clk/xilinx_alveo_clk_clk_wiz.v \
 	xilinx_alveo_clk/xilinx_alveo_clk.v \
+    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz_clk_wiz.v \
+	xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil_clk_wiz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil.v \
     xilinx_alveo_vio/sim/xilinx_alveo_vio.v \

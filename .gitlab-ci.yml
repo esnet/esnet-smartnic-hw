@@ -28,6 +28,10 @@ variables:
     LANG: C.UTF-8
     GIT_SUBMODULE_STRATEGY: recursive
 
+.common_aved:
+  extends: .common
+  image: $CI_REGISTRY/ht/xilinx-tools-docker:101657-ga13293eb
+
 p4bm:
   stage: p4_sim
   extends: .common
@@ -721,3 +725,21 @@ fw_shell_au280:
     SN_HW_API_JOB: hwapi_shell_au280
   needs:
     - hwapi_shell_au280
+
+build_aved:
+  stage: bitfile
+  extends: .common_aved
+  tags:
+    - ht-synth
+  script:
+    - cp -r /tools/AVED/smbus_v1_1 src/xilinx/aved/hw/hw/amd_v80_gen5x8_25.1/src/iprepo/
+    - make versal_shell
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - src/xilinx/aved/hw
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: manual
+  timeout: 4h
