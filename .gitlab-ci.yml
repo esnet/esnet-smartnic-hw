@@ -743,3 +743,21 @@ build_aved:
   needs: []
   when: manual
   timeout: 4h
+
+versal_shell:
+  stage: bitfile
+  extends: .common_aved
+  tags:
+    - ht-synth
+  script:
+    - cp -r /tools/AVED/smbus_v1_1 src/xilinx/aved/hw/amd_v80_gen5x8_25.1/src/iprepo/
+    - make versal_pdi
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - .out
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: manual
+  timeout: 8h
