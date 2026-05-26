@@ -97,6 +97,26 @@ clean:        _build_clean
 .PHONY: pre_synth link opt place place_opt route route_opt device_image xsa info clean
 
 # -----------------------------------------------
+# Firmware build + PDI generation
+# -----------------------------------------------
+BUILD_PDI_SCRIPT = $(SMARTNIC_ROOT)/scripts/versal/build_pdi.sh
+
+PDI_HW_FILE  = $(COMPONENT_OUT_PATH)/$(TOP).pdi
+XSA_FILE     = $(COMPONENT_OUT_PATH)/$(TOP).xsa
+PDI_APP_FILE = $(COMPONENT_OUT_PATH)/$(TOP)_app.pdi
+
+$(PDI_APP_FILE): $(PDI_HW_FILE) $(XSA_FILE)
+	@$(BUILD_PDI_SCRIPT) \
+	    -p $(abspath $(PROJ_ROOT)) \
+	    -o $(COMPONENT_OUT_PATH) \
+	    -d $(AVED_BASE_DESIGN) \
+	    -t $(TOP)
+
+pdi: _np_xsa $(PDI_APP_FILE)
+
+.PHONY: pdi
+
+# -----------------------------------------------
 # Include non-project build definitions/targets
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk

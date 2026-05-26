@@ -216,5 +216,11 @@ versal_design:
 		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 
-.PHONY: versal_shell_ooc versal_core_ooc versal_design
+versal_pdi:
+	@echo "Building Versal PDI with firmware (CORE=$(CORE), $(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT)/xilinx/alveo/versal/design/build pdi \
+		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
+
+.PHONY: versal_shell_ooc versal_core_ooc versal_design versal_pdi
 
