@@ -13,6 +13,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
+SRC_FILES =
 INC_DIRS =
 SRC_LIST_FILES =
 
@@ -42,12 +43,13 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 all: compile synth
 
+pre:     _compile_pre
 compile: _compile_sim
 synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile synth info clean
+.PHONY: all pre compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

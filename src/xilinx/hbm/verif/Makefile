@@ -45,11 +45,12 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 all: compile
 
+pre:     _compile_pre
 compile: _compile_sim
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile info clean
+.PHONY: all pre compile info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets
