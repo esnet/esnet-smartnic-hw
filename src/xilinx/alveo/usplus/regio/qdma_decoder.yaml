@@ -2,7 +2,7 @@ name: qdma
 
 blocks:
   qdma_function: &qdma_function
-    !include ../src/xilinx/alveo/regio/qdma_function.yaml
+    !include ../src/xilinx/alveo/usplus/regio/qdma_function.yaml
 
 interfaces:
   - name: qdma_func0

@@ -4,9 +4,9 @@ blocks:
   cmac: &cmac
     !include ../src/xilinx/cmac/regio/cmac.yaml
   qsfp28_i2c: &qsfp28_i2c
-    !include ../src/xilinx/alveo/regio/qsfp28_i2c.yaml
+    !include ../src/xilinx/alveo/usplus/regio/qsfp28_i2c.yaml
   cmac_adapter: &cmac_adapter
-    !include ../src/xilinx/alveo/regio/cmac_adapter.yaml
+    !include ../src/xilinx/alveo/usplus/regio/cmac_adapter.yaml
 
 interfaces:
   - block: *cmac

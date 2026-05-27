@@ -2,7 +2,7 @@ name: xilinx_alveo
 
 blocks:
   syscfg: &syscfg
-    !include ../src/xilinx/alveo/regio/syscfg.yaml
+    !include ../src/xilinx/alveo/usplus/regio/syscfg.yaml
   qspi: &qspi
     !include ../src/xilinx/qspi/regio/qspi.yaml
   cms: &cms
@@ -10,9 +10,9 @@ blocks:
 
 decoders:
   qdma_decoder: &qdma_decoder
-    !include ../src/xilinx/alveo/regio/qdma_decoder.yaml
+    !include ../src/xilinx/alveo/usplus/regio/qdma_decoder.yaml
   cmac_decoder: &cmac_decoder
-    !include ../src/xilinx/alveo/regio/cmac_decoder.yaml
+    !include ../src/xilinx/alveo/usplus/regio/cmac_decoder.yaml
   sysmon_decoder: &sysmon_decoder
     !include ../src/xilinx/sysmon/regio/sysmon_decoder.yaml
 
