@@ -68,5 +68,8 @@ include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
 $(VITISNETP4_WRAPPER_FILE): $(VITISNETP4_XCI_FILE) | $(COMPONENT_OUT_PATH)
 	@$(SMARTNIC_ROOT)/scripts/vitisnetp4/gen_vitisnetp4_wrapper.py $< --out_dir $(COMPONENT_OUT_PATH) --template-dir $(SMARTNIC_ROOT)/scripts/vitisnetp4
 
+$(VITISNETP4_XCI_FILE):
+	@$(MAKE) -s -C $(SRC_ROOT) ip COMPONENT=$(COMPONENT_BASE).ip
+
 $(COMPONENT_OUT_PATH):
 	@mkdir -p $@
