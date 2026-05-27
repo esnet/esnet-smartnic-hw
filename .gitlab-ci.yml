@@ -744,7 +744,7 @@ build_aved:
   when: manual
   timeout: 4h
 
-versal_shell:
+build_shell_av80:
   stage: bitfile
   extends: .common_aved
   tags:
