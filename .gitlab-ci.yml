@@ -735,6 +735,14 @@ build_aved:
   tags:
     - ht-synth
   script:
+    - |
+      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
+      if [[ ! -d "${ARMR5_BIN}" ]]; then
+        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
+      fi
+      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
+      echo "ARM R5 toolchain: ${ARMR5_BIN}"
+      export PATH="${ARMR5_BIN}:${PATH}"
     - cd src/xilinx/aved/hw/amd_v80_gen5x8_25.1 && ./build_all.sh
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
