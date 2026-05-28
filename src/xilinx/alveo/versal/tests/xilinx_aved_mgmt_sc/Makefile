@@ -15,6 +15,11 @@ COMPILE_OPTS =
 ELAB_OPTS =
 SIM_OPTS =
 
+SUBCOMPONENTS = \
+    xilinx.alveo.versal.bd \
+    xilinx.alveo.versal.shell.rtl \
+    core.stub.rtl
+
 # -----------------------------------------------
 # Use common testcase Makefile
 # -----------------------------------------------

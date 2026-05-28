@@ -5,15 +5,21 @@
 # after applying xilinx_aved.tcl.  Used to verify that PCIe management
 # transactions are routed to the correct slave port.
 #
+# M00-M03 terminate at AXI VIP slaves so routing can be checked in isolation.
+# M04 is exposed as a boundary port (m_axi_usr_mgmt) so the testbench can
+# wire it to the xilinx_aved_adapter RTL chain and exercise the real register
+# block end-to-end.
+#
 # Topology:
-#   axi_vip_m (MASTER) --> mgmt_sc (1S/5M SmartConnect) --> axi_vip_s{0..4}
+#   axi_vip_m (MASTER) --> mgmt_sc (1S/5M SmartConnect) --> axi_vip_s{0..3}
+#                                                        --> m_axi_usr_mgmt (port)
 #
 # Address map (matches xilinx_aved.tcl exactly):
 #   M00 (hw_discovery)             0x020101000000  4 KB
 #   M01 (uuid_rom)                 0x020101001000  4 KB
 #   M02 (gcq_m2r)                  0x020101010000  4 KB
 #   M03 (pcie_mgmt_pdi_reset_gpio) 0x020101040000  4 KB
-#   M04 (usr_mgmt)                 0x020101800000  8 MB
+#   M04 (usr_mgmt)                 0x020101800000  8 MB  <- boundary port
 # =============================================================================
 
 set module_name xilinx_aved_mgmt_sc
@@ -52,9 +58,9 @@ set_property -dict [list \
 ] $mgmt_sc
 
 # -----------------------------------------------------------------------------
-# AXI VIP slaves  — one per master port, auto-respond in simulation
+# AXI VIP slaves for M00-M03  — auto-respond in simulation
 # -----------------------------------------------------------------------------
-foreach idx {0 1 2 3 4} {
+foreach idx {0 1 2 3} {
     set vip_s [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vip:1.1 axi_vip_s${idx}]
     set_property -dict [list \
         CONFIG.INTERFACE_MODE {SLAVE}    \
@@ -67,6 +73,19 @@ foreach idx {0 1 2 3 4} {
 }
 
 # -----------------------------------------------------------------------------
+# M04 boundary port  — wired to xilinx_aved_adapter in the testbench
+# -----------------------------------------------------------------------------
+set port_m04 [create_bd_intf_port \
+    -mode Master \
+    -vlnv xilinx.com:interface:aximm_rtl:1.0 \
+    m_axi_usr_mgmt]
+set_property -dict [list \
+    CONFIG.ADDR_WIDTH {32} \
+    CONFIG.DATA_WIDTH {32} \
+    CONFIG.PROTOCOL   {AXI4LITE} \
+] $port_m04
+
+# -----------------------------------------------------------------------------
 # Clocks and resets
 # -----------------------------------------------------------------------------
 connect_bd_net [get_bd_ports aclk]    [get_bd_pins axi_vip_m/aclk]
@@ -75,7 +94,7 @@ connect_bd_net [get_bd_ports aresetn] [get_bd_pins axi_vip_m/aresetn]
 connect_bd_net [get_bd_ports aclk]    [get_bd_pins mgmt_sc/aclk]
 connect_bd_net [get_bd_ports aresetn] [get_bd_pins mgmt_sc/aresetn]
 
-foreach idx {0 1 2 3 4} {
+foreach idx {0 1 2 3} {
     connect_bd_net [get_bd_ports aclk]    [get_bd_pins axi_vip_s${idx}/aclk]
     connect_bd_net [get_bd_ports aresetn] [get_bd_pins axi_vip_s${idx}/aresetn]
 }
@@ -86,11 +105,14 @@ foreach idx {0 1 2 3 4} {
 connect_bd_intf_net [get_bd_intf_pins axi_vip_m/M_AXI] \
                     [get_bd_intf_pins mgmt_sc/S00_AXI]
 
-foreach idx {0 1 2 3 4} {
+foreach idx {0 1 2 3} {
     connect_bd_intf_net \
         [get_bd_intf_pins mgmt_sc/M0${idx}_AXI] \
         [get_bd_intf_pins axi_vip_s${idx}/S_AXI]
 }
+
+connect_bd_intf_net [get_bd_intf_pins mgmt_sc/M04_AXI] \
+                    [get_bd_intf_ports m_axi_usr_mgmt]
 
 # -----------------------------------------------------------------------------
 # Address assignments  — mirror xilinx_aved.tcl exactly
@@ -120,6 +142,6 @@ assign_bd_address \
 assign_bd_address \
     -offset 0x020101800000 -range 0x800000 \
     -target_address_space $master_space \
-    [get_bd_addr_segs axi_vip_s4/S_AXI/Reg] -force
+    [get_bd_addr_segs m_axi_usr_mgmt/Reg] -force
 
 save_bd_design

@@ -9,15 +9,20 @@ import xilinx_aved_mgmt_sc_axi_vip_s0_0_pkg::*;
 import xilinx_aved_mgmt_sc_axi_vip_s1_0_pkg::*;
 import xilinx_aved_mgmt_sc_axi_vip_s2_0_pkg::*;
 import xilinx_aved_mgmt_sc_axi_vip_s3_0_pkg::*;
-import xilinx_aved_mgmt_sc_axi_vip_s4_0_pkg::*;
 
 module xilinx_aved_mgmt_sc_unit_test;
     import svunit_pkg::svunit_testcase;
+    import axi4l_pkg::*;
 
     string name = "xilinx_aved_mgmt_sc_ut";
     svunit_testcase svunit_ut;
 
     `define SVUNIT_TIMEOUT 1ms
+
+    // =========================================================================
+    // Register offsets (core.stub.regio/core.yaml)
+    // =========================================================================
+    localparam bit [31:0] ID_EXPECTED = 32'h434F5245;  // 'CORE'
 
     // =========================================================================
     // DUT signals
@@ -26,9 +31,75 @@ module xilinx_aved_mgmt_sc_unit_test;
     logic aresetn;
 
     // =========================================================================
+    // M04 boundary port wires
+    //   Mode Master on the BD means these drive out from the BD and are inputs
+    //   to xilinx_aved_adapter (which is a slave of the management bus).
+    // =========================================================================
+    wire [31:0] m_axi_usr_mgmt_awaddr;
+    wire [2:0]  m_axi_usr_mgmt_awprot;
+    wire        m_axi_usr_mgmt_awvalid;
+    wire        m_axi_usr_mgmt_awready;
+    wire [31:0] m_axi_usr_mgmt_wdata;
+    wire [3:0]  m_axi_usr_mgmt_wstrb;
+    wire        m_axi_usr_mgmt_wvalid;
+    wire        m_axi_usr_mgmt_wready;
+    wire [1:0]  m_axi_usr_mgmt_bresp;
+    wire        m_axi_usr_mgmt_bvalid;
+    wire        m_axi_usr_mgmt_bready;
+    wire [31:0] m_axi_usr_mgmt_araddr;
+    wire [2:0]  m_axi_usr_mgmt_arprot;
+    wire        m_axi_usr_mgmt_arvalid;
+    wire        m_axi_usr_mgmt_arready;
+    wire [31:0] m_axi_usr_mgmt_rdata;
+    wire [1:0]  m_axi_usr_mgmt_rresp;
+    wire        m_axi_usr_mgmt_rvalid;
+    wire        m_axi_usr_mgmt_rready;
+
+    // =========================================================================
     // DUT instantiation
     // =========================================================================
     xilinx_aved_mgmt_sc DUT (.*);
+
+    // =========================================================================
+    // M04 adapter chain: boundary port -> xilinx_aved_adapter
+    //                    -> xilinx_aved_shell_adapter -> core
+    // =========================================================================
+    axi4l_intf axil_app_if ();
+    shell_intf  shell_if    ();
+
+    xilinx_aved_adapter i_xilinx_aved_adapter (
+        .clk_pl                    ( aclk    ),
+        .resetn_pl_periph          ( aresetn ),
+        .m_axi_usr_mgmt_awaddr,
+        .m_axi_usr_mgmt_awprot,
+        .m_axi_usr_mgmt_awvalid,
+        .m_axi_usr_mgmt_awready,
+        .m_axi_usr_mgmt_wdata,
+        .m_axi_usr_mgmt_wstrb,
+        .m_axi_usr_mgmt_wvalid,
+        .m_axi_usr_mgmt_wready,
+        .m_axi_usr_mgmt_bresp,
+        .m_axi_usr_mgmt_bvalid,
+        .m_axi_usr_mgmt_bready,
+        .m_axi_usr_mgmt_araddr,
+        .m_axi_usr_mgmt_arprot,
+        .m_axi_usr_mgmt_arvalid,
+        .m_axi_usr_mgmt_arready,
+        .m_axi_usr_mgmt_rdata,
+        .m_axi_usr_mgmt_rresp,
+        .m_axi_usr_mgmt_rvalid,
+        .m_axi_usr_mgmt_rready,
+        .axil_if ( axil_app_if )
+    );
+
+    xilinx_aved_shell_adapter i_xilinx_aved_shell_adapter (
+        .axil_if  ( axil_app_if ),
+        .shell_if
+    );
+
+    core i_core (
+        .shell_if
+    );
 
     // =========================================================================
     // Clock
@@ -45,7 +116,6 @@ module xilinx_aved_mgmt_sc_unit_test;
     xilinx_aved_mgmt_sc_axi_vip_s1_0_slv_mem_t slave_agent_1;
     xilinx_aved_mgmt_sc_axi_vip_s2_0_slv_mem_t slave_agent_2;
     xilinx_aved_mgmt_sc_axi_vip_s3_0_slv_mem_t slave_agent_3;
-    xilinx_aved_mgmt_sc_axi_vip_s4_0_slv_mem_t slave_agent_4;
 
     // Xilinx VIP agents cannot be stopped and restarted — start once only.
     // Reset is also applied only once: each test completes its transaction
@@ -62,7 +132,6 @@ module xilinx_aved_mgmt_sc_unit_test;
         slave_agent_1 = new("slave_agent_1", DUT.axi_vip_s1.inst.IF);
         slave_agent_2 = new("slave_agent_2", DUT.axi_vip_s2.inst.IF);
         slave_agent_3 = new("slave_agent_3", DUT.axi_vip_s3.inst.IF);
-        slave_agent_4 = new("slave_agent_4", DUT.axi_vip_s4.inst.IF);
     endfunction
 
     // =========================================================================
@@ -77,7 +146,6 @@ module xilinx_aved_mgmt_sc_unit_test;
             slave_agent_1.start_slave();
             slave_agent_2.start_slave();
             slave_agent_3.start_slave();
-            slave_agent_4.start_slave();
             repeat (20) @(posedge aclk);  // >= 16 cycles required by Xilinx VIP
             aresetn = 1'b1;
             repeat (4) @(posedge aclk);
@@ -115,8 +183,8 @@ module xilinx_aved_mgmt_sc_unit_test;
     `SVUNIT_TESTS_BEGIN
 
         // ------------------------------------------------------------------
-        // Verify address routing: each management endpoint receives
-        // a transaction addressed to it without a decode error.
+        // M00-M03: verify address routing — each management endpoint
+        // receives a transaction without a decode error.
         //
         // Absolute addresses match xilinx_aved.tcl (BAR0-relative
         // after NoC maps BAR0 to base 0x0201_0000_0000).
@@ -142,14 +210,26 @@ module xilinx_aved_mgmt_sc_unit_test;
             axil_write(64'h020101040000, 32'h0000_0001);
         `SVTEST_END
 
-        `SVTEST(route_usr_mgmt_base)
-            // M04: usr_mgmt base @ 0x020101800000 (first word of 8 MB window)
-            axil_write(64'h020101800000, 32'hA5A5_A5A5);
+        // ------------------------------------------------------------------
+        // M04: usr_mgmt — exercises the real register block end-to-end.
+        //
+        // The SmartConnect delivers offset-relative addresses to the 32-bit
+        // slave port, so core.stub.regio registers appear at:
+        //   id         = base + 0x0
+        //   scratchpad = base + 0x4
+        // ------------------------------------------------------------------
+
+        `SVTEST(usr_mgmt_id_read)
+            logic [31:0] rdata;
+            axil_read(64'h020101800000, rdata);
+            `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
         `SVTEST_END
 
-        `SVTEST(route_usr_mgmt_top)
-            // M04: usr_mgmt top @ 0x0201_01FF_FFFC (last aligned word in 8 MB window)
-            axil_write(64'h020101FFFFFC, 32'h5A5A_5A5A);
+        `SVTEST(usr_mgmt_scratchpad_write_read)
+            logic [31:0] rdata;
+            axil_write(64'h020101800004, 32'hDEAD_BEEF);
+            axil_read(64'h020101800004, rdata);
+            `FAIL_UNLESS_EQUAL(rdata, 32'hDEAD_BEEF);
         `SVTEST_END
 
     `SVUNIT_TESTS_END

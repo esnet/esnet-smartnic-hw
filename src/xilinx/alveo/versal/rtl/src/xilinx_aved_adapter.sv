@@ -27,13 +27,22 @@ module xilinx_aved_adapter (
     // AXI4-Lite controller output (carries clk/reset via aclk/aresetn)
     axi4l_intf.controller axil_if
 );
+    // Vivado SmartConnect delivers the absolute address (lower 32 bits) to
+    // the slave port rather than the aperture-relative offset.  Strip the
+    // base by masking to the M04 usr_mgmt aperture size (8 MB = 23 bits).
+    localparam int USR_MGMT_APERTURE_BITS = 23;
+
+    wire [31:0] awaddr_offset = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
+                                  m_axi_usr_mgmt_awaddr[USR_MGMT_APERTURE_BITS-1:0]};
+    wire [31:0] araddr_offset = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
+                                  m_axi_usr_mgmt_araddr[USR_MGMT_APERTURE_BITS-1:0]};
 
     axi4l_intf_from_signals i_axi4l_intf_from_signals (
         .aclk     ( clk_pl                   ),
         .aresetn  ( resetn_pl_periph         ),
         .awvalid  ( m_axi_usr_mgmt_awvalid  ),
         .awready  ( m_axi_usr_mgmt_awready  ),
-        .awaddr   ( m_axi_usr_mgmt_awaddr   ),
+        .awaddr   ( awaddr_offset            ),
         .awprot   ( m_axi_usr_mgmt_awprot   ),
         .wvalid   ( m_axi_usr_mgmt_wvalid   ),
         .wready   ( m_axi_usr_mgmt_wready   ),
@@ -44,7 +53,7 @@ module xilinx_aved_adapter (
         .bresp    ( m_axi_usr_mgmt_bresp    ),
         .arvalid  ( m_axi_usr_mgmt_arvalid  ),
         .arready  ( m_axi_usr_mgmt_arready  ),
-        .araddr   ( m_axi_usr_mgmt_araddr   ),
+        .araddr   ( araddr_offset            ),
         .arprot   ( m_axi_usr_mgmt_arprot   ),
         .rvalid   ( m_axi_usr_mgmt_rvalid   ),
         .rready   ( m_axi_usr_mgmt_rready   ),
