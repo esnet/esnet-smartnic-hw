@@ -118,7 +118,7 @@ module xilinx_aved_mgmt_sc_unit_test;
         // Verify address routing: each management endpoint receives
         // a transaction addressed to it without a decode error.
         //
-        // Absolute addresses match xilinx_aved_patch.tcl (BAR0-relative
+        // Absolute addresses match xilinx_aved.tcl (BAR0-relative
         // after NoC maps BAR0 to base 0x0201_0000_0000).
         // ------------------------------------------------------------------
 

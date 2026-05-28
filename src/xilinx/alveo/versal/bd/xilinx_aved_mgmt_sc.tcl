@@ -2,13 +2,13 @@
 # Simulation-only BD: xilinx_aved_mgmt_sc
 #
 # Mirrors the management SmartConnect configuration from pcie_slr0_mgmt_sc
-# after applying xilinx_aved_patch.tcl.  Used to verify that PCIe management
+# after applying xilinx_aved.tcl.  Used to verify that PCIe management
 # transactions are routed to the correct slave port.
 #
 # Topology:
 #   axi_vip_m (MASTER) --> mgmt_sc (1S/5M SmartConnect) --> axi_vip_s{0..4}
 #
-# Address map (matches xilinx_aved_patch.tcl exactly):
+# Address map (matches xilinx_aved.tcl exactly):
 #   M00 (hw_discovery)             0x020101000000  4 KB
 #   M01 (uuid_rom)                 0x020101001000  4 KB
 #   M02 (gcq_m2r)                  0x020101010000  4 KB
@@ -93,7 +93,7 @@ foreach idx {0 1 2 3 4} {
 }
 
 # -----------------------------------------------------------------------------
-# Address assignments  — mirror xilinx_aved_patch.tcl exactly
+# Address assignments  — mirror xilinx_aved.tcl exactly
 # -----------------------------------------------------------------------------
 set master_space [get_bd_addr_spaces axi_vip_m/Master_AXI]
 
