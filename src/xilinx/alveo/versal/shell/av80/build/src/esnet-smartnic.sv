@@ -11,7 +11,7 @@ module esnet_smartnic
     `include "xilinx_aved_app.svh"
 
     // Interfaces
-    xilinx_aved_app_intf app_if ();
+    axi4l_intf axil_if ();
 
     shell_intf shell_if ();
 
@@ -33,11 +33,11 @@ module esnet_smartnic
         .*
     );
 
-    // Adapt AVED application interface to standard ESnet shell-core boundary
+    // Adapt AVED management AXI4-Lite to standard ESnet shell-core boundary
     xilinx_aved_shell_adapter #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_aved_shell_adapter (
-        .app_if,
+        .axil_if,
         .shell_if
     );
 

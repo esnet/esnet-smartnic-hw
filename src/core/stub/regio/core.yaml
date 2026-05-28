@@ -10,7 +10,7 @@ regs:
 
   - name: id
     access: ro
-    init: 0x424F5245
+    init: 0x434F5245
 
   - name: scratchpad
     access: rw

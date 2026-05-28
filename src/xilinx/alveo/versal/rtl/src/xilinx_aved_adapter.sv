@@ -24,12 +24,9 @@ module xilinx_aved_adapter (
     output wire        m_axi_usr_mgmt_rvalid,
     input  wire        m_axi_usr_mgmt_rready,
 
-    // AVED application interface
-    xilinx_aved_app_intf.aved app_if
+    // AXI4-Lite controller output (carries clk/reset via aclk/aresetn)
+    axi4l_intf.controller axil_if
 );
-
-    assign app_if.clk  = clk_pl;
-    assign app_if.srst = ~resetn_pl_periph;
 
     axi4l_intf_from_signals i_axi4l_intf_from_signals (
         .aclk     ( clk_pl                   ),
@@ -53,7 +50,7 @@ module xilinx_aved_adapter (
         .rready   ( m_axi_usr_mgmt_rready   ),
         .rdata    ( m_axi_usr_mgmt_rdata    ),
         .rresp    ( m_axi_usr_mgmt_rresp    ),
-        .axi4l_if ( app_if.axil_if          )
+        .axi4l_if ( axil_if                 )
     );
 
 endmodule : xilinx_aved_adapter
