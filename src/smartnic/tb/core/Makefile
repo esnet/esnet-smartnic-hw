@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -13,8 +13,8 @@ include $(COMPONENT_ROOT)/config.mk
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
-SRC_FILES =
-INC_DIRS =
+SRC_FILES = ../src/tb.sv
+INC_DIRS  = ../include
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -38,7 +38,7 @@ EXT_LIBS =
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = CORE_DUT
 
 # ----------------------------------------------------
 # Options

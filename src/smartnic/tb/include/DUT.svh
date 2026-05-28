@@ -88,6 +88,8 @@
 
     tuser_smartnic_meta_t axis_c2h_tuser [NUM_CMAC];
 
+    assign axil_if.aclk = axil_aclk;
+
     // Assign AXI-L control interface
     assign s_axil_awvalid = axil_if.awvalid;
     assign s_axil_awaddr = axil_if.awaddr;
