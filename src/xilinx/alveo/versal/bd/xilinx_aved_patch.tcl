@@ -107,6 +107,11 @@ proc apply_esnet_patch {} {
         CONFIG.PROTOCOL   {AXI4LITE} \
     ] $port_m_axi
 
+    # Associate with clk_pl so the SmartConnect synthesizes the correct clock
+    # domain for M04_AXI.  Without this, BD 41-2559 fires and the port does not
+    # work in hardware.
+    set_property CONFIG.ASSOCIATED_BUSIF {m_axi_usr_mgmt} [get_bd_ports clk_pl]
+
     # -- Wire M04_AXI to the port ---------------------------------------------
     connect_bd_intf_net \
         [get_bd_intf_pins base_logic/pcie_slr0_mgmt_sc/M04_AXI] \
