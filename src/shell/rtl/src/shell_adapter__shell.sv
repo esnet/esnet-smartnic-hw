@@ -17,8 +17,8 @@ module shell_adapter__shell
     axi4l_intf_to_signals #(
         .ADDR_WID ( shell_if.AXIL_ADDR_WID )
     ) i_axi4l_intf_to_signals (
-        .aclk    ( axil_if.aclk ),
-        .aresetn ( axil_if.aresetn ),
+        .aclk    (),
+        .aresetn (),
         .awvalid ( shell_if.axil_awvalid ),
         .awready ( shell_if.axil_awready ),
         .awaddr  ( shell_if.axil_awaddr  ),
