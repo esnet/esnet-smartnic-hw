@@ -22,10 +22,13 @@ waves ?= OFF
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
+TB_COMPONENT ?= smartnic.tb
+TB_TOP ?= smartnic__tb
+
 SUBCOMPONENTS = \
     smartnic.pkg \
     smartnic.rtl \
-    smartnic.tb \
+    $(TB_COMPONENT) \
     smartnic.verif \
     smartnic_app.rtl \
     smartnic_app.regio.verif \
@@ -86,7 +89,7 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += smartnic__tb.tb
+TOP += $(TB_TOP).tb
 
 # ----------------------------------------------------
 # Import Vivado sim targets
