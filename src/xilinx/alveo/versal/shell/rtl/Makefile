@@ -27,7 +27,8 @@ SUBCOMPONENTS = \
     axi4s.rtl@common \
     shell.pkg \
     shell.rtl \
-    xilinx.alveo.versal.rtl
+    xilinx.alveo.versal.rtl \
+    xilinx.alveo.versal.debug.rtl
 
 EXT_LIBS =
 

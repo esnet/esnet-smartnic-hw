@@ -12,6 +12,7 @@ module esnet_smartnic
 
     // Interfaces
     axi4l_intf axil_if ();
+    axi4l_intf axil_debug_if ();
 
     shell_intf shell_if ();
 
@@ -33,11 +34,17 @@ module esnet_smartnic
         .*
     );
 
+    // AXI-L debug core: ILA + VIO between adapter and shell adapter
+    xilinx_aved_debug i_xilinx_aved_debug (
+        .axil_if_from_adapter ( axil_if       ),
+        .axil_if_to_shell     ( axil_debug_if )
+    );
+
     // Adapt AVED management AXI4-Lite to standard ESnet shell-core boundary
     xilinx_aved_shell_adapter #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_aved_shell_adapter (
-        .axil_if,
+        .axil_if  ( axil_debug_if ),
         .shell_if
     );
 
