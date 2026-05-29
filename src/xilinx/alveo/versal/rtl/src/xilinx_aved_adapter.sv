@@ -29,8 +29,8 @@ module xilinx_aved_adapter (
 );
     // Vivado SmartConnect delivers the absolute address (lower 32 bits) to
     // the slave port rather than the aperture-relative offset.  Strip the
-    // base by masking to the M04 usr_mgmt aperture size (8 MB = 23 bits).
-    localparam int USR_MGMT_APERTURE_BITS = 23;
+    // base by masking to the M04 usr_mgmt aperture size (4 KB = 12 bits).
+    localparam int USR_MGMT_APERTURE_BITS = 12;
 
     wire [31:0] awaddr_offset = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
                                   m_axi_usr_mgmt_awaddr[USR_MGMT_APERTURE_BITS-1:0]};

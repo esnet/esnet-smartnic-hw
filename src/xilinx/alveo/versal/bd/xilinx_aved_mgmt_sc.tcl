@@ -19,7 +19,7 @@
 #   M01 (uuid_rom)                 0x020101001000  4 KB
 #   M02 (gcq_m2r)                  0x020101010000  4 KB
 #   M03 (pcie_mgmt_pdi_reset_gpio) 0x020101040000  4 KB
-#   M04 (usr_mgmt)                 0x020101800000  8 MB  <- boundary port
+#   M04 (usr_mgmt)                 0x020101050000  4 KB  <- boundary port
 # =============================================================================
 
 set module_name xilinx_aved_mgmt_sc
@@ -140,7 +140,7 @@ assign_bd_address \
     [get_bd_addr_segs axi_vip_s3/S_AXI/Reg] -force
 
 assign_bd_address \
-    -offset 0x020101800000 -range 0x800000 \
+    -offset 0x020101050000 -range 0x001000 \
     -target_address_space $master_space \
     [get_bd_addr_segs m_axi_usr_mgmt/Reg] -force
 

@@ -30,11 +30,10 @@ create_root_design ""
 #     0x0000_0104_0000  (4 KB)   pcie_mgmt_pdi_reset_gpio
 #
 #   Added here:
-#     0x0000_0180_0000  (8 MB)   m_axi_usr_mgmt  (user register space root)
+#     0x0000_0105_0000  (4 KB)   m_axi_usr_mgmt  (user register space root)
 #
 # Note: Vivado requires the offset to be naturally aligned to the range size.
-# 0x105_0000 is only 64 KB-aligned, making 8 MB invalid there.  The next
-# 8 MB-aligned offset within the 32 MB NoC aperture is 0x180_0000 (24 MB).
+# 0x050000 is 4 KB-aligned, satisfying the alignment requirement.
 #
 # =============================================================================
 
@@ -141,7 +140,7 @@ connect_bd_intf_net \
 set hw_disc [get_bd_cells base_logic/hw_discovery]
 set_property -dict [list \
     CONFIG.C_PF0_NUM_SLOTS_BAR_LAYOUT_TABLE {4} \
-    CONFIG.C_PF0_ENTRY_ADDR_3              {0x000001800000} \
+    CONFIG.C_PF0_ENTRY_ADDR_3              {0x000001050000} \
     CONFIG.C_PF0_ENTRY_BAR_3              {0} \
     CONFIG.C_PF0_ENTRY_TYPE_3             {0x42} \
     CONFIG.C_PF0_ENTRY_VERSION_TYPE_3     {0x01} \
@@ -151,18 +150,17 @@ set_property -dict [list \
 ] $hw_disc
 
 # -- Assign address segments ----------------------------------------------
-# Maps 8 MB of the NoC aperture (base 0x020100000000, size 32 MB) to M04.
-# 0x020101800000 = BAR0 base (0x020100000000) + 0x1800000 (24 MB).
-# This offset is naturally aligned to 8 MB, satisfying Vivado's requirement
-# that offset % range == 0.  Assigned from both CPM PCIe NOC master spaces.
+# Maps 4 KB of the NoC aperture to M04.
+# 0x020101050000 = BAR0 base (0x020100000000) + 0x1050000.
+# Assigned from both CPM PCIe NOC master spaces.
 
 foreach addr_space {
     cips/CPM_PCIE_NOC_0
     cips/CPM_PCIE_NOC_1
 } {
     assign_bd_address \
-        -offset 0x020101800000 \
-        -range  0x00800000 \
+        -offset 0x020101050000 \
+        -range  0x00001000 \
         -target_address_space [get_bd_addr_spaces $addr_space] \
         [get_bd_addr_segs m_axi_usr_mgmt/Reg] \
         -force

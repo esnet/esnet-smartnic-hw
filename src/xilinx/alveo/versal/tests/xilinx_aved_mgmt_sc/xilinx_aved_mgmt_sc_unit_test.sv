@@ -213,23 +213,46 @@ module xilinx_aved_mgmt_sc_unit_test;
         // ------------------------------------------------------------------
         // M04: usr_mgmt — exercises the real register block end-to-end.
         //
-        // The SmartConnect delivers offset-relative addresses to the 32-bit
-        // slave port, so core.stub.regio registers appear at:
+        // 4 KB aperture @ 0x020101050000.  The SmartConnect delivers the
+        // absolute lower-32-bit address to the slave port; the adapter masks
+        // to 12 bits so core.stub.regio registers appear at:
         //   id         = base + 0x0
         //   scratchpad = base + 0x4
         // ------------------------------------------------------------------
 
         `SVTEST(usr_mgmt_id_read)
             logic [31:0] rdata;
-            axil_read(64'h020101800000, rdata);
+            axil_read(64'h020101050000, rdata);
             `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
         `SVTEST_END
 
         `SVTEST(usr_mgmt_scratchpad_write_read)
             logic [31:0] rdata;
-            axil_write(64'h020101800004, 32'hDEAD_BEEF);
-            axil_read(64'h020101800004, rdata);
+            axil_write(64'h020101050004, 32'hDEAD_BEEF);
+            axil_read(64'h020101050004, rdata);
             `FAIL_UNLESS_EQUAL(rdata, 32'hDEAD_BEEF);
+        `SVTEST_END
+
+        // ------------------------------------------------------------------
+        // Back-to-back reads: verify axi4l_peripheral re-asserts ARREADY
+        // immediately after each RVALID/RREADY handshake so that consecutive
+        // reads through the SmartConnect complete without stalling.
+        //
+        // AXI4-Lite does not allow overlapping outstanding transactions, so
+        // "back-to-back" means the next ARVALID is issued as soon as the
+        // previous RVALID/RREADY completes — no idle cycles between them.
+        // ------------------------------------------------------------------
+        `SVTEST(usr_mgmt_back_to_back_reads)
+            logic [31:0] rdata;
+            axil_write(64'h020101050004, 32'hA5A5_A5A5);
+            // Alternate between id and scratchpad to catch any address decode
+            // or state pollution between consecutive transactions.
+            repeat (4) begin
+                axil_read(64'h020101050000, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
+                axil_read(64'h020101050004, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
+            end
         `SVTEST_END
 
     `SVUNIT_TESTS_END
