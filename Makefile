@@ -115,6 +115,7 @@ package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "----------------------------------------------------------"
 	@echo "Packaging build $(BUILD_NAME) ..."
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/regio reg APP_ROOT=$(APP_ROOT)
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/regio reg BOARD=$(BOARD)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
 	@echo
