@@ -5,7 +5,11 @@ module tb;
     //===================================
     // DUT
     //===================================
-    `include "../include/DUT.svh"
+    `ifdef CORE_DUT
+        `include "../include/core_DUT.svh"
+    `else
+        `include "../include/DUT.svh"
+    `endif
 
     axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(ADPT_TX_TID_WID), .TDEST_WID(PORT_WID), .TUSER_WID(1))  axis_in_if  [4] (.aclk(axis_clk));
     axi4s_intf #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID),
@@ -80,8 +84,6 @@ module tb;
         axis_clk = 1'b0;
         forever #1553ps axis_clk = !axis_clk;
     end
-
-    assign axil_if.aclk = axil_aclk;
 
     // Resets
     std_reset_intf reset_if (.clk(axis_clk));

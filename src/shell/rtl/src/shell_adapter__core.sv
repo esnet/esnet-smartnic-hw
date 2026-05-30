@@ -17,7 +17,7 @@ module shell_adapter__core
     axi4l_intf_from_signals #(
         .ADDR_WID ( shell_if.AXIL_ADDR_WID )
     ) i_axi4l_intf_from_signals (
-        .aclk    ( shell_if.mgmt_clk   ),
+        .aclk    ( shell_if.mgmt_clk ),
         .aresetn ( ~shell_if.mgmt_srst ),
         .awvalid ( shell_if.axil_awvalid ),
         .awready ( shell_if.axil_awready ),

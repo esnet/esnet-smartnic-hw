@@ -38,6 +38,8 @@ interface shell_intf
     logic srst;
     logic mgmt_clk;
     logic mgmt_srst;
+    logic port_clk [NUM_PORTS];
+    logic port_srst [NUM_PORTS];
     logic clk_100mhz;
 
     // -------------------------------------------------------------------------
@@ -116,7 +118,7 @@ interface shell_intf
     // -------------------------------------------------------------------------
     modport shell (
         // Clock/reset: shell drives
-        output clk, srst, mgmt_clk, mgmt_srst, clk_100mhz,
+        output clk, srst, mgmt_clk, mgmt_srst, port_clk, port_srst, clk_100mhz,
         // AXI-L: shell drives controller-to-peripheral signals
         output axil_awvalid, axil_awaddr, axil_awprot,
                axil_wvalid, axil_wdata, axil_wstrb,
@@ -148,7 +150,7 @@ interface shell_intf
 
     modport core (
         // Clock/reset: core receives
-        input  clk, srst, mgmt_clk, mgmt_srst, clk_100mhz,
+        input  clk, srst, mgmt_clk, mgmt_srst, port_clk, port_srst, clk_100mhz,
         // AXI-L: core receives controller-to-peripheral signals
         input  axil_awvalid, axil_awaddr, axil_awprot,
                axil_wvalid, axil_wdata, axil_wstrb,
