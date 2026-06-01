@@ -58,8 +58,15 @@ create_root_design ""
 # ensures transactions are issued only for the addresses the driver requests.
 # =========================================================================
 
-set_property CONFIG.CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE {0} [get_bd_cells cips]
-set_property CONFIG.CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE {0} [get_bd_cells cips]
+foreach {param value} {
+    CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE 0
+    CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0
+} {
+    set_property CONFIG.CPM_CONFIG \
+        [concat [get_property CONFIG.CPM_CONFIG [get_bd_cells cips]] \
+                [list $param $value]] \
+        [get_bd_cells cips]
+}
 
 # =========================================================================
 # 1. Clock / reset outputs
