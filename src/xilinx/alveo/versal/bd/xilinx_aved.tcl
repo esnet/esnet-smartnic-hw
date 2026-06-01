@@ -38,6 +38,30 @@ create_root_design ""
 # =============================================================================
 
 # =========================================================================
+# 0. BAR0 prefetchable override
+#
+# The AMD base design marks BAR0 as prefetchable for both PF0 and PF1
+# (CPM_PCIE1_PF{0,1}_BAR0_QDMA_PREFETCHABLE = 1).  A prefetchable BAR
+# tells the CPU/IOMMU it is safe to read ahead speculatively: a single
+# 4-byte MMIO read can trigger a full cache-line (64-byte) PCIe read,
+# generating AXI-L transactions to addresses beyond the one the driver
+# actually requested.
+#
+# The usr_mgmt aperture is only 4 KB with 8 bytes of valid registers (id
+# and scratchpad at offsets 0x0 and 0x4).  A cache-line read starting at
+# offset 0x0 issues transactions at 0x0, 0x4, 0x8, 0xC; the decoder
+# returns SLVERR/0xDEADBEEF for 0x8 and 0xC (unmapped), which propagates
+# as a PCIe completion error and poisons the entire read — the driver sees
+# all-F's even for the valid registers.
+#
+# Marking BAR0 non-prefetchable suppresses the speculative read-ahead and
+# ensures transactions are issued only for the addresses the driver requests.
+# =========================================================================
+
+set_property CONFIG.CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE {0} [get_bd_cells cips]
+set_property CONFIG.CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE {0} [get_bd_cells cips]
+
+# =========================================================================
 # 1. Clock / reset outputs
 #
 # clk_usr_{0,1} and their resets are generated inside the clock_reset
