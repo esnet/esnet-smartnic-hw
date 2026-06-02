@@ -111,8 +111,8 @@ sim_platform:
     - grep 'PASSED.*suites passing' src/smartnic/tests/top/regression/run_$SEED/sim.log
     - make -s -C src/smartnic/tests/block/regression
     - grep 'PASSED.*suites passing' src/smartnic/tests/block/regression/run_$SEED/sim.log
-    - make -s -C src/smartnic/tests/core/regression
-    - grep 'PASSED.*suites passing' src/smartnic/tests/core/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/core/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic/core/tests/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_app/tests.smartnic/regression
     - grep 'PASSED.*suites passing' src/smartnic_app/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C examples/p2p/tests.smartnic/regression
@@ -129,7 +129,7 @@ sim_platform:
       junit:
         - src/smartnic/tests/top/regression/run_*/tests.xml
         - src/smartnic/tests/block/regression/run_*/tests.xml
-        - src/smartnic/tests/core/regression/run_*/tests.xml
+        - src/smartnic/core/tests/regression/run_*/tests.xml
         - src/smartnic_app/tests.smartnic/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml

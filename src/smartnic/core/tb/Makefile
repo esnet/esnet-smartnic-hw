@@ -13,8 +13,8 @@ include $(COMPONENT_ROOT)/config.mk
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
-SRC_FILES = ../src/tb.sv
-INC_DIRS  = ../include
+SRC_FILES = $(COMPONENT_ROOT)/tb/src/tb.sv
+INC_DIRS  = $(COMPONENT_ROOT)/tb/include
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -23,7 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    core.smartnic.rtl \
+    smartnic.core.rtl \
     shell.rtl \
     smartnic.rtl \
     smartnic.verif \

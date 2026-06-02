@@ -6,7 +6,7 @@
 #       make waves=ON
 #       make SEED=29 waves=ON
 # -----------------------------------------------
-REGRESSION = 0
+REGRESSION = 1
 SEED ?= 0
 waves ?= OFF
 
@@ -17,8 +17,7 @@ waves ?= OFF
 #   command line, as e.g.:
 #     make DEFINES="DEBUG FAST=TRUE"
 # ----------------------------------------------------
-TB_COMPONENT = smartnic.tb.core
-TB_TOP = smartnic__tb__core
+override DEFINES +=
 
 # ----------------------------------------------------
 # Run-time arguments
@@ -40,4 +39,4 @@ SIM_OPTS =
 # -----------------------------------------------
 # Use common testcase Makefile
 # -----------------------------------------------
-include ../../test_base.mk
+include ../test_base.mk

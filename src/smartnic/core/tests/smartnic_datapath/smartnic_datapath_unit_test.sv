@@ -32,7 +32,7 @@ module smartnic_datapath_unit_test;
     //===================================
     // Import common testcase tasks
     //===================================
-    `include "../../common/tasks.svh"
+    `include "../../../tests/common/tasks.svh"
 
     //===================================
     // Build

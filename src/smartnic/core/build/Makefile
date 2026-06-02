@@ -21,7 +21,7 @@ SRC_LIST_FILES =
 # Dependencies
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    core.smartnic.rtl \
+    smartnic.core.rtl \
     smartnic.rtl \
     smartnic_app.blackbox.rtl
 
