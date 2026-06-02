@@ -273,6 +273,8 @@ module xilinx_aved_mgmt_sc_unit_test;
         // to 12 bits so core.stub.regio registers appear at:
         //   id         = base + 0x0
         //   scratchpad = base + 0x4
+        //   reserved_0 = base + 0x8  (ro, zero — pads CPM5 16B aligned window)
+        //   reserved_1 = base + 0xC  (ro, zero — pads CPM5 16B aligned window)
         // ------------------------------------------------------------------
 
         `SVTEST(usr_mgmt_id_read)
@@ -324,9 +326,8 @@ module xilinx_aved_mgmt_sc_unit_test;
         // propagates the worst-case response to the master, so the whole
         // 16-byte read fails even though the data at +0x0 is valid.
         //
-        // This test documents the current (broken) behaviour.  It is
-        // expected to FAIL until the register map is extended to cover the
-        // full 16-byte aligned window.
+        // reserved_0 (base+0x8) and reserved_1 (base+0xC) are read-only
+        // zero registers added to cover the full 16-byte aligned window.
         // ------------------------------------------------------------------
         `SVTEST(usr_mgmt_16b_burst_read_okay)
             logic [127:0]  rdata;
