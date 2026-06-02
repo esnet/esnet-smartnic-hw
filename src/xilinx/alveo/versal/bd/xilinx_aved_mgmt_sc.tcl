@@ -11,8 +11,13 @@
 # block end-to-end.
 #
 # Topology:
-#   axi_vip_m (MASTER) --> mgmt_sc (1S/5M SmartConnect) --> axi_vip_s{0..3}
-#                                                        --> m_axi_usr_mgmt (port)
+#   axi_vip_m (MASTER, AXI4 128-bit) --> mgmt_sc (1S/5M SmartConnect) --> axi_vip_s{0..3}
+#                                                                      --> m_axi_usr_mgmt (port)
+#
+# The master VIP is 128-bit AXI4 to model the CPM5 NOC interface, which
+# generates single-beat 16-byte transactions (ARSIZE=4) for any PCIe MMIO
+# read.  The SmartConnect width-converts these to four 32-bit AXI4-Lite
+# beats on the M04 (usr_mgmt) port.
 #
 # Address map (matches xilinx_aved.tcl exactly):
 #   M00 (hw_discovery)             0x020101000000  4 KB
@@ -36,16 +41,18 @@ set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn]
 set_property CONFIG.ASSOCIATED_RESET {aresetn} [get_bd_ports aclk]
 
 # -----------------------------------------------------------------------------
-# AXI VIP master  — simulates the PCIe host issuing management transactions
+# AXI VIP master  — simulates the CPM5 NOC interface (128-bit AXI4)
+# issuing 16-byte single-beat reads as the CPM5 generates for any PCIe MMIO read.
 # -----------------------------------------------------------------------------
 set vip_m [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vip:1.1 axi_vip_m]
 set_property -dict [list \
-    CONFIG.INTERFACE_MODE {MASTER}   \
-    CONFIG.PROTOCOL       {AXI4LITE} \
-    CONFIG.ADDR_WIDTH     {64}       \
-    CONFIG.DATA_WIDTH     {32}       \
-    CONFIG.HAS_BRESP      {1}        \
-    CONFIG.HAS_RRESP      {1}        \
+    CONFIG.INTERFACE_MODE {MASTER} \
+    CONFIG.PROTOCOL       {AXI4}  \
+    CONFIG.ADDR_WIDTH     {64}    \
+    CONFIG.DATA_WIDTH     {128}   \
+    CONFIG.HAS_BURST      {1}     \
+    CONFIG.HAS_BRESP      {1}     \
+    CONFIG.HAS_RRESP      {1}     \
 ] $vip_m
 
 # -----------------------------------------------------------------------------
