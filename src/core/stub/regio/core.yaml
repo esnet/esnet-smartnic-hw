@@ -14,3 +14,9 @@ regs:
 
   - name: scratchpad
     access: rw
+
+  - name: reserved_0
+    access: ro
+
+  - name: reserved_1
+    access: ro

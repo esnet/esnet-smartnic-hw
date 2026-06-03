@@ -30,13 +30,43 @@ create_root_design ""
 #     0x0000_0104_0000  (4 KB)   pcie_mgmt_pdi_reset_gpio
 #
 #   Added here:
-#     0x0000_0180_0000  (8 MB)   m_axi_usr_mgmt  (user register space root)
+#     0x0000_0105_0000  (4 KB)   m_axi_usr_mgmt  (user register space root)
 #
 # Note: Vivado requires the offset to be naturally aligned to the range size.
-# 0x105_0000 is only 64 KB-aligned, making 8 MB invalid there.  The next
-# 8 MB-aligned offset within the 32 MB NoC aperture is 0x180_0000 (24 MB).
+# 0x050000 is 4 KB-aligned, satisfying the alignment requirement.
 #
 # =============================================================================
+
+# =========================================================================
+# 0. BAR0 prefetchable override
+#
+# The AMD base design marks BAR0 as prefetchable for both PF0 and PF1
+# (CPM_PCIE1_PF{0,1}_BAR0_QDMA_PREFETCHABLE = 1).  A prefetchable BAR
+# tells the CPU/IOMMU it is safe to read ahead speculatively: a single
+# 4-byte MMIO read can trigger a full cache-line (64-byte) PCIe read,
+# generating AXI-L transactions to addresses beyond the one the driver
+# actually requested.
+#
+# The usr_mgmt aperture is only 4 KB with 8 bytes of valid registers (id
+# and scratchpad at offsets 0x0 and 0x4).  A cache-line read starting at
+# offset 0x0 issues transactions at 0x0, 0x4, 0x8, 0xC; the decoder
+# returns SLVERR/0xDEADBEEF for 0x8 and 0xC (unmapped), which propagates
+# as a PCIe completion error and poisons the entire read — the driver sees
+# all-F's even for the valid registers.
+#
+# Marking BAR0 non-prefetchable suppresses the speculative read-ahead and
+# ensures transactions are issued only for the addresses the driver requests.
+# =========================================================================
+
+foreach {param value} {
+    CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE 0
+    CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0
+} {
+    set_property CONFIG.CPM_CONFIG \
+        [concat [get_property CONFIG.CPM_CONFIG [get_bd_cells cips]] \
+                [list $param $value]] \
+        [get_bd_cells cips]
+}
 
 # =========================================================================
 # 1. Clock / reset outputs
@@ -141,7 +171,7 @@ connect_bd_intf_net \
 set hw_disc [get_bd_cells base_logic/hw_discovery]
 set_property -dict [list \
     CONFIG.C_PF0_NUM_SLOTS_BAR_LAYOUT_TABLE {4} \
-    CONFIG.C_PF0_ENTRY_ADDR_3              {0x000001800000} \
+    CONFIG.C_PF0_ENTRY_ADDR_3              {0x000001050000} \
     CONFIG.C_PF0_ENTRY_BAR_3              {0} \
     CONFIG.C_PF0_ENTRY_TYPE_3             {0x42} \
     CONFIG.C_PF0_ENTRY_VERSION_TYPE_3     {0x01} \
@@ -151,18 +181,17 @@ set_property -dict [list \
 ] $hw_disc
 
 # -- Assign address segments ----------------------------------------------
-# Maps 8 MB of the NoC aperture (base 0x020100000000, size 32 MB) to M04.
-# 0x020101800000 = BAR0 base (0x020100000000) + 0x1800000 (24 MB).
-# This offset is naturally aligned to 8 MB, satisfying Vivado's requirement
-# that offset % range == 0.  Assigned from both CPM PCIe NOC master spaces.
+# Maps 4 KB of the NoC aperture to M04.
+# 0x020101050000 = BAR0 base (0x020100000000) + 0x1050000.
+# Assigned from both CPM PCIe NOC master spaces.
 
 foreach addr_space {
     cips/CPM_PCIE_NOC_0
     cips/CPM_PCIE_NOC_1
 } {
     assign_bd_address \
-        -offset 0x020101800000 \
-        -range  0x00800000 \
+        -offset 0x020101050000 \
+        -range  0x00001000 \
         -target_address_space [get_bd_addr_spaces $addr_space] \
         [get_bd_addr_segs m_axi_usr_mgmt/Reg] \
         -force

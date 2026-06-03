@@ -108,6 +108,9 @@ module xilinx_aved_mgmt_sc_unit_test;
 
     // =========================================================================
     // AXI VIP agents
+    // master_agent is AXI4 (not AXI4-Lite) to allow multi-beat burst reads,
+    // matching the CPM5 NOC minimum transaction granularity (128-bit / 4 beats
+    // at 32-bit data width).
     // Use the mem-model slave type so BVALID is generated automatically
     // without user-driven reactive loops.
     // =========================================================================
@@ -160,21 +163,73 @@ module xilinx_aved_mgmt_sc_unit_test;
     // =========================================================================
     // Helpers
     // =========================================================================
-    // Issue an AXI4-Lite write and check for OKAY response.
+    // Issue a single-beat 16-byte AXI4 write (AWLEN=0, AWSIZE=4) to the
+    // 16-byte aligned base address containing addr, with write strobes
+    // selecting only the target 4-byte lane.  Matches CPM5 NOC behaviour:
+    // writes are 16-byte transactions with byte enables masking the target.
     task automatic axil_write(input xil_axi_ulong addr, input logic [31:0] data);
-        xil_axi_resp_t bresp;
-        master_agent.AXI4LITE_WRITE_BURST(addr, 0, data, bresp);
+        xil_axi_ulong             aligned_addr;
+        int                       lane;
+        axi_transaction           t;
+        bit [8*4096-1:0]          wdata;
+        xil_axi_strb_beat         strb;
+        xil_axi_resp_t            bresp;
+        aligned_addr = addr & ~64'hF;
+        lane = addr[3:2];
+        wdata = '0;
+        wdata[lane*32 +: 32] = data;
+        strb = '0;
+        strb[lane*4 +: 4] = 4'hF;
+        t = master_agent.wr_driver.create_transaction("axil_write");
+        t.set_write_cmd(aligned_addr, XIL_AXI_BURST_TYPE_INCR, 0, 0, XIL_AXI_SIZE_16BYTE);
+        t.set_lock(XIL_AXI_ALOCK_NOLOCK);
+        t.set_data_block(wdata);
+        t.set_strb_beat(0, strb);
+        t.set_driver_return_item_policy(XIL_AXI_PAYLOAD_RETURN);
+        master_agent.wr_driver.send(t);
+        master_agent.wr_driver.wait_rsp(t);
+        bresp = t.get_bresp();
         `FAIL_UNLESS_EQUAL(bresp, XIL_AXI_RESP_OKAY);
     endtask
 
-    // Issue an AXI4-Lite read and check for OKAY response.
+    // Issue a single-beat 16-byte AXI4 read (ARLEN=0, ARSIZE=4) to the
+    // 16-byte aligned base address containing addr, returning the 32-bit
+    // lane corresponding to addr[3:2].  Matches the CPM5 NOC behaviour.
     task automatic axil_read(
         input  xil_axi_ulong addr,
         output logic [31:0]  data
     );
-        xil_axi_resp_t rresp;
-        master_agent.AXI4LITE_READ_BURST(addr, 0, data, rresp);
-        `FAIL_UNLESS_EQUAL(rresp, XIL_AXI_RESP_OKAY);
+        xil_axi_ulong             aligned_addr;
+        int                       lane;
+        bit [8*4096-1:0]          rdata;
+        xil_axi_resp_t [255:0]    rresp;
+        xil_axi_data_beat [255:0] ruser;
+        aligned_addr = addr & ~64'hF;
+        lane = addr[3:2];
+        master_agent.AXI4_READ_BURST(
+            0, aligned_addr, 0, XIL_AXI_SIZE_16BYTE, XIL_AXI_BURST_TYPE_INCR,
+            XIL_AXI_ALOCK_NOLOCK, 0, 0, 0, 0, 0, rdata, rresp, ruser);
+        `FAIL_UNLESS_EQUAL(rresp[0], XIL_AXI_RESP_OKAY);
+        data = rdata[lane*32 +: 32];
+    endtask
+
+    // Issue a single-beat 128-bit AXI4 read (ARLEN=0, ARSIZE=4) as the CPM5
+    // NOC generates for any PCIe MMIO read.  The SmartConnect width-converts
+    // this into four 32-bit AXI4-Lite transactions on M04.  All four must
+    // return OKAY for the read to complete without a PCIe completion error.
+    task automatic axi4_read_16b(
+        input  xil_axi_ulong  addr,    // must be 16-byte aligned
+        output logic [127:0]  rdata,
+        output xil_axi_resp_t rresp
+    );
+        bit [8*4096-1:0]          rd;
+        xil_axi_resp_t [255:0]    rr;
+        xil_axi_data_beat [255:0] ru;
+        master_agent.AXI4_READ_BURST(
+            0, addr, 0, XIL_AXI_SIZE_16BYTE, XIL_AXI_BURST_TYPE_INCR,
+            XIL_AXI_ALOCK_NOLOCK, 0, 0, 0, 0, 0, rd, rr, ru);
+        rdata = rd[127:0];
+        rresp = rr[0];
     endtask
 
     // =========================================================================
@@ -213,23 +268,73 @@ module xilinx_aved_mgmt_sc_unit_test;
         // ------------------------------------------------------------------
         // M04: usr_mgmt — exercises the real register block end-to-end.
         //
-        // The SmartConnect delivers offset-relative addresses to the 32-bit
-        // slave port, so core.stub.regio registers appear at:
+        // 4 KB aperture @ 0x020101050000.  The SmartConnect delivers the
+        // absolute lower-32-bit address to the slave port; the adapter masks
+        // to 12 bits so core.stub.regio registers appear at:
         //   id         = base + 0x0
         //   scratchpad = base + 0x4
+        //   reserved_0 = base + 0x8  (ro, zero — pads CPM5 16B aligned window)
+        //   reserved_1 = base + 0xC  (ro, zero — pads CPM5 16B aligned window)
         // ------------------------------------------------------------------
 
         `SVTEST(usr_mgmt_id_read)
             logic [31:0] rdata;
-            axil_read(64'h020101800000, rdata);
+            axil_read(64'h020101050000, rdata);
             `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
         `SVTEST_END
 
         `SVTEST(usr_mgmt_scratchpad_write_read)
             logic [31:0] rdata;
-            axil_write(64'h020101800004, 32'hDEAD_BEEF);
-            axil_read(64'h020101800004, rdata);
+            axil_write(64'h020101050004, 32'hDEAD_BEEF);
+            axil_read(64'h020101050004, rdata);
             `FAIL_UNLESS_EQUAL(rdata, 32'hDEAD_BEEF);
+        `SVTEST_END
+
+        // ------------------------------------------------------------------
+        // Back-to-back reads: verify axi4l_peripheral re-asserts ARREADY
+        // immediately after each RVALID/RREADY handshake so that consecutive
+        // reads through the SmartConnect complete without stalling.
+        //
+        // AXI4-Lite does not allow overlapping outstanding transactions, so
+        // "back-to-back" means the next ARVALID is issued as soon as the
+        // previous RVALID/RREADY completes — no idle cycles between them.
+        // ------------------------------------------------------------------
+        `SVTEST(usr_mgmt_back_to_back_reads)
+            logic [31:0] rdata;
+            axil_write(64'h020101050004, 32'hA5A5_A5A5);
+            // Alternate between id and scratchpad to catch any address decode
+            // or state pollution between consecutive transactions.
+            repeat (4) begin
+                axil_read(64'h020101050000, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
+                axil_read(64'h020101050004, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
+            end
+        `SVTEST_END
+
+        // ------------------------------------------------------------------
+        // CPM5 NOC 16-byte burst read of usr_mgmt base address.
+        //
+        // The CPM5 AXI Bridge Master has a 128-bit internal bus; any PCIe
+        // MMIO read produces a single-beat 16-byte AXI4 transaction on the
+        // NOC (ARLEN=0, ARSIZE=4).  The SmartConnect width-converts this to
+        // four 32-bit AXI4-Lite transactions at offsets +0x0, +0x4, +0x8,
+        // +0xC relative to the aligned base address.
+        //
+        // With only two registers (id @ 0x0, scratchpad @ 0x4), offsets
+        // +0x8 and +0xC are unmapped and return SLVERR.  The SmartConnect
+        // propagates the worst-case response to the master, so the whole
+        // 16-byte read fails even though the data at +0x0 is valid.
+        //
+        // reserved_0 (base+0x8) and reserved_1 (base+0xC) are read-only
+        // zero registers added to cover the full 16-byte aligned window.
+        // ------------------------------------------------------------------
+        `SVTEST(usr_mgmt_16b_burst_read_okay)
+            logic [127:0]  rdata;
+            xil_axi_resp_t rresp;
+            // Base address must be 16-byte aligned (0x020101050000 already is).
+            axi4_read_16b(64'h020101050000, rdata, rresp);
+            `FAIL_UNLESS_EQUAL(rresp, XIL_AXI_RESP_OKAY);
         `SVTEST_END
 
     `SVUNIT_TESTS_END
