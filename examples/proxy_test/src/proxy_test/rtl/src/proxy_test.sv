@@ -357,9 +357,7 @@ module proxy_test
     generate
         for (genvar g_if = 0; g_if < PACKET_Q_INPUT_IFS; g_if++) begin : g__mem_if
             axi3_from_mem_adapter #(
-                .SIZE ( axi3_pkg::SIZE_32BYTES ),
-                .WR_TIMEOUT ( 0 ),
-                .RD_TIMEOUT ( 0 )
+                .SIZE ( axi3_pkg::SIZE_32BYTES )
             ) i_axi3_from_mem_adapter (
                 .clk,
                 .srst,
@@ -381,9 +379,7 @@ module proxy_test
 
     // Connect descriptor wr/rd interface
     axi3_from_mem_adapter #(
-        .SIZE ( axi3_pkg::SIZE_32BYTES ),
-        .WR_TIMEOUT ( 0 ),
-        .RD_TIMEOUT ( 0 )
+        .SIZE ( axi3_pkg::SIZE_32BYTES )
     ) i_axi3_from_mem_adapter (
         .clk,
         .srst,

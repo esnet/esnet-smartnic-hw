@@ -6,7 +6,7 @@
 #       make waves=ON
 #       make SEED=29 waves=ON
 # -----------------------------------------------
-REGRESSION = 1
+REGRESSION = 0
 SEED ?= 0
 waves ?= OFF
 
@@ -17,7 +17,6 @@ waves ?= OFF
 #   command line, as e.g.:
 #     make DEFINES="DEBUG FAST=TRUE"
 # ----------------------------------------------------
-override DEFINES +=
 
 # ----------------------------------------------------
 # Run-time arguments
@@ -39,4 +38,4 @@ SIM_OPTS =
 # -----------------------------------------------
 # Use common testcase Makefile
 # -----------------------------------------------
-include ../../test_base.mk
+include ../test_base.mk

@@ -12,12 +12,10 @@ include $(COMPONENT_ROOT)/config.mk
 #       make REGRESSION=1
 #       make waves=ON
 #       make SEED=29 waves=ON
-#       make SIM=verilator
 # -----------------------------------------------
 REGRESSION ?= 0
 SEED ?= 0
 waves ?= OFF
-SIM ?= xsim
 
 # ----------------------------------------------------
 # Dependencies
@@ -25,9 +23,11 @@ SIM ?= xsim
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    shell.rtl \
+    smartnic.core.rtl \
+    smartnic.core.tb \
     smartnic.pkg \
     smartnic.rtl \
-    smartnic.tb \
     smartnic.verif \
     smartnic_app.rtl \
     smartnic_app.regio.verif \
@@ -67,9 +67,7 @@ override PLUSARGS +=
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS =
-ifeq ($(SIM),xsim)
 ELAB_OPTS = --relax --debug typical
-endif
 SIM_OPTS =
 
 # ----------------------------------------------------
@@ -90,9 +88,9 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # Add testbench as top module (in addition to SVUnit testrunner)
-TOP += smartnic__tb.tb
+TOP += smartnic__core__tb.tb
 
 # ----------------------------------------------------
-# Import sim targets (backend selected by SIM variable)
+# Import Vivado sim targets
 # ----------------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/sim.mk
+include $(SCRIPTS_ROOT)/Makefiles/vivado_sim.mk

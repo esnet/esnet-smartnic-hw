@@ -25,8 +25,8 @@ DEFINES = BOARD=$(BOARD) __$(BOARD)__
 
 CONSTRAINTS_XDC_USER = $(abspath $(wildcard $(BOARD)/*.xdc))
 
-SHELL_COMPONENT = xilinx.alveo.shell.rtl@$(SMARTNIC_LIB_NAME)
-CORE_COMPONENT = core.smartnic.build@$(SMARTNIC_LIB_NAME)
+SHELL_COMPONENT = xilinx.alveo.usplus.shell.rtl@$(SMARTNIC_LIB_NAME)
+CORE_COMPONENT = smartnic.core.build@$(SMARTNIC_LIB_NAME)
 SMARTNIC_APP_COMPONENT = smartnic_app.build
 
 SHELL_DCP = $(call get_lib_component_out_path_from_ref,$(SHELL_COMPONENT),$(LIB_OUTPUT_ROOT))/proj/proj.runs/impl_1/xilinx_alveo_shell.dcp
