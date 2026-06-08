@@ -6,7 +6,5 @@ set_property -dict [list \
     CONFIG.PRIMITIVE {Auto} \
     CONFIG.PRIM_SOURCE {No_buffer} \
     CONFIG.PRIM_IN_FREQ {125.000} \
-    CONFIG.CLKOUT2_USED {true} \
-    CONFIG.CLK_OUT1_PORT {clk_100mhz} \
-    CONFIG.CLK_OUT2_PORT {hbm_ref_clk} \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {100.000} \
 ] [get_ips $module_name]

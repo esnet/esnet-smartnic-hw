@@ -80,7 +80,6 @@ module smartnic
    wire                       __srst;
 
    wire                       clk_100mhz;
-   wire                       hbm_ref_clk;
 
    tuser_smartnic_meta_t      m_axis_adpt_rx_322mhz_tuser [NUM_CMAC];
 
@@ -110,8 +109,7 @@ module smartnic
     .core_clk     (core_clk),
     .core_srst    (__srst),
 
-    .clk_100mhz   (clk_100mhz),
-    .hbm_ref_clk  (hbm_ref_clk)
+    .clk_100mhz   (clk_100mhz)
   );
 
    always @(posedge core_clk) begin
