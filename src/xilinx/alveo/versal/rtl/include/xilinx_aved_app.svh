@@ -32,6 +32,54 @@
     wire        m_axi_usr_mgmt_rvalid;
     wire        m_axi_usr_mgmt_rready;
 
+    // PCIE0 clock / reset (from BD)
+    wire        clk_pcie0;
+    wire        resetn_pcie0;
+
+    // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)
+    // Signal widths taken from the Vivado-generated BD wrapper.
+    wire [63:0]  m_axi_pcie0_awaddr;
+    wire [1:0]   m_axi_pcie0_awid;
+    wire [7:0]   m_axi_pcie0_awlen;
+    wire [2:0]   m_axi_pcie0_awsize;
+    wire [1:0]   m_axi_pcie0_awburst;
+    wire         m_axi_pcie0_awlock;
+    wire [3:0]   m_axi_pcie0_awcache;
+    wire [2:0]   m_axi_pcie0_awprot;
+    wire [3:0]   m_axi_pcie0_awqos;
+    wire [3:0]   m_axi_pcie0_awregion;
+    wire [17:0]  m_axi_pcie0_awuser;
+    wire         m_axi_pcie0_awvalid;
+    wire         m_axi_pcie0_awready;
+    wire [511:0] m_axi_pcie0_wdata;
+    wire [63:0]  m_axi_pcie0_wstrb;
+    wire         m_axi_pcie0_wlast;
+    wire         m_axi_pcie0_wvalid;
+    wire         m_axi_pcie0_wready;
+    wire [1:0]   m_axi_pcie0_bid;
+    wire [1:0]   m_axi_pcie0_bresp;
+    wire         m_axi_pcie0_bvalid;
+    wire         m_axi_pcie0_bready;
+    wire [63:0]  m_axi_pcie0_araddr;
+    wire [1:0]   m_axi_pcie0_arid;
+    wire [7:0]   m_axi_pcie0_arlen;
+    wire [2:0]   m_axi_pcie0_arsize;
+    wire [1:0]   m_axi_pcie0_arburst;
+    wire         m_axi_pcie0_arlock;
+    wire [3:0]   m_axi_pcie0_arcache;
+    wire [2:0]   m_axi_pcie0_arprot;
+    wire [3:0]   m_axi_pcie0_arqos;
+    wire [3:0]   m_axi_pcie0_arregion;
+    wire [17:0]  m_axi_pcie0_aruser;
+    wire         m_axi_pcie0_arvalid;
+    wire         m_axi_pcie0_arready;
+    wire [511:0] m_axi_pcie0_rdata;
+    wire [1:0]   m_axi_pcie0_rid;
+    wire [1:0]   m_axi_pcie0_rresp;
+    wire         m_axi_pcie0_rlast;
+    wire         m_axi_pcie0_rvalid;
+    wire         m_axi_pcie0_rready;
+
     // SMBus tristate signals (BD -> IOBUF)
     wire        smbus_0_scl_i;
     wire        smbus_0_scl_o;
