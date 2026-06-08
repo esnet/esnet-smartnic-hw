@@ -453,24 +453,9 @@ foreach addr_space {
 #   dma0_usr_flr         — function level reset notification (CIPS → user)
 # =========================================================================
 
-foreach {port_name pin_name vlnv mode} {
-    dma0_m_axis_h2c      dma0_m_axis_h2c      {xilinx.com:display_eqdma:m_axis_h2c:1.0}      Master
-    dma0_s_axis_c2h      dma0_s_axis_c2h      {xilinx.com:display_eqdma:s_axis_c2h:1.0}      Slave
-    dma0_s_axis_c2h_cmpt dma0_s_axis_c2h_cmpt {xilinx.com:display_eqdma:s_axis_c2h_cmpt:1.0} Slave
-    dma0_usr_irq         dma0_usr_irq         {xilinx.com:interface:qdma_usr_irq:1.0}         Slave
-    dma0_tm_dsc_sts      dma0_tm_dsc_sts      {xilinx.com:interface:qdma_tm_dsc_sts:1.0}      Master
-    dma0_dsc_crdt_in     dma0_dsc_crdt_in     {xilinx.com:interface:qdma_dsc_crdt_in:1.0}     Slave
-    dma0_qsts_out        dma0_qsts_out        {xilinx.com:interface:eqdma_qsts:1.0}            Master
-    dma0_usr_flr         dma0_usr_flr         {xilinx.com:interface:qdma_usr_flr:1.0}          Master
-} {
-    create_bd_intf_port -mode $mode -vlnv $vlnv $port_name
-    connect_bd_intf_net \
-        [get_bd_intf_pins cips/$pin_name] \
-        [get_bd_intf_ports $port_name]
-}
-
-# Associate streaming interfaces with clk_pcie0
-set assoc_busifs [join {
+# make_bd_intf_pins_external infers the port VLNV from the pin itself, avoiding
+# the need to specify display_eqdma VLNVs which have no registered abstraction.
+foreach pin_name {
     dma0_m_axis_h2c
     dma0_s_axis_c2h
     dma0_s_axis_c2h_cmpt
@@ -479,6 +464,21 @@ set assoc_busifs [join {
     dma0_dsc_crdt_in
     dma0_qsts_out
     dma0_usr_flr
+} {
+    make_bd_intf_pins_external [get_bd_intf_pins cips/$pin_name]
+}
+
+# Associate streaming interfaces with clk_pcie0.
+# make_bd_intf_pins_external appends _0 to the pin name for the port name.
+set assoc_busifs [join {
+    dma0_m_axis_h2c_0
+    dma0_s_axis_c2h_0
+    dma0_s_axis_c2h_cmpt_0
+    dma0_usr_irq_0
+    dma0_tm_dsc_sts_0
+    dma0_dsc_crdt_in_0
+    dma0_qsts_out_0
+    dma0_usr_flr_0
     m_axi_pcie0
 } :]
 set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports clk_pcie0]
