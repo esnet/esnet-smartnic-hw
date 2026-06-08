@@ -985,17 +985,26 @@ module smartnic
 `endif
 
 `ifdef __au250__
-    // AU250 doesn't support HBM
-    axi4s_intf_set_meta #(
-        .TDEST_WID ( PORT_WID ),
-        .TUSER_WID ( TUSER_SMARTNIC_META_WID )
-    ) axi4s_intf_set_meta (
-        .from_tx   ( axis_to_qs[i] ),
-        .to_rx     ( axis_from_qs[i] ),
-        .tdest     ( axis_to_qs[i].tdest ),
-        .tuser     ( axis_to_qs[i].tuser )
-    );
-    axi4l_intf_peripheral_term i_axi4l_peripheral_term__egr_qs (.from_controller(__axil_to_egr_qs));
+    `define __no_hbm__
+`elsif __av80__
+    `define __no_hbm__
+`endif
+`ifdef __no_hbm__
+    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__egr_q_bypass
+        axi4s_intf_set_meta #(
+            .TDEST_WID ( PORT_WID ),
+            .TUSER_WID ( TUSER_SMARTNIC_META_WID )
+        ) axi4s_intf_set_meta (
+            .from_tx   ( axis_to_qs[i] ),
+            .to_rx     ( axis_from_qs[i] ),
+            .tdest     ( axis_to_qs[i].tdest ),
+            .tuser     ( axis_to_qs[i].tuser )
+        );
+    end : g__egr_q_bypass
+    endgenerate
+
+    axi4l_intf_peripheral_term i_axi4l_peripheral_term__egr_qs (.axi4l_if(__axil_to_egr_qs));
+
 `else
     // HBM queue instantiation
     smartnic_egress_qs smartnic_egress_qs_0 (
