@@ -433,4 +433,54 @@ foreach addr_space {
         -force
 }
 
+# =========================================================================
+# 4. PCIE0 AXI4S streaming and control interfaces
+#
+# The QDMA H2C/C2H streams and associated control sidebands connect
+# directly as CIPS pins — they do not pass through the NoC.
+#
+# Exported as BD interface ports using Vivado's interface types so that
+# downstream RTL can connect cleanly without per-signal wiring.
+#
+# Interfaces exported:
+#   dma0_m_axis_h2c      — H2C data stream (CIPS master → user slave)
+#   dma0_s_axis_c2h      — C2H data stream (user master → CIPS slave)
+#   dma0_s_axis_c2h_cmpt — C2H completion write-back (user → CIPS)
+#   dma0_usr_irq         — user interrupt request (user → CIPS)
+#   dma0_tm_dsc_sts      — traffic manager descriptor status (CIPS → user)
+#   dma0_dsc_crdt_in     — descriptor credit in (user → CIPS)
+#   dma0_qsts_out        — queue status output (CIPS → user)
+#   dma0_usr_flr         — function level reset notification (CIPS → user)
+# =========================================================================
+
+foreach {port_name pin_name vlnv mode} {
+    dma0_m_axis_h2c      dma0_m_axis_h2c      {xilinx.com:display_eqdma:m_axis_h2c:1.0}      Master
+    dma0_s_axis_c2h      dma0_s_axis_c2h      {xilinx.com:display_eqdma:s_axis_c2h:1.0}      Slave
+    dma0_s_axis_c2h_cmpt dma0_s_axis_c2h_cmpt {xilinx.com:display_eqdma:s_axis_c2h_cmpt:1.0} Slave
+    dma0_usr_irq         dma0_usr_irq         {xilinx.com:interface:qdma_usr_irq:1.0}         Slave
+    dma0_tm_dsc_sts      dma0_tm_dsc_sts      {xilinx.com:interface:qdma_tm_dsc_sts:1.0}      Master
+    dma0_dsc_crdt_in     dma0_dsc_crdt_in     {xilinx.com:interface:qdma_dsc_crdt_in:1.0}     Slave
+    dma0_qsts_out        dma0_qsts_out        {xilinx.com:interface:eqdma_qsts:1.0}            Master
+    dma0_usr_flr         dma0_usr_flr         {xilinx.com:interface:qdma_usr_flr:1.0}          Master
+} {
+    create_bd_intf_port -mode $mode -vlnv $vlnv $port_name
+    connect_bd_intf_net \
+        [get_bd_intf_pins cips/$pin_name] \
+        [get_bd_intf_ports $port_name]
+}
+
+# Associate streaming interfaces with clk_pcie0
+set assoc_busifs [join {
+    dma0_m_axis_h2c
+    dma0_s_axis_c2h
+    dma0_s_axis_c2h_cmpt
+    dma0_usr_irq
+    dma0_tm_dsc_sts
+    dma0_dsc_crdt_in
+    dma0_qsts_out
+    dma0_usr_flr
+    m_axi_pcie0
+} :]
+set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports clk_pcie0]
+
 save_bd_design
