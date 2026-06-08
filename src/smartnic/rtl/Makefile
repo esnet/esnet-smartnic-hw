@@ -22,21 +22,36 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
+ifeq ($(BOARD),av80)
+    IP_SUBCOMPONENTS = smartnic.ip.versal
+else
+    IP_SUBCOMPONENTS = smartnic.ip.usplus
+endif
+
+ifeq ($(BOARD),au250)
+    HBM_SUBCOMPONENTS =
+else ifeq ($(BOARD),av80)
+    HBM_SUBCOMPONENTS =
+else
+    HBM_SUBCOMPONENTS = \
+        xilinx.hbm.pkg \
+        xilinx.hbm.rtl
+endif
+
 SUBCOMPONENTS = \
     smartnic.pkg \
-    smartnic.ip \
+    $(IP_SUBCOMPONENTS) \
     smartnic.regio.rtl \
     reg.endian.rtl@common \
     reg.proxy.rtl@common \
-    xilinx.axis.rtl \
-    xilinx.hbm.pkg \
-    xilinx.hbm.rtl \
     axi4l.rtl@common \
     axi4s.rtl@common \
     mem.rtl@common \
     mem.infra.rtl@common \
     axi3.rtl@common \
-    packet.rtl@common
+    packet.rtl@common \
+    $(HBM_SUBCOMPONENTS)
+#    xilinx.axis.rtl \
 
 EXT_LIBS =
 
@@ -44,7 +59,7 @@ EXT_LIBS =
 # Defines
 #   List macro definitions.
 # ----------------------------------------------------
-DEFINES =
+DEFINES = __$(BOARD)__
 
 # ----------------------------------------------------
 # Options
