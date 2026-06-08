@@ -3,6 +3,10 @@ set module_name xilinx_aved
 set AVED_ROOT $env(AVED_ROOT)
 set AVED_BASE_DESIGN $env(AVED_BASE_DESIGN)
 
+# Limit Vivado's internal thread count to reduce peak memory during
+# CIPS elaboration (PCIE0 + SR-IOV is very large on this platform).
+set_param general.maxThreads 4
+
 # Create BD
 create_bd_design ${module_name} -dir .
 current_bd_design ${module_name}
@@ -194,6 +198,238 @@ foreach addr_space {
         -range  0x00001000 \
         -target_address_space [get_bd_addr_spaces $addr_space] \
         [get_bd_addr_segs m_axi_usr_mgmt/Reg] \
+        -force
+}
+
+# =========================================================================
+# 3. PCIE0 — user application endpoint (QDMA mode, X8)
+#
+# PCIE0 and PCIE1 are independent CPM5 controllers mapped to separate GT
+# quads.  The AMD base design sets CPM_PCIE0_MODES {None}; this section
+# enables it.  Host-side PCIe slot bifurcation is required so that both
+# x8 segments link simultaneously.
+#
+# No connections are made to any existing AVED internal logic.  All PCIE0
+# interfaces are routed directly to BD boundary ports for use by RTL outside
+# the AVED BD.
+#
+# BAR0 base: 0x0000_0203_0000_0000 (distinct from PCIE1's 0x0000_0201_…).
+# BAR0 non-prefetchable — same reason as the PCIE1 fix above.
+# =========================================================================
+
+# -------------------------------------------------------------------------
+# 3a. Enable PCIE0 on the CIPS
+#
+# All PCIE0 parameters are appended to the existing CPM_CONFIG value in a
+# single set_property call.  The per-iteration approach (one set_property
+# per parameter) triggers a full CIPS re-validation on each call; with
+# SR-IOV enabled this becomes prohibitively slow (~50 re-validations).
+# -------------------------------------------------------------------------
+set cips [get_bd_cells cips]
+
+set pcie0_params [list \
+    CPM_PCIE0_MODES                         DMA \
+    CPM_PCIE0_FUNCTIONAL_MODE               QDMA \
+    CPM_PCIE0_MODE_SELECTION                Advanced \
+    CPM_PCIE0_MAX_LINK_SPEED                32.0_GT/s \
+    CPM_PCIE0_PL_LINK_CAP_MAX_LINK_WIDTH    X8 \
+    CPM_PCIE0_TL_PF_ENABLE_REG             2 \
+    CPM_PCIE0_MSI_X_OPTIONS                 MSI-X_Internal \
+    CPM_PCIE0_EXT_PCIE_CFG_SPACE_ENABLED    Extended_Large \
+    CPM_PCIE0_CFG_VEND_ID                   10ee \
+    CPM_PCIE0_PF0_CFG_DEV_ID               9038 \
+    CPM_PCIE0_PF0_CFG_SUBSYS_ID            0000 \
+    CPM_PCIE0_PF0_BASE_CLASS_VALUE         02 \
+    CPM_PCIE0_PF0_SUB_CLASS_VALUE          80 \
+    CPM_PCIE0_ACS_CAP_ON                   1 \
+    CPM_PCIE0_PF0_MSIX_ENABLED             1 \
+    CPM_PCIE0_PF0_MSIX_CAP_TABLE_SIZE      8 \
+    CPM_PCIE0_PF0_MSIX_CAP_TABLE_OFFSET    40 \
+    CPM_PCIE0_PF0_BAR0_QDMA_ENABLED        1 \
+    CPM_PCIE0_PF0_BAR0_QDMA_64BIT          1 \
+    CPM_PCIE0_PF0_BAR0_QDMA_PREFETCHABLE   0 \
+    CPM_PCIE0_PF0_BAR0_QDMA_SCALE         Kilobytes \
+    CPM_PCIE0_PF0_BAR0_QDMA_SIZE          512 \
+    CPM_PCIE0_PF0_BAR0_QDMA_TYPE          AXI_Bridge_Master \
+    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_0   0x0000020300000000 \
+    CPM_PCIE0_PF0_BAR2_QDMA_ENABLED        1 \
+    CPM_PCIE0_PF0_BAR2_QDMA_64BIT          1 \
+    CPM_PCIE0_PF0_BAR2_QDMA_PREFETCHABLE   0 \
+    CPM_PCIE0_PF0_BAR2_QDMA_SCALE         Megabytes \
+    CPM_PCIE0_PF0_BAR2_QDMA_SIZE          8 \
+    CPM_PCIE0_PF0_BAR2_QDMA_TYPE          AXI_Bridge_Master \
+    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2   0x0000020300080000 \
+    CPM_PCIE0_DMA_INTF                     AXI4S \
+    CPM_PCIE0_PF1_CFG_DEV_ID              9039 \
+    CPM_PCIE0_PF1_BASE_CLASS_VALUE        02 \
+    CPM_PCIE0_PF1_SUB_CLASS_VALUE         80 \
+    CPM_PCIE0_PF1_MSIX_ENABLED            1 \
+    CPM_PCIE0_PF1_MSIX_CAP_TABLE_SIZE     8 \
+    CPM_PCIE0_PF1_MSIX_CAP_TABLE_OFFSET   40 \
+    CPM_PCIE0_PF1_BAR0_QDMA_ENABLED       1 \
+    CPM_PCIE0_PF1_BAR0_QDMA_64BIT         1 \
+    CPM_PCIE0_PF1_BAR0_QDMA_PREFETCHABLE  0 \
+    CPM_PCIE0_PF1_BAR0_QDMA_SCALE        Kilobytes \
+    CPM_PCIE0_PF1_BAR0_QDMA_SIZE         512 \
+    CPM_PCIE0_PF1_BAR0_QDMA_TYPE         AXI_Bridge_Master \
+    CPM_PCIE0_PF1_BAR2_QDMA_ENABLED       1 \
+    CPM_PCIE0_PF1_BAR2_QDMA_64BIT         1 \
+    CPM_PCIE0_PF1_BAR2_QDMA_PREFETCHABLE  0 \
+    CPM_PCIE0_PF1_BAR2_QDMA_SCALE        Megabytes \
+    CPM_PCIE0_PF1_BAR2_QDMA_SIZE         8 \
+    CPM_PCIE0_PF1_BAR2_QDMA_TYPE         AXI_Bridge_Master \
+    CPM_PCIE0_SRIOV_CAP_ENABLE             1 \
+    CPM_PCIE0_PF0_SRIOV_CAP_TOTAL_VF      4 \
+    CPM_PCIE0_PF0_SRIOV_CAP_INITIAL_VF    4 \
+    CPM_PCIE0_ALL_VFS                      4 \
+    CPM_PCIE0_PF0_SRIOV_BAR0_ENABLED      1 \
+    CPM_PCIE0_PF0_SRIOV_BAR0_64BIT        0 \
+    CPM_PCIE0_PF0_SRIOV_BAR0_PREFETCHABLE 0 \
+    CPM_PCIE0_PF0_SRIOV_BAR0_SCALE       Kilobytes \
+    CPM_PCIE0_PF0_SRIOV_BAR0_SIZE        32 \
+    CPM_PCIE0_PF0_SRIOV_BAR0_TYPE        Memory \
+    CPM_PCIE0_PF0_SRIOV_BAR2_ENABLED      1 \
+    CPM_PCIE0_PF0_SRIOV_BAR2_64BIT        1 \
+    CPM_PCIE0_PF0_SRIOV_BAR2_PREFETCHABLE 0 \
+    CPM_PCIE0_PF0_SRIOV_BAR2_SCALE       Megabytes \
+    CPM_PCIE0_PF0_SRIOV_BAR2_SIZE        8 \
+    CPM_PCIE0_PF0_SRIOV_BAR2_TYPE        Memory \
+    CPM_PCIE0_MAILBOX_ENABLE               1 \
+    CPM_PCIE0_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 1 \
+]
+
+set_property CONFIG.CPM_CONFIG \
+    [concat [get_property CONFIG.CPM_CONFIG $cips] $pcie0_params] \
+    $cips
+
+# Validate after CPM_CONFIG changes so Vivado surfaces the new PCIE0 pins
+# (PCIE0_GT, gt_refclk0, dma0_intrfc_clk, dma0_intrfc_resetn) on the CIPS
+# cell before sections 3b and 3c reference them.
+validate_bd_design -quiet
+
+# -------------------------------------------------------------------------
+# 3b. PCIE0 physical GT interfaces
+#
+# gt_pciea0 / gt_pcie0_refclk mirror the existing gt_pciea1 / gt_pcie_refclk
+# ports created by the AMD base design for PCIE1.
+# -------------------------------------------------------------------------
+set gt_pciea0 [create_bd_intf_port \
+    -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 gt_pciea0]
+connect_bd_intf_net \
+    [get_bd_intf_pins cips/PCIE0_GT] \
+    [get_bd_intf_ports gt_pciea0]
+
+set gt_pcie0_refclk [create_bd_intf_port \
+    -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 gt_pcie0_refclk]
+set_property CONFIG.FREQ_HZ {100000000} $gt_pcie0_refclk
+connect_bd_intf_net \
+    [get_bd_intf_ports gt_pcie0_refclk] \
+    [get_bd_intf_pins cips/gt_refclk0]
+
+# -------------------------------------------------------------------------
+# 3c. PCIE0 interface clock and reset exports
+#
+# dma0_intrfc_clk is an INPUT to the CIPS, not an output.  It must be
+# driven by a PL reference clock, exactly as the AMD base design drives
+# dma1_intrfc_clk from pl2_ref_clk (250 MHz) for PCIE1.  We extend that
+# same net to also drive dma0_intrfc_clk, axi_noc_cips/aclk5, and the
+# clk_pcie0 BD output port — all at 250 MHz, no new clock resource needed.
+#
+# dma0_intrfc_resetn is a CIPS output and is the source for resetn_pcie0.
+# -------------------------------------------------------------------------
+create_bd_port -dir O -type clk clk_pcie0
+create_bd_port -dir O -type rst resetn_pcie0
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pcie0]
+
+connect_bd_net \
+    [get_bd_pins cips/pl2_ref_clk] \
+    [get_bd_pins cips/dma0_intrfc_clk] \
+    [get_bd_ports clk_pcie0]
+
+connect_bd_net [get_bd_ports resetn_pcie0] \
+    [get_bd_pins cips/dma0_intrfc_resetn]
+
+# -------------------------------------------------------------------------
+# 3d. PCIE0 AXI4 boundary port via axi_noc_cips
+#
+# The CPM5 exposes a single shared pair of NoC initiator ports
+# (CPM_PCIE_NOC_0 / CPM_PCIE_NOC_1) that carry traffic from both PCIE0
+# and PCIE1 — there are no separate CPM_PCIE0_NOC_* pins.  Address-based
+# routing inside axi_noc_cips demultiplexes the two endpoints:
+#
+#   M00_AXI  →  base_logic (PCIE1 management, existing, unchanged)
+#   M01_AXI  →  m_axi_pcie0 (new BD boundary port, PCIE0 data path)
+#
+# axi_noc_cips is expanded from 1 to 2 MI ports.  The existing M00_AXI
+# connection and all SI/clock associations are untouched.
+#
+# The CONNECTIONS map on S00_AXI / S01_AXI in the AMD base design already
+# lists M00_AXI; we append M01_AXI to each.  Bandwidth parameters mirror
+# the existing M00_AXI entry (5 Gbps read + write).
+# -------------------------------------------------------------------------
+set noc_cips [get_bd_cells axi_noc_cips]
+
+# Expand to 2 MI ports (was 1), then validate so Vivado surfaces the new
+# M01_AXI interface pin and aclk5 clock pin before they are referenced below.
+set_property CONFIG.NUM_MI   {2} $noc_cips
+set_property CONFIG.NUM_CLKS {6} $noc_cips
+validate_bd_design -quiet
+
+# Append M01_AXI to the CONNECTIONS map for both CPM NoC slave ports.
+# The base design sets these as separate set_property calls per port;
+# we read the current value and append rather than overwrite.
+foreach {si_port} {S00_AXI S01_AXI} {
+    set pin [get_bd_intf_pins axi_noc_cips/$si_port]
+    set cur [get_property CONFIG.CONNECTIONS $pin]
+    set_property CONFIG.CONNECTIONS \
+        "$cur M01_AXI {read_bw {5} write_bw {5} read_avg_burst {64} write_avg_burst {64}}" \
+        $pin
+}
+
+# M01_AXI clock: aclk5 (slot 6, added via NUM_CLKS above).
+# Joins the pl2_ref_clk net shared by dma0_intrfc_clk and clk_pcie0.
+set_property CONFIG.ASSOCIATED_BUSIF {M01_AXI} \
+    [get_bd_pins axi_noc_cips/aclk5]
+connect_bd_net [get_bd_pins cips/pl2_ref_clk] \
+    [get_bd_pins axi_noc_cips/aclk5]
+
+# BD boundary port — raw AXI4, 512-bit wide (CPM5 QDMA native width).
+# User RTL outside the AVED BD instantiates its own slave and, when needed,
+# drives a separate user-instantiated NoC toward DCMAC or other endpoints.
+set port_pcie0_axi [create_bd_intf_port \
+    -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 m_axi_pcie0]
+set_property -dict [list \
+    CONFIG.ADDR_WIDTH {64}  \
+    CONFIG.DATA_WIDTH {512} \
+    CONFIG.PROTOCOL   {AXI4} \
+] $port_pcie0_axi
+connect_bd_intf_net \
+    [get_bd_intf_pins axi_noc_cips/M01_AXI] \
+    [get_bd_intf_ports m_axi_pcie0]
+
+# Associate m_axi_pcie0 with clk_pcie0.
+set_property CONFIG.ASSOCIATED_BUSIF {m_axi_pcie0} \
+    [get_bd_ports clk_pcie0]
+
+# Address assignment: route PCIE0 BAR0 (256 MB) and BAR2 (8 MB) windows
+# to M01_AXI from both CPM NoC initiator address spaces.
+# Offsets match PCIEBAR2AXIBAR_QDMA_0 and _2 respectively.
+# BAR2 is placed immediately after BAR0: 0x020300080000 = 0x020300000000 + 512 KB.
+foreach addr_space {
+    cips/CPM_PCIE_NOC_0
+    cips/CPM_PCIE_NOC_1
+} {
+    assign_bd_address \
+        -offset 0x020300000000 \
+        -range  0x00080000 \
+        -target_address_space [get_bd_addr_spaces $addr_space] \
+        [get_bd_addr_segs m_axi_pcie0/Reg] \
+        -force
+    assign_bd_address \
+        -offset 0x020300080000 \
+        -range  0x00800000 \
+        -target_address_space [get_bd_addr_spaces $addr_space] \
+        [get_bd_addr_segs m_axi_pcie0/Reg] \
         -force
 }
 
