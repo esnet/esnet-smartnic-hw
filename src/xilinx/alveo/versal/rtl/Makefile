@@ -24,6 +24,9 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     axi4l.rtl@common \
+    axi4.pkg@common \
+    axi4.rtl@common \
+    core.stub.regio.rtl
 
 EXT_LIBS =
 
