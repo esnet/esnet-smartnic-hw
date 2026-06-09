@@ -39,9 +39,12 @@
     wire        aresetn_pl0;          // PS global reset
     wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
 
-    // PCIE0 synthesised reset (adapter output → BD input → dma0_intrfc_resetn)
-    // Driven by xilinx_aved_adapter; TODO: add VIO GPIO for JTAG-forced reset.
-    wire        resetn_pcie0;
+    // Shell-facing signals — functional names exposed at esnet_smartnic boundary.
+    // xilinx_aved_adapter maps these to/from AVED BD port names internally.
+    wire        sys_clk;       // system/debug clock
+    wire        pcie_clk;      // PCIe interface clock
+    wire        pcie_rstn_in;  // combined pre-JTAG reset (active-low)
+    wire        pcie_rstn;     // post-JTAG synthesised reset (active-low)
 
     // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)
     // Signal widths taken from the Vivado-generated BD wrapper.

@@ -40,11 +40,15 @@ module esnet_smartnic
         .axil_if_to_shell     ( axil_debug_if )
     );
 
-    // Adapt AVED management AXI4-Lite to standard ESnet shell-core boundary
-    xilinx_aved_shell_adapter #(
+    // Versal Alveo shell — PCIe reset control and shell-core boundary
+    xilinx_alveo_versal_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
-    ) i_xilinx_aved_shell_adapter (
-        .axil_if  ( axil_debug_if ),
+    ) i_xilinx_alveo_versal_shell (
+        .sys_clk      ( sys_clk      ),
+        .pcie_clk     ( pcie_clk     ),
+        .pcie_rstn_in ( pcie_rstn_in ),
+        .pcie_rstn    ( pcie_rstn    ),
+        .axil_if      ( axil_debug_if ),
         .shell_if
     );
 
