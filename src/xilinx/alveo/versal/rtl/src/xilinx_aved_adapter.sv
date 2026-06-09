@@ -3,7 +3,15 @@ module xilinx_aved_adapter (
     input  wire        clk_pl,
     input  wire        resetn_pl_periph,
     input  wire        clk_pcie0,
-    input  wire        resetn_pcie0,
+
+    // PCIE0 raw reset sources (inputs from BD — forwarded to user logic)
+    input  wire        aresetn_pl0,
+    input  wire        aresetn_pcie0_link,
+
+    // PCIE0 synthesised reset (output toward BD — drives dma0_intrfc_resetn)
+    // Adapter combines aresetn_pl0, aresetn_pcie0_link, and VIO GPIO here.
+    // For now: placeholder AND of the two available sources.
+    output wire        resetn_pcie0,
 
     // PCIE1 management AXI4-Lite (BD master → terminated at core_reg_blk)
     // The existing PCIE1 management path is terminated here with the stub
@@ -349,5 +357,21 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_clear              = dma0_usr_flr_0_set;
     assign dma0_usr_flr_0_done_fnc           = dma0_usr_flr_0_fnc;
     assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
+
+    // =========================================================================
+    // PCIE0 reset synthesis
+    //
+    // Combines available reset sources into the single active-low reset that
+    // drives dma0_intrfc_resetn via the BD boundary port resetn_pcie0.
+    //
+    // aresetn_pcie0_link alone is sufficient for correctness — it de-asserts
+    // only after PMC boot → NoC init → CPM5 init → link training, so the NoC
+    // is guaranteed ready.  aresetn_pl0 is included for belt-and-suspenders
+    // gating of any future PS-dependent functionality.
+    //
+    // TODO: add VIO GPIO bit here when debug infrastructure is added, to allow
+    // JTAG-forced reset of the PCIE0 endpoint independently of PCIE1.
+    // =========================================================================
+    assign resetn_pcie0 = aresetn_pl0 & aresetn_pcie0_link;
 
 endmodule : xilinx_aved_adapter

@@ -32,8 +32,15 @@
     wire        m_axi_usr_mgmt_rvalid;
     wire        m_axi_usr_mgmt_rready;
 
-    // PCIE0 clock / reset (from BD)
+    // PCIE0 clock (from BD)
     wire        clk_pcie0;
+
+    // PCIE0 raw reset sources (from BD, active-low outputs)
+    wire        aresetn_pl0;          // PS global reset
+    wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
+
+    // PCIE0 synthesised reset (adapter output → BD input → dma0_intrfc_resetn)
+    // Driven by xilinx_aved_adapter; TODO: add VIO GPIO for JTAG-forced reset.
     wire        resetn_pcie0;
 
     // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)

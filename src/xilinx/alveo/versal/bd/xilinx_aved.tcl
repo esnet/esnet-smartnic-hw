@@ -327,26 +327,53 @@ connect_bd_intf_net \
     [get_bd_intf_pins cips/gt_refclk0]
 
 # -------------------------------------------------------------------------
-# 3c. PCIE0 interface clock and reset exports
+# 3c. PCIE0 interface clock and independent reset
 #
-# dma0_intrfc_clk is an INPUT to the CIPS, not an output.  It must be
-# driven by a PL reference clock, exactly as the AMD base design drives
-# dma1_intrfc_clk from pl2_ref_clk (250 MHz) for PCIE1.  We extend that
-# same net to also drive dma0_intrfc_clk, axi_noc_cips/aclk5, and the
-# clk_pcie0 BD output port — all at 250 MHz, no new clock resource needed.
+# dma0_intrfc_clk is a CIPS input driven by pl2_ref_clk (250 MHz),
+# matching the base design's treatment of dma1_intrfc_clk.
 #
-# dma0_intrfc_resetn is a CIPS output and is the source for resetn_pcie0.
+# Reset is kept fully independent from PCIE1.  Two raw reset sources are
+# exported as BD outputs so that user RTL outside the BD can combine them
+# (along with a VIO-driven GPIO reset) into a single synthesised reset:
+#
+#   aresetn_pl0        — cips/pl0_resetn (PS global reset, active-low)
+#   aresetn_pcie0_link — cips/dma0_axi_aresetn (CPM5 PCIE0 link reset)
+#
+# The synthesised result is fed back in as resetn_pcie0 (active-low input)
+# which drives dma0_intrfc_resetn.  This allows VIO/JTAG, link-down events,
+# and PS global reset to be combined with arbitrary priority outside the BD.
 # -------------------------------------------------------------------------
 create_bd_port -dir O -type clk clk_pcie0
-create_bd_port -dir O -type rst resetn_pcie0
+
+# Raw reset source exports (both active-low)
+create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pl0
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pl0]
+create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pcie0_link
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pcie0_link]
+
+# Synthesised reset input from user logic
+create_bd_port -dir I -from 0 -to 0 -type rst resetn_pcie0
 set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pcie0]
 
 connect_bd_net \
     [get_bd_pins cips/pl2_ref_clk] \
     [get_bd_pins cips/dma0_intrfc_clk] \
     [get_bd_ports clk_pcie0]
+# Note: pl2_ref_clk is derived from the PCIE1 DPLL but is shared here
+# with PCIE0.  This is valid because a bifurcated PCIe slot provides a
+# single 100 MHz REFCLK (or phase-locked derivatives) to all segments,
+# so both GT quads are synchronous to a common source.
 
-connect_bd_net [get_bd_ports resetn_pcie0] \
+connect_bd_net \
+    [get_bd_pins cips/pl0_resetn] \
+    [get_bd_ports aresetn_pl0]
+
+connect_bd_net \
+    [get_bd_pins cips/dma0_axi_aresetn] \
+    [get_bd_ports aresetn_pcie0_link]
+
+connect_bd_net \
+    [get_bd_ports resetn_pcie0] \
     [get_bd_pins cips/dma0_intrfc_resetn]
 
 # -------------------------------------------------------------------------
