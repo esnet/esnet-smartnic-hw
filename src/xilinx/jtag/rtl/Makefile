@@ -23,7 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.pci.ip
+    xilinx.jtag.ip
 EXT_LIBS =
 
 # ----------------------------------------------------
