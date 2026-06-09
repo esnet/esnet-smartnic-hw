@@ -363,8 +363,7 @@ module xilinx_aved_adapter (
     assign sys_clk      = clk_pl;
     assign pcie_clk     = clk_pcie0;
     assign pcie_rstn_in = aresetn_pl0 & aresetn_pcie0_link;
-    // Map functional shell name to AVED BD port name
-    wire resetn_pcie0;
+    // Map post-JTAG reset to the BD boundary port name so .* on top_i resolves it.
     assign resetn_pcie0 = pcie_rstn;
 
 endmodule : xilinx_aved_adapter

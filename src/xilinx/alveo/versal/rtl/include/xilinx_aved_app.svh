@@ -39,8 +39,12 @@
     wire        aresetn_pl0;          // PS global reset
     wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
 
-    // Shell-facing signals — functional names exposed at esnet_smartnic boundary.
-    // xilinx_aved_adapter maps these to/from AVED BD port names internally.
+    // PCIE0 BD reset port — named to match the AVED BD wrapper.
+    // xilinx_aved_adapter maps this to/from pcie_rstn internally.
+    wire        resetn_pcie0;
+
+    // Shell-facing signals — functional names used above the adapter layer.
+    // xilinx_aved_adapter drives/receives these and maps to AVED BD names.
     wire        sys_clk;       // system/debug clock
     wire        pcie_clk;      // PCIe interface clock
     wire        pcie_rstn_in;  // combined pre-JTAG reset (active-low)
