@@ -49,15 +49,6 @@ module xilinx_alveo_versal_shell
     );
 
     // =========================================================================
-    // Clock/reset — derived from the AXI4-Lite clock/reset
-    // =========================================================================
-    assign shell_if.clk        = axil_if.aclk;
-    assign shell_if.srst       = ~axil_if.aresetn;
-    assign shell_if.mgmt_clk   = axil_if.aclk;
-    assign shell_if.mgmt_srst  = ~axil_if.aresetn;
-    assign shell_if.clk_100mhz = axil_if.aclk;  // placeholder until 100 MHz export added
-
-    // =========================================================================
     // Network port interfaces (CMAC) — terminated pending DCMAC wiring
     // =========================================================================
     axi4s_intf #(
@@ -106,10 +97,20 @@ module xilinx_alveo_versal_shell
     axi4s_intf_rx_sink i_axi4s_intf_rx_sink__c2h (.from_tx (axis_c2h));
 
     // =========================================================================
-    // Convert SV interfaces to flat shell_intf representation
+    // Convert SV interfaces to flat shell_intf representation.
+    // Clock/reset are driven into shell_intf here — all derived from axil_if
+    // which carries the management clock/reset from the AXI4-L path.
+    // port_clk/port_srst use the same clock pending per-port clock support.
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
+        .clk        ( axil_if.aclk    ),
+        .srst       ( ~axil_if.aresetn ),
+        .mgmt_clk   ( axil_if.aclk    ),
+        .mgmt_srst  ( ~axil_if.aresetn ),
+        .clk_100mhz ( axil_if.aclk    ),  // placeholder until 100 MHz export added
+        .port_clk   ( '{default: axil_if.aclk}    ),
+        .port_srst  ( '{default: ~axil_if.aresetn} ),
         .axil_if,
         .axis_port_rx,
         .axis_port_tx,

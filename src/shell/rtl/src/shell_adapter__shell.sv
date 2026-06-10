@@ -5,6 +5,15 @@ module shell_adapter__shell
 ) (
     shell_intf.shell shell_if,
 
+    // Clock / reset inputs — driven by platform, assigned into shell_intf
+    input  logic                    clk,
+    input  logic                    srst,
+    input  logic                    mgmt_clk,
+    input  logic                    mgmt_srst,
+    input  logic                    clk_100mhz,
+    input  logic [NUM_PORTS-1:0]    port_clk,
+    input  logic [NUM_PORTS-1:0]    port_srst,
+
     axi4l_intf.peripheral axil_if,
 
     axi4s_intf.rx axis_port_rx [NUM_PORTS],
@@ -13,6 +22,19 @@ module shell_adapter__shell
     axi4s_intf.rx axis_h2c,
     axi4s_intf.tx axis_c2h
 );
+    // Clock / reset — assign platform-driven signals into shell_intf
+    assign shell_if.clk        = clk;
+    assign shell_if.srst       = srst;
+    assign shell_if.mgmt_clk   = mgmt_clk;
+    assign shell_if.mgmt_srst  = mgmt_srst;
+    assign shell_if.clk_100mhz = clk_100mhz;
+    generate
+        for (genvar g = 0; g < NUM_PORTS; g++) begin : g__port_clk
+            assign shell_if.port_clk[g]  = port_clk[g];
+            assign shell_if.port_srst[g] = port_srst[g];
+        end : g__port_clk
+    endgenerate
+
     // AXI-L
     axi4l_intf_to_signals #(
         .ADDR_WID ( shell_if.AXIL_ADDR_WID )

@@ -5,6 +5,15 @@ module shell_adapter__core
 ) (
     shell_intf.core shell_if,
 
+    // Clock / reset outputs — read from shell_intf and exposed to core logic
+    output logic                    clk,
+    output logic                    srst,
+    output logic                    mgmt_clk,
+    output logic                    mgmt_srst,
+    output logic                    clk_100mhz,
+    output logic [NUM_PORTS-1:0]    port_clk,
+    output logic [NUM_PORTS-1:0]    port_srst,
+
     axi4l_intf.controller axil_if,
 
     axi4s_intf.tx axis_port_rx [NUM_PORTS],
@@ -13,12 +22,25 @@ module shell_adapter__core
     axi4s_intf.tx axis_h2c,
     axi4s_intf.rx axis_c2h
 );
+    // Clock / reset — read from shell_intf and expose to core logic
+    assign clk        = shell_if.clk;
+    assign srst       = shell_if.srst;
+    assign mgmt_clk   = shell_if.mgmt_clk;
+    assign mgmt_srst  = shell_if.mgmt_srst;
+    assign clk_100mhz = shell_if.clk_100mhz;
+    generate
+        for (genvar g = 0; g < NUM_PORTS; g++) begin : g__port_clk
+            assign port_clk[g]  = shell_if.port_clk[g];
+            assign port_srst[g] = shell_if.port_srst[g];
+        end : g__port_clk
+    endgenerate
+
     // AXI-L
     axi4l_intf_from_signals #(
         .ADDR_WID ( shell_if.AXIL_ADDR_WID )
     ) i_axi4l_intf_from_signals (
-        .aclk    ( shell_if.mgmt_clk ),
-        .aresetn ( ~shell_if.mgmt_srst ),
+        .aclk    ( shell_if.mgmt_clk    ),
+        .aresetn ( ~shell_if.mgmt_srst  ),
         .awvalid ( shell_if.axil_awvalid ),
         .awready ( shell_if.axil_awready ),
         .awaddr  ( shell_if.axil_awaddr  ),
