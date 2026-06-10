@@ -11,8 +11,8 @@ module shell_adapter__core
     output logic                    mgmt_clk,
     output logic                    mgmt_srst,
     output logic                    clk_100mhz,
-    output logic [NUM_PORTS-1:0]    port_clk,
-    output logic [NUM_PORTS-1:0]    port_srst,
+    output logic                    port_clk  [NUM_PORTS],
+    output logic                    port_srst [NUM_PORTS],
 
     axi4l_intf.controller axil_if,
 

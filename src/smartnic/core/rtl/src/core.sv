@@ -19,11 +19,13 @@ module core
     axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(port_clk[0]));
 
     // Convert shell_intf to SV interfaces
+    logic                          clk;
+    logic                          srst;
     logic                          mgmt_clk;
     logic                          mgmt_srst;
     logic                          clk_100mhz;
-    logic [shell_if.NUM_PORTS-1:0] port_clk;
-    logic [shell_if.NUM_PORTS-1:0] port_srst;
+    logic port_clk  [shell_if.NUM_PORTS];
+    logic port_srst [shell_if.NUM_PORTS];
 
     shell_adapter__core i_shell_adapter__core (
         .shell_if,
@@ -45,8 +47,8 @@ module core
     smartnic_wrapper #(
         .NUM_PORTS ( shell_if.NUM_PORTS )
     ) i_smartnic_wrapper (
-        .clk  ( shell_if.clk ),
-        .srst ( shell_if.srst ),
+        .clk,
+        .srst,
         .axil_if,
         .axis_port_rx,
         .axis_port_tx,

@@ -11,8 +11,8 @@ module shell_adapter__shell
     input  logic                    mgmt_clk,
     input  logic                    mgmt_srst,
     input  logic                    clk_100mhz,
-    input  logic [NUM_PORTS-1:0]    port_clk,
-    input  logic [NUM_PORTS-1:0]    port_srst,
+    input  logic                    port_clk  [NUM_PORTS],
+    input  logic                    port_srst [NUM_PORTS],
 
     axi4l_intf.peripheral axil_if,
 
