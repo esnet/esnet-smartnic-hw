@@ -17,7 +17,7 @@ TOP = esnet_smartnic
 # -----------------------------------------------
 BUILD_TIMESTAMP = $(shell date +"%s")
 BUILD_ID ?= $(BUILD_TIMESTAMP)
-CORE ?= stub
+CORE ?= core.stub
 
 AVED_BASE_DESIGN = amd_v80_gen5x8_25.1
 
@@ -28,8 +28,8 @@ SHELL_BOARD_DIR = $(SRC_ROOT)/xilinx/alveo/versal/shell/$(BOARD)
 SHELL_SUBCOMPONENT_REF = xilinx.alveo.versal.shell.$(BOARD).build
 SHELL_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(SHELL_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/$(TOP).synth.dcp
 
-# Core OOC DCP: produced by core.<CORE>.build (non-project flow)
-CORE_SUBCOMPONENT_REF = core.$(CORE).build
+# Core OOC DCP: produced by <CORE>.build (non-project flow)
+CORE_SUBCOMPONENT_REF = $(CORE).build
 CORE_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(CORE_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/core.synth.dcp
 
 # Map to the generic assembly interface (shell=top-level, core fills i_core cell)

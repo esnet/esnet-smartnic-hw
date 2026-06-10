@@ -194,7 +194,7 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 .PHONY: shell shell_bitfile shell_package shell_clean_artifacts
 
 VERSAL_BOARD ?= av80
-CORE ?= stub
+CORE ?= core.stub
 
 versal_shell_ooc:
 	@echo "Building Versal shell OOC DCP ($(BUILD_ID))..."
@@ -206,7 +206,7 @@ versal_shell_ooc:
 versal_core_ooc:
 	@echo "Building Versal core OOC DCP (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=core.$(CORE).build \
+		COMPONENT=$(CORE).build \
 		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
 	@echo "Done."
 

@@ -25,7 +25,7 @@ export P4_IGR_FILE = $(CURDIR)/p4/$(APP_NAME).p4
 
 # CORE - Name of core implementation to assemble into the shell.
 # Default is 'stub'.
-CORE ?= stub
+CORE ?= core.stub
 
 #------- Targets -------
 build:
