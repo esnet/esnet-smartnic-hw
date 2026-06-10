@@ -19,5 +19,5 @@ set_property -dict {
     CONFIG.C_PROBE_IN1_WIDTH {1}
     CONFIG.C_PROBE_IN2_WIDTH {1}
     CONFIG.C_PROBE_OUT0_WIDTH {1}
-    CONFIG.C_PROBE_OUT0_INIT_VAL {0x1}
+    CONFIG.C_PROBE_OUT0_INIT_VAL {0x0}
 } [get_ips $module_name]
