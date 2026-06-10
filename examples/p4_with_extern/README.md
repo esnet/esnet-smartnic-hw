@@ -13,7 +13,7 @@ hardware.
 
 The p4_with_extern design is identical in function to the p4_only design (i.e. a simple table-based
 Layer-2 packet switch).  However, unlike p4_only, p4_with_extern also incorporates an instantiation of the
-AMD (Xilinx) minimal_user_extern_example (provided with the Vivado 2023.2 software release).
+AMD (Xilinx) minimal_user_extern_example (provided with the Vivado 2025.2 software release).
 
 The minimal_user_extern_example extern implements a simple pass-through delay line, with a 16-cycle
 latency.
@@ -78,7 +78,7 @@ example design project can be opened, and the p4 processor can be simulated, as 
    For more information about how to simulate designs and evaluate results within the AMD (Xilinx) Vivado GUI,
 refer to the following document:
 
-   - *Vivado Design Suite User Guide - Logic Simulation, UG900 (v2023.2) October 18, 2023.*
+   - *Vivado Design Suite User Guide - Logic Simulation, UG900 (v2025.2) December 17, 2025.*
 
    Note that in the current Vivado release, simulating stimulus captured in .pcap format seems to hang simulation
    indefinitely.  To avoid this issue, input stimulus should be captured using the .user file format instead.
