@@ -22,8 +22,7 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    xilinx.pci.ip
+SUBCOMPONENTS =
 EXT_LIBS =
 
 # ----------------------------------------------------
