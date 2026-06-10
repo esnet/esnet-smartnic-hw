@@ -14,6 +14,10 @@ module xilinx_aved_adapter (
     output wire        pcie_rstn_in,  // combined pre-JTAG reset → shell
     input  wire        pcie_rstn,     // post-JTAG reset ← shell
 
+    // BD-facing reset output — named to match the AVED BD wrapper port.
+    // Driven from pcie_rstn; connects to cips/dma0_intrfc_resetn via .* on top_i.
+    output wire        resetn_pcie0,
+
     // PCIE1 management AXI4-Lite (BD master → terminated at core_reg_blk)
     // The existing PCIE1 management path is terminated here with the stub
     // register block; PCIE0 BAR2 becomes the live management interface.
