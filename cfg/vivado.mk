@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------
 # Full release version including patches
 # - e.g. 2022.1, 2022.1.1, 2022.1.1_AR88888
-PROJ_VIVADO_VERSION = 2023.2.2
+PROJ_VIVADO_VERSION = 2025.2
 
 # ------------------------------------------------------------------
 # Import targets for querying tool version info

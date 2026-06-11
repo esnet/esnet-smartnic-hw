@@ -59,7 +59,7 @@ to a packet in the input PCAP or user file, in sequence.  The syntax of the meta
 is described in the Xilinx VitisnetP4 documentation.  Note: Each metadata record
 must be terminated by a semicolon (;).
 
-For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2023.2) October 18, 2023*.
+For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2025.2) November 20, 2025*.
 
 
 ## Testcase Output Files
