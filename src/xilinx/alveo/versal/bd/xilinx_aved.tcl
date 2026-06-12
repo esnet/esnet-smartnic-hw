@@ -251,14 +251,13 @@ set pcie0_params [list \
     CPM_PCIE0_PF0_BAR0_QDMA_64BIT          1 \
     CPM_PCIE0_PF0_BAR0_QDMA_PREFETCHABLE   0 \
     CPM_PCIE0_PF0_BAR0_QDMA_TYPE          DMA \
-    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_0   0x0000020300000000 \
     CPM_PCIE0_PF0_BAR2_QDMA_ENABLED        1 \
     CPM_PCIE0_PF0_BAR2_QDMA_64BIT          1 \
     CPM_PCIE0_PF0_BAR2_QDMA_PREFETCHABLE   0 \
     CPM_PCIE0_PF0_BAR2_QDMA_SCALE         Megabytes \
     CPM_PCIE0_PF0_BAR2_QDMA_SIZE          8 \
     CPM_PCIE0_PF0_BAR2_QDMA_TYPE          AXI_Bridge_Master \
-    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2   0x0000020300080000 \
+    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2   0x0000020300000000 \
     CPM_PCIE0_DMA_INTF                     AXI4S \
     CPM_PCIE0_PF1_CFG_DEV_ID              9039 \
     CPM_PCIE0_SRIOV_CAP_ENABLE             1 \
@@ -342,10 +341,8 @@ connect_bd_net \
     [get_bd_pins cips/pl2_ref_clk] \
     [get_bd_pins cips/dma0_intrfc_clk] \
     [get_bd_ports clk_pcie0]
-# Note: pl2_ref_clk is derived from the PCIE1 DPLL but is shared here
-# with PCIE0.  This is valid because a bifurcated PCIe slot provides a
-# single 100 MHz REFCLK (or phase-locked derivatives) to all segments,
-# so both GT quads are synchronous to a common source.
+# Note: pl2_ref_clk is a 250 MHz PMC CRP clock (PMC_CRP_PL2_REF_CTRL_FREQMHZ),
+# always-on and independent of PCIe link state.
 
 connect_bd_net \
     [get_bd_pins cips/pl0_resetn] \
@@ -421,22 +418,16 @@ connect_bd_intf_net \
 set_property CONFIG.ASSOCIATED_BUSIF {m_axi_pcie0} \
     [get_bd_ports clk_pcie0]
 
-# Address assignment: route PCIE0 BAR0 (256 MB) and BAR2 (8 MB) windows
-# to M01_AXI from both CPM NoC initiator address spaces.
-# Offsets match PCIEBAR2AXIBAR_QDMA_0 and _2 respectively.
-# BAR2 is placed immediately after BAR0: 0x020300080000 = 0x020300000000 + 512 KB.
+# Address assignment: route PCIE0 BAR2 (8 MB) window to M01_AXI from both
+# CPM NoC initiator address spaces.  BAR0 is type DMA (QDMA internal) and
+# never generates outbound NoC transactions, so only BAR2 is mapped here.
+# Offset matches PCIEBAR2AXIBAR_QDMA_2 = 0x0000020300000000.
 foreach addr_space {
     cips/CPM_PCIE_NOC_0
     cips/CPM_PCIE_NOC_1
 } {
     assign_bd_address \
         -offset 0x020300000000 \
-        -range  0x00080000 \
-        -target_address_space [get_bd_addr_spaces $addr_space] \
-        [get_bd_addr_segs m_axi_pcie0/Reg] \
-        -force
-    assign_bd_address \
-        -offset 0x020300080000 \
         -range  0x00800000 \
         -target_address_space [get_bd_addr_spaces $addr_space] \
         [get_bd_addr_segs m_axi_pcie0/Reg] \
