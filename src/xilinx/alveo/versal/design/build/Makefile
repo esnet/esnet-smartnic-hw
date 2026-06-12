@@ -32,15 +32,26 @@ SHELL_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(SHELL_SUBCOMPONENT
 CORE_SUBCOMPONENT_REF = $(CORE).build
 CORE_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(CORE_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/core.synth.dcp
 
+# App DCP: produced by smartnic_app.build in the application repo
+APP_SUBCOMPONENT_REF = smartnic_app.build
+APP_DCP_FILE = $(call get_lib_component_out_path_from_ref,$(APP_SUBCOMPONENT_REF),$(LIB_OUTPUT_ROOT))/proj/proj.runs/synth_1/smartnic_app.dcp
+
+# VitisNetP4 DCPs: optional — only present for apps that include P4.
+VITISNETP4_IGR_DCP_FILE = $(call get_lib_component_out_path_from_ref,vitisnetp4_igr.ip,$(LIB_OUTPUT_ROOT))/vitisnetp4_igr/vitisnetp4_igr.dcp
+VITISNETP4_EGR_DCP_FILE = $(call get_lib_component_out_path_from_ref,vitisnetp4_egr.ip,$(LIB_OUTPUT_ROOT))/vitisnetp4_egr/vitisnetp4_egr.dcp
+
 # Map to the generic assembly interface (shell=top-level, core fills i_core cell)
 TOP_DCP_FILE = $(SHELL_DCP_FILE)
-CELL_DCPS    = i_core:$(CORE_DCP_FILE)
+CELL_DCPS    = i_core:$(CORE_DCP_FILE) \
+               i_core/i_smartnic_wrapper/smartnic/smartnic_app:$(APP_DCP_FILE) \
+               $(if $(wildcard $(VITISNETP4_IGR_DCP_FILE)),i_core/i_smartnic_wrapper/smartnic/smartnic_app/smartnic_app_igr_p4_inst/vitisnetp4_igr_wrapper_inst/i_vitisnetp4_igr:$(VITISNETP4_IGR_DCP_FILE)) \
+               $(if $(wildcard $(VITISNETP4_EGR_DCP_FILE)),i_core/i_smartnic_wrapper/smartnic/smartnic_app/smartnic_app_egr_p4_inst/vitisnetp4_egr_wrapper_inst/i_vitisnetp4_egr:$(VITISNETP4_EGR_DCP_FILE))
 
-# Re-run from link if either input DCP changes.
+# Re-run from link if any input DCP changes.
 # $(wildcard ...) omits missing files at parse time so Make doesn't demand
 # a rule to build them on first run; freshness tracking still works once
 # the files exist (subcomponent builds via _pre_synth create them).
-STAGE_DEPS = $(wildcard $(SHELL_DCP_FILE) $(CORE_DCP_FILE))
+STAGE_DEPS = $(wildcard $(SHELL_DCP_FILE) $(CORE_DCP_FILE) $(APP_DCP_FILE) $(VITISNETP4_IGR_DCP_FILE) $(VITISNETP4_EGR_DCP_FILE))
 
 # Implementation-only constraints from the shell board directory
 CONSTRAINTS_XDC_IMPL = \
