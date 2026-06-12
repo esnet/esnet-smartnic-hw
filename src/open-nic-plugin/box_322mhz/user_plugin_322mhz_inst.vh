@@ -61,5 +61,6 @@ smartnic #(
   .mod_rst_done                    (mod_rst_done[0]),
 
   .axil_aclk                       (axil_aclk),
-  .cmac_clk                        (cmac_clk)
+  .cmac_clk                        (cmac_clk),
+  .core_clk                        ()
 );

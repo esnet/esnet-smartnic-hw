@@ -65,6 +65,7 @@
 
     logic                      axil_aclk;
     logic       [NUM_CMAC-1:0] cmac_clk;
+    logic                      core_clk;
 
     // DUT instance
     smartnic #(.NUM_CMAC(NUM_CMAC)) DUT(.*);

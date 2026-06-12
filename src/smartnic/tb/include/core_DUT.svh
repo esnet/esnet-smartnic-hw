@@ -29,6 +29,7 @@
 
     logic start_rx = 1'b1;
     logic axis_clk;
+    initial force axis_clk = DUT.i_smartnic_wrapper.core_clk;  // temporarily wire axis_clk to core_clk.
 
     // Interfaces
     axi4l_intf axil_if ();

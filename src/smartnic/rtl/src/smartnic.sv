@@ -62,7 +62,8 @@ module smartnic
   output                      mod_rst_done,
 
   input                       axil_aclk,
-  input [NUM_CMAC-1:0]        cmac_clk
+  input [NUM_CMAC-1:0]        cmac_clk,
+  output                      core_clk
 );
 
   localparam int HOST_NUM_IFS = 3;
@@ -76,7 +77,6 @@ module smartnic
    wire                       axil_aresetn;
    wire [NUM_CMAC-1:0]        cmac_srst;
 
-   wire                       core_clk;
    wire                       __srst;
 
    wire                       clk_100mhz;
