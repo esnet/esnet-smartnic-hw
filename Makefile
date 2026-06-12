@@ -74,7 +74,7 @@ $(APP_DIR)/example:
 	@mkdir -p $@
 	@mkdir -p $@/.src
 
-bitfile : config config_check
+build_app : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo
 	@echo "----------------------------------------------------------"
@@ -88,6 +88,8 @@ bitfile : config config_check
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/build pre_synth APP_ROOT=$(APP_ROOT) BOARD=$(BOARD)
 	@echo
 	@echo "Done."
+
+bitfile : build_app
 	@echo "----------------------------------------------------------"
 	@echo "Preparing smartnic_250mhz IP ..."
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build pre_synth BOARD=$(BOARD)
@@ -136,7 +138,7 @@ endif
 clean_artifacts :
 	@-rm -rf $(ARTIFACTS_BUILD_DIR)
 
-.PHONY : config example bitfile package clean_build clean_artifacts
+.PHONY : config example build_app bitfile package clean_build clean_artifacts
 
 $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
 	@mkdir $(ARTIFACTS_BUILD_DIR)
@@ -214,7 +216,8 @@ versal_design:
 	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
 	@$(MAKE) -s -C $(SRC_ROOT) build \
 		COMPONENT=xilinx.alveo.versal.design.build \
-		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
+		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID) \
+		OUTPUT_ROOT=$(OUTPUT_ROOT)
 	@echo "Done."
 
 versal_pdi:

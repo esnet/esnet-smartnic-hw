@@ -28,6 +28,9 @@ export P4_EGR_FILE := $(CURDIR)/p4/$(APP_NAME)_egr.p4
 # Supports 'au280', 'au250' and 'au55c'.  Default is 'au55c'.
 #export BOARD := au55c
 
+# CORE - Name of core implementation to assemble into the shell.  Default is 'core.stub'.
+CORE ?= smartnic.core
+
 # AMD example design variables - used to generate the AMD example design (for xsim verilog simulation).
 # EXAMPLE_P4_FILE - Full pathname of p4 file used for example design generation (selects ingress or egress p4 program).
 # EXAMPLE_VITISNETP4_IP_NAME - Selects vitisnetp4 instance for example design.  Supports 'vitisnetp4_igr' (default) or 'vitisnetp4_egr'.
@@ -39,7 +42,12 @@ export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim_egr/test-fwd-p0
 
 #------- Targets -------
 build:
+ifeq ($(BOARD),av80)
+	@$(MAKE) -s -C $(SMARTNIC_DIR) build_app APP_DIR=$(CURDIR) OUTPUT_ROOT=$(CURDIR)/.app/out
+	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_design CORE=$(CORE)  OUTPUT_ROOT=$(CURDIR)/.app/out
+else
 	@$(MAKE) -s -C $(SMARTNIC_DIR) build APP_DIR=$(CURDIR)
+endif
 
 config:
 	@$(MAKE) -s -C $(SMARTNIC_DIR) config APP_DIR=$(CURDIR)
