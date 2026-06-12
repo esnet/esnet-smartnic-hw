@@ -13,8 +13,7 @@ module smartnic_reset #(
     output logic                core_clk,   // we synthesize this clock in this block
     output logic                core_srst,  // synchronous to core_clk (sync assert, sync deassert)
 
-    output logic                clk_100mhz,
-    output logic                hbm_ref_clk
+    output logic                clk_100mhz  // clk_100mhz is used to clock the AMD dbg_hub (see timing.xdc).
 );
 
     // ----------------------------------------------------------------
@@ -149,15 +148,14 @@ module smartnic_reset #(
     // ----------------------------------------------------------------
     // core clock domain is asynchronous wrt. CMAC domains, and is derived from the AXI-L clock via a PLL
     clk_wiz_0 axi_to_core_clk(
-         .clk_in1  ( axil_aclk ),
-         .clk_out1 ( core_clk )
+        .clk_in1  ( axil_aclk ),
+        .clk_out1 ( core_clk )
     );
 
     // Synthesize 100MHz clock
     clk_wiz_1 axi_to_clk_100mhz (
-        .clk_in1    ( axil_aclk ),
-        .clk_100mhz ( clk_100mhz ),
-        .hbm_ref_clk( hbm_ref_clk )
+        .clk_in1  ( axil_aclk ),
+        .clk_out1 ( clk_100mhz )
     );
 
 endmodule: smartnic_reset

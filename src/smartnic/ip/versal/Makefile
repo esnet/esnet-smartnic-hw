@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ..
+COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -26,8 +26,7 @@ include $(COMPONENT_ROOT)/config.mk
 # ----------------------------------------------------
 IP_LIST = \
     clk_wiz_0 \
-    clk_wiz_1 \
-    smartnic_hbm_clk_wiz
+    clk_wiz_1
 
 # ----------------------------------------------------
 # Simulation sources
@@ -52,12 +51,10 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    clk_wiz_0/clk_wiz_0_clk_wiz.v \
-    clk_wiz_0/clk_wiz_0.v \
-    clk_wiz_1/clk_wiz_1_clk_wiz.v \
-    clk_wiz_1/clk_wiz_1.v \
-    smartnic_hbm_clk_wiz/smartnic_hbm_clk_wiz_clk_wiz.v \
-    smartnic_hbm_clk_wiz/smartnic_hbm_clk_wiz.v
+#    clk_wiz_0/clk_wiz_0_clk_wiz.v \
+#    clk_wiz_0/clk_wiz_0.v \
+#    clk_wiz_1/clk_wiz_1_clk_wiz.v \
+#    clk_wiz_1/clk_wiz_1.v \
 
 IP_SIM_INC_DIRS =
 
