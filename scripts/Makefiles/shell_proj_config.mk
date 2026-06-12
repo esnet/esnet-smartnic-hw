@@ -183,6 +183,12 @@ $(__SPC_BUILD_SRC_DIR) $(__SPC_ESNET_DIR):
 SMARTNIC_BUILD_CMD = $(MAKE) -s -C $(__SPC_BUILD_SRC_DIR) \
     COMPONENT=esnet_smartnic.build BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
 
+# pdi is not in lib_base.mk's LIB_OPS, so bypass the lib layer and invoke
+# the generated component Makefile directly (TODO: add pdi to LIB_OPS in
+# esnet-fpga-library so this can use SMARTNIC_BUILD_CMD like the others).
+SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
+    BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
+
 .shell_proj_build: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_BUILD_CMD) build
 .PHONY: .shell_proj_build
@@ -192,7 +198,7 @@ SMARTNIC_BUILD_CMD = $(MAKE) -s -C $(__SPC_BUILD_SRC_DIR) \
 .PHONY: .shell_proj_build_clean
 
 .shell_proj_pdi: $(__SPC_CONFIGURED)
-	@$(SMARTNIC_BUILD_CMD) pdi
+	@$(SMARTNIC_COMP_CMD) pdi
 .PHONY: .shell_proj_pdi
 
 .shell_proj_info: $(__SPC_CONFIGURED)
