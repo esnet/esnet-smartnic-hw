@@ -77,7 +77,6 @@
     input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tlast,
     input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tid,
     input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tdest,
-    input  logic [(NUM_PORTS* 16)-1:0] axis_app_igr_tuser_pid,
 
     // AXI-S app_egr interface
     // (synchronous to core_clk domain)
@@ -88,9 +87,6 @@
     output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tlast,
     output logic [(NUM_PORTS*  4)-1:0] axis_app_egr_tid,
     output logic [(NUM_PORTS*  4)-1:0] axis_app_egr_tdest,
-    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_pid,
-    output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_trunc_enable,
-    output logic [(NUM_PORTS* 16)-1:0] axis_app_egr_tuser_trunc_length,
     output logic [(NUM_PORTS*  1)-1:0] axis_app_egr_tuser_rss_enable,
     output logic [(NUM_PORTS* 12)-1:0] axis_app_egr_tuser_rss_entropy,
 
@@ -103,7 +99,6 @@
     input  logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_h2c_tlast,
     input  logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_h2c_tid,
     input  logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_h2c_tdest,
-    input  logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_h2c_tuser_pid,
 
     // AXI-S h2c interface
     // (synchronous to core_clk domain)
@@ -114,9 +109,6 @@
     output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tlast,
     output logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_c2h_tid,
     output logic [(HOST_NUM_IFS*NUM_PORTS*  4)-1:0] axis_c2h_tdest,
-    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_pid,
-    output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_trunc_enable,
-    output logic [(HOST_NUM_IFS*NUM_PORTS* 16)-1:0] axis_c2h_tuser_trunc_length,
     output logic [(HOST_NUM_IFS*NUM_PORTS*  1)-1:0] axis_c2h_tuser_rss_enable,
     output logic [(HOST_NUM_IFS*NUM_PORTS* 12)-1:0] axis_c2h_tuser_rss_entropy,
 
