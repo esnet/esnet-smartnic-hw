@@ -235,8 +235,8 @@ set pcie0_params [list \
     CPM_PCIE0_PL_LINK_CAP_MAX_LINK_WIDTH    X8 \
     CPM_PCIE0_TL_PF_ENABLE_REG             2 \
     CPM_PCIE0_MSI_X_OPTIONS                 MSI-X_Internal \
-    CPM_PCIE0_EXT_PCIE_CFG_SPACE_ENABLED    Extended_Large \
-    CPM_PCIE0_CFG_EXT_IF                   1 \
+    CPM_PCIE0_EXT_PCIE_CFG_SPACE_ENABLED    None \
+    CPM_PCIE0_CFG_EXT_IF                   0 \
     CPM_PCIE0_COPY_PF0_QDMA_ENABLED       1 \
     CPM_PCIE0_CFG_VEND_ID                  10ee \
     CPM_PCIE0_PF0_CFG_DEV_ID               9038 \
