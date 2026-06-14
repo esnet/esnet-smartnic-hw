@@ -773,3 +773,55 @@ build_shell_av80:
   needs: []
   when: manual
   timeout: 8h
+
+build_fec_test_av80:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - |
+      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
+      if [[ ! -d "${ARMR5_BIN}" ]]; then
+        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
+      fi
+      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
+      echo "ARM R5 toolchain: ${ARMR5_BIN}"
+      export PATH="${ARMR5_BIN}:${PATH}"
+      make -s -C examples/fec_test config BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+      make -s -C examples/fec_test build  BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - examples/fec_test
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: manual
+  timeout: 8h
+
+build_udplb_fec_av80:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - |
+      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
+      if [[ ! -d "${ARMR5_BIN}" ]]; then
+        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
+      fi
+      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
+      echo "ARM R5 toolchain: ${ARMR5_BIN}"
+      export PATH="${ARMR5_BIN}:${PATH}"
+      make -s -C examples/udplb_fec config BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+      make -s -C examples/udplb_fec build  BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - examples/udplb_fec
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: manual
+  timeout: 8h
