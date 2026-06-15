@@ -9,7 +9,7 @@ from scapy.all import rdpcap, wrpcap
 from scapy.all import Ether, Dot1Q
 from scapy.all import IP, ARP, ICMP
 from scapy.all import IPOption, IPOption_EOL, IPOption_NOP, IPOption_Security, IPOption_LSRR, IPOption_Timestamp, IPOption_RR, IPOption_Stream_Id, IPOption_SSRR, IPOption_MTU_Probe, IPOption_MTU_Reply, IPOption_Traceroute, IPOption_Address_Extension, IPOption_Router_Alert, IPOption_SDBM
-from scapy.all import IPv6, ICMPv6ND_NS, ICMPv6ND_NA, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest, ICMPv6EchoReply
+from scapy.all import IPv6, ICMPv6ND_NS, ICMPv6ND_NA, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest, ICMPv6EchoReply, ICMPv6DestUnreach
 from scapy.all import UDP, TCP
 from scapy.all import ESP
 from scapy.all import checksum, in4_chksum, in6_chksum, raw, socket
@@ -165,6 +165,10 @@ class Library:
     @keyword
     def packet_ICMPv6EchoRequest(self, **kwargs):
         return ICMPv6EchoRequest(**kwargs)
+
+    @keyword
+    def packet_ICMPv6DestUnreach(self, **kwargs):
+        return ICMPv6DestUnreach(**kwargs)
 
     @keyword
     def packet_ICMPv6NDOptSrcLLAddr(self, **kwargs):
