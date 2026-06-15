@@ -156,11 +156,23 @@ class Library:
 
     @keyword
     def packet_layer_is_present(self, packet, layer_name):
-        return packet.haslayer(layer_name)
+        if not packet.haslayer(layer_name):
+            raise Failure("Required layer {} is NOT present in packet {}".format(
+                layer_name,
+                packet.summary()
+            ))
+        else:
+            return True
 
     @keyword
     def packet_layer_is_absent(self, packet, layer_name):
-        return not self.packet_layer_is_present(packet, layer_name)
+        if packet.haslayer(layer_name):
+            raise Failure("Prohibited layer {} IS present in packet {}".format(
+                layer_name,
+                packet.summary()
+            ))
+        else:
+            return True
 
     @keyword
     def packet_checksums_ok(self, packet):
