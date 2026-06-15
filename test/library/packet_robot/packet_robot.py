@@ -16,6 +16,7 @@ from scapy.all import checksum, in4_chksum, in6_chksum, raw, socket
 
 from scapy.all import load_contrib
 load_contrib('lldp')
+load_contrib('lacp')
 
 #---------------------------------------------------------------------------------------------------
 # TODO: Maybe auto-create layer keywords by introspection into the scapy layer list
@@ -55,6 +56,14 @@ class Library:
     @keyword
     def packet_lldp_endoflldppdu(self, **kwargs):
         return LLDPDUEndOfLLDPDU(**kwargs)
+
+    @keyword
+    def packet_lacp(self, **kwargs):
+        return LACP(**kwargs)
+
+    @keyword
+    def packet_slowprotocol(self, **kwargs):
+        return SlowProtocol(**kwargs)
 
     @keyword
     def packet_dot1q(self, **kwargs):
