@@ -14,6 +14,9 @@ from scapy.all import UDP, TCP
 from scapy.all import ESP
 from scapy.all import checksum, in4_chksum, in6_chksum, raw, socket
 
+from scapy.all import load_contrib
+load_contrib('lldp')
+
 #---------------------------------------------------------------------------------------------------
 # TODO: Maybe auto-create layer keywords by introspection into the scapy layer list
 @library
@@ -24,6 +27,34 @@ class Library:
     @keyword
     def packet_ether(self, **kwargs):
         return Ether(**kwargs)
+
+    @keyword
+    def packet_lldp(self, **kwargs):
+        return LLDPDU(**kwargs)
+
+    @keyword
+    def packet_lldp_chassisid(self, **kwargs):
+        return LLDPDUChassisID(**kwargs)
+
+    @keyword
+    def packet_lldp_portid(self, **kwargs):
+        return LLDPDUPortID(**kwargs)
+
+    @keyword
+    def packet_lldp_timetolive(self, **kwargs):
+        return LLDPDUTimeToLive(**kwargs)
+
+    @keyword
+    def packet_lldp_systemname(self, **kwargs):
+        return LLDPDUSystemName(**kwargs)
+
+    @keyword
+    def packet_lldp_systemdescription(self, **kwargs):
+        return LLDPDUSystemDescription(**kwargs)
+
+    @keyword
+    def packet_lldp_endoflldppdu(self, **kwargs):
+        return LLDPDUEndOfLLDPDU(**kwargs)
 
     @keyword
     def packet_dot1q(self, **kwargs):
