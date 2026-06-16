@@ -51,18 +51,19 @@ module xilinx_alveo_shell
     logic clk_250mhz;
     logic clk_333mhz;
 
-    assign shell_if.clk       = clk;
-    assign shell_if.srst      = srst;
-    assign shell_if.mgmt_clk  = axil_if.aclk;
-    assign shell_if.mgmt_srst = !axil_if.aresetn;
-    assign shell_if.clk_100mhz = clk_100mhz;
-
     // =========================================================================
     // Shell adaptation layer
     // (maps shell_intf signals to/from axi4l_intf / axi4s_intf)
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
+        .clk,
+        .srst,
+        .mgmt_clk   ( axil_if.aclk    ),
+        .mgmt_srst  ( !axil_if.aresetn ),
+        .clk_100mhz,
+        .port_clk   ( '{default: clk}  ),
+        .port_srst  ( '{default: srst} ),
         .axil_if,
         .axis_port_rx,
         .axis_port_tx,

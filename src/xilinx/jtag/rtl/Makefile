@@ -23,12 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    sync.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
-    xilinx.alveo.pkg \
-    xilinx.jtag.rtl
-
+    xilinx.jtag.ip
 EXT_LIBS =
 
 # ----------------------------------------------------
@@ -47,12 +42,13 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 all: compile synth
 
+pre:     _compile_pre
 compile: _compile_sim
 synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all compile synth info clean
+.PHONY: all pre compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets
