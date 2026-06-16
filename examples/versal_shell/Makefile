@@ -1,40 +1,19 @@
-#------- Mandatory variables -------
+# Versal shell example build
 
-# SMARTNIC_DIR must be set to the pathname of smartnic root directory.
-SMARTNIC_DIR := ../..
+.DEFAULT_GOAL := pdi
 
-#------- Optional variables -------
+SMARTNIC_ROOT  := $(abspath ../..)
+BOARD          ?= av80
+CORE_BUILD_REF ?= core.stub.build
 
-# The following variables are optionally configured in this Makefile, or on the command line.
-# If NOT configured, each of these variables gets a default value (as specified below)
+include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_proj_config.mk
 
-# APP_NAME - Application name. Used for default naming conventions below.
-export APP_NAME := $(notdir $(abspath $(CURDIR)))
+build:       .shell_proj_build
+pdi:         .shell_proj_pdi
+info:        .shell_proj_info
+build_clean: .shell_proj_build_clean
+clean:       .shell_proj_clean
+clean_all:   .shell_proj_clean_all
+restore:     .shell_proj_restore
 
-# P4_FILE - Full pathname of application p4 file.
-export P4_IGR_FILE = $(CURDIR)/p4/$(APP_NAME).p4
-
-# ARTIFACTS_DIR - Full pathname of root artifacts directory.
-#export ARTIFACTS_DIR := $(CURDIR)/artifacts
-
-# BUILD_NAME - Name of subdirectory for artifacts of latest build i.e. artifacts go to $(ARTIFACTS_DIR)/$(BUILD_NAME)
-#export BUILD_NAME := esnet-smartnic-$(APP_NAME)
-
-# BOARD - Name of AMD (Xilinx) Alveo board for Versal builds.
-#export VERSAL_BOARD ?= av80
-
-# CORE - Name of core implementation to assemble into the shell.
-# Default is 'stub'.
-CORE ?= core.stub
-
-#------- Targets -------
-build:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_design CORE=$(CORE)
-
-shell_ooc:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_shell_ooc
-
-core_ooc:
-	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_core_ooc CORE=$(CORE)
-
-.PHONY: build shell_ooc core_ooc
+.PHONY: build pdi info build_clean clean clean_all restore

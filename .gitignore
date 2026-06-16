@@ -47,3 +47,8 @@ xsim.log
 ######################
 **/.app
 **/.out
+
+# Claude Code        #
+######################
+.claude/
+CLAUDE.md

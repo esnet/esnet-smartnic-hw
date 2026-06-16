@@ -29,13 +29,21 @@
     output wire [0:0]  CH0_DDR4_0_1_par,
     output wire [0:0]  CH0_DDR4_0_1_reset_n,
 
-    // PCIe
+    // PCIe — PCIE1 (AVED-managed endpoint)
     input  wire       gt_pcie_refclk_clk_n,
     input  wire       gt_pcie_refclk_clk_p,
     input  wire [7:0] gt_pciea1_grx_n,
     input  wire [7:0] gt_pciea1_grx_p,
     output wire [7:0] gt_pciea1_gtx_n,
     output wire [7:0] gt_pciea1_gtx_p,
+
+    // PCIe — PCIE0 (user application endpoint)
+    input  wire       gt_pcie0_refclk_clk_n,
+    input  wire       gt_pcie0_refclk_clk_p,
+    input  wire [7:0] gt_pciea0_grx_n,
+    input  wire [7:0] gt_pciea0_grx_p,
+    output wire [7:0] gt_pciea0_gtx_n,
+    output wire [7:0] gt_pciea0_gtx_p,
 
     // HBM
     input  wire       hbm_ref_clk_0_clk_n,

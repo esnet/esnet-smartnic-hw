@@ -763,11 +763,11 @@ build_shell_av80:
   tags:
     - ht-synth
   script:
-    - make versal_pdi
+    - make -s -C examples/versal_shell pdi
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
-      - .out
+      - examples/versal_shell/build
     when: always
     expire_in: 2 weeks
   needs: []
