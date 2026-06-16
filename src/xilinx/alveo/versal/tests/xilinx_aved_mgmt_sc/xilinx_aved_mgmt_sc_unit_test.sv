@@ -29,13 +29,15 @@ module xilinx_aved_mgmt_sc_unit_test;
     // =========================================================================
     logic aclk;
     logic aresetn;
+    wire  pcie_rstn_in;  // adapter output → shell input (pre-JTAG combined reset)
+    wire  pcie_rstn;     // shell output → adapter input (post-JTAG reset)
 
     // =========================================================================
     // M04 boundary port wires
     //   Mode Master on the BD means these drive out from the BD and are inputs
     //   to xilinx_aved_adapter (which is a slave of the management bus).
     // =========================================================================
-    wire [31:0] m_axi_usr_mgmt_awaddr;
+    wire [41:0] m_axi_usr_mgmt_awaddr;
     wire [2:0]  m_axi_usr_mgmt_awprot;
     wire        m_axi_usr_mgmt_awvalid;
     wire        m_axi_usr_mgmt_awready;
@@ -46,7 +48,7 @@ module xilinx_aved_mgmt_sc_unit_test;
     wire [1:0]  m_axi_usr_mgmt_bresp;
     wire        m_axi_usr_mgmt_bvalid;
     wire        m_axi_usr_mgmt_bready;
-    wire [31:0] m_axi_usr_mgmt_araddr;
+    wire [41:0] m_axi_usr_mgmt_araddr;
     wire [2:0]  m_axi_usr_mgmt_arprot;
     wire        m_axi_usr_mgmt_arvalid;
     wire        m_axi_usr_mgmt_arready;
@@ -70,6 +72,14 @@ module xilinx_aved_mgmt_sc_unit_test;
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .clk_pl                    ( aclk    ),
         .resetn_pl_periph          ( aresetn ),
+        .clk_pcie0                 ( aclk    ),
+        .aresetn_pl0               ( aresetn ),
+        .aresetn_pcie0_link        ( aresetn ),
+        .sys_clk                   (             ),
+        .pcie_clk                  (             ),
+        .pcie_rstn_in              ( pcie_rstn_in ),
+        .pcie_rstn                 ( pcie_rstn    ),
+        .resetn_pcie0              (             ),
         .m_axi_usr_mgmt_awaddr,
         .m_axi_usr_mgmt_awprot,
         .m_axi_usr_mgmt_awvalid,
@@ -89,11 +99,130 @@ module xilinx_aved_mgmt_sc_unit_test;
         .m_axi_usr_mgmt_rresp,
         .m_axi_usr_mgmt_rvalid,
         .m_axi_usr_mgmt_rready,
+        // PCIE0 BAR2 AXI4 — not exercised
+        .m_axi_pcie0_awaddr       ( '0 ),
+        .m_axi_pcie0_awid         ( '0 ),
+        .m_axi_pcie0_awlen        ( '0 ),
+        .m_axi_pcie0_awsize       ( '0 ),
+        .m_axi_pcie0_awburst      ( '0 ),
+        .m_axi_pcie0_awlock       ( '0 ),
+        .m_axi_pcie0_awcache      ( '0 ),
+        .m_axi_pcie0_awprot       ( '0 ),
+        .m_axi_pcie0_awqos        ( '0 ),
+        .m_axi_pcie0_awregion     ( '0 ),
+        .m_axi_pcie0_awuser       ( '0 ),
+        .m_axi_pcie0_awvalid      ( '0 ),
+        .m_axi_pcie0_awready      (    ),
+        .m_axi_pcie0_wdata        ( '0 ),
+        .m_axi_pcie0_wstrb        ( '0 ),
+        .m_axi_pcie0_wlast        ( '0 ),
+        .m_axi_pcie0_wvalid       ( '0 ),
+        .m_axi_pcie0_wready       (    ),
+        .m_axi_pcie0_bid          (    ),
+        .m_axi_pcie0_bresp        (    ),
+        .m_axi_pcie0_bvalid       (    ),
+        .m_axi_pcie0_bready       ( '0 ),
+        .m_axi_pcie0_araddr       ( '0 ),
+        .m_axi_pcie0_arid         ( '0 ),
+        .m_axi_pcie0_arlen        ( '0 ),
+        .m_axi_pcie0_arsize       ( '0 ),
+        .m_axi_pcie0_arburst      ( '0 ),
+        .m_axi_pcie0_arlock       ( '0 ),
+        .m_axi_pcie0_arcache      ( '0 ),
+        .m_axi_pcie0_arprot       ( '0 ),
+        .m_axi_pcie0_arqos        ( '0 ),
+        .m_axi_pcie0_arregion     ( '0 ),
+        .m_axi_pcie0_aruser       ( '0 ),
+        .m_axi_pcie0_arvalid      ( '0 ),
+        .m_axi_pcie0_arready      (    ),
+        .m_axi_pcie0_rdata        (    ),
+        .m_axi_pcie0_rid          (    ),
+        .m_axi_pcie0_rresp        (    ),
+        .m_axi_pcie0_rlast        (    ),
+        .m_axi_pcie0_rvalid       (    ),
+        .m_axi_pcie0_rready       ( '0 ),
+        // PCIE0 DMA streams — not exercised
+        .dma0_m_axis_h2c_0_tvalid   ( '0 ),
+        .dma0_m_axis_h2c_0_tdata    ( '0 ),
+        .dma0_m_axis_h2c_0_tlast    ( '0 ),
+        .dma0_m_axis_h2c_0_tready   (    ),
+        .dma0_m_axis_h2c_0_qid      ( '0 ),
+        .dma0_m_axis_h2c_0_port_id  ( '0 ),
+        .dma0_m_axis_h2c_0_mdata    ( '0 ),
+        .dma0_m_axis_h2c_0_mty      ( '0 ),
+        .dma0_m_axis_h2c_0_tcrc     ( '0 ),
+        .dma0_m_axis_h2c_0_err      ( '0 ),
+        .dma0_m_axis_h2c_0_zero_byte ( '0 ),
+        .dma0_s_axis_c2h_0_tvalid        (    ),
+        .dma0_s_axis_c2h_0_tdata         (    ),
+        .dma0_s_axis_c2h_0_tlast         (    ),
+        .dma0_s_axis_c2h_0_tready        ( '0 ),
+        .dma0_s_axis_c2h_0_ctrl_qid      (    ),
+        .dma0_s_axis_c2h_0_ctrl_len      (    ),
+        .dma0_s_axis_c2h_0_ctrl_port_id  (    ),
+        .dma0_s_axis_c2h_0_ctrl_has_cmpt (    ),
+        .dma0_s_axis_c2h_0_ctrl_marker   (    ),
+        .dma0_s_axis_c2h_0_mty           (    ),
+        .dma0_s_axis_c2h_0_ecc           (    ),
+        .dma0_s_axis_c2h_0_tcrc          (    ),
+        .dma0_s_axis_c2h_cmpt_0_tvalid          (    ),
+        .dma0_s_axis_c2h_cmpt_0_data            (    ),
+        .dma0_s_axis_c2h_cmpt_0_size            (    ),
+        .dma0_s_axis_c2h_cmpt_0_qid             (    ),
+        .dma0_s_axis_c2h_cmpt_0_port_id         (    ),
+        .dma0_s_axis_c2h_cmpt_0_cmpt_type       (    ),
+        .dma0_s_axis_c2h_cmpt_0_wait_pld_pkt_id (    ),
+        .dma0_s_axis_c2h_cmpt_0_dpar            (    ),
+        .dma0_s_axis_c2h_cmpt_0_col_idx         (    ),
+        .dma0_s_axis_c2h_cmpt_0_err_idx         (    ),
+        .dma0_s_axis_c2h_cmpt_0_user_trig       (    ),
+        .dma0_s_axis_c2h_cmpt_0_marker          (    ),
+        .dma0_s_axis_c2h_cmpt_0_no_wrb_marker   (    ),
+        .dma0_s_axis_c2h_cmpt_0_tready          ( '0 ),
+        .dma0_dsc_crdt_in_0_crdt   (    ),
+        .dma0_dsc_crdt_in_0_dir    (    ),
+        .dma0_dsc_crdt_in_0_fence  (    ),
+        .dma0_dsc_crdt_in_0_qid    (    ),
+        .dma0_dsc_crdt_in_0_valid  (    ),
+        .dma0_dsc_crdt_in_0_rdy    ( '0 ),
+        .dma0_qsts_out_0_data      ( '0 ),
+        .dma0_qsts_out_0_op        ( '0 ),
+        .dma0_qsts_out_0_port_id   ( '0 ),
+        .dma0_qsts_out_0_qid       ( '0 ),
+        .dma0_qsts_out_0_vld       ( '0 ),
+        .dma0_qsts_out_0_rdy       (    ),
+        .dma0_tm_dsc_sts_0_avl     ( '0 ),
+        .dma0_tm_dsc_sts_0_byp     ( '0 ),
+        .dma0_tm_dsc_sts_0_dir     ( '0 ),
+        .dma0_tm_dsc_sts_0_error   ( '0 ),
+        .dma0_tm_dsc_sts_0_irq_arm ( '0 ),
+        .dma0_tm_dsc_sts_0_mm      ( '0 ),
+        .dma0_tm_dsc_sts_0_pidx    ( '0 ),
+        .dma0_tm_dsc_sts_0_port_id ( '0 ),
+        .dma0_tm_dsc_sts_0_qen     ( '0 ),
+        .dma0_tm_dsc_sts_0_qid     ( '0 ),
+        .dma0_tm_dsc_sts_0_qinv    ( '0 ),
+        .dma0_tm_dsc_sts_0_rdy     (    ),
+        .dma0_tm_dsc_sts_0_valid   ( '0 ),
+        .dma0_usr_irq_0_vec        (    ),
+        .dma0_usr_irq_0_fnc        (    ),
+        .dma0_usr_irq_0_valid      (    ),
+        .dma0_usr_irq_0_ack        ( '0 ),
+        .dma0_usr_irq_0_fail       ( '0 ),
+        .dma0_usr_flr_0_fnc        ( '0 ),
+        .dma0_usr_flr_0_set        ( '0 ),
+        .dma0_usr_flr_0_clear      (    ),
+        .dma0_usr_flr_0_done_fnc   (    ),
+        .dma0_usr_flr_0_done_vld   (    ),
         .axil_if ( axil_app_if )
     );
 
-    xilinx_aved_shell_adapter i_xilinx_aved_shell_adapter (
-        .axil_if  ( axil_app_if ),
+    xilinx_alveo_versal_shell i_xilinx_alveo_versal_shell (
+        .sys_clk      ( aclk         ),
+        .pcie_clk     ( aclk         ),
+        .pcie_rstn_in ( pcie_rstn_in ),
+        .pcie_rstn    ( pcie_rstn    ),
+        .axil_if      ( axil_app_if  ),
         .shell_if
     );
 
