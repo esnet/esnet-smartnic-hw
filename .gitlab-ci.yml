@@ -273,11 +273,17 @@ shell_ip_au280:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au280
+  rules:
+    - when: manual
+      allow_failure: true
 
 shell_ip_au55c:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 .bitfile:
   stage: bitfile
@@ -348,6 +354,9 @@ build_p4_only_u280:
   needs:
     - ons_ip_au280
     - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_only_u55c:
   extends: .bitfile
@@ -391,6 +400,9 @@ build_p4_multi_proc_u55c:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_proxy_test_u280:
   extends: .bitfile
@@ -771,7 +783,7 @@ build_shell_av80:
     when: always
     expire_in: 2 weeks
   needs: []
-  when: manual
+  when: always
   timeout: 8h
 
 build_fec_test_av80:
@@ -797,7 +809,7 @@ build_fec_test_av80:
     when: always
     expire_in: 2 weeks
   needs: []
-  when: manual
+  when: always
   timeout: 8h
 
 build_udplb_fec_av80:
