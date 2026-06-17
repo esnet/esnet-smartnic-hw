@@ -24,6 +24,7 @@ artifacts/
 **/tests*/*/*.wcfg
 xvlog*.log
 xvlog.pb
+xvhdl.pb
 xelab*.log
 xelab.pb
 xsim.jou
