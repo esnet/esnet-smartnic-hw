@@ -259,7 +259,7 @@ set pcie0_params [list \
     CPM_PCIE0_PF0_BAR2_QDMA_TYPE          AXI_Bridge_Master \
     CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2   0x0000020300000000 \
     CPM_PCIE0_DMA_INTF                     AXI4S \
-    CPM_PCIE0_PF1_CFG_DEV_ID              9039 \
+    CPM_PCIE0_PF1_CFG_DEV_ID              9138 \
     CPM_PCIE0_SRIOV_CAP_ENABLE             1 \
     CPM_PCIE0_PF0_SRIOV_CAP_TOTAL_VF      4 \
     CPM_PCIE0_PF0_SRIOV_CAP_INITIAL_VF    4 \
