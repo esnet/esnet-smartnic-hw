@@ -173,8 +173,10 @@ module xilinx_aved_adapter (
     output wire         dma0_usr_flr_0_done_vld,
 
     // AXI4-L controller output — driven from PCIE0 BAR2
+    // (axil_if.aclk is driven from clk_pl)
     axi4l_intf.controller axil_if
 );
+
     // =========================================================================
     // PCIE1 management path — terminated at stub core_reg_blk
     //
@@ -238,6 +240,8 @@ module xilinx_aved_adapter (
     // actual transfer width).  axi4l_from_axi4_adapter extracts the active
     // 32-bit word and drives the downstream AXI4-L register fabric.
     // =========================================================================
+    axi4l_intf axil_if__clk_pcie0 ();
+
     axi4_intf #(
         .DATA_BYTE_WID ( 64 ),
         .ADDR_WID      ( 64 ),
@@ -308,7 +312,13 @@ module xilinx_aved_adapter (
         .aclk    ( clk_pcie0    ),
         .aresetn ( pcie_rstn    ),
         .axi4_if ( pcie0_axi4_if ),
-        .axi4l_if( axil_if      )
+        .axi4l_if( axil_if__clk_pcie0 )
+    );
+
+    axi4l_intf_cdc i_axi4l_intf_cdc (
+        .axi4l_if_from_controller ( axil_if__clk_pcie0 ),
+        .clk_to_peripheral        ( clk_pl ),
+        .axi4l_if_to_peripheral   ( axil_if )
     );
 
     // =========================================================================
