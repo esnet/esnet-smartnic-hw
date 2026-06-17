@@ -76,7 +76,6 @@ module smartnic_app
     input  logic [(NUM_PORTS*  1)-1:0] axis_app_igr_tlast,
     input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tid,
     input  logic [(NUM_PORTS*  4)-1:0] axis_app_igr_tdest,
-    input  logic [(NUM_PORTS* 16)-1:0] axis_app_igr_tuser_pid,
 
     // AXI-S app_egr interface
     // (synchronous to core_clk domain)

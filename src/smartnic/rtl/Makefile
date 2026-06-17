@@ -33,9 +33,7 @@ ifeq ($(BOARD),au250)
 else ifeq ($(BOARD),av80)
     HBM_SUBCOMPONENTS =
 else
-    HBM_SUBCOMPONENTS = \
-        xilinx.hbm.pkg \
-        xilinx.hbm.rtl
+    HBM_SUBCOMPONENTS = xilinx.hbm.rtl
 endif
 
 SUBCOMPONENTS = \
@@ -50,6 +48,7 @@ SUBCOMPONENTS = \
     mem.infra.rtl@common \
     axi3.rtl@common \
     packet.rtl@common \
+    xilinx.hbm.pkg \
     $(HBM_SUBCOMPONENTS)
 #    xilinx.axis.rtl \
 

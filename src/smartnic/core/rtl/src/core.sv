@@ -116,6 +116,7 @@ module smartnic_wrapper
     wire logic [NUM_PORTS-1:0]       s_axis_cmac_rx_322mhz_tready;
 
     wire logic [NUM_PORTS-1:0]       cmac_clk;
+    wire logic                       core_clk;
 
     dma_st_axis_tuser_t axis_h2c_tuser;
     dma_st_axis_tid_t   axis_h2c_tid;
@@ -160,7 +161,8 @@ module smartnic_wrapper
             port_axis_tuser_t axis_port_rx_tuser;
             port_axis_tuser_t axis_port_tx_tuser;
 
-            assign cmac_clk[g_port] = axis_port_rx[g_port].aclk;
+            // temporarily connect cmac clocks to core_clk (prior to DCMAC instantiations).
+            assign cmac_clk[g_port] = core_clk; // axis_port_rx[g_port].aclk;
 
             // CMAC Rx
             assign s_axis_cmac_rx_322mhz_tvalid[g_port]            = axis_port_rx[g_port].tvalid;
