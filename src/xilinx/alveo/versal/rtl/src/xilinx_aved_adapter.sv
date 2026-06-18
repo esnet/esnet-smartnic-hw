@@ -1,21 +1,18 @@
 module xilinx_aved_adapter (
     // Clocks and resets from AVED BD
     input  wire        clk_pl,
-    input  wire        resetn_pl_periph,
     input  wire        clk_pcie0,
-
-    // PCIE0 raw reset sources (inputs from BD)
+    input  wire        resetn_pl_periph,
     input  wire        aresetn_pl0,
     input  wire        aresetn_pcie0_link,
 
     // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
-    output wire        sys_clk,       // system/debug clock → shell
-    output wire        pcie_clk,      // PCIe interface clock → shell
-    output wire        pcie_rstn_in,  // combined pre-JTAG reset → shell
-    input  wire        pcie_rstn,     // post-JTAG reset ← shell
+    output wire        sys_clk,      // system/debug clock → shell
+    output wire        pcie_clk,     // PCIe interface clock → shell
+    output wire        pci_rstn_in,  // pre-JTAG reset → shell (aresetn_pcie0_link proxy for perst#)
+    input  wire        pci_rstn,     // post-JTAG reset ← shell (not yet wired to CPM5)
 
-    // BD-facing reset output — named to match the AVED BD wrapper port.
-    // Driven from pcie_rstn; connects to cips/dma0_intrfc_resetn via .* on top_i.
+    // BD-facing reset output — feeds cips/dma0_intrfc_resetn via .* on top_i.
     output wire        resetn_pcie0,
 
     // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
@@ -177,7 +174,7 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_from_signals (
-        .aclk     ( clk_pcie0              ),
+        .aclk     ( clk_pcie0      ),
         .awid     ( m_axi_pcie0_awid      ),
         .awaddr   ( m_axi_pcie0_awaddr    ),
         .awlen    ( m_axi_pcie0_awlen     ),
@@ -231,8 +228,8 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_axi4l_from_axi4 (
-        .aclk    ( clk_pcie0    ),
-        .aresetn ( pcie_rstn    ),
+        .aclk    ( clk_pcie0 ),
+        .aresetn ( aresetn_pcie0_link ),
         .axi4_if ( pcie0_axi4_if ),
         .axi4l_if( axil_if__clk_pcie0 )
     );
@@ -298,8 +295,7 @@ module xilinx_aved_adapter (
     // Signal naming adaptation — AVED-specific names → functional shell names
     assign sys_clk      = clk_pl;
     assign pcie_clk     = clk_pcie0;
-    assign pcie_rstn_in = aresetn_pl0 & aresetn_pcie0_link;
-    // Map post-JTAG reset to the BD boundary port name so .* on top_i resolves it.
-    assign resetn_pcie0 = pcie_rstn;
+    assign pci_rstn_in  = aresetn_pcie0_link;
+    assign resetn_pcie0 = pci_rstn;
 
 endmodule : xilinx_aved_adapter

@@ -26,12 +26,12 @@ module xilinx_alveo_versal_shell_unit_test;
     shell_intf shell_if ();
 
     // =========================================================================
-    // PCIe reset signals — shell needs these to synthesise pcie_rstn.
+    // PCIe reset signals — shell needs these to synthesise pci_rstn.
     // Driven in lockstep with the management reset since no real PCIe link
     // is present in simulation.
     // =========================================================================
-    logic pcie_rstn_in = 1'b0;
-    wire  pcie_rstn;
+    logic pci_rstn_in = 1'b0;
+    wire  pci_rstn;
 
     // =========================================================================
     // DUT: xilinx_alveo_versal_shell
@@ -39,10 +39,10 @@ module xilinx_alveo_versal_shell_unit_test;
     //   core.stub is connected via shell_if.
     // =========================================================================
     xilinx_alveo_versal_shell DUT (
-        .sys_clk      ( axil_if.aclk  ),
-        .pcie_clk     ( axil_if.aclk  ),
-        .pcie_rstn_in ( pcie_rstn_in  ),
-        .pcie_rstn    ( pcie_rstn     ),
+        .sys_clk     ( axil_if.aclk ),
+        .pcie_clk    ( axil_if.aclk ),
+        .pci_rstn_in ( pci_rstn_in  ),
+        .pci_rstn    ( pci_rstn     ),
         .axil_if,
         .shell_if
     );
@@ -70,10 +70,10 @@ module xilinx_alveo_versal_shell_unit_test;
         svunit_ut.setup();
         axil_if.idle_controller();
         axil_if.aresetn = 1'b0;
-        pcie_rstn_in    = 1'b0;
+        pci_rstn_in     = 1'b0;
         repeat (8) @(posedge axil_if.aclk);
         axil_if.aresetn = 1'b1;
-        pcie_rstn_in    = 1'b1;
+        pci_rstn_in     = 1'b1;
         repeat (4) @(posedge axil_if.aclk);
     endtask
 

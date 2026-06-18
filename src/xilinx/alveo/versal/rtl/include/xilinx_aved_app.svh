@@ -1,27 +1,18 @@
     // Clocks from BD
     wire        clk_pl;
-
-    // Resets from BD (active-low)
-    wire        resetn_pl_ic;
-    wire        resetn_pl_periph;
-
-    // PCIE0 clock (from BD)
     wire        clk_pcie0;
 
-    // PCIE0 raw reset sources (from BD, active-low outputs)
-    wire        aresetn_pl0;          // PS global reset
+    // Resets from BD (active-low)
+    wire        resetn_pl_periph;
+    wire        aresetn_pl0;          // PS global reset (raw, asynchronous)
     wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
-
-    // PCIE0 BD reset port — named to match the AVED BD wrapper.
-    // xilinx_aved_adapter maps this to/from pcie_rstn internally.
-    wire        resetn_pcie0;
+    wire        resetn_pcie0;         // synthesised reset → dma0_intrfc_resetn
 
     // Shell-facing signals — functional names used above the adapter layer.
-    // xilinx_aved_adapter drives/receives these and maps to AVED BD names.
-    wire        sys_clk;       // system/debug clock
-    wire        pcie_clk;      // PCIe interface clock
-    wire        pcie_rstn_in;  // combined pre-JTAG reset (active-low)
-    wire        pcie_rstn;     // post-JTAG synthesised reset (active-low)
+    wire        sys_clk;      // system/debug clock
+    wire        pcie_clk;     // PCIe interface clock
+    wire        pci_rstn_in;  // pre-JTAG reset (active-low)
+    wire        pci_rstn;     // post-JTAG synthesised reset (active-low)
 
     // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)
     // Signal widths taken from the Vivado-generated BD wrapper.

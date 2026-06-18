@@ -25,11 +25,11 @@ module xilinx_alveo_versal_shell
     // PCIe interface clock
     input  wire logic       pcie_clk,
 
-    // PCIe reset — pre-JTAG synthesis input (active-low, all sources ANDed)
-    input  wire logic       pcie_rstn_in,
+    // PCIe reset — pre-JTAG synthesis input (active-low)
+    input  wire logic       pci_rstn_in,
 
     // PCIe reset — post-JTAG synthesis output (active-low)
-    output wire logic       pcie_rstn,
+    output wire logic       pci_rstn,
 
     // Management AXI4-Lite from xilinx_aved_adapter
     axi4l_intf.peripheral   axil_if,
@@ -44,8 +44,8 @@ module xilinx_alveo_versal_shell
     xilinx_alveo i_xilinx_alveo (
         .sys_clk_100mhz ( sys_clk      ),
         .pci_clk        ( pcie_clk     ),
-        .pci_rstn_in    ( pcie_rstn_in ),
-        .pci_rstn_out   ( pcie_rstn    )
+        .pci_rstn_in    ( pci_rstn_in ),
+        .pci_rstn_out   ( pci_rstn    )
     );
 
     // =========================================================================

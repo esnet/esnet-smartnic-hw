@@ -46,8 +46,8 @@ module esnet_smartnic
     ) i_xilinx_alveo_versal_shell (
         .sys_clk      ( sys_clk      ),
         .pcie_clk     ( pcie_clk     ),
-        .pcie_rstn_in ( pcie_rstn_in ),
-        .pcie_rstn    ( pcie_rstn    ),
+        .pci_rstn_in ( pci_rstn_in ),
+        .pci_rstn    ( pci_rstn    ),
         .axil_if      ( axil_debug_if ),
         .shell_if
     );

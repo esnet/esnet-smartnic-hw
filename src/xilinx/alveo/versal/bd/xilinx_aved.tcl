@@ -18,42 +18,35 @@ create_root_design ""
 #
 # Adds to the BD boundary:
 #
-#   1. Clock / reset outputs — clk_pl and its resets
-#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, and reset ports
+#   1. Clock / reset outputs — clk_pl (pl0_ref_clk) and resetn_pl_periph
+#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, clock, and reset ports
 #
 # =============================================================================
 
 # =========================================================================
 # 1. Clock / reset outputs
 #
-# clk_pl (pl0_ref_clk, 100 MHz) and its resets are internal-only in the
-# AMD base design.  BD ports are added and connected onto the existing
-# internal nets.  No internal logic is added or modified.
+# clk_pl (pl0_ref_clk) and resetn_pl_periph are internal-only in the AMD
+# base design.  BD ports are added and connected onto the existing internal
+# nets.  No internal logic is added or modified.
+#
+# FREQ_HZ is intentionally not set on the clock port — Vivado propagates
+# the frequency from the CRP configuration through the net automatically,
+# so the port annotation is redundant and could become stale if the
+# CRP frequency is ever changed.
 # =========================================================================
 
-# -- Clock ----------------------------------------------------------------
 create_bd_port -dir O -type clk clk_pl
-
-# FREQ_HZ is intentionally not set here — Vivado propagates the actual
-# frequency from the CRP through the net, which is more accurate than
-# any nominal value we could specify.
 
 connect_bd_net [get_bd_ports clk_pl] \
     [get_bd_pins cips/pl0_ref_clk]
 
-# -- Resets ---------------------------------------------------------------
-# proc_sys_reset produces two flavours of active-low resetn:
-#   ic     (interconnect_aresetn) — for AXI interconnects
-#   periph (peripheral_aresetn)  — for peripheral IP
+create_bd_port -dir O -from 0 -to 0 -type rst resetn_pl_periph
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pl_periph]
 
-foreach {port_name pin_path} {
-    resetn_pl_ic        clock_reset/resetn_pl_ic
-    resetn_pl_periph    clock_reset/resetn_pl_periph
-} {
-    create_bd_port -dir O -from 0 -to 0 -type rst $port_name
-    connect_bd_net [get_bd_ports $port_name] \
-        [get_bd_pins $pin_path]
-}
+connect_bd_net \
+    [get_bd_pins clock_reset/resetn_pl_periph] \
+    [get_bd_ports resetn_pl_periph]
 
 # =========================================================================
 # 2. PCIE0 — user application endpoint (QDMA mode, X8)
@@ -68,7 +61,7 @@ foreach {port_name pin_path} {
 # the AVED BD.
 #
 # BAR0 base: 0x0000_0203_0000_0000 (distinct from PCIE1's 0x0000_0201_…).
-# BAR0 non-prefetchable — same reason as the PCIE1 fix above.
+# BAR0 non-prefetchable to suppress speculative cache-line read-ahead.
 # =========================================================================
 
 # -------------------------------------------------------------------------
@@ -140,7 +133,7 @@ set_property CONFIG.CPM_CONFIG \
 
 # Validate after CPM_CONFIG changes so Vivado surfaces the new PCIE0 pins
 # (PCIE0_GT, gt_refclk0, dma0_intrfc_clk, dma0_intrfc_resetn) on the CIPS
-# cell before sections 3b and 3c reference them.
+# cell before sections 2b and 2c reference them.
 validate_bd_design -quiet
 
 # -------------------------------------------------------------------------
@@ -163,31 +156,32 @@ connect_bd_intf_net \
     [get_bd_intf_pins cips/gt_refclk0]
 
 # -------------------------------------------------------------------------
-# 2c. PCIE0 interface clock and independent reset
+# 2c. PCIE0 interface clock and reset
 #
-# dma0_intrfc_clk is a CIPS input driven by pl2_ref_clk (250 MHz),
-# matching the base design's treatment of dma1_intrfc_clk.
+# clk_pcie0 is pl2_ref_clk (250 MHz), a PMC CRP clock always-on and
+# independent of PCIe link state.  It drives dma0_intrfc_clk and the
+# axi_noc_cips M01_AXI clock (section 2d).
 #
-# Reset is kept fully independent from PCIE1.  Two raw reset sources are
-# exported as BD outputs so that user RTL outside the BD can combine them
-# (along with a VIO-driven GPIO reset) into a single synthesised reset:
+# aresetn_pcie0_link (dma0_axi_aresetn) is the CPM5 PCIE0 link reset,
+# already synchronous to clk_pcie0.  Exported for use by user RTL.
 #
-#   aresetn_pl0        — cips/pl0_resetn (PS global reset, active-low)
-#   aresetn_pcie0_link — cips/dma0_axi_aresetn (CPM5 PCIE0 link reset)
+# dma0_intrfc_resetn mirrors dma1: driven from clock_reset/resetn_pcie_ic,
+# which is pcie_psr/interconnect_aresetn — cascaded from pl_psr, rooted at
+# pl0_resetn, synchronised first to pl0_ref_clk then to pl2_ref_clk.
 #
-# The synthesised result is fed back in as resetn_pcie0 (active-low input)
-# which drives dma0_intrfc_resetn.  This allows VIO/JTAG, link-down events,
-# and PS global reset to be combined with arbitrary priority outside the BD.
+# aresetn_pl0 (pl0_resetn) is the raw PS global reset, exported as a raw
+# asynchronous source for user RTL reset synthesis.
+#
+# The synthesised result is fed back as resetn_pcie0 (active-low input)
+# which drives dma0_intrfc_resetn.
 # -------------------------------------------------------------------------
 create_bd_port -dir O -type clk clk_pcie0
 
-# Raw reset source exports (both active-low)
 create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pl0
 set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pl0]
 create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pcie0_link
 set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pcie0_link]
 
-# Synthesised reset input from user logic
 create_bd_port -dir I -from 0 -to 0 -type rst resetn_pcie0
 set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pcie0]
 
@@ -195,8 +189,6 @@ connect_bd_net \
     [get_bd_pins cips/pl2_ref_clk] \
     [get_bd_pins cips/dma0_intrfc_clk] \
     [get_bd_ports clk_pcie0]
-# Note: pl2_ref_clk is a 250 MHz PMC CRP clock (PMC_CRP_PL2_REF_CTRL_FREQMHZ),
-# always-on and independent of PCIe link state.
 
 connect_bd_net \
     [get_bd_pins cips/pl0_resetn] \
@@ -289,7 +281,7 @@ foreach addr_space {
 }
 
 # =========================================================================
-# 3. PCIE0 AXI4S streaming and control interfaces
+# 2e. PCIE0 AXI4S streaming and control interfaces
 #
 # The QDMA H2C/C2H streams and associated control sidebands connect
 # directly as CIPS pins — they do not pass through the NoC.

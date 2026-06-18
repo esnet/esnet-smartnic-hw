@@ -25,12 +25,12 @@ module xilinx_aved_adapter_unit_test;
     //   clk_pcie0 — PCIe interface clock (250 MHz); drives the AXI4 master port
     //
     // aresetn_pl0 and aresetn_pcie0_link are asserted together with clk_pl
-    // reset so that pcie_rstn_in (their AND) de-asserts at the same time.
+    // reset so that pci_rstn_in de-asserts at the same time.
     // =========================================================================
-    logic clk_pl           = 1'b0;
-    logic clk_pcie0        = 1'b0;
-    logic aresetn_pl       = 1'b0;
-    logic aresetn_pl0      = 1'b0;
+    logic clk_pl             = 1'b0;
+    logic clk_pcie0          = 1'b0;
+    logic resetn_pl_periph   = 1'b0;
+    logic aresetn_pl0        = 1'b0;
     logic aresetn_pcie0_link = 1'b0;
 
     `SVUNIT_CLK_GEN(clk_pl,    5ns);   // 100 MHz
@@ -53,8 +53,8 @@ module xilinx_aved_adapter_unit_test;
     axi4l_intf axil_app_if ();
     shell_intf shell_if    ();
 
-    wire pcie_rstn_in;
-    wire pcie_rstn;
+    wire pci_rstn_in;
+    wire pci_rstn;
 
     // =========================================================================
     // DUT chain:
@@ -63,17 +63,17 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     xilinx_aved_adapter DUT_adapter (
         // Clocks and resets
-        .clk_pl                   ( clk_pl                          ),
-        .resetn_pl_periph         ( aresetn_pl                      ),
-        .clk_pcie0                ( clk_pcie0                       ),
-        .aresetn_pl0              ( aresetn_pl0                     ),
-        .aresetn_pcie0_link       ( aresetn_pcie0_link              ),
+        .clk_pl                   ( clk_pl             ),
+        .clk_pcie0                ( clk_pcie0          ),
+        .resetn_pl_periph         ( resetn_pl_periph   ),
+        .aresetn_pl0              ( aresetn_pl0        ),
+        .aresetn_pcie0_link       ( aresetn_pcie0_link ),
         // Shell-facing clock/reset
-        .sys_clk                  (                                  ),
-        .pcie_clk                 (                                  ),
-        .pcie_rstn_in             ( pcie_rstn_in                    ),
-        .pcie_rstn                ( pcie_rstn                       ),
-        .resetn_pcie0             (                                  ),
+        .sys_clk                  (                    ),
+        .pcie_clk                 (                    ),
+        .pci_rstn_in              ( pci_rstn_in        ),
+        .pci_rstn                 ( pci_rstn           ),
+        .resetn_pcie0             (                    ),
         // PCIE0 BAR2 AXI4 (512-bit) — driven from pcie0_axi4_if
         .m_axi_pcie0_awaddr       ( pcie0_axi4_if.awaddr    ),
         .m_axi_pcie0_awid         ( pcie0_axi4_if.awid      ),
@@ -194,11 +194,11 @@ module xilinx_aved_adapter_unit_test;
     );
 
     xilinx_alveo_versal_shell DUT_shell (
-        .sys_clk      ( clk_pl        ),
-        .pcie_clk     ( clk_pcie0     ),
-        .pcie_rstn_in ( pcie_rstn_in  ),
-        .pcie_rstn    ( pcie_rstn     ),
-        .axil_if      ( axil_app_if   ),
+        .sys_clk      ( clk_pl      ),
+        .pcie_clk     ( clk_pcie0   ),
+        .pci_rstn_in  ( pci_rstn_in ),
+        .pci_rstn     ( pci_rstn    ),
+        .axil_if      ( axil_app_if ),
         .shell_if
     );
 
@@ -231,12 +231,12 @@ module xilinx_aved_adapter_unit_test;
     task setup();
         svunit_ut.setup();
         agent.idle();
-        aresetn_pl       = 1'b0;
-        aresetn_pl0      = 1'b0;
+        resetn_pl_periph   = 1'b0;
+        aresetn_pl0        = 1'b0;
         aresetn_pcie0_link = 1'b0;
         repeat (8) @(posedge clk_pl);
-        aresetn_pl       = 1'b1;
-        aresetn_pl0      = 1'b1;
+        resetn_pl_periph   = 1'b1;
+        aresetn_pl0        = 1'b1;
         aresetn_pcie0_link = 1'b1;
         // Allow CDC and reset synchronisers to settle
         repeat (16) @(posedge clk_pl);
@@ -253,9 +253,6 @@ module xilinx_aved_adapter_unit_test;
     // for the axi4l_from_axi4_adapter (it extracts the lane from addr[5:2]).
     // =========================================================================
     task automatic axi4_write(input bit [31:0] addr, input bit [31:0] data);
-        // Place the 32-bit word on the correct 512-bit lane; axi4_reg_agent
-        // sends strobe='1 (all bytes), but axi4l_from_axi4_adapter selects
-        // the active lane from awaddr[5:2], so only the correct word is written.
         automatic int word_idx = addr[5:2];
         automatic bit [64-1:0][7:0] wdata = '0;
         automatic bit [64-1:0]      strb  = '0;
