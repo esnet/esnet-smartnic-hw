@@ -19,7 +19,7 @@ create_root_design ""
 # Adds to the BD boundary:
 #
 #   1. Clock / reset outputs — clk_pl0_100mhz (pl0_ref_clk) and rstn_pl0_100mhz
-#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, clock and reset ports
+#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, clock, and reset ports
 #
 # =============================================================================
 
@@ -168,22 +168,11 @@ connect_bd_intf_net \
 # dma0_intrfc_resetn mirrors dma1: driven from clock_reset/resetn_pcie_ic,
 # which is pcie_psr/interconnect_aresetn — cascaded from pl_psr, rooted at
 # pl0_resetn, synchronised first to pl0_ref_clk then to pl2_ref_clk.
-#
-# arstn (pl0_resetn) is the raw PS global reset, exported as a raw
-# asynchronous source for user RTL reset synthesis.
-#
-# The synthesised result is fed back as dma0_intrfc_aresetn (active-low input)
-# which drives dma0_intrfc_resetn.
 # -------------------------------------------------------------------------
 create_bd_port -dir O -type clk m_axi_pcie0_aclk
 
-create_bd_port -dir O -from 0 -to 0 -type rst arstn
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports arstn]
 create_bd_port -dir O -from 0 -to 0 -type rst m_axi_pcie0_aresetn
 set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports m_axi_pcie0_aresetn]
-
-create_bd_port -dir I -from 0 -to 0 -type rst dma0_intrfc_aresetn
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports dma0_intrfc_aresetn]
 
 connect_bd_net \
     [get_bd_pins cips/pl2_ref_clk] \
@@ -191,15 +180,11 @@ connect_bd_net \
     [get_bd_ports m_axi_pcie0_aclk]
 
 connect_bd_net \
-    [get_bd_pins cips/pl0_resetn] \
-    [get_bd_ports arstn]
-
-connect_bd_net \
     [get_bd_pins cips/dma0_axi_aresetn] \
     [get_bd_ports m_axi_pcie0_aresetn]
 
 connect_bd_net \
-    [get_bd_ports dma0_intrfc_aresetn] \
+    [get_bd_pins clock_reset/resetn_pcie_ic] \
     [get_bd_pins cips/dma0_intrfc_resetn]
 
 # -------------------------------------------------------------------------

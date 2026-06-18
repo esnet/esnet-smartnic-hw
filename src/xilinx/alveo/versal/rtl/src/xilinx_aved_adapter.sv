@@ -3,17 +3,13 @@ module xilinx_aved_adapter (
     input  wire        clk_pl0_100mhz,
     input  wire        m_axi_pcie0_aclk,
     input  wire        rstn_pl0_100mhz,
-    input  wire        arstn,
     input  wire        m_axi_pcie0_aresetn,
 
     // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
-    output wire        sys_clk,      // system/debug clock → shell
-    output wire        pcie_clk,     // PCIe interface clock → shell
-    output wire        pci_rstn_in,  // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
-    input  wire        pci_rstn,     // post-JTAG reset ← shell (not yet wired to CPM5)
-
-    // BD-facing reset output — feeds cips/dma0_intrfc_resetn via .* on top_i.
-    output wire        dma0_intrfc_aresetn,
+    output wire        sys_clk,     // system/debug clock → shell
+    output wire        pcie_clk,    // PCIe interface clock → shell
+    output wire        pci_rstn_in, // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
+    input  wire        pci_rstn,    // post-JTAG reset ← shell (not yet wired to CPM5)
 
     // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
     input  wire [63:0]  m_axi_pcie0_awaddr,
@@ -293,9 +289,8 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
-    assign sys_clk      = clk_pl0_100mhz;
-    assign pcie_clk     = m_axi_pcie0_aclk;
-    assign pci_rstn_in  = m_axi_pcie0_aresetn;
-    assign dma0_intrfc_aresetn = pci_rstn;
+    assign sys_clk     = clk_pl0_100mhz;
+    assign pcie_clk    = m_axi_pcie0_aclk;
+    assign pci_rstn_in = m_axi_pcie0_aresetn;
 
 endmodule : xilinx_aved_adapter

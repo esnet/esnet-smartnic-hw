@@ -4,9 +4,7 @@
 
     // Resets from BD (active-low)
     wire        rstn_pl0_100mhz;
-    wire        arstn;          // PS global reset (raw, asynchronous)
     wire        m_axi_pcie0_aresetn;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
-    wire        dma0_intrfc_aresetn;         // synthesised reset → dma0_intrfc_resetn
 
     // Shell-facing signals — functional names used above the adapter layer.
     wire        sys_clk;      // system/debug clock
