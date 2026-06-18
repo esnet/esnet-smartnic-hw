@@ -17,21 +17,24 @@ module xilinx_alveo_versal_shell
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
+    // -------------------------------------------------------------------------
+    // From/to Versal hardware layer
+    // -------------------------------------------------------------------------
     // System clock — sourced from the PMC crystal oscillator via the CRP.
     // Independent of PCIe, HBM, and PS state; available immediately after
-    // device power-on.  Used as the free-running clock for the JTAG VIO.
-    input  wire logic       sys_clk,
+    // device power-on.
+    input  wire logic       sys_clk_100mhz,
 
-    // PCIe reset — pre-JTAG synthesis input (active-low)
-    input  wire logic       pci_rstn_in,
+    // PCIe reset (JTAG VIO overrride interface)
+    input  wire logic       pci_rstn_in, // Incoming hardware PCI reset (e.g. PERST#)
+    output wire logic       pci_rstn,    // Outgoing PCI reset (includes JTAG override)
 
-    // PCIe reset — post-JTAG synthesis output (active-low)
-    output wire logic       pci_rstn,
-
-    // Management AXI4-Lite from xilinx_aved_adapter
+    // Management AXI4-Lite
     axi4l_intf.peripheral   axil_if,
 
+    // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
+    // -------------------------------------------------------------------------
     shell_intf.shell        shell_if
 );
 
@@ -39,7 +42,7 @@ module xilinx_alveo_versal_shell
     // Common Alveo platform — PCIe reset control with JTAG VIO override
     // =========================================================================
     xilinx_alveo i_xilinx_alveo (
-        .sys_clk_100mhz ( sys_clk     ),
+        .sys_clk_100mhz ( sys_clk_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn_out   ( pci_rstn    )
     );
@@ -104,7 +107,7 @@ module xilinx_alveo_versal_shell
         .srst       ( ~axil_if.aresetn ),
         .mgmt_clk   ( axil_if.aclk    ),
         .mgmt_srst  ( ~axil_if.aresetn ),
-        .clk_100mhz ( axil_if.aclk    ),  // placeholder until 100 MHz export added
+        .clk_100mhz ( sys_clk_100mhz ),
         .port_clk   ( '{default: axil_if.aclk}    ),
         .port_srst  ( '{default: ~axil_if.aresetn} ),
         .axil_if,

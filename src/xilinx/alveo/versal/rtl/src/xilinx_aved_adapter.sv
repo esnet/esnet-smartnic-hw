@@ -146,9 +146,10 @@ module xilinx_aved_adapter (
     // -------------------------------------------------------------------------
     // Shell-facing outputs
     // -------------------------------------------------------------------------
-    output wire        sys_clk,     // system/debug clock → shell
-    output wire        pci_rstn_in, // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
-    input  wire        pci_rstn,    // post-JTAG reset ← shell (not yet wired to CPM5)
+    output wire        sys_clk_100mhz, // system/debug clock → shell
+
+    output wire        pci_rstn_in,    // (raw) PCI reset (PERST#) → shell
+    input  wire        pci_rstn,       // Adapted PCI reset (includes JTAG override) reset ← shell (not yet wired to CPM5)
 
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if
@@ -296,7 +297,7 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
-    assign sys_clk     = clk_pl0_100mhz;
+    assign sys_clk_100mhz = clk_pl0_100mhz;
     assign pci_rstn_in = m_axi_pcie0_aresetn;
 
 endmodule : xilinx_aved_adapter
