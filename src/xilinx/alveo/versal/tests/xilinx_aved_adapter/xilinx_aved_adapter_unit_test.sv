@@ -2,6 +2,8 @@
 
 module xilinx_aved_adapter_unit_test;
     import svunit_pkg::svunit_testcase;
+    import axi4_verif_pkg::*;
+    import axi4_pkg::*;
     import axi4l_pkg::*;
 
     string name = "xilinx_aved_adapter_ut";
@@ -17,110 +19,104 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
     // =========================================================================
-    // Interfaces
+    // Clocks and resets
     //
-    //   axil_if     — testbench drives flat M_AXI_USR_MGMT signals into adapter
-    //   axil_app_if — adapter output (controller) wired to shell peripheral input
+    //   clk_pl    — system clock (100 MHz); drives adapter clk_pl and axil_app_if
+    //   clk_pcie0 — PCIe interface clock (250 MHz); drives the AXI4 master port
+    //
+    // aresetn_pl0 and aresetn_pcie0_link are asserted together with clk_pl
+    // reset so that pcie_rstn_in (their AND) de-asserts at the same time.
     // =========================================================================
-    axi4l_intf axil_if     ();
-    axi4l_intf axil_app_if ();
-    shell_intf shell_if    ();
-
-    // =========================================================================
-    // PCIE0 clock/reset — adapter needs these; tie to the management clock and
-    // assert/deassert with the management reset since they are unused by this
-    // test (PCIE0 BAR2 path is not exercised here).
-    // =========================================================================
+    logic clk_pl           = 1'b0;
     logic clk_pcie0        = 1'b0;
+    logic aresetn_pl       = 1'b0;
     logic aresetn_pl0      = 1'b0;
     logic aresetn_pcie0_link = 1'b0;
 
-    always @(posedge axil_if.aclk) clk_pcie0 <= ~clk_pcie0;
+    `SVUNIT_CLK_GEN(clk_pl,    5ns);   // 100 MHz
+    `SVUNIT_CLK_GEN(clk_pcie0, 2ns);   // 250 MHz
 
-    wire pcie_rstn_in;  // adapter output → shell input (pre-JTAG combined reset)
-    wire pcie_rstn;     // shell output → adapter input (post-JTAG reset)
+    // =========================================================================
+    // AXI4 interface — controller side; drives m_axi_pcie0_* flat ports.
+    // Parameterised to match xilinx_aved_adapter's 512-bit / 64-bit-addr port.
+    // =========================================================================
+    axi4_intf #(
+        .DATA_BYTE_WID ( 64 ),
+        .ADDR_WID      ( 64 ),
+        .ID_WID        ( 2  ),
+        .USER_WID      ( 18 )
+    ) pcie0_axi4_if (.aclk(clk_pcie0));
+
+    // =========================================================================
+    // Shell and core interfaces
+    // =========================================================================
+    axi4l_intf axil_app_if ();
+    shell_intf shell_if    ();
+
+    wire pcie_rstn_in;
+    wire pcie_rstn;
 
     // =========================================================================
     // DUT chain:
-    //   axil_if (flat signals) -> xilinx_aved_adapter -> axil_app_if
+    //   pcie0_axi4_if (flat signals) -> xilinx_aved_adapter -> axil_app_if
     //   -> xilinx_alveo_versal_shell -> shell_if -> core
     // =========================================================================
     xilinx_aved_adapter DUT_adapter (
         // Clocks and resets
-        .clk_pl                   ( axil_if.aclk           ),
-        .resetn_pl_periph         ( axil_if.aresetn         ),
-        .clk_pcie0                ( clk_pcie0               ),
-        .aresetn_pl0              ( aresetn_pl0             ),
-        .aresetn_pcie0_link       ( aresetn_pcie0_link      ),
+        .clk_pl                   ( clk_pl                          ),
+        .resetn_pl_periph         ( aresetn_pl                      ),
+        .clk_pcie0                ( clk_pcie0                       ),
+        .aresetn_pl0              ( aresetn_pl0                     ),
+        .aresetn_pcie0_link       ( aresetn_pcie0_link              ),
         // Shell-facing clock/reset
-        .sys_clk                  (                         ),
-        .pcie_clk                 (                         ),
-        .pcie_rstn_in             ( pcie_rstn_in            ),
-        .pcie_rstn                ( pcie_rstn               ),
-        .resetn_pcie0             (                         ),
-        // PCIE1 management AXI4-Lite
-        .m_axi_usr_mgmt_awaddr    ( axil_if.awaddr          ),
-        .m_axi_usr_mgmt_awprot    ( axil_if.awprot          ),
-        .m_axi_usr_mgmt_awvalid   ( axil_if.awvalid         ),
-        .m_axi_usr_mgmt_awready   ( axil_if.awready         ),
-        .m_axi_usr_mgmt_wdata     ( axil_if.wdata           ),
-        .m_axi_usr_mgmt_wstrb     ( axil_if.wstrb           ),
-        .m_axi_usr_mgmt_wvalid    ( axil_if.wvalid          ),
-        .m_axi_usr_mgmt_wready    ( axil_if.wready          ),
-        .m_axi_usr_mgmt_bresp     ( axil_if.bresp           ),
-        .m_axi_usr_mgmt_bvalid    ( axil_if.bvalid          ),
-        .m_axi_usr_mgmt_bready    ( axil_if.bready          ),
-        .m_axi_usr_mgmt_araddr    ( axil_if.araddr          ),
-        .m_axi_usr_mgmt_arprot    ( axil_if.arprot          ),
-        .m_axi_usr_mgmt_arvalid   ( axil_if.arvalid         ),
-        .m_axi_usr_mgmt_arready   ( axil_if.arready         ),
-        .m_axi_usr_mgmt_rdata     ( axil_if.rdata           ),
-        .m_axi_usr_mgmt_rresp     ( axil_if.rresp           ),
-        .m_axi_usr_mgmt_rvalid    ( axil_if.rvalid          ),
-        .m_axi_usr_mgmt_rready    ( axil_if.rready          ),
-        // PCIE0 BAR2 AXI4 (512-bit) — not exercised; tie inputs to 0
-        .m_axi_pcie0_awaddr       ( '0 ),
-        .m_axi_pcie0_awid         ( '0 ),
-        .m_axi_pcie0_awlen        ( '0 ),
-        .m_axi_pcie0_awsize       ( '0 ),
-        .m_axi_pcie0_awburst      ( '0 ),
-        .m_axi_pcie0_awlock       ( '0 ),
-        .m_axi_pcie0_awcache      ( '0 ),
-        .m_axi_pcie0_awprot       ( '0 ),
-        .m_axi_pcie0_awqos        ( '0 ),
-        .m_axi_pcie0_awregion     ( '0 ),
-        .m_axi_pcie0_awuser       ( '0 ),
-        .m_axi_pcie0_awvalid      ( '0 ),
-        .m_axi_pcie0_awready      (    ),
-        .m_axi_pcie0_wdata        ( '0 ),
-        .m_axi_pcie0_wstrb        ( '0 ),
-        .m_axi_pcie0_wlast        ( '0 ),
-        .m_axi_pcie0_wvalid       ( '0 ),
-        .m_axi_pcie0_wready       (    ),
-        .m_axi_pcie0_bid          (    ),
-        .m_axi_pcie0_bresp        (    ),
-        .m_axi_pcie0_bvalid       (    ),
-        .m_axi_pcie0_bready       ( '0 ),
-        .m_axi_pcie0_araddr       ( '0 ),
-        .m_axi_pcie0_arid         ( '0 ),
-        .m_axi_pcie0_arlen        ( '0 ),
-        .m_axi_pcie0_arsize       ( '0 ),
-        .m_axi_pcie0_arburst      ( '0 ),
-        .m_axi_pcie0_arlock       ( '0 ),
-        .m_axi_pcie0_arcache      ( '0 ),
-        .m_axi_pcie0_arprot       ( '0 ),
-        .m_axi_pcie0_arqos        ( '0 ),
-        .m_axi_pcie0_arregion     ( '0 ),
-        .m_axi_pcie0_aruser       ( '0 ),
-        .m_axi_pcie0_arvalid      ( '0 ),
-        .m_axi_pcie0_arready      (    ),
-        .m_axi_pcie0_rdata        (    ),
-        .m_axi_pcie0_rid          (    ),
-        .m_axi_pcie0_rresp        (    ),
-        .m_axi_pcie0_rlast        (    ),
-        .m_axi_pcie0_rvalid       (    ),
-        .m_axi_pcie0_rready       ( '0 ),
-        // PCIE0 H2C stream — not exercised
+        .sys_clk                  (                                  ),
+        .pcie_clk                 (                                  ),
+        .pcie_rstn_in             ( pcie_rstn_in                    ),
+        .pcie_rstn                ( pcie_rstn                       ),
+        .resetn_pcie0             (                                  ),
+        // PCIE0 BAR2 AXI4 (512-bit) — driven from pcie0_axi4_if
+        .m_axi_pcie0_awaddr       ( pcie0_axi4_if.awaddr    ),
+        .m_axi_pcie0_awid         ( pcie0_axi4_if.awid      ),
+        .m_axi_pcie0_awlen        ( pcie0_axi4_if.awlen     ),
+        .m_axi_pcie0_awsize       ( pcie0_axi4_if.awsize    ),
+        .m_axi_pcie0_awburst      ( pcie0_axi4_if.awburst   ),
+        .m_axi_pcie0_awlock       ( pcie0_axi4_if.awlock    ),
+        .m_axi_pcie0_awcache      ( pcie0_axi4_if.awcache   ),
+        .m_axi_pcie0_awprot       ( pcie0_axi4_if.awprot    ),
+        .m_axi_pcie0_awqos        ( pcie0_axi4_if.awqos     ),
+        .m_axi_pcie0_awregion     ( pcie0_axi4_if.awregion  ),
+        .m_axi_pcie0_awuser       ( pcie0_axi4_if.awuser    ),
+        .m_axi_pcie0_awvalid      ( pcie0_axi4_if.awvalid   ),
+        .m_axi_pcie0_awready      ( pcie0_axi4_if.awready   ),
+        .m_axi_pcie0_wdata        ( pcie0_axi4_if.wdata     ),
+        .m_axi_pcie0_wstrb        ( pcie0_axi4_if.wstrb     ),
+        .m_axi_pcie0_wlast        ( pcie0_axi4_if.wlast     ),
+        .m_axi_pcie0_wvalid       ( pcie0_axi4_if.wvalid    ),
+        .m_axi_pcie0_wready       ( pcie0_axi4_if.wready    ),
+        .m_axi_pcie0_bid          ( pcie0_axi4_if.bid       ),
+        .m_axi_pcie0_bresp        ( pcie0_axi4_if.bresp     ),
+        .m_axi_pcie0_bvalid       ( pcie0_axi4_if.bvalid    ),
+        .m_axi_pcie0_bready       ( pcie0_axi4_if.bready    ),
+        .m_axi_pcie0_araddr       ( pcie0_axi4_if.araddr    ),
+        .m_axi_pcie0_arid         ( pcie0_axi4_if.arid      ),
+        .m_axi_pcie0_arlen        ( pcie0_axi4_if.arlen     ),
+        .m_axi_pcie0_arsize       ( pcie0_axi4_if.arsize    ),
+        .m_axi_pcie0_arburst      ( pcie0_axi4_if.arburst   ),
+        .m_axi_pcie0_arlock       ( pcie0_axi4_if.arlock    ),
+        .m_axi_pcie0_arcache      ( pcie0_axi4_if.arcache   ),
+        .m_axi_pcie0_arprot       ( pcie0_axi4_if.arprot    ),
+        .m_axi_pcie0_arqos        ( pcie0_axi4_if.arqos     ),
+        .m_axi_pcie0_arregion     ( pcie0_axi4_if.arregion  ),
+        .m_axi_pcie0_aruser       ( pcie0_axi4_if.aruser    ),
+        .m_axi_pcie0_arvalid      ( pcie0_axi4_if.arvalid   ),
+        .m_axi_pcie0_arready      ( pcie0_axi4_if.arready   ),
+        .m_axi_pcie0_rdata        ( pcie0_axi4_if.rdata     ),
+        .m_axi_pcie0_rid          ( pcie0_axi4_if.rid       ),
+        .m_axi_pcie0_rresp        ( pcie0_axi4_if.rresp     ),
+        .m_axi_pcie0_rlast        ( pcie0_axi4_if.rlast     ),
+        .m_axi_pcie0_rvalid       ( pcie0_axi4_if.rvalid    ),
+        .m_axi_pcie0_rready       ( pcie0_axi4_if.rready    ),
+        // PCIE0 DMA streams — not exercised
         .dma0_m_axis_h2c_0_tvalid    ( '0 ),
         .dma0_m_axis_h2c_0_tdata     ( '0 ),
         .dma0_m_axis_h2c_0_tlast     ( '0 ),
@@ -132,20 +128,18 @@ module xilinx_aved_adapter_unit_test;
         .dma0_m_axis_h2c_0_tcrc      ( '0 ),
         .dma0_m_axis_h2c_0_err       ( '0 ),
         .dma0_m_axis_h2c_0_zero_byte ( '0 ),
-        // PCIE0 C2H stream — not exercised
-        .dma0_s_axis_c2h_0_tvalid       (    ),
-        .dma0_s_axis_c2h_0_tdata        (    ),
-        .dma0_s_axis_c2h_0_tlast        (    ),
-        .dma0_s_axis_c2h_0_tready       ( '0 ),
-        .dma0_s_axis_c2h_0_ctrl_qid     (    ),
-        .dma0_s_axis_c2h_0_ctrl_len     (    ),
-        .dma0_s_axis_c2h_0_ctrl_port_id (    ),
-        .dma0_s_axis_c2h_0_ctrl_has_cmpt(    ),
-        .dma0_s_axis_c2h_0_ctrl_marker  (    ),
-        .dma0_s_axis_c2h_0_mty          (    ),
-        .dma0_s_axis_c2h_0_ecc          (    ),
-        .dma0_s_axis_c2h_0_tcrc         (    ),
-        // PCIE0 C2H completion — not exercised
+        .dma0_s_axis_c2h_0_tvalid        (    ),
+        .dma0_s_axis_c2h_0_tdata         (    ),
+        .dma0_s_axis_c2h_0_tlast         (    ),
+        .dma0_s_axis_c2h_0_tready        ( '0 ),
+        .dma0_s_axis_c2h_0_ctrl_qid      (    ),
+        .dma0_s_axis_c2h_0_ctrl_len      (    ),
+        .dma0_s_axis_c2h_0_ctrl_port_id  (    ),
+        .dma0_s_axis_c2h_0_ctrl_has_cmpt (    ),
+        .dma0_s_axis_c2h_0_ctrl_marker   (    ),
+        .dma0_s_axis_c2h_0_mty           (    ),
+        .dma0_s_axis_c2h_0_ecc           (    ),
+        .dma0_s_axis_c2h_0_tcrc          (    ),
         .dma0_s_axis_c2h_cmpt_0_tvalid          (    ),
         .dma0_s_axis_c2h_cmpt_0_data            (    ),
         .dma0_s_axis_c2h_cmpt_0_size            (    ),
@@ -160,21 +154,18 @@ module xilinx_aved_adapter_unit_test;
         .dma0_s_axis_c2h_cmpt_0_marker          (    ),
         .dma0_s_axis_c2h_cmpt_0_no_wrb_marker   (    ),
         .dma0_s_axis_c2h_cmpt_0_tready          ( '0 ),
-        // PCIE0 descriptor credit — not exercised
         .dma0_dsc_crdt_in_0_crdt   (    ),
         .dma0_dsc_crdt_in_0_dir    (    ),
         .dma0_dsc_crdt_in_0_fence  (    ),
         .dma0_dsc_crdt_in_0_qid    (    ),
         .dma0_dsc_crdt_in_0_valid  (    ),
         .dma0_dsc_crdt_in_0_rdy    ( '0 ),
-        // PCIE0 queue status — not exercised
         .dma0_qsts_out_0_data      ( '0 ),
         .dma0_qsts_out_0_op        ( '0 ),
         .dma0_qsts_out_0_port_id   ( '0 ),
         .dma0_qsts_out_0_qid       ( '0 ),
         .dma0_qsts_out_0_vld       ( '0 ),
         .dma0_qsts_out_0_rdy       (    ),
-        // PCIE0 TM descriptor status — not exercised
         .dma0_tm_dsc_sts_0_avl     ( '0 ),
         .dma0_tm_dsc_sts_0_byp     ( '0 ),
         .dma0_tm_dsc_sts_0_dir     ( '0 ),
@@ -188,28 +179,26 @@ module xilinx_aved_adapter_unit_test;
         .dma0_tm_dsc_sts_0_qinv    ( '0 ),
         .dma0_tm_dsc_sts_0_rdy     (    ),
         .dma0_tm_dsc_sts_0_valid   ( '0 ),
-        // PCIE0 user interrupt — not exercised
-        .dma0_usr_irq_0_vec   (    ),
-        .dma0_usr_irq_0_fnc   (    ),
-        .dma0_usr_irq_0_valid (    ),
-        .dma0_usr_irq_0_ack   ( '0 ),
-        .dma0_usr_irq_0_fail  ( '0 ),
-        // PCIE0 FLR — not exercised
-        .dma0_usr_flr_0_fnc      ( '0 ),
-        .dma0_usr_flr_0_set      ( '0 ),
-        .dma0_usr_flr_0_clear    (    ),
-        .dma0_usr_flr_0_done_fnc (    ),
-        .dma0_usr_flr_0_done_vld (    ),
+        .dma0_usr_irq_0_vec        (    ),
+        .dma0_usr_irq_0_fnc        (    ),
+        .dma0_usr_irq_0_valid      (    ),
+        .dma0_usr_irq_0_ack        ( '0 ),
+        .dma0_usr_irq_0_fail       ( '0 ),
+        .dma0_usr_flr_0_fnc        ( '0 ),
+        .dma0_usr_flr_0_set        ( '0 ),
+        .dma0_usr_flr_0_clear      (    ),
+        .dma0_usr_flr_0_done_fnc   (    ),
+        .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
-        .axil_if                  ( axil_app_if             )
+        .axil_if                   ( axil_app_if )
     );
 
     xilinx_alveo_versal_shell DUT_shell (
-        .sys_clk      ( axil_if.aclk   ),
-        .pcie_clk     ( clk_pcie0      ),
-        .pcie_rstn_in ( pcie_rstn_in    ),
-        .pcie_rstn    ( pcie_rstn      ),
-        .axil_if      ( axil_app_if    ),
+        .sys_clk      ( clk_pl        ),
+        .pcie_clk     ( clk_pcie0     ),
+        .pcie_rstn_in ( pcie_rstn_in  ),
+        .pcie_rstn    ( pcie_rstn     ),
+        .axil_if      ( axil_app_if   ),
         .shell_if
     );
 
@@ -218,15 +207,22 @@ module xilinx_aved_adapter_unit_test;
     );
 
     // =========================================================================
-    // Clock  (100 MHz)
+    // AXI4 register agent — drives pcie0_axi4_if as a controller
     // =========================================================================
-    `SVUNIT_CLK_GEN(axil_if.aclk, 5ns);
+    axi4_reg_agent #(
+        .DATA_BYTE_WID ( 64 ),
+        .ADDR_WID      ( 64 ),
+        .ID_WID        ( 2  ),
+        .USER_WID      ( 18 )
+    ) agent;
 
     // =========================================================================
     // Build
     // =========================================================================
     function void build();
         svunit_ut = new(name);
+        agent = new();
+        agent.axi4_vif = pcie0_axi4_if;
     endfunction
 
     // =========================================================================
@@ -234,15 +230,16 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     task setup();
         svunit_ut.setup();
-        axil_if.idle_controller();
-        axil_if.aresetn      = 1'b0;
-        aresetn_pl0          = 1'b0;
-        aresetn_pcie0_link   = 1'b0;
-        repeat (8) @(posedge axil_if.aclk);
-        axil_if.aresetn      = 1'b1;
-        aresetn_pl0          = 1'b1;
-        aresetn_pcie0_link   = 1'b1;
-        repeat (4) @(posedge axil_if.aclk);
+        agent.idle();
+        aresetn_pl       = 1'b0;
+        aresetn_pl0      = 1'b0;
+        aresetn_pcie0_link = 1'b0;
+        repeat (8) @(posedge clk_pl);
+        aresetn_pl       = 1'b1;
+        aresetn_pl0      = 1'b1;
+        aresetn_pcie0_link = 1'b1;
+        // Allow CDC and reset synchronisers to settle
+        repeat (16) @(posedge clk_pl);
     endtask
 
     task teardown();
@@ -251,21 +248,37 @@ module xilinx_aved_adapter_unit_test;
 
     // =========================================================================
     // Helpers
+    //
+    // axi4_reg_agent._write/_read use full-bus-width strobes, which is correct
+    // for the axi4l_from_axi4_adapter (it extracts the lane from addr[5:2]).
     // =========================================================================
-    task automatic axil_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
-        bit timeout;
-        axil_if.write(addr, data, resp, timeout);
-        `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+    task automatic axi4_write(input bit [31:0] addr, input bit [31:0] data);
+        // Place the 32-bit word on the correct 512-bit lane; axi4_reg_agent
+        // sends strobe='1 (all bytes), but axi4l_from_axi4_adapter selects
+        // the active lane from awaddr[5:2], so only the correct word is written.
+        automatic int word_idx = addr[5:2];
+        automatic bit [64-1:0][7:0] wdata = '0;
+        automatic bit [64-1:0]      strb  = '0;
+        automatic bit [1:0] resp;
+        automatic bit       timeout;
+        wdata[word_idx*4 +: 4] = data;
+        strb[word_idx*4 +: 4]  = 4'hF;
+        pcie0_axi4_if.write(64'(addr), wdata, strb, resp, timeout);
+        `FAIL_IF_LOG(timeout, $sformatf("axi4_write to 0x%08x timed out", addr));
+        `FAIL_UNLESS_LOG(resp === 2'b00,
+            $sformatf("axi4_write to 0x%08x: expected OKAY, got 2'b%02b", addr, resp));
     endtask
 
-    task automatic axil_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
-        bit timeout;
-        axil_if.read(addr, data, resp, timeout);
-        `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+    task automatic axi4_read(input bit [31:0] addr, output bit [31:0] data);
+        automatic int word_idx = addr[5:2];
+        automatic bit [64-1:0][7:0] rdata;
+        automatic bit [1:0] resp;
+        automatic bit       timeout;
+        pcie0_axi4_if.read(64'(addr), rdata, resp, timeout);
+        `FAIL_IF_LOG(timeout, $sformatf("axi4_read from 0x%08x timed out", addr));
+        `FAIL_UNLESS_LOG(resp === 2'b00,
+            $sformatf("axi4_read from 0x%08x: expected OKAY, got 2'b%02b", addr, resp));
+        data = rdata[word_idx*4 +: 4];
     endtask
 
     // =========================================================================
@@ -273,19 +286,32 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     `SVUNIT_TESTS_BEGIN
 
-        // Verify the id register returns the 'CORE' sentinel value.
+        // Verify the id register returns the 'CORE' sentinel value via PCIE0.
         `SVTEST(id_read)
             bit [31:0] rdata;
-            axil_read(ADDR_ID, rdata);
+            axi4_read(ADDR_ID, rdata);
             `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
         `SVTEST_END
 
-        // Verify the scratchpad register round-trips a written value.
+        // Verify the scratchpad register round-trips a written value via PCIE0.
         `SVTEST(scratchpad_write_read)
             bit [31:0] rdata;
-            axil_write(ADDR_SCRATCHPAD, 32'hDEAD_BEEF);
-            axil_read(ADDR_SCRATCHPAD, rdata);
+            axi4_write(ADDR_SCRATCHPAD, 32'hDEAD_BEEF);
+            axi4_read(ADDR_SCRATCHPAD, rdata);
             `FAIL_UNLESS_EQUAL(rdata, 32'hDEAD_BEEF);
+        `SVTEST_END
+
+        // Back-to-back reads: verify the CDC and axi4l_from_axi4_adapter pipeline
+        // resets correctly between consecutive transactions.
+        `SVTEST(back_to_back_reads)
+            bit [31:0] rdata;
+            axi4_write(ADDR_SCRATCHPAD, 32'hA5A5_A5A5);
+            repeat (4) begin
+                axi4_read(ADDR_ID, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, ID_EXPECTED);
+                axi4_read(ADDR_SCRATCHPAD, rdata);
+                `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
+            end
         `SVTEST_END
 
     `SVUNIT_TESTS_END

@@ -18,29 +18,6 @@ module xilinx_aved_adapter (
     // Driven from pcie_rstn; connects to cips/dma0_intrfc_resetn via .* on top_i.
     output wire        resetn_pcie0,
 
-    // PCIE1 management AXI4-Lite (BD master → terminated at core_reg_blk)
-    // The existing PCIE1 management path is terminated here with the stub
-    // register block; PCIE0 BAR2 becomes the live management interface.
-    input  wire [31:0] m_axi_usr_mgmt_awaddr,
-    input  wire [2:0]  m_axi_usr_mgmt_awprot,
-    input  wire        m_axi_usr_mgmt_awvalid,
-    output wire        m_axi_usr_mgmt_awready,
-    input  wire [31:0] m_axi_usr_mgmt_wdata,
-    input  wire [3:0]  m_axi_usr_mgmt_wstrb,
-    input  wire        m_axi_usr_mgmt_wvalid,
-    output wire        m_axi_usr_mgmt_wready,
-    output wire [1:0]  m_axi_usr_mgmt_bresp,
-    output wire        m_axi_usr_mgmt_bvalid,
-    input  wire        m_axi_usr_mgmt_bready,
-    input  wire [31:0] m_axi_usr_mgmt_araddr,
-    input  wire [2:0]  m_axi_usr_mgmt_arprot,
-    input  wire        m_axi_usr_mgmt_arvalid,
-    output wire        m_axi_usr_mgmt_arready,
-    output wire [31:0] m_axi_usr_mgmt_rdata,
-    output wire [1:0]  m_axi_usr_mgmt_rresp,
-    output wire        m_axi_usr_mgmt_rvalid,
-    input  wire        m_axi_usr_mgmt_rready,
-
     // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
     input  wire [63:0]  m_axi_pcie0_awaddr,
     input  wire [1:0]   m_axi_pcie0_awid,
@@ -176,61 +153,6 @@ module xilinx_aved_adapter (
     // (axil_if.aclk is driven from clk_pl)
     axi4l_intf.controller axil_if
 );
-
-    // =========================================================================
-    // PCIE1 management path — terminated at stub core_reg_blk
-    //
-    // The usr_mgmt interface carries PCIE1 BAR0 management traffic.  It is
-    // terminated here with the stub register block (id + scratchpad) so the
-    // PCIE1 host can enumerate and probe basic registers while the live
-    // management interface transitions to PCIE0 BAR2.
-    //
-    // Vivado SmartConnect delivers the absolute lower-32-bit address; mask to
-    // the 4 KB usr_mgmt aperture to get aperture-relative offsets.
-    // =========================================================================
-    localparam int USR_MGMT_APERTURE_BITS = 12;
-
-    wire [31:0] usr_mgmt_awaddr = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
-                                    m_axi_usr_mgmt_awaddr[USR_MGMT_APERTURE_BITS-1:0]};
-    wire [31:0] usr_mgmt_araddr = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
-                                    m_axi_usr_mgmt_araddr[USR_MGMT_APERTURE_BITS-1:0]};
-
-    axi4l_intf usr_mgmt_axil_if ();
-
-    axi4l_intf_from_signals i_usr_mgmt_from_signals (
-        .aclk     ( clk_pl                    ),
-        .aresetn  ( resetn_pl_periph          ),
-        .awvalid  ( m_axi_usr_mgmt_awvalid   ),
-        .awready  ( m_axi_usr_mgmt_awready   ),
-        .awaddr   ( usr_mgmt_awaddr           ),
-        .awprot   ( m_axi_usr_mgmt_awprot    ),
-        .wvalid   ( m_axi_usr_mgmt_wvalid    ),
-        .wready   ( m_axi_usr_mgmt_wready    ),
-        .wdata    ( m_axi_usr_mgmt_wdata     ),
-        .wstrb    ( m_axi_usr_mgmt_wstrb     ),
-        .bvalid   ( m_axi_usr_mgmt_bvalid    ),
-        .bready   ( m_axi_usr_mgmt_bready    ),
-        .bresp    ( m_axi_usr_mgmt_bresp     ),
-        .arvalid  ( m_axi_usr_mgmt_arvalid   ),
-        .arready  ( m_axi_usr_mgmt_arready   ),
-        .araddr   ( usr_mgmt_araddr           ),
-        .arprot   ( m_axi_usr_mgmt_arprot    ),
-        .rvalid   ( m_axi_usr_mgmt_rvalid    ),
-        .rready   ( m_axi_usr_mgmt_rready    ),
-        .rdata    ( m_axi_usr_mgmt_rdata     ),
-        .rresp    ( m_axi_usr_mgmt_rresp     ),
-        .axi4l_if ( usr_mgmt_axil_if         )
-    );
-
-    core_reg_intf usr_mgmt_regs ();
-
-    core_reg_blk i_usr_mgmt_core_reg_blk (
-        .axil_if    ( usr_mgmt_axil_if  ),
-        .reg_blk_if ( usr_mgmt_regs     )
-    );
-
-    assign usr_mgmt_regs.id_nxt_v = 1'b0;
-    assign usr_mgmt_regs.id_nxt   = '0;
 
     // =========================================================================
     // PCIE0 BAR2 — AXI4 (512-bit) → AXI4-L → axil_if
