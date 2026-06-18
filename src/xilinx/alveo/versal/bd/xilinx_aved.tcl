@@ -22,29 +22,10 @@ create_root_design ""
 #
 # Adds to the BD boundary:
 #
-#   1. Clock / reset outputs  — clk_pl, clk_usr_{0,1} and their resets
-#   2. PCIE0 endpoint         — GT, AXI4, AXI4S streaming, and reset ports
+#   1. Clock / reset outputs — clk_pl, clk_usr_{0,1} and their resets
+#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, and reset ports
 #
 # =============================================================================
-
-# =========================================================================
-# 0. BAR0 prefetchable override
-#
-# The AMD base design marks BAR0 as prefetchable for both PF0 and PF1
-# (CPM_PCIE1_PF{0,1}_BAR0_QDMA_PREFETCHABLE = 1).  Marking BAR0
-# non-prefetchable suppresses speculative read-ahead and ensures
-# transactions are issued only for the addresses the driver requests.
-# =========================================================================
-
-foreach {param value} {
-    CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE 0
-    CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0
-} {
-    set_property CONFIG.CPM_CONFIG \
-        [concat [get_property CONFIG.CPM_CONFIG [get_bd_cells cips]] \
-                [list $param $value]] \
-        [get_bd_cells cips]
-}
 
 # =========================================================================
 # 1. Clock / reset outputs
