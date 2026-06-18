@@ -4,7 +4,7 @@ create_ip -name clk_wizard -vendor xilinx.com -library ip -module_name $module_n
 
 set_property -dict [list \
     CONFIG.PRIM_SOURCE                    {No_buffer} \
-    CONFIG.PRIM_IN_FREQ                   {125.000} \
+    CONFIG.PRIM_IN_FREQ                   {100.000} \
     CONFIG.CLKOUT_REQUESTED_OUT_FREQUENCY {350.000} \
     CONFIG.CLKOUT_USED                    {true} \
     CONFIG.CLKOUT_DRIVES                  {Buffer} \

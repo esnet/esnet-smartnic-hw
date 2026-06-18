@@ -92,7 +92,6 @@ module smartnic
    logic                      srst__smartnic_egress_qs;
    logic                      srst__smartnic_app;
 
-  // Reset is clocked by the 125MHz AXI-Lite clock
 
   smartnic_reset #(
     .NUM_CMAC (NUM_CMAC)
