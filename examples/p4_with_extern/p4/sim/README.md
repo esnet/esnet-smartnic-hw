@@ -62,7 +62,7 @@ must be terminated by a semicolon (;).
 4. `smartnic_extern.cpp` - C++ behavioural model for any user extern functions.
 Located in the user_externs/ subdirectory (co-located with the `test-<NAME>` subdirectories).
 
-For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2023.1) May 16, 2023*.
+For more details, see chapter 3 of *Vitis Networking P4 User Guide, UG1308 (v2025.2) November 20, 2025*.
 
 
 ## Testcase Output Files

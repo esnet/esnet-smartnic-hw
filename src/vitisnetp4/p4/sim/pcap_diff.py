@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Diff two or more pcap files and write a pcap file with different packets as result
 #

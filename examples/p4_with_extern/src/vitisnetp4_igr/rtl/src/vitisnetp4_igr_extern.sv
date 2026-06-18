@@ -3,7 +3,7 @@ module vitisnetp4_igr_extern
     import smartnic_pkg::*;
 (
     input   logic clk,
-    input   logic rstn,
+    input   logic srst,
 
     input   USER_EXTERN_OUT_T    extern_from_vitisnetp4,
     input   USER_EXTERN_VALID_T  extern_from_vitisnetp4_valid,

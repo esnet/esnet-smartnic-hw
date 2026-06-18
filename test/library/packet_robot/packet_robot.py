@@ -9,10 +9,14 @@ from scapy.all import rdpcap, wrpcap
 from scapy.all import Ether, Dot1Q
 from scapy.all import IP, ARP, ICMP
 from scapy.all import IPOption, IPOption_EOL, IPOption_NOP, IPOption_Security, IPOption_LSRR, IPOption_Timestamp, IPOption_RR, IPOption_Stream_Id, IPOption_SSRR, IPOption_MTU_Probe, IPOption_MTU_Reply, IPOption_Traceroute, IPOption_Address_Extension, IPOption_Router_Alert, IPOption_SDBM
-from scapy.all import IPv6, ICMPv6ND_NS, ICMPv6ND_NA, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest, ICMPv6EchoReply
+from scapy.all import IPv6, ICMPv6ND_NS, ICMPv6ND_NA, ICMPv6NDOptSrcLLAddr, ICMPv6EchoRequest, ICMPv6EchoReply, ICMPv6DestUnreach
 from scapy.all import UDP, TCP
 from scapy.all import ESP
 from scapy.all import checksum, in4_chksum, in6_chksum, raw, socket
+
+from scapy.all import load_contrib
+load_contrib('lldp')
+load_contrib('lacp')
 
 #---------------------------------------------------------------------------------------------------
 # TODO: Maybe auto-create layer keywords by introspection into the scapy layer list
@@ -24,6 +28,42 @@ class Library:
     @keyword
     def packet_ether(self, **kwargs):
         return Ether(**kwargs)
+
+    @keyword
+    def packet_lldp(self, **kwargs):
+        return LLDPDU(**kwargs)
+
+    @keyword
+    def packet_lldp_chassisid(self, **kwargs):
+        return LLDPDUChassisID(**kwargs)
+
+    @keyword
+    def packet_lldp_portid(self, **kwargs):
+        return LLDPDUPortID(**kwargs)
+
+    @keyword
+    def packet_lldp_timetolive(self, **kwargs):
+        return LLDPDUTimeToLive(**kwargs)
+
+    @keyword
+    def packet_lldp_systemname(self, **kwargs):
+        return LLDPDUSystemName(**kwargs)
+
+    @keyword
+    def packet_lldp_systemdescription(self, **kwargs):
+        return LLDPDUSystemDescription(**kwargs)
+
+    @keyword
+    def packet_lldp_endoflldppdu(self, **kwargs):
+        return LLDPDUEndOfLLDPDU(**kwargs)
+
+    @keyword
+    def packet_lacp(self, **kwargs):
+        return LACP(**kwargs)
+
+    @keyword
+    def packet_slowprotocol(self, **kwargs):
+        return SlowProtocol(**kwargs)
 
     @keyword
     def packet_dot1q(self, **kwargs):
@@ -127,6 +167,10 @@ class Library:
         return ICMPv6EchoRequest(**kwargs)
 
     @keyword
+    def packet_ICMPv6DestUnreach(self, **kwargs):
+        return ICMPv6DestUnreach(**kwargs)
+
+    @keyword
     def packet_ICMPv6NDOptSrcLLAddr(self, **kwargs):
         return ICMPv6NDOptSrcLLAddr(**kwargs)
 
@@ -156,11 +200,23 @@ class Library:
 
     @keyword
     def packet_layer_is_present(self, packet, layer_name):
-        return packet.haslayer(layer_name)
+        if not packet.haslayer(layer_name):
+            raise Failure("Required layer {} is NOT present in packet {}".format(
+                layer_name,
+                packet.summary()
+            ))
+        else:
+            return True
 
     @keyword
     def packet_layer_is_absent(self, packet, layer_name):
-        return not self.packet_layer_is_present(packet, layer_name)
+        if packet.haslayer(layer_name):
+            raise Failure("Prohibited layer {} IS present in packet {}".format(
+                layer_name,
+                packet.summary()
+            ))
+        else:
+            return True
 
     @keyword
     def packet_checksums_ok(self, packet):

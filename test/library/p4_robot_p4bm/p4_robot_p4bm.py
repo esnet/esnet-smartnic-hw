@@ -146,3 +146,33 @@ class Library(P4RobotAPI):
         for counter in config['counter_arrays']:
             self.standard.bm_counter_reset_all(None, counter['name'])
 
+    @keyword
+    def p4_register_read(self, register_name, index):
+        reg = self.standard.bm_register_read(None, register_name, int(index))
+        return(int.from_bytes(reg, byteorder='big'))
+
+    @keyword
+    def p4_register_read_all(self, register_name):
+        regs = self.standard.bm_register_read_all(None, register_name)
+        regints = map(lambda x: int.from_bytes(x, byteorder='big'), regs)
+        return(regs)
+
+    @keyword
+    def p4_register_write(self, register_name, index, value):
+        self.standard.bm_register_write(None, register_name, int(index), int(value))
+
+    @keyword
+    def p4_register_write_range(self, register_name, start_index, end_index, value):
+        self.standard.bm_register_write_range(None, register_name, int(start_index), int(end_index), int(value))
+
+    @keyword
+    def p4_register_reset(self, register_name):
+        self.standard.bm_register_reset(None, register_name)
+
+    @keyword
+    def p4_register_reset_all(self):
+        config = json.loads(self.standard.bm_get_config())
+        for register in config['register_arrays']:
+            self.standard.bm_register_reset(None, register['name'])
+
+
