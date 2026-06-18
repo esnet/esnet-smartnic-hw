@@ -22,7 +22,7 @@ create_root_design ""
 #
 # Adds to the BD boundary:
 #
-#   1. Clock / reset outputs — clk_pl, clk_usr_{0,1} and their resets
+#   1. Clock / reset outputs — clk_pl and its resets
 #   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, and reset ports
 #
 # =============================================================================
@@ -30,49 +30,29 @@ create_root_design ""
 # =========================================================================
 # 1. Clock / reset outputs
 #
-# clk_usr_{0,1} and their resets are generated inside the clock_reset
-# hierarchy but not exported at the BD boundary by the AMD base design.
-# clk_pl (pl0_ref_clk, 100 MHz) is likewise internal-only.
-#
-# BD ports are added and connected onto the existing internal nets.
-# No internal logic is added or modified.
+# clk_pl (pl0_ref_clk, 100 MHz) and its resets are internal-only in the
+# AMD base design.  BD ports are added and connected onto the existing
+# internal nets.  No internal logic is added or modified.
 # =========================================================================
 
-# -- Clocks ---------------------------------------------------------------
+# -- Clock ----------------------------------------------------------------
 create_bd_port -dir O -type clk clk_pl
-create_bd_port -dir O -type clk clk_usr_0
-create_bd_port -dir O -type clk clk_usr_1
 
 # FREQ_HZ is intentionally not set here — Vivado propagates the actual
-# PLL output frequency from the clock wizard through the net, which is
-# more accurate than any nominal value we could specify.
+# frequency from the CRP through the net, which is more accurate than
+# any nominal value we could specify.
 
-# clk_pl is pl0_ref_clk; tap the existing net driven by cips.
 connect_bd_net [get_bd_ports clk_pl] \
     [get_bd_pins cips/pl0_ref_clk]
 
-connect_bd_net [get_bd_ports clk_usr_0] \
-    [get_bd_pins clock_reset/clk_usr_0]
-
-connect_bd_net [get_bd_ports clk_usr_1] \
-    [get_bd_pins clock_reset/clk_usr_1]
-
 # -- Resets ---------------------------------------------------------------
-# Each proc_sys_reset produces two flavours of active-low resetn:
+# proc_sys_reset produces two flavours of active-low resetn:
 #   ic     (interconnect_aresetn) — for AXI interconnects
 #   periph (peripheral_aresetn)  — for peripheral IP
-#
-# The pl_* resets are already consumed internally by base_logic; exporting
-# them too lets the platform RTL build its own peripheral reset trees
-# synchronised to clk_pl without needing a second proc_sys_reset.
 
 foreach {port_name pin_path} {
     resetn_pl_ic        clock_reset/resetn_pl_ic
     resetn_pl_periph    clock_reset/resetn_pl_periph
-    resetn_usr_0_ic     clock_reset/resetn_usr_0_ic
-    resetn_usr_0_periph clock_reset/resetn_usr_0_periph
-    resetn_usr_1_ic     clock_reset/resetn_usr_1_ic
-    resetn_usr_1_periph clock_reset/resetn_usr_1_periph
 } {
     create_bd_port -dir O -from 0 -to 0 -type rst $port_name
     connect_bd_net [get_bd_ports $port_name] \

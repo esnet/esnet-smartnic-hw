@@ -1,15 +1,9 @@
     // Clocks from BD
     wire        clk_pl;
-    wire        clk_usr_0;
-    wire        clk_usr_1;
 
     // Resets from BD (active-low)
     wire        resetn_pl_ic;
     wire        resetn_pl_periph;
-    wire        resetn_usr_0_ic;
-    wire        resetn_usr_0_periph;
-    wire        resetn_usr_1_ic;
-    wire        resetn_usr_1_periph;
 
     // PCIE0 clock (from BD)
     wire        clk_pcie0;
