@@ -3,10 +3,6 @@ set module_name xilinx_aved
 set AVED_ROOT $env(AVED_ROOT)
 set AVED_BASE_DESIGN $env(AVED_BASE_DESIGN)
 
-# Limit Vivado's internal thread count to reduce peak memory during
-# CIPS elaboration (PCIE0 + SR-IOV is very large on this platform).
-set_param general.maxThreads 4
-
 # Create BD
 create_bd_design ${module_name} -dir .
 current_bd_design ${module_name}
