@@ -1,16 +1,15 @@
 module xilinx_aved_adapter (
-    // Clocks and resets from AVED BD
+    // -------------------------------------------------------------------------
+    // AVED BD — clock and reset inputs
+    // -------------------------------------------------------------------------
     input  wire        clk_pl0_100mhz,
-    input  wire        m_axi_pcie0_aclk,
     input  wire        rstn_pl0_100mhz,
-    input  wire        m_axi_pcie0_aresetn,
 
-    // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
-    output wire        sys_clk,     // system/debug clock → shell
-    output wire        pci_rstn_in, // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
-    input  wire        pci_rstn,    // post-JTAG reset ← shell (not yet wired to CPM5)
-
-    // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
+    // -------------------------------------------------------------------------
+    // AVED BD — PCIE0 BAR2: 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
+    // -------------------------------------------------------------------------
+    input  wire         m_axi_pcie0_aclk,
+    input  wire         m_axi_pcie0_aresetn,
     input  wire [63:0]  m_axi_pcie0_awaddr,
     input  wire [1:0]   m_axi_pcie0_awid,
     input  wire [7:0]   m_axi_pcie0_awlen,
@@ -53,6 +52,9 @@ module xilinx_aved_adapter (
     output wire         m_axi_pcie0_rvalid,
     input  wire         m_axi_pcie0_rready,
 
+    // -------------------------------------------------------------------------
+    // AVED BD — PCIE0 AXI4S streaming and control interfaces (terminated here)
+    // -------------------------------------------------------------------------
     // PCIE0 H2C stream (BD master → terminated here)
     input  wire         dma0_m_axis_h2c_0_tvalid,
     input  wire [511:0] dma0_m_axis_h2c_0_tdata,
@@ -141,8 +143,14 @@ module xilinx_aved_adapter (
     output wire [12:0]  dma0_usr_flr_0_done_fnc,
     output wire         dma0_usr_flr_0_done_vld,
 
-    // AXI4-L controller output — driven from PCIE0 BAR2
-    // (axil_if.aclk is driven from clk_pl0_100mhz)
+    // -------------------------------------------------------------------------
+    // Shell-facing outputs
+    // -------------------------------------------------------------------------
+    output wire        sys_clk,     // system/debug clock → shell
+    output wire        pci_rstn_in, // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
+    input  wire        pci_rstn,    // post-JTAG reset ← shell (not yet wired to CPM5)
+
+    // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if
 );
 
