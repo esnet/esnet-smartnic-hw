@@ -7,3 +7,4 @@
 [submodule "src/xilinx/aved"]
 	path = src/xilinx/aved
 	url = https://github.com/Xilinx/AVED.git
+	ignore = untracked

@@ -10,6 +10,15 @@ module core
 );
 
     // Signals
+    logic clk;
+    logic srst;
+    logic mgmt_clk;
+    logic mgmt_srst;
+    logic clk_100mhz;
+    logic port_clk  [shell_if.NUM_PORTS];
+    logic port_srst [shell_if.NUM_PORTS];
+    
+    // Interfaces
     axi4l_intf axil_if ();
 
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
@@ -19,14 +28,6 @@ module core
     axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(port_clk[0]));
 
     // Convert shell_intf to SV interfaces
-    logic                          clk;
-    logic                          srst;
-    logic                          mgmt_clk;
-    logic                          mgmt_srst;
-    logic                          clk_100mhz;
-    logic port_clk  [shell_if.NUM_PORTS];
-    logic port_srst [shell_if.NUM_PORTS];
-
     shell_adapter__core i_shell_adapter__core (
         .shell_if,
         .clk,

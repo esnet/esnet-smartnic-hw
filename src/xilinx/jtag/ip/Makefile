@@ -18,7 +18,11 @@ IP_SIM_SRC_FILES = \
 
 IP_SIM_INC_DIRS =
 
-EXT_LIBS =
+EXT_LIBS = \
+    xpm \
+    axis_vio_v1_0_14 \
+    axis_dbg_stub_v1_0_1 \
+    axis_dbg_sync_v1_0_1
 
 COMPILE_OPTS =
 
