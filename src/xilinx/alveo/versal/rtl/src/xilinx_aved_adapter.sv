@@ -1,19 +1,19 @@
 module xilinx_aved_adapter (
     // Clocks and resets from AVED BD
-    input  wire        clk_pl,
-    input  wire        clk_pcie0,
-    input  wire        resetn_pl_periph,
-    input  wire        aresetn_pl0,
-    input  wire        aresetn_pcie0_link,
+    input  wire        clk_pl0_100mhz,
+    input  wire        m_axi_pcie0_aclk,
+    input  wire        rstn_pl0_100mhz,
+    input  wire        arstn,
+    input  wire        m_axi_pcie0_aresetn,
 
     // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
     output wire        sys_clk,      // system/debug clock → shell
     output wire        pcie_clk,     // PCIe interface clock → shell
-    output wire        pci_rstn_in,  // pre-JTAG reset → shell (aresetn_pcie0_link proxy for perst#)
+    output wire        pci_rstn_in,  // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
     input  wire        pci_rstn,     // post-JTAG reset ← shell (not yet wired to CPM5)
 
     // BD-facing reset output — feeds cips/dma0_intrfc_resetn via .* on top_i.
-    output wire        resetn_pcie0,
+    output wire        dma0_intrfc_aresetn,
 
     // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
     input  wire [63:0]  m_axi_pcie0_awaddr,
@@ -147,7 +147,7 @@ module xilinx_aved_adapter (
     output wire         dma0_usr_flr_0_done_vld,
 
     // AXI4-L controller output — driven from PCIE0 BAR2
-    // (axil_if.aclk is driven from clk_pl)
+    // (axil_if.aclk is driven from clk_pl0_100mhz)
     axi4l_intf.controller axil_if
 );
 
@@ -159,14 +159,14 @@ module xilinx_aved_adapter (
     // actual transfer width).  axi4l_from_axi4_adapter extracts the active
     // 32-bit word and drives the downstream AXI4-L register fabric.
     // =========================================================================
-    axi4l_intf axil_if__clk_pcie0 ();
+    axi4l_intf axil_if__m_axi_pcie0_aclk ();
 
     axi4_intf #(
         .DATA_BYTE_WID ( 64 ),
         .ADDR_WID      ( 64 ),
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
-    ) pcie0_axi4_if (.aclk(clk_pcie0));
+    ) pcie0_axi4_if (.aclk(m_axi_pcie0_aclk));
 
     axi4_intf_from_signals #(
         .DATA_BYTE_WID ( 64 ),
@@ -174,7 +174,7 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_from_signals (
-        .aclk     ( clk_pcie0      ),
+        .aclk     ( m_axi_pcie0_aclk      ),
         .awid     ( m_axi_pcie0_awid      ),
         .awaddr   ( m_axi_pcie0_awaddr    ),
         .awlen    ( m_axi_pcie0_awlen     ),
@@ -228,15 +228,15 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_axi4l_from_axi4 (
-        .aclk    ( clk_pcie0 ),
-        .aresetn ( aresetn_pcie0_link ),
+        .aclk    ( m_axi_pcie0_aclk ),
+        .aresetn ( m_axi_pcie0_aresetn ),
         .axi4_if ( pcie0_axi4_if ),
-        .axi4l_if( axil_if__clk_pcie0 )
+        .axi4l_if( axil_if__m_axi_pcie0_aclk )
     );
 
     axi4l_intf_cdc i_axi4l_intf_cdc (
-        .axi4l_if_from_controller ( axil_if__clk_pcie0 ),
-        .clk_to_peripheral        ( clk_pl ),
+        .axi4l_if_from_controller ( axil_if__m_axi_pcie0_aclk ),
+        .clk_to_peripheral        ( clk_pl0_100mhz ),
         .axi4l_if_to_peripheral   ( axil_if )
     );
 
@@ -293,9 +293,9 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
-    assign sys_clk      = clk_pl;
-    assign pcie_clk     = clk_pcie0;
-    assign pci_rstn_in  = aresetn_pcie0_link;
-    assign resetn_pcie0 = pci_rstn;
+    assign sys_clk      = clk_pl0_100mhz;
+    assign pcie_clk     = m_axi_pcie0_aclk;
+    assign pci_rstn_in  = m_axi_pcie0_aresetn;
+    assign dma0_intrfc_aresetn = pci_rstn;
 
 endmodule : xilinx_aved_adapter

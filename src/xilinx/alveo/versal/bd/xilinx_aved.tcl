@@ -18,17 +18,17 @@ create_root_design ""
 #
 # Adds to the BD boundary:
 #
-#   1. Clock / reset outputs — clk_pl (pl0_ref_clk) and resetn_pl_periph
-#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, clock, and reset ports
+#   1. Clock / reset outputs — clk_pl0_100mhz (pl0_ref_clk) and rstn_pl0_100mhz
+#   2. PCIE0 endpoint        — GT, AXI4, AXI4S streaming, clock and reset ports
 #
 # =============================================================================
 
 # =========================================================================
 # 1. Clock / reset outputs
 #
-# clk_pl (pl0_ref_clk) and resetn_pl_periph are internal-only in the AMD
-# base design.  BD ports are added and connected onto the existing internal
-# nets.  No internal logic is added or modified.
+# clk_pl0_100mhz (pl0_ref_clk) and rstn_pl0_100mhz (resetn_pl_periph) are
+# internal-only in the AMD base design.  BD ports are added and connected
+# onto the existing internal nets.  No internal logic is added or modified.
 #
 # FREQ_HZ is intentionally not set on the clock port — Vivado propagates
 # the frequency from the CRP configuration through the net automatically,
@@ -36,17 +36,17 @@ create_root_design ""
 # CRP frequency is ever changed.
 # =========================================================================
 
-create_bd_port -dir O -type clk clk_pl
+create_bd_port -dir O -type clk clk_pl0_100mhz
 
-connect_bd_net [get_bd_ports clk_pl] \
+connect_bd_net [get_bd_ports clk_pl0_100mhz] \
     [get_bd_pins cips/pl0_ref_clk]
 
-create_bd_port -dir O -from 0 -to 0 -type rst resetn_pl_periph
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pl_periph]
+create_bd_port -dir O -from 0 -to 0 -type rst rstn_pl0_100mhz
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports rstn_pl0_100mhz]
 
 connect_bd_net \
     [get_bd_pins clock_reset/resetn_pl_periph] \
-    [get_bd_ports resetn_pl_periph]
+    [get_bd_ports rstn_pl0_100mhz]
 
 # =========================================================================
 # 2. PCIE0 — user application endpoint (QDMA mode, X8)
@@ -158,48 +158,48 @@ connect_bd_intf_net \
 # -------------------------------------------------------------------------
 # 2c. PCIE0 interface clock and reset
 #
-# clk_pcie0 is pl2_ref_clk (250 MHz), a PMC CRP clock always-on and
+# m_axi_pcie0_aclk is pl2_ref_clk (250 MHz), a PMC CRP clock always-on and
 # independent of PCIe link state.  It drives dma0_intrfc_clk and the
 # axi_noc_cips M01_AXI clock (section 2d).
 #
-# aresetn_pcie0_link (dma0_axi_aresetn) is the CPM5 PCIE0 link reset,
-# already synchronous to clk_pcie0.  Exported for use by user RTL.
+# m_axi_pcie0_aresetn (dma0_axi_aresetn) is the CPM5 PCIE0 link reset,
+# already synchronous to m_axi_pcie0_aclk.  Exported for use by user RTL.
 #
 # dma0_intrfc_resetn mirrors dma1: driven from clock_reset/resetn_pcie_ic,
 # which is pcie_psr/interconnect_aresetn — cascaded from pl_psr, rooted at
 # pl0_resetn, synchronised first to pl0_ref_clk then to pl2_ref_clk.
 #
-# aresetn_pl0 (pl0_resetn) is the raw PS global reset, exported as a raw
+# arstn (pl0_resetn) is the raw PS global reset, exported as a raw
 # asynchronous source for user RTL reset synthesis.
 #
-# The synthesised result is fed back as resetn_pcie0 (active-low input)
+# The synthesised result is fed back as dma0_intrfc_aresetn (active-low input)
 # which drives dma0_intrfc_resetn.
 # -------------------------------------------------------------------------
-create_bd_port -dir O -type clk clk_pcie0
+create_bd_port -dir O -type clk m_axi_pcie0_aclk
 
-create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pl0
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pl0]
-create_bd_port -dir O -from 0 -to 0 -type rst aresetn_pcie0_link
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports aresetn_pcie0_link]
+create_bd_port -dir O -from 0 -to 0 -type rst arstn
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports arstn]
+create_bd_port -dir O -from 0 -to 0 -type rst m_axi_pcie0_aresetn
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports m_axi_pcie0_aresetn]
 
-create_bd_port -dir I -from 0 -to 0 -type rst resetn_pcie0
-set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports resetn_pcie0]
+create_bd_port -dir I -from 0 -to 0 -type rst dma0_intrfc_aresetn
+set_property CONFIG.POLARITY {ACTIVE_LOW} [get_bd_ports dma0_intrfc_aresetn]
 
 connect_bd_net \
     [get_bd_pins cips/pl2_ref_clk] \
     [get_bd_pins cips/dma0_intrfc_clk] \
-    [get_bd_ports clk_pcie0]
+    [get_bd_ports m_axi_pcie0_aclk]
 
 connect_bd_net \
     [get_bd_pins cips/pl0_resetn] \
-    [get_bd_ports aresetn_pl0]
+    [get_bd_ports arstn]
 
 connect_bd_net \
     [get_bd_pins cips/dma0_axi_aresetn] \
-    [get_bd_ports aresetn_pcie0_link]
+    [get_bd_ports m_axi_pcie0_aresetn]
 
 connect_bd_net \
-    [get_bd_ports resetn_pcie0] \
+    [get_bd_ports dma0_intrfc_aresetn] \
     [get_bd_pins cips/dma0_intrfc_resetn]
 
 # -------------------------------------------------------------------------
@@ -240,7 +240,7 @@ foreach {si_port} {S00_AXI S01_AXI} {
 }
 
 # M01_AXI clock: aclk5 (slot 6, added via NUM_CLKS above).
-# Joins the pl2_ref_clk net shared by dma0_intrfc_clk and clk_pcie0.
+# Joins the pl2_ref_clk net shared by dma0_intrfc_clk and m_axi_pcie0_aclk.
 set_property CONFIG.ASSOCIATED_BUSIF {M01_AXI} \
     [get_bd_pins axi_noc_cips/aclk5]
 connect_bd_net [get_bd_pins cips/pl2_ref_clk] \
@@ -260,9 +260,9 @@ connect_bd_intf_net \
     [get_bd_intf_pins axi_noc_cips/M01_AXI] \
     [get_bd_intf_ports m_axi_pcie0]
 
-# Associate m_axi_pcie0 with clk_pcie0.
+# Associate m_axi_pcie0 with m_axi_pcie0_aclk.
 set_property CONFIG.ASSOCIATED_BUSIF {m_axi_pcie0} \
-    [get_bd_ports clk_pcie0]
+    [get_bd_ports m_axi_pcie0_aclk]
 
 # Address assignment: route PCIE0 BAR2 (8 MB) window to M01_AXI from both
 # CPM NoC initiator address spaces.  BAR0 is type DMA (QDMA internal) and
@@ -315,7 +315,7 @@ foreach pin_name {
     make_bd_intf_pins_external [get_bd_intf_pins cips/$pin_name]
 }
 
-# Associate streaming interfaces with clk_pcie0.
+# Associate streaming interfaces with m_axi_pcie0_aclk.
 # make_bd_intf_pins_external appends _0 to the pin name for the port name.
 set assoc_busifs [join {
     dma0_m_axis_h2c_0
@@ -328,6 +328,6 @@ set assoc_busifs [join {
     dma0_usr_flr_0
     m_axi_pcie0
 } :]
-set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports clk_pcie0]
+set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports m_axi_pcie0_aclk]
 
 save_bd_design

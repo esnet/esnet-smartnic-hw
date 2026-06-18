@@ -1,12 +1,12 @@
     // Clocks from BD
-    wire        clk_pl;
-    wire        clk_pcie0;
+    wire        clk_pl0_100mhz;
+    wire        m_axi_pcie0_aclk;
 
     // Resets from BD (active-low)
-    wire        resetn_pl_periph;
-    wire        aresetn_pl0;          // PS global reset (raw, asynchronous)
-    wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
-    wire        resetn_pcie0;         // synthesised reset → dma0_intrfc_resetn
+    wire        rstn_pl0_100mhz;
+    wire        arstn;          // PS global reset (raw, asynchronous)
+    wire        m_axi_pcie0_aresetn;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
+    wire        dma0_intrfc_aresetn;         // synthesised reset → dma0_intrfc_resetn
 
     // Shell-facing signals — functional names used above the adapter layer.
     wire        sys_clk;      // system/debug clock

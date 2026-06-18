@@ -21,20 +21,20 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     // Clocks and resets
     //
-    //   clk_pl    — system clock (100 MHz); drives adapter clk_pl and axil_app_if
-    //   clk_pcie0 — PCIe interface clock (250 MHz); drives the AXI4 master port
+    //   clk_pl0_100mhz    — system clock (100 MHz); drives adapter clk_pl0_100mhz and axil_app_if
+    //   m_axi_pcie0_aclk — PCIe interface clock (250 MHz); drives the AXI4 master port
     //
-    // aresetn_pl0 and aresetn_pcie0_link are asserted together with clk_pl
+    // arstn and m_axi_pcie0_aresetn are asserted together with clk_pl0_100mhz
     // reset so that pci_rstn_in de-asserts at the same time.
     // =========================================================================
-    logic clk_pl             = 1'b0;
-    logic clk_pcie0          = 1'b0;
-    logic resetn_pl_periph   = 1'b0;
-    logic aresetn_pl0        = 1'b0;
-    logic aresetn_pcie0_link = 1'b0;
+    logic clk_pl0_100mhz             = 1'b0;
+    logic m_axi_pcie0_aclk          = 1'b0;
+    logic rstn_pl0_100mhz   = 1'b0;
+    logic arstn        = 1'b0;
+    logic m_axi_pcie0_aresetn = 1'b0;
 
-    `SVUNIT_CLK_GEN(clk_pl,    5ns);   // 100 MHz
-    `SVUNIT_CLK_GEN(clk_pcie0, 2ns);   // 250 MHz
+    `SVUNIT_CLK_GEN(clk_pl0_100mhz,    5ns);   // 100 MHz
+    `SVUNIT_CLK_GEN(m_axi_pcie0_aclk, 2ns);   // 250 MHz
 
     // =========================================================================
     // AXI4 interface — controller side; drives m_axi_pcie0_* flat ports.
@@ -45,7 +45,7 @@ module xilinx_aved_adapter_unit_test;
         .ADDR_WID      ( 64 ),
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
-    ) pcie0_axi4_if (.aclk(clk_pcie0));
+    ) pcie0_axi4_if (.aclk(m_axi_pcie0_aclk));
 
     // =========================================================================
     // Shell and core interfaces
@@ -63,17 +63,17 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     xilinx_aved_adapter DUT_adapter (
         // Clocks and resets
-        .clk_pl                   ( clk_pl             ),
-        .clk_pcie0                ( clk_pcie0          ),
-        .resetn_pl_periph         ( resetn_pl_periph   ),
-        .aresetn_pl0              ( aresetn_pl0        ),
-        .aresetn_pcie0_link       ( aresetn_pcie0_link ),
+        .clk_pl0_100mhz                   ( clk_pl0_100mhz             ),
+        .m_axi_pcie0_aclk                ( m_axi_pcie0_aclk          ),
+        .rstn_pl0_100mhz         ( rstn_pl0_100mhz   ),
+        .arstn              ( arstn        ),
+        .m_axi_pcie0_aresetn       ( m_axi_pcie0_aresetn ),
         // Shell-facing clock/reset
         .sys_clk                  (                    ),
         .pcie_clk                 (                    ),
         .pci_rstn_in              ( pci_rstn_in        ),
         .pci_rstn                 ( pci_rstn           ),
-        .resetn_pcie0             (                    ),
+        .dma0_intrfc_aresetn             (                    ),
         // PCIE0 BAR2 AXI4 (512-bit) — driven from pcie0_axi4_if
         .m_axi_pcie0_awaddr       ( pcie0_axi4_if.awaddr    ),
         .m_axi_pcie0_awid         ( pcie0_axi4_if.awid      ),
@@ -194,8 +194,8 @@ module xilinx_aved_adapter_unit_test;
     );
 
     xilinx_alveo_versal_shell DUT_shell (
-        .sys_clk      ( clk_pl      ),
-        .pcie_clk     ( clk_pcie0   ),
+        .sys_clk      ( clk_pl0_100mhz      ),
+        .pcie_clk     ( m_axi_pcie0_aclk   ),
         .pci_rstn_in  ( pci_rstn_in ),
         .pci_rstn     ( pci_rstn    ),
         .axil_if      ( axil_app_if ),
@@ -231,15 +231,15 @@ module xilinx_aved_adapter_unit_test;
     task setup();
         svunit_ut.setup();
         agent.idle();
-        resetn_pl_periph   = 1'b0;
-        aresetn_pl0        = 1'b0;
-        aresetn_pcie0_link = 1'b0;
-        repeat (8) @(posedge clk_pl);
-        resetn_pl_periph   = 1'b1;
-        aresetn_pl0        = 1'b1;
-        aresetn_pcie0_link = 1'b1;
+        rstn_pl0_100mhz   = 1'b0;
+        arstn        = 1'b0;
+        m_axi_pcie0_aresetn = 1'b0;
+        repeat (8) @(posedge clk_pl0_100mhz);
+        rstn_pl0_100mhz   = 1'b1;
+        arstn        = 1'b1;
+        m_axi_pcie0_aresetn = 1'b1;
         // Allow CDC and reset synchronisers to settle
-        repeat (16) @(posedge clk_pl);
+        repeat (16) @(posedge clk_pl0_100mhz);
     endtask
 
     task teardown();
