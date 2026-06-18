@@ -44,8 +44,7 @@ module esnet_smartnic
     xilinx_alveo_versal_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_versal_shell (
-        .sys_clk      ( sys_clk      ),
-        .pcie_clk     ( pcie_clk     ),
+        .sys_clk     ( sys_clk     ),
         .pci_rstn_in ( pci_rstn_in ),
         .pci_rstn    ( pci_rstn    ),
         .axil_if      ( axil_debug_if ),

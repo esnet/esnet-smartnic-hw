@@ -1,10 +1,9 @@
 module xilinx_jtag_reset_ctrl (
     input  wire logic debug_clk, // Free-running (debug) clock
     input  wire logic ready,     // Reset indication (forwarded to JTAG)
-    input  wire logic rstn_clk,  // Retime reset to this clock
     input  wire logic rstn_in,   // Incoming (raw) reset
 
-    output logic rstn_out // Outgoing reset (potentially overridden by JTAG)
+    output wire logic rstn_out   // Outgoing reset (potentially overridden by JTAG)
 );
     logic jtag_reset;
 
@@ -16,9 +15,6 @@ module xilinx_jtag_reset_ctrl (
         .probe_out0 ( jtag_reset ) // Active-high
     );
 
-    always @(posedge rstn_clk or negedge rstn_in) begin
-        if (!rstn_in) rstn_out <= 1'b0;
-        else          rstn_out <= !jtag_reset;
-    end
+    assign rstn_out = rstn_in & !jtag_reset;
 
 endmodule : xilinx_jtag_reset_ctrl

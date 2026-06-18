@@ -22,9 +22,6 @@ module xilinx_alveo_versal_shell
     // device power-on.  Used as the free-running clock for the JTAG VIO.
     input  wire logic       sys_clk,
 
-    // PCIe interface clock
-    input  wire logic       pcie_clk,
-
     // PCIe reset — pre-JTAG synthesis input (active-low)
     input  wire logic       pci_rstn_in,
 
@@ -42,8 +39,7 @@ module xilinx_alveo_versal_shell
     // Common Alveo platform — PCIe reset control with JTAG VIO override
     // =========================================================================
     xilinx_alveo i_xilinx_alveo (
-        .sys_clk_100mhz ( sys_clk      ),
-        .pci_clk        ( pcie_clk     ),
+        .sys_clk_100mhz ( sys_clk     ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn_out   ( pci_rstn    )
     );

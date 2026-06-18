@@ -68,7 +68,6 @@ module xilinx_aved_adapter_unit_test;
         .m_axi_pcie0_aresetn       ( m_axi_pcie0_aresetn ),
         // Shell-facing clock/reset
         .sys_clk                  (                    ),
-        .pcie_clk                 (                    ),
         .pci_rstn_in              ( pci_rstn_in        ),
         .pci_rstn                 ( pci_rstn           ),
         // PCIE0 BAR2 AXI4 (512-bit) — driven from pcie0_axi4_if
@@ -191,9 +190,8 @@ module xilinx_aved_adapter_unit_test;
     );
 
     xilinx_alveo_versal_shell DUT_shell (
-        .sys_clk      ( clk_pl0_100mhz      ),
-        .pcie_clk     ( m_axi_pcie0_aclk   ),
-        .pci_rstn_in  ( pci_rstn_in ),
+        .sys_clk      ( clk_pl0_100mhz ),
+        .pci_rstn_in  ( pci_rstn_in   ),
         .pci_rstn     ( pci_rstn    ),
         .axil_if      ( axil_app_if ),
         .shell_if

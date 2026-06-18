@@ -40,7 +40,6 @@ module xilinx_alveo_versal_shell_unit_test;
     // =========================================================================
     xilinx_alveo_versal_shell DUT (
         .sys_clk     ( axil_if.aclk ),
-        .pcie_clk    ( axil_if.aclk ),
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),
         .axil_if,

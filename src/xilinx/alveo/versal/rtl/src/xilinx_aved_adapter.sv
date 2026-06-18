@@ -7,7 +7,6 @@ module xilinx_aved_adapter (
 
     // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
     output wire        sys_clk,     // system/debug clock → shell
-    output wire        pcie_clk,    // PCIe interface clock → shell
     output wire        pci_rstn_in, // pre-JTAG reset → shell (m_axi_pcie0_aresetn proxy for perst#)
     input  wire        pci_rstn,    // post-JTAG reset ← shell (not yet wired to CPM5)
 
@@ -290,7 +289,6 @@ module xilinx_aved_adapter (
 
     // Signal naming adaptation — AVED-specific names → functional shell names
     assign sys_clk     = clk_pl0_100mhz;
-    assign pcie_clk    = m_axi_pcie0_aclk;
     assign pci_rstn_in = m_axi_pcie0_aresetn;
 
 endmodule : xilinx_aved_adapter

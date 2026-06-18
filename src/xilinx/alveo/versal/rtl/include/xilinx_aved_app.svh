@@ -8,7 +8,6 @@
 
     // Shell-facing signals — functional names used above the adapter layer.
     wire        sys_clk;      // system/debug clock
-    wire        pcie_clk;     // PCIe interface clock
     wire        pci_rstn_in;  // pre-JTAG reset (active-low)
     wire        pci_rstn;     // post-JTAG synthesised reset (active-low)
 
