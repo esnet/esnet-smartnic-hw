@@ -41,8 +41,8 @@ with the SmartNIC runtime firmware, which is located in a companion github repos
 https://github.com/esnet/esnet-smartnic-fw
 
 The OpenNIC shell and SmartNIC designs are built with the AMD (Xilinx) Vivado software tool
-suite.  The current release supports development with Vivado version 2023.2.2, running on
-Ubuntu 22.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
+suite.  The current release supports development with Vivado version 2025.2, running on
+Ubuntu 24.04 LTS.  Furthermore, while the ESnet SmartNIC Platform, the AMD (Xilinx) OpenNIC
 shell and the AMD (Xilinx) Vivado tool suite are all public and openly available, note
 that the AMD (Xilinx) VitisNetP4 IP core is a commercially licensed feature that requires a
 site-specific license file.
@@ -184,7 +184,7 @@ test/
 
 The following steps guide a new user through the installation of the
 SmartNIC Hardware Design Repository, beginning with a
-suitably-configured host running Ubuntu 22.04 LTS Linux.
+suitably-configured host running Ubuntu 24.04 LTS Linux.
 
 1. Install the esnet-smartnic-hw respository by creating a clone from github into a local directory:
 
@@ -208,14 +208,14 @@ suitably-configured host running Ubuntu 22.04 LTS Linux.
 
 ### Installing and Configuring the Vivado Runtime Environment
 
-1. Install the AMD (Xilinx) Vivado tool suite (version 2023.2.2), including the VitisNetP4 option.
+1. Install the AMD (Xilinx) Vivado tool suite (version 2025.2), including the VitisNetP4 option.
 
 2. Configure the runtime environment by executing the settings64.sh script located in the Vivado
 installation directory:
 
-       > source /tools/Xilinx/Vivado/2023.2/settings64.sh
+       > source /tools/Xilinx/2025.2/Vivado/settings64.sh
 
-   where the Vivado installation directory is located at /tools/Xilinx/Vivado/2023.2/ in this example.
+   where the Vivado installation directory is located at /tools/Xilinx/2025.2/Vivado/ in this example.
 
 3. Set the XILINXD_LICENSE_FILE environment variable accordingly to resolve the site-specific license for
 the AMD (Xilinx) VitisNetp4 IP core.  This can be done with a `.flexlmrc` file in the users home directory,
@@ -384,7 +384,7 @@ User P4 files **MUST** be structured to comply with this processing architecture
 desired within each of these processing stages.
 
 More details about the AMD (Xilinx) P4 architecture can be found in the *Vitis Networking P4 User Guide, UG1308
-(v2023.2) Oct 18, 2023*.
+(v2025.2) Nov 20, 2025*.
 
 
 ### Include files:
@@ -419,7 +419,7 @@ The VitisNetP4 core supports both `Standard Metadata` (defined and set by the P4
 program.
 
 For more details about the `Standard Metadata` definitions, see *Vitis Networking P4 User Guide, UG1308
-(v2023.2) Oct 18, 2023*.
+(v2025.2) Nov 20, 2025*.
 
 In order for the compiled VitisNetP4 core to match the SmartNIC application interface, a user P4 program **MUST**
 define the User Metadata structure as follows:
@@ -523,11 +523,11 @@ definitions.
 The following reference documents can be accessed from the AMD (Xilinx) Vitis Networking P4 Secure Site
 (once access priveleges are approved and granted):
 
-- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2023.2) Oct 18, 2023*.
+- *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2025.2) Nov 20, 2025*.
 
-- *Vitis Networking P4 User Guide, UG1308 (v2023.2) Oct 18, 2023*.
+- *Vitis Networking P4 User Guide, UG1308 (v2025.2) Nov 20, 2025*.
 
-- *Vitis Networking P4 Getting Started Guide, UG1373 (v2023.2) Oct 18, 2023*.
+- *Vitis Networking P4 Getting Started Guide, UG1373 (v2025.2) Nov 20, 2025*.
 
 Users may also be interested in the information at https://p4.org/.
 
