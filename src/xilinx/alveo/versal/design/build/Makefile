@@ -7,6 +7,8 @@ COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
+export LIB_ROOT
+
 # -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
