@@ -8,6 +8,7 @@ source ../../../.out/${board}/${__XILINX_VERSION}/smartnic/build/synth/sources.t
 read_checkpoint -cell box_322mhz_inst/smartnic/smartnic_app $env(APP_ROOT)/app_if/smartnic_app.dcp
 
 # read constraints
+set CONSTR_MGMT_TYPE {-unmanaged}
 source ../../../.out/${board}/${__XILINX_VERSION}/smartnic/build/synth/constraints.tcl
 
 read_xdc constraints/${board}/timing.xdc
