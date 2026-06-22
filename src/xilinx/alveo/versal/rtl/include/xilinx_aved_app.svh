@@ -1,57 +1,11 @@
-    // Clocks from BD
-    wire        clk_pl;
-    wire        clk_usr_0;
-    wire        clk_usr_1;
-
-    // Resets from BD (active-low)
-    wire        resetn_pl_ic;
-    wire        resetn_pl_periph;
-    wire        resetn_usr_0_ic;
-    wire        resetn_usr_0_periph;
-    wire        resetn_usr_1_ic;
-    wire        resetn_usr_1_periph;
-
-    // Management AXI4-Lite interface (BD master -> adapter slave)
-    wire [31:0] m_axi_usr_mgmt_awaddr;
-    wire [2:0]  m_axi_usr_mgmt_awprot;
-    wire        m_axi_usr_mgmt_awvalid;
-    wire        m_axi_usr_mgmt_awready;
-    wire [31:0] m_axi_usr_mgmt_wdata;
-    wire [3:0]  m_axi_usr_mgmt_wstrb;
-    wire        m_axi_usr_mgmt_wvalid;
-    wire        m_axi_usr_mgmt_wready;
-    wire [1:0]  m_axi_usr_mgmt_bresp;
-    wire        m_axi_usr_mgmt_bvalid;
-    wire        m_axi_usr_mgmt_bready;
-    wire [31:0] m_axi_usr_mgmt_araddr;
-    wire [2:0]  m_axi_usr_mgmt_arprot;
-    wire        m_axi_usr_mgmt_arvalid;
-    wire        m_axi_usr_mgmt_arready;
-    wire [31:0] m_axi_usr_mgmt_rdata;
-    wire [1:0]  m_axi_usr_mgmt_rresp;
-    wire        m_axi_usr_mgmt_rvalid;
-    wire        m_axi_usr_mgmt_rready;
-
-    // PCIE0 clock (from BD)
-    wire        clk_pcie0;
-
-    // PCIE0 raw reset sources (from BD, active-low outputs)
-    wire        aresetn_pl0;          // PS global reset
-    wire        aresetn_pcie0_link;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
-
-    // PCIE0 BD reset port — named to match the AVED BD wrapper.
-    // xilinx_aved_adapter maps this to/from pcie_rstn internally.
-    wire        resetn_pcie0;
-
-    // Shell-facing signals — functional names used above the adapter layer.
-    // xilinx_aved_adapter drives/receives these and maps to AVED BD names.
-    wire        sys_clk;       // system/debug clock
-    wire        pcie_clk;      // PCIe interface clock
-    wire        pcie_rstn_in;  // combined pre-JTAG reset (active-low)
-    wire        pcie_rstn;     // post-JTAG synthesised reset (active-low)
+    // AVED BD — clock and reset
+    wire        clk_pl0_100mhz;
+    wire        rstn_pl0_100mhz;
 
     // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)
     // Signal widths taken from the Vivado-generated BD wrapper.
+    wire        m_axi_pcie0_aclk;
+    wire        m_axi_pcie0_aresetn;   // CPM5 PCIE0 link reset (dma0_axi_aresetn)
     wire [63:0]  m_axi_pcie0_awaddr;
     wire [1:0]   m_axi_pcie0_awid;
     wire [7:0]   m_axi_pcie0_awlen;

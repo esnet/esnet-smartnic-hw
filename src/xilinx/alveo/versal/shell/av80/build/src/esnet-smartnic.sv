@@ -7,8 +7,13 @@ module esnet_smartnic
     // Imports
     import shell_pkg::*;
 
-    // Signals
+    // Signals from AVED BD wrapper and adapter
     `include "xilinx_aved_app.svh"
+
+    // Signals between xilinx_aved_adapter and xilinx_alveo_versal_shell
+    wire        sys_clk_100mhz;
+    wire        pci_rstn_in;
+    wire        pci_rstn;
 
     // Interfaces
     axi4l_intf axil_if ();
@@ -44,11 +49,10 @@ module esnet_smartnic
     xilinx_alveo_versal_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_versal_shell (
-        .sys_clk      ( sys_clk      ),
-        .pcie_clk     ( pcie_clk     ),
-        .pcie_rstn_in ( pcie_rstn_in ),
-        .pcie_rstn    ( pcie_rstn    ),
-        .axil_if      ( axil_debug_if ),
+        .sys_clk_100mhz ( sys_clk_100mhz ),
+        .pci_rstn_in    ( pci_rstn_in ),
+        .pci_rstn       ( pci_rstn    ),
+        .axil_if        ( axil_debug_if ),
         .shell_if
     );
 

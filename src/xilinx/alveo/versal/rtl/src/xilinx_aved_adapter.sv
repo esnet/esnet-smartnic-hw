@@ -1,47 +1,15 @@
 module xilinx_aved_adapter (
-    // Clocks and resets from AVED BD
-    input  wire        clk_pl,
-    input  wire        resetn_pl_periph,
-    input  wire        clk_pcie0,
+    // -------------------------------------------------------------------------
+    // AVED BD — clock and reset inputs
+    // -------------------------------------------------------------------------
+    input  wire        clk_pl0_100mhz,
+    input  wire        rstn_pl0_100mhz,
 
-    // PCIE0 raw reset sources (inputs from BD)
-    input  wire        aresetn_pl0,
-    input  wire        aresetn_pcie0_link,
-
-    // Shell-facing signals (functional naming for xilinx_alveo_versal_shell)
-    output wire        sys_clk,       // system/debug clock → shell
-    output wire        pcie_clk,      // PCIe interface clock → shell
-    output wire        pcie_rstn_in,  // combined pre-JTAG reset → shell
-    input  wire        pcie_rstn,     // post-JTAG reset ← shell
-
-    // BD-facing reset output — named to match the AVED BD wrapper port.
-    // Driven from pcie_rstn; connects to cips/dma0_intrfc_resetn via .* on top_i.
-    output wire        resetn_pcie0,
-
-    // PCIE1 management AXI4-Lite (BD master → terminated at core_reg_blk)
-    // The existing PCIE1 management path is terminated here with the stub
-    // register block; PCIE0 BAR2 becomes the live management interface.
-    input  wire [31:0] m_axi_usr_mgmt_awaddr,
-    input  wire [2:0]  m_axi_usr_mgmt_awprot,
-    input  wire        m_axi_usr_mgmt_awvalid,
-    output wire        m_axi_usr_mgmt_awready,
-    input  wire [31:0] m_axi_usr_mgmt_wdata,
-    input  wire [3:0]  m_axi_usr_mgmt_wstrb,
-    input  wire        m_axi_usr_mgmt_wvalid,
-    output wire        m_axi_usr_mgmt_wready,
-    output wire [1:0]  m_axi_usr_mgmt_bresp,
-    output wire        m_axi_usr_mgmt_bvalid,
-    input  wire        m_axi_usr_mgmt_bready,
-    input  wire [31:0] m_axi_usr_mgmt_araddr,
-    input  wire [2:0]  m_axi_usr_mgmt_arprot,
-    input  wire        m_axi_usr_mgmt_arvalid,
-    output wire        m_axi_usr_mgmt_arready,
-    output wire [31:0] m_axi_usr_mgmt_rdata,
-    output wire [1:0]  m_axi_usr_mgmt_rresp,
-    output wire        m_axi_usr_mgmt_rvalid,
-    input  wire        m_axi_usr_mgmt_rready,
-
-    // PCIE0 BAR2 — 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
+    // -------------------------------------------------------------------------
+    // AVED BD — PCIE0 BAR2: 512-bit AXI4 master from NoC (→ AXI4-L → axil_if)
+    // -------------------------------------------------------------------------
+    input  wire         m_axi_pcie0_aclk,
+    input  wire         m_axi_pcie0_aresetn,
     input  wire [63:0]  m_axi_pcie0_awaddr,
     input  wire [1:0]   m_axi_pcie0_awid,
     input  wire [7:0]   m_axi_pcie0_awlen,
@@ -84,6 +52,9 @@ module xilinx_aved_adapter (
     output wire         m_axi_pcie0_rvalid,
     input  wire         m_axi_pcie0_rready,
 
+    // -------------------------------------------------------------------------
+    // AVED BD — PCIE0 AXI4S streaming and control interfaces (terminated here)
+    // -------------------------------------------------------------------------
     // PCIE0 H2C stream (BD master → terminated here)
     input  wire         dma0_m_axis_h2c_0_tvalid,
     input  wire [511:0] dma0_m_axis_h2c_0_tdata,
@@ -172,65 +143,17 @@ module xilinx_aved_adapter (
     output wire [12:0]  dma0_usr_flr_0_done_fnc,
     output wire         dma0_usr_flr_0_done_vld,
 
-    // AXI4-L controller output — driven from PCIE0 BAR2
-    // (axil_if.aclk is driven from clk_pl)
+    // -------------------------------------------------------------------------
+    // Shell-facing outputs
+    // -------------------------------------------------------------------------
+    output wire        sys_clk_100mhz, // system/debug clock → shell
+
+    output wire        pci_rstn_in,    // (raw) PCI reset (PERST#) → shell
+    input  wire        pci_rstn,       // Adapted PCI reset (includes JTAG override) reset ← shell (not yet wired to CPM5)
+
+    // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if
 );
-
-    // =========================================================================
-    // PCIE1 management path — terminated at stub core_reg_blk
-    //
-    // The usr_mgmt interface carries PCIE1 BAR0 management traffic.  It is
-    // terminated here with the stub register block (id + scratchpad) so the
-    // PCIE1 host can enumerate and probe basic registers while the live
-    // management interface transitions to PCIE0 BAR2.
-    //
-    // Vivado SmartConnect delivers the absolute lower-32-bit address; mask to
-    // the 4 KB usr_mgmt aperture to get aperture-relative offsets.
-    // =========================================================================
-    localparam int USR_MGMT_APERTURE_BITS = 12;
-
-    wire [31:0] usr_mgmt_awaddr = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
-                                    m_axi_usr_mgmt_awaddr[USR_MGMT_APERTURE_BITS-1:0]};
-    wire [31:0] usr_mgmt_araddr = {{(32-USR_MGMT_APERTURE_BITS){1'b0}},
-                                    m_axi_usr_mgmt_araddr[USR_MGMT_APERTURE_BITS-1:0]};
-
-    axi4l_intf usr_mgmt_axil_if ();
-
-    axi4l_intf_from_signals i_usr_mgmt_from_signals (
-        .aclk     ( clk_pl                    ),
-        .aresetn  ( resetn_pl_periph          ),
-        .awvalid  ( m_axi_usr_mgmt_awvalid   ),
-        .awready  ( m_axi_usr_mgmt_awready   ),
-        .awaddr   ( usr_mgmt_awaddr           ),
-        .awprot   ( m_axi_usr_mgmt_awprot    ),
-        .wvalid   ( m_axi_usr_mgmt_wvalid    ),
-        .wready   ( m_axi_usr_mgmt_wready    ),
-        .wdata    ( m_axi_usr_mgmt_wdata     ),
-        .wstrb    ( m_axi_usr_mgmt_wstrb     ),
-        .bvalid   ( m_axi_usr_mgmt_bvalid    ),
-        .bready   ( m_axi_usr_mgmt_bready    ),
-        .bresp    ( m_axi_usr_mgmt_bresp     ),
-        .arvalid  ( m_axi_usr_mgmt_arvalid   ),
-        .arready  ( m_axi_usr_mgmt_arready   ),
-        .araddr   ( usr_mgmt_araddr           ),
-        .arprot   ( m_axi_usr_mgmt_arprot    ),
-        .rvalid   ( m_axi_usr_mgmt_rvalid    ),
-        .rready   ( m_axi_usr_mgmt_rready    ),
-        .rdata    ( m_axi_usr_mgmt_rdata     ),
-        .rresp    ( m_axi_usr_mgmt_rresp     ),
-        .axi4l_if ( usr_mgmt_axil_if         )
-    );
-
-    core_reg_intf usr_mgmt_regs ();
-
-    core_reg_blk i_usr_mgmt_core_reg_blk (
-        .axil_if    ( usr_mgmt_axil_if  ),
-        .reg_blk_if ( usr_mgmt_regs     )
-    );
-
-    assign usr_mgmt_regs.id_nxt_v = 1'b0;
-    assign usr_mgmt_regs.id_nxt   = '0;
 
     // =========================================================================
     // PCIE0 BAR2 — AXI4 (512-bit) → AXI4-L → axil_if
@@ -240,14 +163,14 @@ module xilinx_aved_adapter (
     // actual transfer width).  axi4l_from_axi4_adapter extracts the active
     // 32-bit word and drives the downstream AXI4-L register fabric.
     // =========================================================================
-    axi4l_intf axil_if__clk_pcie0 ();
+    axi4l_intf axil_if__m_axi_pcie0_aclk ();
 
     axi4_intf #(
         .DATA_BYTE_WID ( 64 ),
         .ADDR_WID      ( 64 ),
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
-    ) pcie0_axi4_if (.aclk(clk_pcie0));
+    ) pcie0_axi4_if (.aclk(m_axi_pcie0_aclk));
 
     axi4_intf_from_signals #(
         .DATA_BYTE_WID ( 64 ),
@@ -255,7 +178,7 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_from_signals (
-        .aclk     ( clk_pcie0              ),
+        .aclk     ( m_axi_pcie0_aclk      ),
         .awid     ( m_axi_pcie0_awid      ),
         .awaddr   ( m_axi_pcie0_awaddr    ),
         .awlen    ( m_axi_pcie0_awlen     ),
@@ -309,15 +232,15 @@ module xilinx_aved_adapter (
         .ID_WID        ( 2  ),
         .USER_WID      ( 18 )
     ) i_pcie0_axi4l_from_axi4 (
-        .aclk    ( clk_pcie0    ),
-        .aresetn ( pcie_rstn    ),
+        .aclk    ( m_axi_pcie0_aclk ),
+        .aresetn ( m_axi_pcie0_aresetn ),
         .axi4_if ( pcie0_axi4_if ),
-        .axi4l_if( axil_if__clk_pcie0 )
+        .axi4l_if( axil_if__m_axi_pcie0_aclk )
     );
 
     axi4l_intf_cdc i_axi4l_intf_cdc (
-        .axi4l_if_from_controller ( axil_if__clk_pcie0 ),
-        .clk_to_peripheral        ( clk_pl ),
+        .axi4l_if_from_controller ( axil_if__m_axi_pcie0_aclk ),
+        .clk_to_peripheral        ( clk_pl0_100mhz ),
         .axi4l_if_to_peripheral   ( axil_if )
     );
 
@@ -374,10 +297,7 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
-    assign sys_clk      = clk_pl;
-    assign pcie_clk     = clk_pcie0;
-    assign pcie_rstn_in = aresetn_pl0 & aresetn_pcie0_link;
-    // Map post-JTAG reset to the BD boundary port name so .* on top_i resolves it.
-    assign resetn_pcie0 = pcie_rstn;
+    assign sys_clk_100mhz = clk_pl0_100mhz;
+    assign pci_rstn_in = m_axi_pcie0_aresetn;
 
 endmodule : xilinx_aved_adapter
