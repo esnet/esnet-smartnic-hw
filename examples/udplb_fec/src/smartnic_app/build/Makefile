@@ -10,11 +10,6 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 TOP = smartnic_app
 
-# -----------------------------------------------
-# Build config
-# -----------------------------------------------
-CONSTRAINTS_XDC_USER = $(abspath $(wildcard $(BOARD)/*.xdc))
-
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.

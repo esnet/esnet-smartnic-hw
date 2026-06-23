@@ -9,6 +9,8 @@
 # See shell_build_base.mk for the common shell+core assembly logic and its
 # required/optional inputs.
 
+export LIB_ROOT
+
 ifeq ($(filter av%,$(BOARD)),$(BOARD))
 include $(SMARTNIC_ROOT)/scripts/Makefiles/versal_shell_build.mk
 else ifeq ($(filter au%,$(BOARD)),$(BOARD))

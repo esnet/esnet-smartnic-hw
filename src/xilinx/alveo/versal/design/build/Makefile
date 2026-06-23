@@ -7,6 +7,8 @@ COMPONENT_ROOT := ../../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
+export LIB_ROOT
+
 # -----------------------------------------------
 # Specify top-level module
 # -----------------------------------------------
@@ -47,19 +49,22 @@ CELL_DCPS    = i_core:$(CORE_DCP_FILE) \
                $(if $(wildcard $(VITISNETP4_IGR_DCP_FILE)),i_core/i_smartnic_wrapper/smartnic/smartnic_app/smartnic_app_igr_p4_inst/vitisnetp4_igr_wrapper_inst/i_vitisnetp4_igr:$(VITISNETP4_IGR_DCP_FILE)) \
                $(if $(wildcard $(VITISNETP4_EGR_DCP_FILE)),i_core/i_smartnic_wrapper/smartnic/smartnic_app/smartnic_app_egr_p4_inst/vitisnetp4_egr_wrapper_inst/i_vitisnetp4_egr:$(VITISNETP4_EGR_DCP_FILE))
 
-# Re-run from link if any input DCP changes.
-# $(wildcard ...) omits missing files at parse time so Make doesn't demand
-# a rule to build them on first run; freshness tracking still works once
-# the files exist (subcomponent builds via _pre_synth create them).
-STAGE_DEPS = $(wildcard $(SHELL_DCP_FILE) $(CORE_DCP_FILE) $(APP_DCP_FILE) $(VITISNETP4_IGR_DCP_FILE) $(VITISNETP4_EGR_DCP_FILE))
-
 # Implementation-only constraints from the shell board directory
 CONSTRAINTS_XDC_IMPL = \
     $(abspath $(SHELL_BOARD_DIR)/impl.pins.xdc) \
-    $(abspath $(SHELL_BOARD_DIR)/impl.xdc)
+    $(abspath $(SHELL_BOARD_DIR)/impl.xdc) \
+    $(abspath $(SHELL_BOARD_DIR)/timing.xdc)
 
 # TCL hook files attached to implementation run steps
 IMPL_HOOK_TCL_FILES = $(abspath $(wildcard $(SHELL_BOARD_DIR)/*.tcl))
+
+# Re-run from link if any input DCP, XDC or TCL changes.
+# $(wildcard ...) omits missing files at parse time so Make doesn't demand
+# a rule to build them on first run; freshness tracking still works once
+# the files exist (subcomponent builds via _pre_synth create them).
+STAGE_DEPS = $(wildcard $(SHELL_DCP_FILE) $(CORE_DCP_FILE) $(APP_DCP_FILE) \
+                        $(VITISNETP4_IGR_DCP_FILE) $(VITISNETP4_EGR_DCP_FILE) \
+                        $(CONSTRAINTS_XDC_IMPL) $(IMPL_HOOK_TCL_FILES) )
 
 # AVED IP repository — needed by Vivado link_design to resolve the CIPS
 # partition context during full-device implementation.
