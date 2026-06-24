@@ -628,6 +628,59 @@ validate_udplb_fec_u280:
         hwapi.env
   timeout: 30m
 
+.hwapi_versal:
+  stage: package
+  extends: .common
+  tags:
+    - ht-misc
+  before_script: []
+  script:
+    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
+    - |
+      cat <<_EOF >> hwapi.env
+      SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
+      _EOF
+    - cat hwapi.env
+
+    # Setup for creating the package to hand off build output to a FW pipeline.
+    - APP_OUT_DIR=${EXAMPLES_DIR}/${SN_HW_APP_NAME}/build/${SN_HW_BOARD}/out
+    - SN_OUT_DIR=${APP_OUT_DIR}/esnet_smartnic/build
+    - HWAPI_DIR=esnet-smartnic-hwapi
+
+    # Extract the UUID used by the AVED build for tracking versions.
+    - UUID=$(cat ${SN_OUT_DIR}/pfm_uuid_manifest.dict | sed -e 's/^logic_uuid \([0-9a-f]\+\) .\+$/\1/')
+
+    # Pass the device programming files and associated metadata to FW.
+    - FW_DIR=${HWAPI_DIR}/firmware
+    - mkdir -p ${FW_DIR}
+    - echo "${UUID}" >${FW_DIR}/esnet-smartnic-uuid.txt
+    - cp ${SN_OUT_DIR}/esnet_smartnic.ltx ${FW_DIR}/esnet-smartnic.ltx
+    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_nofpt.pdi -o ${FW_DIR}/esnet-smartnic.pdi.zst
+    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_app.pdi -o ${FW_DIR}/esnet-smartnic.bin.zst
+
+    # Pass the elaborated register definitions to FW.
+    - REGMAP_DIR=${HWAPI_DIR}/regmap
+    - mkdir -p ${REGMAP_DIR}
+    - cp ${SN_OUT_DIR}/regio/ir/esnet-smartnic-top-ir.yaml ${REGMAP_DIR}/.
+
+    # Pass the source for the kernel driver and user-space tool used for versal device management to FW.
+    - SW_DIR=${HWAPI_DIR}/software
+    - mkdir -p ${SW_DIR}
+    - tar -c -C src/xilinx/aved/sw AMI | zstd -f9 - -o ${SW_DIR}/AMI.tar.zst
+
+  artifacts:
+    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-smartnic-hwapi
+    when: always
+    expire_in: 3 month
+    reports:
+      dotenv: hwapi.env
+  timeout: 30m
+
 hwapi_p4_and_verilog:
   extends: .hwapi
   needs:
@@ -677,6 +730,11 @@ hwapi_udplb_fec_u280:
   extends: .hwapi
   needs:
     - build_udplb_fec_u280
+
+hwapi_udplb_fec_av80:
+  extends: .hwapi_versal
+  needs:
+    - build_udplb_fec_av80
 
 hwapi_shell_au55c:
   extends: .hwapi
@@ -816,6 +874,11 @@ build_shell_av80:
     SN_HW_APP_NAME: versal_shell
     SN_HW_BOARD: av80
   when: manual
+
+hwapi_shell_av80:
+  extends: .hwapi_versal
+  needs:
+    - build_shell_av80
 
 build_fec_test_av80:
   stage: bitfile
