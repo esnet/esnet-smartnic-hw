@@ -7,6 +7,7 @@ set __XILINX_VERSION [regexp -inline {[0-9]{4}\.[0-9]} $env(XILINX_VIVADO)]
 source ../../../.out/${board}/${__XILINX_VERSION}/smartnic_250mhz/build/synth/sources.tcl
 
 # read constraints
+set CONSTR_MGMT_TYPE {-unmanaged}
 source ../../../.out/${board}/${__XILINX_VERSION}/smartnic_250mhz/build/synth/constraints.tcl
 
 read_xdc constraints/${board}/timing.xdc
