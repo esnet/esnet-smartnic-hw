@@ -53,9 +53,17 @@ module xilinx_alveo_shell
 
     // =========================================================================
     // Shell config register block
+    //
+    // id is a fixed RO constant; tie off update inputs so it holds INIT_VALUE.
     // =========================================================================
+    shell_cfg_reg_intf shell_cfg_reg_if ();
+
+    assign shell_cfg_reg_if.id_nxt_v = 1'b0;
+    assign shell_cfg_reg_if.id_nxt   = '0;
+
     shell_cfg_reg_blk i_shell_cfg_reg_blk (
-        .axil_if ( axil_shell_cfg )
+        .axil_if     ( axil_shell_cfg  ),
+        .reg_blk_if  ( shell_cfg_reg_if )
     );
 
 endmodule : xilinx_alveo_shell
