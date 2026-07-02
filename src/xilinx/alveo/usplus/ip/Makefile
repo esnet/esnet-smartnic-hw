@@ -25,7 +25,6 @@ include $(COMPONENT_ROOT)/config.mk
 #   not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    xilinx_alveo_vio \
     xilinx_alveo_clk_axil \
     xilinx_alveo_clk \
     xilinx_alveo_clk_100mhz \
@@ -60,7 +59,6 @@ IP_SIM_SRC_FILES = \
 	xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil_clk_wiz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil.v \
-    xilinx_alveo_vio/sim/xilinx_alveo_vio.v \
     xilinx_alveo_axil_ila/sim/xilinx_alveo_axil_ila.v
 
 IP_SIM_INC_DIRS =
