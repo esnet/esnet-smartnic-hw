@@ -2,10 +2,8 @@ toplevel:
   name: esnet_smartnic
   info: |
     ESnet SmartNIC FPGA (Versal V80)
-  # TODO: Update pci_vendor and pci_device with the actual Versal (CPM5)
-  # PCIe device IDs when they are finalized.
   pci_vendor: 0x10ee
-  pci_device: 0x9800
+  pci_device: 0x9038
 
   bars:
     2:
