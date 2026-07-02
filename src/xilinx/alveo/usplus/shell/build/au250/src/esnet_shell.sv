@@ -11,9 +11,9 @@ module esnet_shell
 
     xilinx_alveo_au250 i_xilinx_au250 (.*);
 
-    xilinx_alveo_shell #(
+    xilinx_alveo_usplus_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
-    ) i_xilinx_alveo_shell (
+    ) i_xilinx_alveo_usplus_shell (
         .alveo_hw_if,
         .shell_if
     );
