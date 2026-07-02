@@ -159,7 +159,7 @@ $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml:
 	    COMPONENT=$(__SB_CORE_REGIO_REF) \
 	    BOARD=$(BOARD) \
 	    BUILD_ID=$(BUILD_ID) \
-	    OUTPUT_ROOT=$(OUTPUT_ROOT) \
+	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
 	    $(if $(SMARTNIC_LIB_NAME),SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME),)
 	@mkdir -p $(__SB_REGIO_IR_DIR)
 	@cp $(__SB_CORE_REGIO_OUT)/ir/core_decoder-ir.yaml $@
