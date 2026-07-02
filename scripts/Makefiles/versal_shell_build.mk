@@ -72,6 +72,14 @@ IP_REPO_PATHS += \
 BUILD_STAGES := link opt place place_opt route route_opt device_image xsa
 
 # -----------------------------------------------
+# Versal-specific regio top YAML
+#
+# Points to the Versal platform's top-level register map specification.
+# Used by shell_build_base.mk to elaborate the final IR artifact.
+# -----------------------------------------------
+SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/versal/regio/esnet-smartnic-top.yaml
+
+# -----------------------------------------------
 # Include generic shell+core assembly
 # -----------------------------------------------
 include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_build_base.mk
@@ -93,6 +101,12 @@ $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 
 .versal_shell_build_pdi: _np_xsa $(__VSB_PDI_APP_FILE)
 .PHONY: .versal_shell_build_pdi
+
+# -----------------------------------------------
+# Regio alias
+# -----------------------------------------------
+.versal_shell_build_regio: .shell_build_regio
+.PHONY: .versal_shell_build_regio
 
 # -----------------------------------------------
 # Info

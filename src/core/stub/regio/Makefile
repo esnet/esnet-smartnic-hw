@@ -11,7 +11,8 @@ include $(COMPONENT_ROOT)/config.mk
 REG_BLOCK_YAML = \
     core.yaml
 
-REG_DECODER_YAML =
+REG_DECODER_YAML = \
+    core_decoder.yaml
 
 # ----------------------------------------------------
 # Options

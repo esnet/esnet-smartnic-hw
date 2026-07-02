@@ -1,0 +1,22 @@
+toplevel:
+  name: esnet_smartnic
+  info: |
+    ESnet SmartNIC FPGA (Versal V80)
+  # TODO: Update pci_vendor and pci_device with the actual Versal (CPM5)
+  # PCIe device IDs when they are finalized.
+  pci_vendor: 0x10ee
+  pci_device: 0x9800
+
+  bars:
+    2:
+      name: bar2
+      desc: all user logic
+      size: 0x00800000
+      decoder:
+        name: bar2
+        decoders:
+          shell_decoder: &shell_decoder
+            !include ../src/xilinx/alveo/versal/regio/shell_decoder_core.yaml
+        interfaces:
+          - decoder: *shell_decoder
+            address: 0x000000
