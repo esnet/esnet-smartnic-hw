@@ -222,7 +222,7 @@ module xilinx_alveo
     // =========================================================================
     // Alveo (platform-level) decoder
     // =========================================================================
-    xilinx_alveo_decoder i_xilinx_alveo_decoder (
+    xilinx_alveo_usplus_decoder i_xilinx_alveo_usplus_decoder (
         .axil_if        ( axil_hw ),
         .syscfg_axil_if ( axil_syscfg ),
         .qdma_axil_if   ( axil_qdma ),

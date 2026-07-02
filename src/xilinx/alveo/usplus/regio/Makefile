@@ -18,7 +18,7 @@ REG_BLOCK_YAML = \
 REG_DECODER_YAML = \
     cmac_decoder.yaml \
     qdma_decoder.yaml \
-    xilinx_alveo_decoder.yaml
+    xilinx_alveo_usplus_decoder.yaml
 
 # ----------------------------------------------------
 # Options

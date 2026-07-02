@@ -6,7 +6,7 @@ blocks:
 
 decoders:
   hw_decoder: &hw_decoder
-    !include ../src/xilinx/alveo/usplus/regio/xilinx_alveo_decoder.yaml
+    !include ../src/xilinx/alveo/usplus/regio/xilinx_alveo_usplus_decoder.yaml
   core_decoder: &core_decoder
     !include core_decoder-ir.yaml
 

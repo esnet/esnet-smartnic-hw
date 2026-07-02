@@ -1,4 +1,4 @@
-name: xilinx_alveo
+name: xilinx_alveo_usplus
 
 blocks:
   syscfg: &syscfg
