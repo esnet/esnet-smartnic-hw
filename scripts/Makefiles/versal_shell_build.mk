@@ -77,7 +77,7 @@ BUILD_STAGES := link opt place place_opt route route_opt device_image xsa
 # Points to the Versal platform's top-level register map specification.
 # Used by shell_build_base.mk to elaborate the final IR artifact.
 # -----------------------------------------------
-SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/versal/regio/esnet-smartnic-top.yaml
+SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/versal/shell/regio/esnet-smartnic-top.yaml
 
 # -----------------------------------------------
 # Include generic shell+core assembly

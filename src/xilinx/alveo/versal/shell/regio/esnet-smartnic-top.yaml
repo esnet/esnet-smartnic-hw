@@ -16,7 +16,7 @@ toplevel:
         name: bar2
         decoders:
           shell_decoder: &shell_decoder
-            !include ../src/xilinx/alveo/versal/regio/shell_decoder_core.yaml
+            !include ../src/xilinx/alveo/versal/shell/regio/shell_decoder_core.yaml
         interfaces:
           - decoder: *shell_decoder
             address: 0x000000
