@@ -1,18 +1,22 @@
 // =============================================================================
-// xilinx_alveo
+// xilinx_alveo_shell
 //
 // Common platform module for Alveo cards (UltraScale+ and Versal).
 // Instantiated once per top-level design to collect functionality that is
 // shared across all Alveo platform variants.
 // =============================================================================
-module xilinx_alveo
+module xilinx_alveo_shell
     import xilinx_alveo_pkg::*;
 (
-    input  wire logic sys_clk_100mhz,  // Free-running debug clock for VIO
+    input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
 
-    input  wire logic pci_rstn_in,     // Raw incoming reset (active-low)
+    input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
 
-    output wire logic pci_rstn_out     // Reset output (active-low, JTAG-overridable)
+    output wire logic pci_rstn_out,       // Reset output (active-low, JTAG-overridable)
+
+    axi4l_intf.peripheral axil_top,       // AXI-L interface from PCIe core
+    axi4l_intf.controller axil_hw,        // AXI-L interface to hardware (shell) components
+    axi4l_intf.controller axil_core       // AXI-L interface to core
 );
 
     // =========================================================================
@@ -31,4 +35,17 @@ module xilinx_alveo
         .rstn_out  ( pci_rstn_out   )
     );
 
-endmodule : xilinx_alveo
+    // =========================================================================
+    // Top-level decoder
+    //
+    // Splits the incoming AXI-L interface into hw (shell hardware registers)
+    // and core (application registers) sub-spaces.  The hw/core address map
+    // is defined in src/shell/regio/shell_decoder.yaml.
+    // =========================================================================
+    shell_decoder i_shell_decoder (
+        .axil_if (axil_top),
+        .hw_axil_if ( axil_hw ),
+        .core_axil_if ( axil_core )
+    );
+
+endmodule : xilinx_alveo_shell
