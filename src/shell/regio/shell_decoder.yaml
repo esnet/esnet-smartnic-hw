@@ -3,15 +3,15 @@ name: shell
 blocks:
   shell_cfg: &shell_cfg
     !include ../src/shell/regio/shell_cfg.yaml
-  core: &core
-    name: core
-    info: Core (i.e. user/application) registers.
-    regs: []
 
 decoders:
   hw: &hw
     name: hw
     info: Hardware (i.e. physical layer) registers.
+    interfaces: []
+  core: &core
+    name: core
+    info: Core (i.e. user/application) registers.
     interfaces: []
 
 interfaces:
@@ -25,7 +25,7 @@ interfaces:
     width: 21
     name: hw
 
-  - block: *core
+  - decoder: *core
     address: 0x400000
     width: 22
     name: core
