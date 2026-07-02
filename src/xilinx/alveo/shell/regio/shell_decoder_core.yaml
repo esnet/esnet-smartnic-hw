@@ -9,9 +9,9 @@ decoders:
 interfaces:
   - decoder: *hw_decoder
     address: 0x000000
-    width: 20
+    width: 22
     name: hw
   - decoder: *core_decoder
-    address: 0x200000
-    width: 21
+    address: 0x400000
+    width: 22
     name: core
