@@ -1,0 +1,16 @@
+name: xilinx_alveo_versal
+
+decoders:
+  dcmac_decoder: &dcmac_decoder
+    !include ../src/xilinx/alveo/versal/regio/dcmac_decoder.yaml
+
+interfaces:
+  - decoder: *dcmac_decoder
+    address: 0x000000
+    suffix: '0'
+    name: dcmac
+
+  - decoder: *dcmac_decoder
+    address: 0x008000
+    suffix: '1'
+    name: dcmac

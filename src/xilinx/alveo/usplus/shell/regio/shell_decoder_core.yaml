@@ -1,5 +1,9 @@
 name: bar2
 
+blocks:
+  shell_cfg: &shell_cfg
+    !include ../src/shell/regio/shell_cfg.yaml
+
 decoders:
   hw_decoder: &hw_decoder
     !include ../src/xilinx/alveo/usplus/regio/xilinx_alveo_decoder.yaml
@@ -7,10 +11,16 @@ decoders:
     !include core_decoder-ir.yaml
 
 interfaces:
-  - decoder: *hw_decoder
+  - block: *shell_cfg
     address: 0x000000
-    width: 22
+    width: 12
+    name: shell_cfg
+
+  - decoder: *hw_decoder
+    address: 0x200000
+    width: 21
     name: hw
+
   - decoder: *core_decoder
     address: 0x400000
     width: 22

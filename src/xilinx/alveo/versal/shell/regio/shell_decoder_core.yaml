@@ -1,20 +1,26 @@
 name: bar2
 
+blocks:
+  shell_cfg: &shell_cfg
+    !include ../src/shell/regio/shell_cfg.yaml
+
 decoders:
   hw_decoder: &hw_decoder
-    # Placeholder — no Versal hw registers yet.
-    # Replace with a Versal-specific hw decoder YAML as hardware registers
-    # are added (e.g. CPM5, DCMAC, etc.).
-    name: versal_hw
-    interfaces: []
+    !include ../src/xilinx/alveo/versal/regio/xilinx_alveo_versal_decoder.yaml
   core_decoder: &core_decoder
     !include core_decoder-ir.yaml
 
 interfaces:
-  - decoder: *hw_decoder
+  - block: *shell_cfg
     address: 0x000000
-    width: 22
+    width: 12
+    name: shell_cfg
+
+  - decoder: *hw_decoder
+    address: 0x200000
+    width: 21
     name: hw
+
   - decoder: *core_decoder
     address: 0x400000
     width: 22

@@ -14,9 +14,9 @@ module xilinx_alveo_shell
 
     output wire logic pci_rstn_out,       // Reset output (active-low, JTAG-overridable)
 
-    axi4l_intf.peripheral axil_top,       // AXI-L interface from PCIe core
-    axi4l_intf.controller axil_hw,        // AXI-L interface to hardware (shell) components
-    axi4l_intf.controller axil_core       // AXI-L interface to core
+    axi4l_intf.peripheral axil_top,  // AXI-L interface from PCIe core
+    axi4l_intf.controller axil_hw,   // AXI-L interface to hardware (shell) components
+    axi4l_intf.controller axil_core  // AXI-L interface to core
 );
 
     // =========================================================================
@@ -38,14 +38,24 @@ module xilinx_alveo_shell
     // =========================================================================
     // Top-level decoder
     //
-    // Splits the incoming AXI-L interface into hw (shell hardware registers)
-    // and core (application registers) sub-spaces.  The hw/core address map
-    // is defined in src/shell/regio/shell_decoder.yaml.
+    // Splits the incoming AXI-L interface into shell_cfg, hw, and core
+    // sub-spaces.  The address map is defined in
+    // src/shell/regio/shell_decoder.yaml.
     // =========================================================================
+    axi4l_intf #() axil_shell_cfg ();
+
     shell_decoder i_shell_decoder (
-        .axil_if (axil_top),
-        .hw_axil_if ( axil_hw ),
-        .core_axil_if ( axil_core )
+        .axil_if           ( axil_top       ),
+        .shell_cfg_axil_if ( axil_shell_cfg ),
+        .hw_axil_if        ( axil_hw        ),
+        .core_axil_if      ( axil_core      )
+    );
+
+    // =========================================================================
+    // Shell config register block
+    // =========================================================================
+    shell_cfg_reg_blk i_shell_cfg_reg_blk (
+        .axil_if ( axil_shell_cfg )
     );
 
 endmodule : xilinx_alveo_shell
