@@ -58,11 +58,22 @@ module xilinx_alveo_versal_shell
     );
 
     // =========================================================================
-    // Terminate hw AXI-L sub-space — no Versal hw registers yet.
-    // Returns SLVERR on any access; replace with a hw decoder when
-    // Versal-specific hardware registers are added.
+    // Versal Alveo hw decoder
     // =========================================================================
-    axi4l_intf_peripheral_term i_axi4l_term__hw (.axi4l_if (axil_hw));
+    axi4l_intf #() axil_dcmac [2] ();
+
+    xilinx_alveo_versal_decoder i_xilinx_alveo_versal_decoder (
+        .axil_if        ( axil_hw       ),
+        .dcmac0_axil_if ( axil_dcmac[0] ),
+        .dcmac1_axil_if ( axil_dcmac[1] )
+    );
+
+    // Terminate DCMAC AXI-L interfaces — pending DCMAC register map
+    generate
+        for (genvar g = 0; g < 2; g++) begin : g__dcmac
+            axi4l_intf_peripheral_term i_axi4l_term__dcmac (.axi4l_if (axil_dcmac[g]));
+        end : g__dcmac
+    endgenerate
 
     // =========================================================================
     // Network port interfaces (CMAC) — terminated pending DCMAC wiring
