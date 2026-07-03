@@ -135,7 +135,6 @@ __SB_CORE_REGIO_REF := $(patsubst %.build,%.regio,$(if $(__SB_LIB_SUFFIX),$(__SB
 __SB_REGIO_IR_DIR := $(COMPONENT_OUT_PATH)/regio/ir
 __SB_CORE_REGIO_OUT := $(call get_lib_component_out_path_from_ref,$(__SB_CORE_REGIO_REF),$(LIB_OUTPUT_ROOT))
 __SB_REGIO_ELABORATE_CMD := $(REGIO_ROOT)/regio-elaborate -i $(LIB_ROOT) -i $(__SB_REGIO_IR_DIR)
-__SB_SMARTNIC_SRC_ROOT := $(SMARTNIC_ROOT)/src
 
 # The top-level IR artifact
 SHELL_REGIO_ARTIFACT := $(__SB_REGIO_IR_DIR)/esnet-smartnic-top-ir.yaml
@@ -155,11 +154,10 @@ $(SHELL_REGIO_ARTIFACT): $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml
 
 $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml:
 	@echo "Building core regio for $(__SB_CORE_REGIO_REF) ..."
-	@$(MAKE) -s -C $(__SB_SMARTNIC_SRC_ROOT) reg \
+	@$(MAKE) -s -C $(SRC_ROOT) reg \
 	    COMPONENT=$(__SB_CORE_REGIO_REF) \
 	    BOARD=$(BOARD) \
 	    BUILD_ID=$(BUILD_ID) \
-	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
 	    $(if $(SMARTNIC_LIB_NAME),SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME),)
 	@mkdir -p $(__SB_REGIO_IR_DIR)
 	@cp $(__SB_CORE_REGIO_OUT)/ir/core_decoder-ir.yaml $@
