@@ -29,6 +29,7 @@ SUBCOMPONENTS = \
     shell.rtl \
     xilinx.alveo.rtl \
     xilinx.alveo.versal.rtl \
+    xilinx.alveo.versal.regio.rtl \
     xilinx.alveo.versal.debug.rtl
 
 EXT_LIBS =

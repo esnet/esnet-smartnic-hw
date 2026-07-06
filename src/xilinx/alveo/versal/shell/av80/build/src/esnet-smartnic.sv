@@ -52,7 +52,7 @@ module esnet_smartnic
         .sys_clk_100mhz ( sys_clk_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
-        .axil_if        ( axil_debug_if ),
+        .axil_top       ( axil_debug_if ),
         .shell_if
     );
 

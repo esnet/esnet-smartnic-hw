@@ -776,6 +776,7 @@ build_shell_av80:
     - ht-synth
   script:
     - make -s -C examples/versal_shell pdi
+    - make -s -C examples/versal_shell reg_package
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:

@@ -6,6 +6,9 @@ module xilinx_alveo
     // To/from physical layer (hardware)
     xilinx_alveo_hw_intf.alveo  alveo_hw_if,
 
+    // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
+    input  wire logic     pci_rstn,
+
     // To/from core (application)
     // -- Core clock/reset
     output wire logic     clk,
@@ -46,8 +49,6 @@ module xilinx_alveo
     // =========================================================================
     logic core_clk;
     logic core_srst;
-
-    logic jtag_reset;
 
     logic axis_qdma_aclk;
     logic axis_qdma_aresetn;
@@ -108,7 +109,7 @@ module xilinx_alveo
     xilinx_alveo_host #(
         .PCIE_LINK_WID ( alveo_hw_if.PCIE_LINK_WID )
     ) i_xilinx_alveo_host (
-        .pcie_rstn     ( alveo_hw_if.pcie_rstn ),
+        .pcie_rstn     ( pci_rstn ),
         .pcie_refclk_p ( alveo_hw_if.pcie_refclk_p ),
         .pcie_refclk_n ( alveo_hw_if.pcie_refclk_n ),
         .pcie_rxp      ( alveo_hw_if.pcie_rxp ),
@@ -221,7 +222,7 @@ module xilinx_alveo
     // =========================================================================
     // Alveo (platform-level) decoder
     // =========================================================================
-    xilinx_alveo_decoder i_xilinx_alveo_decoder (
+    xilinx_alveo_usplus_decoder i_xilinx_alveo_usplus_decoder (
         .axil_if        ( axil_hw ),
         .syscfg_axil_if ( axil_syscfg ),
         .qdma_axil_if   ( axil_qdma ),
@@ -429,14 +430,5 @@ module xilinx_alveo
             axi4l_intf_peripheral_term (.axi4l_if (axil_qspi));
         end : g__no_qspi
     endgenerate
-
-    // =========================================================================
-    // JTAG debug (VIO)
-    // =========================================================================
-    xilinx_alveo_debug i_xilinx_alveo_debug (
-        .clk       ( clk_100mhz_freerun ),
-        .reset_in  ( axil_top.aresetn ),
-        .reset_out ( jtag_reset )
-    );
 
 endmodule : xilinx_alveo

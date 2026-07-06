@@ -163,8 +163,9 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "build:       .shell_build"                                            >> $(__SPC_COMP_DIR)/Makefile
 	@echo "build_clean: .shell_build_clean"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "pdi:         .versal_shell_build_pdi"                                 >> $(__SPC_COMP_DIR)/Makefile
+	@echo "regio:       .shell_build_regio"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "info:        .shell_build_info"                                       >> $(__SPC_COMP_DIR)/Makefile
-	@echo ".PHONY: build build_clean pdi info"                                   >> $(__SPC_COMP_DIR)/Makefile
+	@echo ".PHONY: build build_clean pdi regio info"                             >> $(__SPC_COMP_DIR)/Makefile
 	@touch $@
 	@echo "Done."
 
@@ -200,6 +201,10 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 .shell_proj_pdi: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_COMP_CMD) pdi
 .PHONY: .shell_proj_pdi
+
+.shell_proj_regio: $(__SPC_CONFIGURED)
+	@$(SMARTNIC_COMP_CMD) regio
+.PHONY: .shell_proj_regio
 
 .shell_proj_info: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_BUILD_CMD) info

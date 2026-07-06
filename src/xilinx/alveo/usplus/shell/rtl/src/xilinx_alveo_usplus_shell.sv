@@ -1,16 +1,19 @@
 // =========================================================================
-// Xilinx Alveo shell
+// xilinx_alveo_usplus_shell
 //
-//   Implements ESnet standard shell on Xilinx Alveo architecture.
+//   Implements ESnet standard shell on UltraScale+ Alveo architecture.
 //
 //   Supports a variety of hardware implementations (Alveo boards) using
-//   abstract xilinx_alveo_hw_intf connection to physical layer.
+//   the abstract xilinx_alveo_hw_intf connection to the physical layer.
 //
 //   Supports a variety of 'core' implementations (applications) using
-//   abstract shell_intf connection to user logic.
+//   the abstract shell_intf connection to user logic.
+//
+//   Uses the common xilinx_alveo_shell module for JTAG reset control and
+//   the top-level hw/core AXI-L decoder.
 //
 // =========================================================================
-module xilinx_alveo_shell
+module xilinx_alveo_usplus_shell
     import shell_pkg::*;
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
@@ -24,10 +27,10 @@ module xilinx_alveo_shell
     // =========================================================================
     // Interfaces
     // =========================================================================
-    axi4l_intf #() axil_if ();
 
     axi4l_intf #() axil_top ();
     axi4l_intf #() axil_hw ();
+    axi4l_intf #() axil_core ();
 
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(shell_if.clk));
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [shell_if.NUM_PORTS] (.aclk(shell_if.clk));
@@ -44,6 +47,8 @@ module xilinx_alveo_shell
     // =========================================================================
     // Signals
     // =========================================================================
+    logic pci_rstn;
+
     logic clk;
     logic srst;
     logic clk_100mhz;
@@ -54,17 +59,18 @@ module xilinx_alveo_shell
     // =========================================================================
     // Shell adaptation layer
     // (maps shell_intf signals to/from axi4l_intf / axi4s_intf)
+    // axil_core carries the post-decoded core AXI-L (from xilinx_alveo_shell)
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
         .clk,
         .srst,
-        .mgmt_clk   ( axil_if.aclk    ),
-        .mgmt_srst  ( !axil_if.aresetn ),
+        .mgmt_clk   ( axil_core.aclk    ),
+        .mgmt_srst  ( !axil_core.aresetn ),
         .clk_100mhz,
         .port_clk   ( '{default: clk}  ),
         .port_srst  ( '{default: srst} ),
-        .axil_if,
+        .axil_if    ( axil_core ),
         .axis_port_rx,
         .axis_port_tx,
         .axis_h2c,
@@ -72,12 +78,27 @@ module xilinx_alveo_shell
     );
 
     // =========================================================================
-    // Common Alveo core
+    // Common Alveo shell — JTAG reset control and top-level hw/core decoder
+    // =========================================================================
+    xilinx_alveo_shell i_xilinx_alveo_shell (
+        .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
+        .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
+        .pci_rstn_out   ( pci_rstn ),
+        .axil_top,
+        .axil_hw,
+        .axil_core
+    );
+
+    // =========================================================================
+    // UltraScale+ Alveo core — CMAC, QDMA, clocking, hw register decode
+    // axil_top drives the PCIe AXI-L into the QDMA; axil_hw receives the
+    // decoded hw sub-space from the top-level shell_decoder.
     // =========================================================================
     xilinx_alveo #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo  (
         .alveo_hw_if,
+        .pci_rstn,
         .clk,
         .srst,
         .clk_100mhz,
@@ -90,15 +111,6 @@ module xilinx_alveo_shell
         .axis_c2h ( __axis_c2h ),
         .axil_top,
         .axil_hw
-    );
-
-    // =========================================================================
-    // Shell top-level decoder
-    // =========================================================================
-    shell_decoder i_shell_decoder (
-        .axil_if      ( axil_top ),
-        .hw_axil_if   ( axil_hw ),
-        .core_axil_if ( axil_if )
     );
 
     // =========================================================================
@@ -228,4 +240,4 @@ module xilinx_alveo_shell
         .tdest   ( __axis_c2h_tdest ),
         .tuser   ( __axis_c2h_tuser )
     );
-endmodule : xilinx_alveo_shell
+endmodule : xilinx_alveo_usplus_shell

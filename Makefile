@@ -150,7 +150,7 @@ __SHELL_BUILD_OUTPUT_ROOT = $(OUTPUT_ROOT)/$(BOARD)/$(XILINX_VIVADO__VERSION)
 SHELL_BUILD_OUT_DIR = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/usplus/shell/build/proj/proj.runs/impl_1
 SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
 
-SHELL_REG_ARTIFACT = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
+SHELL_REG_ARTIFACT = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/usplus/shell/regio/ir/esnet-smartnic-top-ir.yaml
 SHELL_VITISNETP4_DRV_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar
 SHELL_P4_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr.p4
 
@@ -167,7 +167,7 @@ shell_bitfile: config config_check
 
 $(SHELL_REG_ARTIFACT): config
 	@echo "Generating regmap artifact for ESnet shell build..."
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.alveo.shell.regio@$(SMARTNIC_LIB_NAME) BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) OUTPUT_ROOT=$(OUTPUT_ROOT) SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME)
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.alveo.usplus.shell.regio@$(SMARTNIC_LIB_NAME) BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) OUTPUT_ROOT=$(OUTPUT_ROOT) SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME)
 	@echo "Done."
 
 $(SHELL_VITISNETP4_DRV_ARTIFACT): config

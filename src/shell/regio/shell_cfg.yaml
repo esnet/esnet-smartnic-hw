@@ -1,0 +1,14 @@
+name: shell_cfg
+info: |
+  Shell identification and configuration registers.
+
+regs:
+  - default:
+      width: 32
+      access: ro
+      init: 0
+
+  - name: id
+    access: ro
+    init: 0x5348454C
+    info: Shell identification. Read as ASCII 'SHEL'.

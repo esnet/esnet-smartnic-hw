@@ -1,16 +1,14 @@
-name: shell
+name: bar2
 
 blocks:
   shell_cfg: &shell_cfg
     !include ../src/shell/regio/shell_cfg.yaml
-  hw: &hw
-    name: hw
-    info: Hardware (i.e. physical layer) registers.
-    regs: []
-  core: &core
-    name: core
-    info: Core (i.e. user/application) registers.
-    regs: []
+
+decoders:
+  hw_decoder: &hw_decoder
+    !include ../src/xilinx/alveo/versal/regio/xilinx_alveo_versal_decoder.yaml
+  core_decoder: &core_decoder
+    !include core_decoder-ir.yaml
 
 interfaces:
   - block: *shell_cfg
@@ -18,12 +16,12 @@ interfaces:
     width: 12
     name: shell_cfg
 
-  - block: *hw
+  - decoder: *hw_decoder
     address: 0x200000
     width: 21
     name: hw
 
-  - block: *core
+  - decoder: *core_decoder
     address: 0x400000
     width: 22
     name: core

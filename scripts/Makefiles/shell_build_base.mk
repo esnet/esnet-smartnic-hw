@@ -40,6 +40,20 @@
 BUILD_STAGES ?= link opt place place_opt route route_opt
 
 # -----------------------------------------------
+# Regio IR packaging configuration
+#
+# SHELL_REGIO_TOP_YAML must be set by the platform-specific include
+# (e.g. versal_shell_build.mk) to the path of the top-level regio YAML
+# for elaboration into a final esnet-smartnic-top-ir.yaml artifact.
+#
+# The core regio component ref is derived from CORE_BUILD_REF by stripping
+# the trailing .build (and optional @lib qualifier) and appending .regio,
+# so the same @lib qualifier is preserved:
+#   core.stub.build@smartnic  →  core.stub.regio@smartnic
+# -----------------------------------------------
+SHELL_REGIO_TOP_YAML ?=
+
+# -----------------------------------------------
 # DCP paths
 #
 # Computed from the component refs using the same function used by
@@ -99,3 +113,66 @@ include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
 	@echo "TOP_DCP_FILE     : $(TOP_DCP_FILE)"
 	@echo "CELL_DCPS        : $(CELL_DCPS)"
 .PHONY: .shell_build_info
+
+# -----------------------------------------------
+# Regio IR packaging
+#
+# .shell_build_regio: generates the top-level register map IR YAML
+# that can be handed off to firmware and software.
+#
+# The output is: $(COMPONENT_OUT_PATH)/regio/ir/esnet-smartnic-top-ir.yaml
+#
+# Derivation of the core regio component ref from CORE_BUILD_REF:
+#   1. Strip the @lib suffix (if any), save it for re-attachment
+#   2. Strip the trailing .build segment
+#   3. Append .regio and restore the @lib suffix
+# Example: core.stub.build@smartnic → core.stub.regio@smartnic
+# -----------------------------------------------
+__SB_CORE_BUILD_BASE := $(subst @$(lastword $(subst @, ,$(CORE_BUILD_REF))),,$(CORE_BUILD_REF))
+__SB_LIB_SUFFIX := $(if $(findstring @,$(CORE_BUILD_REF)),@$(lastword $(subst @, ,$(CORE_BUILD_REF))),)
+__SB_CORE_REGIO_REF := $(patsubst %.build,%.regio,$(if $(__SB_LIB_SUFFIX),$(__SB_CORE_BUILD_BASE),$(CORE_BUILD_REF)))$(__SB_LIB_SUFFIX)
+
+__SB_REGIO_IR_DIR := $(COMPONENT_OUT_PATH)/regio/ir
+__SB_CORE_REGIO_OUT := $(call get_lib_component_out_path_from_ref,$(__SB_CORE_REGIO_REF),$(LIB_OUTPUT_ROOT))
+__SB_REGIO_ELABORATE_CMD := $(REGIO_ROOT)/regio-elaborate -i $(LIB_ROOT) -i $(__SB_REGIO_IR_DIR)
+
+# The top-level IR artifact
+SHELL_REGIO_ARTIFACT := $(__SB_REGIO_IR_DIR)/esnet-smartnic-top-ir.yaml
+
+.shell_build_regio: $(SHELL_REGIO_ARTIFACT)
+.PHONY: .shell_build_regio
+
+$(SHELL_REGIO_ARTIFACT): $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml
+	@if [ -z "$(SHELL_REGIO_TOP_YAML)" ]; then \
+	    echo "Error: SHELL_REGIO_TOP_YAML is not set."; \
+	    echo "Set it in the platform-specific include (e.g. versal_shell_build.mk)."; \
+	    exit 1; \
+	fi
+	@echo "Elaborating top-level regio IR: $@"
+	@$(__SB_REGIO_ELABORATE_CMD) -f top -o $@ $(SHELL_REGIO_TOP_YAML)
+.PHONY: $(SHELL_REGIO_ARTIFACT)
+
+$(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml:
+	@echo "Building core regio for $(__SB_CORE_REGIO_REF) ..."
+	@$(MAKE) -s -C $(SRC_ROOT) reg \
+	    COMPONENT=$(__SB_CORE_REGIO_REF) \
+	    BOARD=$(BOARD) \
+	    BUILD_ID=$(BUILD_ID) \
+	    $(if $(SMARTNIC_LIB_NAME),SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME),)
+	@mkdir -p $(__SB_REGIO_IR_DIR)
+	@cp $(__SB_CORE_REGIO_OUT)/ir/core_decoder-ir.yaml $@
+.PHONY: $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml
+
+.shell_build_regio_info:
+	@echo "------------------------------------------------------"
+	@echo "Regio packaging configuration"
+	@echo "------------------------------------------------------"
+	@echo "CORE_BUILD_REF        : $(CORE_BUILD_REF)"
+	@echo "Core regio ref        : $(__SB_CORE_REGIO_REF)"
+	@echo "Core regio output     : $(__SB_CORE_REGIO_OUT)"
+	@echo "Regio IR output dir   : $(__SB_REGIO_IR_DIR)"
+	@echo "SHELL_REGIO_TOP_YAML  : $(SHELL_REGIO_TOP_YAML)"
+	@echo "SHELL_REGIO_ARTIFACT  : $(SHELL_REGIO_ARTIFACT)"
+.PHONY: .shell_build_regio_info
+
+.shell_build_info: .shell_build_regio_info
