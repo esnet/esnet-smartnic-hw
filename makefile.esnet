@@ -28,8 +28,8 @@ else
 	APP_NAME ?= (empty)
 	APPLICATION_ID = $(APP_NAME)
 	BUILD_ID ?= 0
-	BUILD_GIT_REPO ?= (empty)
-	BUILD_GIT_HASH ?= (empty)
+	BUILD_GIT_REPO ?= {empty}
+	BUILD_GIT_HASH ?= {empty}
 endif
 
 BUILD_TIMESTAMP = $(shell date +"%s")
