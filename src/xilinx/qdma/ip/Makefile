@@ -32,8 +32,7 @@ export BOARD
 #   not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    xilinx_qdma_ecc \
-    xilinx_qdma
+    xilinx_qdma_ecc
 
 # ----------------------------------------------------
 # Simulation sources
@@ -58,65 +57,9 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    xilinx_qdma_ecc/sim/xilinx_qdma_ecc.v \
-    xilinx_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_channel.v \
-    xilinx_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_common.v \
-    xilinx_qdma/ip_0/ip_0/sim/xilinx_qdma_pcie4c_ip_gt_gtwizard_gtye4.v \
-    xilinx_qdma/ip_0/ip_0/sim/xilinx_qdma_pcie4c_ip_gt_gtwizard_top.v \
-    xilinx_qdma/ip_0/ip_0/sim/xilinx_qdma_pcie4c_ip_gt_gtye4_channel_wrapper.v \
-    xilinx_qdma/ip_0/ip_0/sim/xilinx_qdma_pcie4c_ip_gt_gtye4_common_wrapper.v \
-    xilinx_qdma/ip_0/ip_0/sim/xilinx_qdma_pcie4c_ip_gt.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_async_fifo.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_cc_intfc.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_cc_output_mux.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_cq_intfc.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_cq_output_mux.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_intfc_int.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_intfc.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_rc_intfc.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_rc_output_mux.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_rq_intfc.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_rq_output_mux.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_512b_sync_fifo.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_16k_int.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_16k.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_32k.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_4k_int.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_msix.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_rep_int.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_rep.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram_tph.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_bram.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_cxs_remap.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_cdr_ctrl_on_eidle.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_gt_channel.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_gt_common.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_phy_clk.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_phy_rst.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_phy_rxeq.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_phy_txeq.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_phy_wrapper.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gt_receiver_detect_rxterm.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_gtwizard_top.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_init_ctrl.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_pcie4c_uscale_core_top.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_phy_ff_chain.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_phy_pipeline.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_phy_top.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_pipe.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_pl_eq.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_seqnum_fifo.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_sync_cell.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_sync.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_sys_clk_gen_ps.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_vf_decode_attr.v \
-    xilinx_qdma/ip_0/source/xilinx_qdma_pcie4c_ip_vf_decode.v \
-    xilinx_qdma/ip_0/sim/xilinx_qdma_pcie4c_ip.v \
-    xilinx_qdma/xilinx_qdmahdl/verilog/xilinx_qdma_core_top.sv \
-    xilinx_qdma/sim/xilinx_qdma.sv
+    xilinx_qdma_ecc/sim/xilinx_qdma_ecc.v
 
-IP_SIM_INC_DIRS = \
-	xilinx_qdma/ip_0/source
+IP_SIM_INC_DIRS =
 
 # Import IP core revision details from version-specific tool config
 include $(CFG_ROOT)/vivado_ip.mk
@@ -124,13 +67,7 @@ include $(CFG_ROOT)/vivado_ip.mk
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
-    ecc_v$(IP_VER_ECC) \
-    gtwizard_ultrascale_v$(IP_VER_GTWIZARD_ULTRASCALE) \
-    qdma_v$(IP_VER_QDMA) \
-    unisims_ver \
-    unimacro_ver \
-    secureip \
-    xpm
+    ecc_v$(IP_VER_ECC)
 
 
 # ----------------------------------------------------

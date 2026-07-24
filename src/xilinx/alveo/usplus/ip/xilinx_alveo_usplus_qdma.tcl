@@ -1,5 +1,5 @@
 # Create IP
-set module_name xilinx_qdma
+set module_name xilinx_alveo_usplus_qdma
 
 create_ip -name qdma -vendor xilinx.com -library ip -module_name $module_name -dir . -force
 
