@@ -1,4 +1,4 @@
-module xilinx_qdma_wrapper #(
+module xilinx_alveo_qdma_wrapper #(
     parameter int PCIE_LINK_WID = 16
 ) (
     // From/to pins
@@ -699,4 +699,4 @@ xilinx_alveo_usplus_qdma i_xilinx_alveo_usplus_qdma (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-endmodule : xilinx_qdma_wrapper
+endmodule : xilinx_alveo_qdma_wrapper

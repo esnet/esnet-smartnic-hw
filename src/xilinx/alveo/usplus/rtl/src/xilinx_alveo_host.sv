@@ -50,7 +50,7 @@ module xilinx_alveo_host
     // =========================================================================
     // QDMA IP
     // =========================================================================
-    xilinx_qdma_wrapper #(
+    xilinx_alveo_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
     ) i_xilinx_alveo_qdma (
         .pcie_rstn ( __pcie_rstn ),

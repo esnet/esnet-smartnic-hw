@@ -34,7 +34,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
 
     axi4l_intf #() axil_if ();
 
-    xilinx_qdma_wrapper #(
+    xilinx_alveo_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
     ) DUT (.*);
 
