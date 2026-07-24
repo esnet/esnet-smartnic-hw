@@ -152,7 +152,11 @@ module xilinx_aved_adapter (
     input  wire        pci_rstn,       // Adapted PCI reset (includes JTAG override) reset ← shell (not yet wired to CPM5)
 
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
-    axi4l_intf.controller axil_if
+    axi4l_intf.controller axil_if,
+
+    // AXI4-S DMA streams — in the QDMA clock domain (m_axi_pcie0_aclk, ~250 MHz)
+    axi4s_intf.tx axis_h2c,  // H2C: host-to-core, drives toward shell/core
+    axi4s_intf.rx axis_c2h   // C2H: core-to-host, receives from shell/core
 );
 
     // =========================================================================
@@ -245,56 +249,109 @@ module xilinx_aved_adapter (
     );
 
     // =========================================================================
-    // PCIE0 DMA interface termination
-    //
-    // H2C is consumed (tready=1). C2H, completions, and all control sidebands
-    // are driven to safe idle values. FLR is immediately acknowledged.
+    // PCIE0 DMA streaming — CPM5 flat signals → axi4s_intf
+    // CPM5 uses 12-bit qid and 13-bit FLR/IRQ fnc fields.
     // =========================================================================
+    xilinx_qdma_st_adapter #(
+        .QID_WID     ( 12 ),
+        .FLR_FNC_WID ( 13 ),
+        .IRQ_FNC_WID ( 13 )
+    ) i_xilinx_qdma_st_adapter (
+        .aclk    ( m_axi_pcie0_aclk    ),
+        .aresetn ( m_axi_pcie0_aresetn ),
 
-    assign dma0_m_axis_h2c_0_tready          = 1'b1;
+        // H2C
+        .h2c_tvalid   ( dma0_m_axis_h2c_0_tvalid   ),
+        .h2c_tdata    ( dma0_m_axis_h2c_0_tdata     ),
+        .h2c_tlast    ( dma0_m_axis_h2c_0_tlast     ),
+        .h2c_tready   ( dma0_m_axis_h2c_0_tready    ),
+        .h2c_qid      ( dma0_m_axis_h2c_0_qid       ),
+        .h2c_port_id  ( dma0_m_axis_h2c_0_port_id   ),
+        .h2c_mdata    ( dma0_m_axis_h2c_0_mdata     ),
+        .h2c_mty      ( dma0_m_axis_h2c_0_mty       ),
+        .h2c_tcrc     ( dma0_m_axis_h2c_0_tcrc      ),
+        .h2c_err      ( dma0_m_axis_h2c_0_err       ),
+        .h2c_zero_byte( dma0_m_axis_h2c_0_zero_byte ),
 
-    assign dma0_s_axis_c2h_0_tvalid          = 1'b0;
-    assign dma0_s_axis_c2h_0_tdata           = '0;
-    assign dma0_s_axis_c2h_0_tlast           = 1'b0;
-    assign dma0_s_axis_c2h_0_ctrl_qid        = '0;
-    assign dma0_s_axis_c2h_0_ctrl_len        = '0;
-    assign dma0_s_axis_c2h_0_ctrl_port_id    = '0;
-    assign dma0_s_axis_c2h_0_ctrl_has_cmpt   = 1'b0;
-    assign dma0_s_axis_c2h_0_ctrl_marker     = 1'b0;
-    assign dma0_s_axis_c2h_0_mty             = '0;
-    assign dma0_s_axis_c2h_0_ecc             = '0;
-    assign dma0_s_axis_c2h_0_tcrc            = '0;
+        // C2H data
+        .c2h_tvalid       ( dma0_s_axis_c2h_0_tvalid        ),
+        .c2h_tdata        ( dma0_s_axis_c2h_0_tdata         ),
+        .c2h_tlast        ( dma0_s_axis_c2h_0_tlast         ),
+        .c2h_tready       ( dma0_s_axis_c2h_0_tready        ),
+        .c2h_ctrl_qid     ( dma0_s_axis_c2h_0_ctrl_qid      ),
+        .c2h_ctrl_len     ( dma0_s_axis_c2h_0_ctrl_len      ),
+        .c2h_ctrl_port_id ( dma0_s_axis_c2h_0_ctrl_port_id  ),
+        .c2h_ctrl_has_cmpt( dma0_s_axis_c2h_0_ctrl_has_cmpt ),
+        .c2h_ctrl_marker  ( dma0_s_axis_c2h_0_ctrl_marker   ),
+        .c2h_mty          ( dma0_s_axis_c2h_0_mty           ),
+        .c2h_ecc          ( dma0_s_axis_c2h_0_ecc           ),
+        .c2h_tcrc         ( dma0_s_axis_c2h_0_tcrc          ),
 
-    assign dma0_s_axis_c2h_cmpt_0_tvalid          = 1'b0;
-    assign dma0_s_axis_c2h_cmpt_0_data            = '0;
-    assign dma0_s_axis_c2h_cmpt_0_size            = '0;
-    assign dma0_s_axis_c2h_cmpt_0_qid             = '0;
-    assign dma0_s_axis_c2h_cmpt_0_port_id         = '0;
-    assign dma0_s_axis_c2h_cmpt_0_cmpt_type       = '0;
-    assign dma0_s_axis_c2h_cmpt_0_wait_pld_pkt_id = '0;
-    assign dma0_s_axis_c2h_cmpt_0_dpar            = '0;
-    assign dma0_s_axis_c2h_cmpt_0_col_idx         = '0;
-    assign dma0_s_axis_c2h_cmpt_0_err_idx         = '0;
-    assign dma0_s_axis_c2h_cmpt_0_user_trig       = 1'b0;
-    assign dma0_s_axis_c2h_cmpt_0_marker          = 1'b0;
-    assign dma0_s_axis_c2h_cmpt_0_no_wrb_marker   = 1'b0;
+        // C2H completion
+        .cmpt_tvalid          ( dma0_s_axis_c2h_cmpt_0_tvalid          ),
+        .cmpt_data            ( dma0_s_axis_c2h_cmpt_0_data            ),
+        .cmpt_size            ( dma0_s_axis_c2h_cmpt_0_size            ),
+        .cmpt_qid             ( dma0_s_axis_c2h_cmpt_0_qid             ),
+        .cmpt_port_id         ( dma0_s_axis_c2h_cmpt_0_port_id         ),
+        .cmpt_cmpt_type       ( dma0_s_axis_c2h_cmpt_0_cmpt_type       ),
+        .cmpt_wait_pld_pkt_id ( dma0_s_axis_c2h_cmpt_0_wait_pld_pkt_id ),
+        .cmpt_dpar            ( dma0_s_axis_c2h_cmpt_0_dpar            ),
+        .cmpt_col_idx         ( dma0_s_axis_c2h_cmpt_0_col_idx         ),
+        .cmpt_err_idx         ( dma0_s_axis_c2h_cmpt_0_err_idx         ),
+        .cmpt_user_trig       ( dma0_s_axis_c2h_cmpt_0_user_trig       ),
+        .cmpt_marker          ( dma0_s_axis_c2h_cmpt_0_marker          ),
+        .cmpt_no_wrb_marker   ( dma0_s_axis_c2h_cmpt_0_no_wrb_marker   ),
+        .cmpt_tready          ( dma0_s_axis_c2h_cmpt_0_tready          ),
 
-    assign dma0_dsc_crdt_in_0_crdt           = '0;
-    assign dma0_dsc_crdt_in_0_dir            = 1'b0;
-    assign dma0_dsc_crdt_in_0_fence          = 1'b0;
-    assign dma0_dsc_crdt_in_0_qid            = '0;
-    assign dma0_dsc_crdt_in_0_valid          = 1'b0;
+        // Descriptor credits
+        .dsc_crdt_crdt ( dma0_dsc_crdt_in_0_crdt  ),
+        .dsc_crdt_dir  ( dma0_dsc_crdt_in_0_dir   ),
+        .dsc_crdt_fence( dma0_dsc_crdt_in_0_fence ),
+        .dsc_crdt_qid  ( dma0_dsc_crdt_in_0_qid   ),
+        .dsc_crdt_valid( dma0_dsc_crdt_in_0_valid  ),
+        .dsc_crdt_rdy  ( dma0_dsc_crdt_in_0_rdy   ),
 
-    assign dma0_qsts_out_0_rdy               = 1'b1;
-    assign dma0_tm_dsc_sts_0_rdy             = 1'b1;
+        // Queue status
+        .qsts_data    ( dma0_qsts_out_0_data    ),
+        .qsts_op      ( dma0_qsts_out_0_op      ),
+        .qsts_port_id ( dma0_qsts_out_0_port_id ),
+        .qsts_qid     ( dma0_qsts_out_0_qid     ),
+        .qsts_vld     ( dma0_qsts_out_0_vld     ),
+        .qsts_rdy     ( dma0_qsts_out_0_rdy     ),
 
-    assign dma0_usr_irq_0_vec                = '0;
-    assign dma0_usr_irq_0_fnc                = '0;
-    assign dma0_usr_irq_0_valid              = 1'b0;
+        // TM descriptor status
+        .tm_dsc_avl     ( dma0_tm_dsc_sts_0_avl     ),
+        .tm_dsc_byp     ( dma0_tm_dsc_sts_0_byp     ),
+        .tm_dsc_dir     ( dma0_tm_dsc_sts_0_dir     ),
+        .tm_dsc_error   ( dma0_tm_dsc_sts_0_error   ),
+        .tm_dsc_irq_arm ( dma0_tm_dsc_sts_0_irq_arm ),
+        .tm_dsc_mm      ( dma0_tm_dsc_sts_0_mm      ),
+        .tm_dsc_pidx    ( dma0_tm_dsc_sts_0_pidx    ),
+        .tm_dsc_port_id ( dma0_tm_dsc_sts_0_port_id ),
+        .tm_dsc_qen     ( dma0_tm_dsc_sts_0_qen     ),
+        .tm_dsc_qid     ( dma0_tm_dsc_sts_0_qid     ),
+        .tm_dsc_qinv    ( dma0_tm_dsc_sts_0_qinv    ),
+        .tm_dsc_rdy     ( dma0_tm_dsc_sts_0_rdy     ),
+        .tm_dsc_valid   ( dma0_tm_dsc_sts_0_valid   ),
 
-    assign dma0_usr_flr_0_clear              = dma0_usr_flr_0_set;
-    assign dma0_usr_flr_0_done_fnc           = dma0_usr_flr_0_fnc;
-    assign dma0_usr_flr_0_done_vld           = dma0_usr_flr_0_set;
+        // User interrupt
+        .usr_irq_vec   ( dma0_usr_irq_0_vec   ),
+        .usr_irq_fnc   ( dma0_usr_irq_0_fnc   ),
+        .usr_irq_valid ( dma0_usr_irq_0_valid  ),
+        .usr_irq_ack   ( dma0_usr_irq_0_ack   ),
+        .usr_irq_fail  ( dma0_usr_irq_0_fail  ),
+
+        // Function level reset
+        .flr_fnc      ( dma0_usr_flr_0_fnc      ),
+        .flr_set      ( dma0_usr_flr_0_set      ),
+        .flr_clear    ( dma0_usr_flr_0_clear    ),
+        .flr_done_fnc ( dma0_usr_flr_0_done_fnc ),
+        .flr_done_vld ( dma0_usr_flr_0_done_vld ),
+
+        // AXI4-S interfaces
+        .axis_h2c,
+        .axis_c2h
+    );
 
     // Signal naming adaptation — AVED-specific names → functional shell names
     assign sys_clk_100mhz = clk_pl0_100mhz;

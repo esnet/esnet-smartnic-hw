@@ -26,6 +26,8 @@ SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi4.pkg@common \
     axi4.rtl@common \
+    axi4s.rtl@common \
+    xilinx.qdma.rtl \
     core.stub.regio.rtl
 
 EXT_LIBS =

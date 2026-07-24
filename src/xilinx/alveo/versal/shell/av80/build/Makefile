@@ -50,6 +50,7 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     shell.pkg \
     shell.rtl \
+    xilinx.qdma.pkg \
     xilinx.alveo.versal.bd \
     xilinx.alveo.versal.shell.rtl \
     core.blackbox

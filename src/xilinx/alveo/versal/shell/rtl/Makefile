@@ -28,6 +28,7 @@ SUBCOMPONENTS = \
     shell.pkg \
     shell.rtl \
     xilinx.alveo.rtl \
+    xilinx.qdma.pkg \
     xilinx.alveo.versal.rtl \
     xilinx.alveo.versal.regio.rtl \
     xilinx.alveo.versal.debug.rtl
