@@ -253,9 +253,7 @@ module xilinx_aved_adapter (
     // CPM5 uses 12-bit qid and 13-bit FLR/IRQ fnc fields.
     // =========================================================================
     xilinx_qdma_st_adapter #(
-        .QID_WID     ( 12 ),
-        .FLR_FNC_WID ( 13 ),
-        .IRQ_FNC_WID ( 13 )
+        .QID_WID ( 12 )
     ) i_xilinx_qdma_st_adapter (
         .aclk    ( m_axi_pcie0_aclk    ),
         .aresetn ( m_axi_pcie0_aresetn ),
@@ -311,47 +309,30 @@ module xilinx_aved_adapter (
         .dsc_crdt_valid( dma0_dsc_crdt_in_0_valid  ),
         .dsc_crdt_rdy  ( dma0_dsc_crdt_in_0_rdy   ),
 
-        // Queue status
-        .qsts_data    ( dma0_qsts_out_0_data    ),
-        .qsts_op      ( dma0_qsts_out_0_op      ),
-        .qsts_port_id ( dma0_qsts_out_0_port_id ),
-        .qsts_qid     ( dma0_qsts_out_0_qid     ),
-        .qsts_vld     ( dma0_qsts_out_0_vld     ),
-        .qsts_rdy     ( dma0_qsts_out_0_rdy     ),
-
-        // TM descriptor status
-        .tm_dsc_avl     ( dma0_tm_dsc_sts_0_avl     ),
-        .tm_dsc_byp     ( dma0_tm_dsc_sts_0_byp     ),
-        .tm_dsc_dir     ( dma0_tm_dsc_sts_0_dir     ),
-        .tm_dsc_error   ( dma0_tm_dsc_sts_0_error   ),
-        .tm_dsc_irq_arm ( dma0_tm_dsc_sts_0_irq_arm ),
-        .tm_dsc_mm      ( dma0_tm_dsc_sts_0_mm      ),
-        .tm_dsc_pidx    ( dma0_tm_dsc_sts_0_pidx    ),
-        .tm_dsc_port_id ( dma0_tm_dsc_sts_0_port_id ),
-        .tm_dsc_qen     ( dma0_tm_dsc_sts_0_qen     ),
-        .tm_dsc_qid     ( dma0_tm_dsc_sts_0_qid     ),
-        .tm_dsc_qinv    ( dma0_tm_dsc_sts_0_qinv    ),
-        .tm_dsc_rdy     ( dma0_tm_dsc_sts_0_rdy     ),
-        .tm_dsc_valid   ( dma0_tm_dsc_sts_0_valid   ),
-
-        // User interrupt
-        .usr_irq_vec   ( dma0_usr_irq_0_vec   ),
-        .usr_irq_fnc   ( dma0_usr_irq_0_fnc   ),
-        .usr_irq_valid ( dma0_usr_irq_0_valid  ),
-        .usr_irq_ack   ( dma0_usr_irq_0_ack   ),
-        .usr_irq_fail  ( dma0_usr_irq_0_fail  ),
-
-        // Function level reset
-        .flr_fnc      ( dma0_usr_flr_0_fnc      ),
-        .flr_set      ( dma0_usr_flr_0_set      ),
-        .flr_clear    ( dma0_usr_flr_0_clear    ),
-        .flr_done_fnc ( dma0_usr_flr_0_done_fnc ),
-        .flr_done_vld ( dma0_usr_flr_0_done_vld ),
-
         // AXI4-S interfaces
         .axis_h2c,
         .axis_c2h
     );
+
+    // =========================================================================
+    // PCIe function-level controls — handled at the adapter layer
+    // =========================================================================
+
+    // Queue status: consume silently
+    assign dma0_qsts_out_0_rdy = 1'b1;
+
+    // TM descriptor status: consume silently
+    assign dma0_tm_dsc_sts_0_rdy = 1'b1;
+
+    // User interrupts: not used
+    assign dma0_usr_irq_0_vec   = '0;
+    assign dma0_usr_irq_0_fnc   = '0;
+    assign dma0_usr_irq_0_valid = 1'b0;
+
+    // Function level reset: immediately acknowledged
+    assign dma0_usr_flr_0_clear    = dma0_usr_flr_0_set;
+    assign dma0_usr_flr_0_done_fnc = dma0_usr_flr_0_fnc;
+    assign dma0_usr_flr_0_done_vld = dma0_usr_flr_0_set;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
     assign sys_clk_100mhz = clk_pl0_100mhz;

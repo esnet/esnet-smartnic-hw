@@ -1,23 +1,21 @@
 // =========================================================================
-// xilinx_dma_st_adapter
+// xilinx_qdma_st_adapter
 //
 // Common QDMA streaming interface adapter — converts flat QDMA H2C/C2H
 // signals (as exported by the QDMA IP or the CPM5 block design) to/from
 // axi4s_intf.
 //
-// Parameters cover the only width differences between the discrete QDMA
-// IP (UltraScale+) and the CPM5 QDMA (Versal):
-//
-//   Parameter       USPlus QDMA   CPM5 QDMA
-//   QID_WID         11            12
-//   FLR_FNC_WID      8            13
-//   IRQ_FNC_WID      8            13
+// QID_WID covers the only width difference between the discrete QDMA IP
+// (UltraScale+, 11 bits) and the CPM5 QDMA (Versal, 12 bits).
 //
 // Responsibilities:
 //   H2C: mty → tkeep (last beat), qid → tid.qid, err → tuser.err
 //   C2H: tid.qid → ctrl_qid, tkeep → mty, auto-generate completions + ECC
-//   Control: FLR immediately acknowledged, IRQ/credits kept idle,
-//            qsts/tm_dsc consumed silently.
+//        descriptor credits kept at zero (simple mode)
+//
+// FLR, user interrupts, queue status, and TM descriptor status are
+// PCIe function-level concerns and belong in the caller (e.g.
+// xilinx_aved_adapter, xilinx_alveo_qdma_wrapper).
 //
 // The module operates entirely in the QDMA clock domain.  The caller is
 // responsible for any CDC needed before connecting axis_h2c / axis_c2h to
@@ -26,9 +24,7 @@
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;
 #(
-    parameter int QID_WID     = 11, // 11 for USPlus, 12 for CPM5
-    parameter int FLR_FNC_WID = 8,  //  8 for USPlus, 13 for CPM5
-    parameter int IRQ_FNC_WID = 8   //  8 for USPlus, 13 for CPM5
+    parameter int QID_WID = 11  // 11 for USPlus discrete QDMA, 12 for CPM5
 ) (
     // QDMA clock and reset
     input  wire        aclk,
@@ -89,43 +85,6 @@ module xilinx_qdma_st_adapter
     output wire [QID_WID-1:0]     dsc_crdt_qid,
     output wire                   dsc_crdt_valid,
     input  wire                   dsc_crdt_rdy,
-
-    // Queue status output (QDMA → user, consumed silently)
-    input  wire [63:0]            qsts_data,
-    input  wire [7:0]             qsts_op,
-    input  wire [2:0]             qsts_port_id,
-    input  wire [12:0]            qsts_qid,
-    input  wire                   qsts_vld,
-    output wire                   qsts_rdy,
-
-    // Traffic manager descriptor status (QDMA → user, consumed silently)
-    input  wire [15:0]            tm_dsc_avl,
-    input  wire                   tm_dsc_byp,
-    input  wire                   tm_dsc_dir,
-    input  wire                   tm_dsc_error,
-    input  wire                   tm_dsc_irq_arm,
-    input  wire                   tm_dsc_mm,
-    input  wire [15:0]            tm_dsc_pidx,
-    input  wire [2:0]             tm_dsc_port_id,
-    input  wire                   tm_dsc_qen,
-    input  wire [QID_WID-1:0]     tm_dsc_qid,
-    input  wire                   tm_dsc_qinv,
-    output wire                   tm_dsc_rdy,
-    input  wire                   tm_dsc_valid,
-
-    // User interrupt (kept idle)
-    output wire [10:0]            usr_irq_vec,
-    output wire [IRQ_FNC_WID-1:0] usr_irq_fnc,
-    output wire                   usr_irq_valid,
-    input  wire                   usr_irq_ack,
-    input  wire                   usr_irq_fail,
-
-    // Function level reset (immediately acknowledged)
-    input  wire [FLR_FNC_WID-1:0] flr_fnc,
-    input  wire                    flr_set,
-    output wire                    flr_clear,
-    output wire [FLR_FNC_WID-1:0] flr_done_fnc,
-    output wire                    flr_done_vld,
 
     // -----------------------------------------------------------------------
     // AXI4-S interfaces (QDMA clock domain)
@@ -248,23 +207,12 @@ module xilinx_qdma_st_adapter
     assign axis_c2h.tready = c2h_tready && cmpt_tready;
 
     // =========================================================================
-    // Control signals — safe terminations
+    // Descriptor credits — kept at zero (simple mode)
     // =========================================================================
     assign dsc_crdt_crdt  = '0;
     assign dsc_crdt_dir   = 1'b0;
     assign dsc_crdt_fence = 1'b0;
     assign dsc_crdt_qid   = '0;
     assign dsc_crdt_valid = 1'b0;
-
-    assign qsts_rdy   = 1'b1;
-    assign tm_dsc_rdy = 1'b1;
-
-    assign usr_irq_vec   = '0;
-    assign usr_irq_fnc   = '0;
-    assign usr_irq_valid = 1'b0;
-
-    assign flr_clear    = flr_set;
-    assign flr_done_fnc = flr_fnc;
-    assign flr_done_vld = flr_set;
 
 endmodule : xilinx_qdma_st_adapter
