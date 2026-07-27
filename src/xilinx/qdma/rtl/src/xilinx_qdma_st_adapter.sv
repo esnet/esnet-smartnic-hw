@@ -118,45 +118,81 @@ module xilinx_qdma_st_adapter
     assign h2c_tdest.unused = 1'b0;
     assign h2c_tuser.err    = h2c_err;
 
-    assign axis_h2c.tvalid = h2c_tvalid;
-    assign axis_h2c.tdata  = h2c_tdata;
-    assign axis_h2c.tkeep  = h2c_tkeep;
-    assign axis_h2c.tlast  = h2c_tlast;
-    assign axis_h2c.tid    = h2c_tid;
-    assign axis_h2c.tdest  = h2c_tdest;
-    assign axis_h2c.tuser  = h2c_tuser;
-    assign h2c_tready      = axis_h2c.tready;
+    // Internal interface: combinatorial assignments before the output pipe
+    axi4s_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_WID       ( AXIS_TID_WID       ),
+        .TDEST_WID     ( AXIS_TDEST_WID     ),
+        .TUSER_WID     ( AXIS_TUSER_WID     )
+    ) axis_h2c_comb (.aclk(aclk));
+
+    assign axis_h2c_comb.tvalid = h2c_tvalid;
+    assign axis_h2c_comb.tdata  = h2c_tdata;
+    assign axis_h2c_comb.tkeep  = h2c_tkeep;
+    assign axis_h2c_comb.tlast  = h2c_tlast;
+    assign axis_h2c_comb.tid    = h2c_tid;
+    assign axis_h2c_comb.tdest  = h2c_tdest;
+    assign axis_h2c_comb.tuser  = h2c_tuser;
+    assign h2c_tready           = axis_h2c_comb.tready;
+
+    // Register H2C output signals to eliminate the combinatorial path through
+    // mty → tkeep before the interface, preventing clocking-block race conditions
+    // in simulation and improving timing in synthesis.
+    axi4s_intf_pipe i_axi4s_intf_pipe_h2c (
+        .srst    ( ~aresetn      ),
+        .from_tx ( axis_h2c_comb ),
+        .to_rx   ( axis_h2c      )
+    );
 
     // =========================================================================
-    // C2H stream — axi4s_intf → flat signals + completions
+    // C2H stream — axi4s_intf → registered interface → flat signals + completions
+    //
+    // axi4s_pipe registers the C2H input, eliminating the combinatorial path
+    // through tkeep → mty before the flat outputs and improving timing.
+    // tready back-propagates through the pipe from the downstream logic.
     // =========================================================================
+
+    // Internal registered interface — all C2H logic reads from this
+    axi4s_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_WID       ( AXIS_TID_WID       ),
+        .TDEST_WID     ( AXIS_TDEST_WID     ),
+        .TUSER_WID     ( AXIS_TUSER_WID     )
+    ) axis_c2h_reg (.aclk(aclk));
+
+    axi4s_intf_pipe i_axi4s_intf_pipe_c2h (
+        .srst    ( ~aresetn     ),
+        .from_tx ( axis_c2h     ),
+        .to_rx   ( axis_c2h_reg )
+    );
+
     axis_tid_t   c2h_tid;
     axis_tdest_t c2h_tdest;
     axis_tuser_t c2h_tuser;
 
-    assign c2h_tid   = axis_c2h.tid;
-    assign c2h_tdest = axis_c2h.tdest;
-    assign c2h_tuser = axis_c2h.tuser;
+    assign c2h_tid   = axis_c2h_reg.tid;
+    assign c2h_tdest = axis_c2h_reg.tdest;
+    assign c2h_tuser = axis_c2h_reg.tuser;
 
     // tkeep → mty: count contiguous trailing zero keeps on the last beat
     logic [5:0] c2h_mty_comb;
     always_comb begin
         c2h_mty_comb = '0;
         for (int b = AXIS_DATA_BYTE_WID-1; b >= 0; b--) begin
-            if (!axis_c2h.tkeep[b] && (c2h_mty_comb == (AXIS_DATA_BYTE_WID-1-b)))
+            if (!axis_c2h_reg.tkeep[b] && (c2h_mty_comb == (AXIS_DATA_BYTE_WID-1-b)))
                 c2h_mty_comb = c2h_mty_comb + 1'b1;
         end
     end
 
-    assign c2h_tvalid        = axis_c2h.tvalid;
-    assign c2h_tdata         = axis_c2h.tdata;
-    assign c2h_tlast         = axis_c2h.tlast;
+    assign c2h_tvalid        = axis_c2h_reg.tvalid;
+    assign c2h_tdata         = axis_c2h_reg.tdata;
+    assign c2h_tlast         = axis_c2h_reg.tlast;
     assign c2h_ctrl_qid      = c2h_tid.qid[QID_WID-1:0];
     assign c2h_ctrl_len      = '0;
     assign c2h_ctrl_port_id  = '0;
     assign c2h_ctrl_has_cmpt = 1'b1;
     assign c2h_ctrl_marker   = 1'b0;
-    assign c2h_mty           = axis_c2h.tlast ? c2h_mty_comb : '0;
+    assign c2h_mty           = axis_c2h_reg.tlast ? c2h_mty_comb : '0;
     assign c2h_tcrc          = '0;
 
     // ECC over C2H ctrl bus (PG302: input order LSB-first as listed below)
@@ -179,7 +215,7 @@ module xilinx_qdma_st_adapter
     pkt_id_t c2h_pkt_id;
     always_ff @(posedge aclk) begin
         if (!aresetn) c2h_pkt_id <= '0;
-        else if (axis_c2h.tvalid && axis_c2h.tready && axis_c2h.tlast)
+        else if (axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast)
             c2h_pkt_id <= c2h_pkt_id + 1'b1;
     end
 
@@ -189,7 +225,7 @@ module xilinx_qdma_st_adapter
     assign cmpt_data_packed.pkt_id = c2h_pkt_id;
     assign cmpt_data_packed.qid    = c2h_tid.qid;
 
-    assign cmpt_tvalid          = axis_c2h.tvalid && axis_c2h.tready && axis_c2h.tlast;
+    assign cmpt_tvalid          = axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast;
     assign cmpt_data            = cmpt_data_packed;
     assign cmpt_size            = 2'b00;   // 8-byte completion
     assign cmpt_qid             = c2h_tid.qid[QID_WID-1:0];
@@ -204,7 +240,7 @@ module xilinx_qdma_st_adapter
     assign cmpt_no_wrb_marker   = 1'b0;
 
     // tready: accepted when both data and completion paths are ready
-    assign axis_c2h.tready = c2h_tready && cmpt_tready;
+    assign axis_c2h_reg.tready = c2h_tready && cmpt_tready;
 
     // =========================================================================
     // Descriptor credits — kept at zero (simple mode)
