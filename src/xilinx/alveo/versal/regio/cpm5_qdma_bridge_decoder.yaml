@@ -1,0 +1,13 @@
+name: cpm5_qdma_bridge_decoder
+info: |
+  CPM5 QDMA BAR2 (AXI Bridge Master) Registers for Physical Functions.
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  PF BAR2 type = AXI_Bridge_Master, 8 MB, mapped at NoC address
+  0x0000020300000000 (CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2).
+  Bridge registers start at offset 0xE00 within this BAR.
+blocks:
+  cpm5_qdma_bridge: &cpm5_qdma_bridge
+    !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_bridge.yaml
+interfaces:
+  - block: *cpm5_qdma_bridge
+    address: 0xE00

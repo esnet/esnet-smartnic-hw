@@ -1,0 +1,968 @@
+name: cpm5_qdma_pf_csrs
+info: |
+  CPM5 QDMA PF Device CSRs
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  Source: cpm5-qdma-v4-0-pf-registers.csv
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # Config Block / GLBL1 (0x000)
+
+  - name: cfg_block_id
+    access: ro
+    fields:
+      - name: version
+        width: 8
+      - name: rsvd
+        width: 8
+      - name: config_block_identifier
+        width: 4
+      - name: identifier
+        width: 12
+
+  - meta:
+      pad_until: 0x08
+
+  - name: cfg_pcie_max_pl_sz
+    fields:
+      - name: pcie_max_payload_issued
+        width: 3
+        access: ro
+      - name: rsvd
+        width: 1
+      - name: pcie_max_payload_prog
+        width: 3
+      - name: rsvd1
+        width: 25
+
+  - name: cfg_pcie_max_rdrq_sz
+    fields:
+      - name: pcie_max_read_issued
+        width: 3
+        access: ro
+      - name: rsvd
+        width: 1
+      - name: pcie_max_read_prog
+        width: 3
+      - name: rsvd1
+        width: 25
+
+  - name: cfg_sys_id
+    fields:
+      - name: system_id
+        width: 16
+        access: ro
+      - name: inst_type
+        width: 1
+        access: ro
+      - name: rsvd
+        width: 15
+
+  - name: cfg_msix_en
+    access: ro
+
+  - name: cfg_pcie_data_width
+    fields:
+      - name: datapath_width
+        width: 3
+        access: ro
+        enum:
+          0x0 : WIDTH_64
+          0x1 : WIDTH_128
+          0x2 : WIDTH_256
+          0x3 : WIDTH_512
+      - name: rsvd
+        width: 29
+
+  - name: cfg_pcie_ctrl
+    fields:
+      - name: relaxed_ordering
+        width: 1
+      - name: rrq_disable
+        width: 1
+      - name: rsvd
+        width: 14
+      - name: mgmt_axil_ctrl
+        width: 2
+        enum:
+          0x0 : RR
+          0x1 : MGMT_ONLY
+          0x2 : AXIL_ONLY
+      - name: rsvd1
+        width: 14
+
+  - name: cfg_msi_en
+    access: ro
+
+  - meta:
+      pad_until: 0x40
+
+  - name: cfg_axi_usr_max_pl_sz
+    fields:
+      - name: user_max_payload_prog
+        width: 3
+      - name: rsvd
+        width: 1
+      - name: user_max_payload_issued
+        width: 3
+        access: ro
+      - name: rsvd1
+        width: 25
+
+  - name: cfg_axi_usr_max_rdrq_sz
+    fields:
+      - name: usr_max_read_request_prog
+        width: 3
+      - name: rsvd
+        width: 1
+      - name: usr_max_read_request_issued
+        width: 3
+        access: ro
+      - name: rsvd1
+        width: 25
+
+  - meta:
+      pad_until: 0x4C
+
+  - name: cfg_misc_ctrl
+    fields:
+      - name: rq_metering_multiplier
+        width: 5
+      - name: rsvd
+        width: 3
+      - name: num_tag
+        width: 12
+      - name: axi_dsc
+        width: 1
+      - name: axi_wbk
+        width: 1
+      - name: rsvd1
+        width: 1
+      - name: tag_10b_en
+        width: 1
+      - name: rsvd2
+        width: 8
+
+  - meta:
+      pad_until: 0x68
+
+  - name: cfg_pl_credit_ctl
+    fields:
+      - name: master_crd_rst
+        width: 1
+      - name: rsvd
+        width: 3
+      - name: slave_crd_rls
+        width: 1
+      - name: rsvd1
+        width: 27
+
+  - meta:
+      pad_until: 0x80
+
+  - name: cfg_scratch_reg
+    count: 8
+
+  - name: cfg_gic
+    fields:
+      - name: gic_irq
+        width: 1
+      - name: rsvd
+        width: 31
+
+  - meta:
+      pad_until: 0xE0
+
+  - name: qdma_ram_sbe_msk_1_a
+  - name: qdma_ram_sbe_sts_1_a
+    fields:
+      - name: rc_rrq_even_ram
+        width: 1
+      - name: tag_odd_ram
+        width: 1
+      - name: tag_even_ram
+        width: 1
+      - name: pfch_ctxt_cam_ram_0
+        width: 1
+      - name: pfch_ctxt_cam_ram_1
+        width: 1
+      - name: rsvd
+        width: 27
+  - name: qdma_ram_dbe_msk_1_a
+  - name: qdma_ram_dbe_sts_1_a
+    fields:
+      - name: rc_rrq_even_ram
+        width: 1
+      - name: tag_odd_ram
+        width: 1
+      - name: tag_even_ram
+        width: 1
+      - name: pfch_ctxt_cam_ram_0
+        width: 1
+      - name: pfch_ctxt_cam_ram_1
+        width: 1
+      - name: rsvd
+        width: 27
+  - name: qdma_ram_sbe_msk_a
+  - name: qdma_ram_sbe_sts_a
+  - name: qdma_ram_dbe_msk_a
+  - name: qdma_ram_dbe_sts_a
+
+  # GLBL2 (0x100)
+
+  - name: glbl2_identifier
+    access: ro
+    fields:
+      - name: version
+        width: 8
+      - name: identifier
+        width: 24
+
+  - meta:
+      pad_until: 0x114
+
+  - name: glbl2_channel_inst
+    access: ro
+    fields:
+      - name: h2c_eng
+        width: 4
+      - name: rsvd
+        width: 4
+      - name: c2h_eng
+        width: 4
+      - name: rsvd1
+        width: 4
+      - name: h2c_st
+        width: 1
+      - name: c2h_st
+        width: 1
+      - name: rsvd2
+        width: 14
+
+  - name: glbl2_channel_mdma
+    access: ro
+    fields:
+      - name: h2c_eng
+        width: 4
+      - name: rsvd
+        width: 4
+      - name: c2h_eng
+        width: 4
+      - name: rsvd1
+        width: 4
+      - name: h2c_st
+        width: 1
+      - name: c2h_st
+        width: 1
+      - name: rsvd2
+        width: 14
+
+  - name: glbl2_channel_strm
+    access: ro
+    fields:
+      - name: h2c_eng
+        width: 4
+      - name: rsvd
+        width: 4
+      - name: c2h_eng
+        width: 4
+      - name: rsvd1
+        width: 4
+      - name: h2c_st
+        width: 1
+      - name: c2h_st
+        width: 1
+      - name: rsvd2
+        width: 14
+
+  - name: glbl2_channel_qdma_cap
+    access: ro
+    fields:
+      - name: multiq_max
+        width: 12
+      - name: rsvd
+        width: 20
+
+  - meta:
+      pad_until: 0x128
+
+  - name: glbl2_channel_pasid_cap
+    access: ro
+    fields:
+      - name: dma_pasid_en
+        width: 1
+      - name: bridge_pasid_en
+        width: 1
+      - name: rsvd
+        width: 30
+
+  - meta:
+      pad_until: 0x130
+
+  - name: glbl2_sys_id
+    access: ro
+    fields:
+      - name: system_id
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: glbl2_misc_cap
+    access: ro
+
+  - meta:
+      pad_until: 0x1B8
+
+  - name: glbl2_dbg_pcie_rq
+    count: 2
+    access: ro
+  - name: glbl2_dbg_aximm_wr
+    count: 2
+    access: ro
+  - name: glbl2_dbg_aximm_rd
+    count: 2
+    access: ro
+  - name: glbl2_dbg_fab0
+    access: ro
+  - name: glbl2_dbg_fab1
+    access: ro
+
+  - meta:
+      pad_until: 0x1F4
+
+  - name: glbl2_dbg_match_sel
+  - name: glbl2_dbg_match_msk
+  - name: glbl2_dbg_match_pat
+
+  # GLBL (0x200)
+
+  - meta:
+      pad_until: 0x204
+
+  - name: glbl_rngsz
+    count: 16
+    fields:
+      - name: ring_size
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - meta:
+      pad_until: 0x248
+
+  - name: glbl_err_stat
+    fields:
+      - name: err_ram_sbe
+        width: 1
+      - name: err_ram_dbe
+        width: 1
+      - name: err_dsc
+        width: 1
+      - name: err_trq
+        width: 1
+      - name: err_h2c_mm_0
+        width: 1
+      - name: err_h2c_mm_1
+        width: 1
+      - name: err_c2h_mm_0
+        width: 1
+      - name: err_c2h_mm_1
+        width: 1
+      - name: err_c2h_st
+        width: 1
+      - name: ind_ctxt_cmd_err
+        width: 6
+      - name: err_bdg
+        width: 1
+      - name: err_h2c_st
+        width: 1
+      - name: err_fab
+        width: 1
+      - name: rsvd
+        width: 14
+
+  - name: glbl_err_mask
+
+  - name: glbl_dsc_cfg
+    fields:
+      - name: wb_acc_int
+        width: 3
+      - name: max_dsc_fetch
+        width: 3
+      - name: rsvd
+        width: 2
+      - name: ctxt_fer_dis
+        width: 1
+      - name: unc_ovr_cor
+        width: 1
+      - name: rsvd1
+        width: 22
+
+  - name: glbl_dsc_err_sts
+    fields:
+      - name: poison
+        width: 1
+      - name: ur_ca
+        width: 1
+      - name: bcnt
+        width: 1
+      - name: param
+        width: 1
+      - name: addr
+        width: 1
+      - name: tag
+        width: 1
+      - name: flr
+        width: 1
+      - name: rsvd
+        width: 1
+      - name: timeout
+        width: 1
+      - name: dat_poison
+        width: 1
+      - name: rsvd1
+        width: 2
+      - name: flr_cancel
+        width: 1
+      - name: dma
+        width: 1
+      - name: dsc
+        width: 1
+      - name: rq_cancel
+        width: 1
+      - name: rsvd2
+        width: 2
+      - name: dat_poison2
+        width: 1
+      - name: flr_cancel2
+        width: 1
+      - name: dbe
+        width: 1
+      - name: sbe
+        width: 1
+      - name: rq_cancel2
+        width: 1
+      - name: dsc2
+        width: 1
+      - name: dma2
+        width: 1
+      - name: port_id
+        width: 1
+      - name: rsvd3
+        width: 6
+
+  - name: glbl_dsc_err_msk
+
+  - name: glbl_dsc_err_log0
+    fields:
+      - name: qid
+        width: 13
+      - name: rsvd
+        width: 17
+      - name: sel
+        width: 1
+        enum:
+          0x0 : H2C
+          0x1 : C2H
+      - name: valid
+        width: 1
+
+  - name: glbl_dsc_err_log1
+    fields:
+      - name: err_type
+        width: 5
+      - name: sub_type
+        width: 4
+        enum:
+          0x0 : NON_UPDATE_ERR
+          0x2 : PIDX_UPDATE_OVFL
+          0x3 : RX_TOO_MANY_CREDITS
+          0x4 : FENCED_CREDIT_RX
+          0x5 : VIRTIO_AVAIL_PAGE_SPAN
+      - name: rsvd
+        width: 3
+      - name: cidx
+        width: 16
+      - name: rsvd1
+        width: 4
+
+  - name: glbl_trq_err_sts
+    fields:
+      - name: csr_unmapped
+        width: 1
+      - name: vf_access_err
+        width: 1
+      - name: rsvd
+        width: 1
+      - name: tcp_csr_timeout
+        width: 1
+      - name: qspc_unmapped
+        width: 1
+      - name: qid_range
+        width: 1
+      - name: rsvd1
+        width: 1
+      - name: tcp_qspc_timeout
+        width: 1
+      - name: rsvd2
+        width: 24
+
+  - name: glbl_trq_err_msk
+  - name: glbl_trq_err_log
+
+  - name: glbl_dsc_dbg_dat0
+    access: ro
+  - name: glbl_dsc_dbg_dat1
+    access: ro
+  - name: glbl_dsc_dbg_ctl
+
+  - name: glbl_dsc_err_log2
+    fields:
+      - name: new_pidx
+        width: 16
+      - name: old_pidx
+        width: 16
+
+  - meta:
+      pad_until: 0x2C4
+
+  - name: glbl_interrupt_cfg
+    fields:
+      - name: en_lgcy_intr
+        width: 1
+      - name: lgcy_intr_pending
+        width: 1
+      - name: rsvd
+        width: 30
+
+  - name: glbl_vch_host_profile
+    count: 16
+
+  - name: glbl_bridge_host_profile
+    fields:
+      - name: bdg_host_id
+        width: 4
+      - name: rsvd
+        width: 28
+
+  - name: qdma_aximm_irq_dest_addr
+    count: 2
+
+  - name: qdma_fab_thr_log
+    fields:
+      - name: src
+        width: 7
+      - name: rsvd
+        width: 25
+
+  # Indirect Context (0x804)
+
+  - meta:
+      pad_until: 0x804
+
+  - name: ind_ctxt_data
+    count: 8
+  - name: ind_ctxt_mask
+    count: 8
+  - name: ind_ctxt_cmd
+    fields:
+      - name: busy
+        width: 1
+      - name: sel
+        width: 4
+      - name: op
+        width: 2
+      - name: qid
+        width: 13
+      - name: rsvd
+        width: 12
+
+  # C2H (0xA00)
+
+  - meta:
+      pad_until: 0xA00
+
+  - name: c2h_timer_cnt
+    count: 16
+    fields:
+      - name: timer_count
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: c2h_cnt_thresh
+    count: 16
+    fields:
+      - name: threshold_count
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: c2h_pfch_cfg_1
+    fields:
+      - name: pfch_qcnt
+        width: 16
+      - name: evt_qcnt_th
+        width: 16
+
+  - name: c2h_pfch_cfg_2
+    fields:
+      - name: num_pfch
+        width: 6
+      - name: var_desc_num_pfch
+        width: 6
+      - name: pfch_ll_sz_th
+        width: 16
+      - name: var_desc_no_drop
+        width: 1
+      - name: rsvd
+        width: 2
+      - name: fence
+        width: 1
+
+  - name: c2h_stat_s_axis_c2h_accepted
+    access: ro
+  - name: c2h_stat_s_axis_wrb_accepted
+    access: ro
+  - name: c2h_stat_desc_rsp_pkt_accepted
+    access: ro
+  - name: c2h_stat_axis_pkg_cmp
+    access: ro
+  - name: c2h_stat_desc_rsp_accepted
+    access: ro
+  - name: c2h_stat_desc_rsp_cmp
+    access: ro
+  - name: c2h_stat_wrq_out
+    access: ro
+  - name: c2h_stat_wpl_ren_accepted
+    access: ro
+  - name: c2h_stat_total_wrq_len
+    access: ro
+  - name: c2h_stat_total_wpl_len
+    access: ro
+
+  - name: c2h_buf_sz
+    count: 16
+    fields:
+      - name: buf_size
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: c2h_err_stat
+  - name: c2h_err_mask
+  - name: c2h_fatal_err_stat
+  - name: c2h_fatal_err_mask
+  - name: c2h_fatal_err_enable
+    fields:
+      - name: enable_wrq_dis
+        width: 1
+      - name: enable_wpl_par_inv
+        width: 1
+      - name: rsvd
+        width: 30
+
+  - name: glbl_err_int
+    fields:
+      - name: func
+        width: 12
+      - name: vec
+        width: 11
+      - name: en_coal
+        width: 1
+      - name: err_int_arm
+        width: 1
+      - name: dis_intr_on_vf
+        width: 1
+      - name: host_id
+        width: 4
+      - name: rsvd
+        width: 2
+
+  - name: c2h_pfch_cfg
+    fields:
+      - name: pfch_fl_th
+        width: 16
+      - name: evt_pfch_fl_th
+        width: 16
+
+  - name: c2h_int_timer_tick
+
+  - name: c2h_stat_desc_rsp_drop_accepted
+    access: ro
+  - name: c2h_stat_desc_rsp_err_accepted
+    access: ro
+  - name: c2h_stat_desc_req
+    access: ro
+  - name: c2h_stat_debug_dma_eng_0
+    access: ro
+  - name: c2h_stat_debug_dma_eng_1
+    access: ro
+  - name: c2h_stat_debug_dma_eng_2
+    access: ro
+  - name: c2h_stat_debug_dma_eng_3
+    access: ro
+  - name: c2h_dbg_pfch_err_ctxt
+    access: ro
+  - name: c2h_first_err_qid
+    access: ro
+
+  - name: stat_num_wrb_in
+    access: ro
+    fields:
+      - name: wrb_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_wrb_out
+    access: ro
+    fields:
+      - name: wrb_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_wrb_drp
+    access: ro
+    fields:
+      - name: wrb_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_stat_desc_out
+    access: ro
+    fields:
+      - name: stat_desc_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_dsc_crdt_sent
+    access: ro
+    fields:
+      - name: crdt_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_fch_dsc_rcvd
+    access: ro
+    fields:
+      - name: dsc_cnt
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: stat_num_byp_dsc_rcvd
+    access: ro
+    fields:
+      - name: dsc_cnt
+        width: 11
+      - name: rsvd
+        width: 21
+
+  - name: c2h_wrb_coal_cfg
+    fields:
+      - name: done_glb_flush
+        width: 1
+        access: ro
+      - name: set_glb_flush
+        width: 1
+      - name: tick_cnt
+        width: 12
+      - name: tick_val
+        width: 12
+      - name: max_buf_sz
+        width: 6
+
+  - name: c2h_intr_h2c_req
+    access: ro
+  - name: c2h_intr_c2h_mm_req
+    access: ro
+  - name: c2h_intr_err_int_req
+    access: ro
+  - name: c2h_intr_c2h_st_req
+    access: ro
+  - name: c2h_intr_h2c_err_c2h_mm_msix_ack
+    access: ro
+  - name: c2h_intr_h2c_err_c2h_mm_msix_fail
+    access: ro
+  - name: c2h_intr_h2c_err_c2h_mm_no_msix
+    access: ro
+  - name: c2h_intr_h2c_err_c2h_mm_ctxt_inval
+    access: ro
+  - name: c2h_intr_c2h_st_msix_ack
+    access: ro
+  - name: c2h_intr_c2h_st_msix_fail
+    access: ro
+  - name: c2h_intr_c2h_st_no_msix
+    access: ro
+  - name: c2h_intr_c2h_st_ctxt_inval
+    access: ro
+  - name: c2h_stat_wr_cmp
+    access: ro
+  - name: c2h_stat_debug_dma_eng_4
+    access: ro
+  - name: c2h_stat_debug_dma_eng_5
+    access: ro
+  - name: c2h_dbg_pfch_qid
+    access: ro
+  - name: c2h_dbg_pfch
+  - name: c2h_int_debug
+    access: ro
+  - name: c2h_stat_imm_accepted
+    access: ro
+  - name: c2h_stat_marker_accepted
+    access: ro
+  - name: c2h_stat_disable_cmp_accepted
+    access: ro
+  - name: c2h_payload_fifo_crdt_cnt
+    access: ro
+  - name: c2h_intr_dyn_req
+    access: ro
+  - name: c2h_intr_dyn_misc
+    access: ro
+  - name: c2h_drop_len_mismatch
+    access: ro
+  - name: c2h_drop_desc_rsp_len
+    access: ro
+  - name: c2h_drop_qid_fifo_len
+    access: ro
+  - name: c2h_drop_payload_cnt
+    access: ro
+
+  - name: c2h_cmpt_format
+    count: 7
+
+  - name: c2h_pfch_cache_depth
+    access: ro
+  - name: c2h_wrb_coal_buf_depth
+    access: ro
+  - name: c2h_pfch_crdt
+    access: ro
+  - name: c2h_stat_has_cmpt_accepted
+    access: ro
+  - name: c2h_stat_has_pld_accepted
+    access: ro
+  - name: c2h_pld_pkt_id
+    access: ro
+  - name: c2h_pld_pkt_id_1
+    access: ro
+  - name: c2h_drop_payload_cnt_1
+    access: ro
+
+  # H2C (0xE00)
+
+  - meta:
+      pad_until: 0xE00
+
+  - name: h2c_err_stat
+    fields:
+      - name: zero_len_dsc_err
+        width: 1
+      - name: sdi_mrkr_req_mop_err
+        width: 1
+      - name: no_dma_dsc_err
+        width: 1
+      - name: dbe
+        width: 1
+      - name: sbe
+        width: 1
+      - name: par_err
+        width: 1
+      - name: rsvd
+        width: 26
+  - name: h2c_err_mask
+  - name: h2c_first_err_qid
+    access: ro
+    fields:
+      - name: qid
+        width: 13
+      - name: rsvd
+        width: 3
+      - name: err_type
+        width: 4
+      - name: rsvd1
+        width: 12
+  - name: h2c_dbg_reg
+    count: 5
+    access: ro
+  - name: h2c_fatal_err_en
+    fields:
+      - name: h2c_fatal_err_en
+        width: 1
+      - name: rsvd
+        width: 31
+  - name: h2c_req_throt_pcie
+  - name: h2c_aln_dbg_reg0
+    access: ro
+  - name: h2c_req_throt_aximm
+
+  # C2H/H2C credit coalescing and misc (0x1400)
+
+  - meta:
+      pad_until: 0x1400
+
+  - name: c2h_crdt_coal_cfg_1
+    fields:
+      - name: crdt_timer_th
+        width: 10
+      - name: pld_fifo_th
+        width: 8
+      - name: rsvd
+        width: 14
+  - name: c2h_crdt_coal_cfg_2
+    fields:
+      - name: crdt_cnt_th
+        width: 11
+      - name: rsvd
+        width: 5
+      - name: crdt_fifo_th
+        width: 8
+      - name: rsvd1
+        width: 8
+  - name: c2h_pfch_byp_qid
+    fields:
+      - name: byp_qid
+        width: 12
+      - name: rsvd
+        width: 20
+  - name: c2h_pfch_byp_tag
+    access: ro
+    fields:
+      - name: byp_tag
+        width: 7
+      - name: rsvd
+        width: 1
+      - name: byp_qid
+        width: 12
+      - name: rsvd1
+        width: 12
+
+  - meta:
+      pad_until: 0x1500
+
+  - name: c2h_water_mark
+    count: 16
+    access: ro
+
+  - meta:
+      pad_until: 0x1800
+
+  - name: c2h_notify_empty
+    access: ro
+    fields:
+      - name: noe
+        width: 16
+      - name: rsvd
+        width: 16
+  - name: c2h_stat_s_axis_c2h_accepted_1
+    access: ro
+  - name: c2h_stat_s_axis_wrb_accepted_1
+    access: ro
+  - name: c2h_stat_desc_rsp_pkt_accepted_1
+    access: ro
+  - name: c2h_stat_axis_pkg_cmp_1
+    access: ro
+  - name: c2h_stat_s_axis_wrb_accepted_2
+    access: ro
+  - name: c2h_st_payload_fifo_depth
+    access: ro

@@ -1,0 +1,20 @@
+name: cpm5_qdma_vf_decoder
+info: |
+  CPM5 QDMA Registers for Virtual Functions (SR-IOV)
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  VF BAR0 = 32 KB (Kilobytes, as configured in xilinx_aved.tcl).
+  Layout within VF BAR0:
+    0x3000 : DMAP per-queue registers (int_cidx/h2c_pidx/c2h_pidx/cmpt_cidx)
+    0x4000 : MSI-X table (not decoded here)
+    0x5000 : Mailbox / interrupt control CSRs
+blocks:
+  cpm5_qdma_pf_queues: &cpm5_qdma_pf_queues
+    !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_pf_queues.yaml
+  cpm5_qdma_vf_csrs: &cpm5_qdma_vf_csrs
+    !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_vf_csrs.yaml
+interfaces:
+  - block: *cpm5_qdma_pf_queues
+    address: 0x3000
+
+  - block: *cpm5_qdma_vf_csrs
+    address: 0x5000

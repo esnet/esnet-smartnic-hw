@@ -1,0 +1,376 @@
+name: cpm5_qdma_bridge
+info: |
+  CPM5 QDMA AXI Bridge Registers
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  Source: cpm5-qdma-v4-0_bridge-registers.csv
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # Bridge registers start at 0xE00 within the overall QDMA PF BAR.
+  # This block is mapped at that offset by the decoder.
+
+  - name: vsec_cap
+    access: ro
+    fields:
+      - name: cap_id
+        width: 16
+      - name: cap_ver
+        width: 4
+      - name: nxt_cap_offset
+        width: 12
+
+  - name: vsec_hdr
+    access: ro
+    fields:
+      - name: vsec_id
+        width: 16
+      - name: vsec_rev
+        width: 4
+      - name: vsec_length
+        width: 12
+
+  - name: bdg_info
+    access: ro
+
+  - name: bdg_csr
+    fields:
+      - name: rsvd
+        width: 8
+      - name: glb_int_dis
+        width: 1
+      - name: cfg_space_en
+        width: 1
+      - name: rsvd1
+        width: 6
+      - name: cfg_wr_rw1c_rw
+        width: 1
+      - name: cfg_wr_readonly
+        width: 1
+        access: ro
+      - name: rsvd2
+        width: 14
+
+  - name: int_dec
+    fields:
+      - name: link_down
+        width: 1
+      - name: sw_ctrl_int
+        width: 1
+      - name: flr_intr
+        width: 1
+      - name: hot_reset
+        width: 1
+      - name: cfg_pcie_timeout
+        width: 1
+      - name: cfg_cpl_status
+        width: 3
+      - name: cfg_timeout
+        width: 1
+      - name: correctable
+        width: 1
+      - name: non_fatal
+        width: 1
+      - name: fatal
+        width: 1
+      - name: cfg_err_poison
+        width: 1
+      - name: apb_tz_err
+        width: 1
+      - name: slv_lite_tz_err
+        width: 1
+      - name: pme_to_ack_rcvd
+        width: 1
+      - name: intx_rcvd
+        width: 1
+      - name: pm_pme_rcvd
+        width: 1
+      - name: vdm_rcvd
+        width: 1
+      - name: pme_turn_off_rcvd
+        width: 1
+      - name: slv_ur
+        width: 1
+      - name: slv_tz_violation
+        width: 1
+      - name: slv_cpl_timeout
+        width: 1
+      - name: slv_err_poison
+        width: 1
+      - name: slv_ca
+        width: 1
+      - name: slv_illegal_burst
+        width: 1
+      - name: mst_decerr
+        width: 1
+      - name: mst_slverr
+        width: 1
+      - name: slv_pcie_timeout
+        width: 1
+      - name: ecc_parity_err_rcvd
+        width: 1
+      - name: rsvd
+        width: 1
+      - name: dma_int_rcvd
+        width: 1
+
+  - name: int_mask
+
+  - name: bus_loc
+    fields:
+      - name: func_num
+        width: 3
+        access: ro
+      - name: dev_num
+        width: 5
+        access: ro
+      - name: bus_num
+        width: 8
+        access: ro
+      - name: port_num
+        width: 8
+      - name: rsvd
+        width: 8
+
+  - name: phy_csr
+    access: ro
+    fields:
+      - name: link_is_gen2
+        width: 1
+      - name: link_width
+        width: 2
+      - name: ltssm_state
+        width: 6
+      - name: rsvd
+        width: 2
+      - name: link_up
+        width: 1
+      - name: link_is_gen3
+        width: 1
+      - name: link_width_is_x16
+        width: 1
+      - name: link_is_gen4
+        width: 1
+      - name: rsvd1
+        width: 17
+
+  - name: rp_csr
+    fields:
+      - name: bdg_en
+        width: 1
+      - name: rsvd
+        width: 7
+      - name: pcie_cfg_overwrite
+        width: 1
+      - name: rsvd1
+        width: 7
+      - name: efifo_not_empty
+        width: 1
+        access: ro
+      - name: efifo_overflow
+        width: 1
+        access: ro
+      - name: pfifo_not_empty
+        width: 1
+        access: ro
+      - name: pfifo_overflow
+        width: 1
+      - name: rsvd2
+        width: 12
+
+  - name: rp_msi_base_upper
+  - name: rp_msi_base_lower
+    fields:
+      - name: rsvd
+        width: 12
+      - name: msi_base
+        width: 20
+
+  - name: rp_efifo_read
+    fields:
+      - name: req_id
+        width: 16
+      - name: err_type
+        width: 2
+      - name: err_valid
+        width: 1
+      - name: rsvd
+        width: 13
+
+  - name: rp_pfifo_read
+    fields:
+      - name: req_id
+        width: 16
+      - name: rsvd
+        width: 15
+      - name: msg_valid
+        width: 1
+
+  - name: rsvd_34a
+    access: ro
+
+  - name: int_dec_2
+    fields:
+      - name: slv_axis_par_err
+        width: 1
+      - name: slv_r_ecc_err
+        width: 1
+      - name: slv_w_ecc_err
+        width: 1
+      - name: mst_axis_par_err
+        width: 1
+      - name: mst_r_ecc_err
+        width: 1
+      - name: mst_w_ecc_err
+        width: 1
+      - name: slv_r_ecc_cerr
+        width: 1
+      - name: slv_w_ecc_cerr
+        width: 1
+      - name: mst_r_ecc_cerr
+        width: 1
+      - name: mst_w_ecc_cerr
+        width: 1
+      - name: slv_lite_par_err
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: inta_line_status
+        width: 1
+        access: ro
+      - name: intb_line_status
+        width: 1
+        access: ro
+      - name: intc_line_status
+        width: 1
+        access: ro
+      - name: intd_line_status
+        width: 1
+        access: ro
+      - name: rsvd1
+        width: 12
+
+  - name: int_msk_2
+
+  - name: cfg_ctrl
+    fields:
+      - name: uc_err
+        width: 1
+      - name: c_err
+        width: 1
+      - name: rsvd
+        width: 30
+
+  - name: slv_err_aid
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: cpl_err_aid
+        width: 8
+      - name: cpl_err_func
+        width: 8
+
+  - name: msi_dec_31_0
+  - name: rsvd_e4c
+    access: ro
+  - name: msi_dec_63_32
+  - name: msi_mask_31_0
+  - name: msi_mask_63_32
+
+  - name: usr_irq_req
+    fields:
+      - name: usr_irq_req_set
+        width: 16
+      - name: usr_irq_req_clr
+        width: 16
+
+  - name: usr_irq_ack
+    access: ro
+
+  - name: msg_tx_ctrl
+  - name: tx_msg_hdr_l
+  - name: tx_msg_hdr_h
+  - name: tx_msg_dfifo
+
+  - name: rx_msg_csr
+    fields:
+      - name: mfifo_not_empty
+        width: 1
+        access: ro
+      - name: mfifo_overflow
+        width: 1
+      - name: rsvd
+        width: 1
+      - name: msg_count
+        width: 5
+        access: ro
+      - name: mfifo_read_ptr
+        width: 5
+        access: ro
+      - name: rsvd1
+        width: 3
+      - name: overflow_rid
+        width: 16
+        access: ro
+
+  - name: rx_mfifo_read
+
+  - name: mst_pend_cntr
+    access: ro
+    fields:
+      - name: wr_pend_cnt
+        width: 8
+      - name: rd_pend_cnt
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: tx_irq_csr
+    fields:
+      - name: int_function
+        width: 12
+      - name: rsvd
+        width: 4
+      - name: int_vector
+        width: 5
+      - name: rsvd1
+        width: 3
+      - name: int_set
+        width: 1
+      - name: int_fail
+        width: 1
+      - name: rsvd2
+        width: 6
+
+  - meta:
+      pad_until: 0x80
+
+  - name: apb_tz_err_addr
+    access: ro
+  - name: slv_lite_tz_err_addr
+    access: ro
+  - name: brg_slv_tz_err_addr
+    access: ro
+  - name: slv_lite_smid_err_addr
+    access: ro
+
+  - name: pcie_cfg_fnc
+    fields:
+      - name: func_number
+        width: 13
+      - name: rsvd
+        width: 19
+
+  - meta:
+      pad_until: 0x110
+
+  - name: mst_personality_entry
+  - name: mst_win_map_entry_reg0
+  - name: mst_win_map_entry_reg1
+  - name: mst_win_attr_entry_reg0
+  - name: mst_win_attr_entry_reg1
+  - name: mst_win_off_map_reg
+  - name: mst_noc_badr_tbl_entry_reg0
+  - name: mst_noc_badr_tbl_entry_reg1

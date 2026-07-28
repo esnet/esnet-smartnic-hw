@@ -1,0 +1,62 @@
+name: cpm5_qdma_vf_csrs
+info: |
+  CPM5 QDMA VF Mailbox / Interrupt / MSI-X Registers
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  Source: cpm5-qdma-v4-0-vf-registers.csv (non-DMAP sections)
+  Note: Offsets here are relative to the start of this block (0x0).
+  The decoder maps this block at the appropriate BAR0 offset.
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # Mailbox (relative offset 0x0 within this block, mapped at 0x5000 in VF BAR0)
+
+  - name: func_status
+    access: ro
+    fields:
+      - name: i_msg_status
+        width: 1
+      - name: o_msg_status
+        width: 1
+      - name: ack_status
+        width: 1
+      - name: rsvd
+        width: 1
+      - name: cur_src_fn
+        width: 8
+      - name: rsvd1
+        width: 20
+
+  - name: func_cmd
+    fields:
+      - name: msg_send
+        width: 1
+      - name: msg_rcv
+        width: 1
+      - name: rsvd
+        width: 30
+
+  - name: func_intr_vec
+    fields:
+      - name: int_vect
+        width: 5
+      - name: rsvd
+        width: 27
+
+  - name: target_fn
+    fields:
+      - name: target_fn_id
+        width: 8
+      - name: rsvd
+        width: 24
+
+  - name: intr_ctrl
+    fields:
+      - name: int_en
+        width: 1
+      - name: rsvd
+        width: 31
+
+  - name: rtl_version
+    access: ro
