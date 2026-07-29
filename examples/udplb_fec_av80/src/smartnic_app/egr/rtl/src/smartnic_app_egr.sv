@@ -1,0 +1,156 @@
+module smartnic_app_egr
+#(
+    parameter int NUM_PORTS = 2  // Number of ingress/egress axi4s ports.
+ ) (
+    input  logic      core_clk,
+    input  logic      core_srst,
+
+    axi4s_intf.rx     axi4s_in  [NUM_PORTS],
+    axi4s_intf.rx     axi4s_h2c [NUM_PORTS],
+    axi4s_intf.tx     axi4s_out [NUM_PORTS],
+
+    axi4l_intf.peripheral axil_if
+);
+    import fec_pkg::*;
+
+    localparam int DATA_BYTE_WID = axi4s_in[0].DATA_BYTE_WID;
+    localparam int TID_WID       = axi4s_in[0].TID_WID;
+    localparam int TDEST_WID     = axi4s_in[0].TDEST_WID;
+    localparam int TUSER_WID     = axi4s_in[0].TUSER_WID;
+
+    logic srst;
+    assign srst = core_srst;
+
+    // ----------------------------------------------------------------------
+    //  axil register map. axil intf, regio block and decoder instantiations.
+    // ----------------------------------------------------------------------
+    axi4l_intf  axil_if__core_clk ();
+
+    smartnic_app_egr_reg_intf  smartnic_app_egr_regs ();
+
+    // pass AXI-L interface from aclk (AXI-L clock) to core clk domain
+    axi4l_intf_cdc i_axil_intf_cdc (
+        .axi4l_if_from_controller  ( axil_if ),
+        .clk_to_peripheral         ( core_clk ),
+        .axi4l_if_to_peripheral    ( axil_if__core_clk )
+    );
+
+    // smartnic_app_egr register block
+    smartnic_app_egr_reg_blk smartnic_app_egr_reg_blk (
+        .axil_if    ( axil_if__core_clk ),
+        .reg_blk_if ( smartnic_app_egr_regs )
+    );
+
+
+    // -------------------------------------------------------------------------------------------------------
+    // APPLICATION-SPECIFIC CONNECTIVITY
+    // -------------------------------------------------------------------------------------------------------
+
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID),
+                 .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  mux_in  [NUM_PORTS][2] (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID),
+                 .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  mux_out [NUM_PORTS] (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID),
+                 .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  axi4s_h2c_reg [NUM_PORTS] (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(DATA_BYTE_WID),
+                 .TUSER_WID(TUSER_WID), .TID_WID(TID_WID), .TDEST_WID(TDEST_WID))  _axi4s_out [NUM_PORTS] (.aclk(core_clk));
+
+
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+        axi4s_intf_pipe axi4s_mux_in_pipe_0 ( .srst, .from_tx(axi4s_in[i]),   .to_rx(mux_in[i][0]) );
+        axi4s_intf_pipe axi4s_mux_in_pipe_1 ( .srst, .from_tx(_axi4s_out[i]), .to_rx(mux_in[i][1]) );
+
+        axi4s_mux #(.N(2)) axi4s_mux_inst (
+            .srst,
+            .axi4s_in  (mux_in[i]),
+            .axi4s_out (mux_out[i])
+        );
+
+        axi4s_full_pipe axis4s_full_pipe_inst (.srst, .from_tx(mux_out[i]), .to_rx(axi4s_out[i]));
+
+    end endgenerate
+
+
+    localparam int DATA_WID = DATA_BYTE_WID*8;
+
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_in  [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) frm_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) pad_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) b2s_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) enc_out [NUM_PORTS] (.clk(core_clk));
+    rs_acc_intf #(.DATA_WID(DATA_WID)) s2b_out [NUM_PORTS] (.clk(core_clk));
+
+    generate for (genvar i = 0; i < NUM_PORTS; i += 1) begin
+        always_ff @(posedge core_clk) if (axi4s_h2c[i].tvalid && axi4s_h2c[i].tready) begin
+            axi4s_h2c_reg[i].tkeep <= axi4s_h2c[i].tkeep;
+            axi4s_h2c_reg[i].tid   <= axi4s_h2c[i].tid;   // assume ALL encoded pkts share common tid, tdest, tuser.
+            axi4s_h2c_reg[i].tdest <= axi4s_h2c[i].tdest;
+            axi4s_h2c_reg[i].tuser <= axi4s_h2c[i].tuser;
+        end
+
+        always_comb begin
+            for (int j=0; j<DATA_BYTE_WID; j++)
+                frm_in[i].data[j*8 +: 8] = axi4s_h2c[i].tkeep[j] ? axi4s_h2c[i].tdata[j] : '0;
+
+            frm_in[i].valid = axi4s_h2c[i].tvalid;
+
+            axi4s_h2c[i].tready = frm_in[i].ready;
+        end
+
+        rs_acc_framer #(.DATA_WID(DATA_WID)) rs_acc_framer_0 (
+            .clk            (core_clk),
+            .srst           (core_srst),
+            .fec_evt_size   (smartnic_app_egr_regs.fec_evt_size_enc),
+            .data_in        (frm_in[i]),
+            .data_out       (frm_out[i])
+        );
+
+        rs_acc_pad #(.DATA_WID(DATA_WID), .MODE(INSERT)) rs_acc_pad_0 (
+            .clk            (core_clk),
+            .srst           (core_srst),
+            .data_in        (frm_out[i]),
+            .data_out       (pad_out[i])
+        );
+
+        fec_col_transpose #(
+            .DATA_WID      (DATA_WID),
+            .COL_WID       (SYM_SIZE),
+            .MODE          (BIT_TO_SYM)
+        ) fec_bit_to_sym_0 (
+            .clk           (core_clk),
+            .srst          (core_srst),
+            .data_in       (pad_out[i]),
+            .data_out      (b2s_out[i])
+        );
+
+        rs_acc_encode #(.DATA_WID(DATA_WID)) rs_acc_encode_0 (
+            .clk            (core_clk),
+            .srst           (core_srst),
+            .data_in        (b2s_out[i]),
+            .data_out       (enc_out[i])
+        );
+
+        fec_col_transpose #(
+            .DATA_WID      (DATA_WID),
+            .COL_WID       (SYM_SIZE),
+            .MODE          (SYM_TO_BIT)
+        ) fec_sym_to_bit_0 (
+            .clk           (core_clk),
+            .srst          (core_srst),
+            .data_in       (enc_out[i]),
+            .data_out      (s2b_out[i])
+        );
+
+        assign _axi4s_out[i].tdata  = s2b_out[i].data;
+        assign _axi4s_out[i].tvalid = s2b_out[i].valid;
+        assign _axi4s_out[i].tkeep  = '1;
+        assign _axi4s_out[i].tid    = axi4s_h2c_reg[i].tid;   // assume ALL encoded pkts share common tid, tdest, tuser.
+        assign _axi4s_out[i].tdest  = axi4s_h2c_reg[i].tdest;
+        assign _axi4s_out[i].tuser  = axi4s_h2c_reg[i].tuser;
+        assign _axi4s_out[i].tlast  = s2b_out[i].meta.eos;
+
+        assign s2b_out[i].ready = _axi4s_out[i].tready;
+
+    end endgenerate
+
+endmodule // smartnic_app_egr
