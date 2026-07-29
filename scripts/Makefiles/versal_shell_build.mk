@@ -59,7 +59,8 @@ __VSB_SHELL_BOARD_DIR := $(SMARTNIC_ROOT)/src/xilinx/alveo/versal/shell/$(BOARD)
 
 CONSTRAINTS_XDC_IMPL += \
     $(abspath $(__VSB_SHELL_BOARD_DIR)/impl.pins.xdc) \
-    $(abspath $(__VSB_SHELL_BOARD_DIR)/impl.xdc)
+    $(abspath $(__VSB_SHELL_BOARD_DIR)/impl.xdc) \
+    $(abspath $(__VSB_SHELL_BOARD_DIR)/timing.xdc)
 
 IMPL_HOOK_TCL_FILES += $(abspath $(wildcard $(__VSB_SHELL_BOARD_DIR)/*.tcl))
 
