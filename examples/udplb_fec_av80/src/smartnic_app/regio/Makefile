@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -12,7 +12,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML =
 REG_DECODER_YAML = \
-    core_decoder.yaml
+    smartnic_app_decoder.yaml
 
 # ----------------------------------------------------
 # Options

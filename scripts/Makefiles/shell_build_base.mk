@@ -20,6 +20,17 @@
 #                      e.g. core.stub.build
 #
 # Optional inputs:
+#   CORE_CELL_DCPS        - "cell:path" pair for the core DCP; written as a literal
+#                           into the generated Makefile by shell_proj_config.mk
+#   APP_BUILD_REF         - component ref for the smartnic_app build (default: empty);
+#                           when set its synth target is triggered as a subcomponent
+#   APP_CELL_DCPS         - "cell:path" pairs for the app DCP and any sub-cell DCPs
+#                           (e.g. VitisNetP4); written as literals into the generated
+#                           Makefile by shell_proj_config.mk
+#   APP_REGIO_REF         - component ref for the app's regio build (default: empty);
+#                           when set, builds the app register map and copies
+#                           smartnic_app_decoder.yaml into the regio IR directory
+#                           so core_decoder.yaml's !include can resolve it
 #   BUILD_STAGES          - implementation stages (default: link opt place
 #                           place_opt route route_opt); set before including
 #                           to extend (e.g. += device_image xsa)
@@ -52,6 +63,7 @@ BUILD_STAGES ?= link opt place place_opt route route_opt
 #   core.stub.build@smartnic  →  core.stub.regio@smartnic
 # -----------------------------------------------
 SHELL_REGIO_TOP_YAML ?=
+APP_REGIO_REF        ?=
 
 # -----------------------------------------------
 # DCP paths
@@ -61,14 +73,17 @@ SHELL_REGIO_TOP_YAML ?=
 # from the component context.
 # -----------------------------------------------
 __SB_SHELL_OUT := $(call get_lib_component_out_path_from_ref,$(SHELL_BUILD_REF),$(LIB_OUTPUT_ROOT))
-__SB_CORE_OUT  := $(call get_lib_component_out_path_from_ref,$(CORE_BUILD_REF),$(LIB_OUTPUT_ROOT))
+
+CORE_CELL_DCPS ?=
+APP_CELL_DCPS  ?=
 
 TOP_DCP_FILE := $(__SB_SHELL_OUT)/$(TOP).synth.dcp
-CELL_DCPS    := i_core:$(__SB_CORE_OUT)/core.synth.dcp
+CELL_DCPS    := $(CORE_CELL_DCPS) $(APP_CELL_DCPS)
 
-# Re-run from link if either input DCP changes; wildcard avoids Make errors
+# Re-run from link if any input DCP changes; wildcard avoids Make errors
 # on first run before the DCPs exist.
-STAGE_DEPS := $(wildcard $(TOP_DCP_FILE) $(__SB_CORE_OUT)/core.synth.dcp)
+__SB_ALL_CELL_DCP_PATHS := $(foreach cd,$(CELL_DCPS),$(word 2,$(subst :, ,$(cd))))
+STAGE_DEPS := $(wildcard $(TOP_DCP_FILE) $(__SB_ALL_CELL_DCP_PATHS))
 
 # -----------------------------------------------
 # Subcomponents
@@ -79,7 +94,8 @@ STAGE_DEPS := $(wildcard $(TOP_DCP_FILE) $(__SB_CORE_OUT)/core.synth.dcp)
 # -----------------------------------------------
 SUBCOMPONENTS := \
     $(SHELL_BUILD_REF) \
-    $(CORE_BUILD_REF)
+    $(CORE_BUILD_REF) \
+    $(APP_BUILD_REF)
 
 # Assembly only — no RTL sources in this layer
 SRC_FILES      :=
@@ -110,6 +126,7 @@ include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
 	@echo "------------------------------------------------------"
 	@echo "SHELL_BUILD_REF  : $(SHELL_BUILD_REF)"
 	@echo "CORE_BUILD_REF   : $(CORE_BUILD_REF)"
+	@echo "APP_BUILD_REF    : $(APP_BUILD_REF)"
 	@echo "TOP_DCP_FILE     : $(TOP_DCP_FILE)"
 	@echo "CELL_DCPS        : $(CELL_DCPS)"
 .PHONY: .shell_build_info
@@ -132,8 +149,9 @@ __SB_CORE_BUILD_BASE := $(subst @$(lastword $(subst @, ,$(CORE_BUILD_REF))),,$(C
 __SB_LIB_SUFFIX := $(if $(findstring @,$(CORE_BUILD_REF)),@$(lastword $(subst @, ,$(CORE_BUILD_REF))),)
 __SB_CORE_REGIO_REF := $(patsubst %.build,%.regio,$(if $(__SB_LIB_SUFFIX),$(__SB_CORE_BUILD_BASE),$(CORE_BUILD_REF)))$(__SB_LIB_SUFFIX)
 
-__SB_REGIO_IR_DIR := $(COMPONENT_OUT_PATH)/regio/ir
-__SB_CORE_REGIO_OUT := $(call get_lib_component_out_path_from_ref,$(__SB_CORE_REGIO_REF),$(LIB_OUTPUT_ROOT))
+__SB_REGIO_IR_DIR    := $(COMPONENT_OUT_PATH)/regio/ir
+__SB_CORE_REGIO_OUT  := $(call get_lib_component_out_path_from_ref,$(__SB_CORE_REGIO_REF),$(LIB_OUTPUT_ROOT))
+__SB_APP_REGIO_OUT   := $(if $(APP_REGIO_REF),$(call get_lib_component_out_path_from_ref,$(APP_REGIO_REF),$(LIB_OUTPUT_ROOT)),)
 __SB_REGIO_ELABORATE_CMD := $(REGIO_ROOT)/regio-elaborate -i $(LIB_ROOT) -i $(__SB_REGIO_IR_DIR)
 
 # The top-level IR artifact
@@ -152,16 +170,43 @@ $(SHELL_REGIO_ARTIFACT): $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml
 	@$(__SB_REGIO_ELABORATE_CMD) -f top -o $@ $(SHELL_REGIO_TOP_YAML)
 .PHONY: $(SHELL_REGIO_ARTIFACT)
 
-$(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml:
+$(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml: \
+    $(if $(APP_REGIO_REF),$(__SB_REGIO_IR_DIR)/smartnic_app_decoder.yaml,)
 	@echo "Building core regio for $(__SB_CORE_REGIO_REF) ..."
-	@$(MAKE) -s -C $(SRC_ROOT) reg \
+	@mkdir -p $(__SB_REGIO_IR_DIR)
+	@$(MAKE) -s -C $(SMARTNIC_ROOT)/src reg \
 	    COMPONENT=$(__SB_CORE_REGIO_REF) \
 	    BOARD=$(BOARD) \
 	    BUILD_ID=$(BUILD_ID) \
-	    $(if $(SMARTNIC_LIB_NAME),SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME),)
-	@mkdir -p $(__SB_REGIO_IR_DIR)
+	    $(if $(SMARTNIC_LIB_NAME),SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME),) \
+	    LIB_ROOT=$(LIB_ROOT) \
+	    SCRIPTS_ROOT=$(SCRIPTS_ROOT) \
+	    REGIO_ROOT=$(REGIO_ROOT) \
+	    CFG_ROOT=$(CFG_ROOT) \
+	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
+	    OUTPUT_SUBDIR= \
+	    "REGIO_FLATTEN_DEFAULT_OPTS=-i $(LIB_ROOT) -i $(__SB_REGIO_IR_DIR)" \
+	    "REGIO_ELABORATE_DEFAULT_OPTS=-i $(LIB_ROOT) -i $(__SB_REGIO_IR_DIR)"
 	@cp $(__SB_CORE_REGIO_OUT)/ir/core_decoder-ir.yaml $@
 .PHONY: $(__SB_REGIO_IR_DIR)/core_decoder-ir.yaml
+
+# Build the app register map and copy smartnic_app_decoder.yaml into the
+# regio IR directory so that core_decoder.yaml's !include can resolve it.
+$(__SB_REGIO_IR_DIR)/smartnic_app_decoder.yaml:
+	@echo "Building app regio for $(APP_REGIO_REF) ..."
+	@mkdir -p $(__SB_REGIO_IR_DIR)
+	@$(MAKE) -s -C $(SRC_ROOT) reg \
+	    COMPONENT=$(APP_REGIO_REF) \
+	    BOARD=$(BOARD) \
+	    BUILD_ID=$(BUILD_ID) \
+	    LIB_ROOT=$(LIB_ROOT) \
+	    SCRIPTS_ROOT=$(SCRIPTS_ROOT) \
+	    REGIO_ROOT=$(REGIO_ROOT) \
+	    CFG_ROOT=$(CFG_ROOT) \
+	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
+	    OUTPUT_SUBDIR=
+	@cp $(__SB_APP_REGIO_OUT)/ir/smartnic_app_decoder-ir.yaml $@
+.PHONY: $(__SB_REGIO_IR_DIR)/smartnic_app_decoder.yaml
 
 .shell_build_regio_info:
 	@echo "------------------------------------------------------"

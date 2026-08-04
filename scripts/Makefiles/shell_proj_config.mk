@@ -13,7 +13,7 @@
 # coexist as build/av80/, build/av90/, etc.
 #
 # Reconfiguration is triggered only when the recorded build parameters
-# change (BOARD, CORE_BUILD_REF, SMARTNIC_ROOT, Vivado version).
+# change (BOARD, CORE_BUILD_REF, APP_BUILD_REF, APP_SRC_DIR, SMARTNIC_ROOT, Vivado version).
 # A stamp file is written to build/$(BOARD).config and compared
 # using cmp -s before overwriting, matching the pattern used in
 # vivado_compile.mk for sources.tcl.
@@ -24,23 +24,36 @@
 # Optional inputs:
 #   BOARD          - target board (default: av80)
 #   CORE_BUILD_REF - core component ref (default: core.stub.build)
+#   APP_BUILD_REF  - app component ref (default: empty); passed into the generated
+#                    component Makefile for shell_build_base.mk to consume
+#   APP_REGIO_REF  - app regio component ref (default: empty); when set, the app
+#                    register map is built and smartnic_app_decoder.yaml is placed
+#                    in the regio IR directory for core_decoder.yaml to include
 #   BUILD_DIR      - build root (default: $(CURDIR)/build/$(BOARD))
+#   APP_SRC_DIR    - path to the application's src/ directory (default: empty)
 
 # -----------------------------------------------
 # Defaults
 # -----------------------------------------------
 BOARD          ?= av80
 CORE_BUILD_REF ?= core.stub.build
+APP_BUILD_REF  ?=
+APP_REGIO_REF  ?=
 BUILD_DIR      ?= $(CURDIR)/build/$(BOARD)
+APP_SRC_DIR    ?=
+P4_IGR_FILE    ?=
+P4_EGR_FILE    ?=
 
 # -----------------------------------------------
 # Paths (modelled on app_config_base.mk — no config.mk include)
 # -----------------------------------------------
 __SPC_SMARTNIC_ROOT  := $(abspath $(SMARTNIC_ROOT))
+__SPC_APP_SRC_DIR    := $(if $(APP_SRC_DIR),$(abspath $(APP_SRC_DIR)),)
 LIB_ROOT             := $(__SPC_SMARTNIC_ROOT)/esnet-fpga-library
+CFG_ROOT             := $(__SPC_SMARTNIC_ROOT)/cfg
 include $(LIB_ROOT)/paths.mk
 include $(__SPC_SMARTNIC_ROOT)/paths.mk
-CFG_ROOT             := $(__SPC_SMARTNIC_ROOT)/cfg
+include $(SCRIPTS_ROOT)/Makefiles/component_funcs.mk
 
 XILINX_VIVADO__VERSION := $(firstword $(sort $(subst /, ,$(XILINX_VIVADO))))
 
@@ -56,6 +69,30 @@ SMARTNIC_LIB_NAME := smartnic
 __SPC_LIB_SUFFIX  := @$(SMARTNIC_LIB_NAME)
 
 # -----------------------------------------------
+# Cell DCP path and cell string computation
+#
+# Computed at configure time so that CORE_CELL_DCPS and APP_CELL_DCPS
+# can be written as resolved literals into the generated Makefile,
+# avoiding any parse-time ordering or environment-propagation issues.
+# -----------------------------------------------
+__SPC_CORE_DCP           := $(call get_lib_component_out_path_from_ref,\
+    $(CORE_BUILD_REF)$(__SPC_LIB_SUFFIX),$(__SPC_BUILD_OUT_DIR))/core.synth.dcp
+__SPC_APP_DCP            := $(if $(APP_BUILD_REF),$(call get_lib_component_out_path_from_ref,\
+    $(APP_BUILD_REF),$(__SPC_BUILD_OUT_DIR))/smartnic_app.synth.dcp,)
+__SPC_VITISNETP4_IGR_DCP := $(__SPC_BUILD_OUT_DIR)/vitisnetp4_igr/ip/vitisnetp4_igr/vitisnetp4_igr.dcp
+__SPC_VITISNETP4_EGR_DCP := $(__SPC_BUILD_OUT_DIR)/vitisnetp4_egr/ip/vitisnetp4_egr/vitisnetp4_egr.dcp
+
+__SPC_APP_CELL            := i_core/i_smartnic_wrapper/smartnic/smartnic_app
+__SPC_VITISNETP4_IGR_CELL := $(__SPC_APP_CELL)/smartnic_app_igr_p4_inst/vitisnetp4_igr_wrapper_inst/i_vitisnetp4_igr
+__SPC_VITISNETP4_EGR_CELL := $(__SPC_APP_CELL)/smartnic_app_egr_p4_inst/vitisnetp4_egr_wrapper_inst/i_vitisnetp4_egr
+
+__SPC_CORE_CELL_DCPS := i_core:$(__SPC_CORE_DCP)
+__SPC_APP_CELL_DCPS  := $(if $(APP_BUILD_REF),\
+    $(__SPC_APP_CELL):$(__SPC_APP_DCP) \
+    $(if $(P4_IGR_FILE),$(__SPC_VITISNETP4_IGR_CELL):$(__SPC_VITISNETP4_IGR_DCP),) \
+    $(if $(P4_EGR_FILE),$(__SPC_VITISNETP4_EGR_CELL):$(__SPC_VITISNETP4_EGR_DCP),),)
+
+# -----------------------------------------------
 # Config stamp
 #
 # Records the parameters that affect the generated files.  The sentinel
@@ -69,14 +106,6 @@ __SPC_CONFIGURED := $(__SPC_COMP_DIR)/.configured
 __SPC_STAMP     := $(CURDIR)/build/$(BOARD).config
 __SPC_STAMP_TMP := $(CURDIR)/build/$(BOARD).config.tmp
 
-# Define the stamp content: one key=value per line.
-define __SPC_STAMP_CONTENT
-SMARTNIC_ROOT=$(abspath $(SMARTNIC_ROOT))
-CORE_BUILD_REF=$(CORE_BUILD_REF)
-XILINX_VIVADO__VERSION=$(XILINX_VIVADO__VERSION)
-endef
-export __SPC_STAMP_CONTENT
-
 # The stamp file is written (or left unchanged) before configure runs.
 # Depends on the including Makefile as a normal prerequisite so that
 # editing it (changing CORE_BUILD_REF, BOARD, etc.) always re-runs the
@@ -86,8 +115,9 @@ export __SPC_STAMP_CONTENT
 # before a fresh configure proceeds.
 __SPC_CALLER_MAKEFILE := $(firstword $(MAKEFILE_LIST))
 $(__SPC_STAMP): $(__SPC_CALLER_MAKEFILE) | $(BUILD_DIR)
-	@printf 'SMARTNIC_ROOT=%s\nCORE_BUILD_REF=%s\nXILINX_VIVADO__VERSION=%s\n' \
-	    "$(abspath $(SMARTNIC_ROOT))" "$(CORE_BUILD_REF)" "$(XILINX_VIVADO__VERSION)" \
+	@printf 'SMARTNIC_ROOT=%s\nCORE_BUILD_REF=%s\nAPP_BUILD_REF=%s\nAPP_SRC_DIR=%s\nP4_IGR_FILE=%s\nP4_EGR_FILE=%s\nXILINX_VIVADO__VERSION=%s\n' \
+	    "$(__SPC_SMARTNIC_ROOT)" "$(CORE_BUILD_REF)" "$(APP_BUILD_REF)" "$(__SPC_APP_SRC_DIR)" \
+	    "$(P4_IGR_FILE)" "$(P4_EGR_FILE)" "$(XILINX_VIVADO__VERSION)" \
 	    > $(__SPC_STAMP_TMP)
 	@if ! cmp -s $(__SPC_STAMP_TMP) $@ 2>/dev/null; then \
 	    if [ -e $@ ]; then \
@@ -115,9 +145,9 @@ $(BUILD_DIR):
 # Configure target
 #
 # Depends on the stamp file so it only runs when the stamp changes
-# (i.e. when BOARD, CORE_BUILD_REF, SMARTNIC_ROOT, or Vivado version
-# change).  The generated files are written unconditionally when
-# reconfiguration does occur.
+# (i.e. when BOARD, CORE_BUILD_REF, APP_BUILD_REF, APP_SRC_DIR, SMARTNIC_ROOT,
+# or Vivado version change).  The generated files are written unconditionally
+# when reconfiguration does occur.
 # -----------------------------------------------
 $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "Configuring shell build at $(BUILD_DIR) ..."
@@ -139,9 +169,9 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@sed -i 's|<library-desc>|Shell build library|'                         $(__SPC_BUILD_SRC_DIR)/config.mk
 	@sed -i 's|<libraries>|$(SMARTNIC_LIB_NAME)=$(__SPC_SMARTNIC_ROOT)/src|' $(__SPC_BUILD_SRC_DIR)/config.mk
 	@sed -i 's|<common-lib-name>|common@$(SMARTNIC_LIB_NAME)|'              $(__SPC_BUILD_SRC_DIR)/config.mk
-	@sed -i 's|<custom-env-setup>|BOARD ?= $(BOARD)|'                       $(__SPC_BUILD_SRC_DIR)/config.mk
+	@sed -i 's|<custom-env-setup>|BOARD ?= $(BOARD)$(if $(__SPC_APP_SRC_DIR),\nSRC_ROOT := $(__SPC_APP_SRC_DIR),)|' $(__SPC_BUILD_SRC_DIR)/config.mk
 	@sed -i 's|<output-subdir>||'                                           $(__SPC_BUILD_SRC_DIR)/config.mk
-	@sed -i 's|<lib-env>|\\\n\tBOARD=$$(BOARD)|g'                          $(__SPC_BUILD_SRC_DIR)/config.mk
+	@sed -i 's|<lib-env>|\\\n\tBOARD=$$(BOARD)\\\n\tSMARTNIC_ROOT=$(__SPC_SMARTNIC_ROOT)\\\n\tLIB_ROOT=$(LIB_ROOT)\\\n\tSCRIPTS_ROOT=$(SCRIPTS_ROOT)\\\n\tREGIO_ROOT=$(REGIO_ROOT)\\\n\tOUTPUT_ROOT=$(abspath $(__SPC_BUILD_OUT_DIR))\\\n\tOUTPUT_SUBDIR=|g' $(__SPC_BUILD_SRC_DIR)/config.mk
 	@# --- build/src/esnet_smartnic/config.mk ---
 	@cp $(SCRIPTS_ROOT)/Makefiles/templates/component_config.mk $(__SPC_ESNET_DIR)/config.mk
 	@# --- build/src/esnet_smartnic/build/Makefile ---
@@ -156,7 +186,11 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "SMARTNIC_ROOT  := $(__SPC_SMARTNIC_ROOT)"                            >> $(__SPC_COMP_DIR)/Makefile
 	@echo "BOARD          := $(BOARD)"                                           >> $(__SPC_COMP_DIR)/Makefile
 	@echo "CORE_BUILD_REF := $(CORE_BUILD_REF)$(__SPC_LIB_SUFFIX)"             >> $(__SPC_COMP_DIR)/Makefile
+	@echo "APP_BUILD_REF  := $(APP_BUILD_REF)"                                 >> $(__SPC_COMP_DIR)/Makefile
+	@echo "APP_REGIO_REF  := $(APP_REGIO_REF)"                                >> $(__SPC_COMP_DIR)/Makefile
 	@echo "SMARTNIC_LIB_NAME := $(SMARTNIC_LIB_NAME)"                          >> $(__SPC_COMP_DIR)/Makefile
+	@echo "CORE_CELL_DCPS := $(__SPC_CORE_CELL_DCPS)"                         >> $(__SPC_COMP_DIR)/Makefile
+	@echo "APP_CELL_DCPS  := $(__SPC_APP_CELL_DCPS)"                          >> $(__SPC_COMP_DIR)/Makefile
 	@echo ""                                                                     >> $(__SPC_COMP_DIR)/Makefile
 	@echo "include $(__SPC_SMARTNIC_ROOT)/scripts/Makefiles/shell_build.mk"     >> $(__SPC_COMP_DIR)/Makefile
 	@echo ""                                                                     >> $(__SPC_COMP_DIR)/Makefile
