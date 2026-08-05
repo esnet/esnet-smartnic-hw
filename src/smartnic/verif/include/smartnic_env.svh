@@ -362,7 +362,11 @@ class smartnic_env extends std_verif_pkg::basic_env;
     endtask
 
     task enable_egress_qs();
+        smartnic_qs_reg_pkg::reg_status_t  reg_status;
         smartnic_qs_reg_pkg::reg_control_t reg_control;
+        do
+            egress_qs_reg_blk_agent.read_status(reg_status);
+        while (reg_status.init_done == 1'b0);
         reg_control.enable = 1'b1;
         egress_qs_reg_blk_agent.write_control(reg_control);
     endtask
