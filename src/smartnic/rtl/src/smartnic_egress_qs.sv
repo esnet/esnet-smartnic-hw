@@ -47,6 +47,12 @@ module smartnic_egress_qs
 
     localparam int  HBM_MAX_LATENCY = 256; // Typical latency is ~160ns (~5)
 
+    localparam int  NUM_QS = 1;
+    localparam int  Q_SEL_WID = 1;
+    localparam int  Q_DEPTH = NUM_BUFFERS;
+    localparam int  Q_PTR_WID = $clog2(Q_DEPTH);
+    localparam int  OUTPUT_SEL_WID = PHY_NUM_PORTS > 1 ? $clog2(PHY_NUM_PORTS) : 1;
+
     // ----------------------------------------------------------------
     //  Parameter Checking
     // ----------------------------------------------------------------
@@ -78,6 +84,18 @@ module smartnic_egress_qs
     logic hbm_ref_clk;
     logic hbm_init_done;
 
+    logic [OUTPUT_SEL_WID-1:0] packet_in_dest [PHY_NUM_PORTS];
+    logic [Q_SEL_WID-1:0]     packet_in_q    [PHY_NUM_PORTS];
+
+    logic                      enq_ack  [PHY_NUM_PORTS];
+    logic                      deq_req  [PHY_NUM_PORTS];
+    logic                      deq_rdy  [PHY_NUM_PORTS];
+    logic [Q_SEL_WID-1:0]      deq_q    [PHY_NUM_PORTS];
+    logic                      deq_ack  [PHY_NUM_PORTS];
+    logic                      deq_nack [PHY_NUM_PORTS];
+    int                        enq_cnt  [PHY_NUM_PORTS];
+    bit                        deq_busy [PHY_NUM_PORTS];
+
     logic desc_status_clear;
     logic __axi3_desc_wr_data_oflow_evt;
     logic axi3_desc_wr_data_oflow;
@@ -97,14 +115,14 @@ module smartnic_egress_qs
     packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_in_if  [PHY_NUM_PORTS] (.clk);
     packet_intf #(.DATA_BYTE_WID(PHY_DATA_BYTE_WID), .META_WID(META_WID)) packet_out_if [PHY_NUM_PORTS] (.clk);
 
-    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_in_if  [PHY_NUM_PORTS] (.clk);
-    packet_descriptor_intf #(.ADDR_WID(BUFFER_PTR_WID), .META_WID(META_WID), .MAX_PKT_SIZE(MAX_PKT_SIZE)) desc_out_if [PHY_NUM_PORTS] (.clk);
+    mem_wr_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) packet_data_mem_wr_if [PHY_NUM_PORTS] (.clk);
+    mem_rd_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) packet_data_mem_rd_if [PHY_NUM_PORTS] (.clk);
 
-    mem_wr_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) mem_wr_if [PHY_NUM_PORTS] (.clk);
-    mem_rd_intf #(.ADDR_WID(QMEM_ROW_ADDR_WID), .DATA_WID(PHY_DATA_BYTE_WID*8)) mem_rd_if [PHY_NUM_PORTS] (.clk);
+    mem_wr_intf #(.ADDR_WID(Q_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) q_mem_wr_if [PHY_NUM_PORTS] (.clk);
+    mem_rd_intf #(.ADDR_WID(Q_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) q_mem_rd_if [PHY_NUM_PORTS] (.clk);
 
-    mem_wr_intf #(.ADDR_WID(BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) desc_mem_wr_if (.clk);
-    mem_rd_intf #(.ADDR_WID(BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) desc_mem_rd_if (.clk);
+    mem_wr_intf #(.ADDR_WID(BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_desc_mem_wr_if (.clk);
+    mem_rd_intf #(.ADDR_WID(BUFFER_PTR_WID), .DATA_WID(HBM_AXI_DATA_WID)) packet_desc_mem_rd_if (.clk);
 
     // ----------------------------------------------------------------
     //  Register map block and decoder instantiations
@@ -182,6 +200,8 @@ module smartnic_egress_qs
         .IGNORE_RDY_IN        ( 1 ),
         .NUM_INPUT_IFS        ( PHY_NUM_PORTS ),
         .NUM_OUTPUT_IFS       ( PHY_NUM_PORTS ),
+        .NUM_QS               ( NUM_QS ),
+        .Q_DEPTH              ( Q_DEPTH ),
         .MIN_PKT_SIZE         ( 40 ),
         .MAX_PKT_SIZE         ( MAX_PKT_SIZE ),
         .NUM_BUFFERS          ( NUM_BUFFERS ),
@@ -192,18 +212,34 @@ module smartnic_egress_qs
         .MAX_BURST_LEN        ( 16 )
     ) i_packet_q_core         (
         .clk,
-        .srst ( local_srst ),
+        .srst              ( local_srst ),
         .init_done,
         .packet_in_if,
-        .desc_mem_wr_if,
-        .mem_wr_if,
-        .desc_in_if,
-        .desc_out_if,
+        .packet_in_dest,
+        .packet_in_q,
+        .packet_desc_mem_wr_if,
+        .packet_data_mem_wr_if,
+        .enq_ack,
+        .enq_nack          (),
+        .enq_src           (),
+        .enq_q             (),
+        .enq_size          (),
+        .deq_req,
+        .deq_rdy,
+        .deq_q,
+        .deq_ack,
+        .deq_nack,
+        .deq_src           (),
+        .deq_size          (),
+        .q_mem_wr_if,
+        .q_mem_rd_if,
         .packet_out_if,
-        .desc_mem_rd_if,
-        .mem_rd_if,
-        .mem_init_done  ( hbm_init_done ),
-        .axil_if ( axil_to_alloc )
+        .packet_out_src    (),
+        .packet_out_q      (),
+        .packet_desc_mem_rd_if,
+        .packet_data_mem_rd_if,
+        .mem_init_done     ( hbm_init_done ),
+        .axil_if           ( axil_to_alloc )
     );
 
     // Per-port logic
@@ -256,8 +292,24 @@ module smartnic_egress_qs
                 .bypass     ( bypass_en )
             );
 
+            // Dequeue scheduler: request dequeue when packets are enqueued
+            always @(posedge clk) begin
+                if (local_srst) enq_cnt[g_port] <= 0;
+                else begin
+                    if      (enq_ack[g_port] && !deq_ack[g_port]) enq_cnt[g_port] <= enq_cnt[g_port] + 1;
+                    else if (deq_ack[g_port] && !enq_ack[g_port]) enq_cnt[g_port] <= enq_cnt[g_port] - 1;
+                end
+            end
+            always @(posedge clk) begin
+                if (local_srst)                              deq_busy[g_port] <= 0;
+                else if (deq_req[g_port] && deq_rdy[g_port]) deq_busy[g_port] <= 1'b1;
+                else if (deq_ack[g_port] || deq_nack[g_port]) deq_busy[g_port] <= 1'b0;
+            end
+            assign deq_q[g_port]   = '0;
+            assign deq_req[g_port] = (enq_cnt[g_port] > 0) && !deq_busy[g_port];
+
             // Adapt from/to AXI-S
-            assign meta_in.egr_port = axis_in[g_port].tdest;
+            assign meta_in.egr_port = __axis_to_qs.tdest;
             assign meta_in.egr_q = 0;
             axi4s_to_packet_adapter #(
                 .META_WID ( META_WID )
@@ -268,6 +320,10 @@ module smartnic_egress_qs
                 .err       ( 1'b0 ),
                 .meta      ( meta_in )
             );
+
+            // Drive packet_in_dest/q for packet_q_core
+            assign packet_in_dest[g_port] = meta_in.egr_port;
+            assign packet_in_q[g_port]    = meta_in.egr_q;
 
             assign meta_out = packet_out_if[g_port].meta;
             axi4s_from_packet_adapter #(
@@ -297,7 +353,7 @@ module smartnic_egress_qs
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
                 .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_wr_aggregate (
-                .from_controller ( mem_wr_if [g_port] ),
+                .from_controller ( packet_data_mem_wr_if [g_port] ),
                 .to_peripheral   ( __mem_wr_if ),
                 .req_oflow       ( __wr_agg_req_oflow_evt ),
                 .req_pending     ( wr_agg_req_pending ),
@@ -308,7 +364,7 @@ module smartnic_egress_qs
                 .N ( HBM_NUM_AXI_CHANNELS_PER_PORT ),
                 .ALIGNMENT_DEPTH ( 512 )
             ) i_mem_rd_aggregate (
-                .from_controller ( mem_rd_if [g_port] ),
+                .from_controller ( packet_data_mem_rd_if [g_port] ),
                 .to_peripheral   ( __mem_rd_if ),
                 .req_oflow       ( __rd_agg_req_oflow_evt ),
                 .req_pending     ( rd_agg_req_pending ),
@@ -430,8 +486,8 @@ module smartnic_egress_qs
         .clk,
         .srst      ( local_srst ),
         .init_done (),
-        .mem_wr_if ( desc_mem_wr_if ),
-        .mem_rd_if ( desc_mem_rd_if ),
+        .mem_wr_if ( packet_desc_mem_wr_if ),
+        .mem_rd_if ( packet_desc_mem_rd_if ),
         .axi3_if   ( axi_if[HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS] ),
         // Status
         .wr_data_oflow   ( __axi3_desc_wr_data_oflow_evt ),
@@ -475,26 +531,39 @@ module smartnic_egress_qs
     assign reg_if.desc_status_nxt.axi3_rd_burst_oflow   = axi3_desc_rd_burst_oflow;
     assign reg_if.desc_status_nxt.axi3_rd_burst_pending = axi3_desc_rd_burst_pending;
 
-    // Tie off unused AXI-3 interfaces
+    // Q-manager memory adapters (one HBM channel per port)
     generate
-        for (genvar g_if = HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS+1; g_if < HBM_NUM_AXI_CHANNELS; g_if++) begin : g__axi_if_tieoff
-            axi3_intf_controller_term i_axi3_intf_controller_term (.to_peripheral ( axi_if[g_if] ));
-        end : g__axi_if_tieoff
+        for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__q_mem_if
+            localparam longint Q_MEM_BASE_ADDR = (HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS + 1 + g_port) *
+                                                  xilinx_hbm_pkg::get_ps_capacity(HBM_DENSITY);
+            axi3_from_mem_adapter #(
+                .SIZE       ( axi3_pkg::SIZE_32BYTES ),
+                .BASE_ADDR  ( Q_MEM_BASE_ADDR ),
+                .BURST_SUPPORT ( 0 ),
+                .WR_ID      ( PHY_NUM_PORTS * 2 + 1 + g_port ),
+                .RD_ID      ( PHY_NUM_PORTS * 2 + 1 + g_port )
+            ) i_axi3_from_mem_adapter__q_mem (
+                .clk,
+                .srst      ( local_srst ),
+                .init_done (),
+                .mem_wr_if ( q_mem_wr_if [g_port] ),
+                .mem_rd_if ( q_mem_rd_if [g_port] ),
+                .axi3_if   ( axi_if[HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS + 1 + g_port] ),
+                .wr_data_oflow   (),
+                .wr_data_pending (),
+                .wr_burst_oflow  (),
+                .wr_burst_pending(),
+                .rd_burst_oflow  (),
+                .rd_burst_pending()
+            );
+        end : g__q_mem_if
     endgenerate
 
-    // ----------------------------------------------------------------
-    //  Scheduling Logic
-    // ----------------------------------------------------------------
+    // Tie off unused AXI-3 interfaces
     generate
-        for (genvar g_port = 0; g_port < PHY_NUM_PORTS; g_port++) begin : g__scheduler
-            // TEMP: send packets out on same port on which they were received
-            packet_descriptor_fifo #(.DEPTH(512)) i_packet_descriptor_fifo (
-                .from_tx      ( desc_in_if[g_port] ),
-                .from_tx_srst ( local_srst ),
-                .to_rx        ( desc_out_if[g_port] ),
-                .to_rx_srst   ( local_srst )
-            );
-        end : g__scheduler
+        for (genvar g_if = HBM_NUM_AXI_CHANNELS_PER_PORT*PHY_NUM_PORTS+1+PHY_NUM_PORTS; g_if < HBM_NUM_AXI_CHANNELS; g_if++) begin : g__axi_if_tieoff
+            axi3_intf_controller_term i_axi3_intf_controller_term (.to_peripheral ( axi_if[g_if] ));
+        end : g__axi_if_tieoff
     endgenerate
 
 endmodule: smartnic_egress_qs
