@@ -91,12 +91,21 @@ module smartnic
    logic                      core_srst;
    logic                      srst__smartnic_egress_qs;
    logic                      srst__smartnic_app;
+   logic                      smartnic_srst_n_sync;  // smartnic_srst synced to axil_aclk (active-low)
 
+   sync_areset #(
+       .INPUT_ACTIVE_HIGH ( 1 ),
+       .OUTPUT_ACTIVE_LOW ( 1 )
+   ) i_sync_areset__smartnic_srst (
+       .rst_in  ( smartnic_regs.smartnic_srst[0] ),
+       .clk_out ( axil_aclk ),
+       .rst_out ( smartnic_srst_n_sync )
+   );
 
   smartnic_reset #(
     .NUM_CMAC (NUM_CMAC)
   ) reset_inst (
-    .mod_rstn     (mod_rstn),
+    .mod_rstn     (mod_rstn && smartnic_srst_n_sync),
     .mod_rst_done (mod_rst_done),
 
     .axil_aclk    (axil_aclk),
