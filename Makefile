@@ -98,7 +98,7 @@ bitfile : build_app
 	@echo "----------------------------------------------------------"
 	@echo "Building OpenNIC shell ..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) APP_NAME=$(APP_NAME) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
 	@echo
 	@echo "Done."
 
