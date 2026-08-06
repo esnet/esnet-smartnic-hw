@@ -103,7 +103,7 @@ interfaces:
 
   - decoder: *smartnic_qs_decoder
     address: 0x18000
-    width: 14
+    width: 15
     name: smartnic_egr_qs
 
   - decoder: *smartnic_p4

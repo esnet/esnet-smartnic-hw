@@ -129,16 +129,16 @@ module smartnic_egress_qs
     // ----------------------------------------------------------------
     axi4l_intf axil_to_hbm ();
     axi4l_intf axil_to_regs ();
-    axi4l_intf axil_to_alloc ();
+    axi4l_intf axil_to_packet_q ();
     axi4l_intf axil_to_regs__clk ();
 
     smartnic_qs_reg_intf reg_if();
 
     smartnic_qs_decoder i_smartnic_qs_decoder (
-        .axil_if         ( axil_if ),
-        .control_axil_if ( axil_to_regs ),
-        .alloc_axil_if   ( axil_to_alloc ),
-        .hbm_axil_if     ( axil_to_hbm )
+        .axil_if           ( axil_if ),
+        .control_axil_if   ( axil_to_regs ),
+        .packet_q_axil_if  ( axil_to_packet_q ),
+        .hbm_axil_if       ( axil_to_hbm )
     );
 
     // Pass AXI-L interface from aclk (AXI-L clock) to clk domain
@@ -239,7 +239,7 @@ module smartnic_egress_qs
         .packet_desc_mem_rd_if,
         .packet_data_mem_rd_if,
         .mem_init_done     ( hbm_init_done ),
-        .axil_if           ( axil_to_alloc )
+        .axil_if           ( axil_to_packet_q )
     );
 
     // Per-port logic
