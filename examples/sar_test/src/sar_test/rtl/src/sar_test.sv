@@ -145,9 +145,9 @@ module sar_test
     // ----------------------------------------------------------------
     logic ms_tick;
 
-    // Core clock assumed 250 MHz; 250,000 cycles per millisecond
+    // AXI-L clock (125 MHz); 125,000 cycles per millisecond
     timer_tick #(
-        .TCLK_PER_TICK ( 250_000 ),
+        .TCLK_PER_TICK ( 125_000 ),
         .TCLK_DDR      ( 0       )
     ) i_timer_tick (
         .clk    ( clk     ),

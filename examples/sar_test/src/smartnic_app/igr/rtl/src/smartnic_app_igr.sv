@@ -15,10 +15,10 @@ module smartnic_app_igr
     //  Connect sar_test logic
     // ----------------------------------------------------------------
     logic  clk;
-    assign clk  = core_clk;
+    assign clk  = axil_if.aclk;  // Temporarily use AXI-L clock (125 MHz) for timing closure
 
     logic  srst;
-    assign srst = core_srst;
+    assign srst = ~axil_if.aresetn;
 
     sar_test sar_test_0 (.*);
 
