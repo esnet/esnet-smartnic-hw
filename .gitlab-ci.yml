@@ -47,7 +47,7 @@ p4bm:
     - make -s -C examples/p4_with_extern/p4/sim sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_igr sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_egr sim-all
-    - make -s -C examples/proxy_test/p4/sim build sim-all
+    - make -s -C examples/sar_test/p4/sim build sim-all
     #- make -s -C examples/fec_test/p4/sim build sim-all
     #- make -s -C examples/udplb_fec/p4/sim_igr sim-all
     #- make -s -C examples/udplb_fec/p4/sim_egr sim-all
@@ -62,7 +62,7 @@ p4bm:
       - examples/p4_with_extern/p4/sim
       - examples/p4_multi_proc/p4/sim_igr
       - examples/p4_multi_proc/p4/sim_egr
-      - examples/proxy_test/p4/sim
+      - examples/sar_test/p4/sim
       #- examples/fec_test/p4/sim
       #- examples/udplb_fec/p4/sim
       - examples/udplb_fec_av80/p4/sim
@@ -83,8 +83,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
-    - make -s -C examples/proxy_test/tests/regression
-    - grep 'PASSED.*suites passing' examples/proxy_test/tests/regression/run_$SEED/sim.log
+    - make -s -C examples/sar_test/tests/regression
+    - grep 'PASSED.*suites passing' examples/sar_test/tests/regression/run_$SEED/sim.log
 #    - make -s -C examples/fec_test/tests/regression
 #    - grep 'PASSED.*suites passing' examples/fec_test/tests/regression/run_$SEED/sim.log
 #    - make -s -C examples/udplb_fec/tests/regression
@@ -99,7 +99,7 @@ sim_p4_apps:
         - src/smartnic_app/tests/regression/run_*/tests.xml
         - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
-        - examples/proxy_test/tests/regression/run_*/tests.xml
+        - examples/sar_test/tests/regression/run_*/tests.xml
 #        - examples/fec_test/tests/regression/run_*/tests.xml
 #        - examples/udplb_fec/tests/regression/run_*/tests.xml
         - examples/udplb_fec_av80/tests/regression/run_*/tests.xml
@@ -410,11 +410,11 @@ build_p4_multi_proc_u55c:
     - when: manual
       allow_failure: true
 
-build_proxy_test_u280:
+build_sar_test_u280:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: proxy_test
+    SN_HW_APP_NAME: sar_test
     SN_HW_BOARD: au280
   needs:
     - ons_ip_au280
@@ -559,10 +559,10 @@ validate_p4_multi_proc_u55c:
   needs:
     - build_p4_multi_proc_u55c
 
-validate_proxy_test_u280:
+validate_sar_test_u280:
   extends: .validate
   needs:
-    - build_proxy_test_u280
+    - build_sar_test_u280
 
 validate_fec_test_u280:
   extends: .validate
@@ -647,10 +647,10 @@ hwapi_p4_multi_proc_u55c:
   needs:
     - build_p4_multi_proc_u55c
 
-hwapi_proxy_test_u280:
+hwapi_sar_test_u280:
   extends: .hwapi
   needs:
-    - build_proxy_test_u280
+    - build_sar_test_u280
 
 hwapi_fec_test_u280:
   extends: .hwapi
@@ -733,12 +733,12 @@ fw_p4_multi_proc_u55c:
   needs:
     - hwapi_p4_multi_proc_u55c
 
-fw_proxy_test_u280:
+fw_sar_test_u280:
   extends: .trigger_fw
   variables:
-    SN_HW_API_JOB: hwapi_proxy_test_u280
+    SN_HW_API_JOB: hwapi_sar_test_u280
   needs:
-    - hwapi_proxy_test_u280
+    - hwapi_sar_test_u280
 
 fw_fec_test_u280:
   extends: .trigger_fw

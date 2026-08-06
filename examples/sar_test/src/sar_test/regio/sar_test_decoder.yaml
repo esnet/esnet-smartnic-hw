@@ -1,0 +1,59 @@
+name: sar_test
+
+blocks:
+  sar_test: &sar_test
+    !include ../examples/sar_test/src/sar_test/regio/sar_test.yaml
+  seg_ctrl: &seg_ctrl
+    !include ../examples/sar_test/src/sar_test/regio/sar_test_seg_ctrl.yaml
+  mem_proxy: &mem_proxy
+    !include src/mem/proxy/regio/mem_proxy.yaml
+
+decoders:
+  sar_packet_reassembly: &sar_packet_reassembly
+    !include src/sar/regio/sar_packet_reassembly_decoder.yaml
+  sar_packet_segmentation: &sar_packet_segmentation
+    !include src/sar/regio/sar_packet_segmentation_decoder.yaml
+  packet_playback: &packet_playback
+    !include src/packet/regio/packet_playback_decoder.yaml
+  packet_capture: &packet_capture
+    !include src/packet/regio/packet_capture_decoder.yaml
+  hbm_stack: &hbm_stack
+    !include ../src/xilinx/hbm/regio/xilinx_hbm_decoder.yaml
+
+interfaces:
+  - block: *sar_test
+    address: 0x00000
+    width: 12
+    name: sar_test
+  - decoder: *packet_playback
+    address: 0x01000
+    width: 12
+    name: reassembly_playback
+  - block: *mem_proxy
+    address: 0x02000
+    width: 12
+    name: reassembly_mem_proxy
+  - decoder: *sar_packet_reassembly
+    address: 0x04000
+    width: 15
+    name: reassembly
+  - decoder: *sar_packet_segmentation
+    address: 0x0C000
+    width: 13
+    name: segmentation
+  - block: *mem_proxy
+    address: 0x10000
+    width: 12
+    name: segmentation_mem_proxy
+  - decoder: *packet_capture
+    address: 0x11000
+    width: 12
+    name: segmentation_capture
+  - block: *seg_ctrl
+    address: 0x12000
+    width: 12
+    name: segmentation_ctrl
+  - decoder: *hbm_stack
+    address: 0x14000
+    width: 14
+    name: hbm

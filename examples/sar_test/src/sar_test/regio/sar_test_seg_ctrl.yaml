@@ -1,0 +1,37 @@
+name: sar_test_seg_ctrl
+info: |
+  Segmentation path frame control registers.
+  Software writes frame_buf_id and frame_len, then pulses trigger
+  to initiate segmentation of one frame from HBM into packet_capture.
+
+regs:
+  - default:
+      width  : 32
+      access : rw
+      init   : 0
+
+  - name: frame_buf_id
+    desc: Frame buffer index to read from HBM for segmentation.
+    access: rw
+
+  - name: frame_len
+    desc: Frame length in bytes. Must be set before triggering segmentation.
+    access: rw
+
+  - name: trigger
+    desc: Write any value to initiate segmentation of the configured frame.
+    access: wr_evt
+
+  - name: status
+    desc: Segmentation path status.
+    access: ro
+    fields:
+      - name: busy
+        desc: Segmentation is in progress.
+        width: 1
+      - name: done
+        desc: Segmentation has completed since last trigger.
+        width: 1
+      - name: error
+        desc: Error encountered during segmentation.
+        width: 1

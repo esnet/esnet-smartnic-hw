@@ -11,6 +11,7 @@ import json
 sys.path.insert(0, os.environ['XILINX_VIVADO'] + '/tps/lib/python3.8')
 
 from p4_robot import API as P4RobotAPI
+from p4bm_metadata import parse_metadata_file, write_metadata_file
 
 import bmpy_utils as utils
 
@@ -115,6 +116,14 @@ class Library(P4RobotAPI):
         with open(cmd_log_filename, 'r') as f:
             for l in f.readlines():
                 self.p4_cmd(l)
+
+    @keyword
+    def p4_read_metadata(self, metadata_filename):
+        return(parse_metadata_file(metadata_filename))
+
+    @keyword
+    def p4_write_metadata(self, recs, metadata_filename):
+        write_metadata_file(recs, metadata_filename)
 
     # Execute a command via the high level p4bm CLI language and show the result
     @keyword
