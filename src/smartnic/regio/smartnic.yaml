@@ -12,6 +12,10 @@ regs:
   - name: status
     init: 0xC0BEBEEF
 
+  - name: smartnic_srst
+    desc   : smartnic software reset. write '1' to reset the smartnic module.
+    access : wr_evt
+
   # ----- smartnic configuration registers. -----
   - name: igr_q_config_0
     access : rw
