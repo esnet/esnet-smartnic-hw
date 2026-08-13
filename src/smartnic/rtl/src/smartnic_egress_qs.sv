@@ -322,7 +322,8 @@ module smartnic_egress_qs
             );
 
             // Drive packet_in_dest/q for packet_q_core
-            assign packet_in_dest[g_port] = meta_in.egr_port;
+            // Use port_num only (strips port_typ) so PF0/PHY0 -> 0, PF1/PHY1 -> 1
+            assign packet_in_dest[g_port] = get_port_idx(meta_in.egr_port);
             assign packet_in_q[g_port]    = meta_in.egr_q;
 
             assign meta_out = packet_out_if[g_port].meta;
