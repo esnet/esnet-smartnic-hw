@@ -175,8 +175,8 @@ class PacketMemProtocol():
         self.proxy.burst.len = burst_len
         # Execute read
         self._transact(self.CommandCode.READ)
-        # Read data
-        return (self._get_burst_len(size), self._get_rd_data(size))
+        # Read only the bytes actually transferred in this burst.
+        return (burst_len, self._get_rd_data(min(size, burst_len * self.__MIN_BURST)))
 
 
         
