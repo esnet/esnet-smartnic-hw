@@ -23,7 +23,7 @@ class PacketMemProtocol():
         self.proxy = mem_proxy_if
         self.__DEBUG = debug
         self.__TRACE = 0
-        self.__SIZE = int(self.proxy.info_size_upper) << 32 + int(self.proxy.info_size_lower)
+        self.__SIZE = (int(self.proxy.info_size_upper) << 32) | int(self.proxy.info_size_lower)
         self.__MIN_BURST= int(self.proxy.info_burst.min)
         self.__MAX_BURST = int(self.proxy.info_burst.max)
         self.wait_delay = 1e-3
