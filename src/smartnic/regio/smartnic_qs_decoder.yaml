@@ -4,11 +4,12 @@ visible: true
 blocks:
   smartnic_qs: &smartnic_qs
     !include ../src/smartnic/regio/smartnic_qs.yaml
-  alloc: &alloc
-    !include src/alloc/regio/alloc.yaml
+
 decoders:
   hbm_stack: &hbm_stack
-    !include ../src/xilinx/hbm/regio/xilinx_hbm_decoder.yaml 
+    !include ../src/xilinx/hbm/regio/xilinx_hbm_decoder.yaml
+  packet_q: &packet_q
+    !include src/packet/regio/packet_q_decoder.yaml
 
 interfaces:
   - block: *smartnic_qs
@@ -16,13 +17,12 @@ interfaces:
     width: 12
     name: control
 
-  - block: *alloc
-    address: 0x1000
-    width: 12
-    name: alloc
-
   - decoder: *hbm_stack
-    address: 0x2000
+    address: 0x1000
     width: 13
     name: hbm
 
+  - decoder: *packet_q
+    address: 0x4000
+    width: 13
+    name: packet_q

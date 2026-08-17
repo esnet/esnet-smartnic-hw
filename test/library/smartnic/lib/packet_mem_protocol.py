@@ -23,7 +23,7 @@ class PacketMemProtocol():
         self.proxy = mem_proxy_if
         self.__DEBUG = debug
         self.__TRACE = 0
-        self.__SIZE = int(self.proxy.info_size_upper) << 32 + int(self.proxy.info_size_lower)
+        self.__SIZE = (int(self.proxy.info_size_upper) << 32) | int(self.proxy.info_size_lower)
         self.__MIN_BURST= int(self.proxy.info_burst.min)
         self.__MAX_BURST = int(self.proxy.info_burst.max)
         self.wait_delay = 1e-3
@@ -175,8 +175,8 @@ class PacketMemProtocol():
         self.proxy.burst.len = burst_len
         # Execute read
         self._transact(self.CommandCode.READ)
-        # Read data
-        return (self._get_burst_len(size), self._get_rd_data(size))
+        # Read only the bytes actually transferred in this burst.
+        return (burst_len, self._get_rd_data(min(size, burst_len * self.__MIN_BURST)))
 
 
         
