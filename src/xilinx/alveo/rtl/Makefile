@@ -27,11 +27,8 @@ SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi4s.rtl@common \
     xilinx.alveo.pkg \
-    xilinx.alveo.ip \
-    xilinx.alveo.regio.rtl \
-    xilinx.qdma.rtl \
-    xilinx.cmac.rtl \
-    xilinx.sysmon.rtl
+    xilinx.jtag.rtl \
+    shell.regio.rtl
 
 EXT_LIBS =
 

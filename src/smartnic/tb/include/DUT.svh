@@ -65,6 +65,7 @@
 
     logic                      axil_aclk;
     logic       [NUM_CMAC-1:0] cmac_clk;
+    logic                      core_clk;
 
     // DUT instance
     smartnic #(.NUM_CMAC(NUM_CMAC)) DUT(.*);
@@ -87,6 +88,8 @@
     axi4s_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .TUSER_WID(TUSER_SMARTNIC_META_WID))             axis_c2h      [NUM_CMAC] (.aclk(axis_clk));
 
     tuser_smartnic_meta_t axis_c2h_tuser [NUM_CMAC];
+
+    assign axil_if.aclk = axil_aclk;
 
     // Assign AXI-L control interface
     assign s_axil_awvalid = axil_if.awvalid;

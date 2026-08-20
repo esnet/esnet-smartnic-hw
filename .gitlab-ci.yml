@@ -28,9 +28,12 @@ variables:
     LANG: C.UTF-8
     GIT_SUBMODULE_STRATEGY: recursive
 
-.common_aved:
+.common_versal:
   extends: .common
   image: $CI_REGISTRY/ht/xilinx-tools-docker:101657-ga13293eb
+  before_script:
+    - !reference [.common, before_script]
+    - cp -r /tools/AVED/smbus_v1_1 src/xilinx/aved/hw/amd_v80_gen5x8_25.1/src/iprepo/
 
 p4bm:
   stage: p4_sim
@@ -44,10 +47,12 @@ p4bm:
     - make -s -C examples/p4_with_extern/p4/sim sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_igr sim-all
     - make -s -C examples/p4_multi_proc/p4/sim_egr sim-all
-    - make -s -C examples/proxy_test/p4/sim build sim-all
+    - make -s -C examples/sar_test/p4/sim build sim-all
     #- make -s -C examples/fec_test/p4/sim build sim-all
-    - make -s -C examples/udplb_fec/p4/sim_igr sim-all
-    - make -s -C examples/udplb_fec/p4/sim_egr sim-all
+    #- make -s -C examples/udplb_fec/p4/sim_igr sim-all
+    #- make -s -C examples/udplb_fec/p4/sim_egr sim-all
+    - make -s -C examples/udplb_fec_av80/p4/sim_igr sim-all
+    - make -s -C examples/udplb_fec_av80/p4/sim_egr sim-all
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -57,9 +62,10 @@ p4bm:
       - examples/p4_with_extern/p4/sim
       - examples/p4_multi_proc/p4/sim_igr
       - examples/p4_multi_proc/p4/sim_egr
-      - examples/proxy_test/p4/sim
+      - examples/sar_test/p4/sim
       #- examples/fec_test/p4/sim
-      - examples/udplb_fec/p4/sim
+      #- examples/udplb_fec/p4/sim
+      - examples/udplb_fec_av80/p4/sim
   needs: []
 
 sim_p4_apps:
@@ -77,12 +83,14 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
-    - make -s -C examples/proxy_test/tests/regression
-    - grep 'PASSED.*suites passing' examples/proxy_test/tests/regression/run_$SEED/sim.log
+    - make -s -C examples/sar_test/tests/regression
+    - grep 'PASSED.*suites passing' examples/sar_test/tests/regression/run_$SEED/sim.log
 #    - make -s -C examples/fec_test/tests/regression
 #    - grep 'PASSED.*suites passing' examples/fec_test/tests/regression/run_$SEED/sim.log
-    - make -s -C examples/udplb_fec/tests/regression
-    - grep 'PASSED.*suites passing' examples/udplb_fec/tests/regression/run_$SEED/sim.log
+#    - make -s -C examples/udplb_fec/tests/regression
+#    - grep 'PASSED.*suites passing' examples/udplb_fec/tests/regression/run_$SEED/sim.log
+    - make -s -C examples/udplb_fec_av80/tests/regression
+    - grep 'PASSED.*suites passing' examples/udplb_fec_av80/tests/regression/run_$SEED/sim.log
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     reports:
@@ -91,9 +99,10 @@ sim_p4_apps:
         - src/smartnic_app/tests/regression/run_*/tests.xml
         - examples/p4_multi_proc/tests/regression/run_*/tests.xml
         - examples/p4_and_verilog/tests/regression/run_*/tests.xml
-        - examples/proxy_test/tests/regression/run_*/tests.xml
+        - examples/sar_test/tests/regression/run_*/tests.xml
 #        - examples/fec_test/tests/regression/run_*/tests.xml
-        - examples/udplb_fec/tests/regression/run_*/tests.xml
+#        - examples/udplb_fec/tests/regression/run_*/tests.xml
+        - examples/udplb_fec_av80/tests/regression/run_*/tests.xml
     when: always
   timeout: 4h
   needs: []
@@ -108,6 +117,8 @@ sim_platform:
     - grep 'PASSED.*suites passing' src/smartnic/tests/top/regression/run_$SEED/sim.log
     - make -s -C src/smartnic/tests/block/regression
     - grep 'PASSED.*suites passing' src/smartnic/tests/block/regression/run_$SEED/sim.log
+    - make -s -C src/smartnic/core/tests/regression
+    - grep 'PASSED.*suites passing' src/smartnic/core/tests/regression/run_$SEED/sim.log
     - make -s -C src/smartnic_app/tests.smartnic/regression
     - grep 'PASSED.*suites passing' src/smartnic_app/tests.smartnic/regression/run_$SEED/sim.log
     - make -s -C examples/p2p/tests.smartnic/regression
@@ -124,6 +135,7 @@ sim_platform:
       junit:
         - src/smartnic/tests/top/regression/run_*/tests.xml
         - src/smartnic/tests/block/regression/run_*/tests.xml
+        - src/smartnic/core/tests/regression/run_*/tests.xml
         - src/smartnic_app/tests.smartnic/regression/run_*/tests.xml
         - examples/p2p/tests.smartnic/regression/run_*/tests.xml
         - src/smartnic_250mhz/tests/regression/run_*/tests.xml
@@ -233,7 +245,7 @@ shell_ip_cache_key:
     - ht-synth
   script:
     - make -s -C src refresh
-    - make -s -C src synth COMPONENT=xilinx.alveo.rtl BOARD=$SN_HW_BOARD
+    - make -s -C src synth COMPONENT=xilinx.alveo.usplus.rtl BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - .out
@@ -267,11 +279,17 @@ shell_ip_au280:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au280
+  rules:
+    - when: manual
+      allow_failure: true
 
 shell_ip_au55c:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
 .bitfile:
   stage: bitfile
@@ -342,6 +360,9 @@ build_p4_only_u280:
   needs:
     - ons_ip_au280
     - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
 
 build_p4_only_u55c:
   extends: .bitfile
@@ -385,12 +406,15 @@ build_p4_multi_proc_u55c:
   needs:
     - ons_ip_au55c
     - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
 
-build_proxy_test_u280:
+build_sar_test_u280:
   extends: .bitfile
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: proxy_test
+    SN_HW_APP_NAME: sar_test
     SN_HW_BOARD: au280
   needs:
     - ons_ip_au280
@@ -424,6 +448,24 @@ build_udplb_fec_u280:
   rules:
     - when: manual
       allow_failure: true
+
+build_udplb_fec_av80:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - make -s -C examples/udplb_fec_av80 pdi
+    - make -s -C examples/udplb_fec_av80 reg_package
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - examples/udplb_fec_av80/build
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: always
+  timeout: 8h
 
 build_shell_au55c:
   extends: .bitfile
@@ -517,10 +559,10 @@ validate_p4_multi_proc_u55c:
   needs:
     - build_p4_multi_proc_u55c
 
-validate_proxy_test_u280:
+validate_sar_test_u280:
   extends: .validate
   needs:
-    - build_proxy_test_u280
+    - build_sar_test_u280
 
 validate_fec_test_u280:
   extends: .validate
@@ -605,10 +647,10 @@ hwapi_p4_multi_proc_u55c:
   needs:
     - build_p4_multi_proc_u55c
 
-hwapi_proxy_test_u280:
+hwapi_sar_test_u280:
   extends: .hwapi
   needs:
-    - build_proxy_test_u280
+    - build_sar_test_u280
 
 hwapi_fec_test_u280:
   extends: .hwapi
@@ -691,12 +733,12 @@ fw_p4_multi_proc_u55c:
   needs:
     - hwapi_p4_multi_proc_u55c
 
-fw_proxy_test_u280:
+fw_sar_test_u280:
   extends: .trigger_fw
   variables:
-    SN_HW_API_JOB: hwapi_proxy_test_u280
+    SN_HW_API_JOB: hwapi_sar_test_u280
   needs:
-    - hwapi_proxy_test_u280
+    - hwapi_sar_test_u280
 
 fw_fec_test_u280:
   extends: .trigger_fw
@@ -728,18 +770,70 @@ fw_shell_au280:
 
 build_aved:
   stage: bitfile
-  extends: .common_aved
+  extends: .common_versal
   tags:
     - ht-synth
   script:
-    - cp -r /tools/AVED/smbus_v1_1 src/xilinx/aved/hw/hw/amd_v80_gen5x8_25.1/src/iprepo/
-    - make versal_shell
+    - |
+      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
+      if [[ ! -d "${ARMR5_BIN}" ]]; then
+        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
+      fi
+      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
+      echo "ARM R5 toolchain: ${ARMR5_BIN}"
+      export PATH="${ARMR5_BIN}:${PATH}"
+    - cd src/xilinx/aved/hw/amd_v80_gen5x8_25.1 && ./build_all.sh
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
-      - src/xilinx/aved/hw
+      - src/xilinx/aved
     when: always
     expire_in: 2 weeks
   needs: []
   when: manual
   timeout: 4h
+
+build_shell_av80:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - make -s -C examples/versal_shell pdi
+    - make -s -C examples/versal_shell reg_package
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - examples/versal_shell/build
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: always
+  timeout: 8h
+
+build_fec_test_av80:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - |
+      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
+      if [[ ! -d "${ARMR5_BIN}" ]]; then
+        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
+      fi
+      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
+      echo "ARM R5 toolchain: ${ARMR5_BIN}"
+      export PATH="${ARMR5_BIN}:${PATH}"
+      make -s -C examples/fec_test config BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+      make -s -C examples/fec_test build  BOARD=av80 PROJ_VIVADO_VERSION=2025.1
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - examples/fec_test
+    when: always
+    expire_in: 2 weeks
+  needs: []
+  when: always
+  timeout: 8h
+

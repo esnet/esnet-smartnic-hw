@@ -62,7 +62,8 @@ module smartnic
   output                      mod_rst_done,
 
   input                       axil_aclk,
-  input [NUM_CMAC-1:0]        cmac_clk
+  input [NUM_CMAC-1:0]        cmac_clk,
+  output                      core_clk
 );
 
   localparam int HOST_NUM_IFS = 3;
@@ -76,11 +77,9 @@ module smartnic
    wire                       axil_aresetn;
    wire [NUM_CMAC-1:0]        cmac_srst;
 
-   wire                       core_clk;
    wire                       __srst;
 
    wire                       clk_100mhz;
-   wire                       hbm_ref_clk;
 
    tuser_smartnic_meta_t      m_axis_adpt_rx_322mhz_tuser [NUM_CMAC];
 
@@ -92,13 +91,21 @@ module smartnic
    logic                      core_srst;
    logic                      srst__smartnic_egress_qs;
    logic                      srst__smartnic_app;
+   logic                      smartnic_srst_n_sync;  // smartnic_srst synced to axil_aclk (active-low)
 
-  // Reset is clocked by the 125MHz AXI-Lite clock
+   sync_areset #(
+       .INPUT_ACTIVE_HIGH ( 1 ),
+       .OUTPUT_ACTIVE_LOW ( 1 )
+   ) i_sync_areset__smartnic_srst (
+       .rst_in  ( smartnic_regs.smartnic_srst[0] ),
+       .clk_out ( axil_aclk ),
+       .rst_out ( smartnic_srst_n_sync )
+   );
 
   smartnic_reset #(
     .NUM_CMAC (NUM_CMAC)
   ) reset_inst (
-    .mod_rstn     (mod_rstn),
+    .mod_rstn     (mod_rstn && smartnic_srst_n_sync),
     .mod_rst_done (mod_rst_done),
 
     .axil_aclk    (axil_aclk),
@@ -110,8 +117,7 @@ module smartnic
     .core_clk     (core_clk),
     .core_srst    (__srst),
 
-    .clk_100mhz   (clk_100mhz),
-    .hbm_ref_clk  (hbm_ref_clk)
+    .clk_100mhz   (clk_100mhz)
   );
 
    always @(posedge core_clk) begin
@@ -987,8 +993,12 @@ module smartnic
 `endif
 
 `ifdef __au250__
-    for (genvar i = 0; i < PHY_NUM_PORTS; i++) begin : g__egress_q_bypass
-        // AU250 doesn't support HBM
+    `define __no_hbm__
+`elsif __av80__
+    `define __no_hbm__
+`endif
+`ifdef __no_hbm__
+    generate for (genvar i = 0; i < NUM_CMAC; i += 1) begin : g__egr_q_bypass
         axi4s_intf_set_meta #(
             .TDEST_WID ( PORT_WID ),
             .TUSER_WID ( TUSER_SMARTNIC_META_WID )
@@ -998,8 +1008,11 @@ module smartnic
             .tdest     ( axis_to_qs[i].tdest ),
             .tuser     ( axis_to_qs[i].tuser )
         );
-    end : g__egress_q_bypass
+    end : g__egr_q_bypass
+    endgenerate
+
     axi4l_intf_peripheral_term i_axi4l_peripheral_term__egr_qs (.axi4l_if(__axil_to_egr_qs));
+
 `else
     // HBM queue instantiation
     smartnic_egress_qs smartnic_egress_qs_0 (

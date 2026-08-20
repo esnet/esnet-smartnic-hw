@@ -1,173 +1,141 @@
 module shell_adapter__shell
     import shell_pkg::*;
-(
-    // Clock/reset
-    // ----------------------------
-    input wire logic clk,
-    input wire logic srst,
+#(
+    parameter int NUM_PORTS = 2
+) (
+    shell_intf.shell shell_if,
 
-    input wire logic mgmt_clk,
-    input wire logic mgmt_srst,
+    // Clock / reset inputs — driven by platform, assigned into shell_intf
+    input  logic                    clk,
+    input  logic                    srst,
+    input  logic                    mgmt_clk,
+    input  logic                    mgmt_srst,
+    input  logic                    clk_100mhz,
+    input  logic                    port_clk  [NUM_PORTS],
+    input  logic                    port_srst [NUM_PORTS],
 
-    input wire logic clk_100mhz,
-
-    // Shell-side interface
-    // ----------------------------
-    // AXI-L
     axi4l_intf.peripheral axil_if,
 
-    // CMAC
-    axi4s_intf.rx axis_cmac_rx [NUM_CMAC],
-    axi4s_intf.tx axis_cmac_tx [NUM_CMAC],
+    axi4s_intf.rx axis_port_rx [NUM_PORTS],
+    axi4s_intf.tx axis_port_tx [NUM_PORTS],
 
-    // DMA (streaming)
     axi4s_intf.rx axis_h2c,
-    axi4s_intf.tx axis_c2h,
-
-    // Core-side interface
-    // ----------------------------
-    output wire logic [SHELL_TO_CORE_WID-1:0] shell_to_core,
-    input  wire logic [CORE_TO_SHELL_WID-1:0] core_to_shell
+    axi4s_intf.tx axis_c2h
 );
-    // 'Cast' shell interface to structs
-    shell_to_core_t __shell_to_core;
-    core_to_shell_t __core_to_shell;
+    // Clock / reset — assign platform-driven signals into shell_intf
+    assign shell_if.clk        = clk;
+    assign shell_if.srst       = srst;
+    assign shell_if.mgmt_clk   = mgmt_clk;
+    assign shell_if.mgmt_srst  = mgmt_srst;
+    assign shell_if.clk_100mhz = clk_100mhz;
+    generate
+        for (genvar g = 0; g < NUM_PORTS; g++) begin : g__port_clk
+            assign shell_if.port_clk[g]  = port_clk[g];
+            assign shell_if.port_srst[g] = port_srst[g];
+        end : g__port_clk
+    endgenerate
 
-    assign shell_to_core = __shell_to_core;
-    assign __core_to_shell = core_to_shell;
-
-    // AXI-L control
-    axil_fwd_t shell_to_core_axil;
-    axil_rev_t core_to_shell_axil;
-
-    assign __shell_to_core.axil = shell_to_core_axil;
-    assign core_to_shell_axil = __core_to_shell.axil;
-
+    // AXI-L
     axi4l_intf_to_signals #(
-        .ADDR_WID ( AXIL_ADDR_WID )
+        .ADDR_WID ( shell_if.AXIL_ADDR_WID )
     ) i_axi4l_intf_to_signals (
-        .aclk    ( mgmt_clk ),
-        .aresetn ( !mgmt_srst ),
-        .awvalid ( shell_to_core_axil.awvalid ),
-        .awready ( core_to_shell_axil.awready ),
-        .awaddr  ( shell_to_core_axil.awaddr ),
-        .awprot  ( shell_to_core_axil.awprot ),
-        .wvalid  ( shell_to_core_axil.wvalid ),
-        .wready  ( core_to_shell_axil.wready ),
-        .wdata   ( shell_to_core_axil.wdata ),
-        .wstrb   ( shell_to_core_axil.wstrb ),
-        .bvalid  ( core_to_shell_axil.bvalid ),
-        .bready  ( shell_to_core_axil.bready ),
-        .bresp   ( core_to_shell_axil.bresp ),
-        .arvalid ( shell_to_core_axil.arvalid ),
-        .arready ( core_to_shell_axil.arready ),
-        .araddr  ( shell_to_core_axil.araddr ),
-        .arprot  ( shell_to_core_axil.arprot ),
-        .rvalid  ( core_to_shell_axil.rvalid ),
-        .rready  ( shell_to_core_axil.rready ),
-        .rdata   ( core_to_shell_axil.rdata ),
-        .rresp   ( core_to_shell_axil.rresp ),
+        .aclk    (),
+        .aresetn (),
+        .awvalid ( shell_if.axil_awvalid ),
+        .awready ( shell_if.axil_awready ),
+        .awaddr  ( shell_if.axil_awaddr  ),
+        .awprot  ( shell_if.axil_awprot  ),
+        .wvalid  ( shell_if.axil_wvalid  ),
+        .wready  ( shell_if.axil_wready  ),
+        .wdata   ( shell_if.axil_wdata   ),
+        .wstrb   ( shell_if.axil_wstrb   ),
+        .bvalid  ( shell_if.axil_bvalid  ),
+        .bready  ( shell_if.axil_bready  ),
+        .bresp   ( shell_if.axil_bresp   ),
+        .arvalid ( shell_if.axil_arvalid ),
+        .arready ( shell_if.axil_arready ),
+        .araddr  ( shell_if.axil_araddr  ),
+        .arprot  ( shell_if.axil_arprot  ),
+        .rvalid  ( shell_if.axil_rvalid  ),
+        .rready  ( shell_if.axil_rready  ),
+        .rdata   ( shell_if.axil_rdata   ),
+        .rresp   ( shell_if.axil_rresp   ),
         .axi4l_if( axil_if )
     );
 
-    // CMAC
+    // Network ports
     generate
-        for (genvar g_cmac = 0; g_cmac < NUM_CMAC; g_cmac++) begin : g__cmac
-            // -- Rx
-            cmac_axis_fwd_t shell_to_core_cmac_rx;
-            cmac_axis_rev_t core_to_shell_cmac_rx;
-
-            assign __shell_to_core.cmac_rx[g_cmac] = shell_to_core_cmac_rx;
-            assign core_to_shell_cmac_rx = __core_to_shell.cmac_rx[g_cmac];
-
+        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
             axi4s_intf_to_signals #(
-                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-                .TID_WID       ( CMAC_AXIS_TID_WID ),
-                .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
-            ) i_axi4s_intf_to_signals (
-                .tvalid   ( shell_to_core_cmac_rx.tvalid ),
-                .tready   ( core_to_shell_cmac_rx.tready ),
-                .tdata    ( shell_to_core_cmac_rx.tdata ),
-                .tkeep    ( shell_to_core_cmac_rx.tkeep ),
-                .tlast    ( shell_to_core_cmac_rx.tlast ),
-                .tid      ( shell_to_core_cmac_rx.tid ),
-                .tdest    ( shell_to_core_cmac_rx.tdest ),
-                .tuser    ( shell_to_core_cmac_rx.tuser ),
-                .axi4s_if ( axis_cmac_rx[g_cmac] )
+                .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
+                .TID_WID       ( PORT_AXIS_TID_WID  ),
+                .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+                .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+            ) i_axi4s_intf_to_signals__port_rx (
+                .tvalid   ( shell_if.port_rx_tvalid[g_port] ),
+                .tready   ( shell_if.port_rx_tready[g_port] ),
+                .tdata    ( shell_if.port_rx_tdata [g_port] ),
+                .tkeep    ( shell_if.port_rx_tkeep [g_port] ),
+                .tlast    ( shell_if.port_rx_tlast [g_port] ),
+                .tid      ( shell_if.port_rx_tid   [g_port] ),
+                .tdest    ( shell_if.port_rx_tdest [g_port] ),
+                .tuser    ( shell_if.port_rx_tuser [g_port] ),
+                .axi4s_if ( axis_port_rx[g_port] )
             );
-            // -- Tx
-            cmac_axis_rev_t shell_to_core_cmac_tx;
-            cmac_axis_fwd_t core_to_shell_cmac_tx;
-
-            assign shell_to_core_cmac_tx = __shell_to_core.cmac_tx[g_cmac];
-            assign __core_to_shell.cmac_tx[g_cmac] = core_to_shell_cmac_tx;
 
             axi4s_intf_from_signals #(
-                .DATA_BYTE_WID ( CMAC_DATA_BYTE_WID ),
-                .TID_WID       ( CMAC_AXIS_TID_WID ),
-                .TDEST_WID     ( CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID     ( CMAC_AXIS_TUSER_WID )
-            ) i_axi4s_intf_from_signals (
-                .tvalid   ( core_to_shell_cmac_tx.tvalid ),
-                .tready   ( shell_to_core_cmac_tx.tready ),
-                .tdata    ( core_to_shell_cmac_tx.tdata ),
-                .tkeep    ( core_to_shell_cmac_tx.tkeep ),
-                .tlast    ( core_to_shell_cmac_tx.tlast ),
-                .tid      ( core_to_shell_cmac_tx.tid ),
-                .tdest    ( core_to_shell_cmac_tx.tdest ),
-                .tuser    ( core_to_shell_cmac_tx.tuser ),
-                .axi4s_if ( axis_cmac_tx[g_cmac] )
+                .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
+                .TID_WID       ( PORT_AXIS_TID_WID  ),
+                .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+                .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+            ) i_axi4s_intf_from_signals__port_tx (
+                .tvalid   ( shell_if.port_tx_tvalid[g_port] ),
+                .tready   ( shell_if.port_tx_tready[g_port] ),
+                .tdata    ( shell_if.port_tx_tdata [g_port] ),
+                .tkeep    ( shell_if.port_tx_tkeep [g_port] ),
+                .tlast    ( shell_if.port_tx_tlast [g_port] ),
+                .tid      ( shell_if.port_tx_tid   [g_port] ),
+                .tdest    ( shell_if.port_tx_tdest [g_port] ),
+                .tuser    ( shell_if.port_tx_tuser [g_port] ),
+                .axi4s_if ( axis_port_tx[g_port] )
             );
         end
     endgenerate
 
     // H2C
-    dma_st_axis_fwd_t shell_to_core_h2c;
-    dma_st_axis_rev_t core_to_shell_h2c;
-
-    assign __shell_to_core.h2c = shell_to_core_h2c;
-    assign core_to_shell_h2c = __core_to_shell.h2c;
-
     axi4s_intf_to_signals #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_to_signals__h2c (
-         .tvalid   ( shell_to_core_h2c.tvalid ),
-         .tready   ( core_to_shell_h2c.tready ),
-         .tdata    ( shell_to_core_h2c.tdata ),
-         .tkeep    ( shell_to_core_h2c.tkeep ),
-         .tlast    ( shell_to_core_h2c.tlast ),
-         .tid      ( shell_to_core_h2c.tid ),
-         .tdest    ( shell_to_core_h2c.tdest ),
-         .tuser    ( shell_to_core_h2c.tuser ),
-         .axi4s_if ( axis_h2c )
+        .tvalid   ( shell_if.h2c_tvalid ),
+        .tready   ( shell_if.h2c_tready ),
+        .tdata    ( shell_if.h2c_tdata  ),
+        .tkeep    ( shell_if.h2c_tkeep  ),
+        .tlast    ( shell_if.h2c_tlast  ),
+        .tid      ( shell_if.h2c_tid    ),
+        .tdest    ( shell_if.h2c_tdest  ),
+        .tuser    ( shell_if.h2c_tuser  ),
+        .axi4s_if ( axis_h2c )
     );
 
     // C2H
-    dma_st_axis_rev_t shell_to_core_c2h;
-    dma_st_axis_fwd_t core_to_shell_c2h;
-
-    assign shell_to_core_c2h = __shell_to_core.c2h;
-    assign __core_to_shell.c2h = core_to_shell_c2h;
-
     axi4s_intf_from_signals #(
-        .DATA_BYTE_WID ( DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID ),
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_from_signals__c2h (
-         .tvalid   ( core_to_shell_c2h.tvalid ),
-         .tready   ( shell_to_core_c2h.tready ),
-         .tdata    ( core_to_shell_c2h.tdata ),
-         .tkeep    ( core_to_shell_c2h.tkeep ),
-         .tlast    ( core_to_shell_c2h.tlast ),
-         .tid      ( core_to_shell_c2h.tid ),
-         .tdest    ( core_to_shell_c2h.tdest ),
-         .tuser    ( core_to_shell_c2h.tuser ),
-         .axi4s_if ( axis_c2h )
+        .tvalid   ( shell_if.c2h_tvalid ),
+        .tready   ( shell_if.c2h_tready ),
+        .tdata    ( shell_if.c2h_tdata  ),
+        .tkeep    ( shell_if.c2h_tkeep  ),
+        .tlast    ( shell_if.c2h_tlast  ),
+        .tid      ( shell_if.c2h_tid    ),
+        .tdest    ( shell_if.c2h_tdest  ),
+        .tuser    ( shell_if.c2h_tuser  ),
+        .axi4s_if ( axis_c2h )
     );
 
 endmodule : shell_adapter__shell

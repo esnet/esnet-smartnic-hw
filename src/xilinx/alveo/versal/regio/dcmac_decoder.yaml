@@ -1,0 +1,12 @@
+name: dcmac
+
+blocks:
+  dcmac: &dcmac
+    name: dcmac
+    info: Placeholder for Xilinx DCMAC registers.
+    regs: []
+
+interfaces:
+  - block: *dcmac
+    address: 0x0000
+    name: dcmac

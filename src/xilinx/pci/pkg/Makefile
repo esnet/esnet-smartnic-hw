@@ -41,14 +41,15 @@ COMPILE_OPTS =
 # ----------------------------------------------------
 # Targets
 # ----------------------------------------------------
-all: compile
+all: compile synth
 
 pre:     _compile_pre
 compile: _compile_sim
+synth:   _compile_synth
 info:    _compile_info
 clean:   _compile_clean
 
-.PHONY: all pre compile info clean
+.PHONY: all pre compile synth info clean
 
 # ----------------------------------------------------
 # Import Vivado compile targets

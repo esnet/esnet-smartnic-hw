@@ -1,6 +1,8 @@
 name: shell
 
 blocks:
+  shell_cfg: &shell_cfg
+    !include ../src/shell/regio/shell_cfg.yaml
   hw: &hw
     name: hw
     info: Hardware (i.e. physical layer) registers.
@@ -11,11 +13,17 @@ blocks:
     regs: []
 
 interfaces:
-  - block: *hw
+  - block: *shell_cfg
     address: 0x000000
-    width: 20
-    name: hw
-  - block: *core
+    width: 12
+    name: shell_cfg
+
+  - block: *hw
     address: 0x200000
     width: 21
+    name: hw
+
+  - block: *core
+    address: 0x400000
+    width: 22
     name: core

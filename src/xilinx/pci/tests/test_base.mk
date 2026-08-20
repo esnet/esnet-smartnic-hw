@@ -12,10 +12,12 @@ include $(COMPONENT_ROOT)/config.mk
 #       make REGRESSION=1
 #       make waves=ON
 #       make SEED=29 waves=ON
+#       make SIM=verilator
 # -----------------------------------------------
 REGRESSION ?= 0
 SEED ?= 0
 waves ?= OFF
+SIM ?= xsim
 
 # ----------------------------------------------------
 # Additional sources
@@ -68,7 +70,9 @@ override PLUSARGS +=
 # Options
 # ----------------------------------------------------
 COMPILE_OPTS =
+ifeq ($(SIM),xsim)
 ELAB_OPTS = --debug typical
+endif
 SIM_OPTS =
 
 # ----------------------------------------------------
@@ -89,6 +93,6 @@ clean:      _clean_test _clean_sim
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
 # ----------------------------------------------------
-# Import Vivado sim targets
+# Import sim targets (backend selected by SIM variable)
 # ----------------------------------------------------
-include $(SCRIPTS_ROOT)/Makefiles/vivado_sim.mk
+include $(SCRIPTS_ROOT)/Makefiles/sim.mk

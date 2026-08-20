@@ -74,7 +74,7 @@ $(APP_DIR)/example:
 	@mkdir -p $@
 	@mkdir -p $@/.src
 
-bitfile : config config_check
+build_app : config config_check
 	@echo "Starting bitfile build $(BUILD_NAME)..."
 	@echo
 	@echo "----------------------------------------------------------"
@@ -88,6 +88,8 @@ bitfile : config config_check
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/build pre_synth APP_ROOT=$(APP_ROOT) BOARD=$(BOARD)
 	@echo
 	@echo "Done."
+
+bitfile : build_app
 	@echo "----------------------------------------------------------"
 	@echo "Preparing smartnic_250mhz IP ..."
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/build pre_synth BOARD=$(BOARD)
@@ -96,7 +98,7 @@ bitfile : config config_check
 	@echo "----------------------------------------------------------"
 	@echo "Building OpenNIC shell ..."
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet bitfile \
-		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) APP_NAME=$(APP_NAME) max_pkt_len=$(max_pkt_len) jobs=$(jobs)
 	@echo
 	@echo "Done."
 
@@ -115,6 +117,7 @@ package : | $(ARTIFACTS_BUILD_DIR)
 	@echo "----------------------------------------------------------"
 	@echo "Packaging build $(BUILD_NAME) ..."
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/regio reg APP_ROOT=$(APP_ROOT)
+	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic_250mhz/regio reg BOARD=$(BOARD)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
 	@echo
@@ -135,7 +138,7 @@ endif
 clean_artifacts :
 	@-rm -rf $(ARTIFACTS_BUILD_DIR)
 
-.PHONY : config example bitfile package clean_build clean_artifacts
+.PHONY : config example build_app bitfile package clean_build clean_artifacts
 
 $(ARTIFACTS_BUILD_DIR) : | $(ARTIFACTS_DIR)
 	@mkdir $(ARTIFACTS_BUILD_DIR)
@@ -144,10 +147,10 @@ $(ARTIFACTS_DIR) :
 	@mkdir $(ARTIFACTS_DIR)
 
 __SHELL_BUILD_OUTPUT_ROOT = $(OUTPUT_ROOT)/$(BOARD)/$(XILINX_VIVADO__VERSION)
-SHELL_BUILD_OUT_DIR = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/build/proj/proj.runs/impl_1
+SHELL_BUILD_OUT_DIR = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/usplus/shell/build/proj/proj.runs/impl_1
 SHELL_HWAPI_DIR = $(ARTIFACTS_BUILD_DIR)/esnet-smartnic-hwapi
 
-SHELL_REG_ARTIFACT = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/shell/regio/ir/esnet-smartnic-top-ir.yaml
+SHELL_REG_ARTIFACT = $(__SHELL_BUILD_OUTPUT_ROOT)/smartnic/xilinx/alveo/usplus/shell/regio/ir/esnet-smartnic-top-ir.yaml
 SHELL_VITISNETP4_DRV_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr_drv.tar
 SHELL_P4_ARTIFACT = $(APP_ROOT)/app_if/smartnic_app_igr.p4
 
@@ -157,14 +160,14 @@ shell: shell_bitfile shell_package
 
 shell_bitfile: config config_check
 	@echo "Building ESnet shell bitfile ($(BUILD_ID))..."
-	@$(MAKE) -s -C $(APP_ROOT)/src build COMPONENT=xilinx.alveo.shell.build@smartnic BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
+	@$(MAKE) -s -C $(APP_ROOT)/src build COMPONENT=xilinx.alveo.usplus.shell.build@smartnic BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
 	@test -e $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.bit || (echo ERROR: bitfile not produced. && false)
 	@test -e $(SHELL_BUILD_OUT_DIR)/esnet_smartnic.mcs || (echo ERROR: flash image not produced. && false)
 	@echo "Done."
 
 $(SHELL_REG_ARTIFACT): config
 	@echo "Generating regmap artifact for ESnet shell build..."
-	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.alveo.shell.regio@$(SMARTNIC_LIB_NAME) BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) OUTPUT_ROOT=$(OUTPUT_ROOT) SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME)
+	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=xilinx.alveo.usplus.shell.regio@$(SMARTNIC_LIB_NAME) BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) OUTPUT_ROOT=$(OUTPUT_ROOT) SMARTNIC_LIB_NAME=$(SMARTNIC_LIB_NAME)
 	@echo "Done."
 
 $(SHELL_VITISNETP4_DRV_ARTIFACT): config
@@ -192,11 +195,36 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 
 .PHONY: shell shell_bitfile shell_package shell_clean_artifacts
 
-versal_shell: versal_shell_bitfile
+VERSAL_BOARD ?= av80
+CORE ?= core.stub
 
-versal_shell_bitfile:
-	@echo "Building ESnet Versal shell bitfile ($(BUILD_ID))..."
-	@cd $(AVED_ROOT)/hw/amd_v80_gen5x8_25.1 && PATH=$(PATH):$(XILINX_VITIS)/gnu/armr5/lin/gcc-arm-none-eabi/bin ./build_all.sh
+versal_shell_ooc:
+	@echo "Building Versal shell OOC DCP ($(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT) build \
+		COMPONENT=xilinx.alveo.versal.shell.av80.build \
+		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
 
-.PHONY: versal_shell versal_shell_bitfile
+versal_core_ooc:
+	@echo "Building Versal core OOC DCP (CORE=$(CORE), $(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT) build \
+		COMPONENT=$(CORE).build \
+		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
+
+versal_design:
+	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT) build \
+		COMPONENT=xilinx.alveo.versal.design.build \
+		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID) \
+		OUTPUT_ROOT=$(OUTPUT_ROOT)
+	@echo "Done."
+
+versal_pdi:
+	@echo "Building Versal PDI with firmware (CORE=$(CORE), $(BUILD_ID))..."
+	@$(MAKE) -s -C $(SRC_ROOT)/xilinx/alveo/versal/design/build pdi \
+		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
+	@echo "Done."
+
+.PHONY: versal_shell_ooc versal_core_ooc versal_design versal_pdi
 

@@ -57,3 +57,6 @@ clean:   _compile_clean
 # Import Vivado compile targets
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_compile.mk
+
+$(VITISNETP4_XCI_FILE):
+	@$(MAKE) -s -C $(SRC_ROOT) ip COMPONENT=$(COMPONENT_BASE).ip

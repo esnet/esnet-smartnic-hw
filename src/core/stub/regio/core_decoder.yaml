@@ -1,0 +1,12 @@
+name: core
+
+visible: true
+
+blocks:
+  core: &core
+    !include ../src/core/stub/regio/core.yaml
+
+interfaces:
+  - block: *core
+    address: 0x0000
+    name: core

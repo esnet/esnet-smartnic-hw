@@ -1,0 +1,16 @@
+name: sar_test
+info: |
+  sar_test base registers.
+
+regs:
+  - default:
+      width  : 32
+      access : ro
+      init   : 0
+
+  - name: id
+    access: ro
+    init: 0x53415254
+
+  - name: scratchpad
+    access: rw
