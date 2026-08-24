@@ -765,6 +765,12 @@ hwapi_shell_au280:
       when: manual
       allow_failure: true
 
+.versal_trigger_fw:
+  extends: .trigger_fw
+  trigger:
+    project: ht/esnet-smartnic-fw
+    branch: dev/versal
+
 fw_p4_and_verilog:
   extends: .trigger_fw
   variables:
@@ -828,6 +834,13 @@ fw_udplb_fec_u280:
   needs:
     - hwapi_udplb_fec_u280
 
+fw_udplb_fec_av80:
+  extends: .versal_trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_udplb_fec_av80
+  needs:
+    - hwapi_udplb_fec_av80
+
 fw_shell_au55c:
   extends: .trigger_fw
   variables:
@@ -841,6 +854,13 @@ fw_shell_au280:
     SN_HW_API_JOB: hwapi_shell_au280
   needs:
     - hwapi_shell_au280
+
+fw_shell_av80:
+  extends: .versal_trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_shell_av80
+  needs:
+    - hwapi_shell_av80
 
 build_aved:
   stage: bitfile
