@@ -325,6 +325,33 @@ shell_ip_au55c:
     expire_in: 2 weeks
   timeout: 10h
 
+.versal_pdi:
+  stage: bitfile
+  extends: .common_versal
+  tags:
+    - ht-synth
+  script:
+    - |
+      cat <<_EOF >> versal_pdi.env
+      EXAMPLES_DIR=$EXAMPLES_DIR
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      _EOF
+    - cat versal_pdi.env
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME pdi
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME reg_package
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - $EXAMPLES_DIR/$SN_HW_APP_NAME/build
+    when: always
+    expire_in: 2 weeks
+    reports:
+      dotenv: versal_pdi.env
+  needs: []
+  when: always
+  timeout: 8h
+
 build_p4_and_verilog:
   extends: .bitfile
   variables:
@@ -450,22 +477,11 @@ build_udplb_fec_u280:
       allow_failure: true
 
 build_udplb_fec_av80:
-  stage: bitfile
-  extends: .common_versal
-  tags:
-    - ht-synth
-  script:
-    - make -s -C examples/udplb_fec_av80 pdi
-    - make -s -C examples/udplb_fec_av80 reg_package
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - examples/udplb_fec_av80/build
-    when: always
-    expire_in: 2 weeks
-  needs: []
-  when: always
-  timeout: 8h
+  extends: .versal_pdi
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: udplb_fec_av80
+    SN_HW_BOARD: av80
 
 build_shell_au55c:
   extends: .bitfile
@@ -612,6 +628,59 @@ validate_udplb_fec_u280:
         hwapi.env
   timeout: 30m
 
+.hwapi_versal:
+  stage: package
+  extends: .common
+  tags:
+    - ht-misc
+  before_script: []
+  script:
+    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
+    - |
+      cat <<_EOF >> hwapi.env
+      SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
+      _EOF
+    - cat hwapi.env
+
+    # Setup for creating the package to hand off build output to a FW pipeline.
+    - APP_OUT_DIR=${EXAMPLES_DIR}/${SN_HW_APP_NAME}/build/${SN_HW_BOARD}/out
+    - SN_OUT_DIR=${APP_OUT_DIR}/esnet_smartnic/build
+    - HWAPI_DIR=esnet-smartnic-hwapi
+
+    # Extract the UUID used by the AVED build for tracking versions.
+    - UUID=$(cat ${SN_OUT_DIR}/pfm_uuid_manifest.dict | sed -e 's/^logic_uuid \([0-9a-f]\+\) .\+$/\1/')
+
+    # Pass the device programming files and associated metadata to FW.
+    - FW_DIR=${HWAPI_DIR}/firmware
+    - mkdir -p ${FW_DIR}
+    - echo "${UUID}" >${FW_DIR}/esnet-smartnic-uuid.txt
+    - cp ${SN_OUT_DIR}/esnet_smartnic.ltx ${FW_DIR}/esnet-smartnic.ltx
+    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_nofpt.pdi -o ${FW_DIR}/esnet-smartnic.pdi.zst
+    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_app.pdi -o ${FW_DIR}/esnet-smartnic.bin.zst
+
+    # Pass the elaborated register definitions to FW.
+    - REGMAP_DIR=${HWAPI_DIR}/regmap
+    - mkdir -p ${REGMAP_DIR}
+    - cp ${SN_OUT_DIR}/regio/ir/esnet-smartnic-top-ir.yaml ${REGMAP_DIR}/.
+
+    # Pass the source for the kernel driver and user-space tool used for versal device management to FW.
+    - SW_DIR=${HWAPI_DIR}/software
+    - mkdir -p ${SW_DIR}
+    - tar -c -C src/xilinx/aved/sw AMI | zstd -f9 - -o ${SW_DIR}/AMI.tar.zst
+
+  artifacts:
+    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-smartnic-hwapi
+    when: always
+    expire_in: 3 month
+    reports:
+      dotenv: hwapi.env
+  timeout: 30m
+
 hwapi_p4_and_verilog:
   extends: .hwapi
   needs:
@@ -662,6 +731,11 @@ hwapi_udplb_fec_u280:
   needs:
     - build_udplb_fec_u280
 
+hwapi_udplb_fec_av80:
+  extends: .hwapi_versal
+  needs:
+    - build_udplb_fec_av80
+
 hwapi_shell_au55c:
   extends: .hwapi
   needs:
@@ -690,6 +764,12 @@ hwapi_shell_au280:
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
       when: manual
       allow_failure: true
+
+.versal_trigger_fw:
+  extends: .trigger_fw
+  trigger:
+    project: ht/esnet-smartnic-fw
+    branch: dev/versal
 
 fw_p4_and_verilog:
   extends: .trigger_fw
@@ -754,6 +834,13 @@ fw_udplb_fec_u280:
   needs:
     - hwapi_udplb_fec_u280
 
+fw_udplb_fec_av80:
+  extends: .versal_trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_udplb_fec_av80
+  needs:
+    - hwapi_udplb_fec_av80
+
 fw_shell_au55c:
   extends: .trigger_fw
   variables:
@@ -767,6 +854,13 @@ fw_shell_au280:
     SN_HW_API_JOB: hwapi_shell_au280
   needs:
     - hwapi_shell_au280
+
+fw_shell_av80:
+  extends: .versal_trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_shell_av80
+  needs:
+    - hwapi_shell_av80
 
 build_aved:
   stage: bitfile
@@ -794,22 +888,17 @@ build_aved:
   timeout: 4h
 
 build_shell_av80:
-  stage: bitfile
-  extends: .common_versal
-  tags:
-    - ht-synth
-  script:
-    - make -s -C examples/versal_shell pdi
-    - make -s -C examples/versal_shell reg_package
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - examples/versal_shell/build
-    when: always
-    expire_in: 2 weeks
-  needs: []
-  when: always
-  timeout: 8h
+  extends: .versal_pdi
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: versal_shell
+    SN_HW_BOARD: av80
+  when: manual
+
+hwapi_shell_av80:
+  extends: .hwapi_versal
+  needs:
+    - build_shell_av80
 
 build_fec_test_av80:
   stage: bitfile
@@ -836,4 +925,3 @@ build_fec_test_av80:
   needs: []
   when: always
   timeout: 8h
-
