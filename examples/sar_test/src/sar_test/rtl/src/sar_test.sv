@@ -1,13 +1,6 @@
-module sar_test
-#(
-    parameter int NUM_PORTS = 2
-) (
+module sar_test (
     input  logic      clk,
     input  logic      srst,
-
-    axi4s_intf.rx     axi4s_in  [NUM_PORTS],
-    axi4s_intf.tx     axi4s_out [NUM_PORTS],
-    axi4s_intf.tx     axi4s_c2h [NUM_PORTS],
 
     axi4l_intf.peripheral axil_if
 );
@@ -473,15 +466,5 @@ module sar_test
         .axil_if ( axil_to_segmentation_capture__clk ),
         .packet_if ( packet_if__capture )
     );
-
-    // ================================================================
-    //  AXI-S pass-through (unused datapath)
-    // ================================================================
-    generate
-        for (genvar g_port = 0; g_port < NUM_PORTS; g_port++) begin : g__port
-            axi4s_full_pipe axi4s_full_pipe_0 (.srst, .from_tx(axi4s_in[g_port]), .to_rx(axi4s_out[g_port]));
-            axi4s_intf_tx_term axi4s_intf_tx_term_0 (.to_rx(axi4s_c2h[g_port]));
-        end
-    endgenerate
 
 endmodule : sar_test
