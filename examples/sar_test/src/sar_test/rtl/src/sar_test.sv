@@ -157,14 +157,6 @@ module sar_test (
     // ================================================================
 
     // --- packet_playback ---
-    axi4l_intf axil_to_reassembly_playback__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__reasm_playback (
-        .axi4l_if_from_controller ( axil_to_reassembly_playback      ),
-        .clk_to_peripheral        ( clk                              ),
-        .axi4l_if_to_peripheral   ( axil_to_reassembly_playback__clk )
-    );
-
     packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_WID(PLAYBACK_META_WID)) packet_if__playback (.clk);
 
     packet_playback #(
@@ -173,7 +165,7 @@ module sar_test (
         .clk,
         .srst,
         .en      (),
-        .axil_if ( axil_to_reassembly_playback__clk ),
+        .axil_if ( axil_to_reassembly_playback ),
         .packet_if ( packet_if__playback )
     );
 
@@ -186,14 +178,6 @@ module sar_test (
 
     // --- sar_packet_reassembly ---
     mem_wr_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) reasm_mem_wr_if (.clk);
-
-    axi4l_intf axil_to_reassembly__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__reasm (
-        .axi4l_if_from_controller ( axil_to_reassembly      ),
-        .clk_to_peripheral        ( clk                     ),
-        .axi4l_if_to_peripheral   ( axil_to_reassembly__clk )
-    );
 
     logic reasm_frame_valid;
     logic reasm_frame_ready;
@@ -215,7 +199,7 @@ module sar_test (
         .packet_offset ( reasm_packet_offset  ),
         .packet_last   ( reasm_packet_last    ),
         .packet_if     ( packet_if__playback  ),
-        .axil_if       ( axil_to_reassembly__clk ),
+        .axil_if       ( axil_to_reassembly ),
         .ms_tick       ( ms_tick             ),
         .frame_ready   ( reasm_frame_ready   ),
         .frame_valid   ( reasm_frame_valid   ),
@@ -229,14 +213,6 @@ module sar_test (
     assign reasm_frame_ready = 1'b1;
 
     // --- mem_proxy for reassembly read-back (ACCESS_READ_ONLY) ---
-    axi4l_intf axil_to_reassembly_mem_proxy__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__reasm_proxy (
-        .axi4l_if_from_controller ( axil_to_reassembly_mem_proxy      ),
-        .clk_to_peripheral        ( clk                               ),
-        .axi4l_if_to_peripheral   ( axil_to_reassembly_mem_proxy__clk )
-    );
-
     mem_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) reasm_proxy_mem_if (.clk);
     mem_wr_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) reasm_proxy_mem_wr_if (.clk);
     mem_rd_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) reasm_proxy_mem_rd_if (.clk);
@@ -249,7 +225,7 @@ module sar_test (
         .clk,
         .srst,
         .init_done (),
-        .axil_if   ( axil_to_reassembly_mem_proxy__clk ),
+        .axil_if   ( axil_to_reassembly_mem_proxy ),
         .mem_if    ( reasm_proxy_mem_if                 )
     );
 
@@ -289,14 +265,6 @@ module sar_test (
     // ================================================================
 
     // --- mem_proxy for segmentation frame write ---
-    axi4l_intf axil_to_segmentation_mem_proxy__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__seg_proxy (
-        .axi4l_if_from_controller ( axil_to_segmentation_mem_proxy      ),
-        .clk_to_peripheral        ( clk                                  ),
-        .axi4l_if_to_peripheral   ( axil_to_segmentation_mem_proxy__clk  )
-    );
-
     mem_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) seg_proxy_mem_if (.clk);
     mem_wr_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) seg_proxy_mem_wr_if (.clk);
     mem_rd_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) seg_proxy_mem_rd_if (.clk);
@@ -309,7 +277,7 @@ module sar_test (
         .clk,
         .srst,
         .init_done (),
-        .axil_if   ( axil_to_segmentation_mem_proxy__clk ),
+        .axil_if   ( axil_to_segmentation_mem_proxy ),
         .mem_if    ( seg_proxy_mem_if                     )
     );
 
@@ -324,18 +292,10 @@ module sar_test (
     mem_rd_intf_peripheral_term i_mem_rd_term__seg_proxy (.from_controller(seg_proxy_mem_rd_if));
 
     // --- Segmentation frame control registers ---
-    axi4l_intf axil_to_segmentation_ctrl__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__seg_ctrl (
-        .axi4l_if_from_controller ( axil_to_segmentation_ctrl      ),
-        .clk_to_peripheral        ( clk                            ),
-        .axi4l_if_to_peripheral   ( axil_to_segmentation_ctrl__clk )
-    );
-
     sar_test_seg_ctrl_reg_intf seg_ctrl_regs ();
 
     sar_test_seg_ctrl_reg_blk i_seg_ctrl_reg_blk (
-        .axil_if    ( axil_to_segmentation_ctrl__clk ),
+        .axil_if    ( axil_to_segmentation_ctrl ),
         .reg_blk_if ( seg_ctrl_regs                  )
     );
 
@@ -396,14 +356,6 @@ module sar_test (
     // --- sar_packet_segmentation ---
     mem_rd_intf #(.ADDR_WID(SAR_MEM_ADDR_WID), .DATA_WID(PACKET_DATA_WID)) seg_mem_rd_if (.clk);
 
-    axi4l_intf axil_to_segmentation__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__seg (
-        .axi4l_if_from_controller ( axil_to_segmentation      ),
-        .clk_to_peripheral        ( clk                       ),
-        .axi4l_if_to_peripheral   ( axil_to_segmentation__clk )
-    );
-
     packet_intf #(.DATA_BYTE_WID(PACKET_DATA_BYTE_WID), .META_WID(1)) packet_if__capture (.clk);
 
     sar_packet_segmentation #(
@@ -420,7 +372,7 @@ module sar_test (
         .packet_size  (),
         .packet_last  (),
         .packet_if    ( packet_if__capture  ),
-        .axil_if      ( axil_to_segmentation__clk ),
+        .axil_if      ( axil_to_segmentation ),
         .frame_valid  ( seg_frame_valid     ),
         .frame_ready  ( seg_frame_ready     ),
         .frame_buf_id ( seg_frame_buf_id    ),
@@ -449,21 +401,13 @@ module sar_test (
     );
 
     // --- packet_capture ---
-    axi4l_intf axil_to_segmentation_capture__clk ();
-
-    axi4l_intf_cdc i_axil_cdc__seg_capture (
-        .axi4l_if_from_controller ( axil_to_segmentation_capture      ),
-        .clk_to_peripheral        ( clk                               ),
-        .axi4l_if_to_peripheral   ( axil_to_segmentation_capture__clk )
-    );
-
     packet_capture #(
         .PACKET_MEM_SIZE ( SAR_MAX_FRAME_SIZE )
     ) i_packet_capture (
         .clk,
         .srst,
         .en      (),
-        .axil_if ( axil_to_segmentation_capture__clk ),
+        .axil_if ( axil_to_segmentation_capture ),
         .packet_if ( packet_if__capture )
     );
 
