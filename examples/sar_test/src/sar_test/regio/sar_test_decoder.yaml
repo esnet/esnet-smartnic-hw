@@ -1,4 +1,5 @@
 name: sar_test
+visible: true
 
 blocks:
   sar_test: &sar_test
