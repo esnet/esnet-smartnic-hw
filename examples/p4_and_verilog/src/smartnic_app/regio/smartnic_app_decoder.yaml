@@ -11,18 +11,18 @@ blocks:
 
 interfaces:
   - block: *empty
-    address: 0x00000
-    width: 16
+    address: 0x000000
+    width: 19
     name: igr_extern
   - block: *empty
-    address: 0x10000
-    width: 16
+    address: 0x080000
+    width: 19
     name: egr_extern
   - block: *p4_and_verilog
-    address: 0x20000
-    width: 16
+    address: 0x100000
+    width: 19
     name: smartnic_app_igr
   - block: *empty
-    address: 0x30000
-    width: 16
+    address: 0x180000
+    width: 19
     name: smartnic_app_egr
