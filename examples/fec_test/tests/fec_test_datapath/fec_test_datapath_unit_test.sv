@@ -49,7 +49,7 @@ module fec_test_datapath_unit_test;
         // Create P4 table agent
         vitisnetp4_agent = new(.hier_path(p4_dpic_hier_path)); // DPI-C P4 table agent requires hierarchical path to AXI-L write/read tasks
 
-//        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h20000);
+//        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000);
 //        smartnic_app_igr_reg_blk_agent.reg_agent = env.app_reg_agent;
     endfunction
 

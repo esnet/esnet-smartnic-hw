@@ -45,7 +45,7 @@ module smartnic_packet_playback_unit_test;
         env = tb.build();
         env.set_debug_level(1);
 
-        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h20000);
+        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h100000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 

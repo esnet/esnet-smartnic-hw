@@ -44,7 +44,7 @@ module smartnic_egress_qs_unit_test;
         env = tb.build();
         env.pkt_capture_monitor.disable_autostart();
 
-        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h20000);
+        smartnic_app_igr_reg_blk_agent = new("smartnic_app_igr_reg_blk_agent", 'h100000 + 'h100000);
         smartnic_app_igr_reg_blk_agent.reg_agent = env.reg_agent;
     endfunction
 
