@@ -36,13 +36,31 @@ clean:   _reg_clean
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/regio.mk
 
+# Always regenerate these IR artifacts, regardless of file timestamps.
+# esnet-smartnic-top.yaml (and the yaml files elaborated into
+# core_decoder-ir.yaml) can transitively pull in other yaml sources via the
+# custom '!include' tag, which Make cannot see as a dependency. Since
+# esnet-smartnic-top-ir.yaml is the top-level regmap spec consumed by
+# host-side tooling (esnet-smartnic-hwapi) as well as downstream RTL
+# generation, always regenerate both artifacts rather than risk them going
+# stale relative to any of their transitive yaml inputs.
+#
+# NOTE: marking core_decoder-ir.yaml itself as .PHONY does NOT work — GNU
+# Make treats a .PHONY-listed file target as satisfied the moment the
+# (real, on-disk) file exists, without ever re-running the recipe. The
+# correct idiom is to depend on a dedicated always-out-of-date phony
+# prerequisite instead. `reg` is already unconditionally re-run every
+# invocation since it has no file target of its own (declared .PHONY
+# above), so its recipe always regenerates esnet-smartnic-top-ir.yaml.
 reg: _reg $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml
 	@$(REGIO_ELABORATE_CMD) -f top -i $(REGIO_IR_OUTPUT_DIR) -o $(REGIO_IR_OUTPUT_DIR)/esnet-smartnic-top-ir.yaml esnet-smartnic-top.yaml
 
-$(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml:
+$(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml: FORCE
 	@$(MAKE) -s -C $(SRC_ROOT) reg COMPONENT=smartnic.regio APP_ROOT=$(SRC_ROOT)/core/hbmtest OUTPUT_ROOT=$(OUTPUT_ROOT)/$(BOARD)$(if $(SMARTNIC_LIB_NAME),/$(SMARTNIC_LIB_NAME),)
 	@mkdir -p $(REGIO_IR_OUTPUT_DIR)
 	@cp $(OUTPUT_ROOT)/$(BOARD)$(if $(SMARTNIC_LIB_NAME),/$(SMARTNIC_LIB_NAME),)/smartnic/regio/ir/smartnic_decoder-ir.yaml $@
 
-.PHONY: $(REGIO_IR_OUTPUT_DIR)/core_decoder-ir.yaml
+FORCE:
+
+.PHONY: FORCE
 
