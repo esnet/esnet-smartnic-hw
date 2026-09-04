@@ -36,8 +36,8 @@ module sar_test_ctrl_unit_test;
         // Create P4 table agent
         vitisnetp4_agent = new(.hier_path(p4_dpic_hier_path)); // DPI-C P4 table agent requires hierarchical path to AXI-L write/read tasks
 
-        // sar_test block is at 0x20000 (smartnic_app_igr base) + 0x00000 (sar_test offset)
-        sar_test_reg_agent = new("sar_test_reg_agent", env.app_reg_agent, 'h20000);
+        // sar_test block is at 0x100000 (smartnic_app_igr base) + 0x00000 (sar_test offset)
+        sar_test_reg_agent = new("sar_test_reg_agent", env.app_reg_agent, 'h100000);
 
     endfunction
 

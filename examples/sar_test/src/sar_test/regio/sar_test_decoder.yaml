@@ -1,4 +1,5 @@
 name: sar_test
+visible: true
 
 blocks:
   sar_test: &sar_test
@@ -34,26 +35,26 @@ interfaces:
     width: 12
     name: reassembly_mem_proxy
   - decoder: *sar_packet_reassembly
-    address: 0x04000
+    address: 0x08000
     width: 15
     name: reassembly
   - decoder: *sar_packet_segmentation
-    address: 0x0C000
+    address: 0x10000
     width: 13
     name: segmentation
   - block: *mem_proxy
-    address: 0x10000
+    address: 0x12000
     width: 12
     name: segmentation_mem_proxy
   - decoder: *packet_capture
-    address: 0x11000
+    address: 0x13000
     width: 12
     name: segmentation_capture
   - block: *seg_ctrl
-    address: 0x12000
+    address: 0x14000
     width: 12
     name: segmentation_ctrl
   - decoder: *hbm_stack
-    address: 0x14000
+    address: 0x18000
     width: 14
     name: hbm

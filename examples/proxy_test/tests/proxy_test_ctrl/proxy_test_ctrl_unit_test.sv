@@ -45,7 +45,7 @@ module proxy_test_ctrl_unit_test;
         // Create P4 table agent
         vitisnetp4_agent = new(.hier_path(p4_dpic_hier_path)); // DPI-C P4 table agent requires hierarchical path to AXI-L write/read tasks
 
-        proxy_test_reg_agent = new("proxy_test_reg_agent", env.app_reg_agent, 'h20000);
+        proxy_test_reg_agent = new("proxy_test_reg_agent", env.app_reg_agent, 'h100000);
 
     endfunction
 
