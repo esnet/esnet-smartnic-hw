@@ -81,6 +81,14 @@ class PacketMemProtocol():
         if status.error:
             raise IOError('Transaction error')
 
+    def wait_ready(self, timeout_ms=5000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        while time.monotonic() < deadline:
+            if int(self.proxy.monitor.ready_mon):
+                return
+            time.sleep(1e-3)
+        raise TimeoutError(f'[{self.name}] mem_proxy controller did not become ready')
+
     def nop(self):
         self._transact(self.CommandCode.NOP)
 
