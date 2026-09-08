@@ -32,7 +32,8 @@ SUBCOMPONENTS = \
     axi4l.verif@$(COMMON_LIB_NAME) \
     axi4s.verif@$(COMMON_LIB_NAME) \
     packet.verif@$(COMMON_LIB_NAME) \
-    pcap.pkg@$(COMMON_LIB_NAME)
+    pcap.pkg@$(COMMON_LIB_NAME) \
+    sar.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 

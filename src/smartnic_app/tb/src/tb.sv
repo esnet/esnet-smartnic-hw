@@ -66,6 +66,15 @@ module tb;
 
 
     //===================================
+    // Assertions
+    //===================================
+    // Disable VitisNetP4 IP assertions
+    // - works around a time-zero underflow assertion that causes an immediate exit from the sim
+    //
+    //       turn off assertions during reset and then re-enable possibly
+    initial $assertoff(0);
+
+    //===================================
     // Build
     //===================================
     function automatic tb_env build();

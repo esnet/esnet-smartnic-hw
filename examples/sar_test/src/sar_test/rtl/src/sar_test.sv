@@ -1,3 +1,16 @@
+// Peripheral stubs for unused halves of split mem_intf.
+// Drive rdy=1 so mem_proxy can exit INIT_PENDING; ack=0 since no transactions happen.
+module mem_wr_intf_peripheral_stub (mem_wr_intf.peripheral from_controller);
+    assign from_controller.rdy = 1'b1;
+    assign from_controller.ack = 1'b0;
+endmodule : mem_wr_intf_peripheral_stub
+
+module mem_rd_intf_peripheral_stub (mem_rd_intf.peripheral from_controller);
+    assign from_controller.rdy   = 1'b1;
+    assign from_controller.ack   = 1'b0;
+    assign from_controller.data  = '0;
+endmodule : mem_rd_intf_peripheral_stub
+
 module sar_test (
     input  logic      clk,
     input  logic      srst,
@@ -26,7 +39,7 @@ module sar_test (
     localparam int SAR_TIMER_WID         = 8;
     localparam int SAR_MAX_FRAGMENTS     = 64;
     localparam int SAR_BURST_SIZE        = 8;
-    localparam int SAR_MAX_RD_LATENCY    = 48;
+    localparam int SAR_MAX_RD_LATENCY    = 240;
 
     localparam int PACKET_DATA_BYTE_WID  = HBM_AXI_DATA_BYTE_WID; // 32 bytes = 256 bits
     localparam int PACKET_DATA_WID       = PACKET_DATA_BYTE_WID * 8;
@@ -222,8 +235,8 @@ module sar_test (
         .mem_rd_if ( reasm_proxy_mem_rd_if  )
     );
 
-    // Tie off the write side (proxy is read-only)
-    mem_wr_intf_peripheral_term i_mem_wr_term__reasm_proxy (.from_controller(reasm_proxy_mem_wr_if));
+    // Stub the write side as always-ready (proxy is read-only; rdy=1 required for mem_proxy init)
+    mem_wr_intf_peripheral_stub i_mem_wr_stub__reasm_proxy (.from_controller(reasm_proxy_mem_wr_if));
 
     // --- axi3_from_mem_adapter for HBM channel 0 ---
     // SAR writes; proxy reads
@@ -274,8 +287,8 @@ module sar_test (
         .mem_rd_if ( seg_proxy_mem_rd_if )
     );
 
-    // Tie off the read side (software writes frames, not reads)
-    mem_rd_intf_peripheral_term i_mem_rd_term__seg_proxy (.from_controller(seg_proxy_mem_rd_if));
+    // Stub the read side as always-ready (software only writes; rdy=1 required for mem_proxy init)
+    mem_rd_intf_peripheral_stub i_mem_rd_stub__seg_proxy (.from_controller(seg_proxy_mem_rd_if));
 
     // --- Segmentation frame control registers ---
     sar_test_seg_ctrl_reg_intf seg_ctrl_regs ();
