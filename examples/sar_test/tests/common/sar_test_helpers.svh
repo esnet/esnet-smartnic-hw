@@ -29,8 +29,8 @@ localparam int FRAG_TIMEOUT_CYCLES = 25000;
 localparam int FRAG_TIMEOUT_SIM_TICKS = 1;
 
 // One ms_tick period expressed in ns.
-// timer_tick uses core_clk (343.75 MHz) as clk, axil_if.aclk (125 MHz) as tclk.
-// TCLK_PER_TICK=125_000 rising edges of aclk → 125_000 / 125 MHz = 1 ms = 1_000_000 ns.
+// timer_tick uses axil_if.aclk (125 MHz) as clk, div2 (62.5 MHz) as tclk.
+// TCLK_PER_TICK=62_500 rising edges of tclk → 62_500 × 16 ns = 1 ms = 1_000_000 ns.
 localparam int FRAG_TICK_NS = 1_000_000;
 
 // Polling guards for non-timeout tests.
