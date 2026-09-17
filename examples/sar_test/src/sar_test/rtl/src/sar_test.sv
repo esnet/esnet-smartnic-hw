@@ -1,6 +1,7 @@
 module sar_test (
     input  logic      clk,
     input  logic      srst,
+    input  logic      ms_tick,
 
     axi4l_intf.peripheral axil_if
 );
@@ -133,22 +134,7 @@ module sar_test (
         end : g__hbm_term
     endgenerate
 
-    // ----------------------------------------------------------------
-    //  Millisecond tick (for reassembly timeout)
-    // ----------------------------------------------------------------
-    logic ms_tick;
-
-    // AXI-L clock (125 MHz); 125,000 cycles per millisecond
-    timer_tick #(
-        .TCLK_PER_TICK ( 125_000 ),
-        .TCLK_DDR      ( 0       )
-    ) i_timer_tick (
-        .clk    ( clk     ),
-        .srst   ( srst    ),
-        .squelch( 1'b0    ),
-        .tclk   ( clk     ),
-        .tick   ( ms_tick )
-    );
+    // ms_tick is driven externally (see smartnic_app_igr)
 
     // ================================================================
     //  REASSEMBLY PATH (HBM channel 0)
