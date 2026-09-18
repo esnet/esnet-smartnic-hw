@@ -28,8 +28,7 @@ SUBCOMPONENTS = \
     xilinx.hbm.ip \
     axi4l.rtl@common \
     axi3.rtl@common \
-    mem.proxy.rtl@common \
-    axi3.rtl@common
+    mem.proxy.rtl@common
 
 EXT_LIBS =
 
