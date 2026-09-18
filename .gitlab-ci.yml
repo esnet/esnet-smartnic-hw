@@ -893,7 +893,7 @@ build_shell_av80:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: versal_shell
     SN_HW_BOARD: av80
-  when: manual
+  when: always
 
 hwapi_shell_av80:
   extends: .hwapi_versal
