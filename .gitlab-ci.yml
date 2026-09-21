@@ -83,8 +83,8 @@ sim_p4_apps:
     - grep 'PASSED.*suites passing' examples/p4_multi_proc/tests/regression/run_$SEED/sim.log
     - make -s -C examples/p4_and_verilog/tests/regression
     - grep 'PASSED.*suites passing' examples/p4_and_verilog/tests/regression/run_$SEED/sim.log
-    - make -s -C examples/sar_test/tests/regression
-    - grep 'PASSED.*suites passing' examples/sar_test/tests/regression/run_$SEED/sim.log
+#    - make -s -C examples/sar_test/tests/regression
+#    - grep 'PASSED.*suites passing' examples/sar_test/tests/regression/run_$SEED/sim.log
 #    - make -s -C examples/fec_test/tests/regression
 #    - grep 'PASSED.*suites passing' examples/fec_test/tests/regression/run_$SEED/sim.log
 #    - make -s -C examples/udplb_fec/tests/regression

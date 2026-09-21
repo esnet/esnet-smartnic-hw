@@ -24,7 +24,6 @@ SUBCOMPONENTS = \
     smartnic_app.igr.rtl \
     smartnic_app.egr.passthru.rtl@$(SMARTNIC_LIB_NAME) \
     smartnic_app.egr_p4.vf_loopback.rtl@$(SMARTNIC_LIB_NAME) \
-    smartnic_app.egr.passthru.rtl@$(SMARTNIC_LIB_NAME) \
     smartnic_app.tb@$(SMARTNIC_LIB_NAME) \
     xilinx.hbm.verif@$(SMARTNIC_LIB_NAME) \
     axi4l.rtl@$(COMMON_LIB_NAME) \
@@ -32,7 +31,8 @@ SUBCOMPONENTS = \
     axi4l.verif@$(COMMON_LIB_NAME) \
     axi4s.verif@$(COMMON_LIB_NAME) \
     packet.verif@$(COMMON_LIB_NAME) \
-    pcap.pkg@$(COMMON_LIB_NAME)
+    pcap.pkg@$(COMMON_LIB_NAME) \
+    sar.verif@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
