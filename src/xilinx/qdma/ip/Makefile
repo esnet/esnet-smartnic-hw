@@ -67,7 +67,8 @@ include $(CFG_ROOT)/vivado_ip.mk
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
-    ecc_v$(IP_VER_ECC)
+    ecc_v$(IP_VER_ECC) \
+    xpm
 
 
 # ----------------------------------------------------
