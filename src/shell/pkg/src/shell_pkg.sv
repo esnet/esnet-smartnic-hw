@@ -7,7 +7,7 @@ package shell_pkg;
     typedef struct packed {logic unused;} unused_t;
 
     // DMA streaming
-    localparam int DMA_ST_QUEUES     = 2048;
+    localparam int DMA_ST_QUEUES     = 4096;
     localparam int DMA_ST_QID_WID    = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
 
     typedef logic [DMA_ST_QID_WID-1:0]           dma_st_qid_t;

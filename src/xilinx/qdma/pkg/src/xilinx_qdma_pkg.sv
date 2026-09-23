@@ -6,7 +6,7 @@ package xilinx_qdma_pkg;
     localparam int AXIS_DATA_BYTE_WID = 64;
     localparam int AXIS_DATA_WIDTH    = AXIS_DATA_BYTE_WID * 8;
 
-    localparam int QID_WID        = 11;
+    localparam int QID_WID        = 12;
     localparam int PORT_ID_WID    = 3;
     localparam int MDATA_WID      = 32;
     localparam int MTY_WID        = $clog2(AXIS_DATA_BYTE_WID);
@@ -17,7 +17,6 @@ package xilinx_qdma_pkg;
     // Typedefs
     // --------------------------------------------------------------
     typedef struct packed {logic unused;} unused_t;
-
 
     typedef logic [QID_WID-1:0]         qid_t;
     typedef logic [PORT_ID_WID-1:0]     port_id_t;

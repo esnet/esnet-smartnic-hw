@@ -17,6 +17,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     xilinx.alveo.rtl \
+    xilinx.alveo.usplus.pkg \
     xilinx.alveo.usplus.ip \
     xilinx.alveo.usplus.regio.rtl \
     xilinx.qdma.rtl \

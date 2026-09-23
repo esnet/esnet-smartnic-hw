@@ -6,6 +6,18 @@ toplevel:
   pci_device: 0x9038
 
   bars:
+    0:
+      name: bar0
+      desc: QDMA DMA registers (CPM5 internal)
+      size: 0x00020000
+      decoder:
+        name: bar0
+        decoders:
+          cpm5_qdma_pf_decoder: &cpm5_qdma_pf_decoder
+            !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_pf_decoder.yaml
+        interfaces:
+          - decoder: *cpm5_qdma_pf_decoder
+            address: 0x000000
     2:
       name: bar2
       desc: all user logic

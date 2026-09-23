@@ -1,7 +1,7 @@
 # -----------------------------------------------
 # Component setup
 # -----------------------------------------------
-COMPONENT_ROOT := ../..
+COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
@@ -23,7 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.qdma.rtl
+    xilinx.alveo.usplus.rtl
 
 EXT_LIBS =
 

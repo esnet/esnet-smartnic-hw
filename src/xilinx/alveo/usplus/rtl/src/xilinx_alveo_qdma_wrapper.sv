@@ -1,4 +1,4 @@
-module xilinx_qdma_wrapper #(
+module xilinx_alveo_qdma_wrapper #(
     parameter int PCIE_LINK_WID = 16
 ) (
     // From/to pins
@@ -537,9 +537,9 @@ module xilinx_qdma_wrapper #(
     //       generic instance name commented out) to enable trivial diffs to simplify upgrades or changes,
     //       identify added/removed signals, etc.
     // 
-xilinx_qdma i_xilinx_qdma (
+xilinx_alveo_usplus_qdma i_xilinx_alveo_usplus_qdma (
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-//xilinx_qdma your_instance_name (
+//xilinx_alveo_usplus_qdma your_instance_name (
   .sys_clk(sys_clk),                                                            // input wire sys_clk
   .sys_clk_gt(sys_clk_gt),                                                      // input wire sys_clk_gt
   .sys_rst_n(sys_rst_n),                                                        // input wire sys_rst_n
@@ -699,4 +699,4 @@ xilinx_qdma i_xilinx_qdma (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-endmodule : xilinx_qdma_wrapper
+endmodule : xilinx_alveo_qdma_wrapper

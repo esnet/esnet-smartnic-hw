@@ -50,7 +50,7 @@ module xilinx_alveo_host
     // =========================================================================
     // QDMA IP
     // =========================================================================
-    xilinx_qdma_wrapper #(
+    xilinx_alveo_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
     ) i_xilinx_alveo_qdma (
         .pcie_rstn ( __pcie_rstn ),
@@ -114,7 +114,7 @@ module xilinx_alveo_host
     );
 
     // TEMP: Tie off unused AXI-L interface
-    axi4l_intf_peripheral_term (.axi4l_if(axil_qdma));
+    axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term__qdma (.axi4l_if(axil_qdma));
 
     // =========================================================================
     // AXI-L ILA (125MHz domain)

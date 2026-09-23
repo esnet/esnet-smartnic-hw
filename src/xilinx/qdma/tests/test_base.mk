@@ -7,12 +7,6 @@ include $(COMPONENT_ROOT)/config.mk
 
 # -----------------------------------------------
 # Configuration
-# Note: these parameters can also be provided
-#       at the command line, e.g.:
-#       make REGRESSION=1
-#       make waves=ON
-#       make SEED=29 waves=ON
-#       make SIM=verilator
 # -----------------------------------------------
 REGRESSION ?= 0
 SEED ?= 0
@@ -20,46 +14,20 @@ waves ?= OFF
 SIM ?= xsim
 
 # ----------------------------------------------------
-# Additional sources
-# ----------------------------------------------------
-SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv
-
-# ----------------------------------------------------
 # Dependencies
-#   List subcomponent and external library dependencies
-#   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    xilinx.qdma.rtl \
-    sync.rtl@common \
-    axi4l.rtl@common \
-    axi4s.rtl@common \
-    axi4l.verif@common
+SUBCOMPONENTS ?= \
+    axi4s.verif@common \
+    xilinx.qdma.rtl
 
 EXT_LIBS =
 
 # ----------------------------------------------------
-# Defines
-#   List macro definitions.
-#   Macros listed here will add to any defines set at
-#   command line, as e.g.:
-#     make DEFINES="DEBUG FAST=TRUE"
+# Defines / plusargs / options
 # ----------------------------------------------------
 override DEFINES +=
-
-# ----------------------------------------------------
-# Run-time arguments
-#   List runtime arguments passed to simulator as
-#   plusarg (+ARG) references.
-#   Arguments listed here will add to any arguments
-#   set at the command line, as e.g.:
-#   make PLUSARGS="FAST_SIM MODE=1"
-# ----------------------------------------------------
 override PLUSARGS +=
 
-# ----------------------------------------------------
-# Options
-# ----------------------------------------------------
 COMPILE_OPTS =
 ifeq ($(SIM),xsim)
 ELAB_OPTS = --debug typical

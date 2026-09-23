@@ -1,0 +1,19 @@
+name: cpm5_qdma_pf_decoder
+info: |
+  CPM5 QDMA BAR0 (DMA mode) Registers for Physical Functions.
+  Ref: PG347, Versal Adaptive SoC CPM DMA and Bridge Mode for PCI Express
+  PF BAR0 type = DMA (QDMA internal registers).
+  PF BAR2 type = AXI_Bridge_Master — use cpm5_qdma_bridge.yaml for that space.
+  Note: per-queue DMAP address (0x3000) follows the VF CSV DMAP base; verify
+  against PG347 PF address map if the driver uses a different offset.
+blocks:
+  cpm5_qdma_pf_csrs: &cpm5_qdma_pf_csrs
+    !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_pf_csrs.yaml
+  cpm5_qdma_pf_queues: &cpm5_qdma_pf_queues
+    !include ../src/xilinx/alveo/versal/regio/cpm5_qdma_pf_queues.yaml
+interfaces:
+  - block: *cpm5_qdma_pf_csrs
+    address: 0x000000
+
+  - block: *cpm5_qdma_pf_queues
+    address: 0x003000

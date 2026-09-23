@@ -5,6 +5,10 @@ COMPONENT_ROOT := ../../..
 
 include $(COMPONENT_ROOT)/config.mk
 
+# Import IP version variables — must be explicit so IP_VER_* are defined
+# before EXT_LIBS is evaluated (config.mk includes this too, but too late).
+include $(CFG_ROOT)/vivado_ip.mk
+
 # ----------------------------------------------------
 # IP listing
 #
@@ -28,7 +32,8 @@ IP_LIST = \
     xilinx_alveo_clk_axil \
     xilinx_alveo_clk \
     xilinx_alveo_clk_100mhz \
-    xilinx_alveo_axil_ila
+    xilinx_alveo_axil_ila \
+    xilinx_alveo_usplus_qdma
 
 # ----------------------------------------------------
 # Simulation sources
@@ -54,18 +59,80 @@ IP_LIST = \
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
     xilinx_alveo_clk/xilinx_alveo_clk_clk_wiz.v \
-	xilinx_alveo_clk/xilinx_alveo_clk.v \
+    xilinx_alveo_clk/xilinx_alveo_clk.v \
     xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz_clk_wiz.v \
-	xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
+    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil_clk_wiz.v \
     xilinx_alveo_clk_axil/xilinx_alveo_clk_axil.v \
-    xilinx_alveo_axil_ila/sim/xilinx_alveo_axil_ila.v
+    xilinx_alveo_axil_ila/sim/xilinx_alveo_axil_ila.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_channel.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_common.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtwizard_gtye4.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtwizard_top.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtye4_channel_wrapper.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtye4_common_wrapper.v \
+    xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_async_fifo.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_cc_intfc.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_cc_output_mux.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_cq_intfc.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_cq_output_mux.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_intfc_int.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_intfc.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_rc_intfc.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_rc_output_mux.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_rq_intfc.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_rq_output_mux.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_512b_sync_fifo.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_16k_int.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_16k.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_32k.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_4k_int.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_msix.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_rep_int.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_rep.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram_tph.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_bram.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_cxs_remap.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_cdr_ctrl_on_eidle.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gt_channel.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gt_common.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_phy_clk.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_phy_rst.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_phy_rxeq.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_phy_txeq.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_phy_wrapper.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_receiver_detect_rxterm.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_gtwizard_top.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_init_ctrl.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_pcie4c_uscale_core_top.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_phy_ff_chain.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_phy_pipeline.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_phy_top.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_pipe.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_pl_eq.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_seqnum_fifo.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_sync_cell.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_sync.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_sys_clk_gen_ps.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_vf_decode_attr.v \
+    xilinx_alveo_usplus_qdma/ip_0/source/xilinx_alveo_usplus_qdma_pcie4c_ip_vf_decode.v \
+    xilinx_alveo_usplus_qdma/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip.v \
+    xilinx_alveo_usplus_qdma/xilinx_alveo_usplus_qdmahdl/verilog/xilinx_alveo_usplus_qdma_core_top.sv \
+    xilinx_alveo_usplus_qdma/sim/xilinx_alveo_usplus_qdma.sv
 
-IP_SIM_INC_DIRS =
+IP_SIM_INC_DIRS = \
+    xilinx_alveo_usplus_qdma/ip_0/source
 
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
-EXT_LIBS =
+EXT_LIBS = \
+    gtwizard_ultrascale_v$(IP_VER_GTWIZARD_ULTRASCALE) \
+    qdma_v$(IP_VER_QDMA) \
+    unisims_ver \
+    unimacro_ver \
+    secureip \
+    xpm
 
 # ----------------------------------------------------
 # Options

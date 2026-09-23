@@ -1,10 +1,10 @@
 `include "svunit_defines.svh"
 
-module xilinx_qdma_wrapper_unit_test;
+module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     import svunit_pkg::svunit_testcase;
     import xilinx_qdma_pkg::*;
 
-    string name = "xilinx_qdma_wrapper_ut";
+    string name = "xilinx_alveo_usplus_qdma_wrapper_ut";
     svunit_testcase svunit_ut;
 
     localparam int PCIE_LINK_WID = 16;
@@ -34,7 +34,7 @@ module xilinx_qdma_wrapper_unit_test;
 
     axi4l_intf #() axil_if ();
 
-    xilinx_qdma_wrapper #(
+    xilinx_alveo_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
     ) DUT (.*);
 
