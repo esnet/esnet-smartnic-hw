@@ -58,7 +58,7 @@ variables in the root-level application Makefile:
        export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim/test-fwd-p0
 
    By setting the above Makefile variables, the example design will import all input stimulus, CLI programming,
-and any (optional) extern behvioural models associated with the specified simulation testcase.
+and any (optional) extern behavioural models associated with the specified simulation testcase.
 
 
 2. The AMD (Xilinx) vitisnetp4 example design can be generated in the local application design directory by
@@ -96,7 +96,7 @@ function(s) by supplying the following additional file content:
    - System verilog RTL code for the custom extern function(s) in file `src/vitisnetp4_igr/rtl/src/vitisnetp4_igr_extern.sv`.
    If a user wishes to captures extern function(s) in a design hierarchy comprised of multiple .sv files,
    all of the .sv files located in the `src/vitisnetp4_igr/rtl/src/` directory will be included in the example
-   design project.  Furthmore, .sv files from multiple source directories can be included by listing all source directories
+   design project.  Furthermore, .sv files from multiple source directories can be included by listing all source directories
    in the SRC_DIRS makefile variable assignment (see `src/vitisnetp4_igr/rtl/src/Makefile`).
 
    Finally, when simulating the vitisnetp4 example design with a user extern function, the `vitisnetp4_igr_extern`

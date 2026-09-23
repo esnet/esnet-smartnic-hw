@@ -139,7 +139,7 @@ esnet-fpga-library/
   This library contains general-purpose FPGA design content.
 
 examples/
-  Contains SmartNIC application design exaples.  A new application directory can be started
+  Contains SmartNIC application design examples.  A new application directory can be started
   by copying one of the provided example directories, or by modeling portions of the example
   directory structure.
 
@@ -154,7 +154,7 @@ makefile.esnet
   OpenNIC shell Makefile.
   Used to build the AMD (Xilinx) open-nic-shell for the target application.
 
-open-nic_shell/
+open-nic-shell/
   Contains the AMD (Xilinx) OpenNIC Shell repository (imported as a git submodule).
   OpenNIC shell delivers an FPGA-based NIC shell with 100Gbps Ethernet ports,
   for use on the AMD (Xilinx) Alveo platform.
@@ -186,7 +186,7 @@ The following steps guide a new user through the installation of the
 SmartNIC Hardware Design Repository, beginning with a
 suitably-configured host running Ubuntu 24.04 LTS Linux.
 
-1. Install the esnet-smartnic-hw respository by creating a clone from github into a local directory:
+1. Install the esnet-smartnic-hw repository by creating a clone from github into a local directory:
 
        > git clone https://github.com/esnet/esnet-smartnic-hw.git
 
@@ -248,9 +248,9 @@ From the esnet-smartnic-hw directory:
 The following steps can be taken by a new user to setup a local application design directory for building
 the bitfile and artifacts for a custom P4-based SmartNIC application.
 
-1. Install the esnet-smartnic-hw respository (as described above).
+1. Install the esnet-smartnic-hw repository (as described above).
 
-   Or, alternatively, add the esnet-smartnic-hw respository to an existing git repository as a sub-module:
+   Or, alternatively, add the esnet-smartnic-hw repository to an existing git repository as a sub-module:
 
        > git submodule add https://github.com/esnet/esnet-smartnic-hw.git
 
@@ -298,7 +298,7 @@ If the P4_EGR_FILE variable is unspecified, pass-through logic is implemented in
 
 The current SmartNIC release supports backwards compatibility for legacy SmartNIC applications (which implement only
 a single P4 processor) by automatically mapping the P4 program onto the ingress processor and implementing pass-through
-logic in place of the egress P4 processor.  The optionally cumstomizable ingress and egress RTL datapath functions also
+logic in place of the egress P4 processor.  The optionally customizable ingress and egress RTL datapath functions also
 implement pass-through logic by default.
 
 Support for multi-processor application design is limited in the current release.  See the `p4_multi_proc` example design
@@ -328,7 +328,7 @@ See the `p4_with_extern` example design for reference.
 The following steps can be taken by a new user to setup a local application design directory for building
 the bitfile and artifacts for a custom P4-based SmartNIC application that includes a custom user extern function.
 
-1. Install the esnet-smartnic-hw respository (as described above).
+1. Install the esnet-smartnic-hw repository (as described above).
 
 2. Initialize all submodules within the esnet-smartnic-hw/ design directory:
 
@@ -462,7 +462,7 @@ to the PCIe interface capabilities subsequently requires the PCIe interface to b
 bitfile is downloaded to FPGA hardware.  As such, a host system reboot is required to transition to a load with these new PCIe
 capabilities.
 
-For clarity, when a subsequent bitfile is downloaded to the FPGA hardware, if it shares the same PCIe interface capabilites, no
+For clarity, when a subsequent bitfile is downloaded to the FPGA hardware, if it shares the same PCIe interface capabilities, no
 subsequent PCIe reset, rescan or reboot is required to bring up the new image.  By consequence, it is recommended to reprogram the
 FPGA image stored in the FPGA card's FLASH memory with a bitfile based on the above SmartNIC release.  Doing so will avoid the need
 for future reboot iterations.
@@ -483,9 +483,9 @@ diagrams below:
 ![SmartNIC Top Level Block Diagram](docs/smartnic.svg)
 
 The new architecture incorporates 2 optional P4-programmable blocks (*smartnic_app_igr_p4, smartnic_app_egr_p4*) and
-4 optional RTL-programmable blocks (*vitisnetp4_igr_extern, vitisnetp4_egr_extern, smartnic_app_igr, smatnic_app_egr*).
+4 optional RTL-programmable blocks (*vitisnetp4_igr_extern, vitisnetp4_egr_extern, smartnic_app_igr, smartnic_app_egr*).
 It also expands the number of datapath interfaces used to stream packet traffic into and out of these functional blocks
-by leveraging PCIe SR-IOV viritual functions (VFs).  See block diagram below.
+by leveraging PCIe SR-IOV virtual functions (VFs).  See block diagram below.
 
 ![SmartNIC Application Block Diagram](docs/smartnic_app.svg)
 
@@ -521,7 +521,7 @@ definitions.
 ### Reference Documents:
 
 The following reference documents can be accessed from the AMD (Xilinx) Vitis Networking P4 Secure Site
-(once access priveleges are approved and granted):
+(once access privileges are approved and granted):
 
 - *Vitis Networking P4 Installation Guide and Release Notes, UG1307 (v2025.2) Nov 20, 2025*.
 
