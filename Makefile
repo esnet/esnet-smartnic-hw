@@ -194,37 +194,3 @@ shell_package: $(SHELL_REG_ARTIFACT) $(SHELL_VITISNETP4_DRV_ARTIFACT)
 	@echo "Done."
 
 .PHONY: shell shell_bitfile shell_package shell_clean_artifacts
-
-VERSAL_BOARD ?= av80
-CORE ?= core.stub
-
-versal_shell_ooc:
-	@echo "Building Versal shell OOC DCP ($(BUILD_ID))..."
-	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=xilinx.alveo.versal.shell.av80.build \
-		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
-	@echo "Done."
-
-versal_core_ooc:
-	@echo "Building Versal core OOC DCP (CORE=$(CORE), $(BUILD_ID))..."
-	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=$(CORE).build \
-		BOARD=$(VERSAL_BOARD) BUILD_ID=$(BUILD_ID)
-	@echo "Done."
-
-versal_design:
-	@echo "Building Versal design (CORE=$(CORE), $(BUILD_ID))..."
-	@$(MAKE) -s -C $(SRC_ROOT) build \
-		COMPONENT=xilinx.alveo.versal.design.build \
-		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID) \
-		OUTPUT_ROOT=$(OUTPUT_ROOT)
-	@echo "Done."
-
-versal_pdi:
-	@echo "Building Versal PDI with firmware (CORE=$(CORE), $(BUILD_ID))..."
-	@$(MAKE) -s -C $(SRC_ROOT)/xilinx/alveo/versal/design/build pdi \
-		BOARD=$(VERSAL_BOARD) CORE=$(CORE) BUILD_ID=$(BUILD_ID)
-	@echo "Done."
-
-.PHONY: versal_shell_ooc versal_core_ooc versal_design versal_pdi
-
