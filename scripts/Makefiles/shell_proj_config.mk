@@ -199,7 +199,8 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "pdi:         .versal_shell_build_pdi"                                 >> $(__SPC_COMP_DIR)/Makefile
 	@echo "regio:       .shell_build_regio"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "info:        .shell_build_info"                                       >> $(__SPC_COMP_DIR)/Makefile
-	@echo ".PHONY: build build_clean pdi regio info"                             >> $(__SPC_COMP_DIR)/Makefile
+	@echo "hwapi:       .shell_build_hwapi"                                      >> $(__SPC_COMP_DIR)/Makefile
+	@echo ".PHONY: build build_clean pdi regio info hwapi"                       >> $(__SPC_COMP_DIR)/Makefile
 	@touch $@
 	@echo "Done."
 
@@ -243,6 +244,15 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 .shell_proj_info: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_BUILD_CMD) info
 .PHONY: .shell_proj_info
+
+.shell_proj_hwapi:
+	@[ -d "$(__SPC_COMP_DIR)" ] || \
+	    { \
+	        echo "Error: project not configured — run 'make build' first."; \
+	        exit 1; \
+	    }
+	@$(SMARTNIC_COMP_CMD) hwapi
+.PHONY: .shell_proj_hwapi
 
 # -----------------------------------------------
 # Clean

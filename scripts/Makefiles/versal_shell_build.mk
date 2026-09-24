@@ -91,7 +91,10 @@ include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_build_base.mk
 __VSB_BUILD_PDI_SCRIPT := $(SMARTNIC_ROOT)/scripts/versal/build_pdi.sh
 __VSB_PDI_HW_FILE      := $(COMPONENT_OUT_PATH)/$(TOP).pdi
 __VSB_XSA_FILE         := $(COMPONENT_OUT_PATH)/$(TOP).xsa
+__VSB_LTX_FILE         := $(COMPONENT_OUT_PATH)/$(TOP).ltx
 __VSB_PDI_APP_FILE     := $(COMPONENT_OUT_PATH)/$(TOP)_app.pdi
+__VSB_PDI_NOFPT_FILE   := $(COMPONENT_OUT_PATH)/$(TOP)_nofpt.pdi
+__VSB_UUID_MANIFEST    := $(COMPONENT_OUT_PATH)/pfm_uuid_manifest.dict
 
 $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 	@$(__VSB_BUILD_PDI_SCRIPT) \
@@ -127,3 +130,22 @@ $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 	@for f in $(IP_REPO_PATHS); do echo "\t$$f"; done
 	@echo "PDI_APP_FILE     : $(__VSB_PDI_APP_FILE)"
 .PHONY: .versal_shell_build_info
+
+# -----------------------------------------------
+# HW API Packaging
+# -----------------------------------------------
+.shell_build_hwapi: .versal_shell_build_hwapi
+.versal_shell_build_hwapi: | $(SHELL_HWAPI_DIRS)
+	@echo "Extracting the AVED build UUID."
+	@cat $(__VSB_UUID_MANIFEST) | \
+	    sed -e 's/^logic_uuid \([0-9a-f]\+\) .\+$$/\1/' \
+	    >$(SHELL_HWAPI_FW_DIR)/esnet-smartnic-uuid.txt
+	@echo "Installing the device programming files."
+	@zstd -f9 $(__VSB_PDI_NOFPT_FILE) -o $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.pdi.zst
+	@zstd -f9 $(__VSB_PDI_APP_FILE) -o $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.bin.zst
+	@echo "Installing the debug probes file."
+	@cp $(__VSB_LTX_FILE) $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.ltx
+	@echo "Installing the AVED AMI software."
+	@tar -c -C $(SMARTNIC_ROOT)/src/xilinx/aved/sw AMI | \
+	    zstd -f9 - -o $(SHELL_HWAPI_SW_DIR)/AMI.tar.zst
+.PHONY: .versal_shell_build_hwapi

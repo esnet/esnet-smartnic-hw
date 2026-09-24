@@ -221,3 +221,24 @@ $(__SB_REGIO_IR_DIR)/smartnic_app_decoder.yaml:
 .PHONY: .shell_build_regio_info
 
 .shell_build_info: .shell_build_regio_info
+
+# -----------------------------------------------
+# HW API packaging
+# -----------------------------------------------
+SHELL_HWAPI_DIR        ?= $(COMPONENT_OUT_PATH)/hwapi
+SHELL_HWAPI_FW_DIR     := $(SHELL_HWAPI_DIR)/firmware
+SHELL_HWAPI_SW_DIR     := $(SHELL_HWAPI_DIR)/software
+SHELL_HWAPI_REGMAP_DIR := $(SHELL_HWAPI_DIR)/regmap
+
+SHELL_HWAPI_DIRS := \
+    $(SHELL_HWAPI_DIR) \
+    $(SHELL_HWAPI_FW_DIR) \
+    $(SHELL_HWAPI_SW_DIR) \
+    $(SHELL_HWAPI_REGMAP_DIR)
+$(SHELL_HWAPI_DIRS):
+	@mkdir -p $@
+
+.shell_build_hwapi: $(SHELL_REGIO_ARTIFACT) | $(SHELL_HWAPI_DIRS)
+	@echo "Installing the register map IR file."
+	@cp $(SHELL_REGIO_ARTIFACT) $(SHELL_HWAPI_REGMAP_DIR)/.
+.PHONY: .shell_build_hwapi
