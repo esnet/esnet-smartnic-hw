@@ -31,12 +31,7 @@ CORE ?= smartnic.core
 
 #------- Targets -------
 build:
-ifeq ($(BOARD),av80)
-	@$(MAKE) -s -C $(SMARTNIC_DIR) build_app APP_DIR=$(CURDIR) OUTPUT_ROOT=$(CURDIR)/.app/out
-	@$(MAKE) -s -C $(SMARTNIC_DIR) versal_design CORE=$(CORE)  OUTPUT_ROOT=$(CURDIR)/.app/out
-else
 	@$(MAKE) -s -C $(SMARTNIC_DIR) build APP_DIR=$(CURDIR)
-endif
 
 config:
 	@$(MAKE) -s -C $(SMARTNIC_DIR) config APP_DIR=$(CURDIR)
