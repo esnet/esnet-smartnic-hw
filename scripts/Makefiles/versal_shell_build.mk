@@ -26,11 +26,11 @@
 #   IP_REPO_PATHS         - additional IP repository paths
 #
 # Targets provided (dot-prefixed; expose with public names in the including
-# Makefile, e.g. build: .shell_build  pdi: .versal_shell_build_pdi):
+# Makefile, e.g. build: .shell_build  pdi: .shell_build_pdi):
 #   .shell_build              - from shell_build_base.mk: link through xsa
 #   .shell_build_clean        - from shell_build_base.mk: clean assembly output
 #   .shell_build_info         - from shell_build_base.mk + Versal-specific info
-#   .versal_shell_build_pdi   - firmware PDI generation (requires .shell_build)
+#   .shell_build_pdi          - firmware PDI generation (requires .shell_build)
 
 # -----------------------------------------------
 # Defaults
@@ -105,6 +105,9 @@ $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 
 .versal_shell_build_pdi: _np_xsa $(__VSB_PDI_APP_FILE)
 .PHONY: .versal_shell_build_pdi
+
+.shell_build_pdi: .versal_shell_build_pdi
+.PHONY: .shell_build_pdi
 
 # -----------------------------------------------
 # Regio alias

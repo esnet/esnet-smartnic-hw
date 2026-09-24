@@ -196,7 +196,7 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo ""                                                                     >> $(__SPC_COMP_DIR)/Makefile
 	@echo "build:       .shell_build"                                            >> $(__SPC_COMP_DIR)/Makefile
 	@echo "build_clean: .shell_build_clean"                                      >> $(__SPC_COMP_DIR)/Makefile
-	@echo "pdi:         .versal_shell_build_pdi"                                 >> $(__SPC_COMP_DIR)/Makefile
+	@echo "pdi:         .shell_build_pdi"                                        >> $(__SPC_COMP_DIR)/Makefile
 	@echo "regio:       .shell_build_regio"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "info:        .shell_build_info"                                       >> $(__SPC_COMP_DIR)/Makefile
 	@echo "hwapi:       .shell_build_hwapi"                                      >> $(__SPC_COMP_DIR)/Makefile
