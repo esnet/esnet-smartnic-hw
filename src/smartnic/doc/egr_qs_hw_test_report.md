@@ -2,7 +2,7 @@
  Egress queues have been implemented in the ESnet SmartNIC platform in order to take advantage of HBM in order to support advanced traffic management functions in SmartNIC network applications. This report will capture the results of functional and performance testing of this queue implementation in hardware.
 
  ## Design
- The queue implementation is captured in [`smartnic_egress_qs.sv`](../../rtl/src/smartnic_egress_qs.sv). This component leverages the [common ESnet FPGA repository](../../../../esnet-fpga-library/) extensively (especially the `packet`, `alloc` and `axi3` libraries) and   instantiates the [HBM Controller IP](../../../xilinx/hbm/ip) directly.
+ The queue implementation is captured in [`smartnic_egress_qs.sv`](../rtl/src/smartnic_egress_qs.sv). This component leverages the [common ESnet FPGA repository](../../../esnet-fpga-library/) extensively (especially the `packet`, `alloc` and `axi3` libraries) and   instantiates the [HBM Controller IP](../../xilinx/hbm/ip) directly.
 
  The HBM memory is managed as a pool of 2kB buffers allocated by a scatter-gather controller. As packets are received they are written to the memory using an available buffer descriptor. The buffer descriptor is stored and added to a list representing a virtual output queue. A packet scheduler services the output queues according to a specified algorithm or configuration and uses the descriptors to dequeue the packet data for transmission.
 
