@@ -644,32 +644,7 @@ validate_udplb_fec_u280:
       SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
       _EOF
     - cat hwapi.env
-
-    # Setup for creating the package to hand off build output to a FW pipeline.
-    - APP_OUT_DIR=${EXAMPLES_DIR}/${SN_HW_APP_NAME}/build/${SN_HW_BOARD}/out
-    - SN_OUT_DIR=${APP_OUT_DIR}/esnet_smartnic/build
-    - HWAPI_DIR=esnet-smartnic-hwapi
-
-    # Extract the UUID used by the AVED build for tracking versions.
-    - UUID=$(cat ${SN_OUT_DIR}/pfm_uuid_manifest.dict | sed -e 's/^logic_uuid \([0-9a-f]\+\) .\+$/\1/')
-
-    # Pass the device programming files and associated metadata to FW.
-    - FW_DIR=${HWAPI_DIR}/firmware
-    - mkdir -p ${FW_DIR}
-    - echo "${UUID}" >${FW_DIR}/esnet-smartnic-uuid.txt
-    - cp ${SN_OUT_DIR}/esnet_smartnic.ltx ${FW_DIR}/esnet-smartnic.ltx
-    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_nofpt.pdi -o ${FW_DIR}/esnet-smartnic.pdi.zst
-    - zstd -f9 ${SN_OUT_DIR}/esnet_smartnic_app.pdi -o ${FW_DIR}/esnet-smartnic.bin.zst
-
-    # Pass the elaborated register definitions to FW.
-    - REGMAP_DIR=${HWAPI_DIR}/regmap
-    - mkdir -p ${REGMAP_DIR}
-    - cp ${SN_OUT_DIR}/regio/ir/esnet-smartnic-top-ir.yaml ${REGMAP_DIR}/.
-
-    # Pass the source for the kernel driver and user-space tool used for versal device management to FW.
-    - SW_DIR=${HWAPI_DIR}/software
-    - mkdir -p ${SW_DIR}
-    - tar -c -C src/xilinx/aved/sw AMI | zstd -f9 - -o ${SW_DIR}/AMI.tar.zst
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME hwapi SHELL_HWAPI_DIR=${CI_PROJECT_DIR}/esnet-smartnic-hwapi
 
   artifacts:
     name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
@@ -862,31 +837,6 @@ fw_shell_av80:
   needs:
     - hwapi_shell_av80
 
-build_aved:
-  stage: bitfile
-  extends: .common_versal
-  tags:
-    - ht-synth
-  script:
-    - |
-      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
-      if [[ ! -d "${ARMR5_BIN}" ]]; then
-        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
-      fi
-      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
-      echo "ARM R5 toolchain: ${ARMR5_BIN}"
-      export PATH="${ARMR5_BIN}:${PATH}"
-    - cd src/xilinx/aved/hw/amd_v80_gen5x8_25.1 && ./build_all.sh
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - src/xilinx/aved
-    when: always
-    expire_in: 2 weeks
-  needs: []
-  when: manual
-  timeout: 4h
-
 build_shell_av80:
   extends: .versal_pdi
   variables:
@@ -899,29 +849,3 @@ hwapi_shell_av80:
   extends: .hwapi_versal
   needs:
     - build_shell_av80
-
-build_fec_test_av80:
-  stage: bitfile
-  extends: .common_versal
-  tags:
-    - ht-synth
-  script:
-    - |
-      ARMR5_BIN="${XILINX_VITIS:-}/gnu/armr5/lin/gcc-arm-none-eabi/bin"
-      if [[ ! -d "${ARMR5_BIN}" ]]; then
-        ARMR5_BIN=$(ls -d /tools/Xilinx/*/gnu/armr5/lin/gcc-arm-none-eabi/bin 2>/dev/null | sort -V | tail -1)
-      fi
-      [[ -d "${ARMR5_BIN}" ]] || { echo "ERROR: ARM R5 toolchain not found"; exit 1; }
-      echo "ARM R5 toolchain: ${ARMR5_BIN}"
-      export PATH="${ARMR5_BIN}:${PATH}"
-      make -s -C examples/fec_test config BOARD=av80 PROJ_VIVADO_VERSION=2025.1
-      make -s -C examples/fec_test build  BOARD=av80 PROJ_VIVADO_VERSION=2025.1
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - examples/fec_test
-    when: always
-    expire_in: 2 weeks
-  needs: []
-  when: always
-  timeout: 8h
