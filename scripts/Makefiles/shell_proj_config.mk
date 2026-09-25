@@ -188,6 +188,8 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "CORE_BUILD_REF := $(CORE_BUILD_REF)$(__SPC_LIB_SUFFIX)"             >> $(__SPC_COMP_DIR)/Makefile
 	@echo "APP_BUILD_REF  := $(APP_BUILD_REF)"                                 >> $(__SPC_COMP_DIR)/Makefile
 	@echo "APP_REGIO_REF  := $(APP_REGIO_REF)"                                >> $(__SPC_COMP_DIR)/Makefile
+	@echo "P4_IGR_FILE   := $(P4_IGR_FILE)"                                   >> $(__SPC_COMP_DIR)/Makefile
+	@echo "P4_EGR_FILE   := $(P4_EGR_FILE)"                                   >> $(__SPC_COMP_DIR)/Makefile
 	@echo "SMARTNIC_LIB_NAME := $(SMARTNIC_LIB_NAME)"                          >> $(__SPC_COMP_DIR)/Makefile
 	@echo "CORE_CELL_DCPS := $(__SPC_CORE_CELL_DCPS)"                         >> $(__SPC_COMP_DIR)/Makefile
 	@echo "APP_CELL_DCPS  := $(__SPC_APP_CELL_DCPS)"                          >> $(__SPC_COMP_DIR)/Makefile
@@ -200,7 +202,8 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "regio:       .shell_build_regio"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "info:        .shell_build_info"                                       >> $(__SPC_COMP_DIR)/Makefile
 	@echo "hwapi:       .shell_build_hwapi"                                      >> $(__SPC_COMP_DIR)/Makefile
-	@echo ".PHONY: build build_clean pdi regio info hwapi"                       >> $(__SPC_COMP_DIR)/Makefile
+	@echo "p4_driver:   .shell_build_p4_driver"                                  >> $(__SPC_COMP_DIR)/Makefile
+	@echo ".PHONY: build build_clean pdi regio info hwapi p4_driver"             >> $(__SPC_COMP_DIR)/Makefile
 	@touch $@
 	@echo "Done."
 
@@ -253,6 +256,10 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 	    }
 	@$(SMARTNIC_COMP_CMD) hwapi
 .PHONY: .shell_proj_hwapi
+
+.shell_proj_p4_driver: $(__SPC_CONFIGURED)
+	@$(SMARTNIC_COMP_CMD) p4_driver
+.PHONY: .shell_proj_p4_driver
 
 # -----------------------------------------------
 # Clean
