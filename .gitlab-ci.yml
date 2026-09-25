@@ -340,6 +340,7 @@ shell_ip_au55c:
     - cat versal_pdi.env
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME pdi
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME reg_package
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME p4_driver
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
