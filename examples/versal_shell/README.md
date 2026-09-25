@@ -31,7 +31,7 @@ EXAMPLE_TEST_DIR variable in the application Makefile. For example:
        export EXAMPLE_TEST_DIR := $(CURDIR)/p4/sim/test-fwd-p0
 
    By setting the above Makefile variable, the example design will import all input stimulus, CLI programming,
-and any (optional) extern behvioural models associated with the specified simulation testcase.
+and any (optional) extern behavioural models associated with the specified simulation testcase.
 
 
 2. The AMD (Xilinx) vitisnetp4 example design can be generated in the local application design directory by

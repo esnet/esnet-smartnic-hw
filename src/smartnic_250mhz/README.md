@@ -5,7 +5,7 @@ Top-level module for box_250mhz of the ESnet SmartNIC platform.
 ## Unit Tests
 
 This library contains unit tests implemented using the open-source SVUnit test
-framework (https://github.com/tudortimi/svunit).
+framework (https://github.com/svunit/svunit.git).
 
 SVUnit is managed within the repository as a submodule and no separate installation
 or setup is required.
