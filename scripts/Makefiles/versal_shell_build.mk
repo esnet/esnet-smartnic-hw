@@ -101,7 +101,8 @@ $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 	    -p $(abspath $(SMARTNIC_ROOT)) \
 	    -o $(COMPONENT_OUT_PATH) \
 	    -d $(AVED_BASE_DESIGN) \
-	    -t $(TOP)
+	    -t $(TOP) \
+	    -b $(BUILD_ID)
 
 .versal_shell_build_pdi: _np_xsa $(__VSB_PDI_APP_FILE)
 .PHONY: .versal_shell_build_pdi
