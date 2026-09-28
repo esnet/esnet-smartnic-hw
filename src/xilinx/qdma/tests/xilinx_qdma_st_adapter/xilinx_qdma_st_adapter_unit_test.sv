@@ -188,12 +188,10 @@ module xilinx_qdma_st_adapter_unit_test;
     endproperty
     a_cmpt_on_eop: assert property (p_cmpt_on_eop);
 
-    // Note: axis_c2h.tready = ready || (c2h_tready && cmpt_tready) where 'ready'
-    // is the internal buffer register in axi4s_intf_pipe.  When the pipe is empty
-    // (ready=1), axis_c2h.tready is 1 regardless of downstream tready — back-pressure
-    // only takes effect after the pipe stores a beat and ready goes to 0.
-    // A same-cycle SVA on this relationship is not possible; functional correctness
-    // is verified by c2h_backpressure_data_ and c2h_backpressure_cmpt_.
+    // Note: axis_c2h feeds into axi4s_pkt_fifo_sync (store-and-forward), which
+    // decouples the input from the output side.  axis_c2h.tready reflects FIFO
+    // capacity, not downstream c2h_tready / cmpt_tready.  Functional backpressure
+    // correctness is verified by c2h_backpressure_data_ and c2h_backpressure_cmpt_.
 
     // =========================================================================
     // Coverage
@@ -563,6 +561,97 @@ module xilinx_qdma_st_adapter_unit_test;
             repeat (4) @(posedge aclk);
         `SVTEST_END
 
+        // -----------------------------------------------------------------
+        // C2H ctrl_len / completion len tests
+        // -----------------------------------------------------------------
+
+        // C2H: c2h_ctrl_len carries correct length — single full beat (64 B).
+        `SVTEST(c2h_ctrl_len_single_full_beat)
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(AXIS_DATA_BYTE_WID));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(AXIS_DATA_BYTE_WID));
+        `SVTEST_END
+
+        // C2H: c2h_ctrl_len for a partial-beat packet (33 B).
+        `SVTEST(c2h_ctrl_len_partial_beat)
+            localparam int VALID_BYTES = 33;
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(VALID_BYTES));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(VALID_BYTES));
+        `SVTEST_END
+
+        // C2H: c2h_ctrl_len for multi-beat packet with partial last beat (209 B).
+        `SVTEST(c2h_ctrl_len_multi_beat)
+            localparam int PKT_BYTES = 3 * AXIS_DATA_BYTE_WID + 17;  // 209 bytes
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(PKT_BYTES));
+        `SVTEST_END
+
+        // C2H: back-to-back packets of different lengths — each gets correct length.
+        `SVTEST(c2h_ctrl_len_back_to_back)
+            localparam int LEN_A = AXIS_DATA_BYTE_WID;           // 64 bytes
+            localparam int LEN_B = 2 * AXIS_DATA_BYTE_WID + 7;   // 135 bytes
+            logic [15:0] captured_len_a, captured_len_b;
+            // First packet
+            fork
+                send_c2h_packet(.num_bytes(LEN_A));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len_a = c2h_ctrl_len;
+                end
+            join
+            repeat (2) @(posedge aclk);
+            // Second packet
+            fork
+                send_c2h_packet(.num_bytes(LEN_B));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len_b = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len_a, 16'(LEN_A));
+            `FAIL_UNLESS_EQUAL(captured_len_b, 16'(LEN_B));
+        `SVTEST_END
+
+        // C2H: completion data len field matches c2h_ctrl_len.
+        `SVTEST(c2h_cmpt_len_matches_ctrl_len)
+            localparam int PKT_BYTES = 100;  // 2 beats: 64 + 36
+            logic [15:0] captured_ctrl_len;
+            logic [15:0] captured_cmpt_len;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    // Capture ctrl_len on first output beat
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_ctrl_len = c2h_ctrl_len;
+                    // Capture cmpt_data.len on EOP (completion fires on last beat)
+                    @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
+                    captured_cmpt_len = cmpt_data[15:0];
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_ctrl_len, 16'(PKT_BYTES));
+            `FAIL_UNLESS_EQUAL(captured_cmpt_len, 16'(PKT_BYTES));
+        `SVTEST_END
+
         // Descriptor credits are always idle.
         `SVTEST(credits_idle)
             repeat (16) @(posedge aclk);
@@ -614,7 +703,7 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // C2H throughput: drive N beats continuously via the axi4s_driver and
         // verify c2h_tvalid (flat output) is high on every cycle after the
-        // one-cycle pipe latency fills, with no bubbles.
+        // store-and-forward FIFO releases the packet, with no bubbles.
         `SVTEST(c2h_full_throughput)
             localparam int N = 16;
             int valid_cycles;

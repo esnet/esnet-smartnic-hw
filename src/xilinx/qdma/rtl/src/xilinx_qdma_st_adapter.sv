@@ -24,7 +24,9 @@
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;
 #(
-    parameter int QID_WID = 11  // 11 for USPlus discrete QDMA, 12 for CPM5
+    parameter int QID_WID = 11,         // 11 for USPlus discrete QDMA, 12 for CPM5
+    parameter int C2H_FIFO_DEPTH = 256, // C2H store-and-forward FIFO depth (words)
+    parameter int MAX_PKT_LEN = 9100    // Max packet length (bytes) for FIFO sizing
 ) (
     // QDMA clock and reset
     input  wire        aclk,
@@ -145,11 +147,16 @@ module xilinx_qdma_st_adapter
     );
 
     // =========================================================================
-    // C2H stream — axi4s_intf → registered interface → flat signals + completions
+    // C2H stream — axi4s_intf → store-and-forward FIFO → flat signals + completions
     //
-    // axi4s_pipe registers the C2H input, eliminating the combinatorial path
-    // through tkeep → mty before the flat outputs and improving timing.
-    // tready back-propagates through the pipe from the downstream logic.
+    // A packet FIFO in store-and-forward mode buffers complete packets before
+    // emission.  This lets us compute total packet length (from tkeep) and
+    // drive c2h_ctrl_len on the first beat — required by the QDMA IP for
+    // descriptor pre-fetch and by the Xilinx DPDK driver.
+    //
+    // A parallel length register array (written on EOP at the FIFO input,
+    // read on EOP at the FIFO output) provides FWFT access to the current
+    // packet's length.
     // =========================================================================
 
     // Internal registered interface — all C2H logic reads from this
@@ -160,11 +167,63 @@ module xilinx_qdma_st_adapter
         .TUSER_WID     ( AXIS_TUSER_WID     )
     ) axis_c2h_reg (.aclk(aclk));
 
-    axi4s_intf_pipe i_axi4s_intf_pipe_c2h (
-        .srst    ( ~aresetn     ),
-        .from_tx ( axis_c2h     ),
-        .to_rx   ( axis_c2h_reg )
+    // AXI-L interfaces for FIFO monitoring (terminated — not exposed)
+    axi4l_intf #() axil_c2h_fifo_probe ();
+    axi4l_intf #() axil_c2h_fifo_ovfl  ();
+    axi4l_intf #() axil_c2h_fifo       ();
+
+    axi4l_intf_peripheral_term i_axil_term__c2h_probe (.axi4l_if(axil_c2h_fifo_probe));
+    axi4l_intf_peripheral_term i_axil_term__c2h_ovfl  (.axi4l_if(axil_c2h_fifo_ovfl));
+    axi4l_intf_peripheral_term i_axil_term__c2h_fifo  (.axi4l_if(axil_c2h_fifo));
+
+    axi4s_pkt_fifo_sync #(
+        .FIFO_DEPTH   ( C2H_FIFO_DEPTH ),
+        .MAX_PKT_LEN  ( MAX_PKT_LEN    ),
+        .STR_FWD_MODE ( 1               )
+    ) i_axi4s_pkt_fifo_c2h (
+        .srst          ( ~aresetn           ),
+        .axi4s_in      ( axis_c2h           ),
+        .axi4s_out     ( axis_c2h_reg       ),
+        .axil_to_probe ( axil_c2h_fifo_probe),
+        .axil_to_ovfl  ( axil_c2h_fifo_ovfl ),
+        .axil_if       ( axil_c2h_fifo      ),
+        .oflow         (                    )
     );
+
+    // --- C2H packet length computation ---
+    // Write side: count bytes per packet from tkeep, push length on EOP
+    localparam int LEN_PTR_WID = $clog2(C2H_FIFO_DEPTH);
+
+    logic [15:0]             c2h_byte_accum;
+    logic [15:0]             len_mem [C2H_FIFO_DEPTH];
+    logic [LEN_PTR_WID-1:0]  len_wr_ptr;
+    logic [LEN_PTR_WID-1:0]  len_rd_ptr;
+    logic [15:0]             c2h_pkt_len;
+
+    always_ff @(posedge aclk) begin
+        if (!aresetn) begin
+            c2h_byte_accum <= '0;
+            len_wr_ptr     <= '0;
+        end else if (axis_c2h.tvalid && axis_c2h.tready) begin
+            if (axis_c2h.tlast) begin
+                len_mem[len_wr_ptr] <= c2h_byte_accum + 16'($countones(axis_c2h.tkeep));
+                len_wr_ptr          <= len_wr_ptr + 1;
+                c2h_byte_accum      <= '0;
+            end else begin
+                c2h_byte_accum <= c2h_byte_accum + 16'($countones(axis_c2h.tkeep));
+            end
+        end
+    end
+
+    // Read side: FWFT — current packet length is always visible; advance on EOP
+    assign c2h_pkt_len = len_mem[len_rd_ptr];
+
+    always_ff @(posedge aclk) begin
+        if (!aresetn)
+            len_rd_ptr <= '0;
+        else if (axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast)
+            len_rd_ptr <= len_rd_ptr + 1;
+    end
 
     axis_tid_t   c2h_tid;
     axis_tdest_t c2h_tdest;
@@ -188,7 +247,7 @@ module xilinx_qdma_st_adapter
     assign c2h_tdata         = axis_c2h_reg.tdata;
     assign c2h_tlast         = axis_c2h_reg.tlast;
     assign c2h_ctrl_qid      = c2h_tid.qid[QID_WID-1:0];
-    assign c2h_ctrl_len      = '0;
+    assign c2h_ctrl_len      = c2h_pkt_len;
     assign c2h_ctrl_port_id  = '0;
     assign c2h_ctrl_has_cmpt = 1'b1;
     assign c2h_ctrl_marker   = 1'b0;
@@ -221,7 +280,7 @@ module xilinx_qdma_st_adapter
 
     // Completion: one per EOP
     c2h_cmpt_data_t cmpt_data_packed;
-    assign cmpt_data_packed.len    = '0;
+    assign cmpt_data_packed.len    = c2h_pkt_len;
     assign cmpt_data_packed.pkt_id = c2h_pkt_id;
     assign cmpt_data_packed.qid    = c2h_tid.qid;
 
