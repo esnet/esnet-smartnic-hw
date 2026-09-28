@@ -223,22 +223,71 @@ $(__SB_REGIO_IR_DIR)/smartnic_app_decoder.yaml:
 .shell_build_info: .shell_build_regio_info
 
 # -----------------------------------------------
+# VitisNetP4 driver build
+# -----------------------------------------------
+P4_IGR_FILE ?=
+P4_EGR_FILE ?=
+
+__SB_VITISNETP4_IGR_DRV_INSTALL := \
+    $(LIB_OUTPUT_ROOT)/vitisnetp4_igr/ip/vitisnetp4_igr/src/sw/drivers/install
+__SB_VITISNETP4_EGR_DRV_INSTALL := \
+    $(LIB_OUTPUT_ROOT)/vitisnetp4_egr/ip/vitisnetp4_egr/src/sw/drivers/install
+
+.shell_build_p4_driver:
+	@[ -z "$(P4_IGR_FILE)" ] || $(MAKE) -s -C $(SRC_ROOT) driver \
+	    COMPONENT=vitisnetp4_igr.ip \
+	    BOARD=$(BOARD) \
+	    BUILD_ID=$(BUILD_ID) \
+	    LIB_ROOT=$(LIB_ROOT) \
+	    SCRIPTS_ROOT=$(SCRIPTS_ROOT) \
+	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
+	    OUTPUT_SUBDIR=
+	@[ -z "$(P4_EGR_FILE)" ] || $(MAKE) -s -C $(SRC_ROOT) driver \
+	    COMPONENT=vitisnetp4_egr.ip \
+	    BOARD=$(BOARD) \
+	    BUILD_ID=$(BUILD_ID) \
+	    LIB_ROOT=$(LIB_ROOT) \
+	    SCRIPTS_ROOT=$(SCRIPTS_ROOT) \
+	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
+	    OUTPUT_SUBDIR=
+.PHONY: .shell_build_p4_driver
+
+.shell_build_p4_driver_info:
+	@echo "------------------------------------------------------"
+	@echo "VitisNetP4 driver configuration"
+	@echo "------------------------------------------------------"
+	@echo "P4_IGR_FILE       : $(P4_IGR_FILE)"
+	@echo "P4_EGR_FILE       : $(P4_EGR_FILE)"
+	@echo "IGR driver install: $(__SB_VITISNETP4_IGR_DRV_INSTALL)"
+	@echo "EGR driver install: $(__SB_VITISNETP4_EGR_DRV_INSTALL)"
+.PHONY: .shell_build_p4_driver_info
+
+.shell_build_info: .shell_build_p4_driver_info
+
+# -----------------------------------------------
 # HW API packaging
 # -----------------------------------------------
 SHELL_HWAPI_DIR        ?= $(COMPONENT_OUT_PATH)/hwapi
 SHELL_HWAPI_FW_DIR     := $(SHELL_HWAPI_DIR)/firmware
 SHELL_HWAPI_SW_DIR     := $(SHELL_HWAPI_DIR)/software
 SHELL_HWAPI_REGMAP_DIR := $(SHELL_HWAPI_DIR)/regmap
+SHELL_HWAPI_P4_DRV_DIR := $(strip $(if $(or $(P4_IGR_FILE),$(P4_EGR_FILE)),\
+                              $(SHELL_HWAPI_DIR)/libvitisnetp4drv))
 
 SHELL_HWAPI_DIRS := \
     $(SHELL_HWAPI_DIR) \
     $(SHELL_HWAPI_FW_DIR) \
     $(SHELL_HWAPI_SW_DIR) \
-    $(SHELL_HWAPI_REGMAP_DIR)
+    $(SHELL_HWAPI_REGMAP_DIR) \
+    $(SHELL_HWAPI_P4_DRV_DIR)
 $(SHELL_HWAPI_DIRS):
 	@mkdir -p $@
 
 .shell_build_hwapi: $(SHELL_REGIO_ARTIFACT) | $(SHELL_HWAPI_DIRS)
 	@echo "Installing the register map IR file."
 	@cp $(SHELL_REGIO_ARTIFACT) $(SHELL_HWAPI_REGMAP_DIR)/.
+	@[ -z "$(P4_IGR_FILE)" ] || \
+	    cp -r $(__SB_VITISNETP4_IGR_DRV_INSTALL) $(SHELL_HWAPI_P4_DRV_DIR)/vitisnetp4_igr
+	@[ -z "$(P4_EGR_FILE)" ] || \
+	    cp -r $(__SB_VITISNETP4_EGR_DRV_INSTALL) $(SHELL_HWAPI_P4_DRV_DIR)/vitisnetp4_egr
 .PHONY: .shell_build_hwapi
