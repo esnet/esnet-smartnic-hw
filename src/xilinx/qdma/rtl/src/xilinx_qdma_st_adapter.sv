@@ -3,23 +3,29 @@
 //
 // Common QDMA streaming interface adapter — converts flat QDMA H2C/C2H
 // signals (as exported by the QDMA IP or the CPM5 block design) to/from
-// axi4s_intf.
+// standard interfaces.
 //
 // QID_WID covers the only width difference between the discrete QDMA IP
 // (UltraScale+, 11 bits) and the CPM5 QDMA (Versal, 12 bits).
 //
 // Responsibilities:
 //   H2C: mty → tkeep (last beat), qid → tid.qid, err → tuser.err
-//   C2H: tid.qid → ctrl_qid, tkeep → mty, auto-generate completions + ECC
-//        descriptor credits kept at zero (simple mode)
+//        Output: axi4s_intf (QDMA clock domain)
+//   C2H: packet_intf → flat QDMA signals + completions + ECC
+//        An internal packet_fifo (ASYNC=1) provides store-and-forward
+//        buffering with CDC from the core clock domain, and computes
+//        packet length for c2h_ctrl_len (required for DPDK).
+//        The QID is carried in packet_intf.meta.
+//        Descriptor credits kept at zero (simple mode).
 //
 // FLR, user interrupts, queue status, and TM descriptor status are
 // PCIe function-level concerns and belong in the caller (e.g.
 // xilinx_aved_adapter, xilinx_alveo_qdma_wrapper).
 //
-// The module operates entirely in the QDMA clock domain.  The caller is
-// responsible for any CDC needed before connecting axis_h2c / axis_c2h to
-// a downstream clock domain.
+// H2C output operates in the QDMA clock domain.  The caller is
+// responsible for any CDC needed on axis_h2c.
+// C2H input accepts packet_intf in the core clock domain; CDC is
+// handled internally by the packet_fifo.
 // =========================================================================
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;
@@ -31,6 +37,9 @@ module xilinx_qdma_st_adapter
     // QDMA clock and reset
     input  wire        aclk,
     input  wire        aresetn,
+
+    // Core-side synchronous reset (for C2H packet_fifo input side)
+    input  wire        core_srst,
 
     // -----------------------------------------------------------------------
     // Flat QDMA streaming signals
@@ -89,10 +98,14 @@ module xilinx_qdma_st_adapter
     input  wire                   dsc_crdt_rdy,
 
     // -----------------------------------------------------------------------
-    // AXI4-S interfaces (QDMA clock domain)
+    // AXI4-S interface — H2C (QDMA clock domain)
     // -----------------------------------------------------------------------
     axi4s_intf.tx axis_h2c,  // H2C: drives toward core
-    axi4s_intf.rx axis_c2h   // C2H: receives from core
+
+    // -----------------------------------------------------------------------
+    // Packet interface — C2H (core clock domain; CDC handled internally)
+    // -----------------------------------------------------------------------
+    packet_intf.rx pkt_c2h   // C2H: receives from core (meta = qid)
 );
 
     // =========================================================================
@@ -147,111 +160,54 @@ module xilinx_qdma_st_adapter
     );
 
     // =========================================================================
-    // C2H stream — axi4s_intf → store-and-forward FIFO → flat signals + completions
+    // C2H stream — packet_intf → packet_fifo (ASYNC CDC + S&F) → flat signals
     //
-    // A packet FIFO in store-and-forward mode buffers complete packets before
-    // emission.  This lets us compute total packet length (from tkeep) and
-    // drive c2h_ctrl_len on the first beat — required by the QDMA IP for
-    // descriptor pre-fetch and by the Xilinx DPDK driver.
+    // The C2H input arrives on packet_intf in the core clock domain.  An
+    // internal packet_fifo with ASYNC=1 provides:
+    //   - Clock domain crossing (core → QDMA)
+    //   - Store-and-forward buffering
+    //   - Packet length computation (pkt_size output)
     //
-    // A parallel length register array (written on EOP at the FIFO input,
-    // read on EOP at the FIFO output) provides FWFT access to the current
-    // packet's length.
+    // The FIFO output drives flat QDMA C2H signals directly.  mty maps
+    // natively; the QID is carried in packet_intf.meta and extracted for
+    // ctrl_qid and completions.
     // =========================================================================
 
-    // Internal registered interface — all C2H logic reads from this
-    axi4s_intf #(
+    // FIFO output interface (QDMA clock domain)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h_reg (.aclk(aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_out (.clk(aclk));
 
-    // AXI-L interfaces for FIFO monitoring (terminated — not exposed)
-    axi4l_intf #() axil_c2h_fifo_probe ();
-    axi4l_intf #() axil_c2h_fifo_ovfl  ();
-    axi4l_intf #() axil_c2h_fifo       ();
+    // Packet length from packet_fifo (held for current output packet).
+    // packet_pkg::size_t is 16 bits — the same width as the QDMA ctrl_len and
+    // completion len fields, so no resizing is needed below.
+    packet_pkg::size_t c2h_pkt_size;
 
-    axi4l_intf_peripheral_term i_axil_term__c2h_probe (.axi4l_if(axil_c2h_fifo_probe));
-    axi4l_intf_peripheral_term i_axil_term__c2h_ovfl  (.axi4l_if(axil_c2h_fifo_ovfl));
-    axi4l_intf_peripheral_term i_axil_term__c2h_fifo  (.axi4l_if(axil_c2h_fifo));
-
-    axi4s_pkt_fifo_sync #(
-        .FIFO_DEPTH   ( C2H_FIFO_DEPTH ),
-        .MAX_PKT_LEN  ( MAX_PKT_LEN    ),
-        .STR_FWD_MODE ( 1               )
-    ) i_axi4s_pkt_fifo_c2h (
-        .srst          ( ~aresetn           ),
-        .axi4s_in      ( axis_c2h           ),
-        .axi4s_out     ( axis_c2h_reg       ),
-        .axil_to_probe ( axil_c2h_fifo_probe),
-        .axil_to_ovfl  ( axil_c2h_fifo_ovfl ),
-        .axil_if       ( axil_c2h_fifo      ),
-        .oflow         (                    )
+    packet_fifo #(
+        .ASYNC           ( 1              ),
+        .DEPTH           ( C2H_FIFO_DEPTH ),
+        .MAX_PKT_SIZE    ( MAX_PKT_LEN    ),
+        .MAX_DESCRIPTORS ( 32             ),
+        .DROP_ERRORED    ( 0              )
+    ) i_packet_fifo_c2h (
+        .srst_in       ( core_srst    ),
+        .packet_in_if  ( pkt_c2h      ),
+        .srst_out      ( ~aresetn     ),
+        .packet_out_if ( pkt_c2h_out  ),
+        .pkt_size      ( c2h_pkt_size )
     );
 
-    // --- C2H packet length computation ---
-    // Write side: count bytes per packet from tkeep, push length on EOP
-    localparam int LEN_PTR_WID = $clog2(C2H_FIFO_DEPTH);
-
-    logic [15:0]             c2h_byte_accum;
-    logic [15:0]             len_mem [C2H_FIFO_DEPTH];
-    logic [LEN_PTR_WID-1:0]  len_wr_ptr;
-    logic [LEN_PTR_WID-1:0]  len_rd_ptr;
-    logic [15:0]             c2h_pkt_len;
-
-    always_ff @(posedge aclk) begin
-        if (!aresetn) begin
-            c2h_byte_accum <= '0;
-            len_wr_ptr     <= '0;
-        end else if (axis_c2h.tvalid && axis_c2h.tready) begin
-            if (axis_c2h.tlast) begin
-                len_mem[len_wr_ptr] <= c2h_byte_accum + 16'($countones(axis_c2h.tkeep));
-                len_wr_ptr          <= len_wr_ptr + 1;
-                c2h_byte_accum      <= '0;
-            end else begin
-                c2h_byte_accum <= c2h_byte_accum + 16'($countones(axis_c2h.tkeep));
-            end
-        end
-    end
-
-    // Read side: FWFT — current packet length is always visible; advance on EOP
-    assign c2h_pkt_len = len_mem[len_rd_ptr];
-
-    always_ff @(posedge aclk) begin
-        if (!aresetn)
-            len_rd_ptr <= '0;
-        else if (axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast)
-            len_rd_ptr <= len_rd_ptr + 1;
-    end
-
-    axis_tid_t   c2h_tid;
-    axis_tdest_t c2h_tdest;
-    axis_tuser_t c2h_tuser;
-
-    assign c2h_tid   = axis_c2h_reg.tid;
-    assign c2h_tdest = axis_c2h_reg.tdest;
-    assign c2h_tuser = axis_c2h_reg.tuser;
-
-    // tkeep → mty: count contiguous trailing zero keeps on the last beat
-    logic [5:0] c2h_mty_comb;
-    always_comb begin
-        c2h_mty_comb = '0;
-        for (int b = AXIS_DATA_BYTE_WID-1; b >= 0; b--) begin
-            if (!axis_c2h_reg.tkeep[b] && (c2h_mty_comb == (AXIS_DATA_BYTE_WID-1-b)))
-                c2h_mty_comb = c2h_mty_comb + 1'b1;
-        end
-    end
-
-    assign c2h_tvalid        = axis_c2h_reg.tvalid;
-    assign c2h_tdata         = axis_c2h_reg.tdata;
-    assign c2h_tlast         = axis_c2h_reg.tlast;
-    assign c2h_ctrl_qid      = c2h_tid.qid[QID_WID-1:0];
-    assign c2h_ctrl_len      = c2h_pkt_len;
+    // --- Flat C2H data outputs (QDMA clock domain) ---
+    assign c2h_tvalid        = pkt_c2h_out.vld;
+    assign c2h_tdata         = {<<8{pkt_c2h_out.data}};  // big-endian → little-endian
+    assign c2h_tlast         = pkt_c2h_out.eop;
+    assign c2h_ctrl_qid      = pkt_c2h_out.meta[QID_WID-1:0];
+    assign c2h_ctrl_len      = c2h_pkt_size;
     assign c2h_ctrl_port_id  = '0;
     assign c2h_ctrl_has_cmpt = 1'b1;
     assign c2h_ctrl_marker   = 1'b0;
-    assign c2h_mty           = axis_c2h_reg.tlast ? c2h_mty_comb : '0;
+    assign c2h_mty           = pkt_c2h_out.eop ? pkt_c2h_out.mty : '0;
     assign c2h_tcrc          = '0;
 
     // ECC over C2H ctrl bus (PG302: input order LSB-first as listed below)
@@ -274,20 +230,20 @@ module xilinx_qdma_st_adapter
     pkt_id_t c2h_pkt_id;
     always_ff @(posedge aclk) begin
         if (!aresetn) c2h_pkt_id <= '0;
-        else if (axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast)
+        else if (pkt_c2h_out.vld && pkt_c2h_out.rdy && pkt_c2h_out.eop)
             c2h_pkt_id <= c2h_pkt_id + 1'b1;
     end
 
     // Completion: one per EOP
     c2h_cmpt_data_t cmpt_data_packed;
-    assign cmpt_data_packed.len    = c2h_pkt_len;
+    assign cmpt_data_packed.len    = c2h_pkt_size;
     assign cmpt_data_packed.pkt_id = c2h_pkt_id;
-    assign cmpt_data_packed.qid    = c2h_tid.qid;
+    assign cmpt_data_packed.qid    = pkt_c2h_out.meta[QID_WID-1:0];
 
-    assign cmpt_tvalid          = axis_c2h_reg.tvalid && axis_c2h_reg.tready && axis_c2h_reg.tlast;
+    assign cmpt_tvalid          = pkt_c2h_out.vld && pkt_c2h_out.rdy && pkt_c2h_out.eop;
     assign cmpt_data            = cmpt_data_packed;
     assign cmpt_size            = 2'b00;   // 8-byte completion
-    assign cmpt_qid             = c2h_tid.qid[QID_WID-1:0];
+    assign cmpt_qid             = pkt_c2h_out.meta[QID_WID-1:0];
     assign cmpt_port_id         = '0;
     assign cmpt_cmpt_type       = 2'b11;   // HAS_PLD
     assign cmpt_wait_pld_pkt_id = c2h_pkt_id;
@@ -299,7 +255,7 @@ module xilinx_qdma_st_adapter
     assign cmpt_no_wrb_marker   = 1'b0;
 
     // tready: accepted when both data and completion paths are ready
-    assign axis_c2h_reg.tready = c2h_tready && cmpt_tready;
+    assign pkt_c2h_out.rdy = c2h_tready && cmpt_tready;
 
     // =========================================================================
     // Descriptor credits — kept at zero (simple mode)

@@ -22,8 +22,8 @@ module esnet_smartnic
 
     shell_intf shell_if ();
 
-    // DMA AXI4-S interfaces between adapter and shell (QDMA clock domain)
-    // aclk is m_axi_pcie0_aclk (the CPM5 QDMA link clock, ~250 MHz)
+    // H2C interface between adapter and shell, in the QDMA clock domain
+    // (m_axi_pcie0_aclk is the CPM5 QDMA link clock, ~250 MHz)
     axi4s_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .TID_WID       ( AXIS_TID_WID       ),
@@ -31,12 +31,12 @@ module esnet_smartnic
         .TUSER_WID     ( AXIS_TUSER_WID     )
     ) axis_h2c_dma (.aclk(m_axi_pcie0_aclk));
 
-    axi4s_intf #(
+    // C2H interface between shell and adapter, in the management clock
+    // domain; the adapter's packet FIFO crosses it to the QDMA clock.
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h_dma (.aclk(m_axi_pcie0_aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_dma (.clk(axil_if.aclk));
 
     // AVED top-level
     // NOTE: for compatibility with AVED constraints, this instance must
@@ -54,8 +54,9 @@ module esnet_smartnic
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
-        .axis_h2c ( axis_h2c_dma ),
-        .axis_c2h ( axis_c2h_dma )
+        .core_srst ( ~axil_if.aresetn ),
+        .axis_h2c  ( axis_h2c_dma ),
+        .pkt_c2h   ( pkt_c2h_dma  )
     );
 
     // AXI-L debug core: ILA + VIO between adapter and shell adapter
@@ -73,7 +74,7 @@ module esnet_smartnic
         .pci_rstn       ( pci_rstn    ),
         .axil_top       ( axil_debug_if ),
         .axis_h2c_dma   ( axis_h2c_dma ),
-        .axis_c2h_dma   ( axis_c2h_dma ),
+        .pkt_c2h_dma    ( pkt_c2h_dma  ),
         .shell_if
     );
 

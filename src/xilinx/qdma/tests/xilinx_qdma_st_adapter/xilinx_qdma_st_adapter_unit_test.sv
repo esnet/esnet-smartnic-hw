@@ -8,35 +8,49 @@ module xilinx_qdma_st_adapter_unit_test;
     string name = "xilinx_qdma_st_adapter_ut";
     svunit_testcase svunit_ut;
 
-    `define SVUNIT_TIMEOUT 100us
+    `define SVUNIT_TIMEOUT 200us
 
     // =========================================================================
     // Parameters — use default (USPlus) widths
     // =========================================================================
     localparam int QID_WID = 11;
+    localparam int MAX_PKT_LEN = 9100;
 
     // =========================================================================
     // Clock and reset
     // =========================================================================
-    logic aclk    = 1'b0;
-    logic aresetn = 1'b0;
+    logic aclk     = 1'b0;
+    logic core_clk = 1'b0;
+    logic aresetn  = 1'b0;
+    logic core_srst;
+    assign core_srst = ~aresetn;
 
-    `SVUNIT_CLK_GEN(aclk, 2ns);   // 250 MHz
+    // Both clocks free-running: the ASYNC FIFO's sync_reset/sync_ctr logic
+    // requires clock activity from time 0 to initialize properly in xsim.
+    // SVUNIT_CLK_GEN gates the clock until is_running(), which leaves the
+    // FIFO's async reset synchronisers stalled and triggers an xsim hang.
+    // The library's own async FIFO tests use free-running clocks for the
+    // same reason (see fifo_axil_async_unit_test.sv).
+    always #2ns   aclk     = ~aclk;     // 250 MHz — QDMA clock domain
+    always #2.5ns core_clk = ~core_clk; // 200 MHz — core clock domain
 
     // =========================================================================
     // H2C flat signals (driven by testbench → DUT)
+    // All initialized at declaration to avoid X at time 0 — the ASYNC FIFO's
+    // CDC logic can cause xsim to hang if any DUT input is X before idle()
+    // runs (idle() is called from setup(), which is after SVUnit startup).
     // =========================================================================
-    logic                  h2c_tvalid;
-    logic [511:0]          h2c_tdata;
-    logic                  h2c_tlast;
+    logic                  h2c_tvalid    = 1'b0;
+    logic [511:0]          h2c_tdata     = '0;
+    logic                  h2c_tlast     = 1'b0;
     logic                  h2c_tready;
-    logic [QID_WID-1:0]    h2c_qid;
-    logic [2:0]            h2c_port_id;
-    logic [31:0]           h2c_mdata;
-    logic [5:0]            h2c_mty;
-    logic [31:0]           h2c_tcrc;
-    logic                  h2c_err;
-    logic                  h2c_zero_byte;
+    logic [QID_WID-1:0]    h2c_qid       = '0;
+    logic [2:0]            h2c_port_id   = '0;
+    logic [31:0]           h2c_mdata     = '0;
+    logic [5:0]            h2c_mty       = '0;
+    logic [31:0]           h2c_tcrc      = '0;
+    logic                  h2c_err       = 1'b0;
+    logic                  h2c_zero_byte = 1'b0;
 
     // Clocking block for driving H2C flat signals.
     // output #1 drives 1 time unit after posedge — stable before the next
@@ -55,7 +69,7 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  c2h_tvalid;
     logic [511:0]          c2h_tdata;
     logic                  c2h_tlast;
-    logic                  c2h_tready;
+    logic                  c2h_tready    = 1'b1;
     logic [QID_WID-1:0]    c2h_ctrl_qid;
     logic [15:0]           c2h_ctrl_len;
     logic [2:0]            c2h_ctrl_port_id;
@@ -79,7 +93,7 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  cmpt_user_trig;
     logic                  cmpt_marker;
     logic                  cmpt_no_wrb_marker;
-    logic                  cmpt_tready;
+    logic                  cmpt_tready   = 1'b1;
 
     // Descriptor credits
     logic [15:0]           dsc_crdt_crdt;
@@ -87,7 +101,7 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  dsc_crdt_fence;
     logic [QID_WID-1:0]    dsc_crdt_qid;
     logic                  dsc_crdt_valid;
-    logic                  dsc_crdt_rdy;
+    logic                  dsc_crdt_rdy  = 1'b1;
 
     // =========================================================================
     // AXI4-S interfaces — shell side of the DUT
@@ -99,21 +113,35 @@ module xilinx_qdma_st_adapter_unit_test;
         .TUSER_WID     ( AXIS_TUSER_WID     )
     ) axis_h2c (.aclk(aclk));   // DUT drives (tx), monitor reads
 
-    axi4s_intf #(
+    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h (.aclk(aclk));   // driver sends (tx), DUT reads (rx)
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h (.clk(core_clk));
+
+    // Drive interface signals to known values from time 0.
+    // Without this, pkt_c2h.vld et al. are X until idle() runs inside setup(),
+    // and the ASYNC FIFO's CDC logic causes an xsim hang.
+    initial begin
+        pkt_c2h.vld  = 1'b0;
+        pkt_c2h.data = '0;
+        pkt_c2h.eop  = 1'b0;
+        pkt_c2h.mty  = '0;
+        pkt_c2h.err  = 1'b0;
+        pkt_c2h.meta = '0;
+        axis_h2c.tready = 1'b1;
+    end
 
     // =========================================================================
     // DUT
     // =========================================================================
     xilinx_qdma_st_adapter #(
-        .QID_WID ( QID_WID )
+        .QID_WID     ( QID_WID     ),
+        .MAX_PKT_LEN ( MAX_PKT_LEN )
     ) DUT (
         .aclk,
         .aresetn,
+        .core_srst,
         .h2c_tvalid,
         .h2c_tdata,
         .h2c_tlast,
@@ -158,18 +186,17 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
         .axis_h2c,
-        .axis_c2h
+        .pkt_c2h
     );
 
     // =========================================================================
     // Verif objects
     //   h2c_mon  : monitors axis_h2c (DUT output — H2C stream to core)
-    //   c2h_drv  : drives axis_c2h  (DUT input  — C2H stream from core)
+    //   C2H input is driven via packet_intf's built-in cb_tx clocking block
     // =========================================================================
     typedef axi4s_transaction #(axis_tid_t, axis_tdest_t, axis_tuser_t) TRANS_T;
 
     axi4s_monitor  #(AXIS_DATA_BYTE_WID, axis_tid_t, axis_tdest_t, axis_tuser_t) h2c_mon;
-    axi4s_driver   #(AXIS_DATA_BYTE_WID, axis_tid_t, axis_tdest_t, axis_tuser_t) c2h_drv;
 
     // =========================================================================
     // Assertions
@@ -188,73 +215,25 @@ module xilinx_qdma_st_adapter_unit_test;
     endproperty
     a_cmpt_on_eop: assert property (p_cmpt_on_eop);
 
-    // Note: axis_c2h feeds into axi4s_pkt_fifo_sync (store-and-forward), which
-    // decouples the input from the output side.  axis_c2h.tready reflects FIFO
-    // capacity, not downstream c2h_tready / cmpt_tready.  Functional backpressure
-    // correctness is verified by c2h_backpressure_data_ and c2h_backpressure_cmpt_.
+    // Note: pkt_c2h feeds into packet_fifo (store-and-forward), which decouples
+    // the input from the output side.  pkt_c2h.rdy reflects FIFO capacity, not
+    // downstream c2h_tready / cmpt_tready.  Functional backpressure correctness
+    // is verified by c2h_backpressure_data_ and c2h_backpressure_cmpt_.
 
     // =========================================================================
     // Coverage
     // =========================================================================
-    covergroup cg_h2c @(posedge aclk);
-        // mty on the last H2C beat
-        cp_h2c_mty: coverpoint h2c_mty iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast) {
-            bins full_beat = {0};
-            bins partial[] = {[1:AXIS_DATA_BYTE_WID-2]};
-            bins one_byte  = {AXIS_DATA_BYTE_WID-1};
-        }
-        // zero_byte flag
-        cp_h2c_zero_byte: coverpoint h2c_zero_byte iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast);
-        // err flag
-        cp_h2c_err: coverpoint h2c_err iff (aresetn && h2c_tvalid && h2c_tready);
-        // qid boundary values
-        cp_h2c_qid: coverpoint h2c_qid iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast) {
-            bins zero    = {0};
-            bins mid     = {[1:(2**QID_WID)-2]};
-            bins max_val = {(2**QID_WID)-1};
-        }
-        // single-beat packet (tvalid && tready && tlast on first beat)
-        cp_h2c_single_beat: coverpoint (h2c_tvalid && h2c_tready && h2c_tlast) iff (aresetn) {
-            bins single = {1};
-        }
-        // back-to-back: EOP of one packet coincides with first beat of next
-        cp_h2c_back_to_back: coverpoint (h2c_tlast && h2c_tvalid && h2c_tready) iff (aresetn);
-    endgroup
-
-    covergroup cg_c2h @(posedge aclk);
-        // mty on the last C2H beat (derived from tkeep)
-        cp_c2h_mty: coverpoint c2h_mty iff (aresetn && c2h_tvalid && c2h_tready && c2h_tlast) {
-            bins full_beat = {0};
-            bins partial[] = {[1:AXIS_DATA_BYTE_WID-2]};
-            bins one_byte  = {AXIS_DATA_BYTE_WID-1};
-        }
-        // completion fires on EOP
-        cp_cmpt_on_eop: coverpoint cmpt_tvalid iff (aresetn && c2h_tvalid && c2h_tready && c2h_tlast) {
-            bins fires = {1};
-        }
-        // cmpt_qid matches ctrl_qid on every completion
-        cp_cmpt_qid_match: coverpoint (cmpt_qid == c2h_ctrl_qid) iff (aresetn && cmpt_tvalid) {
-            bins match = {1};
-        }
-        // cmpt_type is always HAS_PLD (2'b11)
-        cp_cmpt_type: coverpoint cmpt_cmpt_type iff (aresetn && cmpt_tvalid) {
-            bins has_pld = {2'b11};
-        }
-        // cross c2h_tready x cmpt_tready to cover all four back-pressure combinations
-        cp_c2h_tready:  coverpoint c2h_tready  iff (aresetn);
-        cp_cmpt_tready: coverpoint cmpt_tready iff (aresetn);
-        cx_backpressure: cross cp_c2h_tready, cp_cmpt_tready;
-    endgroup
-
-    covergroup cg_credits @(posedge aclk);
-        cp_crdt_valid: coverpoint dsc_crdt_valid iff (aresetn) {
-            bins idle = {0};
-        }
-    endgroup
-
-    cg_h2c     cg_h2c_inst;
-    cg_c2h     cg_c2h_inst;
-    cg_credits cg_credits_inst;
+    // NOTE: covergroups are intentionally omitted from this testbench.
+    //
+    // xsim's functional-coverage event scheduler hangs at time 0 (zero-time
+    // delta loop) when ANY covergroup is present together with:
+    //   - packet_fifo(ASYNC=1) CDC logic (sync_reset / sync_ctr chains), AND
+    //   - multiple axi4s_intf clocking blocks (the DUT's internal axis_h2c_comb
+    //     plus this testbench's axis_h2c share the same aclk domain).
+    //
+    // The root cause is an xsim bug in coverage event scheduling across
+    // simultaneous clocking-block domains.  Correctness is verified by the
+    // assertions and fail_unless_equal checks in each test case below.
 
     // =========================================================================
     // Build
@@ -262,12 +241,7 @@ module xilinx_qdma_st_adapter_unit_test;
     function void build();
         svunit_ut      = new(name);
         h2c_mon        = new("h2c_mon");
-        c2h_drv        = new("c2h_drv");
         h2c_mon.axis_vif = axis_h2c;
-        c2h_drv.axis_vif = axis_c2h;
-        cg_h2c_inst    = new();
-        cg_c2h_inst    = new();
-        cg_credits_inst = new();
     endfunction
 
     // =========================================================================
@@ -277,9 +251,10 @@ module xilinx_qdma_st_adapter_unit_test;
         svunit_ut.setup();
         idle();
         aresetn = 1'b0;
-        repeat (8) @(posedge aclk);
+        repeat (16) @(posedge aclk);
         aresetn = 1'b1;
-        repeat (4) @(posedge aclk);
+        // Allow packet_fifo internal memory init and CDC synchronizers to settle
+        repeat (32) @(posedge aclk);
     endtask
 
     task teardown();
@@ -305,8 +280,13 @@ module xilinx_qdma_st_adapter_unit_test;
         dsc_crdt_rdy = 1'b1;
         // H2C monitor: always accept
         axis_h2c.tready = 1'b1;
-        // C2H driver idle
-        c2h_drv.idle();
+        // C2H packet_intf idle (direct assignment — avoid clocking block at time 0)
+        pkt_c2h.vld  = 1'b0;
+        pkt_c2h.data = '0;
+        pkt_c2h.eop  = 1'b0;
+        pkt_c2h.mty  = '0;
+        pkt_c2h.err  = 1'b0;
+        pkt_c2h.meta = '0;
     endtask
 
     // Send an H2C packet as a sequence of beats via the cb_h2c clocking block.
@@ -338,18 +318,41 @@ module xilinx_qdma_st_adapter_unit_test;
         cb_h2c.h2c_err       <= 1'b0;
     endtask
 
-    // Send a C2H packet via the axi4s_driver (byte-level, auto-computes tkeep).
+    // Send a C2H packet via packet_intf (byte-level, auto-computes mty).
+    // Data is big-endian byte array as expected by packet_intf.
+    // QID is carried in packet_intf.meta.
     task automatic send_c2h_packet(
         input int                 num_bytes,
-        input axis_tid_t          tid        = '0,
-        input axis_tuser_t        tuser      = '0,
+        input logic [QID_WID-1:0] qid        = '0,
         input int                 twait      = 0
     );
-        TRANS_T trans;
-        trans = new(.name("c2h_pkt"), .len(num_bytes), .tid(tid), .tuser(tuser));
-        trans.randomize();
-        c2h_drv.set_twait(twait);
-        c2h_drv.send(trans);
+        int bytes_remaining;
+        logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat_data;
+        logic [5:0] beat_mty;
+        logic beat_eop;
+
+        bytes_remaining = num_bytes;
+        while (bytes_remaining > 0) begin
+            // Fill beat data with random bytes
+            for (int b = 0; b < AXIS_DATA_BYTE_WID; b++)
+                beat_data[b] = $urandom;
+
+            beat_eop = (bytes_remaining <= AXIS_DATA_BYTE_WID);
+            beat_mty = beat_eop ? 6'(AXIS_DATA_BYTE_WID - bytes_remaining) : 6'd0;
+
+            // Inter-beat gap
+            if (twait > 0) repeat (twait) @(pkt_c2h.cb_tx);
+
+            pkt_c2h.send(
+                ._data ( beat_data ),
+                ._eop  ( beat_eop  ),
+                ._mty  ( beat_mty  ),
+                ._err  ( 1'b0      ),
+                ._meta ( qid       )
+            );
+
+            bytes_remaining -= AXIS_DATA_BYTE_WID;
+        end
     endtask
 
     // Receive one H2C packet via the monitor and return the transaction.
@@ -479,12 +482,10 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // C2H: completion fires on EOP; cmpt_qid matches c2h_ctrl_qid.
         `SVTEST(c2h_completion_on_eop)
-            axis_tid_t tid;
             logic captured_cmpt_valid;
             logic [QID_WID-1:0] captured_cmpt_qid;
-            tid.qid = 11'h3F;
             fork
-                send_c2h_packet(.num_bytes(64), .tid(tid));
+                send_c2h_packet(.num_bytes(64), .qid(11'h3F));
                 @(posedge aclk iff (c2h_tvalid && c2h_tready && c2h_tlast));
             join
             captured_cmpt_valid = cmpt_tvalid;
@@ -508,7 +509,7 @@ module xilinx_qdma_st_adapter_unit_test;
                 `FAIL_UNLESS_EQUAL(pkt_ids[i], pkt_ids[i-1] + 1'b1);
         `SVTEST_END
 
-        // C2H: c2h_tready=0 propagates back through the pipe to axis_c2h.tready.
+        // C2H: c2h_tready=0 propagates back through the FIFO to pkt_c2h.rdy.
         // Verified independently of the driver to avoid a race where the driver
         // accepts a beat before the pipe has propagated the stall.
         // C2H: c2h_tready=0 mid-packet — no data is lost; pkt_id still increments.
