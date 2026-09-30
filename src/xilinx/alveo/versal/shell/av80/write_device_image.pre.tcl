@@ -54,5 +54,10 @@ puts $_manifest [dict create logic_uuid $_logic_uuid interface_uuid $_interface_
 close $_manifest
 puts "Wrote: $_manifest_path"
 
-# Enable USR_ACCESS timestamp in PDI (matches AVED flow)
-set_property BITSTREAM.CONFIG.USR_ACCESS TIMESTAMP [current_design]
+# Write the build ID into the PLM Runtime Configuration Area (RTCA) USR_ACCESS register
+# (register address is 0xF2014168).
+if {$::NP_USERID ne ""} {
+    set_property BITSTREAM.CONFIG.USR_ACCESS $::NP_USERID [current_design]
+} else {
+    puts "WARNING: Missing USERID ... USR_ACCESS register not set."
+}
