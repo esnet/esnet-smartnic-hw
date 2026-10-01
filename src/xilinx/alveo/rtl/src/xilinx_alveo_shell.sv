@@ -6,7 +6,6 @@
 // shared across all Alveo platform variants.
 // =============================================================================
 module xilinx_alveo_shell
-    import xilinx_alveo_pkg::*;
 (
     input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
 

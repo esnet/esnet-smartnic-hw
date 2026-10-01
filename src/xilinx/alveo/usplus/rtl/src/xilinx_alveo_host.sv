@@ -1,5 +1,4 @@
 module xilinx_alveo_host
-    import xilinx_alveo_pkg::*;
 #(
     parameter int PCIE_LINK_WID = 16
 ) (
