@@ -28,6 +28,13 @@ interface shell_intf
     localparam int PORT_DATA_WID      = PORT_DATA_BYTE_WID * 8;
     localparam int DMA_ST_DATA_WID    = DMA_ST_DATA_BYTE_WID * 8;
     localparam int DMA_ST_QID_WID     = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
+
+    // tid carries only the queue ID, so its width must track this interface's
+    // DMA_ST_QUEUES. Declaring it here deliberately shadows the same-named
+    // constant from the wildcard shell_pkg import: the package value is a fixed
+    // platform-independent default, which is what made DMA_ST_QUEUES inert
+    // (declared, never read) and let UltraScale+ silently truncate qid.
+    localparam int DMA_ST_AXIS_TID_WID = DMA_ST_QID_WID;
     localparam int AXIL_DATA_BYTE_WID = 4;
     localparam int AXIL_DATA_WID      = AXIL_DATA_BYTE_WID * 8;
 

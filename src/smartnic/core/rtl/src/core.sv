@@ -24,8 +24,8 @@ module core
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
 
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(port_clk[0]));
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(port_clk[0]));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(port_clk[0]));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(port_clk[0]));
 
     // Convert shell_intf to SV interfaces
     shell_adapter__core i_shell_adapter__core (
@@ -120,9 +120,9 @@ module smartnic_wrapper
     wire logic                       core_clk;
 
     dma_st_axis_tuser_t axis_h2c_tuser;
-    dma_st_axis_tid_t   axis_h2c_tid;
+    logic [axis_h2c.TID_WID-1:0] axis_h2c_tid;
     dma_st_axis_tuser_t axis_c2h_tuser;
-    dma_st_axis_tid_t   axis_c2h_tid;
+    logic [axis_c2h.TID_WID-1:0] axis_c2h_tid;
 
     // =========================================================================
     // Smartnic instance
@@ -196,7 +196,7 @@ module smartnic_wrapper
     assign s_axis_adpt_tx_322mhz_tdest [0*4   +: 4]   = '0;
     assign s_axis_adpt_tx_322mhz_tuser_err [0]        = axis_h2c.tuser;
     assign axis_h2c_tid = axis_h2c.tid;
-    assign s_axis_adpt_tx_322mhz_tid [0*16 +: 16]     = {'0, axis_h2c_tid};
+    assign s_axis_adpt_tx_322mhz_tid [0*16 +: 16]     = 16'(axis_h2c_tid);
     assign axis_h2c.tready = s_axis_adpt_tx_322mhz_tready[0];
 
     // C2H

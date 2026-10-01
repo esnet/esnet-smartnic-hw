@@ -105,7 +105,7 @@ module shell_adapter__core
     // H2C
     axi4s_intf_from_signals #(
         .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_from_signals__h2c (
@@ -123,7 +123,7 @@ module shell_adapter__core
     // C2H
     axi4s_intf_to_signals #(
         .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID  ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_to_signals__c2h (
