@@ -7,16 +7,14 @@ package shell_pkg;
     typedef struct packed {logic unused;} unused_t;
 
     // DMA streaming
-    localparam int DMA_ST_QUEUES     = 4096;
-    localparam int DMA_ST_QID_WID    = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
-
-    typedef logic [DMA_ST_QID_WID-1:0]           dma_st_qid_t;
-    typedef struct packed {dma_st_qid_t qid;}     dma_st_axis_tid_t;
+    //
+    // tid carries the queue ID, whose width depends on the platform's DMA
+    // engine. It is therefore not defined here: shell_intf derives it from its
+    // DMA_ST_QUEUES parameter, which each platform top-level supplies from its
+    // own package.
     typedef unused_t                              dma_st_axis_tdest_t;
     typedef struct packed {logic rss_enable; logic [11:0] rss_entropy;}  dma_st_axis_tuser_t;
 
-
-    localparam int DMA_ST_AXIS_TID_WID   = $bits(dma_st_axis_tid_t);
     localparam int DMA_ST_AXIS_TDEST_WID = $bits(dma_st_axis_tdest_t);
     localparam int DMA_ST_AXIS_TUSER_WID = $bits(dma_st_axis_tuser_t);
 

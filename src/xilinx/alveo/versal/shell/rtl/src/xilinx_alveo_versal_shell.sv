@@ -174,14 +174,14 @@ module xilinx_alveo_versal_shell
     // Shell-domain interfaces: shell_pkg-typed, management clock
     axi4s_intf #(
         .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID           ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
     ) axis_h2c (.aclk(axil_top.aclk));
 
     axi4s_intf #(
         .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID           ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
         .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
     ) axis_c2h (.aclk(axil_top.aclk));
@@ -189,19 +189,19 @@ module xilinx_alveo_versal_shell
     // H2C metadata adaptation: QDMA types → shell_pkg types
     xilinx_qdma_pkg::axis_tid_t   __h2c_qdma_tid;
     xilinx_qdma_pkg::axis_tuser_t __h2c_qdma_tuser;
-    shell_pkg::dma_st_axis_tid_t   h2c_shell_tid;
+    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] h2c_shell_tid;
     shell_pkg::dma_st_axis_tdest_t h2c_shell_tdest;
     shell_pkg::dma_st_axis_tuser_t h2c_shell_tuser;
 
     assign __h2c_qdma_tid    = axis_h2c_cdc.tid;
-    assign h2c_shell_tid.qid = __h2c_qdma_tid.qid;
+    assign h2c_shell_tid     = __h2c_qdma_tid.qid;
     assign h2c_shell_tdest.unused = 1'b0;
     assign __h2c_qdma_tuser      = axis_h2c_cdc.tuser;
     assign h2c_shell_tuser.rss_enable  = 1'b0;
     assign h2c_shell_tuser.rss_entropy = '0;
 
     axi4s_intf_set_meta #(
-        .TID_WID   ( DMA_ST_AXIS_TID_WID   ),
+        .TID_WID   ( shell_if.DMA_ST_AXIS_TID_WID ),
         .TDEST_WID ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_set_meta__h2c (
@@ -213,13 +213,13 @@ module xilinx_alveo_versal_shell
     );
 
     // C2H metadata adaptation: shell_pkg types → QDMA types
-    shell_pkg::dma_st_axis_tid_t   c2h_shell_tid;
+    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] c2h_shell_tid;
     xilinx_qdma_pkg::axis_tid_t   __c2h_qdma_tid;
     xilinx_qdma_pkg::axis_tdest_t __c2h_qdma_tdest;
     xilinx_qdma_pkg::axis_tuser_t __c2h_qdma_tuser;
 
     assign c2h_shell_tid        = axis_c2h.tid;
-    assign __c2h_qdma_tid.qid  = c2h_shell_tid.qid;
+    assign __c2h_qdma_tid.qid  = c2h_shell_tid;
     assign __c2h_qdma_tdest.unused = 1'b0;
     assign __c2h_qdma_tuser.err    = 1'b0;
 
