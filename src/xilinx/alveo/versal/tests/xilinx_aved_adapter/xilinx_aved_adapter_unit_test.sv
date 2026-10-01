@@ -50,7 +50,9 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    shell_intf shell_if    ();
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
 
     wire pci_rstn_in;
     wire pci_rstn;

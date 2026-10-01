@@ -1,5 +1,5 @@
 module xilinx_alveo
-    import xilinx_alveo_pkg::*;
+    import xilinx_alveo_usplus_pkg::*;
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (

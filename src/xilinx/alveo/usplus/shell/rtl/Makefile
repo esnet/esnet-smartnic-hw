@@ -26,7 +26,7 @@ SUBCOMPONENTS = \
     shell.pkg \
     shell.rtl \
     xilinx.alveo.rtl \
-    xilinx.alveo.pkg \
+    xilinx.alveo.usplus.pkg \
     xilinx.alveo.usplus.rtl \
     axi4l.rtl@$(COMMON_LIB_NAME) \
     axi4s.rtl@$(COMMON_LIB_NAME)

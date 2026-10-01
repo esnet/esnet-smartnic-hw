@@ -20,7 +20,11 @@ module esnet_smartnic
     axi4l_intf axil_if ();
     axi4l_intf axil_debug_if ();
 
-    shell_intf shell_if ();
+    // CPM5 carries a 12-bit queue ID; sizing the boundary from the platform
+    // package keeps the core's qid field matched to what the hardware addresses.
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
 
     // H2C interface between adapter and shell, in the QDMA clock domain
     // (m_axi_pcie0_aclk is the CPM5 QDMA link clock, ~250 MHz)

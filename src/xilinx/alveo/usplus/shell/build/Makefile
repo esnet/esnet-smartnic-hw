@@ -49,7 +49,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     shell.pkg \
-    xilinx.alveo.pkg \
+    xilinx.alveo.usplus.pkg \
     xilinx.alveo.usplus.rtl \
     xilinx.alveo.usplus.shell.rtl \
     core.blackbox

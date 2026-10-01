@@ -23,7 +23,9 @@ module xilinx_alveo_versal_shell_unit_test;
     //   shell_if — shell output wired to core.stub
     // =========================================================================
     axi4l_intf axil_if  ();
-    shell_intf shell_if ();
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
 
     // =========================================================================
     // PCIe reset signals — shell needs these to synthesise pci_rstn.
