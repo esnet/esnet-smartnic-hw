@@ -317,4 +317,14 @@ set assoc_busifs [join {
 } :]
 set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports m_axi_pcie0_aclk]
 
+# Write the build ID into the PMC JTAG CSR USECODE register
+# (register address is 0xF11A0008).
+if {[info exists env(BITSTREAM_USERID)] && $env(BITSTREAM_USERID) ne ""} {
+    set_property CONFIG.PS_PMC_CONFIG \
+        [list JTAG_USERCODE $env(BITSTREAM_USERID)] \
+        $cips
+} else {
+    puts "WARNING: Missing USERID ... JTAG_USERCODE register not set."
+}
+
 save_bd_design
