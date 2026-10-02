@@ -106,12 +106,11 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // AXI4-S interfaces — shell side of the DUT
     // =========================================================================
-    axi4s_intf #(
+    // H2C output: packet_intf in core clock domain (DUT crosses from aclk)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c (.aclk(aclk));   // DUT drives (tx), monitor reads
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c (.clk(core_clk));
 
     // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
     packet_intf #(
@@ -129,7 +128,7 @@ module xilinx_qdma_st_adapter_unit_test;
         pkt_c2h.mty  = '0;
         pkt_c2h.err  = 1'b0;
         pkt_c2h.meta = '0;
-        axis_h2c.tready = 1'b1;
+        pkt_h2c.rdy  = 1'b1;
     end
 
     // =========================================================================
@@ -185,18 +184,16 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_qid,
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
-        .axis_h2c,
+        .pkt_h2c,
         .pkt_c2h
     );
 
     // =========================================================================
     // Verif objects
-    //   h2c_mon  : monitors axis_h2c (DUT output — H2C stream to core)
-    //   C2H input is driven via packet_intf's built-in cb_tx clocking block
+    //   Both DMA directions are packet_intf: C2H is driven via the built-in
+    //   cb_tx clocking block, H2C is sampled by recv_h2c_packet with rdy held
+    //   high so back-to-back output beats are observable.
     // =========================================================================
-    typedef axi4s_transaction #(axis_tid_t, axis_tdest_t, axis_tuser_t) TRANS_T;
-
-    axi4s_monitor  #(AXIS_DATA_BYTE_WID, axis_tid_t, axis_tdest_t, axis_tuser_t) h2c_mon;
 
     // =========================================================================
     // Assertions
@@ -226,22 +223,16 @@ module xilinx_qdma_st_adapter_unit_test;
     // NOTE: covergroups are intentionally omitted from this testbench.
     //
     // xsim's functional-coverage event scheduler hangs at time 0 (zero-time
-    // delta loop) when ANY covergroup is present together with:
-    //   - packet_fifo(ASYNC=1) CDC logic (sync_reset / sync_ctr chains), AND
-    //   - multiple axi4s_intf clocking blocks (the DUT's internal axis_h2c_comb
-    //     plus this testbench's axis_h2c share the same aclk domain).
-    //
-    // The root cause is an xsim bug in coverage event scheduling across
-    // simultaneous clocking-block domains.  Correctness is verified by the
-    // assertions and fail_unless_equal checks in each test case below.
+    // delta loop) when a covergroup is present alongside packet_fifo(ASYNC=1)
+    // CDC logic and multiple clocking-block domains on the same clock.
+    // Correctness is verified by the assertions and fail_unless_equal checks
+    // in each test case below.
 
     // =========================================================================
     // Build
     // =========================================================================
     function void build();
-        svunit_ut      = new(name);
-        h2c_mon        = new("h2c_mon");
-        h2c_mon.axis_vif = axis_h2c;
+        svunit_ut = new(name);
     endfunction
 
     // =========================================================================
@@ -278,8 +269,8 @@ module xilinx_qdma_st_adapter_unit_test;
         c2h_tready  = 1'b1;
         cmpt_tready = 1'b1;
         dsc_crdt_rdy = 1'b1;
-        // H2C monitor: always accept
-        axis_h2c.tready = 1'b1;
+        // H2C sink: always accept
+        pkt_h2c.rdy = 1'b1;
         // C2H packet_intf idle (direct assignment — avoid clocking block at time 0)
         pkt_c2h.vld  = 1'b0;
         pkt_c2h.data = '0;
@@ -355,9 +346,34 @@ module xilinx_qdma_st_adapter_unit_test;
         end
     endtask
 
-    // Receive one H2C packet via the monitor and return the transaction.
-    task automatic recv_h2c_packet(output TRANS_T trans);
-        h2c_mon.receive(trans);
+    // Receive one H2C packet from pkt_h2c, returning its length and metadata.
+    // rdy is held high by idle(), so this only samples.
+    task automatic recv_h2c_packet(
+            output int                 num_bytes,
+            output logic [QID_WID-1:0] qid,
+            output logic               err
+        );
+        int  beats;
+        bit  last;
+        beats = 0;
+        last  = 1'b0;
+        num_bytes = 0;
+        while (!last) begin
+            @(posedge core_clk iff (pkt_h2c.vld && pkt_h2c.rdy));
+            beats++;
+            qid  = pkt_h2c.meta;
+            err  = pkt_h2c.err;
+            last = pkt_h2c.eop;
+            if (last) num_bytes = beats*AXIS_DATA_BYTE_WID - pkt_h2c.mty;
+        end
+    endtask
+
+    // Expect NO H2C packet to emerge within the given number of core clocks.
+    task automatic expect_no_h2c_packet(input int cycles);
+        repeat (cycles) begin
+            @(posedge core_clk);
+            `FAIL_IF_LOG(pkt_h2c.vld, "unexpected H2C packet: should have been dropped")
+        end
     endtask
 
     // =========================================================================
@@ -371,90 +387,95 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // H2C: single full beat (mty=0, zero_byte=0) — all bytes valid.
         `SVTEST(h2c_single_full_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .last_mty(0));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), AXIS_DATA_BYTE_WID);
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
         `SVTEST_END
 
         // H2C: last beat with mty=1 — 63 valid bytes.
         `SVTEST(h2c_partial_last_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .last_mty(6'd1));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), AXIS_DATA_BYTE_WID - 1);
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID - 1);
         `SVTEST_END
 
-        // H2C: zero_byte flag — adapter still asserts tkeep=all-ones.
+        // H2C: zero_byte carries no payload and cannot be represented on
+        // packet_intf, so the adapter marks it errored and the FIFO drops it.
         `SVTEST(_h2c_zero_byte)
-            TRANS_T trans;
-            fork
-                send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
-                recv_h2c_packet(trans);
-            join
-            // zero_byte means the packet has no valid payload bytes; the monitor
-            // will receive 0 bytes (all tkeep masked) or a full beat depending
-            // on implementation — the key is no timeout and no assertion fire.
+            send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
+            expect_no_h2c_packet(64);
         `SVTEST_END
 
-        // H2C: err flag propagates to tuser.err on axis_h2c.
-        `SVTEST(h2c_err_propagation)
-            TRANS_T trans;
-            fork
-                send_h2c_packet(.num_beats(1), .err(1'b1));
-                recv_h2c_packet(trans);
-            join
-            `FAIL_UNLESS_EQUAL(trans.get_tuser().err, 1'b1);
+        // H2C: an errored packet is dropped rather than forwarded to the core.
+        `SVTEST(h2c_err_dropped)
+            send_h2c_packet(.num_beats(1), .err(1'b1));
+            expect_no_h2c_packet(64);
         `SVTEST_END
 
-        // H2C: qid maps to tid.qid on axis_h2c.
+        // H2C: a good packet still gets through after an errored one is dropped.
+        `SVTEST(h2c_err_does_not_block)
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            send_h2c_packet(.num_beats(2), .err(1'b1));
+            fork
+                send_h2c_packet(.num_beats(1), .qid(11'h2C));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
+            `FAIL_UNLESS_EQUAL(qid, 11'h2C);
+            `FAIL_UNLESS_EQUAL(err, 1'b0);
+        `SVTEST_END
+
+        // H2C: qid is carried in the packet metadata.
         `SVTEST(h2c_qid_mapping)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .qid(11'h5A5));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, 11'h5A5);
+            `FAIL_UNLESS_EQUAL(qid, 11'h5A5);
         `SVTEST_END
 
         // H2C: multi-beat packet — correct total byte count.
         `SVTEST(h2c_multi_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(4), .last_mty(6'd3));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), 4*AXIS_DATA_BYTE_WID - 3);
+            `FAIL_UNLESS_EQUAL(bytes, 4*AXIS_DATA_BYTE_WID - 3);
         `SVTEST_END
 
         // H2C: back-to-back packets with no gap.
         `SVTEST(h2c_back_to_back)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             for (int i = 0; i < 4; i++) begin
                 fork
                     send_h2c_packet(.num_beats(1));
-                    recv_h2c_packet(trans);
+                    recv_h2c_packet(bytes, qid, err);
                 join
+                `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
             end
         `SVTEST_END
 
         // H2C: qid=0 and qid=max propagate correctly.
         `SVTEST(h2c_qid_boundary)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .qid({QID_WID{1'b0}}));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, '0);
+            `FAIL_UNLESS_EQUAL(qid, '0);
             fork
                 send_h2c_packet(.num_beats(1), .qid({QID_WID{1'b1}}));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, {QID_WID{1'b1}});
+            `FAIL_UNLESS_EQUAL(qid, {QID_WID{1'b1}});
         `SVTEST_END
 
         // C2H: full beat — mty output should be 0.
@@ -661,17 +682,17 @@ module xilinx_qdma_st_adapter_unit_test;
         `SVTEST_END
 
         // H2C throughput: drive N beats continuously (tvalid never deasserted
-        // between beats) and verify axis_h2c.tvalid is high on every cycle
-        // after the one-cycle pipe latency fills.
+        // between beats) and verify the output runs gapless once it starts.
         `SVTEST(h2c_full_throughput)
             localparam int N = 16;
             int valid_cycles;
             int bubble_cycles;
             valid_cycles  = 0;
             bubble_cycles = 0;
-            // Start sending — cb_h2c drives signals #1 after each posedge.
-            // Fork a monitor that counts valid/bubble cycles on axis_h2c
-            // starting from the second beat (pipe latency = 1 cycle).
+            // The packet FIFO is store-and-forward, so the whole packet is
+            // buffered before any of it appears on pkt_h2c. Once it starts the
+            // output must run gapless: the core clock is slower than the QDMA
+            // clock, so the read side can never be starved by the write side.
             fork
                 begin : send
                     for (int i = 0; i < N; i++) begin
@@ -687,14 +708,12 @@ module xilinx_qdma_st_adapter_unit_test;
                     cb_h2c.h2c_tlast  <= 1'b0;
                 end : send
                 begin : monitor
-                    // Wait for pipe to fill (first valid on axis_h2c), then
-                    // count N cycles from that point — all must be valid.
-                    @(posedge aclk iff axis_h2c.tvalid);
+                    @(posedge core_clk iff pkt_h2c.vld);
                     valid_cycles++;
                     repeat (N - 1) begin
-                        @(posedge aclk);
-                        if (axis_h2c.tvalid) valid_cycles++;
-                        else                 bubble_cycles++;
+                        @(posedge core_clk);
+                        if (pkt_h2c.vld) valid_cycles++;
+                        else             bubble_cycles++;
                     end
                 end : monitor
             join

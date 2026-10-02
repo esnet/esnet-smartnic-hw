@@ -26,17 +26,13 @@ module esnet_smartnic
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // H2C interface between adapter and shell, in the QDMA clock domain
-    // (m_axi_pcie0_aclk is the CPM5 QDMA link clock, ~250 MHz)
-    axi4s_intf #(
+    // DMA interfaces between adapter and shell, in the management clock
+    // domain; the adapter's packet FIFOs cross them to and from the QDMA clock.
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c_dma (.aclk(m_axi_pcie0_aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_dma (.clk(axil_if.aclk));
 
-    // C2H interface between shell and adapter, in the management clock
-    // domain; the adapter's packet FIFO crosses it to the QDMA clock.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
@@ -59,7 +55,7 @@ module esnet_smartnic
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
         .core_srst ( ~axil_if.aresetn ),
-        .axis_h2c  ( axis_h2c_dma ),
+        .pkt_h2c   ( pkt_h2c_dma  ),
         .pkt_c2h   ( pkt_c2h_dma  )
     );
 
@@ -77,7 +73,7 @@ module esnet_smartnic
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
         .axil_top       ( axil_debug_if ),
-        .axis_h2c_dma   ( axis_h2c_dma ),
+        .pkt_h2c_dma    ( pkt_h2c_dma  ),
         .pkt_c2h_dma    ( pkt_c2h_dma  ),
         .shell_if
     );

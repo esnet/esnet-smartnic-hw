@@ -9,28 +9,26 @@
 // (UltraScale+, 11 bits) and the CPM5 QDMA (Versal, 12 bits).
 //
 // Responsibilities:
-//   H2C: mty → tkeep (last beat), qid → tid.qid, err → tuser.err
-//        Output: axi4s_intf (QDMA clock domain)
-//   C2H: packet_intf → flat QDMA signals + completions + ECC
-//        An internal packet_fifo (ASYNC=1) provides store-and-forward
-//        buffering with CDC from the core clock domain, and computes
+//   H2C: flat QDMA signals → packet_intf
+//   C2H: packet_intf → flat QDMA signals + completions + ECC, deriving the
 //        packet length for c2h_ctrl_len (required for DPDK).
-//        The QID is carried in packet_intf.meta.
 //        Descriptor credits kept at zero (simple mode).
+//
+// Both directions present packet_intf in the core clock domain. Each owns a
+// packet_fifo (ASYNC=1) providing store-and-forward buffering and the clock
+// domain crossing to or from the QDMA clock, so the caller needs no CDC of
+// its own. mty maps natively in both directions and the QID travels in
+// packet_intf.meta.
 //
 // FLR, user interrupts, queue status, and TM descriptor status are
 // PCIe function-level concerns and belong in the caller (e.g.
 // xilinx_aved_adapter, xilinx_alveo_qdma_wrapper).
-//
-// H2C output operates in the QDMA clock domain.  The caller is
-// responsible for any CDC needed on axis_h2c.
-// C2H input accepts packet_intf in the core clock domain; CDC is
-// handled internally by the packet_fifo.
 // =========================================================================
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;
 #(
     parameter int QID_WID = 11,         // 11 for USPlus discrete QDMA, 12 for CPM5
+    parameter int H2C_FIFO_DEPTH = 256, // H2C store-and-forward FIFO depth (words)
     parameter int C2H_FIFO_DEPTH = 256, // C2H store-and-forward FIFO depth (words)
     parameter int MAX_PKT_LEN = 9100    // Max packet length (bytes) for FIFO sizing
 ) (
@@ -38,7 +36,7 @@ module xilinx_qdma_st_adapter
     input  wire        aclk,
     input  wire        aresetn,
 
-    // Core-side synchronous reset (for C2H packet_fifo input side)
+    // Core-domain synchronous reset, for the core-side of both packet FIFOs
     input  wire        core_srst,
 
     // -----------------------------------------------------------------------
@@ -98,65 +96,54 @@ module xilinx_qdma_st_adapter
     input  wire                   dsc_crdt_rdy,
 
     // -----------------------------------------------------------------------
-    // AXI4-S interface — H2C (QDMA clock domain)
+    // Packet interfaces (core clock domain; CDC handled internally).
+    // The QID travels in the metadata field in both directions.
     // -----------------------------------------------------------------------
-    axi4s_intf.tx axis_h2c,  // H2C: drives toward core
-
-    // -----------------------------------------------------------------------
-    // Packet interface — C2H (core clock domain; CDC handled internally)
-    // -----------------------------------------------------------------------
-    packet_intf.rx pkt_c2h   // C2H: receives from core (meta = qid)
+    packet_intf.tx pkt_h2c,  // H2C: drives toward core
+    packet_intf.rx pkt_c2h   // C2H: receives from core
 );
 
     // =========================================================================
-    // H2C stream — flat signals → axi4s_intf
+    // H2C stream — flat signals → packet_fifo (ASYNC CDC + S&F) → packet_intf
     //
-    // mty[5:0] = number of empty bytes in the last beat (MSB end).
-    // Convert to tkeep by masking those bytes off.
-    // qid may be wider than QID_WID in xilinx_qdma_pkg (11); truncate.
+    // mty maps natively onto packet_intf, and the QID travels in the metadata
+    // field. An internal packet_fifo with ASYNC=1 provides store-and-forward
+    // buffering and the clock domain crossing from the QDMA clock down to the
+    // core clock, so the caller receives H2C already in the core domain.
+    //
+    // zero_byte marks a transfer carrying no payload, which packet_intf cannot
+    // represent (mty tops out one byte short of a full beat). Such packets are
+    // marked errored so DROP_ERRORED discards them and the FIFO's event
+    // interface counts them, rather than passing a beat of undefined payload on
+    // to the core.
     // =========================================================================
-    logic [AXIS_DATA_BYTE_WID-1:0] h2c_tkeep;
-    always_comb begin
-        if (h2c_tlast && !h2c_zero_byte) begin
-            for (int b = 0; b < AXIS_DATA_BYTE_WID; b++)
-                h2c_tkeep[b] = (b < (AXIS_DATA_BYTE_WID - h2c_mty)) ? 1'b1 : 1'b0;
-        end else begin
-            h2c_tkeep = '1;
-        end
-    end
 
-    axis_tid_t   h2c_tid;
-    axis_tdest_t h2c_tdest;
-    axis_tuser_t h2c_tuser;
-
-    assign h2c_tid.qid      = h2c_qid; // auto-truncates to qid_t (11 bits) when QID_WID=12
-    assign h2c_tdest.unused = 1'b0;
-    assign h2c_tuser.err    = h2c_err;
-
-    // Internal interface: combinatorial assignments before the output pipe
-    axi4s_intf #(
+    // FIFO input interface (QDMA clock domain)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c_comb (.aclk(aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_in (.clk(aclk));
 
-    assign axis_h2c_comb.tvalid = h2c_tvalid;
-    assign axis_h2c_comb.tdata  = h2c_tdata;
-    assign axis_h2c_comb.tkeep  = h2c_tkeep;
-    assign axis_h2c_comb.tlast  = h2c_tlast;
-    assign axis_h2c_comb.tid    = h2c_tid;
-    assign axis_h2c_comb.tdest  = h2c_tdest;
-    assign axis_h2c_comb.tuser  = h2c_tuser;
-    assign h2c_tready           = axis_h2c_comb.tready;
+    assign pkt_h2c_in.vld  = h2c_tvalid;
+    assign pkt_h2c_in.data = {<<8{h2c_tdata}};  // little-endian → big-endian
+    assign pkt_h2c_in.eop  = h2c_tlast;
+    assign pkt_h2c_in.mty  = h2c_tlast ? h2c_mty : '0;
+    assign pkt_h2c_in.err  = h2c_err || h2c_zero_byte;
+    assign pkt_h2c_in.meta = h2c_qid;
+    assign h2c_tready      = pkt_h2c_in.rdy;
 
-    // Register H2C output signals to eliminate the combinatorial path through
-    // mty → tkeep before the interface, preventing clocking-block race conditions
-    // in simulation and improving timing in synthesis.
-    axi4s_intf_pipe i_axi4s_intf_pipe_h2c (
-        .srst    ( ~aresetn      ),
-        .from_tx ( axis_h2c_comb ),
-        .to_rx   ( axis_h2c      )
+    packet_fifo #(
+        .ASYNC           ( 1              ),
+        .DEPTH           ( H2C_FIFO_DEPTH ),
+        .MAX_PKT_SIZE    ( MAX_PKT_LEN    ),
+        .MAX_DESCRIPTORS ( 32             ),
+        .DROP_ERRORED    ( 1              )
+    ) i_packet_fifo_h2c (
+        .srst_in       ( ~aresetn   ),
+        .packet_in_if  ( pkt_h2c_in ),
+        .srst_out      ( core_srst  ),
+        .packet_out_if ( pkt_h2c    ),
+        .pkt_size      (            )
     );
 
     // =========================================================================

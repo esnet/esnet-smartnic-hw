@@ -157,11 +157,9 @@ module xilinx_aved_adapter (
     // Core-domain synchronous reset, for the C2H packet FIFO input side
     input  wire        core_srst,
 
-    // H2C DMA stream — in the QDMA clock domain (m_axi_pcie0_aclk, ~250 MHz)
-    axi4s_intf.tx axis_h2c,  // H2C: host-to-core, drives toward shell/core
-
-    // C2H DMA stream — in the core clock domain; the CDC to the QDMA clock
-    // domain happens inside xilinx_qdma_st_adapter's packet FIFO.
+    // DMA streams — both in the core clock domain. The CDC to and from the
+    // QDMA clock domain happens inside xilinx_qdma_st_adapter's packet FIFOs.
+    packet_intf.tx pkt_h2c,  // H2C: host-to-core, drives toward shell/core
     packet_intf.rx pkt_c2h   // C2H: core-to-host, receives from shell/core
 );
 
@@ -255,7 +253,7 @@ module xilinx_aved_adapter (
     );
 
     // =========================================================================
-    // PCIE0 DMA streaming — CPM5 flat signals ↔ axi4s_intf (H2C) / packet_intf (C2H)
+    // PCIE0 DMA streaming — CPM5 flat signals ↔ packet_intf
     // CPM5 uses 12-bit qid and 13-bit FLR/IRQ fnc fields.
     // =========================================================================
     xilinx_qdma_st_adapter #(
@@ -317,7 +315,7 @@ module xilinx_aved_adapter (
         .dsc_crdt_rdy  ( dma0_dsc_crdt_in_0_rdy   ),
 
         // Stream interfaces
-        .axis_h2c,
+        .pkt_h2c,
         .pkt_c2h
     );
 

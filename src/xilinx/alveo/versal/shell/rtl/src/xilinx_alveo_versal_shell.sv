@@ -35,7 +35,7 @@ module xilinx_alveo_versal_shell
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
 
     // DMA streams to/from xilinx_aved_adapter
-    axi4s_intf.rx           axis_h2c_dma, // H2C from CPM5 QDMA (QDMA clock domain, ~250 MHz)
+    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA (management clock domain)
     packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA (management clock domain)
 
     // -------------------------------------------------------------------------
@@ -111,65 +111,24 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     // DMA streaming interfaces
     //
-    // H2C arrives from the CPM5 QDMA in the QDMA clock domain (~250 MHz) via
-    // axis_h2c_dma.  We:
-    //   1. Cross to the management clock (axil_top.aclk, 100 MHz) using
-    //      axi4s_pkt_fifo_async (store-and-forward, full-packet CDC).
-    //   2. Adapt metadata (tid/tuser) from xilinx_qdma_pkg types to
-    //      shell_pkg types using axi4s_intf_set_meta, matching the pattern
-    //      used in xilinx_alveo_usplus_shell.
+    // Both DMA directions meet xilinx_qdma_st_adapter as packet_intf in the
+    // management clock domain (axil_top.aclk, 100 MHz); the crossing to and
+    // from the QDMA clock happens in that module's packet FIFOs, so no CDC is
+    // needed here.
     //
-    // C2H runs the metadata adaptation in reverse and then converts to
-    // packet_intf, leaving the management clock domain on pkt_c2h_dma.  The
-    // CDC up to the QDMA clock happens in xilinx_qdma_st_adapter's packet
-    // FIFO, which also derives the packet length needed for c2h_ctrl_len —
-    // so no separate C2H CDC FIFO is needed here.
+    // H2C converts straight to axi4s_intf, taking the QID from the packet
+    // metadata and supplying the shell_pkg tid/tdest/tuser in the same step.
+    // C2H adapts the metadata to xilinx_qdma_pkg types and then converts to
+    // packet_intf.
     // =========================================================================
 
-    // Post-CDC interfaces: QDMA-typed, management clock domain
-    axi4s_intf #(
-        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c_cdc (.aclk(axil_top.aclk));
-
+    // QDMA-typed C2H interface, management clock domain
     axi4s_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .TID_WID       ( AXIS_TID_WID       ),
         .TDEST_WID     ( AXIS_TDEST_WID     ),
         .TUSER_WID     ( AXIS_TUSER_WID     )
     ) axis_c2h_cdc (.aclk(axil_top.aclk));
-
-    // pci_rstn is the JTAG-overrideable form of m_axi_pcie0_aresetn; use it
-    // as the active-high reset for the QDMA-domain side of both CDC FIFOs.
-    logic dma_srst;
-    assign dma_srst = ~pci_rstn;
-
-    // Terminated AXI-L peripheral interfaces for the FIFO probes
-    axi4l_intf #() axil_h2c_fifo_probe ();
-    axi4l_intf #() axil_h2c_fifo_ovfl  ();
-    axi4l_intf #() axil_h2c_fifo       ();
-
-    axi4l_intf_peripheral_term i_axil_term__h2c_probe (.axi4l_if(axil_h2c_fifo_probe));
-    axi4l_intf_peripheral_term i_axil_term__h2c_ovfl  (.axi4l_if(axil_h2c_fifo_ovfl));
-    axi4l_intf_peripheral_term i_axil_term__h2c_fifo  (.axi4l_if(axil_h2c_fifo));
-
-    // H2C CDC: 250 MHz QDMA domain → 100 MHz management domain
-    axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH ( 256 ),
-        .MAX_PKT_LEN( 9100 )
-    ) i_axi4s_pkt_fifo_async__h2c (
-        .axi4s_in_srst  ( dma_srst              ),
-        .axi4s_in       ( axis_h2c_dma          ),
-        .axi4s_out_srst ( ~axil_top.aresetn     ),
-        .axi4s_out      ( axis_h2c_cdc          ),
-        .flow_ctl_thresh( '1 ),
-        .flow_ctl       (    ),
-        .axil_to_probe  ( axil_h2c_fifo_probe   ),
-        .axil_to_ovfl   ( axil_h2c_fifo_ovfl    ),
-        .axil_if        ( axil_h2c_fifo         )
-    );
 
     // Shell-domain interfaces: shell_pkg-typed, management clock
     axi4s_intf #(
@@ -186,30 +145,28 @@ module xilinx_alveo_versal_shell
         .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
     ) axis_c2h (.aclk(axil_top.aclk));
 
-    // H2C metadata adaptation: QDMA types → shell_pkg types
-    xilinx_qdma_pkg::axis_tid_t   __h2c_qdma_tid;
-    xilinx_qdma_pkg::axis_tuser_t __h2c_qdma_tuser;
+    // H2C: packet_intf → axi4s_intf. The QID arrives in the packet metadata
+    // and becomes tid; tdest and tuser have no H2C source and are tied off.
     logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] h2c_shell_tid;
     shell_pkg::dma_st_axis_tdest_t h2c_shell_tdest;
     shell_pkg::dma_st_axis_tuser_t h2c_shell_tuser;
 
-    assign __h2c_qdma_tid    = axis_h2c_cdc.tid;
-    assign h2c_shell_tid     = __h2c_qdma_tid.qid;
-    assign h2c_shell_tdest.unused = 1'b0;
-    assign __h2c_qdma_tuser      = axis_h2c_cdc.tuser;
+    assign h2c_shell_tid               = pkt_h2c_dma.meta;
+    assign h2c_shell_tdest.unused      = 1'b0;
     assign h2c_shell_tuser.rss_enable  = 1'b0;
     assign h2c_shell_tuser.rss_entropy = '0;
 
-    axi4s_intf_set_meta #(
+    axi4s_from_packet_adapter #(
         .TID_WID   ( shell_if.DMA_ST_AXIS_TID_WID ),
         .TDEST_WID ( DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID ( DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_intf_set_meta__h2c (
-        .from_tx ( axis_h2c_cdc  ),
-        .to_rx   ( axis_h2c      ),
-        .tid     ( h2c_shell_tid  ),
-        .tdest   ( h2c_shell_tdest ),
-        .tuser   ( h2c_shell_tuser )
+    ) i_axi4s_from_packet_adapter__h2c (
+        .srst      ( ~axil_top.aresetn ),
+        .packet_if ( pkt_h2c_dma     ),
+        .axis_if   ( axis_h2c        ),
+        .tid       ( h2c_shell_tid   ),
+        .tdest     ( h2c_shell_tdest ),
+        .tuser     ( h2c_shell_tuser )
     );
 
     // C2H metadata adaptation: shell_pkg types → QDMA types
