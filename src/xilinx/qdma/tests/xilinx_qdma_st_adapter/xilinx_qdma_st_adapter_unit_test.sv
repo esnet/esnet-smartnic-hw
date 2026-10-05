@@ -152,6 +152,7 @@ module xilinx_qdma_st_adapter_unit_test;
     ) DUT (
         .aclk,
         .aresetn,
+        .core_clk,
         .core_srst,
         .h2c_tvalid,
         .h2c_tdata,

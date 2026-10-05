@@ -158,7 +158,9 @@ module xilinx_aved_adapter (
     // sub-space and routed back here, where the adapter lives.
     axi4l_intf.peripheral axil_qdma,
 
-    // Core-domain synchronous reset, for the C2H packet FIFO input side
+    // Core clock and synchronous reset — the domain of pkt_h2c/pkt_c2h and the
+    // core side of the QDMA adapter's packet FIFOs.
+    input  wire        core_clk,
     input  wire        core_srst,
 
     // DMA streams — both in the core clock domain. The CDC to and from the
@@ -263,8 +265,9 @@ module xilinx_aved_adapter (
     xilinx_qdma_st_adapter #(
         .QID_WID ( 12 )
     ) i_xilinx_qdma_st_adapter (
-        .aclk    ( m_axi_pcie0_aclk    ),
-        .aresetn ( m_axi_pcie0_aresetn ),
+        .aclk     ( m_axi_pcie0_aclk    ),
+        .aresetn  ( m_axi_pcie0_aresetn ),
+        .core_clk,
         .core_srst,
 
         // H2C

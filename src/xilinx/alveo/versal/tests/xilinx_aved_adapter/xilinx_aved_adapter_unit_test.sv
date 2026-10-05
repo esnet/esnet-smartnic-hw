@@ -215,6 +215,7 @@ module xilinx_aved_adapter_unit_test;
         // QDMA adapter registers, decoded by the shell and routed back here
         .axil_qdma                 ( axil_qdma_if ),
         // DMA streams (core clock domain; adapter owns the CDC)
+        .core_clk                  ( clk_pl0_100mhz   ),
         .core_srst                 ( ~rstn_pl0_100mhz ),
         .pkt_h2c                   ( pkt_h2c_dma ),
         .pkt_c2h                   ( pkt_c2h_dma )

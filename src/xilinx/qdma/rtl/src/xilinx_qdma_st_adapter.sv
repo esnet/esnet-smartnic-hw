@@ -38,7 +38,9 @@ module xilinx_qdma_st_adapter
     input  wire        aclk,
     input  wire        aresetn,
 
-    // Core-domain synchronous reset, for the core-side of both packet FIFOs
+    // Core clock and synchronous reset. This is the domain of pkt_h2c/pkt_c2h,
+    // the core side of both packet FIFOs, and the loopback switch.
+    input  wire        core_clk,
     input  wire        core_srst,
 
     // -----------------------------------------------------------------------
@@ -156,13 +158,13 @@ module xilinx_qdma_st_adapter
         .rst_in  ( 1'b0                           ),
         .rdy_in  (                                ),
         .lvl_in  ( reg_if.loopback_config.enable  ),
-        .clk_out ( pkt_h2c.clk                    ),
+        .clk_out ( core_clk                       ),
         .rst_out ( 1'b0                           ),
         .lvl_out ( core_loopback_en               )
     );
 
     sync_level #(.RST_VALUE(1'b0)) i_sync_level__loopback_enabled (
-        .clk_in  ( pkt_h2c.clk                    ),
+        .clk_in  ( core_clk                       ),
         .rst_in  ( 1'b0                           ),
         .rdy_in  (                                ),
         .lvl_in  ( core_loopback_en_mon           ),
@@ -172,7 +174,7 @@ module xilinx_qdma_st_adapter
     );
 
     sync_level #(.RST_VALUE(1'b0)) i_sync_level__loopback_switching (
-        .clk_in  ( pkt_h2c.clk                    ),
+        .clk_in  ( core_clk                       ),
         .rst_in  ( 1'b0                           ),
         .rdy_in  (                                ),
         .lvl_in  ( core_loopback_switching        ),
@@ -216,7 +218,7 @@ module xilinx_qdma_st_adapter
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_h2c_core (.clk(pkt_h2c.clk));
+    ) pkt_h2c_core (.clk(core_clk));
 
     packet_fifo #(
         .ASYNC           ( 1              ),
@@ -261,7 +263,7 @@ module xilinx_qdma_st_adapter
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_c2h_core (.clk(pkt_h2c.clk));
+    ) pkt_c2h_core (.clk(core_clk));
 
     packet_fifo #(
         .ASYNC           ( 1              ),

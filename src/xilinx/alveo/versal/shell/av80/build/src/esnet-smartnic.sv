@@ -30,17 +30,21 @@ module esnet_smartnic
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // DMA interfaces between adapter and shell, in the management clock
-    // domain; the adapter's packet FIFOs cross them to and from the QDMA clock.
+    // Core clock. The 100 MHz management clock stands in until a 322 MHz source
+    // arrives with DCMAC; the shell likewise drives the core at this rate.
+    wire core_clk = clk_pl0_100mhz;
+
+    // DMA interfaces between adapter and shell, in the core clock domain; the
+    // adapter's packet FIFOs cross them to and from the QDMA clock.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_h2c_dma (.clk(axil_if.aclk));
+    ) pkt_h2c_dma (.clk(core_clk));
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_c2h_dma (.clk(axil_if.aclk));
+    ) pkt_c2h_dma (.clk(core_clk));
 
     // AVED top-level
     // NOTE: for compatibility with AVED constraints, this instance must
@@ -58,6 +62,7 @@ module esnet_smartnic
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
+        .core_clk  ( core_clk     ),
         .core_srst ( ~axil_if.aresetn ),
         .axil_qdma ( axil_qdma    ),
         .pkt_h2c   ( pkt_h2c_dma  ),
