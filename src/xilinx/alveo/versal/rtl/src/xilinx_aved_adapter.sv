@@ -154,6 +154,10 @@ module xilinx_aved_adapter (
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if,
 
+    // QDMA streaming adapter registers, decoded out of the shell's hw
+    // sub-space and routed back here, where the adapter lives.
+    axi4l_intf.peripheral axil_qdma,
+
     // Core-domain synchronous reset, for the C2H packet FIFO input side
     input  wire        core_srst,
 
@@ -313,6 +317,9 @@ module xilinx_aved_adapter (
         .dsc_crdt_qid  ( dma0_dsc_crdt_in_0_qid   ),
         .dsc_crdt_valid( dma0_dsc_crdt_in_0_valid  ),
         .dsc_crdt_rdy  ( dma0_dsc_crdt_in_0_rdy   ),
+
+        // Registers
+        .axil_if ( axil_qdma ),
 
         // Stream interfaces
         .pkt_h2c,

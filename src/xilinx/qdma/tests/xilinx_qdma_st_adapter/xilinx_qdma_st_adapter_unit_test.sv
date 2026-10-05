@@ -21,6 +21,7 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     logic aclk     = 1'b0;
     logic core_clk = 1'b0;
+    logic axil_clk = 1'b0;
     logic aresetn  = 1'b0;
     logic core_srst;
     assign core_srst = ~aresetn;
@@ -33,6 +34,7 @@ module xilinx_qdma_st_adapter_unit_test;
     // same reason (see fifo_axil_async_unit_test.sv).
     always #2ns   aclk     = ~aclk;     // 250 MHz — QDMA clock domain
     always #2.5ns core_clk = ~core_clk; // 200 MHz — core clock domain
+    always #5ns   axil_clk = ~axil_clk; // 100 MHz — management clock domain
 
     // =========================================================================
     // H2C flat signals (driven by testbench → DUT)
@@ -132,6 +134,16 @@ module xilinx_qdma_st_adapter_unit_test;
     end
 
     // =========================================================================
+    // Management AXI4-Lite (register access)
+    // =========================================================================
+    axi4l_intf axil_if ();
+
+    assign axil_if.aclk = axil_clk;
+    always @(posedge axil_clk) axil_if.aresetn <= aresetn;
+
+    initial axil_if.aresetn = 1'b0;
+
+    // =========================================================================
     // DUT
     // =========================================================================
     xilinx_qdma_st_adapter #(
@@ -184,6 +196,7 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_qid,
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
+        .axil_if,
         .pkt_h2c,
         .pkt_c2h
     );
@@ -257,6 +270,7 @@ module xilinx_qdma_st_adapter_unit_test;
     // Helpers
     // =========================================================================
     task idle();
+        axil_if.idle_controller();
         // H2C flat inputs idle
         cb_h2c.h2c_tvalid    <= 1'b0;
         cb_h2c.h2c_tdata     <= '0;
@@ -373,6 +387,52 @@ module xilinx_qdma_st_adapter_unit_test;
         repeat (cycles) begin
             @(posedge core_clk);
             `FAIL_IF_LOG(pkt_h2c.vld, "unexpected H2C packet: should have been dropped")
+        end
+    endtask
+
+
+    // =========================================================================
+    // Register access
+    // =========================================================================
+    task automatic reg_write(input bit [31:0] addr, input bit [31:0] data);
+        axi4l_pkg::resp_t resp;
+        bit timeout;
+        axil_if.write(addr, data, resp, timeout);
+        `FAIL_IF_LOG(timeout, "AXI-L write timed out")
+        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L write returned an error response")
+    endtask
+
+    task automatic reg_read(input bit [31:0] addr, output bit [31:0] data);
+        axi4l_pkg::resp_t resp;
+        bit timeout;
+        axil_if.read(addr, data, resp, timeout);
+        `FAIL_IF_LOG(timeout, "AXI-L read timed out")
+        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L read returned an error response")
+    endtask
+
+    // Set loopback mode and wait until the adapter reports it applied.
+    task automatic set_loopback(input bit mode);
+        bit [31:0] status;
+        reg_write(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_CONFIG, 32'(mode));
+        forever begin
+            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_STATUS, status);
+            if (status[0] === mode && status[1] === 1'b0) break;
+        end
+    endtask
+
+    // Capture the length and queue id of the next packet on the flat C2H bus.
+    task automatic recv_c2h_flat(output logic [15:0] len, output logic [QID_WID-1:0] qid);
+        @(posedge aclk iff (c2h_tvalid && c2h_tready));
+        len = c2h_ctrl_len;
+        qid = c2h_ctrl_qid;
+        while (!c2h_tlast) @(posedge aclk iff (c2h_tvalid && c2h_tready));
+    endtask
+
+    // Fail if any packet reaches the flat C2H bus within the window.
+    task automatic expect_no_c2h_flat(input int cycles);
+        repeat (cycles) begin
+            @(posedge aclk);
+            `FAIL_IF_LOG(c2h_tvalid, "unexpected C2H packet")
         end
     endtask
 
@@ -747,6 +807,90 @@ module xilinx_qdma_st_adapter_unit_test;
             join
             `FAIL_UNLESS_EQUAL(bubble_cycles, 0);
             `FAIL_UNLESS_EQUAL(valid_cycles,  N);
+        `SVTEST_END
+
+        // -----------------------------------------------------------------
+        // Loopback mode
+        // -----------------------------------------------------------------
+
+        // Registers are reachable and default to loopback disabled.
+        `SVTEST(loopback_reg_defaults)
+            bit [31:0] data;
+            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_CONFIG, data);
+            `FAIL_UNLESS_EQUAL(data[0], 1'b0);
+            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_STATUS, data);
+            `FAIL_UNLESS_EQUAL(data[0], 1'b0);   // enabled
+            `FAIL_UNLESS_EQUAL(data[1], 1'b0);   // switching
+        `SVTEST_END
+
+        // The full 16-byte window must respond, or a CPM5 read completion
+        // covering it is poisoned by SLVERR on the unmapped beats.
+        `SVTEST(loopback_reg_window_complete)
+            bit [31:0] data;
+            reg_read(qdma_st_adapter_reg_pkg::OFFSET_RESERVED_0, data);
+            `FAIL_UNLESS_EQUAL(data, 32'h0);
+            reg_read(qdma_st_adapter_reg_pkg::OFFSET_RESERVED_1, data);
+            `FAIL_UNLESS_EQUAL(data, 32'h0);
+        `SVTEST_END
+
+        // With loopback enabled an H2C packet comes back as C2H, on the same
+        // queue and with the length it was sent with.
+        `SVTEST(loopback_h2c_returns_as_c2h)
+            logic [15:0] len;
+            logic [QID_WID-1:0] qid;
+            set_loopback(1'b1);
+            fork
+                send_h2c_packet(.num_beats(3), .last_mty(6'd5), .qid(11'h1A3));
+                recv_c2h_flat(len, qid);
+            join
+            `FAIL_UNLESS_EQUAL(len, 16'(3*AXIS_DATA_BYTE_WID - 5));
+            `FAIL_UNLESS_EQUAL(qid, 11'h1A3);
+        `SVTEST_END
+
+        // While looped back, the core sees no H2C traffic.
+        `SVTEST(loopback_core_h2c_idle)
+            logic [15:0] len;
+            logic [QID_WID-1:0] qid;
+            set_loopback(1'b1);
+            fork
+                send_h2c_packet(.num_beats(2), .qid(11'h0C));
+                recv_c2h_flat(len, qid);
+                expect_no_h2c_packet(96);
+            join
+            `FAIL_UNLESS_EQUAL(qid, 11'h0C);
+        `SVTEST_END
+
+        // While looped back, C2H traffic from the core is discarded rather
+        // than reaching the host.
+        `SVTEST(loopback_core_c2h_discarded)
+            set_loopback(1'b1);
+            send_c2h_packet(.num_bytes(128), .qid(11'h7F));
+            expect_no_c2h_flat(96);
+        `SVTEST_END
+
+        // Disabling loopback restores normal routing in both directions.
+        `SVTEST(loopback_disable_restores_normal)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            logic err;
+            logic [15:0] len;
+            logic [QID_WID-1:0] c2h_qid;
+            set_loopback(1'b1);
+            set_loopback(1'b0);
+            // H2C reaches the core again
+            fork
+                send_h2c_packet(.num_beats(1), .qid(11'h55));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
+            `FAIL_UNLESS_EQUAL(qid, 11'h55);
+            // C2H from the core reaches the host again
+            fork
+                send_c2h_packet(.num_bytes(64), .qid(11'h2B));
+                recv_c2h_flat(len, c2h_qid);
+            join
+            `FAIL_UNLESS_EQUAL(len, 16'(AXIS_DATA_BYTE_WID));
+            `FAIL_UNLESS_EQUAL(c2h_qid, 11'h2B);
         `SVTEST_END
 
     `SVUNIT_TESTS_END

@@ -20,6 +20,10 @@
 // its own. mty maps natively in both directions and the QID travels in
 // packet_intf.meta.
 //
+// A register-controlled loopback mode reflects H2C back to the host as C2H
+// without involving the core, for testing the DMA path end to end. See the
+// qdma_st_adapter register block.
+//
 // FLR, user interrupts, queue status, and TM descriptor status are
 // PCIe function-level concerns and belong in the caller (e.g.
 // xilinx_aved_adapter, xilinx_alveo_qdma_wrapper).
@@ -96,12 +100,76 @@ module xilinx_qdma_st_adapter
     input  wire                   dsc_crdt_rdy,
 
     // -----------------------------------------------------------------------
+    // Management AXI4-Lite — test and debug registers.
+    // Its own clock domain; crossings to the core domain are made internally.
+    // -----------------------------------------------------------------------
+    axi4l_intf.peripheral axil_if,
+
+    // -----------------------------------------------------------------------
     // Packet interfaces (core clock domain; CDC handled internally).
     // The QID travels in the metadata field in both directions.
     // -----------------------------------------------------------------------
     packet_intf.tx pkt_h2c,  // H2C: drives toward core
     packet_intf.rx pkt_c2h   // C2H: receives from core
 );
+
+    // =========================================================================
+    // Test and debug registers
+    //
+    // The register block runs on the management clock; the loopback enable and
+    // its status cross to and from the core domain through level
+    // synchronizers.  The enable changes rarely and packet_loopback applies it
+    // only at a packet boundary, so the crossing needs no handshake.
+    // =========================================================================
+    qdma_st_adapter_reg_intf reg_if ();
+
+    qdma_st_adapter_reg_blk i_qdma_st_adapter_reg_blk (
+        .axil_if    ( axil_if ),
+        .reg_blk_if ( reg_if  )
+    );
+
+    // Reserved registers pad the block out to a full 16-byte window; they hold
+    // their init value and take no hardware update.
+    assign reg_if.reserved_0_nxt_v = 1'b0;
+    assign reg_if.reserved_0_nxt   = '0;
+    assign reg_if.reserved_1_nxt_v = 1'b0;
+    assign reg_if.reserved_1_nxt   = '0;
+
+    logic core_loopback_en;
+    logic core_loopback_en_mon;
+    logic core_loopback_switching;
+
+    sync_level #(.RST_VALUE(1'b0)) i_sync_level__loopback_en (
+        .clk_in  ( axil_if.aclk                   ),
+        .rst_in  ( 1'b0                           ),
+        .rdy_in  (                                ),
+        .lvl_in  ( reg_if.loopback_config.enable  ),
+        .clk_out ( pkt_h2c.clk                    ),
+        .rst_out ( 1'b0                           ),
+        .lvl_out ( core_loopback_en               )
+    );
+
+    sync_level #(.RST_VALUE(1'b0)) i_sync_level__loopback_enabled (
+        .clk_in  ( pkt_h2c.clk                    ),
+        .rst_in  ( 1'b0                           ),
+        .rdy_in  (                                ),
+        .lvl_in  ( core_loopback_en_mon           ),
+        .clk_out ( axil_if.aclk                   ),
+        .rst_out ( 1'b0                           ),
+        .lvl_out ( reg_if.loopback_status_nxt.enabled )
+    );
+
+    sync_level #(.RST_VALUE(1'b0)) i_sync_level__loopback_switching (
+        .clk_in  ( pkt_h2c.clk                    ),
+        .rst_in  ( 1'b0                           ),
+        .rdy_in  (                                ),
+        .lvl_in  ( core_loopback_switching        ),
+        .clk_out ( axil_if.aclk                   ),
+        .rst_out ( 1'b0                           ),
+        .lvl_out ( reg_if.loopback_status_nxt.switching )
+    );
+
+    assign reg_if.loopback_status_nxt_v = 1'b1;
 
     // =========================================================================
     // H2C stream — flat signals → packet_fifo (ASYNC CDC + S&F) → packet_intf
@@ -132,6 +200,12 @@ module xilinx_qdma_st_adapter
     assign pkt_h2c_in.meta = h2c_qid;
     assign h2c_tready      = pkt_h2c_in.rdy;
 
+    // FIFO output interface (core clock domain), routed via packet_loopback
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_core (.clk(pkt_h2c.clk));
+
     packet_fifo #(
         .ASYNC           ( 1              ),
         .DEPTH           ( H2C_FIFO_DEPTH ),
@@ -139,11 +213,11 @@ module xilinx_qdma_st_adapter
         .MAX_DESCRIPTORS ( 32             ),
         .DROP_ERRORED    ( 1              )
     ) i_packet_fifo_h2c (
-        .srst_in       ( ~aresetn   ),
-        .packet_in_if  ( pkt_h2c_in ),
-        .srst_out      ( core_srst  ),
-        .packet_out_if ( pkt_h2c    ),
-        .pkt_size      (            )
+        .srst_in       ( ~aresetn     ),
+        .packet_in_if  ( pkt_h2c_in   ),
+        .srst_out      ( core_srst    ),
+        .packet_out_if ( pkt_h2c_core ),
+        .pkt_size      (              )
     );
 
     // =========================================================================
@@ -171,6 +245,12 @@ module xilinx_qdma_st_adapter
     // completion len fields, so no resizing is needed below.
     packet_pkg::size_t c2h_pkt_size;
 
+    // FIFO input interface (core clock domain), sourced via packet_loopback
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_core (.clk(pkt_h2c.clk));
+
     packet_fifo #(
         .ASYNC           ( 1              ),
         .DEPTH           ( C2H_FIFO_DEPTH ),
@@ -179,10 +259,29 @@ module xilinx_qdma_st_adapter
         .DROP_ERRORED    ( 0              )
     ) i_packet_fifo_c2h (
         .srst_in       ( core_srst    ),
-        .packet_in_if  ( pkt_c2h      ),
+        .packet_in_if  ( pkt_c2h_core ),
         .srst_out      ( ~aresetn     ),
         .packet_out_if ( pkt_c2h_out  ),
         .pkt_size      ( c2h_pkt_size )
+    );
+
+    // =========================================================================
+    // Loopback switch (core clock domain)
+    //
+    // tx/rx are named from the host's point of view, which matches the DMA
+    // directions: H2C is the host transmitting, C2H the host receiving.  With
+    // loopback enabled, H2C is reflected straight into the C2H FIFO, the core
+    // sees no H2C traffic, and C2H traffic from the core is discarded.
+    // =========================================================================
+    packet_loopback i_packet_loopback (
+        .srst          ( core_srst               ),
+        .packet_tx_in  ( pkt_h2c_core            ),
+        .packet_tx_out ( pkt_h2c                 ),
+        .packet_rx_in  ( pkt_c2h                 ),
+        .packet_rx_out ( pkt_c2h_core            ),
+        .en            ( core_loopback_en        ),
+        .en_mon        ( core_loopback_en_mon    ),
+        .switching     ( core_loopback_switching )
     );
 
     // --- Flat C2H data outputs (QDMA clock domain) ---

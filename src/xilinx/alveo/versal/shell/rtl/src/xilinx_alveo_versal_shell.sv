@@ -38,6 +38,10 @@ module xilinx_alveo_versal_shell
     packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA (management clock domain)
     packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA (management clock domain)
 
+    // QDMA streaming adapter registers, decoded out of the hw sub-space and
+    // routed back to xilinx_aved_adapter where the adapter lives.
+    axi4l_intf.controller   axil_qdma,
+
     // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
     // -------------------------------------------------------------------------
@@ -70,7 +74,8 @@ module xilinx_alveo_versal_shell
     xilinx_alveo_versal_decoder i_xilinx_alveo_versal_decoder (
         .axil_if        ( axil_hw       ),
         .dcmac0_axil_if ( axil_dcmac[0] ),
-        .dcmac1_axil_if ( axil_dcmac[1] )
+        .dcmac1_axil_if ( axil_dcmac[1] ),
+        .qdma_axil_if   ( axil_qdma     )
     );
 
     // Terminate DCMAC AXI-L interfaces — pending DCMAC register map

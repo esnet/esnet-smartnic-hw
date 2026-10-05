@@ -3,6 +3,7 @@
 module xilinx_alveo_versal_shell_unit_test;
     import svunit_pkg::svunit_testcase;
     import axi4l_pkg::*;
+    import xilinx_qdma_pkg::*;
 
     string name = "xilinx_alveo_versal_shell_ut";
     svunit_testcase svunit_ut;
@@ -23,6 +24,23 @@ module xilinx_alveo_versal_shell_unit_test;
     //   shell_if — shell output wired to core.stub
     // =========================================================================
     axi4l_intf axil_if  ();
+
+    // QDMA adapter register sub-space, decoded by the shell. The adapter
+    // itself lives above the shell, so terminate it here.
+    axi4l_intf axil_qdma ();
+
+    // DMA streams. The QDMA adapter is above the shell in the real design,
+    // so these are terminated rather than driven.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_dma (.clk(axil_if.aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_dma (.clk(axil_if.aclk));
+
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
@@ -44,9 +62,16 @@ module xilinx_alveo_versal_shell_unit_test;
         .sys_clk_100mhz ( axil_if.aclk ),
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),
-        .axil_if,
+        .axil_top    ( axil_if      ),
+        .pkt_h2c_dma ( pkt_h2c_dma  ),
+        .pkt_c2h_dma ( pkt_c2h_dma  ),
+        .axil_qdma   ( axil_qdma    ),
         .shell_if
     );
+
+    axi4l_intf_peripheral_term i_axi4l_term__qdma (.axi4l_if (axil_qdma));
+    packet_intf_tx_term i_packet_intf_tx_term__h2c (.to_rx   (pkt_h2c_dma));
+    packet_intf_rx_sink i_packet_intf_rx_sink__c2h (.from_tx (pkt_c2h_dma));
 
     core DUT_core (
         .shell_if

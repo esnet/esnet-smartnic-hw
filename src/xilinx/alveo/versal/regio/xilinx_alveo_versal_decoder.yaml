@@ -1,5 +1,9 @@
 name: xilinx_alveo_versal
 
+blocks:
+  qdma_st_adapter: &qdma_st_adapter
+    !include ../src/xilinx/qdma/regio/qdma_st_adapter.yaml
+
 decoders:
   dcmac_decoder: &dcmac_decoder
     !include ../src/xilinx/alveo/versal/regio/dcmac_decoder.yaml
@@ -14,3 +18,7 @@ interfaces:
     address: 0x008000
     suffix: '1'
     name: dcmac
+
+  - block: *qdma_st_adapter
+    address: 0x010000
+    name: qdma

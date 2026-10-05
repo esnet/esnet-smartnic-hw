@@ -50,6 +50,7 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
+    axi4l_intf axil_qdma_if ();
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
@@ -200,6 +201,8 @@ module xilinx_aved_adapter_unit_test;
         .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
         .axil_if                   ( axil_app_if ),
+        // QDMA adapter registers, decoded by the shell and routed back here
+        .axil_qdma                 ( axil_qdma_if ),
         // DMA streams (core clock domain; adapter owns the CDC)
         .core_srst                 ( ~rstn_pl0_100mhz ),
         .pkt_h2c                   ( pkt_h2c_dma ),
@@ -213,6 +216,7 @@ module xilinx_aved_adapter_unit_test;
         .axil_top       ( axil_app_if ),
         .pkt_h2c_dma    ( pkt_h2c_dma ),
         .pkt_c2h_dma    ( pkt_c2h_dma ),
+        .axil_qdma      ( axil_qdma_if ),
         .shell_if
     );
 

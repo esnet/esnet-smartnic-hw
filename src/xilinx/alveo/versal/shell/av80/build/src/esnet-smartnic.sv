@@ -20,6 +20,10 @@ module esnet_smartnic
     axi4l_intf axil_if ();
     axi4l_intf axil_debug_if ();
 
+    // QDMA streaming adapter registers: decoded in the shell, consumed by the
+    // adapter, so the sub-space runs back down into xilinx_aved_adapter.
+    axi4l_intf axil_qdma ();
+
     // CPM5 carries a 12-bit queue ID; sizing the boundary from the platform
     // package keeps the core's qid field matched to what the hardware addresses.
     shell_intf #(
@@ -55,6 +59,7 @@ module esnet_smartnic
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
         .core_srst ( ~axil_if.aresetn ),
+        .axil_qdma ( axil_qdma    ),
         .pkt_h2c   ( pkt_h2c_dma  ),
         .pkt_c2h   ( pkt_c2h_dma  )
     );
@@ -75,6 +80,7 @@ module esnet_smartnic
         .axil_top       ( axil_debug_if ),
         .pkt_h2c_dma    ( pkt_h2c_dma  ),
         .pkt_c2h_dma    ( pkt_c2h_dma  ),
+        .axil_qdma      ( axil_qdma    ),
         .shell_if
     );
 
