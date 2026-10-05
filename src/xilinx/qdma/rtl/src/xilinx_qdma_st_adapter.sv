@@ -220,6 +220,12 @@ module xilinx_qdma_st_adapter
         .META_WID      ( QID_WID            )
     ) pkt_h2c_core (.clk(core_clk));
 
+    // Packet events, one per FIFO side.  The input-side event reports the full
+    // status range and so accounts for packets the FIFO drops; the output-side
+    // event reports delivery.
+    packet_event_intf evt_h2c_in  (.clk(aclk));
+    packet_event_intf evt_h2c_out (.clk(core_clk));
+
     packet_fifo #(
         .ASYNC           ( 1              ),
         .DEPTH           ( H2C_FIFO_DEPTH ),
@@ -229,8 +235,10 @@ module xilinx_qdma_st_adapter
     ) i_packet_fifo_h2c (
         .srst_in       ( ~aresetn     ),
         .packet_in_if  ( pkt_h2c_in   ),
+        .event_in_if   ( evt_h2c_in   ),
         .srst_out      ( core_srst    ),
         .packet_out_if ( pkt_h2c_core ),
+        .event_out_if  ( evt_h2c_out  ),
         .pkt_size      (              )
     );
 
@@ -265,6 +273,9 @@ module xilinx_qdma_st_adapter
         .META_WID      ( QID_WID            )
     ) pkt_c2h_core (.clk(core_clk));
 
+    packet_event_intf evt_c2h_in  (.clk(core_clk));
+    packet_event_intf evt_c2h_out (.clk(aclk));
+
     packet_fifo #(
         .ASYNC           ( 1              ),
         .DEPTH           ( C2H_FIFO_DEPTH ),
@@ -274,8 +285,10 @@ module xilinx_qdma_st_adapter
     ) i_packet_fifo_c2h (
         .srst_in       ( core_srst    ),
         .packet_in_if  ( pkt_c2h_core ),
+        .event_in_if   ( evt_c2h_in   ),
         .srst_out      ( ~aresetn     ),
         .packet_out_if ( pkt_c2h_out  ),
+        .event_out_if  ( evt_c2h_out  ),
         .pkt_size      ( c2h_pkt_size )
     );
 
