@@ -31,10 +31,8 @@
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;
 #(
-    parameter int QID_WID = 11,         // 11 for USPlus discrete QDMA, 12 for CPM5
-    parameter int H2C_FIFO_DEPTH = 256, // H2C store-and-forward FIFO depth (words)
-    parameter int C2H_FIFO_DEPTH = 256, // C2H store-and-forward FIFO depth (words)
-    parameter int MAX_PKT_LEN = 9100    // Max packet length (bytes) for FIFO sizing
+    parameter int QID_WID = 11,      // 11 for USPlus discrete QDMA, 12 for CPM5
+    parameter int MAX_PKT_LEN = 9100 // Max packet length (bytes) for FIFO sizing
 ) (
     // QDMA clock and reset
     input  wire        aclk,
@@ -112,6 +110,20 @@ module xilinx_qdma_st_adapter
     packet_intf.tx pkt_h2c,  // H2C: drives toward core
     packet_intf.rx pkt_c2h   // C2H: receives from core
 );
+
+    // =========================================================================
+    // Packet FIFO sizing
+    //
+    // Both FIFOs are store-and-forward, so each must hold strictly more than
+    // one maximum-length packet (packet_fifo_core checks DEPTH > MAX_PKT_WORDS).
+    // 256 words of 64 bytes covers packets up to just under 16 kB, which
+    // includes the 9100-byte jumbo default; beyond that, grow to the next power
+    // of two that clears the check.
+    // =========================================================================
+    localparam int MAX_PKT_WORDS  = (MAX_PKT_LEN + AXIS_DATA_BYTE_WID - 1) / AXIS_DATA_BYTE_WID;
+    localparam int MIN_FIFO_DEPTH = 2 ** $clog2(MAX_PKT_WORDS + 1);
+    localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 256 ? MIN_FIFO_DEPTH : 256;
+    localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
     // =========================================================================
     // Test and debug registers
