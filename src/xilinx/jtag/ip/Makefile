@@ -20,7 +20,7 @@ IP_SIM_INC_DIRS =
 
 EXT_LIBS = \
     xpm \
-    axis_vio_v1_0_14 \
+    axis_vio_v1_0_15 \
     axis_dbg_stub_v1_0_1 \
     axis_dbg_sync_v1_0_1
 

@@ -11,10 +11,15 @@ module xilinx_alveo_versal_shell_unit_test;
     `define SVUNIT_TIMEOUT 1ms
 
     // =========================================================================
-    // Register offsets (core.stub.regio/core.yaml)
+    // Register offsets
+    //
+    // The shell splits its management space per shell_decoder_core.yaml into
+    // shell_cfg at 0x000000, hw at 0x200000 and core at 0x400000.  These reach
+    // core.stub's own registers (core.stub.regio/core.yaml).
     // =========================================================================
-    localparam bit [31:0] ADDR_ID         = 32'h0;
-    localparam bit [31:0] ADDR_SCRATCHPAD = 32'h4;
+    localparam bit [31:0] CORE_BASE       = 32'h400000;
+    localparam bit [31:0] ADDR_ID         = CORE_BASE + 32'h0;
+    localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
     // =========================================================================
