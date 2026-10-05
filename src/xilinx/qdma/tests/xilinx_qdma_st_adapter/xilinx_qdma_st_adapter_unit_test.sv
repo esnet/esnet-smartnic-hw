@@ -414,9 +414,9 @@ module xilinx_qdma_st_adapter_unit_test;
     // Set loopback mode and wait until the adapter reports it applied.
     task automatic set_loopback(input bit mode);
         bit [31:0] status;
-        reg_write(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_CONFIG, 32'(mode));
+        reg_write(qdma_reg_pkg::OFFSET_LOOPBACK_CONFIG, 32'(mode));
         forever begin
-            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_STATUS, status);
+            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_STATUS, status);
             if (status[0] === mode && status[1] === 1'b0) break;
         end
     endtask
@@ -817,9 +817,9 @@ module xilinx_qdma_st_adapter_unit_test;
         // Registers are reachable and default to loopback disabled.
         `SVTEST(loopback_reg_defaults)
             bit [31:0] data;
-            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_CONFIG, data);
+            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_CONFIG, data);
             `FAIL_UNLESS_EQUAL(data[0], 1'b0);
-            reg_read(qdma_st_adapter_reg_pkg::OFFSET_LOOPBACK_STATUS, data);
+            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_STATUS, data);
             `FAIL_UNLESS_EQUAL(data[0], 1'b0);   // enabled
             `FAIL_UNLESS_EQUAL(data[1], 1'b0);   // switching
         `SVTEST_END
@@ -828,9 +828,9 @@ module xilinx_qdma_st_adapter_unit_test;
         // covering it is poisoned by SLVERR on the unmapped beats.
         `SVTEST(loopback_reg_window_complete)
             bit [31:0] data;
-            reg_read(qdma_st_adapter_reg_pkg::OFFSET_RESERVED_0, data);
+            reg_read(qdma_reg_pkg::OFFSET_RESERVED_0, data);
             `FAIL_UNLESS_EQUAL(data, 32'h0);
-            reg_read(qdma_st_adapter_reg_pkg::OFFSET_RESERVED_1, data);
+            reg_read(qdma_reg_pkg::OFFSET_RESERVED_1, data);
             `FAIL_UNLESS_EQUAL(data, 32'h0);
         `SVTEST_END
 

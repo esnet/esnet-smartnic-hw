@@ -135,9 +135,9 @@ module xilinx_qdma_st_adapter
     // synchronizers.  The enable changes rarely and packet_loopback applies it
     // only at a packet boundary, so the crossing needs no handshake.
     // =========================================================================
-    qdma_st_adapter_reg_intf reg_if ();
+    qdma_reg_intf reg_if ();
 
-    qdma_st_adapter_reg_blk i_qdma_st_adapter_reg_blk (
+    qdma_reg_blk i_qdma_reg_blk (
         .axil_if    ( axil_if ),
         .reg_blk_if ( reg_if  )
     );

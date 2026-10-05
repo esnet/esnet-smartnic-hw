@@ -1,4 +1,4 @@
-name: qdma_st_adapter
+name: qdma
 info: |
   QDMA streaming adapter test and debug controls.
 
