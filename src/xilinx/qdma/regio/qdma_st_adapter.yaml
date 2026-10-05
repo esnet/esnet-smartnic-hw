@@ -1,0 +1,49 @@
+name: qdma_st_adapter
+info: |
+  QDMA streaming adapter test and debug controls.
+
+  The register block spans a full 16-byte aligned window.  The CPM5 NoC turns
+  any PCIe MMIO read into a single 16-byte AXI4 transaction, which the
+  SmartConnect splits into four AXI4-Lite beats; an unmapped beat returns
+  SLVERR and poisons the whole PCIe completion.
+
+regs:
+  - default:
+      width: 32
+      access: ro
+      init: 0
+
+  - name: loopback_config
+    desc: Loopback mode control.
+    access: rw
+    fields:
+      - name: enable
+        desc: When set, H2C traffic is reflected back to the host as C2H
+              instead of being passed to the core.  While enabled, nothing is
+              presented to the core on H2C and C2H traffic from the core is
+              discarded.  The queue ID is preserved, so a packet returns on
+              the queue it was sent on.  Takes effect at the next packet
+              boundary on both paths; poll loopback_status.switching to
+              observe when the change has been applied.
+        width: 1
+        init: 0
+
+  - name: loopback_status
+    desc: Loopback mode status.
+    access: ro
+    fields:
+      - name: enabled
+        desc: Loopback mode currently in effect.  Lags loopback_config.enable
+              across a mode change.
+        width: 1
+      - name: switching
+        desc: A mode change is pending.  Clears once the new mode is applied.
+              Stuck set means a path has not reached a packet boundary because
+              its destination is permanently backpressured.
+        width: 1
+
+  - name: reserved_0
+    access: ro
+
+  - name: reserved_1
+    access: ro
