@@ -24,6 +24,10 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
+    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x010000.
+    localparam bit [31:0] QDMA_BASE       = 32'h210000;
+    localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
+    localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
 
     // =========================================================================
     // Clocks and resets
@@ -332,6 +336,28 @@ module xilinx_aved_adapter_unit_test;
                 axi4_read(ADDR_SCRATCHPAD, rdata);
                 `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
             end
+        `SVTEST_END
+
+        // The QDMA adapter's loopback registers are reachable from PCIE0 BAR2
+        // through the shell's hw decoder and back down into the adapter, and
+        // the requested mode is applied across the management/core crossing.
+        `SVTEST(qdma_loopback_register_path)
+            bit [31:0] rdata;
+            axi4_read(ADDR_LB_STATUS, rdata);
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b0);   // not enabled out of reset
+
+            axi4_write(ADDR_LB_CONFIG, 32'h1);
+            axi4_read(ADDR_LB_CONFIG, rdata);
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b1);
+
+            // The enable crosses to the core domain and the status crosses
+            // back, so the applied mode lags the request.
+            for (int i = 0; i < 100; i++) begin
+                axi4_read(ADDR_LB_STATUS, rdata);
+                if (rdata[0] === 1'b1 && rdata[1] === 1'b0) break;
+            end
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b1);   // enabled
+            `FAIL_UNLESS_EQUAL(rdata[1], 1'b0);   // no longer switching
         `SVTEST_END
 
     `SVUNIT_TESTS_END
