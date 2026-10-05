@@ -29,6 +29,17 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
     localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
 
+    // Packet counter sub-blocks, per qdma_decoder.yaml.
+    localparam bit [31:0] ADDR_H2C_IN_CNT  = QDMA_BASE + 32'h100;
+    localparam bit [31:0] ADDR_H2C_OUT_CNT = QDMA_BASE + 32'h200;
+    localparam bit [31:0] ADDR_C2H_IN_CNT  = QDMA_BASE + 32'h300;
+    localparam bit [31:0] ADDR_C2H_OUT_CNT = QDMA_BASE + 32'h400;
+
+    // Offsets within a packet_counters block.
+    localparam bit [31:0] CNT_OFF_INFO       = 32'h00;
+    localparam bit [31:0] CNT_OFF_PKT_OK_LO  = 32'h0C;
+    localparam bit [31:0] CNT_OFF_RESERVED_1 = 32'h6C;
+
     // =========================================================================
     // Clocks and resets
     //
@@ -359,6 +370,34 @@ module xilinx_aved_adapter_unit_test;
             end
             `FAIL_UNLESS_EQUAL(rdata[0], 1'b1);   // enabled
             `FAIL_UNLESS_EQUAL(rdata[1], 1'b0);   // no longer switching
+        `SVTEST_END
+
+        // Each packet counter block decodes at its own sub-address over the
+        // real route from PCIE0. The info register is non-zero (it reports the
+        // counter widths), which distinguishes a decoded block from a read
+        // that fell through to unmapped space.
+        `SVTEST(qdma_counter_blocks_decode)
+            bit [31:0] info;
+            bit [31:0] bases [4];
+            bases = '{ADDR_H2C_IN_CNT, ADDR_H2C_OUT_CNT, ADDR_C2H_IN_CNT, ADDR_C2H_OUT_CNT};
+            foreach (bases[i]) begin
+                bit [31:0] pkt_ok;
+                axi4_read(bases[i] + CNT_OFF_INFO, info);
+                `FAIL_UNLESS(info !== 32'h0);
+                // Counts start at zero: no DMA traffic has run in this test.
+                axi4_read(bases[i] + CNT_OFF_PKT_OK_LO, pkt_ok);
+                `FAIL_UNLESS_EQUAL(pkt_ok, 32'h0);
+            end
+        `SVTEST_END
+
+        // The counter map is padded so that every 16-byte window holding a
+        // register is fully mapped. Reading the last register exercises the
+        // window the padding was added for -- on CPM5 an unmapped beat in that
+        // window would poison the whole read completion.
+        `SVTEST(qdma_counter_last_window_reads_clean)
+            bit [31:0] rdata;
+            axi4_read(ADDR_H2C_IN_CNT + CNT_OFF_RESERVED_1, rdata);
+            `FAIL_UNLESS_EQUAL(rdata, 32'h0);
         `SVTEST_END
 
     `SVUNIT_TESTS_END

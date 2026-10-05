@@ -17,7 +17,9 @@ SIM ?= xsim
 # Dependencies
 # ----------------------------------------------------
 SUBCOMPONENTS ?= \
+    axi4l.verif@common \
     axi4s.verif@common \
+    packet.verif@common \
     xilinx.qdma.rtl
 
 EXT_LIBS =

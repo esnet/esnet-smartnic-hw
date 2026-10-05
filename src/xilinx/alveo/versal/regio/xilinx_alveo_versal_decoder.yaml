@@ -1,12 +1,11 @@
 name: xilinx_alveo_versal
 
-blocks:
-  qdma: &qdma
-    !include ../src/xilinx/qdma/regio/qdma.yaml
-
 decoders:
   dcmac_decoder: &dcmac_decoder
     !include ../src/xilinx/alveo/versal/regio/dcmac_decoder.yaml
+
+  qdma_decoder: &qdma_decoder
+    !include ../src/xilinx/qdma/regio/qdma_decoder.yaml
 
 interfaces:
   - decoder: *dcmac_decoder
@@ -19,6 +18,6 @@ interfaces:
     suffix: '1'
     name: dcmac
 
-  - block: *qdma
+  - decoder: *qdma_decoder
     address: 0x010000
     name: qdma

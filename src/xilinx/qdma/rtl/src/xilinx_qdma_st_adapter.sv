@@ -128,18 +128,41 @@ module xilinx_qdma_st_adapter
     localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
     // =========================================================================
+    // Register space
+    //
+    // axil_if is split by qdma_decoder into the config/status block and four
+    // packet counter blocks, one per side of each direction's FIFO.  Everything
+    // here runs on the management clock; each packet_counters instance makes
+    // its own crossing to the domain of the events it counts.
+    // =========================================================================
+    axi4l_intf axil_config  ();
+    axi4l_intf axil_h2c_in  ();
+    axi4l_intf axil_h2c_out ();
+    axi4l_intf axil_c2h_in  ();
+    axi4l_intf axil_c2h_out ();
+
+    qdma_decoder i_qdma_decoder (
+        .axil_if         ( axil_if      ),
+        .config_axil_if  ( axil_config  ),
+        .h2c_in_axil_if  ( axil_h2c_in  ),
+        .h2c_out_axil_if ( axil_h2c_out ),
+        .c2h_in_axil_if  ( axil_c2h_in  ),
+        .c2h_out_axil_if ( axil_c2h_out )
+    );
+
+    // =========================================================================
     // Test and debug registers
     //
-    // The register block runs on the management clock; the loopback enable and
-    // its status cross to and from the core domain through level
-    // synchronizers.  The enable changes rarely and packet_loopback applies it
-    // only at a packet boundary, so the crossing needs no handshake.
+    // The loopback enable and its status cross to and from the core domain
+    // through level synchronizers.  The enable changes rarely and
+    // packet_loopback applies it only at a packet boundary, so the crossing
+    // needs no handshake.
     // =========================================================================
     qdma_reg_intf reg_if ();
 
     qdma_reg_blk i_qdma_reg_blk (
-        .axil_if    ( axil_if ),
-        .reg_blk_if ( reg_if  )
+        .axil_if    ( axil_config ),
+        .reg_blk_if ( reg_if      )
     );
 
     // Reserved registers pad the block out to a full 16-byte window; they hold
@@ -309,6 +332,47 @@ module xilinx_qdma_st_adapter
         .en            ( core_loopback_en        ),
         .en_mon        ( core_loopback_en_mon    ),
         .switching     ( core_loopback_switching )
+    );
+
+    // =========================================================================
+    // Packet counters
+    //
+    // One per FIFO side, each clocked in the domain of the events it counts,
+    // so the two directions are mirror images: H2C arrives on aclk and leaves
+    // on core_clk, C2H the other way around.  packet_counters crosses its own
+    // AXI-L from the management clock, so no CDC is needed here.
+    //
+    // The _in counters see every packet offered to the FIFO and report why one
+    // was dropped; the _out counters only ever report STATUS_OK, so they count
+    // what the FIFO released.
+    //
+    // Both taps are on the FIFO itself, which is upstream of the loopback
+    // switch.  So with loopback enabled h2c_out still counts, even though the
+    // core receives nothing, and c2h_in counts the reflected H2C traffic
+    // rather than anything the core sent.
+    // =========================================================================
+    packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_in (
+        .clk      ( aclk         ),
+        .axil_if  ( axil_h2c_in  ),
+        .event_if ( evt_h2c_in   )
+    );
+
+    packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_out (
+        .clk      ( core_clk     ),
+        .axil_if  ( axil_h2c_out ),
+        .event_if ( evt_h2c_out  )
+    );
+
+    packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__c2h_in (
+        .clk      ( core_clk     ),
+        .axil_if  ( axil_c2h_in  ),
+        .event_if ( evt_c2h_in   )
+    );
+
+    packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__c2h_out (
+        .clk      ( aclk         ),
+        .axil_if  ( axil_c2h_out ),
+        .event_if ( evt_c2h_out  )
     );
 
     // --- Flat C2H data outputs (QDMA clock domain) ---

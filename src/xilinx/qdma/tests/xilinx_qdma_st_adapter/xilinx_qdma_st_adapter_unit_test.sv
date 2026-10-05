@@ -245,8 +245,25 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // Build
     // =========================================================================
+    // =========================================================================
+    // Counter register agents — one per decoder sub-space
+    // =========================================================================
+    axi4l_verif_pkg::axi4l_reg_agent axil_reg_agent;
+    packet_verif_pkg::packet_counters_reg_agent cnt_h2c_in;
+    packet_verif_pkg::packet_counters_reg_agent cnt_h2c_out;
+    packet_verif_pkg::packet_counters_reg_agent cnt_c2h_in;
+    packet_verif_pkg::packet_counters_reg_agent cnt_c2h_out;
+
     function void build();
         svunit_ut = new(name);
+
+        axil_reg_agent = new("axil_reg_agent");
+        axil_reg_agent.axil_vif = axil_if;
+
+        cnt_h2c_in  = new("cnt_h2c_in",  axil_reg_agent, 'h0100);
+        cnt_h2c_out = new("cnt_h2c_out", axil_reg_agent, 'h0200);
+        cnt_c2h_in  = new("cnt_c2h_in",  axil_reg_agent, 'h0300);
+        cnt_c2h_out = new("cnt_c2h_out", axil_reg_agent, 'h0400);
     endfunction
 
     // =========================================================================
@@ -409,6 +426,68 @@ module xilinx_qdma_st_adapter_unit_test;
         axil_if.read(addr, data, resp, timeout);
         `FAIL_IF_LOG(timeout, "AXI-L read timed out")
         `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L read returned an error response")
+    endtask
+
+    // =========================================================================
+    // Counter helpers
+    //
+    // The counters free-run (control.latch defaults to latch-on-clock), so a
+    // plain read is enough once traffic has stopped. settle_counts covers the
+    // event-to-register pipeline and the AXI-L crossing into each block.
+    // =========================================================================
+    task automatic settle_counts();
+        repeat (64) @(posedge aclk);
+        repeat (64) @(posedge core_clk);
+    endtask
+
+    task automatic clear_all_counts();
+        cnt_h2c_in.clear();
+        cnt_h2c_out.clear();
+        cnt_c2h_in.clear();
+        cnt_c2h_out.clear();
+        settle_counts();
+    endtask
+
+    // Check the ok/err packet counts of one block.
+    task automatic check_pkt_counts(
+        input packet_verif_pkg::packet_counters_reg_agent agent,
+        input string                                      label,
+        input longint unsigned                            exp_pkt_ok,
+        input longint unsigned                            exp_pkt_err
+    );
+        longint unsigned pkt_ok, pkt_err;
+        agent.get_pkt_ok_count(pkt_ok);
+        agent.get_pkt_err_count(pkt_err);
+        `FAIL_UNLESS_LOG(pkt_ok === exp_pkt_ok,
+            $sformatf("%s: ok packet count %0d, expected %0d", label, pkt_ok, exp_pkt_ok))
+        `FAIL_UNLESS_LOG(pkt_err === exp_pkt_err,
+            $sformatf("%s: err packet count %0d, expected %0d", label, pkt_err, exp_pkt_err))
+    endtask
+
+    // Check the ok/err packet and byte counts of one block.
+    task automatic check_counts(
+        input packet_verif_pkg::packet_counters_reg_agent agent,
+        input string                                      label,
+        input longint unsigned                            exp_pkt_ok,
+        input longint unsigned                            exp_byte_ok,
+        input longint unsigned                            exp_pkt_err,
+        input longint unsigned                            exp_byte_err
+    );
+        longint unsigned byte_ok, byte_err;
+        check_pkt_counts(agent, label, exp_pkt_ok, exp_pkt_err);
+        agent.get_byte_ok_count(byte_ok);
+        agent.get_byte_err_count(byte_err);
+        `FAIL_UNLESS_LOG(byte_ok === exp_byte_ok,
+            $sformatf("%s: ok byte count %0d, expected %0d", label, byte_ok, exp_byte_ok))
+        `FAIL_UNLESS_LOG(byte_err === exp_byte_err,
+            $sformatf("%s: err byte count %0d, expected %0d", label, byte_err, exp_byte_err))
+    endtask
+
+    task automatic check_all_counts_zero();
+        check_counts(cnt_h2c_in,  "h2c_in",  0, 0, 0, 0);
+        check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+        check_counts(cnt_c2h_in,  "c2h_in",  0, 0, 0, 0);
+        check_counts(cnt_c2h_out, "c2h_out", 0, 0, 0, 0);
     endtask
 
     // Set loopback mode and wait until the adapter reports it applied.
@@ -892,6 +971,116 @@ module xilinx_qdma_st_adapter_unit_test;
             join
             `FAIL_UNLESS_EQUAL(len, 16'(AXIS_DATA_BYTE_WID));
             `FAIL_UNLESS_EQUAL(c2h_qid, 11'h2B);
+        `SVTEST_END
+
+        // All four counter blocks read back zero out of reset, which also
+        // proves each one decodes at its own sub-address.
+        `SVTEST(counters_idle_zero)
+            check_all_counts_zero();
+        `SVTEST_END
+
+        // Good H2C traffic is counted on both sides of the H2C FIFO.
+        `SVTEST(counters_h2c_ok)
+            localparam int PKTS = 4;
+            localparam int BEATS = 3;
+            localparam longint unsigned BYTES = PKTS * BEATS * AXIS_DATA_BYTE_WID;
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            logic err;
+            clear_all_counts();
+            for (int i = 0; i < PKTS; i++) begin
+                fork
+                    send_h2c_packet(.num_beats(BEATS), .qid(11'h11));
+                    recv_h2c_packet(bytes, qid, err);
+                join
+            end
+            settle_counts();
+            check_counts(cnt_h2c_in,  "h2c_in",  PKTS, BYTES, 0, 0);
+            check_counts(cnt_h2c_out, "h2c_out", PKTS, BYTES, 0, 0);
+        `SVTEST_END
+
+        // An errored H2C packet is counted as errored on the way in and, since
+        // the H2C FIFO drops errored packets, never appears on the way out.
+        `SVTEST(counters_h2c_err)
+            localparam longint unsigned BYTES = 2 * AXIS_DATA_BYTE_WID;
+            clear_all_counts();
+            send_h2c_packet(.num_beats(2), .err(1'b1), .qid(11'h22));
+            expect_no_h2c_packet(96);
+            settle_counts();
+            check_counts(cnt_h2c_in,  "h2c_in",  0, 0, 1, BYTES);
+            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+        `SVTEST_END
+
+        // A zero-byte H2C transfer cannot be represented on packet_intf, so the
+        // adapter marks it errored. It must land in the error bin, not the good
+        // one, and must not reach the core.
+        `SVTEST(counters_h2c_zero_byte_is_errored)
+            clear_all_counts();
+            send_h2c_packet(.num_beats(1), .zero_byte(1'b1), .qid(11'h23));
+            expect_no_h2c_packet(96);
+            settle_counts();
+            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+            check_pkt_counts(cnt_h2c_in, "h2c_in", 0, 1);
+        `SVTEST_END
+
+        // Good C2H traffic from the core is counted on both sides of the C2H
+        // FIFO.
+        `SVTEST(counters_c2h_ok)
+            localparam int PKTS = 3;
+            localparam int BYTES_PER_PKT = 128;
+            localparam longint unsigned BYTES = PKTS * BYTES_PER_PKT;
+            logic [15:0] len;
+            logic [QID_WID-1:0] qid;
+            clear_all_counts();
+            for (int i = 0; i < PKTS; i++) begin
+                fork
+                    send_c2h_packet(.num_bytes(BYTES_PER_PKT), .qid(11'h33));
+                    recv_c2h_flat(len, qid);
+                join
+            end
+            settle_counts();
+            check_counts(cnt_c2h_in,  "c2h_in",  PKTS, BYTES, 0, 0);
+            check_counts(cnt_c2h_out, "c2h_out", PKTS, BYTES, 0, 0);
+        `SVTEST_END
+
+        // Under loopback the reflected H2C traffic enters the C2H FIFO, so the
+        // C2H counters move even though the core sent nothing.
+        `SVTEST(counters_loopback_tracks_reflected_traffic)
+            localparam longint unsigned BYTES = 2 * AXIS_DATA_BYTE_WID;
+            logic [15:0] len;
+            logic [QID_WID-1:0] qid;
+            set_loopback(1'b1);
+            clear_all_counts();
+            fork
+                send_h2c_packet(.num_beats(2), .qid(11'h44));
+                recv_c2h_flat(len, qid);
+            join
+            settle_counts();
+            // The packet is counted at all four taps: the loopback switch sits
+            // downstream of the H2C FIFO, so h2c_out still sees it leave the
+            // FIFO even though it is reflected rather than passed to the core.
+            check_counts(cnt_h2c_in,  "h2c_in",  1, BYTES, 0, 0);
+            check_counts(cnt_h2c_out, "h2c_out", 1, BYTES, 0, 0);
+            check_counts(cnt_c2h_in,  "c2h_in",  1, BYTES, 0, 0);
+            check_counts(cnt_c2h_out, "c2h_out", 1, BYTES, 0, 0);
+        `SVTEST_END
+
+        // Writing control.clear returns every counter to zero.
+        `SVTEST(counters_clear)
+            longint unsigned pkts;
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            logic err;
+            clear_all_counts();
+            fork
+                send_h2c_packet(.num_beats(1), .qid(11'h55));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            settle_counts();
+            cnt_h2c_in.get_pkt_ok_count(pkts);
+            `FAIL_UNLESS_EQUAL(pkts, 1);
+            clear_all_counts();
+            check_all_counts_zero();
         `SVTEST_END
 
     `SVUNIT_TESTS_END

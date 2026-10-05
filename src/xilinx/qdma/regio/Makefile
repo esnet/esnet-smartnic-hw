@@ -14,6 +14,7 @@ REG_BLOCK_YAML = \
     qdma.yaml
 
 REG_DECODER_YAML = \
+    qdma_decoder.yaml \
     qdma_pf_decoder.yaml
 
 # ----------------------------------------------------
