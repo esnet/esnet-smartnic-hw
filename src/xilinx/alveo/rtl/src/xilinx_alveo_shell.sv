@@ -16,9 +16,12 @@ module xilinx_alveo_shell
 
     output wire logic pci_rstn_out,       // Reset output (active-low, JTAG-overridable)
 
-    // Core clock. The DMA streams are handed to the core in this domain; the
-    // crossing from the QDMA clock happens here, in xilinx_alveo_qdma_st.
+    // Core clock and synchronous reset, supplied by the platform shell which
+    // owns the clock source.  The DMA streams are handed to the core in this
+    // domain; the crossing from the QDMA clock happens here, in
+    // xilinx_alveo_qdma_st.
     input  wire logic core_clk,
+    input  wire logic core_srst,
 
     // QDMA clock and reset — the domain of the dma_* packet interfaces below.
     // Passed explicitly rather than taken from packet_intf.clk so the domain
@@ -102,19 +105,7 @@ module xilinx_alveo_shell
     // shell: the platform adapter below stays entirely in the QDMA domain, and
     // the platform shell above receives the streams already in the core domain.
     //
-    // core_srst is derived here rather than taken as a port, so the shell owns
-    // the core reset and stays correct if core_clk later diverges from the
-    // management clock.
     // =========================================================================
-    wire core_srst;
-
-    sync_reset i_sync_reset__core (
-        .clk_in  ( axil_top.aclk    ),
-        .rst_in  ( axil_top.aresetn ),
-        .clk_out ( core_clk         ),
-        .rst_out ( core_srst        )
-    );
-
     xilinx_alveo_qdma_st #(
         .QID_WID     ( QID_WID     ),
         .MAX_PKT_LEN ( MAX_PKT_LEN )

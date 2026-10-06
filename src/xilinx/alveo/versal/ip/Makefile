@@ -8,11 +8,15 @@ include $(COMPONENT_ROOT)/config.mk
 IP_LIST = \
     xilinx_versal_core_clk
 
-IP_SIM_SRC_FILES =
+# clk_wizard emits no sim/ wrapper; the post-synthesis netlist is the
+# simulation model, and it instantiates MMCME5/BUFG from unisims.
+IP_SIM_SRC_FILES = \
+    xilinx_versal_core_clk/xilinx_versal_core_clk_sim_netlist.v
 
 IP_SIM_INC_DIRS =
 
-EXT_LIBS =
+EXT_LIBS = \
+    unisims_ver
 
 COMPILE_OPTS =
 

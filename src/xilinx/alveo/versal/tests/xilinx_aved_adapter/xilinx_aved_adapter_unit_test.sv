@@ -234,7 +234,6 @@ module xilinx_aved_adapter_unit_test;
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
         .axil_top         ( axil_app_if       ),
-        .core_clk         ( clk_pl0_100mhz    ),
         .dma_aclk         ( m_axi_pcie0_aclk  ),
         .dma_aresetn      ( rstn_pl0_100mhz   ),
         .pkt_h2c_dma      ( pkt_h2c_dma       ),

@@ -26,10 +26,6 @@ module esnet_smartnic
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // Core clock. The 100 MHz management clock stands in until a faster source
-    // is wired up; see "Clocking (av80)" in CLAUDE.md.
-    wire core_clk = clk_pl0_100mhz;
-
     // DMA interfaces between adapter and shell, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens inside xilinx_alveo_shell.
     packet_intf #(
@@ -79,7 +75,6 @@ module esnet_smartnic
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
         .axil_top         ( axil_debug_if       ),
-        .core_clk         ( core_clk            ),
         .dma_aclk         ( m_axi_pcie0_aclk    ),
         .dma_aresetn      ( m_axi_pcie0_aresetn ),
         .pkt_h2c_dma      ( pkt_h2c_dma         ),

@@ -67,7 +67,6 @@ module xilinx_alveo_versal_shell_unit_test;
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),
         .axil_top         ( axil_if          ),
-        .core_clk         ( axil_if.aclk     ),
         .dma_aclk         ( axil_if.aclk     ),
         .dma_aresetn      ( axil_if.aresetn  ),
         .pkt_h2c_dma      ( pkt_h2c_dma      ),
@@ -162,6 +161,39 @@ module xilinx_alveo_versal_shell_unit_test;
                 axil_read(ADDR_SCRATCHPAD, rdata);
                 `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
             end
+        `SVTEST_END
+
+        // The shell generates core_clk itself now, so confirm the MMCM
+        // actually locks and the core domain comes out of reset -- the
+        // register tests above run on mgmt_clk and would pass regardless.
+        `SVTEST(core_clk_runs)
+            int unsigned edges = 0;
+            logic prev;
+            // Wait for lock (bounded), then count core_clk edges.
+            fork
+                begin
+                    wait (DUT.core_clk_locked === 1'b1);
+                end
+                begin
+                    #50us;
+                    `FAIL_IF_LOG(1'b1, "core clock MMCM never locked")
+                end
+            join_any
+            disable fork;
+            `FAIL_UNLESS_LOG(DUT.core_clk_locked === 1'b1, "MMCM not locked")
+
+            // core_srst must release once locked and the management reset is up
+            repeat (64) @(posedge DUT.core_clk);
+            `FAIL_IF_LOG(DUT.core_srst, "core_srst still asserted after lock")
+
+            // and the clock must genuinely be toggling
+            prev = DUT.core_clk;
+            repeat (20) begin
+                #1ns;
+                if (DUT.core_clk !== prev) edges++;
+                prev = DUT.core_clk;
+            end
+            `FAIL_UNLESS_LOG(edges > 0, "core_clk is not toggling")
         `SVTEST_END
 
     `SVUNIT_TESTS_END

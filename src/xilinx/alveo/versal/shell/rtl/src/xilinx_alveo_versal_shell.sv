@@ -34,10 +34,6 @@ module xilinx_alveo_versal_shell
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
 
-    // Core clock.  The common Alveo shell crosses the DMA streams into this
-    // domain and hands them to the core.
-    input  wire logic       core_clk,
-
     // DMA streams to/from xilinx_aved_adapter, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
     input  wire logic       dma_aclk,
@@ -57,6 +53,36 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     axi4l_intf #() axil_hw   ();
     axi4l_intf #() axil_core ();
+
+    // =========================================================================
+    // Core clock
+    //
+    // Synthesised from the free-running 100 MHz PMC reference, which is
+    // available immediately after power-on and independent of PCIe and PS
+    // state.  This is the domain the core runs in: shell_if.clk, the port
+    // interfaces and the DMA streams all derive from it.  The crossings to
+    // the management domain are made in xilinx_alveo_qdma_st (DMA) and in
+    // the core itself (registers, via shell_if.mgmt_clk).
+    //
+    // The core is held in reset until the management reset releases and the
+    // MMCM locks; sync_reset retimes that into the core domain.
+    // =========================================================================
+    wire core_clk;
+    wire core_clk_locked;
+    wire core_srst;
+
+    xilinx_versal_core_clk i_xilinx_versal_core_clk (
+        .clk_in1  ( sys_clk_100mhz  ),
+        .clk_out1 ( core_clk        ),
+        .locked   ( core_clk_locked )
+    );
+
+    sync_reset i_sync_reset__core (
+        .clk_in  ( axil_top.aclk                       ),
+        .rst_in  ( axil_top.aresetn && core_clk_locked ),
+        .clk_out ( core_clk                            ),
+        .rst_out ( core_srst                           )
+    );
 
     // =========================================================================
     // DMA streaming interfaces
@@ -93,6 +119,7 @@ module xilinx_alveo_versal_shell
         .pci_rstn_in     ( pci_rstn_in     ),
         .pci_rstn_out    ( pci_rstn        ),
         .core_clk,
+        .core_srst,
         .dma_aclk,
         .dma_aresetn,
         .axil_top,
@@ -133,14 +160,14 @@ module xilinx_alveo_versal_shell
         .TID_WID       ( PORT_AXIS_TID_WID           ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(axil_top.aclk));
+    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf #(
         .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
         .TID_WID       ( PORT_AXIS_TID_WID           ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(axil_top.aclk));
+    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(core_clk));
 
     generate
         for (genvar g_port = 0; g_port < shell_if.NUM_PORTS; g_port++) begin : g__port
@@ -155,19 +182,21 @@ module xilinx_alveo_versal_shell
 
     // =========================================================================
     // Convert SV interfaces to flat shell_intf representation.
-    // Clock/reset are derived from axil_core which carries the management
-    // clock/reset from the AXI4-L path (same aclk/aresetn as axil_if).
-    // port_clk/port_srst use the same clock pending per-port clock support.
+    //
+    // The core runs on core_clk; mgmt_clk carries the management clock, and
+    // the core crosses between them itself (its registers hang off mgmt_clk
+    // via shell_adapter__core).  port_clk follows core_clk pending per-port
+    // clock support.
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
-        .clk        ( axil_core.aclk    ),
-        .srst       ( ~axil_core.aresetn ),
+        .clk        ( core_clk  ),
+        .srst       ( core_srst ),
         .mgmt_clk   ( axil_core.aclk    ),
         .mgmt_srst  ( ~axil_core.aresetn ),
         .clk_100mhz ( sys_clk_100mhz ),
-        .port_clk   ( '{default: axil_core.aclk}    ),
-        .port_srst  ( '{default: ~axil_core.aresetn} ),
+        .port_clk   ( '{default: core_clk}  ),
+        .port_srst  ( '{default: core_srst} ),
         .axil_if    ( axil_core ),
         .axis_port_rx,
         .axis_port_tx,
