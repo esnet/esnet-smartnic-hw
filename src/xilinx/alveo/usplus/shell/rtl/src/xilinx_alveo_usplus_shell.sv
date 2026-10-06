@@ -80,13 +80,55 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    // UltraScale+ does not route its DMA streams through the common shell:
+    // xilinx_alveo below already presents them as axi4s in the core domain,
+    // having done its own CDC.  The common shell's DMA datapath is therefore
+    // left unconnected here and its registers unreachable.  Terminate the
+    // interfaces so the ports are legally driven.
+    axi4l_intf #() axil_qdma_st__unused ();
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_h2c_dma__unused (.clk(axil_top.aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_h2c_core__unused (.clk(clk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_c2h_core__unused (.clk(clk));
+
+    axi4l_intf_controller_term i_axi4l_term__qdma_st (.axi4l_if (axil_qdma_st__unused));
+    packet_intf_tx_term  i_packet_term__h2c_dma  (.to_rx   (pkt_h2c_dma__unused));
+    packet_intf_rx_sink  i_packet_sink__c2h_dma  (.from_tx (pkt_c2h_dma__unused));
+    packet_intf_rx_sink  i_packet_sink__h2c_core (.from_tx (pkt_h2c_core__unused));
+    packet_intf_tx_term  i_packet_term__c2h_core (.to_rx   (pkt_c2h_core__unused));
+
     xilinx_alveo_shell i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
+        .core_clk       ( clk ),
+        .dma_aclk       ( axil_top.aclk ),
+        .dma_aresetn    ( axil_top.aresetn ),
         .axil_top,
         .axil_hw,
-        .axil_core
+        .axil_core,
+        .axil_qdma_st     ( axil_qdma_st__unused ),
+        .pkt_h2c_dma      ( pkt_h2c_dma__unused  ),
+        .pkt_c2h_dma      ( pkt_c2h_dma__unused  ),
+        .pkt_c2h_dma_size (                      ),
+        .pkt_h2c_core     ( pkt_h2c_core__unused ),
+        .pkt_c2h_core     ( pkt_c2h_core__unused )
     );
 
     // =========================================================================

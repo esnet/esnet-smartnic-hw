@@ -14,17 +14,12 @@ module xilinx_qdma_st_adapter_unit_test;
     // Parameters — use default (USPlus) widths
     // =========================================================================
     localparam int QID_WID = 11;
-    localparam int MAX_PKT_LEN = 9100;
 
     // =========================================================================
     // Clock and reset
     // =========================================================================
-    logic aclk     = 1'b0;
-    logic core_clk = 1'b0;
-    logic axil_clk = 1'b0;
-    logic aresetn  = 1'b0;
-    logic core_srst;
-    assign core_srst = ~aresetn;
+    logic aclk    = 1'b0;
+    logic aresetn = 1'b0;
 
     // Both clocks free-running: the ASYNC FIFO's sync_reset/sync_ctr logic
     // requires clock activity from time 0 to initialize properly in xsim.
@@ -32,9 +27,7 @@ module xilinx_qdma_st_adapter_unit_test;
     // FIFO's async reset synchronisers stalled and triggers an xsim hang.
     // The library's own async FIFO tests use free-running clocks for the
     // same reason (see fifo_axil_async_unit_test.sv).
-    always #2ns   aclk     = ~aclk;     // 250 MHz — QDMA clock domain
-    always #2.5ns core_clk = ~core_clk; // 200 MHz — core clock domain
-    always #5ns   axil_clk = ~axil_clk; // 100 MHz — management clock domain
+    always #2ns aclk = ~aclk;  // 250 MHz — QDMA clock domain
 
     // =========================================================================
     // H2C flat signals (driven by testbench → DUT)
@@ -112,13 +105,13 @@ module xilinx_qdma_st_adapter_unit_test;
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_h2c (.clk(core_clk));
+    ) pkt_h2c (.clk(aclk));
 
     // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_c2h (.clk(core_clk));
+    ) pkt_c2h (.clk(aclk));
 
     // Drive interface signals to known values from time 0.
     // Without this, pkt_c2h.vld et al. are X until idle() runs inside setup(),
@@ -133,27 +126,35 @@ module xilinx_qdma_st_adapter_unit_test;
         pkt_h2c.rdy  = 1'b1;
     end
 
-    // =========================================================================
-    // Management AXI4-Lite (register access)
-    // =========================================================================
-    axi4l_intf axil_if ();
+    // C2H packet length, supplied upstream by the C2H FIFO.  Driven directly
+    // here: the adapter just forwards it to ctrl_len and the completion.
+    packet_pkg::size_t pkt_c2h_size = '0;
 
-    assign axil_if.aclk = axil_clk;
-    always @(posedge axil_clk) axil_if.aresetn <= aresetn;
+    // Sticky record that a completion fired.  cmpt_tvalid is a single-cycle
+    // pulse on the last beat's handshake, so tests cannot reliably sample it
+    // after the fact.
+    logic cmpt_fired     = 1'b0;
+    logic cmpt_fired_clr = 1'b0;
+    always @(posedge aclk) begin
+        if (cmpt_fired_clr) cmpt_fired <= 1'b0;
+        else if (cmpt_tvalid) cmpt_fired <= 1'b1;
+    end
 
-    initial axil_if.aresetn = 1'b0;
+    task automatic clear_cmpt_fired();
+        cmpt_fired_clr = 1'b1;
+        @(posedge aclk);
+        cmpt_fired_clr = 1'b0;
+        @(posedge aclk);
+    endtask
 
     // =========================================================================
     // DUT
     // =========================================================================
     xilinx_qdma_st_adapter #(
-        .QID_WID     ( QID_WID     ),
-        .MAX_PKT_LEN ( MAX_PKT_LEN )
+        .QID_WID ( QID_WID )
     ) DUT (
         .aclk,
         .aresetn,
-        .core_clk,
-        .core_srst,
         .h2c_tvalid,
         .h2c_tdata,
         .h2c_tlast,
@@ -197,9 +198,9 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_qid,
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
-        .axil_if,
         .pkt_h2c,
-        .pkt_c2h
+        .pkt_c2h,
+        .pkt_c2h_size
     );
 
     // =========================================================================
@@ -245,25 +246,8 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // Build
     // =========================================================================
-    // =========================================================================
-    // Counter register agents — one per decoder sub-space
-    // =========================================================================
-    axi4l_verif_pkg::axi4l_reg_agent axil_reg_agent;
-    packet_verif_pkg::packet_counters_reg_agent cnt_h2c_in;
-    packet_verif_pkg::packet_counters_reg_agent cnt_h2c_out;
-    packet_verif_pkg::packet_counters_reg_agent cnt_c2h_in;
-    packet_verif_pkg::packet_counters_reg_agent cnt_c2h_out;
-
     function void build();
         svunit_ut = new(name);
-
-        axil_reg_agent = new("axil_reg_agent");
-        axil_reg_agent.axil_vif = axil_if;
-
-        cnt_h2c_in  = new("cnt_h2c_in",  axil_reg_agent, 'h0100);
-        cnt_h2c_out = new("cnt_h2c_out", axil_reg_agent, 'h0200);
-        cnt_c2h_in  = new("cnt_c2h_in",  axil_reg_agent, 'h0300);
-        cnt_c2h_out = new("cnt_c2h_out", axil_reg_agent, 'h0400);
     endfunction
 
     // =========================================================================
@@ -288,7 +272,6 @@ module xilinx_qdma_st_adapter_unit_test;
     // Helpers
     // =========================================================================
     task idle();
-        axil_if.idle_controller();
         // H2C flat inputs idle
         cb_h2c.h2c_tvalid    <= 1'b0;
         cb_h2c.h2c_tdata     <= '0;
@@ -354,6 +337,10 @@ module xilinx_qdma_st_adapter_unit_test;
         logic [5:0] beat_mty;
         logic beat_eop;
 
+        // Stand in for the upstream store-and-forward FIFO: the length is
+        // presented for the whole packet, valid from the first beat.
+        pkt_c2h_size = 16'(num_bytes);
+
         bytes_remaining = num_bytes;
         while (bytes_remaining > 0) begin
             // Fill beat data with random bytes
@@ -391,7 +378,7 @@ module xilinx_qdma_st_adapter_unit_test;
         last  = 1'b0;
         num_bytes = 0;
         while (!last) begin
-            @(posedge core_clk iff (pkt_h2c.vld && pkt_h2c.rdy));
+            @(posedge aclk iff (pkt_h2c.vld && pkt_h2c.rdy));
             beats++;
             qid  = pkt_h2c.meta;
             err  = pkt_h2c.err;
@@ -403,102 +390,11 @@ module xilinx_qdma_st_adapter_unit_test;
     // Expect NO H2C packet to emerge within the given number of core clocks.
     task automatic expect_no_h2c_packet(input int cycles);
         repeat (cycles) begin
-            @(posedge core_clk);
+            @(posedge aclk);
             `FAIL_IF_LOG(pkt_h2c.vld, "unexpected H2C packet: should have been dropped")
         end
     endtask
 
-
-    // =========================================================================
-    // Register access
-    // =========================================================================
-    task automatic reg_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
-        bit timeout;
-        axil_if.write(addr, data, resp, timeout);
-        `FAIL_IF_LOG(timeout, "AXI-L write timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L write returned an error response")
-    endtask
-
-    task automatic reg_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
-        bit timeout;
-        axil_if.read(addr, data, resp, timeout);
-        `FAIL_IF_LOG(timeout, "AXI-L read timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L read returned an error response")
-    endtask
-
-    // =========================================================================
-    // Counter helpers
-    //
-    // The counters free-run (control.latch defaults to latch-on-clock), so a
-    // plain read is enough once traffic has stopped. settle_counts covers the
-    // event-to-register pipeline and the AXI-L crossing into each block.
-    // =========================================================================
-    task automatic settle_counts();
-        repeat (64) @(posedge aclk);
-        repeat (64) @(posedge core_clk);
-    endtask
-
-    task automatic clear_all_counts();
-        cnt_h2c_in.clear();
-        cnt_h2c_out.clear();
-        cnt_c2h_in.clear();
-        cnt_c2h_out.clear();
-        settle_counts();
-    endtask
-
-    // Check the ok/err packet counts of one block.
-    task automatic check_pkt_counts(
-        input packet_verif_pkg::packet_counters_reg_agent agent,
-        input string                                      label,
-        input longint unsigned                            exp_pkt_ok,
-        input longint unsigned                            exp_pkt_err
-    );
-        longint unsigned pkt_ok, pkt_err;
-        agent.get_pkt_ok_count(pkt_ok);
-        agent.get_pkt_err_count(pkt_err);
-        `FAIL_UNLESS_LOG(pkt_ok === exp_pkt_ok,
-            $sformatf("%s: ok packet count %0d, expected %0d", label, pkt_ok, exp_pkt_ok))
-        `FAIL_UNLESS_LOG(pkt_err === exp_pkt_err,
-            $sformatf("%s: err packet count %0d, expected %0d", label, pkt_err, exp_pkt_err))
-    endtask
-
-    // Check the ok/err packet and byte counts of one block.
-    task automatic check_counts(
-        input packet_verif_pkg::packet_counters_reg_agent agent,
-        input string                                      label,
-        input longint unsigned                            exp_pkt_ok,
-        input longint unsigned                            exp_byte_ok,
-        input longint unsigned                            exp_pkt_err,
-        input longint unsigned                            exp_byte_err
-    );
-        longint unsigned byte_ok, byte_err;
-        check_pkt_counts(agent, label, exp_pkt_ok, exp_pkt_err);
-        agent.get_byte_ok_count(byte_ok);
-        agent.get_byte_err_count(byte_err);
-        `FAIL_UNLESS_LOG(byte_ok === exp_byte_ok,
-            $sformatf("%s: ok byte count %0d, expected %0d", label, byte_ok, exp_byte_ok))
-        `FAIL_UNLESS_LOG(byte_err === exp_byte_err,
-            $sformatf("%s: err byte count %0d, expected %0d", label, byte_err, exp_byte_err))
-    endtask
-
-    task automatic check_all_counts_zero();
-        check_counts(cnt_h2c_in,  "h2c_in",  0, 0, 0, 0);
-        check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
-        check_counts(cnt_c2h_in,  "c2h_in",  0, 0, 0, 0);
-        check_counts(cnt_c2h_out, "c2h_out", 0, 0, 0, 0);
-    endtask
-
-    // Set loopback mode and wait until the adapter reports it applied.
-    task automatic set_loopback(input bit mode);
-        bit [31:0] status;
-        reg_write(qdma_reg_pkg::OFFSET_LOOPBACK_CONFIG, 32'(mode));
-        forever begin
-            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_STATUS, status);
-            if (status[0] === mode && status[1] === 1'b0) break;
-        end
-    endtask
 
     // Capture the length and queue id of the next packet on the flat C2H bus.
     task automatic recv_c2h_flat(output logic [15:0] len, output logic [QID_WID-1:0] qid);
@@ -670,16 +566,13 @@ module xilinx_qdma_st_adapter_unit_test;
                 `FAIL_UNLESS_EQUAL(pkt_ids[i], pkt_ids[i-1] + 1'b1);
         `SVTEST_END
 
-        // C2H: c2h_tready=0 propagates back through the FIFO to pkt_c2h.rdy.
-        // Verified independently of the driver to avoid a race where the driver
-        // accepts a beat before the pipe has propagated the stall.
-        // C2H: c2h_tready=0 mid-packet — no data is lost; pkt_id still increments.
-        // Stall after the pipe stores the first beat (ready goes low), then release.
-        // C2H: c2h_tready=0 mid-packet — no data lost; completion fires after release.
+        // C2H: c2h_tready=0 holds off pkt_c2h directly — there is no FIFO
+        // here to absorb it — and the packet completes once released.
         `SVTEST(c2h_backpressure_data_)
-            logic cmpt_seen;
-            cmpt_seen = 1'b0;
+            clear_cmpt_fired();
             c2h_tready = 1'b0;
+            repeat (4) @(posedge aclk);
+            `FAIL_IF_LOG(pkt_c2h.rdy, "pkt_c2h.rdy high while c2h_tready is low")
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
@@ -687,17 +580,17 @@ module xilinx_qdma_st_adapter_unit_test;
                     c2h_tready = 1'b1;
                 end
             join
-            // Completion must fire after the stall is released
-            @(posedge aclk iff cmpt_tvalid);
-            cmpt_seen = 1'b1;
-            `FAIL_UNLESS(cmpt_seen);
+            repeat (4) @(posedge aclk);
+            `FAIL_UNLESS_LOG(cmpt_fired, "no completion after c2h_tready released")
         `SVTEST_END
 
-        // C2H: cmpt_tready=0 — data path completes; completion fires once released.
+        // C2H: cmpt_tready=0 likewise holds off pkt_c2h, since a beat is only
+        // accepted when both the data and completion paths can take it.
         `SVTEST(c2h_backpressure_cmpt_)
-            logic cmpt_seen;
-            cmpt_seen = 1'b0;
+            clear_cmpt_fired();
             cmpt_tready = 1'b0;
+            repeat (4) @(posedge aclk);
+            `FAIL_IF_LOG(pkt_c2h.rdy, "pkt_c2h.rdy high while cmpt_tready is low")
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
@@ -705,9 +598,8 @@ module xilinx_qdma_st_adapter_unit_test;
                     cmpt_tready = 1'b1;
                 end
             join
-            @(posedge aclk iff cmpt_tvalid);
-            cmpt_seen = 1'b1;
-            `FAIL_UNLESS(cmpt_seen);
+            repeat (4) @(posedge aclk);
+            `FAIL_UNLESS_LOG(cmpt_fired, "no completion after cmpt_tready released")
         `SVTEST_END
 
         // C2H: back-to-back packets — pkt_id advances correctly.
@@ -848,10 +740,10 @@ module xilinx_qdma_st_adapter_unit_test;
                     cb_h2c.h2c_tlast  <= 1'b0;
                 end : send
                 begin : monitor
-                    @(posedge core_clk iff pkt_h2c.vld);
+                    @(posedge aclk iff pkt_h2c.vld);
                     valid_cycles++;
                     repeat (N - 1) begin
-                        @(posedge core_clk);
+                        @(posedge aclk);
                         if (pkt_h2c.vld) valid_cycles++;
                         else             bubble_cycles++;
                     end
@@ -887,200 +779,6 @@ module xilinx_qdma_st_adapter_unit_test;
             join
             `FAIL_UNLESS_EQUAL(bubble_cycles, 0);
             `FAIL_UNLESS_EQUAL(valid_cycles,  N);
-        `SVTEST_END
-
-        // -----------------------------------------------------------------
-        // Loopback mode
-        // -----------------------------------------------------------------
-
-        // Registers are reachable and default to loopback disabled.
-        `SVTEST(loopback_reg_defaults)
-            bit [31:0] data;
-            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_CONFIG, data);
-            `FAIL_UNLESS_EQUAL(data[0], 1'b0);
-            reg_read(qdma_reg_pkg::OFFSET_LOOPBACK_STATUS, data);
-            `FAIL_UNLESS_EQUAL(data[0], 1'b0);   // enabled
-            `FAIL_UNLESS_EQUAL(data[1], 1'b0);   // switching
-        `SVTEST_END
-
-        // The full 16-byte window must respond, or a CPM5 read completion
-        // covering it is poisoned by SLVERR on the unmapped beats.
-        `SVTEST(loopback_reg_window_complete)
-            bit [31:0] data;
-            reg_read(qdma_reg_pkg::OFFSET_RESERVED_0, data);
-            `FAIL_UNLESS_EQUAL(data, 32'h0);
-            reg_read(qdma_reg_pkg::OFFSET_RESERVED_1, data);
-            `FAIL_UNLESS_EQUAL(data, 32'h0);
-        `SVTEST_END
-
-        // With loopback enabled an H2C packet comes back as C2H, on the same
-        // queue and with the length it was sent with.
-        `SVTEST(loopback_h2c_returns_as_c2h)
-            logic [15:0] len;
-            logic [QID_WID-1:0] qid;
-            set_loopback(1'b1);
-            fork
-                send_h2c_packet(.num_beats(3), .last_mty(6'd5), .qid(11'h1A3));
-                recv_c2h_flat(len, qid);
-            join
-            `FAIL_UNLESS_EQUAL(len, 16'(3*AXIS_DATA_BYTE_WID - 5));
-            `FAIL_UNLESS_EQUAL(qid, 11'h1A3);
-        `SVTEST_END
-
-        // While looped back, the core sees no H2C traffic.
-        `SVTEST(loopback_core_h2c_idle)
-            logic [15:0] len;
-            logic [QID_WID-1:0] qid;
-            set_loopback(1'b1);
-            fork
-                send_h2c_packet(.num_beats(2), .qid(11'h0C));
-                recv_c2h_flat(len, qid);
-                expect_no_h2c_packet(96);
-            join
-            `FAIL_UNLESS_EQUAL(qid, 11'h0C);
-        `SVTEST_END
-
-        // While looped back, C2H traffic from the core is discarded rather
-        // than reaching the host.
-        `SVTEST(loopback_core_c2h_discarded)
-            set_loopback(1'b1);
-            send_c2h_packet(.num_bytes(128), .qid(11'h7F));
-            expect_no_c2h_flat(96);
-        `SVTEST_END
-
-        // Disabling loopback restores normal routing in both directions.
-        `SVTEST(loopback_disable_restores_normal)
-            int bytes;
-            logic [QID_WID-1:0] qid;
-            logic err;
-            logic [15:0] len;
-            logic [QID_WID-1:0] c2h_qid;
-            set_loopback(1'b1);
-            set_loopback(1'b0);
-            // H2C reaches the core again
-            fork
-                send_h2c_packet(.num_beats(1), .qid(11'h55));
-                recv_h2c_packet(bytes, qid, err);
-            join
-            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
-            `FAIL_UNLESS_EQUAL(qid, 11'h55);
-            // C2H from the core reaches the host again
-            fork
-                send_c2h_packet(.num_bytes(64), .qid(11'h2B));
-                recv_c2h_flat(len, c2h_qid);
-            join
-            `FAIL_UNLESS_EQUAL(len, 16'(AXIS_DATA_BYTE_WID));
-            `FAIL_UNLESS_EQUAL(c2h_qid, 11'h2B);
-        `SVTEST_END
-
-        // All four counter blocks read back zero out of reset, which also
-        // proves each one decodes at its own sub-address.
-        `SVTEST(counters_idle_zero)
-            check_all_counts_zero();
-        `SVTEST_END
-
-        // Good H2C traffic is counted on both sides of the H2C FIFO.
-        `SVTEST(counters_h2c_ok)
-            localparam int PKTS = 4;
-            localparam int BEATS = 3;
-            localparam longint unsigned BYTES = PKTS * BEATS * AXIS_DATA_BYTE_WID;
-            int bytes;
-            logic [QID_WID-1:0] qid;
-            logic err;
-            clear_all_counts();
-            for (int i = 0; i < PKTS; i++) begin
-                fork
-                    send_h2c_packet(.num_beats(BEATS), .qid(11'h11));
-                    recv_h2c_packet(bytes, qid, err);
-                join
-            end
-            settle_counts();
-            check_counts(cnt_h2c_in,  "h2c_in",  PKTS, BYTES, 0, 0);
-            check_counts(cnt_h2c_out, "h2c_out", PKTS, BYTES, 0, 0);
-        `SVTEST_END
-
-        // An errored H2C packet is counted as errored on the way in and, since
-        // the H2C FIFO drops errored packets, never appears on the way out.
-        `SVTEST(counters_h2c_err)
-            localparam longint unsigned BYTES = 2 * AXIS_DATA_BYTE_WID;
-            clear_all_counts();
-            send_h2c_packet(.num_beats(2), .err(1'b1), .qid(11'h22));
-            expect_no_h2c_packet(96);
-            settle_counts();
-            check_counts(cnt_h2c_in,  "h2c_in",  0, 0, 1, BYTES);
-            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
-        `SVTEST_END
-
-        // A zero-byte H2C transfer cannot be represented on packet_intf, so the
-        // adapter marks it errored. It must land in the error bin, not the good
-        // one, and must not reach the core.
-        `SVTEST(counters_h2c_zero_byte_is_errored)
-            clear_all_counts();
-            send_h2c_packet(.num_beats(1), .zero_byte(1'b1), .qid(11'h23));
-            expect_no_h2c_packet(96);
-            settle_counts();
-            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
-            check_pkt_counts(cnt_h2c_in, "h2c_in", 0, 1);
-        `SVTEST_END
-
-        // Good C2H traffic from the core is counted on both sides of the C2H
-        // FIFO.
-        `SVTEST(counters_c2h_ok)
-            localparam int PKTS = 3;
-            localparam int BYTES_PER_PKT = 128;
-            localparam longint unsigned BYTES = PKTS * BYTES_PER_PKT;
-            logic [15:0] len;
-            logic [QID_WID-1:0] qid;
-            clear_all_counts();
-            for (int i = 0; i < PKTS; i++) begin
-                fork
-                    send_c2h_packet(.num_bytes(BYTES_PER_PKT), .qid(11'h33));
-                    recv_c2h_flat(len, qid);
-                join
-            end
-            settle_counts();
-            check_counts(cnt_c2h_in,  "c2h_in",  PKTS, BYTES, 0, 0);
-            check_counts(cnt_c2h_out, "c2h_out", PKTS, BYTES, 0, 0);
-        `SVTEST_END
-
-        // Under loopback the reflected H2C traffic enters the C2H FIFO, so the
-        // C2H counters move even though the core sent nothing.
-        `SVTEST(counters_loopback_tracks_reflected_traffic)
-            localparam longint unsigned BYTES = 2 * AXIS_DATA_BYTE_WID;
-            logic [15:0] len;
-            logic [QID_WID-1:0] qid;
-            set_loopback(1'b1);
-            clear_all_counts();
-            fork
-                send_h2c_packet(.num_beats(2), .qid(11'h44));
-                recv_c2h_flat(len, qid);
-            join
-            settle_counts();
-            // The packet is counted at all four taps: the loopback switch sits
-            // downstream of the H2C FIFO, so h2c_out still sees it leave the
-            // FIFO even though it is reflected rather than passed to the core.
-            check_counts(cnt_h2c_in,  "h2c_in",  1, BYTES, 0, 0);
-            check_counts(cnt_h2c_out, "h2c_out", 1, BYTES, 0, 0);
-            check_counts(cnt_c2h_in,  "c2h_in",  1, BYTES, 0, 0);
-            check_counts(cnt_c2h_out, "c2h_out", 1, BYTES, 0, 0);
-        `SVTEST_END
-
-        // Writing control.clear returns every counter to zero.
-        `SVTEST(counters_clear)
-            longint unsigned pkts;
-            int bytes;
-            logic [QID_WID-1:0] qid;
-            logic err;
-            clear_all_counts();
-            fork
-                send_h2c_packet(.num_beats(1), .qid(11'h55));
-                recv_h2c_packet(bytes, qid, err);
-            join
-            settle_counts();
-            cnt_h2c_in.get_pkt_ok_count(pkts);
-            `FAIL_UNLESS_EQUAL(pkts, 1);
-            clear_all_counts();
-            check_all_counts_zero();
         `SVTEST_END
 
     `SVUNIT_TESTS_END

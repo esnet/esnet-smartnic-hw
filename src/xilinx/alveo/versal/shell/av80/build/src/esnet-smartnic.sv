@@ -20,31 +20,29 @@ module esnet_smartnic
     axi4l_intf axil_if ();
     axi4l_intf axil_debug_if ();
 
-    // QDMA streaming adapter registers: decoded in the shell, consumed by the
-    // adapter, so the sub-space runs back down into xilinx_aved_adapter.
-    axi4l_intf axil_qdma ();
-
     // CPM5 carries a 12-bit queue ID; sizing the boundary from the platform
     // package keeps the core's qid field matched to what the hardware addresses.
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // Core clock. The 100 MHz management clock stands in until a 322 MHz source
-    // arrives with DCMAC; the shell likewise drives the core at this rate.
+    // Core clock. The 100 MHz management clock stands in until a faster source
+    // is wired up; see "Clocking (av80)" in CLAUDE.md.
     wire core_clk = clk_pl0_100mhz;
 
-    // DMA interfaces between adapter and shell, in the core clock domain; the
-    // adapter's packet FIFOs cross them to and from the QDMA clock.
+    // DMA interfaces between adapter and shell, in the PCIE0 (QDMA) clock
+    // domain.  The crossing to core_clk happens inside xilinx_alveo_shell.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_h2c_dma (.clk(core_clk));
+    ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
-    ) pkt_c2h_dma (.clk(core_clk));
+    ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
+
+    packet_pkg::size_t pkt_c2h_dma_size;
 
     // AVED top-level
     // NOTE: for compatibility with AVED constraints, this instance must
@@ -62,11 +60,9 @@ module esnet_smartnic
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
-        .core_clk  ( core_clk     ),
-        .core_srst ( ~axil_if.aresetn ),
-        .axil_qdma ( axil_qdma    ),
-        .pkt_h2c   ( pkt_h2c_dma  ),
-        .pkt_c2h   ( pkt_c2h_dma  )
+        .pkt_h2c      ( pkt_h2c_dma      ),
+        .pkt_c2h      ( pkt_c2h_dma      ),
+        .pkt_c2h_size ( pkt_c2h_dma_size )
     );
 
     // AXI-L debug core: ILA + VIO between adapter and shell adapter
@@ -82,10 +78,13 @@ module esnet_smartnic
         .sys_clk_100mhz ( sys_clk_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
-        .axil_top       ( axil_debug_if ),
-        .pkt_h2c_dma    ( pkt_h2c_dma  ),
-        .pkt_c2h_dma    ( pkt_c2h_dma  ),
-        .axil_qdma      ( axil_qdma    ),
+        .axil_top         ( axil_debug_if       ),
+        .core_clk         ( core_clk            ),
+        .dma_aclk         ( m_axi_pcie0_aclk    ),
+        .dma_aresetn      ( m_axi_pcie0_aresetn ),
+        .pkt_h2c_dma      ( pkt_h2c_dma         ),
+        .pkt_c2h_dma      ( pkt_c2h_dma         ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size    ),
         .shell_if
     );
 

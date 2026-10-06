@@ -34,13 +34,17 @@ module xilinx_alveo_versal_shell
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
 
-    // DMA streams to/from xilinx_aved_adapter
-    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA (management clock domain)
-    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA (management clock domain)
+    // Core clock.  The common Alveo shell crosses the DMA streams into this
+    // domain and hands them to the core.
+    input  wire logic       core_clk,
 
-    // QDMA streaming adapter registers, decoded out of the hw sub-space and
-    // routed back to xilinx_aved_adapter where the adapter lives.
-    axi4l_intf.controller   axil_qdma,
+    // DMA streams to/from xilinx_aved_adapter, in the PCIE0 (QDMA) clock
+    // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
+    input  wire logic       dma_aclk,
+    input  wire logic       dma_aresetn,
+    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA
+    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA
+    output packet_pkg::size_t pkt_c2h_dma_size,
 
     // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
@@ -57,13 +61,39 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
-    xilinx_alveo_shell i_xilinx_alveo_shell (
+    // DMA streaming registers, decoded from the hw sub-space below.
+    axi4l_intf #() axil_qdma_st ();
+
+    // Core-domain DMA streams, produced by the common shell and consumed by
+    // the axi4s conversion below.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_core (.clk(core_clk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_core (.clk(core_clk));
+
+    xilinx_alveo_shell #(
+        .QID_WID ( QID_WID )
+    ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
         .pci_rstn_in     ( pci_rstn_in     ),
         .pci_rstn_out    ( pci_rstn        ),
+        .core_clk,
+        .dma_aclk,
+        .dma_aresetn,
         .axil_top,
         .axil_hw,
-        .axil_core
+        .axil_core,
+        .axil_qdma_st     ( axil_qdma_st ),
+        .pkt_h2c_dma,
+        .pkt_c2h_dma,
+        .pkt_c2h_dma_size,
+        .pkt_h2c_core,
+        .pkt_c2h_core
     );
 
     // =========================================================================
@@ -75,7 +105,7 @@ module xilinx_alveo_versal_shell
         .axil_if        ( axil_hw       ),
         .dcmac0_axil_if ( axil_dcmac[0] ),
         .dcmac1_axil_if ( axil_dcmac[1] ),
-        .qdma_axil_if   ( axil_qdma     )
+        .qdma_axil_if   ( axil_qdma_st  )
     );
 
     // Terminate DCMAC AXI-L interfaces — pending DCMAC register map
@@ -156,7 +186,7 @@ module xilinx_alveo_versal_shell
     shell_pkg::dma_st_axis_tdest_t h2c_shell_tdest;
     shell_pkg::dma_st_axis_tuser_t h2c_shell_tuser;
 
-    assign h2c_shell_tid               = pkt_h2c_dma.meta;
+    assign h2c_shell_tid               = pkt_h2c_core.meta;
     assign h2c_shell_tdest.unused      = 1'b0;
     assign h2c_shell_tuser.rss_enable  = 1'b0;
     assign h2c_shell_tuser.rss_entropy = '0;
@@ -167,7 +197,7 @@ module xilinx_alveo_versal_shell
         .TUSER_WID ( DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_from_packet_adapter__h2c (
         .srst      ( ~axil_top.aresetn ),
-        .packet_if ( pkt_h2c_dma     ),
+        .packet_if ( pkt_h2c_core    ),
         .axis_if   ( axis_h2c        ),
         .tid       ( h2c_shell_tid   ),
         .tdest     ( h2c_shell_tdest ),
@@ -205,7 +235,7 @@ module xilinx_alveo_versal_shell
     ) i_axi4s_to_packet_adapter__c2h (
         .srst      ( ~axil_top.aresetn  ),
         .axis_if   ( axis_c2h_cdc       ),
-        .packet_if ( pkt_c2h_dma        ),
+        .packet_if ( pkt_c2h_core       ),
         .meta      ( __c2h_qdma_tid.qid ),
         .err       ( 1'b0               )
     );

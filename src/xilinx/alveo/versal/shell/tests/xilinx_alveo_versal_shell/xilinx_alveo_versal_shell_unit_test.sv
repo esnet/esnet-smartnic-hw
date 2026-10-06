@@ -30,9 +30,8 @@ module xilinx_alveo_versal_shell_unit_test;
     // =========================================================================
     axi4l_intf axil_if  ();
 
-    // QDMA adapter register sub-space, decoded by the shell. The adapter
-    // itself lives above the shell, so terminate it here.
-    axi4l_intf axil_qdma ();
+    // C2H packet length, published by the shell's C2H FIFO for the adapter.
+    packet_pkg::size_t pkt_c2h_dma_size;
 
     // DMA streams. The QDMA adapter is above the shell in the real design,
     // so these are terminated rather than driven.
@@ -67,14 +66,16 @@ module xilinx_alveo_versal_shell_unit_test;
         .sys_clk_100mhz ( axil_if.aclk ),
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),
-        .axil_top    ( axil_if      ),
-        .pkt_h2c_dma ( pkt_h2c_dma  ),
-        .pkt_c2h_dma ( pkt_c2h_dma  ),
-        .axil_qdma   ( axil_qdma    ),
+        .axil_top         ( axil_if          ),
+        .core_clk         ( axil_if.aclk     ),
+        .dma_aclk         ( axil_if.aclk     ),
+        .dma_aresetn      ( axil_if.aresetn  ),
+        .pkt_h2c_dma      ( pkt_h2c_dma      ),
+        .pkt_c2h_dma      ( pkt_c2h_dma      ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
         .shell_if
     );
 
-    axi4l_intf_peripheral_term i_axi4l_term__qdma (.axi4l_if (axil_qdma));
     packet_intf_tx_term i_packet_intf_tx_term__h2c (.to_rx   (pkt_h2c_dma));
     packet_intf_rx_sink i_packet_intf_rx_sink__c2h (.from_tx (pkt_c2h_dma));
 

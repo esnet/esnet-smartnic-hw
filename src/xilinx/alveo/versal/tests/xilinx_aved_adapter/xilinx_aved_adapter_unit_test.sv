@@ -72,7 +72,7 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    axi4l_intf axil_qdma_if ();
+    packet_pkg::size_t pkt_c2h_dma_size;
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
@@ -81,12 +81,12 @@ module xilinx_aved_adapter_unit_test;
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
         .META_WID      ( xilinx_qdma_pkg::QID_WID            )
-    ) pkt_h2c_dma (.clk(clk_pl0_100mhz));
+    ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
         .META_WID      ( xilinx_qdma_pkg::QID_WID            )
-    ) pkt_c2h_dma (.clk(clk_pl0_100mhz));
+    ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     wire pci_rstn_in;
     wire pci_rstn;
@@ -223,23 +223,23 @@ module xilinx_aved_adapter_unit_test;
         .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
         .axil_if                   ( axil_app_if ),
-        // QDMA adapter registers, decoded by the shell and routed back here
-        .axil_qdma                 ( axil_qdma_if ),
-        // DMA streams (core clock domain; adapter owns the CDC)
-        .core_clk                  ( clk_pl0_100mhz   ),
-        .core_srst                 ( ~rstn_pl0_100mhz ),
-        .pkt_h2c                   ( pkt_h2c_dma ),
-        .pkt_c2h                   ( pkt_c2h_dma )
+        // DMA streams (PCIE0 clock domain; the shell owns the CDC)
+        .pkt_h2c                   ( pkt_h2c_dma      ),
+        .pkt_c2h                   ( pkt_c2h_dma      ),
+        .pkt_c2h_size              ( pkt_c2h_dma_size )
     );
 
     xilinx_alveo_versal_shell DUT_shell (
         .sys_clk_100mhz ( clk_pl0_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
-        .axil_top       ( axil_app_if ),
-        .pkt_h2c_dma    ( pkt_h2c_dma ),
-        .pkt_c2h_dma    ( pkt_c2h_dma ),
-        .axil_qdma      ( axil_qdma_if ),
+        .axil_top         ( axil_app_if       ),
+        .core_clk         ( clk_pl0_100mhz    ),
+        .dma_aclk         ( m_axi_pcie0_aclk  ),
+        .dma_aresetn      ( rstn_pl0_100mhz   ),
+        .pkt_h2c_dma      ( pkt_h2c_dma       ),
+        .pkt_c2h_dma      ( pkt_c2h_dma       ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size  ),
         .shell_if
     );
 
