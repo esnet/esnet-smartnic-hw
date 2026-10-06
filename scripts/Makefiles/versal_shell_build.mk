@@ -102,7 +102,7 @@ $(__VSB_PDI_APP_FILE): $(__VSB_PDI_HW_FILE) $(__VSB_XSA_FILE)
 	    -o $(COMPONENT_OUT_PATH) \
 	    -d $(AVED_BASE_DESIGN) \
 	    -t $(TOP) \
-	    -b $(BUILD_ID)
+	    $(if $(BUILD_ID),-b $(BUILD_ID))
 
 .versal_shell_build_pdi: _np_xsa $(__VSB_PDI_APP_FILE)
 .PHONY: .versal_shell_build_pdi
