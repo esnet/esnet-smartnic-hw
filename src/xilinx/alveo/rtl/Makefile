@@ -30,6 +30,7 @@ SUBCOMPONENTS = \
     xilinx.jtag.rtl \
     xilinx.qdma.pkg \
     xilinx.qdma.regio.rtl \
+    shell.pkg \
     shell.regio.rtl
 
 EXT_LIBS =

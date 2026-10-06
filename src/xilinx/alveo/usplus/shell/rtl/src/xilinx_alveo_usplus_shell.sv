@@ -97,21 +97,25 @@ module xilinx_alveo_usplus_shell
         .META_WID      ( xilinx_qdma_pkg::QID_WID            )
     ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
 
-    packet_intf #(
-        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
-    ) pkt_h2c_core__unused (.clk(clk));
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_h2c__unused (.aclk(clk));
 
-    packet_intf #(
-        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
-    ) pkt_c2h_core__unused (.clk(clk));
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_c2h__unused (.aclk(clk));
 
     axi4l_intf_controller_term i_axi4l_term__qdma_st (.axi4l_if (axil_qdma_st__unused));
     packet_intf_tx_term  i_packet_term__h2c_dma  (.to_rx   (pkt_h2c_dma__unused));
     packet_intf_rx_sink  i_packet_sink__c2h_dma  (.from_tx (pkt_c2h_dma__unused));
-    packet_intf_rx_sink  i_packet_sink__h2c_core (.from_tx (pkt_h2c_core__unused));
-    packet_intf_tx_term  i_packet_term__c2h_core (.to_rx   (pkt_c2h_core__unused));
+    axi4s_intf_rx_sink   i_axi4s_sink__h2c      (.from_tx (axis_h2c__unused));
+    axi4s_intf_tx_term   i_axi4s_term__c2h      (.to_rx   (axis_c2h__unused));
 
     xilinx_alveo_shell i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
@@ -127,8 +131,8 @@ module xilinx_alveo_usplus_shell
         .pkt_h2c_dma      ( pkt_h2c_dma__unused  ),
         .pkt_c2h_dma      ( pkt_c2h_dma__unused  ),
         .pkt_c2h_dma_size (                      ),
-        .pkt_h2c_core     ( pkt_h2c_core__unused ),
-        .pkt_c2h_core     ( pkt_c2h_core__unused )
+        .axis_h2c         ( axis_h2c__unused     ),
+        .axis_c2h         ( axis_c2h__unused     )
     );
 
     // =========================================================================

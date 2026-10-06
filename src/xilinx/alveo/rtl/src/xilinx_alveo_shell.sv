@@ -41,10 +41,10 @@ module xilinx_alveo_shell
     output packet_pkg::size_t pkt_c2h_dma_size,
 
     // -----------------------------------------------------------------------
-    // DMA streams, core clock domain — toward the platform shell datapath
+    // DMA streams, core clock domain — shell-typed axi4s toward the core
     // -----------------------------------------------------------------------
-    packet_intf.tx pkt_h2c_core,  // H2C: drives toward core
-    packet_intf.rx pkt_c2h_core   // C2H: receives from core
+    axi4s_intf.tx axis_h2c,  // H2C: drives toward core
+    axi4s_intf.rx axis_c2h   // C2H: receives from core
 );
 
     // =========================================================================
@@ -127,8 +127,8 @@ module xilinx_alveo_shell
         .pkt_h2c_dma      ( pkt_h2c_dma      ),
         .pkt_c2h_dma      ( pkt_c2h_dma      ),
         .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
-        .pkt_h2c_core     ( pkt_h2c_core     ),
-        .pkt_c2h_core     ( pkt_c2h_core     )
+        .axis_h2c         ( axis_h2c         ),
+        .axis_c2h         ( axis_c2h         )
     );
 
 endmodule : xilinx_alveo_shell

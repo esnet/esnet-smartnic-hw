@@ -4,14 +4,16 @@
 // Platform-common DMA streaming datapath for Alveo cards.
 //
 // Sits between a platform-specific QDMA adapter (which presents the DMA
-// streams as packet_intf in the QDMA clock domain) and the shell datapath
-// (which consumes them in the core clock domain).  Owns:
+// streams as packet_intf in the QDMA clock domain) and the shell, to which
+// it presents shell-typed axi4s_intf in the core clock domain.  Owns:
 //
 //   - the QDMA-clock <-> core-clock crossing, via a store-and-forward
 //     packet_fifo per direction
 //   - a register-controlled loopback that reflects H2C back as C2H
 //   - the register space: loopback control/status plus packet counters on
 //     both sides of each FIFO
+//   - the packet_intf <-> axi4s_intf conversion and the metadata remap
+//     between QDMA and shell types
 //
 // Nothing here is specific to the QDMA IP.  The flat signal mapping, the
 // completion write-back and the ECC all stay in the platform adapter
@@ -55,10 +57,12 @@ module xilinx_alveo_qdma_st
     output packet_pkg::size_t pkt_c2h_dma_size,
 
     // -----------------------------------------------------------------------
-    // Core-side packet interfaces (core clock domain), toward the shell
+    // Core-side AXI4-S interfaces (core clock domain), toward the shell.
+    // Shell-typed: tid carries the queue ID, tdest/tuser are shell_pkg types.
+    // Widths are taken from the interfaces themselves.
     // -----------------------------------------------------------------------
-    packet_intf.tx pkt_h2c_core,  // H2C: drives toward core
-    packet_intf.rx pkt_c2h_core   // C2H: receives from core
+    axi4s_intf.tx axis_h2c,  // H2C: drives toward core
+    axi4s_intf.rx axis_c2h   // C2H: receives from core
 );
 
     // =========================================================================
@@ -233,6 +237,18 @@ module xilinx_alveo_qdma_st
     // loopback enabled, H2C is reflected straight into the C2H FIFO, the core
     // sees no H2C traffic, and C2H traffic from the core is discarded.
     // =========================================================================
+    // Core-side packet interfaces, between the loopback switch and the
+    // axi4s conversion below.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_core (.clk(core_clk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_core (.clk(core_clk));
+
     packet_loopback i_packet_loopback (
         .srst          ( core_srst               ),
         .packet_tx_in  ( pkt_h2c_fifo            ),
@@ -242,6 +258,82 @@ module xilinx_alveo_qdma_st
         .en            ( core_loopback_en        ),
         .en_mon        ( core_loopback_en_mon    ),
         .switching     ( core_loopback_switching )
+    );
+
+    // =========================================================================
+    // packet_intf <-> axi4s_intf conversion (core clock domain)
+    //
+    // H2C converts straight to axi4s_intf, taking the QID from the packet
+    // metadata into tid and supplying the shell_pkg tdest/tuser in the same
+    // step; neither has an H2C source, so both are tied off.
+    //
+    // C2H goes the other way: the shell-typed metadata is remapped to QDMA
+    // types and then converted to packet_intf, where the QID rides in the
+    // metadata field for the adapter to pick up.
+    // =========================================================================
+
+    // H2C: packet_intf -> axi4s_intf
+    logic [axis_h2c.TID_WID-1:0]   h2c_shell_tid;
+    shell_pkg::dma_st_axis_tdest_t h2c_shell_tdest;
+    shell_pkg::dma_st_axis_tuser_t h2c_shell_tuser;
+
+    assign h2c_shell_tid               = pkt_h2c_core.meta;
+    assign h2c_shell_tdest.unused      = 1'b0;
+    assign h2c_shell_tuser.rss_enable  = 1'b0;
+    assign h2c_shell_tuser.rss_entropy = '0;
+
+    axi4s_from_packet_adapter #(
+        .TID_WID   ( axis_h2c.TID_WID   ),
+        .TDEST_WID ( axis_h2c.TDEST_WID ),
+        .TUSER_WID ( axis_h2c.TUSER_WID )
+    ) i_axi4s_from_packet_adapter__h2c (
+        .srst      ( core_srst       ),
+        .packet_if ( pkt_h2c_core    ),
+        .axis_if   ( axis_h2c        ),
+        .tid       ( h2c_shell_tid   ),
+        .tdest     ( h2c_shell_tdest ),
+        .tuser     ( h2c_shell_tuser )
+    );
+
+    // C2H metadata adaptation: shell types -> QDMA types
+    axi4s_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_WID       ( AXIS_TID_WID       ),
+        .TDEST_WID     ( AXIS_TDEST_WID     ),
+        .TUSER_WID     ( AXIS_TUSER_WID     )
+    ) axis_c2h_qdma (.aclk(core_clk));
+
+    logic [axis_c2h.TID_WID-1:0]  c2h_shell_tid;
+    xilinx_qdma_pkg::axis_tid_t   c2h_qdma_tid;
+    xilinx_qdma_pkg::axis_tdest_t c2h_qdma_tdest;
+    xilinx_qdma_pkg::axis_tuser_t c2h_qdma_tuser;
+
+    assign c2h_shell_tid          = axis_c2h.tid;
+    assign c2h_qdma_tid.qid       = c2h_shell_tid;
+    assign c2h_qdma_tdest.unused  = 1'b0;
+    assign c2h_qdma_tuser.err     = 1'b0;
+
+    axi4s_intf_set_meta #(
+        .TID_WID   ( AXIS_TID_WID   ),
+        .TDEST_WID ( AXIS_TDEST_WID ),
+        .TUSER_WID ( AXIS_TUSER_WID )
+    ) i_axi4s_intf_set_meta__c2h (
+        .from_tx ( axis_c2h       ),
+        .to_rx   ( axis_c2h_qdma  ),
+        .tid     ( c2h_qdma_tid   ),
+        .tdest   ( c2h_qdma_tdest ),
+        .tuser   ( c2h_qdma_tuser )
+    );
+
+    // C2H: axi4s_intf -> packet_intf
+    axi4s_to_packet_adapter #(
+        .META_WID ( QID_WID )
+    ) i_axi4s_to_packet_adapter__c2h (
+        .srst      ( core_srst        ),
+        .axis_if   ( axis_c2h_qdma    ),
+        .packet_if ( pkt_c2h_core     ),
+        .meta      ( c2h_qdma_tid.qid ),
+        .err       ( 1'b0             )
     );
 
     // =========================================================================
