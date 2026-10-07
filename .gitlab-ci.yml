@@ -833,6 +833,9 @@ fw_shell_au280:
 
 fw_shell_av80:
   extends: .versal_trigger_fw
+  trigger:
+    project: ht/esnet-smartnic-fw
+    branch: dev/jranger/versal-qdma-drop-opennic-patches
   variables:
     SN_HW_API_JOB: hwapi_shell_av80
   needs:
