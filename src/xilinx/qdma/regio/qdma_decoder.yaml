@@ -22,7 +22,7 @@ blocks:
   config: &config
     !include ../src/xilinx/qdma/regio/qdma.yaml
   counters: &counters
-    !include src/packet/regio/packet_counters.yaml
+    !include ../src/xilinx/qdma/regio/qdma_counters.yaml
 
 interfaces:
   - block: *config

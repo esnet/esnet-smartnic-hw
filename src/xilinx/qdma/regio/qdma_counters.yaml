@@ -1,0 +1,140 @@
+name: qdma_counters
+info: |
+    This register map describes a set of packet and byte counters.
+
+regs:
+  - default:
+      width  : 32
+      init   : 0
+  
+  - name: info
+    desc: Info (provides parameterization details).
+    access: ro
+    fields:
+        - name: pkt_count_wid
+          desc: Packet counter width (in bits).
+          width: 7
+        - name: byte_count_wid
+          desc: Byte counter width (in bits).
+          width: 7
+
+  - name: control
+    desc   : controls the latching and clearing behaviour of the packet counters.
+    access : wr_evt
+    fields:
+        - name: latch
+          desc: 0 - latch regs track internal counts continuously. 1 - latch regs snapshot internal counts only on wr_evt.
+          width: 1
+          enum:
+              0 : LATCH_ON_CLK
+              1 : LATCH_ON_WR_EVT
+          init: 0
+        - name: clear
+          desc: 0 - internal counts NOT cleared by reg events.  1 - internal counts cleared upon wr_evt. 
+          width: 1
+          enum:
+              0 : NO_CLEAR
+              1 : CLEAR_ON_WR_EVT
+          init: 0
+
+  # Good packets
+  - name: cnt_pkt_ok_upper
+    desc   : good packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_ok_lower
+    desc   : good packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_ok_upper
+    desc   : good byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_ok_lower
+    desc   : good byte count (bits[31:0]).
+    access : ro
+
+  # Errored packets
+  - name: cnt_pkt_err_upper
+    desc   : errored packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_err_lower
+    desc   : errored packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_err_upper
+    desc   : errored byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_err_lower
+    desc   : errored byte count (bits[31:0]).
+    access : ro
+ 
+  # Overflow packets
+  - name: cnt_pkt_oflow_upper
+    desc   : overflow packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_oflow_lower
+    desc   : overflow packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_oflow_upper
+    desc   : overflow byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_oflow_lower
+    desc   : overflow byte count (bits[31:0]).
+    access : ro
+
+  # Short packets
+  - name: cnt_pkt_short_upper
+    desc   : short packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_short_lower
+    desc   : short packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_short_upper
+    desc   : short byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_short_lower
+    desc   : short byte count (bits[31:0]).
+    access : ro
+
+  # Long packets
+  - name: cnt_pkt_long_upper
+    desc   : long packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_long_lower
+    desc   : long packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_long_upper
+    desc   : long byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_long_lower
+    desc   : long byte count (bits[31:0]).
+    access : ro
+ 
+  # Other packets
+  - name: cnt_pkt_other_upper
+    desc   : other packet count (bits[63:32]).
+    access : ro
+
+  - name: cnt_pkt_other_lower
+    desc   : other packet count (bits[31:0]).
+    access : ro
+
+  - name: cnt_byte_other_upper
+    desc   : other byte count (bits[63:32]).
+    access : ro
+
+  - name: cnt_byte_other_lower
+    desc   : other byte count (bits[31:0]).
+    access : ro
