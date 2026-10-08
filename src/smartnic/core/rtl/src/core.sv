@@ -118,11 +118,16 @@ module smartnic_wrapper
 
     wire logic [NUM_PORTS-1:0]       cmac_clk;
     wire logic                       core_clk;
+    logic                            core_rst_done;
 
     dma_st_axis_tuser_t axis_h2c_tuser;
     logic [axis_h2c.TID_WID-1:0] axis_h2c_tid;
     dma_st_axis_tuser_t axis_c2h_tuser;
     logic [axis_c2h.TID_WID-1:0] axis_c2h_tid;
+
+    // core_clk-domain DMA interfaces (post-CDC)
+    axi4s_intf #(.DATA_BYTE_WID(axis_h2c.DATA_BYTE_WID), .TID_WID(axis_h2c.TID_WID), .TDEST_WID(axis_h2c.TDEST_WID), .TUSER_WID(axis_h2c.TUSER_WID)) axis_h2c_core (.aclk(core_clk));
+    axi4s_intf #(.DATA_BYTE_WID(axis_c2h.DATA_BYTE_WID), .TID_WID(axis_c2h.TID_WID), .TDEST_WID(axis_c2h.TDEST_WID), .TUSER_WID(axis_c2h.TUSER_WID)) axis_c2h_core (.aclk(core_clk));
 
     // =========================================================================
     // Smartnic instance
@@ -148,8 +153,8 @@ module smartnic_wrapper
         .s_axil_rresp   ( axil_if.rresp ),
         .s_axil_rready  ( axil_if.rready ),
 
-        .mod_rstn ( axil_if.aresetn ),
-        .mod_rst_done ( ),
+        .mod_rstn     ( axil_if.aresetn ),
+        .mod_rst_done ( core_rst_done  ),
 
         .axil_aclk ( axil_if.aclk ),
 
@@ -188,30 +193,46 @@ module smartnic_wrapper
         end : g__port
     endgenerate
 
+    // H2C CDC: shell clock domain → smartnic core_clk domain
+    axi4s_fifo_async #(.DEPTH(256)) i_h2c_cdc (
+        .from_tx      (axis_h2c),
+        .from_tx_srst (srst),
+        .to_rx        (axis_h2c_core),
+        .to_rx_srst   (~core_rst_done)
+    );
+
+    // C2H CDC: smartnic core_clk domain → shell clock domain
+    axi4s_fifo_async #(.DEPTH(256)) i_c2h_cdc (
+        .from_tx      (axis_c2h_core),
+        .from_tx_srst (~core_rst_done),
+        .to_rx        (axis_c2h),
+        .to_rx_srst   (srst)
+    );
+
     // H2C
-    assign s_axis_adpt_tx_322mhz_tvalid[0]            = axis_h2c.tvalid;
-    assign s_axis_adpt_tx_322mhz_tdata [0*512 +: 512] = axis_h2c.tdata;
-    assign s_axis_adpt_tx_322mhz_tkeep [0*64  +: 64]  = axis_h2c.tkeep;
-    assign s_axis_adpt_tx_322mhz_tlast [0]            = axis_h2c.tlast;
+    assign s_axis_adpt_tx_322mhz_tvalid[0]            = axis_h2c_core.tvalid;
+    assign s_axis_adpt_tx_322mhz_tdata [0*512 +: 512] = axis_h2c_core.tdata;
+    assign s_axis_adpt_tx_322mhz_tkeep [0*64  +: 64]  = axis_h2c_core.tkeep;
+    assign s_axis_adpt_tx_322mhz_tlast [0]            = axis_h2c_core.tlast;
     assign s_axis_adpt_tx_322mhz_tdest [0*4   +: 4]   = '0;
-    assign s_axis_adpt_tx_322mhz_tuser_err [0]        = axis_h2c.tuser;
-    assign axis_h2c_tid = axis_h2c.tid;
+    assign s_axis_adpt_tx_322mhz_tuser_err [0]        = axis_h2c_core.tuser;
+    assign axis_h2c_tid = axis_h2c_core.tid;
     assign s_axis_adpt_tx_322mhz_tid [0*16 +: 16]     = 16'(axis_h2c_tid);
-    assign axis_h2c.tready = s_axis_adpt_tx_322mhz_tready[0];
+    assign axis_h2c_core.tready = s_axis_adpt_tx_322mhz_tready[0];
 
     // C2H
-    assign axis_c2h.tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
-    assign axis_c2h.tdata  = m_axis_adpt_rx_322mhz_tdata [0*512 +: 512];
-    assign axis_c2h.tkeep  = m_axis_adpt_rx_322mhz_tkeep [0*64  +: 64];
-    assign axis_c2h.tlast  = m_axis_adpt_rx_322mhz_tlast [0];
+    assign axis_c2h_core.tvalid = m_axis_adpt_rx_322mhz_tvalid[0];
+    assign axis_c2h_core.tdata  = m_axis_adpt_rx_322mhz_tdata [0*512 +: 512];
+    assign axis_c2h_core.tkeep  = m_axis_adpt_rx_322mhz_tkeep [0*64  +: 64];
+    assign axis_c2h_core.tlast  = m_axis_adpt_rx_322mhz_tlast [0];
     // assign axis_c2h_tid.qid = m_axis_adpt_rx_322mhz_tuser_rss_entropy[0*12 +: DMA_ST_QID_WID];
-    // assign axis_c2h.tid = axis_c2h_tid;
-    assign axis_c2h.tid    = '0;
-    assign axis_c2h.tdest  = '0;
+    // assign axis_c2h_core.tid = axis_c2h_tid;
+    assign axis_c2h_core.tid    = '0;
+    assign axis_c2h_core.tdest  = '0;
     assign axis_c2h_tuser.rss_enable  = m_axis_adpt_rx_322mhz_tuser_rss_enable[0];
     assign axis_c2h_tuser.rss_entropy = m_axis_adpt_rx_322mhz_tuser_rss_entropy[11:0];
-    assign axis_c2h.tuser  = axis_c2h_tuser;
-    assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h.tready;
+    assign axis_c2h_core.tuser  = axis_c2h_tuser;
+    assign m_axis_adpt_rx_322mhz_tready[0] = axis_c2h_core.tready;
 
     // Tie off redundant SmartNIC QDMA channel(s)
     generate
