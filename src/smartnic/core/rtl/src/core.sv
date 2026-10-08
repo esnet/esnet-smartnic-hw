@@ -148,7 +148,7 @@ module smartnic_wrapper
         .s_axil_rresp   ( axil_if.rresp ),
         .s_axil_rready  ( axil_if.rready ),
 
-        .mod_rstn ( !srst ),
+        .mod_rstn ( axil_if.aresetn ),
         .mod_rst_done ( ),
 
         .axil_aclk ( axil_if.aclk ),
