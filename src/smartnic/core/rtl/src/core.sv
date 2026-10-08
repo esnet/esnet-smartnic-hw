@@ -118,7 +118,7 @@ module smartnic_wrapper
 
     wire logic [NUM_PORTS-1:0]       cmac_clk;
     wire logic                       core_clk;
-    logic                            core_rst_done;
+    logic                            core_clk_srst;
 
     dma_st_axis_tuser_t axis_h2c_tuser;
     logic [axis_h2c.TID_WID-1:0] axis_h2c_tid;
@@ -128,6 +128,16 @@ module smartnic_wrapper
     // core_clk-domain DMA interfaces (post-CDC)
     axi4s_intf #(.DATA_BYTE_WID(axis_h2c.DATA_BYTE_WID), .TID_WID(axis_h2c.TID_WID), .TDEST_WID(axis_h2c.TDEST_WID), .TUSER_WID(axis_h2c.TUSER_WID)) axis_h2c_core (.aclk(core_clk));
     axi4s_intf #(.DATA_BYTE_WID(axis_c2h.DATA_BYTE_WID), .TID_WID(axis_c2h.TID_WID), .TDEST_WID(axis_c2h.TDEST_WID), .TUSER_WID(axis_c2h.TUSER_WID)) axis_c2h_core (.aclk(core_clk));
+
+    // Synchronize srst (shell clock domain) into core_clk domain
+    sync_reset #(
+        .INPUT_ACTIVE_HIGH ( 1 )
+    ) i_sync_reset__core_clk_srst (
+        .clk_in  ( clk ),
+        .rst_in  ( srst ),
+        .clk_out ( core_clk ),
+        .rst_out ( core_clk_srst )
+    );
 
     // =========================================================================
     // Smartnic instance
@@ -154,7 +164,7 @@ module smartnic_wrapper
         .s_axil_rready  ( axil_if.rready ),
 
         .mod_rstn     ( axil_if.aresetn ),
-        .mod_rst_done ( core_rst_done  ),
+        .mod_rst_done ( ),
 
         .axil_aclk ( axil_if.aclk ),
 
@@ -198,13 +208,13 @@ module smartnic_wrapper
         .from_tx      (axis_h2c),
         .from_tx_srst (srst),
         .to_rx        (axis_h2c_core),
-        .to_rx_srst   (~core_rst_done)
+        .to_rx_srst   (core_clk_srst)
     );
 
     // C2H CDC: smartnic core_clk domain → shell clock domain
     axi4s_fifo_async #(.DEPTH(256)) i_c2h_cdc (
         .from_tx      (axis_c2h_core),
-        .from_tx_srst (~core_rst_done),
+        .from_tx_srst (core_clk_srst),
         .to_rx        (axis_c2h),
         .to_rx_srst   (srst)
     );
