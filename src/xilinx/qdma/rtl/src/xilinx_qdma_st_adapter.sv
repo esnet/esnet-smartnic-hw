@@ -144,11 +144,14 @@ module xilinx_qdma_st_adapter
     assign c2h_mty           = pkt_c2h.eop ? pkt_c2h.mty : '0;
     assign c2h_tcrc          = '0;
 
-    // ECC over C2H ctrl bus (PG302: input order LSB-first as listed below)
+    // ECC over the C2H ctrl bus.  Field order and widths per PG347:
+    //   {24'h0, has_cmpt, marker, port_id[2:0], qid[11:0], len[15:0]} = 57 bits
+    // The qid field is 12 bits on both targets; the 11-bit USPlus qid
+    // zero-extends into it.
     logic [56:0] ecc_data_in;
     assign ecc_data_in = {24'h0, c2h_ctrl_has_cmpt, c2h_ctrl_marker,
-                          c2h_ctrl_port_id, 1'b0,
-                          11'(c2h_ctrl_qid),    // PG302 ECC covers 11-bit qid field
+                          c2h_ctrl_port_id,
+                          12'(c2h_ctrl_qid),
                           c2h_ctrl_len};
 
     xilinx_qdma_ecc i_xilinx_qdma_ecc (
