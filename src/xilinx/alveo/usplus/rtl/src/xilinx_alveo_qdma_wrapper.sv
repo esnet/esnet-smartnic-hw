@@ -467,6 +467,8 @@ module xilinx_alveo_qdma_wrapper #(
     // (Local) signals
     c2h_cmpt_data_t __c2h_cmpt_data;
 
+    assign __c2h_cmpt_data.dma_rsv = '0;
+    assign __c2h_cmpt_data.user_rsv = '0;
     assign __c2h_cmpt_data.len = s_axis_c2h_ctrl_len;
     assign __c2h_cmpt_data.pkt_id = __c2h_pkt_id;
     assign __c2h_cmpt_data.qid = s_axis_c2h_ctrl_qid;
