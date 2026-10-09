@@ -163,7 +163,9 @@ module xilinx_qdma_st_adapter
         .ecc_reset       ( !aresetn    )
     );
 
-    // Packet ID counter for completion write-back
+    // Payload packet ID counter for completion write-back.  QDMA's internal
+    // payload packet ID is 1-based, so the completion carries the count
+    // including the packet being presented.
     pkt_id_t c2h_pkt_id;
     always_ff @(posedge aclk) begin
         if (!aresetn) c2h_pkt_id <= '0;
@@ -171,12 +173,15 @@ module xilinx_qdma_st_adapter
             c2h_pkt_id <= c2h_pkt_id + 1'b1;
     end
 
+    pkt_id_t c2h_pld_pkt_id;
+    assign c2h_pld_pkt_id = c2h_pkt_id + 1'b1;
+
     // Completion: one per EOP
     c2h_cmpt_data_t cmpt_data_packed;
     assign cmpt_data_packed.dma_rsv  = '0;
     assign cmpt_data_packed.user_rsv = '0;
     assign cmpt_data_packed.len    = pkt_c2h_size;
-    assign cmpt_data_packed.pkt_id = c2h_pkt_id;
+    assign cmpt_data_packed.pkt_id = c2h_pld_pkt_id;
     assign cmpt_data_packed.qid    = pkt_c2h.meta[QID_WID-1:0];
 
     assign cmpt_tvalid          = pkt_c2h.vld && pkt_c2h.rdy && pkt_c2h.eop;
@@ -185,7 +190,7 @@ module xilinx_qdma_st_adapter
     assign cmpt_qid             = pkt_c2h.meta[QID_WID-1:0];
     assign cmpt_port_id         = '0;
     assign cmpt_cmpt_type       = 2'b11;   // HAS_PLD
-    assign cmpt_wait_pld_pkt_id = c2h_pkt_id;
+    assign cmpt_wait_pld_pkt_id = c2h_pld_pkt_id;
     // Odd parity: one bit per 32-bit word of the 512-bit completion bus.
     generate
         for (genvar i = 0; i < 16; i++) begin : g_cmpt_dpar
