@@ -181,7 +181,12 @@ module xilinx_qdma_st_adapter
     assign cmpt_port_id         = '0;
     assign cmpt_cmpt_type       = 2'b11;   // HAS_PLD
     assign cmpt_wait_pld_pkt_id = c2h_pkt_id;
-    assign cmpt_dpar            = '0;
+    // Odd parity: one bit per 32-bit word of the 512-bit completion bus.
+    generate
+        for (genvar i = 0; i < 16; i++) begin : g_cmpt_dpar
+            assign cmpt_dpar[i] = ~(^cmpt_data[i*32 +: 32]);
+        end
+    endgenerate
     assign cmpt_col_idx         = '0;
     assign cmpt_err_idx         = '0;
     assign cmpt_user_trig       = 1'b0;
