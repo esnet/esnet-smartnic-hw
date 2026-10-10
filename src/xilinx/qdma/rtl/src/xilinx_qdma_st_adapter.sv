@@ -157,10 +157,7 @@ module xilinx_qdma_st_adapter
     xilinx_qdma_ecc i_xilinx_qdma_ecc (
         .ecc_data_in     ( ecc_data_in ),
         .ecc_data_out    (             ),
-        .ecc_chkbits_out ( c2h_ecc     ),
-        .ecc_clk         ( aclk        ),
-        .ecc_clken       ( 1'b1        ),
-        .ecc_reset       ( !aresetn    )
+        .ecc_chkbits_out ( c2h_ecc     )
     );
 
     // Payload packet ID counter for completion write-back.  QDMA's internal

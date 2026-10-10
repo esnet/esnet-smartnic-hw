@@ -1,7 +1,6 @@
 set module_name xilinx_qdma_ecc
 create_ip -name ecc -vendor xilinx.com -library ip -module_name $module_name -dir . -force
-set_property -dict { 
-    CONFIG.C_USE_CLK_ENABLE {true}
+set_property -dict {
     CONFIG.C_REG_OUTPUT {false}
     CONFIG.C_REG_INPUT {false}
     CONFIG.C_CHK_BIT_WIDTH {7}

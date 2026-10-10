@@ -441,10 +441,7 @@ module xilinx_alveo_qdma_wrapper #(
     xilinx_qdma_ecc i_xilinx_qdma_ecc (
         .ecc_data_in     ( ecc_data_in ),
         .ecc_data_out    ( ),
-        .ecc_chkbits_out ( s_axis_c2h_ctrl_ecc ), // input wire [6 : 0] s_axis_c2h_ctrl_ecc
-        .ecc_clk         ( axi_aclk ),            // output wire axi_aclk
-        .ecc_clken       ( 1'b1 ),
-        .ecc_reset       ( !axi_aresetn )         // output wire axi_aresetn
+        .ecc_chkbits_out ( s_axis_c2h_ctrl_ecc )
     );
 
     // Track packet ID.  QDMA's internal payload packet ID is 1-based, so the
