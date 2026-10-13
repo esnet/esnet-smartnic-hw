@@ -71,15 +71,22 @@ module esnet_smartnic
     xilinx_alveo_versal_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_versal_shell (
-        .sys_clk_100mhz ( sys_clk_100mhz ),
-        .pci_rstn_in    ( pci_rstn_in ),
-        .pci_rstn       ( pci_rstn    ),
-        .axil_top         ( axil_debug_if       ),
-        .dma_aclk         ( m_axi_pcie0_aclk    ),
+        .sys_clk_100mhz   ( sys_clk_100mhz ),
+        .pci_rstn_in      ( pci_rstn_in ),
+        .pci_rstn         ( pci_rstn ),
+        .gt_ref_clk0_p    ( qsfp0_322mhz_clk_p ),
+        .gt_ref_clk0_n    ( qsfp0_322mhz_clk_n ),
+        .gt_rxp_in        ( {qsfp1_4x_grx_p, qsfp0_4x_grx_p} ),
+        .gt_rxn_in        ( {qsfp1_4x_grx_n, qsfp0_4x_grx_n} ),
+        .gt_txp_out       ( {qsfp1_4x_gtx_p, qsfp0_4x_gtx_p} ),
+        .gt_txn_out       ( {qsfp1_4x_gtx_n, qsfp0_4x_gtx_n} ),
+        .axil_top         ( axil_debug_if ),
+        .dma_aclk         ( m_axi_pcie0_aclk ),
         .dma_aresetn      ( m_axi_pcie0_aresetn ),
-        .pkt_h2c_dma      ( pkt_h2c_dma         ),
-        .pkt_c2h_dma      ( pkt_c2h_dma         ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size    ),
+        .pkt_h2c_dma      ( pkt_h2c_dma ),
+        .pkt_c2h_dma      ( pkt_c2h_dma ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
+
         .shell_if
     );
 

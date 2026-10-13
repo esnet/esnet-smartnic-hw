@@ -8,7 +8,6 @@
 // Responsibilities:
 //   - Instantiate xilinx_alveo_shell for common Alveo platform functionality:
 //     JTAG VIO PCIe reset override and top-level hw/core AXI-L decoder.
-//   - Terminate the hw AXI-L sub-space (no Versal hw registers yet).
 //   - Pass the core AXI-L sub-space to the shell-core boundary (shell_intf).
 //   - Terminate network port and DMA streaming interfaces pending
 //     DCMAC and QDMA subsystem implementation.
@@ -30,6 +29,14 @@ module xilinx_alveo_versal_shell
     // PCIe reset (JTAG VIO overrride interface)
     input  wire logic       pci_rstn_in, // Incoming hardware PCI reset (e.g. PERST#)
     output wire logic       pci_rstn,    // Outgoing PCI reset (includes JTAG override)
+
+    input  wire logic       gt_ref_clk0_n,
+    input  wire logic       gt_ref_clk0_p,
+
+    input  wire logic [1:0][3:0] gt_rxp_in,
+    input  wire logic [1:0][3:0] gt_rxn_in,
+    output wire logic [1:0][3:0] gt_txp_out,
+    output wire logic [1:0][3:0] gt_txn_out,
 
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
@@ -116,8 +123,8 @@ module xilinx_alveo_versal_shell
         .QID_WID ( QID_WID )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
-        .pci_rstn_in     ( pci_rstn_in     ),
-        .pci_rstn_out    ( pci_rstn        ),
+        .pci_rstn_in     ( pci_rstn_in ),
+        .pci_rstn_out    ( pci_rstn ),
         .core_clk,
         .core_srst,
         .dma_aclk,
@@ -137,48 +144,107 @@ module xilinx_alveo_versal_shell
     // Versal Alveo hw decoder
     // =========================================================================
     axi4l_intf #() axil_dcmac [2] ();
+    axi4l_intf #() axil_gt [2][2] ();
+
+    axi4l_intf #() axil_versal_hw_regs ();
 
     xilinx_alveo_versal_decoder i_xilinx_alveo_versal_decoder (
-        .axil_if        ( axil_hw       ),
-        .dcmac0_axil_if ( axil_dcmac[0] ),
-        .dcmac1_axil_if ( axil_dcmac[1] ),
-        .qdma_axil_if   ( axil_qdma_st  )
+        .axil_if                ( axil_hw ),
+        .dcmac0_axil_if         ( axil_dcmac[0] ),
+        .dcmac1_axil_if         ( axil_dcmac[1] ),
+        .gt0_axil_if            ( axil_gt[0][0] ),
+        .gt1_axil_if            ( axil_gt[0][1] ),
+        .gt2_axil_if            ( axil_gt[1][0] ),
+        .gt3_axil_if            ( axil_gt[1][1] ),
+        .qdma_axil_if           ( axil_qdma_st ),
+        .versal_hw_regs_axil_if ( axil_versal_hw_regs )
+    );
+
+    // =========================================================================
+    // Versal hardware register block
+    // =========================================================================
+    versal_hw_regs_reg_intf versal_hw_regs_reg_if ();
+
+    versal_hw_regs_reg_blk i_versal_hw_regs_reg_blk (
+        .axil_if    ( axil_versal_hw_regs ),
+        .reg_blk_if ( versal_hw_regs_reg_if )
     );
 
     // Terminate DCMAC AXI-L interfaces — pending DCMAC register map
     generate
-        for (genvar g = 0; g < 2; g++) begin : g__dcmac
-            axi4l_intf_peripheral_term i_axi4l_term__dcmac (.axi4l_if (axil_dcmac[g]));
-        end : g__dcmac
+//        for (genvar g = 1; g < 2; g++) begin : g__dcmac
+//            axi4l_intf_peripheral_term i_axi4l_term__dcmac (.axi4l_if (axil_dcmac[g]));
+            axi4l_intf_peripheral_term i_axi4l_term__dcmac (.axi4l_if (axil_dcmac[1]));
+            axi4l_intf_peripheral_term i_axi4l_term__gt0   (.axi4l_if (axil_gt[1][0]));
+            axi4l_intf_peripheral_term i_axi4l_term__gt1   (.axi4l_if (axil_gt[1][1]));
+//        end : g__dcmac
     endgenerate
 
     // =========================================================================
     // Network port interfaces (CMAC) — terminated pending DCMAC wiring
     // =========================================================================
-    axi4s_intf #(
-        .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
-        .TID_WID       ( PORT_AXIS_TID_WID           ),
-        .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
-        .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(core_clk));
+    logic axis_clk_out;
 
     axi4s_intf #(
         .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
-        .TID_WID       ( PORT_AXIS_TID_WID           ),
-        .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
-        .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(core_clk));
+        .TID_WID       ( PORT_AXIS_TID_WID ),
+        .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+        .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(axis_clk_out));  // todo: separate ifs
 
-    generate
-        for (genvar g_port = 0; g_port < shell_if.NUM_PORTS; g_port++) begin : g__port
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
+        .TID_WID       ( PORT_AXIS_TID_WID ),
+        .TDEST_WID     ( PORT_AXIS_TDEST_WID ),
+        .TUSER_WID     ( PORT_AXIS_TUSER_WID )
+    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(axis_clk_out));  // todo: separate ifs
+
+
+//    generate
+//        for (genvar g_port = 0; g_port < shell_if.NUM_PORTS; g_port++) begin : g__port
+/*
             axi4s_intf_tx_term i_axi4s_intf_tx_term__port_rx (
                 .to_rx ( axis_port_rx[g_port] )
             );
             axi4s_intf_rx_sink i_axi4s_intf_rx_sink__port_tx (
                 .from_tx ( axis_port_tx[g_port] )
             );
-        end : g__port
-    endgenerate
+*/
+//            axi4s_intf_connector axi4s_connector_0 (.from_tx(axis_port_tx[g_port]), .to_rx(axis_port_rx[g_port]));
+//    endgenerate
+
+
+    assign versal_hw_regs_reg_if.dcmac_gt_status_nxt_v = 1'b1;
+
+    dcmac_wrapper dcmac_wrapper_0 (
+        .gt_ref_clk0_p            ( gt_ref_clk0_p ),
+        .gt_ref_clk0_n            ( gt_ref_clk0_n ),
+        .gt_rxp_in                ( gt_rxp_in ),
+        .gt_rxn_in                ( gt_rxn_in ),
+        .gt_txp_out               ( gt_txp_out ),
+        .gt_txn_out               ( gt_txn_out ),
+        .init_clk                 ( sys_clk_100mhz ),
+        .gt_reset_all_in          ( versal_hw_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_all ),
+        .gt_reset_tx_datapath_in  ( versal_hw_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_tx_datapath ),
+        .gt_reset_rx_datapath_in  ( versal_hw_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_rx_datapath ),
+        .gt_tx_reset_done         ( versal_hw_regs_reg_if.dcmac_gt_status_nxt.gt_tx_reset_done ),
+        .gt_rx_reset_done         ( versal_hw_regs_reg_if.dcmac_gt_status_nxt.gt_rx_reset_done ),
+        .gtpowergood              ( versal_hw_regs_reg_if.dcmac_gt_status_nxt.gtpowergood ),
+        .clk_wiz_locked           ( versal_hw_regs_reg_if.dcmac_gt_status_nxt.clk_wiz_locked ),
+        .gt_loopback              ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_loopback ),
+        .gt_line_rate             ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_line_rate ),
+        .gt_txprecursor           ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txprecursor ),
+        .gt_txpostcursor          ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txpostcursor ),
+        .gt_txmaincursor          ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txmaincursor ),
+        .gt_rxcdrhold             ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_rxcdrhold ),
+        .dcmac_lpbk_en            ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.dcmac_lpbk_en ),
+        .axis_clk_out             ( axis_clk_out ),
+        .axis_rx                  ( axis_port_rx ),
+        .axis_tx                  ( axis_port_tx ),
+        .axil_dcmac               ( axil_dcmac[0] ),
+        .axil_gt                  ( axil_gt[0] )
+    );
+
 
     // =========================================================================
     // Convert SV interfaces to flat shell_intf representation.
@@ -190,13 +256,25 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
-        .clk        ( core_clk  ),
-        .srst       ( core_srst ),
-        .mgmt_clk   ( axil_core.aclk    ),
-        .mgmt_srst  ( ~axil_core.aresetn ),
-        .clk_100mhz ( sys_clk_100mhz ),
-        .port_clk   ( '{default: core_clk}  ),
-        .port_srst  ( '{default: core_srst} ),
+//<<<<<<< HEAD
+//        .clk        ( core_clk  ),
+//        .srst       ( core_srst ),
+//        .mgmt_clk   ( axil_core.aclk    ),
+//        .mgmt_srst  ( ~axil_core.aresetn ),
+//        .clk_100mhz ( sys_clk_100mhz ),
+//        .port_clk   ( '{default: core_clk}  ),
+//        .port_srst  ( '{default: core_srst} ),
+//=======
+        .clk        ( core_clk ),        // presently unused by smartnic core?
+        .srst       ( ~axil_core.aresetn ),  // connected to smartnic mod_rstn
+        .mgmt_clk   ( axil_core.aclk ),      // presently unused by smartnic core?
+//        .mgmt_srst  ( ~axil_core.aresetn ),  // presently unused by smartnic core
+        .mgmt_srst  ( 1'b0 ),  // presently unused by smartnic core
+        .clk_100mhz ( sys_clk_100mhz ),      // presently unused by smartnic core?
+        .port_clk   ( {axis_port_rx[1].aclk, axis_port_rx[0].aclk} ),
+//        .port_srst  ( '{default: ~axil_core.aresetn} ),
+        .port_srst  ( '{default: 1'b0} ),     // presently unused by smartnic core
+//>>>>>>> 
         .axil_if    ( axil_core ),
         .axis_port_rx,
         .axis_port_tx,

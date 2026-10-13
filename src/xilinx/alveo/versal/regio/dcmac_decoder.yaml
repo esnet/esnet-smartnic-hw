@@ -9,4 +9,5 @@ blocks:
 interfaces:
   - block: *dcmac
     address: 0x0000
+    width: 18
     name: dcmac
