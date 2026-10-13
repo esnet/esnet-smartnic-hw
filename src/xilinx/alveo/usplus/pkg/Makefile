@@ -15,8 +15,7 @@ SRC_LIST_FILES =
 # ----------------------------------------------------
 # Dependencies
 # ----------------------------------------------------
-SUBCOMPONENTS = \
-    xilinx.alveo.pkg
+SUBCOMPONENTS =
 
 EXT_LIBS =
 

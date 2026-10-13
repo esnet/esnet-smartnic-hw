@@ -441,18 +441,19 @@ module xilinx_alveo_qdma_wrapper #(
     xilinx_qdma_ecc i_xilinx_qdma_ecc (
         .ecc_data_in     ( ecc_data_in ),
         .ecc_data_out    ( ),
-        .ecc_chkbits_out ( s_axis_c2h_ctrl_ecc ), // input wire [6 : 0] s_axis_c2h_ctrl_ecc
-        .ecc_clk         ( axi_aclk ),            // output wire axi_aclk
-        .ecc_clken       ( 1'b1 ),
-        .ecc_reset       ( !axi_aresetn )         // output wire axi_aresetn
+        .ecc_chkbits_out ( s_axis_c2h_ctrl_ecc )
     );
 
-    // Track packet ID
+    // Track packet ID.  QDMA's internal payload packet ID is 1-based, so the
+    // completion carries the count including the packet being presented.
     initial __c2h_pkt_id = 0;
     always @(posedge axi_aclk) begin
         if (!axi_aresetn) __c2h_pkt_id <= 0;
         else if (s_axis_c2h_tvalid && s_axis_c2h_tready && s_axis_c2h_tlast) __c2h_pkt_id <= __c2h_pkt_id + 1;
     end
+
+    pkt_id_t __c2h_pld_pkt_id;
+    assign __c2h_pld_pkt_id = __c2h_pkt_id + 1;
 
     // From PG302:
     // 32 bit CRC value for that beat.
@@ -467,14 +468,16 @@ module xilinx_alveo_qdma_wrapper #(
     // (Local) signals
     c2h_cmpt_data_t __c2h_cmpt_data;
 
+    assign __c2h_cmpt_data.dma_rsv = '0;
+    assign __c2h_cmpt_data.user_rsv = '0;
     assign __c2h_cmpt_data.len = s_axis_c2h_ctrl_len;
-    assign __c2h_cmpt_data.pkt_id = __c2h_pkt_id;
+    assign __c2h_cmpt_data.pkt_id = __c2h_pld_pkt_id;
     assign __c2h_cmpt_data.qid = s_axis_c2h_ctrl_qid;
 
     assign s_axis_c2h_cmpt_tvalid = s_axis_c2h_tvalid && s_axis_c2h_tready && s_axis_c2h_tlast;  // input wire s_axis_c2h_cmpt_tvalid
     assign s_axis_c2h_cmpt_tdata = __c2h_cmpt_data;                // input wire [511 : 0] s_axis_c2h_cmpt_tdata
     assign s_axis_c2h_cmpt_ctrl_qid = s_axis_c2h_ctrl_qid;         // input wire [10 : 0] s_axis_c2h_cmpt_ctrl_qid
-    assign s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id = __c2h_pkt_id;    // input wire [15 : 0] s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id
+    assign s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id = __c2h_pld_pkt_id; // input wire [15 : 0] s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id
     assign s_axis_c2h_cmpt_ctrl_port_id = s_axis_c2h_ctrl_port_id; // input wire [2 : 0] s_axis_c2h_cmpt_ctrl_port_id
     assign s_axis_c2h_cmpt_ctrl_marker = s_axis_c2h_ctrl_marker;   // input wire s_axis_c2h_cmpt_ctrl_marker
     assign s_axis_c2h_cmpt_ctrl_user_trig = 1'b0;                  // input wire s_axis_c2h_cmpt_ctrl_user_trig

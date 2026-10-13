@@ -8,7 +8,7 @@ module xilinx_qdma_st_adapter_unit_test;
     string name = "xilinx_qdma_st_adapter_ut";
     svunit_testcase svunit_ut;
 
-    `define SVUNIT_TIMEOUT 100us
+    `define SVUNIT_TIMEOUT 200us
 
     // =========================================================================
     // Parameters — use default (USPlus) widths
@@ -21,22 +21,31 @@ module xilinx_qdma_st_adapter_unit_test;
     logic aclk    = 1'b0;
     logic aresetn = 1'b0;
 
-    `SVUNIT_CLK_GEN(aclk, 2ns);   // 250 MHz
+    // Both clocks free-running: the ASYNC FIFO's sync_reset/sync_ctr logic
+    // requires clock activity from time 0 to initialize properly in xsim.
+    // SVUNIT_CLK_GEN gates the clock until is_running(), which leaves the
+    // FIFO's async reset synchronisers stalled and triggers an xsim hang.
+    // The library's own async FIFO tests use free-running clocks for the
+    // same reason (see fifo_axil_async_unit_test.sv).
+    always #2ns aclk = ~aclk;  // 250 MHz — QDMA clock domain
 
     // =========================================================================
     // H2C flat signals (driven by testbench → DUT)
+    // All initialized at declaration to avoid X at time 0 — the ASYNC FIFO's
+    // CDC logic can cause xsim to hang if any DUT input is X before idle()
+    // runs (idle() is called from setup(), which is after SVUnit startup).
     // =========================================================================
-    logic                  h2c_tvalid;
-    logic [511:0]          h2c_tdata;
-    logic                  h2c_tlast;
+    logic                  h2c_tvalid    = 1'b0;
+    logic [511:0]          h2c_tdata     = '0;
+    logic                  h2c_tlast     = 1'b0;
     logic                  h2c_tready;
-    logic [QID_WID-1:0]    h2c_qid;
-    logic [2:0]            h2c_port_id;
-    logic [31:0]           h2c_mdata;
-    logic [5:0]            h2c_mty;
-    logic [31:0]           h2c_tcrc;
-    logic                  h2c_err;
-    logic                  h2c_zero_byte;
+    logic [QID_WID-1:0]    h2c_qid       = '0;
+    logic [2:0]            h2c_port_id   = '0;
+    logic [31:0]           h2c_mdata     = '0;
+    logic [5:0]            h2c_mty       = '0;
+    logic [31:0]           h2c_tcrc      = '0;
+    logic                  h2c_err       = 1'b0;
+    logic                  h2c_zero_byte = 1'b0;
 
     // Clocking block for driving H2C flat signals.
     // output #1 drives 1 time unit after posedge — stable before the next
@@ -55,7 +64,7 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  c2h_tvalid;
     logic [511:0]          c2h_tdata;
     logic                  c2h_tlast;
-    logic                  c2h_tready;
+    logic                  c2h_tready    = 1'b1;
     logic [QID_WID-1:0]    c2h_ctrl_qid;
     logic [15:0]           c2h_ctrl_len;
     logic [2:0]            c2h_ctrl_port_id;
@@ -79,7 +88,7 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  cmpt_user_trig;
     logic                  cmpt_marker;
     logic                  cmpt_no_wrb_marker;
-    logic                  cmpt_tready;
+    logic                  cmpt_tready   = 1'b1;
 
     // Descriptor credits
     logic [15:0]           dsc_crdt_crdt;
@@ -87,24 +96,56 @@ module xilinx_qdma_st_adapter_unit_test;
     logic                  dsc_crdt_fence;
     logic [QID_WID-1:0]    dsc_crdt_qid;
     logic                  dsc_crdt_valid;
-    logic                  dsc_crdt_rdy;
+    logic                  dsc_crdt_rdy  = 1'b1;
 
     // =========================================================================
     // AXI4-S interfaces — shell side of the DUT
     // =========================================================================
-    axi4s_intf #(
+    // H2C output: packet_intf in core clock domain (DUT crosses from aclk)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c (.aclk(aclk));   // DUT drives (tx), monitor reads
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c (.clk(aclk));
 
-    axi4s_intf #(
+    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h (.aclk(aclk));   // driver sends (tx), DUT reads (rx)
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h (.clk(aclk));
+
+    // Drive interface signals to known values from time 0.
+    // Without this, pkt_c2h.vld et al. are X until idle() runs inside setup(),
+    // and the ASYNC FIFO's CDC logic causes an xsim hang.
+    initial begin
+        pkt_c2h.vld  = 1'b0;
+        pkt_c2h.data = '0;
+        pkt_c2h.eop  = 1'b0;
+        pkt_c2h.mty  = '0;
+        pkt_c2h.err  = 1'b0;
+        pkt_c2h.meta = '0;
+        pkt_h2c.rdy  = 1'b1;
+    end
+
+    // C2H packet length, supplied upstream by the C2H FIFO.  Driven directly
+    // here: the adapter just forwards it to ctrl_len and the completion.
+    packet_pkg::size_t pkt_c2h_size = '0;
+
+    // Sticky record that a completion fired.  cmpt_tvalid is a single-cycle
+    // pulse on the last beat's handshake, so tests cannot reliably sample it
+    // after the fact.
+    logic cmpt_fired     = 1'b0;
+    logic cmpt_fired_clr = 1'b0;
+    always @(posedge aclk) begin
+        if (cmpt_fired_clr) cmpt_fired <= 1'b0;
+        else if (cmpt_tvalid) cmpt_fired <= 1'b1;
+    end
+
+    task automatic clear_cmpt_fired();
+        cmpt_fired_clr = 1'b1;
+        @(posedge aclk);
+        cmpt_fired_clr = 1'b0;
+        @(posedge aclk);
+    endtask
 
     // =========================================================================
     // DUT
@@ -157,19 +198,17 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_qid,
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
-        .axis_h2c,
-        .axis_c2h
+        .pkt_h2c,
+        .pkt_c2h,
+        .pkt_c2h_size
     );
 
     // =========================================================================
     // Verif objects
-    //   h2c_mon  : monitors axis_h2c (DUT output — H2C stream to core)
-    //   c2h_drv  : drives axis_c2h  (DUT input  — C2H stream from core)
+    //   Both DMA directions are packet_intf: C2H is driven via the built-in
+    //   cb_tx clocking block, H2C is sampled by recv_h2c_packet with rdy held
+    //   high so back-to-back output beats are observable.
     // =========================================================================
-    typedef axi4s_transaction #(axis_tid_t, axis_tdest_t, axis_tuser_t) TRANS_T;
-
-    axi4s_monitor  #(AXIS_DATA_BYTE_WID, axis_tid_t, axis_tdest_t, axis_tuser_t) h2c_mon;
-    axi4s_driver   #(AXIS_DATA_BYTE_WID, axis_tid_t, axis_tdest_t, axis_tuser_t) c2h_drv;
 
     // =========================================================================
     // Assertions
@@ -188,88 +227,27 @@ module xilinx_qdma_st_adapter_unit_test;
     endproperty
     a_cmpt_on_eop: assert property (p_cmpt_on_eop);
 
-    // Note: axis_c2h.tready = ready || (c2h_tready && cmpt_tready) where 'ready'
-    // is the internal buffer register in axi4s_intf_pipe.  When the pipe is empty
-    // (ready=1), axis_c2h.tready is 1 regardless of downstream tready — back-pressure
-    // only takes effect after the pipe stores a beat and ready goes to 0.
-    // A same-cycle SVA on this relationship is not possible; functional correctness
+    // Note: pkt_c2h feeds into packet_fifo (store-and-forward), which decouples
+    // the input from the output side.  pkt_c2h.rdy reflects FIFO capacity, not
+    // downstream c2h_tready / cmpt_tready.  Functional backpressure correctness
     // is verified by c2h_backpressure_data_ and c2h_backpressure_cmpt_.
 
     // =========================================================================
     // Coverage
     // =========================================================================
-    covergroup cg_h2c @(posedge aclk);
-        // mty on the last H2C beat
-        cp_h2c_mty: coverpoint h2c_mty iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast) {
-            bins full_beat = {0};
-            bins partial[] = {[1:AXIS_DATA_BYTE_WID-2]};
-            bins one_byte  = {AXIS_DATA_BYTE_WID-1};
-        }
-        // zero_byte flag
-        cp_h2c_zero_byte: coverpoint h2c_zero_byte iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast);
-        // err flag
-        cp_h2c_err: coverpoint h2c_err iff (aresetn && h2c_tvalid && h2c_tready);
-        // qid boundary values
-        cp_h2c_qid: coverpoint h2c_qid iff (aresetn && h2c_tvalid && h2c_tready && h2c_tlast) {
-            bins zero    = {0};
-            bins mid     = {[1:(2**QID_WID)-2]};
-            bins max_val = {(2**QID_WID)-1};
-        }
-        // single-beat packet (tvalid && tready && tlast on first beat)
-        cp_h2c_single_beat: coverpoint (h2c_tvalid && h2c_tready && h2c_tlast) iff (aresetn) {
-            bins single = {1};
-        }
-        // back-to-back: EOP of one packet coincides with first beat of next
-        cp_h2c_back_to_back: coverpoint (h2c_tlast && h2c_tvalid && h2c_tready) iff (aresetn);
-    endgroup
-
-    covergroup cg_c2h @(posedge aclk);
-        // mty on the last C2H beat (derived from tkeep)
-        cp_c2h_mty: coverpoint c2h_mty iff (aresetn && c2h_tvalid && c2h_tready && c2h_tlast) {
-            bins full_beat = {0};
-            bins partial[] = {[1:AXIS_DATA_BYTE_WID-2]};
-            bins one_byte  = {AXIS_DATA_BYTE_WID-1};
-        }
-        // completion fires on EOP
-        cp_cmpt_on_eop: coverpoint cmpt_tvalid iff (aresetn && c2h_tvalid && c2h_tready && c2h_tlast) {
-            bins fires = {1};
-        }
-        // cmpt_qid matches ctrl_qid on every completion
-        cp_cmpt_qid_match: coverpoint (cmpt_qid == c2h_ctrl_qid) iff (aresetn && cmpt_tvalid) {
-            bins match = {1};
-        }
-        // cmpt_type is always HAS_PLD (2'b11)
-        cp_cmpt_type: coverpoint cmpt_cmpt_type iff (aresetn && cmpt_tvalid) {
-            bins has_pld = {2'b11};
-        }
-        // cross c2h_tready x cmpt_tready to cover all four back-pressure combinations
-        cp_c2h_tready:  coverpoint c2h_tready  iff (aresetn);
-        cp_cmpt_tready: coverpoint cmpt_tready iff (aresetn);
-        cx_backpressure: cross cp_c2h_tready, cp_cmpt_tready;
-    endgroup
-
-    covergroup cg_credits @(posedge aclk);
-        cp_crdt_valid: coverpoint dsc_crdt_valid iff (aresetn) {
-            bins idle = {0};
-        }
-    endgroup
-
-    cg_h2c     cg_h2c_inst;
-    cg_c2h     cg_c2h_inst;
-    cg_credits cg_credits_inst;
+    // NOTE: covergroups are intentionally omitted from this testbench.
+    //
+    // xsim's functional-coverage event scheduler hangs at time 0 (zero-time
+    // delta loop) when a covergroup is present alongside packet_fifo(ASYNC=1)
+    // CDC logic and multiple clocking-block domains on the same clock.
+    // Correctness is verified by the assertions and fail_unless_equal checks
+    // in each test case below.
 
     // =========================================================================
     // Build
     // =========================================================================
     function void build();
-        svunit_ut      = new(name);
-        h2c_mon        = new("h2c_mon");
-        c2h_drv        = new("c2h_drv");
-        h2c_mon.axis_vif = axis_h2c;
-        c2h_drv.axis_vif = axis_c2h;
-        cg_h2c_inst    = new();
-        cg_c2h_inst    = new();
-        cg_credits_inst = new();
+        svunit_ut = new(name);
     endfunction
 
     // =========================================================================
@@ -279,9 +257,10 @@ module xilinx_qdma_st_adapter_unit_test;
         svunit_ut.setup();
         idle();
         aresetn = 1'b0;
-        repeat (8) @(posedge aclk);
+        repeat (16) @(posedge aclk);
         aresetn = 1'b1;
-        repeat (4) @(posedge aclk);
+        // Allow packet_fifo internal memory init and CDC synchronizers to settle
+        repeat (32) @(posedge aclk);
     endtask
 
     task teardown();
@@ -305,10 +284,15 @@ module xilinx_qdma_st_adapter_unit_test;
         c2h_tready  = 1'b1;
         cmpt_tready = 1'b1;
         dsc_crdt_rdy = 1'b1;
-        // H2C monitor: always accept
-        axis_h2c.tready = 1'b1;
-        // C2H driver idle
-        c2h_drv.idle();
+        // H2C sink: always accept
+        pkt_h2c.rdy = 1'b1;
+        // C2H packet_intf idle (direct assignment — avoid clocking block at time 0)
+        pkt_c2h.vld  = 1'b0;
+        pkt_c2h.data = '0;
+        pkt_c2h.eop  = 1'b0;
+        pkt_c2h.mty  = '0;
+        pkt_c2h.err  = 1'b0;
+        pkt_c2h.meta = '0;
     endtask
 
     // Send an H2C packet as a sequence of beats via the cb_h2c clocking block.
@@ -340,23 +324,92 @@ module xilinx_qdma_st_adapter_unit_test;
         cb_h2c.h2c_err       <= 1'b0;
     endtask
 
-    // Send a C2H packet via the axi4s_driver (byte-level, auto-computes tkeep).
+    // Send a C2H packet via packet_intf (byte-level, auto-computes mty).
+    // Data is big-endian byte array as expected by packet_intf.
+    // QID is carried in packet_intf.meta.
     task automatic send_c2h_packet(
         input int                 num_bytes,
-        input axis_tid_t          tid        = '0,
-        input axis_tuser_t        tuser      = '0,
+        input logic [QID_WID-1:0] qid        = '0,
         input int                 twait      = 0
     );
-        TRANS_T trans;
-        trans = new(.name("c2h_pkt"), .len(num_bytes), .tid(tid), .tuser(tuser));
-        trans.randomize();
-        c2h_drv.set_twait(twait);
-        c2h_drv.send(trans);
+        int bytes_remaining;
+        logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat_data;
+        logic [5:0] beat_mty;
+        logic beat_eop;
+
+        // Stand in for the upstream store-and-forward FIFO: the length is
+        // presented for the whole packet, valid from the first beat.
+        pkt_c2h_size = 16'(num_bytes);
+
+        bytes_remaining = num_bytes;
+        while (bytes_remaining > 0) begin
+            // Fill beat data with random bytes
+            for (int b = 0; b < AXIS_DATA_BYTE_WID; b++)
+                beat_data[b] = $urandom;
+
+            beat_eop = (bytes_remaining <= AXIS_DATA_BYTE_WID);
+            beat_mty = beat_eop ? 6'(AXIS_DATA_BYTE_WID - bytes_remaining) : 6'd0;
+
+            // Inter-beat gap
+            if (twait > 0) repeat (twait) @(pkt_c2h.cb_tx);
+
+            pkt_c2h.send(
+                ._data ( beat_data ),
+                ._eop  ( beat_eop  ),
+                ._mty  ( beat_mty  ),
+                ._err  ( 1'b0      ),
+                ._meta ( qid       )
+            );
+
+            bytes_remaining -= AXIS_DATA_BYTE_WID;
+        end
     endtask
 
-    // Receive one H2C packet via the monitor and return the transaction.
-    task automatic recv_h2c_packet(output TRANS_T trans);
-        h2c_mon.receive(trans);
+    // Receive one H2C packet from pkt_h2c, returning its length and metadata.
+    // rdy is held high by idle(), so this only samples.
+    task automatic recv_h2c_packet(
+            output int                 num_bytes,
+            output logic [QID_WID-1:0] qid,
+            output logic               err
+        );
+        int  beats;
+        bit  last;
+        beats = 0;
+        last  = 1'b0;
+        num_bytes = 0;
+        while (!last) begin
+            @(posedge aclk iff (pkt_h2c.vld && pkt_h2c.rdy));
+            beats++;
+            qid  = pkt_h2c.meta;
+            err  = pkt_h2c.err;
+            last = pkt_h2c.eop;
+            if (last) num_bytes = beats*AXIS_DATA_BYTE_WID - pkt_h2c.mty;
+        end
+    endtask
+
+    // Expect NO H2C packet to emerge within the given number of core clocks.
+    task automatic expect_no_h2c_packet(input int cycles);
+        repeat (cycles) begin
+            @(posedge aclk);
+            `FAIL_IF_LOG(pkt_h2c.vld, "unexpected H2C packet: should have been dropped")
+        end
+    endtask
+
+
+    // Capture the length and queue id of the next packet on the flat C2H bus.
+    task automatic recv_c2h_flat(output logic [15:0] len, output logic [QID_WID-1:0] qid);
+        @(posedge aclk iff (c2h_tvalid && c2h_tready));
+        len = c2h_ctrl_len;
+        qid = c2h_ctrl_qid;
+        while (!c2h_tlast) @(posedge aclk iff (c2h_tvalid && c2h_tready));
+    endtask
+
+    // Fail if any packet reaches the flat C2H bus within the window.
+    task automatic expect_no_c2h_flat(input int cycles);
+        repeat (cycles) begin
+            @(posedge aclk);
+            `FAIL_IF_LOG(c2h_tvalid, "unexpected C2H packet")
+        end
     endtask
 
     // =========================================================================
@@ -370,90 +423,95 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // H2C: single full beat (mty=0, zero_byte=0) — all bytes valid.
         `SVTEST(h2c_single_full_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .last_mty(0));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), AXIS_DATA_BYTE_WID);
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
         `SVTEST_END
 
         // H2C: last beat with mty=1 — 63 valid bytes.
         `SVTEST(h2c_partial_last_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .last_mty(6'd1));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), AXIS_DATA_BYTE_WID - 1);
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID - 1);
         `SVTEST_END
 
-        // H2C: zero_byte flag — adapter still asserts tkeep=all-ones.
+        // H2C: zero_byte carries no payload and cannot be represented on
+        // packet_intf, so the adapter marks it errored and the FIFO drops it.
         `SVTEST(_h2c_zero_byte)
-            TRANS_T trans;
-            fork
-                send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
-                recv_h2c_packet(trans);
-            join
-            // zero_byte means the packet has no valid payload bytes; the monitor
-            // will receive 0 bytes (all tkeep masked) or a full beat depending
-            // on implementation — the key is no timeout and no assertion fire.
+            send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
+            expect_no_h2c_packet(64);
         `SVTEST_END
 
-        // H2C: err flag propagates to tuser.err on axis_h2c.
-        `SVTEST(h2c_err_propagation)
-            TRANS_T trans;
-            fork
-                send_h2c_packet(.num_beats(1), .err(1'b1));
-                recv_h2c_packet(trans);
-            join
-            `FAIL_UNLESS_EQUAL(trans.get_tuser().err, 1'b1);
+        // H2C: an errored packet is dropped rather than forwarded to the core.
+        `SVTEST(h2c_err_dropped)
+            send_h2c_packet(.num_beats(1), .err(1'b1));
+            expect_no_h2c_packet(64);
         `SVTEST_END
 
-        // H2C: qid maps to tid.qid on axis_h2c.
+        // H2C: a good packet still gets through after an errored one is dropped.
+        `SVTEST(h2c_err_does_not_block)
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            send_h2c_packet(.num_beats(2), .err(1'b1));
+            fork
+                send_h2c_packet(.num_beats(1), .qid(11'h2C));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
+            `FAIL_UNLESS_EQUAL(qid, 11'h2C);
+            `FAIL_UNLESS_EQUAL(err, 1'b0);
+        `SVTEST_END
+
+        // H2C: qid is carried in the packet metadata.
         `SVTEST(h2c_qid_mapping)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .qid(11'h5A5));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, 11'h5A5);
+            `FAIL_UNLESS_EQUAL(qid, 11'h5A5);
         `SVTEST_END
 
         // H2C: multi-beat packet — correct total byte count.
         `SVTEST(h2c_multi_beat)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(4), .last_mty(6'd3));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.size(), 4*AXIS_DATA_BYTE_WID - 3);
+            `FAIL_UNLESS_EQUAL(bytes, 4*AXIS_DATA_BYTE_WID - 3);
         `SVTEST_END
 
         // H2C: back-to-back packets with no gap.
         `SVTEST(h2c_back_to_back)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             for (int i = 0; i < 4; i++) begin
                 fork
                     send_h2c_packet(.num_beats(1));
-                    recv_h2c_packet(trans);
+                    recv_h2c_packet(bytes, qid, err);
                 join
+                `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID);
             end
         `SVTEST_END
 
         // H2C: qid=0 and qid=max propagate correctly.
         `SVTEST(h2c_qid_boundary)
-            TRANS_T trans;
+            int bytes; logic [QID_WID-1:0] qid; logic err;
             fork
                 send_h2c_packet(.num_beats(1), .qid({QID_WID{1'b0}}));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, '0);
+            `FAIL_UNLESS_EQUAL(qid, '0);
             fork
                 send_h2c_packet(.num_beats(1), .qid({QID_WID{1'b1}}));
-                recv_h2c_packet(trans);
+                recv_h2c_packet(bytes, qid, err);
             join
-            `FAIL_UNLESS_EQUAL(trans.get_tid().qid, {QID_WID{1'b1}});
+            `FAIL_UNLESS_EQUAL(qid, {QID_WID{1'b1}});
         `SVTEST_END
 
         // C2H: full beat — mty output should be 0.
@@ -481,12 +539,10 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // C2H: completion fires on EOP; cmpt_qid matches c2h_ctrl_qid.
         `SVTEST(c2h_completion_on_eop)
-            axis_tid_t tid;
             logic captured_cmpt_valid;
             logic [QID_WID-1:0] captured_cmpt_qid;
-            tid.qid = 11'h3F;
             fork
-                send_c2h_packet(.num_bytes(64), .tid(tid));
+                send_c2h_packet(.num_bytes(64), .qid(11'h3F));
                 @(posedge aclk iff (c2h_tvalid && c2h_tready && c2h_tlast));
             join
             captured_cmpt_valid = cmpt_tvalid;
@@ -510,16 +566,13 @@ module xilinx_qdma_st_adapter_unit_test;
                 `FAIL_UNLESS_EQUAL(pkt_ids[i], pkt_ids[i-1] + 1'b1);
         `SVTEST_END
 
-        // C2H: c2h_tready=0 propagates back through the pipe to axis_c2h.tready.
-        // Verified independently of the driver to avoid a race where the driver
-        // accepts a beat before the pipe has propagated the stall.
-        // C2H: c2h_tready=0 mid-packet — no data is lost; pkt_id still increments.
-        // Stall after the pipe stores the first beat (ready goes low), then release.
-        // C2H: c2h_tready=0 mid-packet — no data lost; completion fires after release.
+        // C2H: c2h_tready=0 holds off pkt_c2h directly — there is no FIFO
+        // here to absorb it — and the packet completes once released.
         `SVTEST(c2h_backpressure_data_)
-            logic cmpt_seen;
-            cmpt_seen = 1'b0;
+            clear_cmpt_fired();
             c2h_tready = 1'b0;
+            repeat (4) @(posedge aclk);
+            `FAIL_IF_LOG(pkt_c2h.rdy, "pkt_c2h.rdy high while c2h_tready is low")
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
@@ -527,17 +580,17 @@ module xilinx_qdma_st_adapter_unit_test;
                     c2h_tready = 1'b1;
                 end
             join
-            // Completion must fire after the stall is released
-            @(posedge aclk iff cmpt_tvalid);
-            cmpt_seen = 1'b1;
-            `FAIL_UNLESS(cmpt_seen);
+            repeat (4) @(posedge aclk);
+            `FAIL_UNLESS_LOG(cmpt_fired, "no completion after c2h_tready released")
         `SVTEST_END
 
-        // C2H: cmpt_tready=0 — data path completes; completion fires once released.
+        // C2H: cmpt_tready=0 likewise holds off pkt_c2h, since a beat is only
+        // accepted when both the data and completion paths can take it.
         `SVTEST(c2h_backpressure_cmpt_)
-            logic cmpt_seen;
-            cmpt_seen = 1'b0;
+            clear_cmpt_fired();
             cmpt_tready = 1'b0;
+            repeat (4) @(posedge aclk);
+            `FAIL_IF_LOG(pkt_c2h.rdy, "pkt_c2h.rdy high while cmpt_tready is low")
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
@@ -545,9 +598,8 @@ module xilinx_qdma_st_adapter_unit_test;
                     cmpt_tready = 1'b1;
                 end
             join
-            @(posedge aclk iff cmpt_tvalid);
-            cmpt_seen = 1'b1;
-            `FAIL_UNLESS(cmpt_seen);
+            repeat (4) @(posedge aclk);
+            `FAIL_UNLESS_LOG(cmpt_fired, "no completion after cmpt_tready released")
         `SVTEST_END
 
         // C2H: back-to-back packets — pkt_id advances correctly.
@@ -563,6 +615,97 @@ module xilinx_qdma_st_adapter_unit_test;
             repeat (4) @(posedge aclk);
         `SVTEST_END
 
+        // -----------------------------------------------------------------
+        // C2H ctrl_len / completion len tests
+        // -----------------------------------------------------------------
+
+        // C2H: c2h_ctrl_len carries correct length — single full beat (64 B).
+        `SVTEST(c2h_ctrl_len_single_full_beat)
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(AXIS_DATA_BYTE_WID));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(AXIS_DATA_BYTE_WID));
+        `SVTEST_END
+
+        // C2H: c2h_ctrl_len for a partial-beat packet (33 B).
+        `SVTEST(c2h_ctrl_len_partial_beat)
+            localparam int VALID_BYTES = 33;
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(VALID_BYTES));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(VALID_BYTES));
+        `SVTEST_END
+
+        // C2H: c2h_ctrl_len for multi-beat packet with partial last beat (209 B).
+        `SVTEST(c2h_ctrl_len_multi_beat)
+            localparam int PKT_BYTES = 3 * AXIS_DATA_BYTE_WID + 17;  // 209 bytes
+            logic [15:0] captured_len;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len, 16'(PKT_BYTES));
+        `SVTEST_END
+
+        // C2H: back-to-back packets of different lengths — each gets correct length.
+        `SVTEST(c2h_ctrl_len_back_to_back)
+            localparam int LEN_A = AXIS_DATA_BYTE_WID;           // 64 bytes
+            localparam int LEN_B = 2 * AXIS_DATA_BYTE_WID + 7;   // 135 bytes
+            logic [15:0] captured_len_a, captured_len_b;
+            // First packet
+            fork
+                send_c2h_packet(.num_bytes(LEN_A));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len_a = c2h_ctrl_len;
+                end
+            join
+            repeat (2) @(posedge aclk);
+            // Second packet
+            fork
+                send_c2h_packet(.num_bytes(LEN_B));
+                begin
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_len_b = c2h_ctrl_len;
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_len_a, 16'(LEN_A));
+            `FAIL_UNLESS_EQUAL(captured_len_b, 16'(LEN_B));
+        `SVTEST_END
+
+        // C2H: completion data len field matches c2h_ctrl_len.
+        `SVTEST(c2h_cmpt_len_matches_ctrl_len)
+            localparam int PKT_BYTES = 100;  // 2 beats: 64 + 36
+            logic [15:0] captured_ctrl_len;
+            logic [15:0] captured_cmpt_len;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    // Capture ctrl_len on first output beat
+                    @(posedge aclk iff (c2h_tvalid && c2h_tready));
+                    captured_ctrl_len = c2h_ctrl_len;
+                    // Capture cmpt_data.len on EOP (completion fires on last beat)
+                    @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
+                    captured_cmpt_len = cmpt_data[15:0];
+                end
+            join
+            `FAIL_UNLESS_EQUAL(captured_ctrl_len, 16'(PKT_BYTES));
+            `FAIL_UNLESS_EQUAL(captured_cmpt_len, 16'(PKT_BYTES));
+        `SVTEST_END
+
         // Descriptor credits are always idle.
         `SVTEST(credits_idle)
             repeat (16) @(posedge aclk);
@@ -571,17 +714,17 @@ module xilinx_qdma_st_adapter_unit_test;
         `SVTEST_END
 
         // H2C throughput: drive N beats continuously (tvalid never deasserted
-        // between beats) and verify axis_h2c.tvalid is high on every cycle
-        // after the one-cycle pipe latency fills.
+        // between beats) and verify the output runs gapless once it starts.
         `SVTEST(h2c_full_throughput)
             localparam int N = 16;
             int valid_cycles;
             int bubble_cycles;
             valid_cycles  = 0;
             bubble_cycles = 0;
-            // Start sending — cb_h2c drives signals #1 after each posedge.
-            // Fork a monitor that counts valid/bubble cycles on axis_h2c
-            // starting from the second beat (pipe latency = 1 cycle).
+            // The packet FIFO is store-and-forward, so the whole packet is
+            // buffered before any of it appears on pkt_h2c. Once it starts the
+            // output must run gapless: the core clock is slower than the QDMA
+            // clock, so the read side can never be starved by the write side.
             fork
                 begin : send
                     for (int i = 0; i < N; i++) begin
@@ -597,14 +740,12 @@ module xilinx_qdma_st_adapter_unit_test;
                     cb_h2c.h2c_tlast  <= 1'b0;
                 end : send
                 begin : monitor
-                    // Wait for pipe to fill (first valid on axis_h2c), then
-                    // count N cycles from that point — all must be valid.
-                    @(posedge aclk iff axis_h2c.tvalid);
+                    @(posedge aclk iff pkt_h2c.vld);
                     valid_cycles++;
                     repeat (N - 1) begin
                         @(posedge aclk);
-                        if (axis_h2c.tvalid) valid_cycles++;
-                        else                 bubble_cycles++;
+                        if (pkt_h2c.vld) valid_cycles++;
+                        else             bubble_cycles++;
                     end
                 end : monitor
             join
@@ -614,7 +755,7 @@ module xilinx_qdma_st_adapter_unit_test;
 
         // C2H throughput: drive N beats continuously via the axi4s_driver and
         // verify c2h_tvalid (flat output) is high on every cycle after the
-        // one-cycle pipe latency fills, with no bubbles.
+        // store-and-forward FIFO releases the packet, with no bubbles.
         `SVTEST(c2h_full_throughput)
             localparam int N = 16;
             int valid_cycles;

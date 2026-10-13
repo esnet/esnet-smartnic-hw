@@ -3,6 +3,7 @@
 module xilinx_alveo_versal_shell_unit_test;
     import svunit_pkg::svunit_testcase;
     import axi4l_pkg::*;
+    import xilinx_qdma_pkg::*;
 
     string name = "xilinx_alveo_versal_shell_ut";
     svunit_testcase svunit_ut;
@@ -10,10 +11,15 @@ module xilinx_alveo_versal_shell_unit_test;
     `define SVUNIT_TIMEOUT 1ms
 
     // =========================================================================
-    // Register offsets (core.stub.regio/core.yaml)
+    // Register offsets
+    //
+    // The shell splits its management space per shell_decoder_core.yaml into
+    // shell_cfg at 0x000000, hw at 0x200000 and core at 0x400000.  These reach
+    // core.stub's own registers (core.stub.regio/core.yaml).
     // =========================================================================
-    localparam bit [31:0] ADDR_ID         = 32'h0;
-    localparam bit [31:0] ADDR_SCRATCHPAD = 32'h4;
+    localparam bit [31:0] CORE_BASE       = 32'h400000;
+    localparam bit [31:0] ADDR_ID         = CORE_BASE + 32'h0;
+    localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
     // =========================================================================
@@ -23,7 +29,25 @@ module xilinx_alveo_versal_shell_unit_test;
     //   shell_if — shell output wired to core.stub
     // =========================================================================
     axi4l_intf axil_if  ();
-    shell_intf shell_if ();
+
+    // C2H packet length, published by the shell's C2H FIFO for the adapter.
+    packet_pkg::size_t pkt_c2h_dma_size;
+
+    // DMA streams. The QDMA adapter is above the shell in the real design,
+    // so these are terminated rather than driven.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_dma (.clk(axil_if.aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_dma (.clk(axil_if.aclk));
+
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
 
     // =========================================================================
     // PCIe reset signals — shell needs these to synthesise pci_rstn.
@@ -42,9 +66,17 @@ module xilinx_alveo_versal_shell_unit_test;
         .sys_clk_100mhz ( axil_if.aclk ),
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),
-        .axil_if,
+        .axil_top         ( axil_if          ),
+        .dma_aclk         ( axil_if.aclk     ),
+        .dma_aresetn      ( axil_if.aresetn  ),
+        .pkt_h2c_dma      ( pkt_h2c_dma      ),
+        .pkt_c2h_dma      ( pkt_c2h_dma      ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
         .shell_if
     );
+
+    packet_intf_tx_term i_packet_intf_tx_term__h2c (.to_rx   (pkt_h2c_dma));
+    packet_intf_rx_sink i_packet_intf_rx_sink__c2h (.from_tx (pkt_c2h_dma));
 
     core DUT_core (
         .shell_if
@@ -129,6 +161,39 @@ module xilinx_alveo_versal_shell_unit_test;
                 axil_read(ADDR_SCRATCHPAD, rdata);
                 `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
             end
+        `SVTEST_END
+
+        // The shell generates core_clk itself now, so confirm the MMCM
+        // actually locks and the core domain comes out of reset -- the
+        // register tests above run on mgmt_clk and would pass regardless.
+        `SVTEST(core_clk_runs)
+            int unsigned edges = 0;
+            logic prev;
+            // Wait for lock (bounded), then count core_clk edges.
+            fork
+                begin
+                    wait (DUT.core_clk_locked === 1'b1);
+                end
+                begin
+                    #50us;
+                    `FAIL_IF_LOG(1'b1, "core clock MMCM never locked")
+                end
+            join_any
+            disable fork;
+            `FAIL_UNLESS_LOG(DUT.core_clk_locked === 1'b1, "MMCM not locked")
+
+            // core_srst must release once locked and the management reset is up
+            repeat (64) @(posedge DUT.core_clk);
+            `FAIL_IF_LOG(DUT.core_srst, "core_srst still asserted after lock")
+
+            // and the clock must genuinely be toggling
+            prev = DUT.core_clk;
+            repeat (20) begin
+                #1ns;
+                if (DUT.core_clk !== prev) edges++;
+                prev = DUT.core_clk;
+            end
+            `FAIL_UNLESS_LOG(edges > 0, "core_clk is not toggling")
         `SVTEST_END
 
     `SVUNIT_TESTS_END

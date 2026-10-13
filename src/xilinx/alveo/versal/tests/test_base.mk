@@ -30,7 +30,8 @@ SIM ?= xsim
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
 SUBCOMPONENTS ?= \
-    xilinx.alveo.versal.bd
+    xilinx.alveo.versal.bd \
+    xilinx.alveo.versal.pkg
 
 EXT_LIBS =
 

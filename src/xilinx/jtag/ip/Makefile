@@ -10,6 +10,9 @@ include $(COMPONENT_ROOT)/config.mk
 #   Versal      (av*): axis_vio
 export BOARD
 
+# Import IP core revision details from version-specific tool config
+include $(CFG_ROOT)/vivado_ip.mk
+
 IP_LIST = \
     xilinx_jtag_reset_vio
 
@@ -18,9 +21,12 @@ IP_SIM_SRC_FILES = \
 
 IP_SIM_INC_DIRS =
 
+#   The axis_vio core revision moves with each Vivado release, so take it from
+#   the per-version IP config in $(CFG_ROOT). The axis_dbg_* sub-cores ship
+#   with it but have held at 1_0_1 across releases.
 EXT_LIBS = \
     xpm \
-    axis_vio_v1_0_14 \
+    axis_vio_v$(IP_VER_AXIS_VIO) \
     axis_dbg_stub_v1_0_1 \
     axis_dbg_sync_v1_0_1
 

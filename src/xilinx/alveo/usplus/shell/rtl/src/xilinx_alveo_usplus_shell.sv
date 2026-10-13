@@ -35,14 +35,14 @@ module xilinx_alveo_usplus_shell
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(shell_if.clk));
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [shell_if.NUM_PORTS] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(shell_if.clk));
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [NUM_CMAC] (.aclk(shell_if.clk));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [NUM_CMAC] (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [xilinx_alveo_usplus_pkg::NUM_CMAC] (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [xilinx_alveo_usplus_pkg::NUM_CMAC] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(shell_if.clk));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(shell_if.clk));
+    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(shell_if.clk));
 
     // =========================================================================
     // Signals
@@ -80,13 +80,60 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    // UltraScale+ does not route its DMA streams through the common shell:
+    // xilinx_alveo below already presents them as axi4s in the core domain,
+    // having done its own CDC.  The common shell's DMA datapath is therefore
+    // left unconnected here and its registers unreachable.  Terminate the
+    // interfaces so the ports are legally driven.
+    axi4l_intf #() axil_qdma_st__unused ();
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_h2c_dma__unused (.clk(axil_top.aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_h2c__unused (.aclk(clk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_c2h__unused (.aclk(clk));
+
+    axi4l_intf_controller_term i_axi4l_term__qdma_st (.axi4l_if (axil_qdma_st__unused));
+    packet_intf_tx_term  i_packet_term__h2c_dma  (.to_rx   (pkt_h2c_dma__unused));
+    packet_intf_rx_sink  i_packet_sink__c2h_dma  (.from_tx (pkt_c2h_dma__unused));
+    axi4s_intf_rx_sink   i_axi4s_sink__h2c      (.from_tx (axis_h2c__unused));
+    axi4s_intf_tx_term   i_axi4s_term__c2h      (.to_rx   (axis_c2h__unused));
+
     xilinx_alveo_shell i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
+        .core_clk       ( clk  ),
+        .core_srst      ( srst ),
+        .dma_aclk       ( axil_top.aclk ),
+        .dma_aresetn    ( axil_top.aresetn ),
         .axil_top,
         .axil_hw,
-        .axil_core
+        .axil_core,
+        .axil_qdma_st     ( axil_qdma_st__unused ),
+        .pkt_h2c_dma      ( pkt_h2c_dma__unused  ),
+        .pkt_c2h_dma      ( pkt_c2h_dma__unused  ),
+        .pkt_c2h_dma_size (                      ),
+        .axis_h2c         ( axis_h2c__unused     ),
+        .axis_c2h         ( axis_c2h__unused     )
     );
 
     // =========================================================================
@@ -123,9 +170,9 @@ module xilinx_alveo_usplus_shell
             shell_pkg::port_axis_tdest_t axis_port_rx_tdest;
             shell_pkg::port_axis_tuser_t axis_port_rx_tuser;
 
-            xilinx_alveo_pkg::cmac_axis_tid_t   __axis_cmac_rx_tid;
-            xilinx_alveo_pkg::cmac_axis_tdest_t __axis_cmac_rx_tdest;
-            xilinx_alveo_pkg::cmac_axis_tuser_t __axis_cmac_rx_tuser;
+            xilinx_alveo_usplus_pkg::cmac_axis_tid_t   __axis_cmac_rx_tid;
+            xilinx_alveo_usplus_pkg::cmac_axis_tdest_t __axis_cmac_rx_tdest;
+            xilinx_alveo_usplus_pkg::cmac_axis_tuser_t __axis_cmac_rx_tuser;
 
             assign __axis_cmac_rx_tid           = __axis_cmac_rx[g_port].tid;
             assign axis_port_rx_tid.unused      = 1'b0;
@@ -149,9 +196,9 @@ module xilinx_alveo_usplus_shell
             );
 
             // Port (Tx)
-            xilinx_alveo_pkg::cmac_axis_tid_t   __axis_cmac_tx_tid;
-            xilinx_alveo_pkg::cmac_axis_tdest_t __axis_cmac_tx_tdest;
-            xilinx_alveo_pkg::cmac_axis_tuser_t __axis_cmac_tx_tuser;
+            xilinx_alveo_usplus_pkg::cmac_axis_tid_t   __axis_cmac_tx_tid;
+            xilinx_alveo_usplus_pkg::cmac_axis_tdest_t __axis_cmac_tx_tdest;
+            xilinx_alveo_usplus_pkg::cmac_axis_tuser_t __axis_cmac_tx_tuser;
 
             shell_pkg::port_axis_tid_t   axis_port_tx_tid;
             shell_pkg::port_axis_tdest_t axis_port_tx_tdest;
@@ -167,9 +214,9 @@ module xilinx_alveo_usplus_shell
             assign __axis_cmac_tx_tuser.err       = axis_port_tx_tuser.err;
 
             axi4s_intf_set_meta #(
-                .TID_WID    ( xilinx_alveo_pkg::CMAC_AXIS_TID_WID ),
-                .TDEST_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TDEST_WID ),
-                .TUSER_WID  ( xilinx_alveo_pkg::CMAC_AXIS_TUSER_WID )
+                .TID_WID    ( xilinx_alveo_usplus_pkg::CMAC_AXIS_TID_WID ),
+                .TDEST_WID  ( xilinx_alveo_usplus_pkg::CMAC_AXIS_TDEST_WID ),
+                .TUSER_WID  ( xilinx_alveo_usplus_pkg::CMAC_AXIS_TUSER_WID )
             ) i_axi4s_set_meta__port_tx (
                 .from_tx ( axis_port_tx[g_port] ),
                 .to_rx   ( __axis_cmac_tx[g_port] ),
@@ -182,16 +229,16 @@ module xilinx_alveo_usplus_shell
     endgenerate
 
     // -- DMA (H2C)
-    xilinx_alveo_pkg::dma_st_axis_tid_t   __axis_h2c_tid;
-    xilinx_alveo_pkg::dma_st_axis_tdest_t __axis_h2c_tdest;
-    xilinx_alveo_pkg::dma_st_axis_tuser_t __axis_h2c_tuser;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tid_t   __axis_h2c_tid;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tdest_t __axis_h2c_tdest;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tuser_t __axis_h2c_tuser;
 
-    shell_pkg::dma_st_axis_tid_t   axis_h2c_tid;
+    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] axis_h2c_tid;
     shell_pkg::dma_st_axis_tdest_t axis_h2c_tdest;
     shell_pkg::dma_st_axis_tuser_t axis_h2c_tuser;
 
     assign __axis_h2c_tid   = __axis_h2c.tid;
-    assign axis_h2c_tid.qid = __axis_h2c_tid.qid;
+    assign axis_h2c_tid       = __axis_h2c_tid.qid;
 
     assign __axis_h2c_tdest = __axis_h2c.tdest;
     assign axis_h2c_tdest.unused = 1'b0;
@@ -200,7 +247,7 @@ module xilinx_alveo_usplus_shell
     assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
 
     axi4s_intf_set_meta #(
-        .TID_WID    ( shell_pkg::DMA_ST_AXIS_TID_WID ),
+        .TID_WID    ( shell_if.DMA_ST_AXIS_TID_WID ),
         .TDEST_WID  ( shell_pkg::DMA_ST_AXIS_TDEST_WID ),
         .TUSER_WID  ( shell_pkg::DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_set_meta__h2c (
@@ -212,16 +259,16 @@ module xilinx_alveo_usplus_shell
     );
 
     // -- DMA (C2H)
-    shell_pkg::dma_st_axis_tid_t   axis_c2h_tid;
+    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] axis_c2h_tid;
     shell_pkg::dma_st_axis_tdest_t axis_c2h_tdest;
     shell_pkg::dma_st_axis_tuser_t axis_c2h_tuser;
 
-    xilinx_alveo_pkg::dma_st_axis_tid_t   __axis_c2h_tid;
-    xilinx_alveo_pkg::dma_st_axis_tdest_t __axis_c2h_tdest;
-    xilinx_alveo_pkg::dma_st_axis_tuser_t __axis_c2h_tuser;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tid_t   __axis_c2h_tid;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tdest_t __axis_c2h_tdest;
+    xilinx_alveo_usplus_pkg::dma_st_axis_tuser_t __axis_c2h_tuser;
 
     assign axis_c2h_tid       = axis_c2h.tid;
-    assign __axis_c2h_tid.qid = axis_c2h_tid.qid;
+    assign __axis_c2h_tid.qid = axis_c2h_tid;
 
     assign axis_c2h_tdest     = axis_c2h.tdest;
     assign __axis_c2h_tdest.unused = 1'b0;
@@ -230,9 +277,9 @@ module xilinx_alveo_usplus_shell
     assign __axis_c2h_tuser.err = axis_c2h_tuser.err;
 
     axi4s_intf_set_meta #(
-        .TID_WID    ( xilinx_alveo_pkg::DMA_ST_AXIS_TID_WID ),
-        .TDEST_WID  ( xilinx_alveo_pkg::DMA_ST_AXIS_TDEST_WID ),
-        .TUSER_WID  ( xilinx_alveo_pkg::DMA_ST_AXIS_TUSER_WID )
+        .TID_WID    ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID ),
+        .TDEST_WID  ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID ),
+        .TUSER_WID  ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID )
     ) i_axi4s_intf_set_meta__c2h (
         .from_tx ( axis_c2h ),
         .to_rx   ( __axis_c2h ),

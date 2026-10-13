@@ -1,0 +1,52 @@
+name: qdma
+visible: true
+
+info: |
+  QDMA streaming adapter register space.
+
+  config holds general adapter configuration and status.  The remaining
+  interfaces are packet counters, one per side of each DMA direction's
+  store-and-forward FIFO.
+
+  The *_in counters sit on the FIFO input and report the full status range,
+  so they account for packets the FIFO drops.  The *_out counters sit on the
+  FIFO output and only ever report good packets; the difference between the
+  two is what the FIFO swallowed or still holds.
+
+  Both taps are on the FIFO, which sits upstream of the loopback switch, so
+  they describe what the FIFOs carried rather than what the core saw.  With
+  loopback enabled h2c_out still counts, and c2h_in counts the reflected H2C
+  traffic rather than anything the core sent.
+
+blocks:
+  config: &config
+    !include ../src/xilinx/qdma/regio/qdma.yaml
+  counters: &counters
+    !include ../src/xilinx/qdma/regio/qdma_counters.yaml
+
+interfaces:
+  - block: *config
+    width: 8
+    address: 0x0000
+    name: config
+
+  # H2C: host to core.  h2c_in is in the QDMA clock domain, h2c_out the core's.
+  - block: *counters
+    width: 8
+    address: 0x0100
+    name: h2c_in
+  - block: *counters
+    width: 8
+    address: 0x0200
+    name: h2c_out
+
+  # C2H: core to host.  c2h_in is in the core clock domain, c2h_out the QDMA's.
+  # With loopback enabled, c2h_in counts the reflected H2C traffic.
+  - block: *counters
+    width: 8
+    address: 0x0300
+    name: c2h_in
+  - block: *counters
+    width: 8
+    address: 0x0400
+    name: c2h_out

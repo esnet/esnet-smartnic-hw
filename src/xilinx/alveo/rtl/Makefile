@@ -26,8 +26,11 @@ SUBCOMPONENTS = \
     sync.rtl@common \
     axi4l.rtl@common \
     axi4s.rtl@common \
-    xilinx.alveo.pkg \
+    packet.rtl@common \
     xilinx.jtag.rtl \
+    xilinx.qdma.pkg \
+    xilinx.qdma.regio.rtl \
+    shell.pkg \
     shell.regio.rtl
 
 EXT_LIBS =

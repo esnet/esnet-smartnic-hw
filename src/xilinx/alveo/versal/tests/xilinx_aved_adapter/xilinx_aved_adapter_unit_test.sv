@@ -12,11 +12,33 @@ module xilinx_aved_adapter_unit_test;
     `define SVUNIT_TIMEOUT 1ms
 
     // =========================================================================
-    // Register offsets (core.stub.regio/core.yaml)
+    // Register offsets
+    //
+    // BAR2 is split by shell_decoder_core.yaml into shell_cfg at 0x000000, hw
+    // at 0x200000 and core at 0x400000.  These reach core.stub's own registers
+    // (core.stub.regio/core.yaml), so a passing read exercises the whole path
+    // from PCIE0 BAR2 through the shell decoder down to the core.
     // =========================================================================
-    localparam bit [31:0] ADDR_ID         = 32'h0;
-    localparam bit [31:0] ADDR_SCRATCHPAD = 32'h4;
+    localparam bit [31:0] CORE_BASE       = 32'h400000;
+    localparam bit [31:0] ADDR_ID         = CORE_BASE + 32'h0;
+    localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
+
+    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x010000.
+    localparam bit [31:0] QDMA_BASE       = 32'h210000;
+    localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
+    localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
+
+    // Packet counter sub-blocks, per qdma_decoder.yaml.
+    localparam bit [31:0] ADDR_H2C_IN_CNT  = QDMA_BASE + 32'h100;
+    localparam bit [31:0] ADDR_H2C_OUT_CNT = QDMA_BASE + 32'h200;
+    localparam bit [31:0] ADDR_C2H_IN_CNT  = QDMA_BASE + 32'h300;
+    localparam bit [31:0] ADDR_C2H_OUT_CNT = QDMA_BASE + 32'h400;
+
+    // Offsets within a packet_counters block.
+    localparam bit [31:0] CNT_OFF_INFO       = 32'h00;
+    localparam bit [31:0] CNT_OFF_PKT_OK_LO  = 32'h0C;
+    localparam bit [31:0] CNT_OFF_RESERVED_1 = 32'h6C;
 
     // =========================================================================
     // Clocks and resets
@@ -50,7 +72,21 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    shell_intf shell_if    ();
+    packet_pkg::size_t pkt_c2h_dma_size;
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
+
+    // DMA streams between adapter and shell, in the management clock domain
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
+        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+    ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     wire pci_rstn_in;
     wire pci_rstn;
@@ -186,14 +222,23 @@ module xilinx_aved_adapter_unit_test;
         .dma0_usr_flr_0_done_fnc   (    ),
         .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
-        .axil_if                   ( axil_app_if )
+        .axil_if                   ( axil_app_if ),
+        // DMA streams (PCIE0 clock domain; the shell owns the CDC)
+        .pkt_h2c                   ( pkt_h2c_dma      ),
+        .pkt_c2h                   ( pkt_c2h_dma      ),
+        .pkt_c2h_size              ( pkt_c2h_dma_size )
     );
 
     xilinx_alveo_versal_shell DUT_shell (
         .sys_clk_100mhz ( clk_pl0_100mhz ),
-        .pci_rstn_in  ( pci_rstn_in   ),
-        .pci_rstn     ( pci_rstn    ),
-        .axil_if      ( axil_app_if ),
+        .pci_rstn_in    ( pci_rstn_in ),
+        .pci_rstn       ( pci_rstn    ),
+        .axil_top         ( axil_app_if       ),
+        .dma_aclk         ( m_axi_pcie0_aclk  ),
+        .dma_aresetn      ( rstn_pl0_100mhz   ),
+        .pkt_h2c_dma      ( pkt_h2c_dma       ),
+        .pkt_c2h_dma      ( pkt_c2h_dma       ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size  ),
         .shell_if
     );
 
@@ -302,6 +347,56 @@ module xilinx_aved_adapter_unit_test;
                 axi4_read(ADDR_SCRATCHPAD, rdata);
                 `FAIL_UNLESS_EQUAL(rdata, 32'hA5A5_A5A5);
             end
+        `SVTEST_END
+
+        // The QDMA adapter's loopback registers are reachable from PCIE0 BAR2
+        // through the shell's hw decoder and back down into the adapter, and
+        // the requested mode is applied across the management/core crossing.
+        `SVTEST(qdma_loopback_register_path)
+            bit [31:0] rdata;
+            axi4_read(ADDR_LB_STATUS, rdata);
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b0);   // not enabled out of reset
+
+            axi4_write(ADDR_LB_CONFIG, 32'h1);
+            axi4_read(ADDR_LB_CONFIG, rdata);
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b1);
+
+            // The enable crosses to the core domain and the status crosses
+            // back, so the applied mode lags the request.
+            for (int i = 0; i < 100; i++) begin
+                axi4_read(ADDR_LB_STATUS, rdata);
+                if (rdata[0] === 1'b1 && rdata[1] === 1'b0) break;
+            end
+            `FAIL_UNLESS_EQUAL(rdata[0], 1'b1);   // enabled
+            `FAIL_UNLESS_EQUAL(rdata[1], 1'b0);   // no longer switching
+        `SVTEST_END
+
+        // Each packet counter block decodes at its own sub-address over the
+        // real route from PCIE0. The info register is non-zero (it reports the
+        // counter widths), which distinguishes a decoded block from a read
+        // that fell through to unmapped space.
+        `SVTEST(qdma_counter_blocks_decode)
+            bit [31:0] info;
+            bit [31:0] bases [4];
+            bases = '{ADDR_H2C_IN_CNT, ADDR_H2C_OUT_CNT, ADDR_C2H_IN_CNT, ADDR_C2H_OUT_CNT};
+            foreach (bases[i]) begin
+                bit [31:0] pkt_ok;
+                axi4_read(bases[i] + CNT_OFF_INFO, info);
+                `FAIL_UNLESS(info !== 32'h0);
+                // Counts start at zero: no DMA traffic has run in this test.
+                axi4_read(bases[i] + CNT_OFF_PKT_OK_LO, pkt_ok);
+                `FAIL_UNLESS_EQUAL(pkt_ok, 32'h0);
+            end
+        `SVTEST_END
+
+        // The counter map is padded so that every 16-byte window holding a
+        // register is fully mapped. Reading the last register exercises the
+        // window the padding was added for -- on CPM5 an unmapped beat in that
+        // window would poison the whole read completion.
+        `SVTEST(qdma_counter_last_window_reads_clean)
+            bit [31:0] rdata;
+            axi4_read(ADDR_H2C_IN_CNT + CNT_OFF_RESERVED_1, rdata);
+            `FAIL_UNLESS_EQUAL(rdata, 32'h0);
         `SVTEST_END
 
     `SVUNIT_TESTS_END

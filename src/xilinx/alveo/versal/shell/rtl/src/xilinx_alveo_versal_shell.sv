@@ -34,9 +34,13 @@ module xilinx_alveo_versal_shell
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
 
-    // DMA streams from xilinx_aved_adapter (QDMA clock domain, ~250 MHz)
-    axi4s_intf.rx           axis_h2c_dma, // H2C from CPM5 QDMA
-    axi4s_intf.tx           axis_c2h_dma, // C2H to CPM5 QDMA
+    // DMA streams to/from xilinx_aved_adapter, in the PCIE0 (QDMA) clock
+    // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
+    input  wire logic       dma_aclk,
+    input  wire logic       dma_aresetn,
+    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA
+    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA
+    output packet_pkg::size_t pkt_c2h_dma_size,
 
     // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
@@ -51,15 +55,82 @@ module xilinx_alveo_versal_shell
     axi4l_intf #() axil_core ();
 
     // =========================================================================
+    // Core clock
+    //
+    // Synthesised from the free-running 100 MHz PMC reference, which is
+    // available immediately after power-on and independent of PCIe and PS
+    // state.  This is the domain the core runs in: shell_if.clk, the port
+    // interfaces and the DMA streams all derive from it.  The crossings to
+    // the management domain are made in xilinx_alveo_qdma_st (DMA) and in
+    // the core itself (registers, via shell_if.mgmt_clk).
+    //
+    // The core is held in reset until the management reset releases and the
+    // MMCM locks; sync_reset retimes that into the core domain.
+    // =========================================================================
+    wire core_clk;
+    wire core_clk_locked;
+    wire core_srst;
+
+    xilinx_versal_core_clk i_xilinx_versal_core_clk (
+        .clk_in1  ( sys_clk_100mhz  ),
+        .clk_out1 ( core_clk        ),
+        .locked   ( core_clk_locked )
+    );
+
+    sync_reset i_sync_reset__core (
+        .clk_in  ( axil_top.aclk                       ),
+        .rst_in  ( axil_top.aresetn && core_clk_locked ),
+        .clk_out ( core_clk                            ),
+        .rst_out ( core_srst                           )
+    );
+
+    // =========================================================================
+    // DMA streaming interfaces
+    //
+    // xilinx_alveo_qdma_st, inside the common Alveo shell, crosses both
+    // directions from the QDMA clock into the core clock domain and presents
+    // them already converted to shell-typed axi4s, so they pass straight to
+    // shell_adapter__shell below.
+    // =========================================================================
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_h2c (.aclk(core_clk));
+
+    axi4s_intf #(
+        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
+        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
+        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
+        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
+    ) axis_c2h (.aclk(core_clk));
+
+    // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
-    xilinx_alveo_shell i_xilinx_alveo_shell (
+    // DMA streaming registers, decoded from the hw sub-space below.
+    axi4l_intf #() axil_qdma_st ();
+
+    xilinx_alveo_shell #(
+        .QID_WID ( QID_WID )
+    ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
         .pci_rstn_in     ( pci_rstn_in     ),
         .pci_rstn_out    ( pci_rstn        ),
+        .core_clk,
+        .core_srst,
+        .dma_aclk,
+        .dma_aresetn,
         .axil_top,
         .axil_hw,
-        .axil_core
+        .axil_core,
+        .axil_qdma_st     ( axil_qdma_st ),
+        .pkt_h2c_dma,
+        .pkt_c2h_dma,
+        .pkt_c2h_dma_size,
+        .axis_h2c,
+        .axis_c2h
     );
 
     // =========================================================================
@@ -70,7 +141,8 @@ module xilinx_alveo_versal_shell
     xilinx_alveo_versal_decoder i_xilinx_alveo_versal_decoder (
         .axil_if        ( axil_hw       ),
         .dcmac0_axil_if ( axil_dcmac[0] ),
-        .dcmac1_axil_if ( axil_dcmac[1] )
+        .dcmac1_axil_if ( axil_dcmac[1] ),
+        .qdma_axil_if   ( axil_qdma_st  )
     );
 
     // Terminate DCMAC AXI-L interfaces — pending DCMAC register map
@@ -88,14 +160,14 @@ module xilinx_alveo_versal_shell
         .TID_WID       ( PORT_AXIS_TID_WID           ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(axil_top.aclk));
+    ) axis_port_rx [shell_if.NUM_PORTS] (.aclk(core_clk));
 
     axi4s_intf #(
         .DATA_BYTE_WID ( shell_if.PORT_DATA_BYTE_WID ),
         .TID_WID       ( PORT_AXIS_TID_WID           ),
         .TDEST_WID     ( PORT_AXIS_TDEST_WID          ),
         .TUSER_WID     ( PORT_AXIS_TUSER_WID          )
-    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(axil_top.aclk));
+    ) axis_port_tx [shell_if.NUM_PORTS] (.aclk(core_clk));
 
     generate
         for (genvar g_port = 0; g_port < shell_if.NUM_PORTS; g_port++) begin : g__port
@@ -109,163 +181,22 @@ module xilinx_alveo_versal_shell
     endgenerate
 
     // =========================================================================
-    // DMA streaming interfaces
-    //
-    // The CPM5 QDMA streams arrive in the QDMA clock domain (~250 MHz) via
-    // axis_h2c_dma / axis_c2h_dma.  We:
-    //   1. Cross to the management clock (axil_top.aclk, 100 MHz) using
-    //      axi4s_pkt_fifo_async (store-and-forward, full-packet CDC).
-    //   2. Adapt metadata (tid/tuser) from xilinx_qdma_pkg types to
-    //      shell_pkg types using axi4s_intf_set_meta, matching the pattern
-    //      used in xilinx_alveo_usplus_shell.
-    // =========================================================================
-
-    // Post-CDC interfaces: QDMA-typed, management clock domain
-    axi4s_intf #(
-        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c_cdc (.aclk(axil_top.aclk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h_cdc (.aclk(axil_top.aclk));
-
-    // pci_rstn is the JTAG-overrideable form of m_axi_pcie0_aresetn; use it
-    // as the active-high reset for the QDMA-domain side of both CDC FIFOs.
-    logic dma_srst;
-    assign dma_srst = ~pci_rstn;
-
-    // Terminated AXI-L peripheral interfaces for the FIFO probes
-    axi4l_intf #() axil_h2c_fifo_probe ();
-    axi4l_intf #() axil_h2c_fifo_ovfl  ();
-    axi4l_intf #() axil_h2c_fifo       ();
-    axi4l_intf #() axil_c2h_fifo_probe ();
-    axi4l_intf #() axil_c2h_fifo_ovfl  ();
-    axi4l_intf #() axil_c2h_fifo       ();
-
-    axi4l_intf_peripheral_term i_axil_term__h2c_probe (.axi4l_if(axil_h2c_fifo_probe));
-    axi4l_intf_peripheral_term i_axil_term__h2c_ovfl  (.axi4l_if(axil_h2c_fifo_ovfl));
-    axi4l_intf_peripheral_term i_axil_term__h2c_fifo  (.axi4l_if(axil_h2c_fifo));
-    axi4l_intf_peripheral_term i_axil_term__c2h_probe (.axi4l_if(axil_c2h_fifo_probe));
-    axi4l_intf_peripheral_term i_axil_term__c2h_ovfl  (.axi4l_if(axil_c2h_fifo_ovfl));
-    axi4l_intf_peripheral_term i_axil_term__c2h_fifo  (.axi4l_if(axil_c2h_fifo));
-
-    // H2C CDC: 250 MHz QDMA domain → 100 MHz management domain
-    axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH ( 256 ),
-        .MAX_PKT_LEN( 9100 )
-    ) i_axi4s_pkt_fifo_async__h2c (
-        .axi4s_in_srst  ( dma_srst              ),
-        .axi4s_in       ( axis_h2c_dma          ),
-        .axi4s_out_srst ( ~axil_top.aresetn     ),
-        .axi4s_out      ( axis_h2c_cdc          ),
-        .flow_ctl_thresh( '1 ),
-        .flow_ctl       (    ),
-        .axil_to_probe  ( axil_h2c_fifo_probe   ),
-        .axil_to_ovfl   ( axil_h2c_fifo_ovfl    ),
-        .axil_if        ( axil_h2c_fifo         )
-    );
-
-    // C2H CDC: 100 MHz management domain → 250 MHz QDMA domain
-    axi4s_pkt_fifo_async #(
-        .FIFO_DEPTH ( 256 ),
-        .MAX_PKT_LEN( 9100 )
-    ) i_axi4s_pkt_fifo_async__c2h (
-        .axi4s_in_srst  ( ~axil_top.aresetn     ),
-        .axi4s_in       ( axis_c2h_cdc          ),
-        .axi4s_out_srst ( dma_srst              ),
-        .axi4s_out      ( axis_c2h_dma          ),
-        .flow_ctl_thresh( '1 ),
-        .flow_ctl       (    ),
-        .axil_to_probe  ( axil_c2h_fifo_probe   ),
-        .axil_to_ovfl   ( axil_c2h_fifo_ovfl    ),
-        .axil_if        ( axil_c2h_fifo         )
-    );
-
-    // Shell-domain interfaces: shell_pkg-typed, management clock
-    axi4s_intf #(
-        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID           ),
-        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
-        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
-    ) axis_h2c (.aclk(axil_top.aclk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( DMA_ST_AXIS_TID_WID           ),
-        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
-        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
-    ) axis_c2h (.aclk(axil_top.aclk));
-
-    // H2C metadata adaptation: QDMA types → shell_pkg types
-    xilinx_qdma_pkg::axis_tid_t   __h2c_qdma_tid;
-    xilinx_qdma_pkg::axis_tuser_t __h2c_qdma_tuser;
-    shell_pkg::dma_st_axis_tid_t   h2c_shell_tid;
-    shell_pkg::dma_st_axis_tdest_t h2c_shell_tdest;
-    shell_pkg::dma_st_axis_tuser_t h2c_shell_tuser;
-
-    assign __h2c_qdma_tid    = axis_h2c_cdc.tid;
-    assign h2c_shell_tid.qid = __h2c_qdma_tid.qid;
-    assign h2c_shell_tdest.unused = 1'b0;
-    assign __h2c_qdma_tuser      = axis_h2c_cdc.tuser;
-    assign h2c_shell_tuser.rss_enable  = 1'b0;
-    assign h2c_shell_tuser.rss_entropy = '0;
-
-    axi4s_intf_set_meta #(
-        .TID_WID   ( DMA_ST_AXIS_TID_WID   ),
-        .TDEST_WID ( DMA_ST_AXIS_TDEST_WID ),
-        .TUSER_WID ( DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_intf_set_meta__h2c (
-        .from_tx ( axis_h2c_cdc  ),
-        .to_rx   ( axis_h2c      ),
-        .tid     ( h2c_shell_tid  ),
-        .tdest   ( h2c_shell_tdest ),
-        .tuser   ( h2c_shell_tuser )
-    );
-
-    // C2H metadata adaptation: shell_pkg types → QDMA types
-    shell_pkg::dma_st_axis_tid_t   c2h_shell_tid;
-    xilinx_qdma_pkg::axis_tid_t   __c2h_qdma_tid;
-    xilinx_qdma_pkg::axis_tdest_t __c2h_qdma_tdest;
-    xilinx_qdma_pkg::axis_tuser_t __c2h_qdma_tuser;
-
-    assign c2h_shell_tid        = axis_c2h.tid;
-    assign __c2h_qdma_tid.qid  = c2h_shell_tid.qid;
-    assign __c2h_qdma_tdest.unused = 1'b0;
-    assign __c2h_qdma_tuser.err    = 1'b0;
-
-    axi4s_intf_set_meta #(
-        .TID_WID   ( AXIS_TID_WID   ),
-        .TDEST_WID ( AXIS_TDEST_WID ),
-        .TUSER_WID ( AXIS_TUSER_WID )
-    ) i_axi4s_intf_set_meta__c2h (
-        .from_tx ( axis_c2h      ),
-        .to_rx   ( axis_c2h_cdc  ),
-        .tid     ( __c2h_qdma_tid  ),
-        .tdest   ( __c2h_qdma_tdest ),
-        .tuser   ( __c2h_qdma_tuser )
-    );
-
-    // =========================================================================
     // Convert SV interfaces to flat shell_intf representation.
-    // Clock/reset are derived from axil_core which carries the management
-    // clock/reset from the AXI4-L path (same aclk/aresetn as axil_if).
-    // port_clk/port_srst use the same clock pending per-port clock support.
+    //
+    // The core runs on core_clk; mgmt_clk carries the management clock, and
+    // the core crosses between them itself (its registers hang off mgmt_clk
+    // via shell_adapter__core).  port_clk follows core_clk pending per-port
+    // clock support.
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
-        .clk        ( axil_core.aclk    ),
-        .srst       ( ~axil_core.aresetn ),
+        .clk        ( core_clk  ),
+        .srst       ( core_srst ),
         .mgmt_clk   ( axil_core.aclk    ),
         .mgmt_srst  ( ~axil_core.aresetn ),
         .clk_100mhz ( sys_clk_100mhz ),
-        .port_clk   ( '{default: axil_core.aclk}    ),
-        .port_srst  ( '{default: ~axil_core.aresetn} ),
+        .port_clk   ( '{default: core_clk}  ),
+        .port_srst  ( '{default: core_srst} ),
         .axil_if    ( axil_core ),
         .axis_port_rx,
         .axis_port_tx,

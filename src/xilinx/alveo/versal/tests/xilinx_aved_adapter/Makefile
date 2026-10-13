@@ -20,6 +20,7 @@ SIM_OPTS =
 # ----------------------------------------------------
 SUBCOMPONENTS = \
     axi4.verif@common \
+    xilinx.alveo.versal.pkg \
     xilinx.alveo.versal.shell.rtl \
     core.stub.rtl
 

@@ -25,10 +25,12 @@ SRC_LIST_FILES =
 SUBCOMPONENTS = \
     axi4l.rtl@common \
     axi4s.rtl@common \
+    packet.rtl@common \
     shell.pkg \
     shell.rtl \
     xilinx.alveo.rtl \
     xilinx.qdma.pkg \
+    xilinx.alveo.versal.ip \
     xilinx.alveo.versal.rtl \
     xilinx.alveo.versal.regio.rtl \
     xilinx.alveo.versal.debug.rtl

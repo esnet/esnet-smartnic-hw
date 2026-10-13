@@ -23,8 +23,8 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    axi4l.rtl@common \
     axi4s.rtl@common \
+    packet.rtl@common \
     xilinx.qdma.pkg \
     xilinx.qdma.ip
 

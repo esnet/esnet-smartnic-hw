@@ -154,9 +154,14 @@ module xilinx_aved_adapter (
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if,
 
-    // AXI4-S DMA streams — in the QDMA clock domain (m_axi_pcie0_aclk, ~250 MHz)
-    axi4s_intf.tx axis_h2c,  // H2C: host-to-core, drives toward shell/core
-    axi4s_intf.rx axis_c2h   // C2H: core-to-host, receives from shell/core
+    // DMA streams — both in the PCIE0 (QDMA) clock domain.  Buffering, the
+    // crossing to the core clock domain, loopback and the DMA registers all
+    // live above this module, in xilinx_alveo_qdma_st.
+    packet_intf.tx pkt_h2c,  // H2C: host-to-core, drives toward the shell
+    packet_intf.rx pkt_c2h,  // C2H: core-to-host, receives from the shell
+
+    // Length of the packet on pkt_c2h, supplied by the shell's C2H FIFO
+    input  packet_pkg::size_t pkt_c2h_size
 );
 
     // =========================================================================
@@ -249,14 +254,14 @@ module xilinx_aved_adapter (
     );
 
     // =========================================================================
-    // PCIE0 DMA streaming — CPM5 flat signals → axi4s_intf
+    // PCIE0 DMA streaming — CPM5 flat signals ↔ packet_intf
     // CPM5 uses 12-bit qid and 13-bit FLR/IRQ fnc fields.
     // =========================================================================
     xilinx_qdma_st_adapter #(
         .QID_WID ( 12 )
     ) i_xilinx_qdma_st_adapter (
-        .aclk    ( m_axi_pcie0_aclk    ),
-        .aresetn ( m_axi_pcie0_aresetn ),
+        .aclk     ( m_axi_pcie0_aclk    ),
+        .aresetn  ( m_axi_pcie0_aresetn ),
 
         // H2C
         .h2c_tvalid   ( dma0_m_axis_h2c_0_tvalid   ),
@@ -309,9 +314,10 @@ module xilinx_aved_adapter (
         .dsc_crdt_valid( dma0_dsc_crdt_in_0_valid  ),
         .dsc_crdt_rdy  ( dma0_dsc_crdt_in_0_rdy   ),
 
-        // AXI4-S interfaces
-        .axis_h2c,
-        .axis_c2h
+        // Stream interfaces
+        .pkt_h2c,
+        .pkt_c2h,
+        .pkt_c2h_size
     );
 
     // =========================================================================

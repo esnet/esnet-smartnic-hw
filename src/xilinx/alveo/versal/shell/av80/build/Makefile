@@ -51,6 +51,7 @@ SUBCOMPONENTS = \
     shell.pkg \
     shell.rtl \
     xilinx.qdma.pkg \
+    xilinx.alveo.versal.pkg \
     xilinx.alveo.versal.bd \
     xilinx.alveo.versal.shell.rtl \
     core.blackbox

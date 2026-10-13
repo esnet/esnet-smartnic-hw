@@ -20,23 +20,25 @@ module esnet_smartnic
     axi4l_intf axil_if ();
     axi4l_intf axil_debug_if ();
 
-    shell_intf shell_if ();
+    // CPM5 carries a 12-bit queue ID; sizing the boundary from the platform
+    // package keeps the core's qid field matched to what the hardware addresses.
+    shell_intf #(
+        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
+    ) shell_if ();
 
-    // DMA AXI4-S interfaces between adapter and shell (QDMA clock domain)
-    // aclk is m_axi_pcie0_aclk (the CPM5 QDMA link clock, ~250 MHz)
-    axi4s_intf #(
+    // DMA interfaces between adapter and shell, in the PCIE0 (QDMA) clock
+    // domain.  The crossing to core_clk happens inside xilinx_alveo_shell.
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_h2c_dma (.aclk(m_axi_pcie0_aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
-    axi4s_intf #(
+    packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .TID_WID       ( AXIS_TID_WID       ),
-        .TDEST_WID     ( AXIS_TDEST_WID     ),
-        .TUSER_WID     ( AXIS_TUSER_WID     )
-    ) axis_c2h_dma (.aclk(m_axi_pcie0_aclk));
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
+
+    packet_pkg::size_t pkt_c2h_dma_size;
 
     // AVED top-level
     // NOTE: for compatibility with AVED constraints, this instance must
@@ -54,8 +56,9 @@ module esnet_smartnic
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
-        .axis_h2c ( axis_h2c_dma ),
-        .axis_c2h ( axis_c2h_dma )
+        .pkt_h2c      ( pkt_h2c_dma      ),
+        .pkt_c2h      ( pkt_c2h_dma      ),
+        .pkt_c2h_size ( pkt_c2h_dma_size )
     );
 
     // AXI-L debug core: ILA + VIO between adapter and shell adapter
@@ -71,9 +74,12 @@ module esnet_smartnic
         .sys_clk_100mhz ( sys_clk_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
-        .axil_top       ( axil_debug_if ),
-        .axis_h2c_dma   ( axis_h2c_dma ),
-        .axis_c2h_dma   ( axis_c2h_dma ),
+        .axil_top         ( axil_debug_if       ),
+        .dma_aclk         ( m_axi_pcie0_aclk    ),
+        .dma_aresetn      ( m_axi_pcie0_aresetn ),
+        .pkt_h2c_dma      ( pkt_h2c_dma         ),
+        .pkt_c2h_dma      ( pkt_c2h_dma         ),
+        .pkt_c2h_dma_size ( pkt_c2h_dma_size    ),
         .shell_if
     );
 

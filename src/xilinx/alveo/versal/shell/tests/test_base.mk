@@ -23,6 +23,7 @@ SIM ?= xsim
 # ----------------------------------------------------
 SUBCOMPONENTS ?= \
     xilinx.alveo.versal.shell.rtl \
+    xilinx.alveo.versal.pkg \
     core.stub.rtl
 
 EXT_LIBS =

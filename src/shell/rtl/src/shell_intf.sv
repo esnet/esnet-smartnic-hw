@@ -4,9 +4,15 @@
 //   Parameterized flat SV interface for the shell-core boundary.
 //   All signals are plain logic — no embedded interface instances.
 //
-//   Parameters are set at instantiation time by the platform top-level,
-//   allowing different port counts and data widths per platform without
-//   requiring per-platform shell_pkg variants.
+//   Parameters are set at instantiation time by the platform top-level, so
+//   port counts, data widths and DMA queue count follow the hardware rather
+//   than a single value shared by every platform. Each top-level takes them
+//   from its own platform package (xilinx_alveo_usplus_pkg,
+//   xilinx_alveo_versal_pkg).
+//
+//   Signal widths derive from these parameters, so a platform that addresses
+//   fewer queues gets a correspondingly narrower tid and the core elaborates
+//   to match.
 //
 //   The 'shell' modport is used by shell adapter modules (xilinx_alveo_shell,
 //   xilinx_aved_shell_adapter). The 'core' modport is the mirror used by
@@ -19,7 +25,7 @@ interface shell_intf
     parameter int NUM_PORTS            = 2,
     parameter int PORT_DATA_BYTE_WID   = 64,
     parameter int DMA_ST_DATA_BYTE_WID = 64,
-    parameter int DMA_ST_QUEUES        = shell_pkg::DMA_ST_QUEUES,
+    parameter int DMA_ST_QUEUES        = 4096,
     parameter int AXIL_ADDR_WID        = 32
 ) ();
     // -------------------------------------------------------------------------
@@ -28,6 +34,12 @@ interface shell_intf
     localparam int PORT_DATA_WID      = PORT_DATA_BYTE_WID * 8;
     localparam int DMA_ST_DATA_WID    = DMA_ST_DATA_BYTE_WID * 8;
     localparam int DMA_ST_QID_WID     = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
+
+    // tid carries only the queue ID, so it is sized from DMA_ST_QUEUES.
+    // Adapters on both sides bind to this rather than to a package constant,
+    // which is what keeps the two sides of the boundary matched.
+    localparam int DMA_ST_AXIS_TID_WID = DMA_ST_QID_WID;
+
     localparam int AXIL_DATA_BYTE_WID = 4;
     localparam int AXIL_DATA_WID      = AXIL_DATA_BYTE_WID * 8;
 
