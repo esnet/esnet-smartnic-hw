@@ -241,7 +241,8 @@ __SB_VITISNETP4_EGR_DRV_INSTALL := \
 	    LIB_ROOT=$(LIB_ROOT) \
 	    SCRIPTS_ROOT=$(SCRIPTS_ROOT) \
 	    OUTPUT_ROOT=$(LIB_OUTPUT_ROOT) \
-	    OUTPUT_SUBDIR=
+	    OUTPUT_SUBDIR= \
+	    P4_IGR_FILE=$(P4_IGR_FILE)
 	@[ -z "$(P4_EGR_FILE)" ] || $(MAKE) -s -C $(SRC_ROOT) driver \
 	    COMPONENT=vitisnetp4_egr.ip \
 	    BOARD=$(BOARD) \

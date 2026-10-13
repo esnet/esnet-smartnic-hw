@@ -1,0 +1,8 @@
+user_metadata.timestamp_ns=1 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=2 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=3 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=4 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=5 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=6 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=7 user_metadata.egress_port=3;
+user_metadata.timestamp_ns=8 user_metadata.egress_port=3;
