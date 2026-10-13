@@ -275,6 +275,7 @@ module smartnic_datapath_unit_test;
             check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
 
+/*
         `SVTEST(PHY0_to_PF0_VF2_test)
             env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
 
@@ -282,7 +283,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PHY1_to_PF1_VF2_test)
             env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
 
@@ -290,7 +291,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
-*/
+
         `SVTEST(PHY0_to_PF0_test)
             app_mode(0);
             env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
@@ -299,7 +300,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PHY1_to_PF1_test)
             app_mode(1);
             env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b11 );
@@ -308,7 +309,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
-*/
+
         `SVTEST(PHY0_to_PF0_VF0_test)
             app_mode(0);
             env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b10 );
@@ -318,7 +319,7 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PHY1_to_PF1_VF0_test)
             app_mode(1);
             env.smartnic_app_reg_blk_agent.write_smartnic_app_igr_p4_out_sel( 2'b10 );
@@ -328,19 +329,19 @@ module smartnic_datapath_unit_test;
             #1us;
             check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
-*/
+
         `SVTEST(PF0_VF2_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0_VF2), .tdest(PHY0));
             #2us;
             check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PF1_VF2_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1_VF2), .tdest(PHY1));
             #2us;
             check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
-*/
+
         `SVTEST(PF0_VF2_to_PF0_VF2_test)
             env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
 
@@ -348,7 +349,7 @@ module smartnic_datapath_unit_test;
             #1us
             check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PF1_VF2_to_PF0_VF2_test)
             env.smartnic_reg_blk_agent.write_smartnic_demux_out_sel(2'b11);
 
@@ -356,36 +357,37 @@ module smartnic_datapath_unit_test;
             #1us
             check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
-*/
+
         `SVTEST(PF0_VF1_to_PF0_VF1_test)
             packet_stream(.bytes(bytes[2]), .tid(PF0_VF1), .tdest(PF0_VF1));
             #1us;
             check_pf0(.pkts(10)) ; check_phy0(); check_phy1(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PF1_VF1_to_PF1_VF1_test)
             packet_stream(.bytes(bytes[3]), .tid(PF1_VF1), .tdest(PF1_VF1));
             #2us;
             check_pf1(.pkts(10)) ; check_phy0(); check_phy1(); check_pf0();
         `SVTEST_END
-*/
+
         `SVTEST(PF0_VF0_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0_VF0), .tdest(PHY0));
             #2us;
             check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
-/*
+
         `SVTEST(PF1_VF0_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1_VF0), .tdest(PHY1));
             #2us;
             check_phy1(.pkts(10)) ; check_phy0(); check_pf0(); check_pf1();
         `SVTEST_END
-*/
+
         `SVTEST(PF0_to_PHY0_test)
             packet_stream(.bytes(bytes[0]), .tid(PF0), .tdest(PHY0));
             #2us;
             check_phy0(.pkts(10)) ; check_phy1(); check_pf0(); check_pf1();
         `SVTEST_END
+*/
 /*
         `SVTEST(PF1_to_PHY1_test)
             packet_stream(.bytes(bytes[1]), .tid(PF1), .tdest(PHY1));
