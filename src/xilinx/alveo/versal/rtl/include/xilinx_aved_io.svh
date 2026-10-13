@@ -51,6 +51,19 @@
     input  wire       hbm_ref_clk_1_clk_n,
     input  wire       hbm_ref_clk_1_clk_p,
     
+    // QSFP0 — GTM Bank 209 (refclk + quad 0)
+    input  wire       qsfp0_322mhz_clk_p,
+    input  wire       qsfp0_322mhz_clk_n,
+    input  wire [3:0] qsfp0_4x_grx_p,
+    input  wire [3:0] qsfp0_4x_grx_n,
+    output wire [3:0] qsfp0_4x_gtx_p,
+    output wire [3:0] qsfp0_4x_gtx_n,
+    // QSFP1 — GTM Bank 210 (quad 1, shares QSFP0 refclk)
+    input  wire [3:0] qsfp1_4x_grx_p,
+    input  wire [3:0] qsfp1_4x_grx_n,
+    output wire [3:0] qsfp1_4x_gtx_p,
+    output wire [3:0] qsfp1_4x_gtx_n,
+
     // SMBus
     inout  wire       smbus_0_scl_io,
     inout  wire       smbus_0_sda_io,

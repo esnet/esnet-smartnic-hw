@@ -171,7 +171,7 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@sed -i 's|<common-lib-name>|common@$(SMARTNIC_LIB_NAME)|'              $(__SPC_BUILD_SRC_DIR)/config.mk
 	@sed -i 's|<custom-env-setup>|BOARD ?= $(BOARD)$(if $(__SPC_APP_SRC_DIR),\nSRC_ROOT := $(__SPC_APP_SRC_DIR),)|' $(__SPC_BUILD_SRC_DIR)/config.mk
 	@sed -i 's|<output-subdir>||'                                           $(__SPC_BUILD_SRC_DIR)/config.mk
-	@sed -i 's|<lib-env>|\\\n\tBOARD=$$(BOARD)\\\n\tSMARTNIC_ROOT=$(__SPC_SMARTNIC_ROOT)\\\n\tLIB_ROOT=$(LIB_ROOT)\\\n\tSCRIPTS_ROOT=$(SCRIPTS_ROOT)\\\n\tREGIO_ROOT=$(REGIO_ROOT)\\\n\tOUTPUT_ROOT=$(abspath $(__SPC_BUILD_OUT_DIR))\\\n\tOUTPUT_SUBDIR=|g' $(__SPC_BUILD_SRC_DIR)/config.mk
+	@sed -i 's|<lib-env>|\\\n\tBOARD=$$(BOARD)\\\n\tSMARTNIC_ROOT=$(__SPC_SMARTNIC_ROOT)\\\n\tLIB_ROOT=$(LIB_ROOT)\\\n\tSCRIPTS_ROOT=$(SCRIPTS_ROOT)\\\n\tREGIO_ROOT=$(REGIO_ROOT)\\\n\tOUTPUT_ROOT=$(abspath $(__SPC_BUILD_OUT_DIR))\\\n\tOUTPUT_SUBDIR=\\\n\tP4_IGR_FILE=$(P4_IGR_FILE)\\\n\tP4_EGR_FILE=$(P4_EGR_FILE)|g' $(__SPC_BUILD_SRC_DIR)/config.mk
 	@# --- build/src/esnet_smartnic/config.mk ---
 	@cp $(SCRIPTS_ROOT)/Makefiles/templates/component_config.mk $(__SPC_ESNET_DIR)/config.mk
 	@# --- build/src/esnet_smartnic/build/Makefile ---
