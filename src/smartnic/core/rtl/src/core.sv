@@ -24,8 +24,8 @@ module core
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
 
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(port_clk[0]));
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(port_clk[0]));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(clk));
 
     // Convert shell_intf to SV interfaces
     shell_adapter__core i_shell_adapter__core (
@@ -125,9 +125,9 @@ module smartnic_wrapper
     dma_st_axis_tuser_t axis_c2h_tuser;
     logic [axis_c2h.TID_WID-1:0] axis_c2h_tid;
 
-    // core_clk-domain DMA interfaces (post-CDC)
-    axi4s_intf #(.DATA_BYTE_WID(axis_h2c.DATA_BYTE_WID), .TID_WID(axis_h2c.TID_WID), .TDEST_WID(axis_h2c.TDEST_WID), .TUSER_WID(axis_h2c.TUSER_WID)) axis_h2c_core (.aclk(core_clk));
-    axi4s_intf #(.DATA_BYTE_WID(axis_c2h.DATA_BYTE_WID), .TID_WID(axis_c2h.TID_WID), .TDEST_WID(axis_c2h.TDEST_WID), .TUSER_WID(axis_c2h.TUSER_WID)) axis_c2h_core (.aclk(core_clk));
+    // cmac_clk[0]-domain DMA interfaces
+    axi4s_intf #(.DATA_BYTE_WID(axis_h2c.DATA_BYTE_WID), .TID_WID(axis_h2c.TID_WID), .TDEST_WID(axis_h2c.TDEST_WID), .TUSER_WID(axis_h2c.TUSER_WID)) axis_h2c_core (.aclk(cmac_clk[0]));
+    axi4s_intf #(.DATA_BYTE_WID(axis_c2h.DATA_BYTE_WID), .TID_WID(axis_c2h.TID_WID), .TDEST_WID(axis_c2h.TDEST_WID), .TUSER_WID(axis_c2h.TUSER_WID)) axis_c2h_core (.aclk(cmac_clk[0]));
 
     // Synchronize srst (shell clock domain) into core_clk domain
     sync_reset #(
@@ -203,21 +203,25 @@ module smartnic_wrapper
         end : g__port
     endgenerate
 
-    // H2C CDC: shell clock domain → smartnic core_clk domain
-    axi4s_fifo_async #(.DEPTH(256)) i_h2c_cdc (
-        .from_tx      (axis_h2c),
-        .from_tx_srst (srst),
-        .to_rx        (axis_h2c_core),
-        .to_rx_srst   (core_clk_srst)
-    );
+    // H2C tie-off: accept and discard all packets from the shell; present idle to the core
+    assign axis_h2c.tready      = 1'b1;
+    assign axis_h2c_core.tvalid = 1'b0;
+    assign axis_h2c_core.tdata  = '0;
+    assign axis_h2c_core.tkeep  = '0;
+    assign axis_h2c_core.tlast  = 1'b0;
+    assign axis_h2c_core.tid    = '0;
+    assign axis_h2c_core.tdest  = '0;
+    assign axis_h2c_core.tuser  = '0;
 
-    // C2H CDC: smartnic core_clk domain → shell clock domain
-    axi4s_fifo_async #(.DEPTH(256)) i_c2h_cdc (
-        .from_tx      (axis_c2h_core),
-        .from_tx_srst (core_clk_srst),
-        .to_rx        (axis_c2h),
-        .to_rx_srst   (srst)
-    );
+    // C2H tie-off: accept and discard all packets from the core; present idle to the shell
+    assign axis_c2h_core.tready = 1'b1;
+    assign axis_c2h.tvalid      = 1'b0;
+    assign axis_c2h.tdata       = '0;
+    assign axis_c2h.tkeep       = '0;
+    assign axis_c2h.tlast       = 1'b0;
+    assign axis_c2h.tid         = '0;
+    assign axis_c2h.tdest       = '0;
+    assign axis_c2h.tuser       = '0;
 
     // H2C
     assign s_axis_adpt_tx_322mhz_tvalid[0]            = axis_h2c_core.tvalid;
