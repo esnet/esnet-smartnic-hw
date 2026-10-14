@@ -135,17 +135,17 @@ module xilinx_gt_wrapper (
     logic [7:0]    INTF0_RX3_ch_rxrate;
     logic [255:0]  INTF0_RX3_ch_rxdata;
 
-    // logic          INTF0_TX_clr_out;
-    // logic          INTF0_TX_clrb_leaf_out;
-    // logic          INTF0_RX_clr_out;
-    // logic          INTF0_RX_clrb_leaf_out;
-    // logic          INTF0_rst_all_in;
+    // logic          INTF0_TX_clr_out;        // output port
+    // logic          INTF0_TX_clrb_leaf_out;  // output port
+    // logic          INTF0_RX_clr_out;        // output port
+    // logic          INTF0_RX_clrb_leaf_out;  // output port
+    // logic          INTF0_rst_all_in;        // input port
     logic          INTF0_rst_tx_pll_and_datapath_in;
-    // logic          INTF0_rst_tx_datapath_in;
-    // logic          INTF0_rst_tx_done_out;
+    // logic          INTF0_rst_tx_datapath_in;  // input port
+    // logic          INTF0_rst_tx_done_out;     // output port
     logic          INTF0_rst_rx_pll_and_datapath_in;
-    // logic          INTF0_rst_rx_datapath_in;
-    // logic          INTF0_rst_rx_done_out;
+    // logic          INTF0_rst_rx_datapath_in;  // input port
+    // logic          INTF0_rst_rx_done_out;     // output port
 
 
     // =========================================================================
@@ -228,7 +228,7 @@ module xilinx_gt_wrapper (
     // AXI-L register access
     // =========================================================================
     assign QUAD0_s_axi_lite_resetn  = axil_if.aresetn;          // input wire QUAD0_s_axi_lite_resetn
-    assign QUAD0_s_axi_lite_awaddr  = axil_if.awaddr[17:0];     // input wire [17 : 0] QUAD0_s_axi_lite_awaddr
+    assign QUAD0_s_axi_lite_awaddr  = {4'h0, axil_if.awaddr[13:0]};  // input wire [17 : 0] QUAD0_s_axi_lite_awaddr
     assign QUAD0_s_axi_lite_awvalid = axil_if.awvalid;          // input wire QUAD0_s_axi_lite_awvalid
     assign axil_if.awready          = QUAD0_s_axi_lite_awready; // output wire QUAD0_s_axi_lite_awready
     assign QUAD0_s_axi_lite_wdata   = axil_if.wdata;            // input wire [31 : 0] QUAD0_s_axi_lite_wdata
@@ -237,7 +237,7 @@ module xilinx_gt_wrapper (
     assign axil_if.bresp            = QUAD0_s_axi_lite_bresp;   // output wire [1 : 0] QUAD0_s_axi_lite_bresp
     assign axil_if.bvalid           = QUAD0_s_axi_lite_bvalid;  // output wire QUAD0_s_axi_lite_bvalid
     assign QUAD0_s_axi_lite_bready  = axil_if.bready;           // input wire QUAD0_s_axi_lite_bready
-    assign QUAD0_s_axi_lite_araddr  = axil_if.araddr[17:0];     // input wire [17 : 0] QUAD0_s_axi_lite_araddr
+    assign QUAD0_s_axi_lite_araddr  = {4'h0, axil_if.araddr[13:0]};  // input wire [17 : 0] QUAD0_s_axi_lite_araddr
     assign QUAD0_s_axi_lite_arvalid = axil_if.arvalid;          // input wire QUAD0_s_axi_lite_arvalid
     assign axil_if.arready          = QUAD0_s_axi_lite_arready; // output wire QUAD0_s_axi_lite_arready
     assign axil_if.rdata            = QUAD0_s_axi_lite_rdata;   // output wire [31 : 0] QUAD0_s_axi_lite_rdata
@@ -339,7 +339,7 @@ xilinx_gt_0 i_xilinx_gt_0 (
   .INTF0_rst_tx_done_out(INTF0_rst_tx_done_out),                        // output wire INTF0_rst_tx_done_out
   .INTF0_rst_rx_pll_and_datapath_in(INTF0_rst_rx_pll_and_datapath_in),  // input wire INTF0_rst_rx_pll_and_datapath_in
   .INTF0_rst_rx_datapath_in(INTF0_rst_rx_datapath_in),                  // input wire INTF0_rst_rx_datapath_in
-  .INTF0_rst_rx_done_out(INTF0_rst_rx_done_out)                        // output wire INTF0_rst_rx_done_out
+  .INTF0_rst_rx_done_out(INTF0_rst_rx_done_out)                         // output wire INTF0_rst_rx_done_out
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

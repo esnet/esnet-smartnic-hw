@@ -9,7 +9,11 @@ include $(COMPONENT_ROOT)/config.mk
 # Regmap YAML sources
 # -----------------------------------------------
 REG_BLOCK_YAML = \
-    versal_hw_regs.yaml
+    versal_hw_regs.yaml \
+    gtm_regs.yaml \
+    dcmac_global_regs.yaml \
+    dcmac_channel_regs.yaml \
+    dcmac_channel_small_regs.yaml
 
 REG_DECODER_YAML = \
     dcmac_decoder.yaml \

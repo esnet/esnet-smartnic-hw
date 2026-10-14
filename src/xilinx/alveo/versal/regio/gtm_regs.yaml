@@ -1,0 +1,3973 @@
+name: gtm_regs
+info: |
+  Versal GTM Transceiver Registers
+  Ref: AM017, Versal Adaptive SoC GTM Transceivers Architecture Manual
+  Source: am017_versal_gtm_regmap_bitfields.csv
+  Note: Addresses are byte addresses = DRP word address x 4,
+  assuming the standard Xilinx AXI-to-DRP bridge convention
+  (AXI byte address / 4 = DRP word address).
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  # CH0 status (DRP 0x08xx, byte 0x20xx)
+
+  - name: ch0_coe_status_tx_gb_dbg6
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x02060
+
+  - name: ch0_coe_status_tx_gb_dbg8
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x020D8
+
+  - name: ch0_coe_status_rx_gb_dbg6
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x020E0
+
+  - name: ch0_coe_status_rx_gb_dbg8
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x02100
+
+  - name: ch0_coe_status_prbserr_cnt0
+    access: ro
+    fields:
+      - name: do_from_prbserr_lsb
+        width: 32
+
+  - name: ch0_coe_status_prbserr_cnt1
+    access: ro
+    fields:
+      - name: do_from_prbserr_msb
+        width: 32
+
+  - name: ch0_coe_status_rx_cyclecnt0
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_lsb
+        width: 32
+
+  - name: ch0_coe_status_rx_cyclecnt1
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_msb
+        width: 32
+
+  - name: ch0_coe_status_prbs_link2reseed_cnt
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprbserr
+        width: 1
+      - name: rxprbslocked
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0221C
+
+  - name: ch0_coestatus_adapt_loop07
+    access: ro
+    fields:
+      - name: h1_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop08
+    access: ro
+    fields:
+      - name: hm01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop09
+    access: ro
+    fields:
+      - name: hp01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop10
+    access: ro
+    fields:
+      - name: hp02_dac
+        width: 8
+      - name: hm02_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop11
+    access: ro
+    fields:
+      - name: hp03_dac
+        width: 8
+      - name: hm03_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop12
+    access: ro
+    fields:
+      - name: hp04_dac
+        width: 8
+      - name: hm04_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop13
+    access: ro
+    fields:
+      - name: hp05_dac
+        width: 8
+      - name: hm05_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop14
+    access: ro
+    fields:
+      - name: hp06_dac
+        width: 8
+      - name: hm06_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop15
+    access: ro
+    fields:
+      - name: hp07_dac
+        width: 8
+      - name: hm07_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop16
+    access: ro
+    fields:
+      - name: hp08_dac
+        width: 8
+      - name: hm08_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop17
+    access: ro
+    fields:
+      - name: hp09_dac
+        width: 8
+      - name: hp10_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop18
+    access: ro
+    fields:
+      - name: hp11_dac
+        width: 8
+      - name: hp12_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop19
+    access: ro
+    fields:
+      - name: hp13_dac
+        width: 8
+      - name: hp14_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop20
+    access: ro
+    fields:
+      - name: hp15_dac
+        width: 8
+      - name: hp16_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop21
+    access: ro
+    fields:
+      - name: hp17_dac
+        width: 8
+      - name: hp18_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop22
+    access: ro
+    fields:
+      - name: hp19_dac
+        width: 8
+      - name: hp20_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop23
+    access: ro
+    fields:
+      - name: hp21_dac
+        width: 8
+      - name: hp22_dac
+        width: 4
+      - name: hp23_dac
+        width: 4
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop24
+    access: ro
+    fields:
+      - name: os_dacn
+        width: 8
+      - name: os_dacp
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop25
+    access: ro
+    fields:
+      - name: agc_dac2
+        width: 8
+      - name: agc_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop26
+    access: ro
+    fields:
+      - name: kh_dac2
+        width: 8
+      - name: kh_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch0_coestatus_adapt_loop27
+    access: ro
+    fields:
+      - name: kl_dac2
+        width: 8
+      - name: kl_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+
+  # CH1 status (DRP 0x09xx, byte 0x24xx)
+
+  - meta:
+      pad_until: 0x02458
+
+  - name: ch1_coe_status_tx_gb_dbg6
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x02460
+
+  - name: ch1_coe_status_tx_gb_dbg8
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x024D8
+
+  - name: ch1_coe_status_rx_gb_dbg6
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x024E0
+
+  - name: ch1_coe_status_rx_gb_dbg8
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x02500
+
+  - name: ch1_coe_status_prbserr_cnt0
+    access: ro
+    fields:
+      - name: do_from_prbserr_lsb
+        width: 32
+
+  - name: ch1_coe_status_prbserr_cnt1
+    access: ro
+    fields:
+      - name: do_from_prbserr_msb
+        width: 32
+
+  - name: ch1_coe_status_rx_cyclecnt0
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_lsb
+        width: 32
+
+  - name: ch1_coe_status_rx_cyclecnt1
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_msb
+        width: 32
+
+  - name: ch1_coe_status_prbs_link2reseed_cnt
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprbserr
+        width: 1
+      - name: rxprbslocked
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0261C
+
+  - name: ch1_coestatus_adapt_loop07
+    access: ro
+    fields:
+      - name: h1_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop08
+    access: ro
+    fields:
+      - name: hm01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop09
+    access: ro
+    fields:
+      - name: hp01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop10
+    access: ro
+    fields:
+      - name: hp02_dac
+        width: 8
+      - name: hm02_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop11
+    access: ro
+    fields:
+      - name: hp03_dac
+        width: 8
+      - name: hm03_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop12
+    access: ro
+    fields:
+      - name: hp04_dac
+        width: 8
+      - name: hm04_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop13
+    access: ro
+    fields:
+      - name: hp05_dac
+        width: 8
+      - name: hm05_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop14
+    access: ro
+    fields:
+      - name: hp06_dac
+        width: 8
+      - name: hm06_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop15
+    access: ro
+    fields:
+      - name: hp07_dac
+        width: 8
+      - name: hm07_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop16
+    access: ro
+    fields:
+      - name: hp08_dac
+        width: 8
+      - name: hm08_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop17
+    access: ro
+    fields:
+      - name: hp09_dac
+        width: 8
+      - name: hp10_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop18
+    access: ro
+    fields:
+      - name: hp11_dac
+        width: 8
+      - name: hp12_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop19
+    access: ro
+    fields:
+      - name: hp13_dac
+        width: 8
+      - name: hp14_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop20
+    access: ro
+    fields:
+      - name: hp15_dac
+        width: 8
+      - name: hp16_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop21
+    access: ro
+    fields:
+      - name: hp17_dac
+        width: 8
+      - name: hp18_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop22
+    access: ro
+    fields:
+      - name: hp19_dac
+        width: 8
+      - name: hp20_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop23
+    access: ro
+    fields:
+      - name: hp21_dac
+        width: 8
+      - name: hp22_dac
+        width: 4
+      - name: hp23_dac
+        width: 4
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop24
+    access: ro
+    fields:
+      - name: os_dacn
+        width: 8
+      - name: os_dacp
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop25
+    access: ro
+    fields:
+      - name: agc_dac2
+        width: 8
+      - name: agc_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop26
+    access: ro
+    fields:
+      - name: kh_dac2
+        width: 8
+      - name: kh_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch1_coestatus_adapt_loop27
+    access: ro
+    fields:
+      - name: kl_dac2
+        width: 8
+      - name: kl_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+
+  # CH2 status (DRP 0x0Axx, byte 0x28xx)
+
+  - meta:
+      pad_until: 0x02858
+
+  - name: ch2_coe_status_tx_gb_dbg6
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x02860
+
+  - name: ch2_coe_status_tx_gb_dbg8
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x028D8
+
+  - name: ch2_coe_status_rx_gb_dbg6
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x028E0
+
+  - name: ch2_coe_status_rx_gb_dbg8
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x02900
+
+  - name: ch2_coe_status_prbserr_cnt0
+    access: ro
+    fields:
+      - name: do_from_prbserr_lsb
+        width: 32
+
+  - name: ch2_coe_status_prbserr_cnt1
+    access: ro
+    fields:
+      - name: do_from_prbserr_msb
+        width: 32
+
+  - name: ch2_coe_status_rx_cyclecnt0
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_lsb
+        width: 32
+
+  - name: ch2_coe_status_rx_cyclecnt1
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_msb
+        width: 32
+
+  - name: ch2_coe_status_prbs_link2reseed_cnt
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprbserr
+        width: 1
+      - name: rxprbslocked
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x02A1C
+
+  - name: ch2_coestatus_adapt_loop07
+    access: ro
+    fields:
+      - name: h1_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop08
+    access: ro
+    fields:
+      - name: hm01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop09
+    access: ro
+    fields:
+      - name: hp01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop10
+    access: ro
+    fields:
+      - name: hp02_dac
+        width: 8
+      - name: hm02_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop11
+    access: ro
+    fields:
+      - name: hp03_dac
+        width: 8
+      - name: hm03_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop12
+    access: ro
+    fields:
+      - name: hp04_dac
+        width: 8
+      - name: hm04_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop13
+    access: ro
+    fields:
+      - name: hp05_dac
+        width: 8
+      - name: hm05_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop14
+    access: ro
+    fields:
+      - name: hp06_dac
+        width: 8
+      - name: hm06_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop15
+    access: ro
+    fields:
+      - name: hp07_dac
+        width: 8
+      - name: hm07_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop16
+    access: ro
+    fields:
+      - name: hp08_dac
+        width: 8
+      - name: hm08_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop17
+    access: ro
+    fields:
+      - name: hp09_dac
+        width: 8
+      - name: hp10_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop18
+    access: ro
+    fields:
+      - name: hp11_dac
+        width: 8
+      - name: hp12_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop19
+    access: ro
+    fields:
+      - name: hp13_dac
+        width: 8
+      - name: hp14_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop20
+    access: ro
+    fields:
+      - name: hp15_dac
+        width: 8
+      - name: hp16_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop21
+    access: ro
+    fields:
+      - name: hp17_dac
+        width: 8
+      - name: hp18_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop22
+    access: ro
+    fields:
+      - name: hp19_dac
+        width: 8
+      - name: hp20_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop23
+    access: ro
+    fields:
+      - name: hp21_dac
+        width: 8
+      - name: hp22_dac
+        width: 4
+      - name: hp23_dac
+        width: 4
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop24
+    access: ro
+    fields:
+      - name: os_dacn
+        width: 8
+      - name: os_dacp
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop25
+    access: ro
+    fields:
+      - name: agc_dac2
+        width: 8
+      - name: agc_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop26
+    access: ro
+    fields:
+      - name: kh_dac2
+        width: 8
+      - name: kh_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch2_coestatus_adapt_loop27
+    access: ro
+    fields:
+      - name: kl_dac2
+        width: 8
+      - name: kl_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+
+  # CH3 status (DRP 0x0Bxx, byte 0x2Cxx)
+
+  - meta:
+      pad_until: 0x02C58
+
+  - name: ch3_coe_status_tx_gb_dbg6
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x02C60
+
+  - name: ch3_coe_status_tx_gb_dbg8
+    access: ro
+    fields:
+      - name: tx_fifo_latency
+        width: 18
+      - name: rsvd
+        width: 14
+
+  - meta:
+      pad_until: 0x02CD8
+
+  - name: ch3_coe_status_rx_gb_dbg6
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x02CE0
+
+  - name: ch3_coe_status_rx_gb_dbg8
+    access: ro
+    fields:
+      - name: rx_fifo_latency
+        width: 17
+      - name: rsvd
+        width: 15
+
+  - meta:
+      pad_until: 0x02D00
+
+  - name: ch3_coe_status_prbserr_cnt0
+    access: ro
+    fields:
+      - name: do_from_prbserr_lsb
+        width: 32
+
+  - name: ch3_coe_status_prbserr_cnt1
+    access: ro
+    fields:
+      - name: do_from_prbserr_msb
+        width: 32
+
+  - name: ch3_coe_status_rx_cyclecnt0
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_lsb
+        width: 32
+
+  - name: ch3_coe_status_rx_cyclecnt1
+    access: ro
+    fields:
+      - name: do_from_rx_cyclecnt_msb
+        width: 32
+
+  - name: ch3_coe_status_prbs_link2reseed_cnt
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprbserr
+        width: 1
+      - name: rxprbslocked
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x02E1C
+
+  - name: ch3_coestatus_adapt_loop07
+    access: ro
+    fields:
+      - name: h1_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop08
+    access: ro
+    fields:
+      - name: hm01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop09
+    access: ro
+    fields:
+      - name: hp01_dac
+        width: 16
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop10
+    access: ro
+    fields:
+      - name: hp02_dac
+        width: 8
+      - name: hm02_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop11
+    access: ro
+    fields:
+      - name: hp03_dac
+        width: 8
+      - name: hm03_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop12
+    access: ro
+    fields:
+      - name: hp04_dac
+        width: 8
+      - name: hm04_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop13
+    access: ro
+    fields:
+      - name: hp05_dac
+        width: 8
+      - name: hm05_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop14
+    access: ro
+    fields:
+      - name: hp06_dac
+        width: 8
+      - name: hm06_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop15
+    access: ro
+    fields:
+      - name: hp07_dac
+        width: 8
+      - name: hm07_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop16
+    access: ro
+    fields:
+      - name: hp08_dac
+        width: 8
+      - name: hm08_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop17
+    access: ro
+    fields:
+      - name: hp09_dac
+        width: 8
+      - name: hp10_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop18
+    access: ro
+    fields:
+      - name: hp11_dac
+        width: 8
+      - name: hp12_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop19
+    access: ro
+    fields:
+      - name: hp13_dac
+        width: 8
+      - name: hp14_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop20
+    access: ro
+    fields:
+      - name: hp15_dac
+        width: 8
+      - name: hp16_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop21
+    access: ro
+    fields:
+      - name: hp17_dac
+        width: 8
+      - name: hp18_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop22
+    access: ro
+    fields:
+      - name: hp19_dac
+        width: 8
+      - name: hp20_dac
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop23
+    access: ro
+    fields:
+      - name: hp21_dac
+        width: 8
+      - name: hp22_dac
+        width: 4
+      - name: hp23_dac
+        width: 4
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop24
+    access: ro
+    fields:
+      - name: os_dacn
+        width: 8
+      - name: os_dacp
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop25
+    access: ro
+    fields:
+      - name: agc_dac2
+        width: 8
+      - name: agc_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop26
+    access: ro
+    fields:
+      - name: kh_dac2
+        width: 8
+      - name: kh_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+  - name: ch3_coestatus_adapt_loop27
+    access: ro
+    fields:
+      - name: kl_dac2
+        width: 8
+      - name: kl_dac1
+        width: 8
+      - name: rsvd
+        width: 16
+
+
+  # CH0 config + HSCLK0 shared (DRP 0x0Cxx, byte 0x30xx)
+
+  - meta:
+      pad_until: 0x0300C
+
+  - name: ctrl_rsv_cfg0
+    fields:
+      - name: rsvd
+        width: 27
+      - name: ch3_rx_lcpll0_reset_en
+        width: 1
+      - name: ch3_rx_lcpll1_reset_en
+        width: 1
+      - name: ch3_rx_ilo_reset_en
+        width: 1
+      - name: ch3_rx_progdiv_reset_en
+        width: 1
+      - name: ch3_rx_ch_reset_en
+        width: 1
+
+  - meta:
+      pad_until: 0x0304C
+
+  - name: hs0_lcpll_ips_cfg
+    fields:
+      - name: rsvd
+        width: 24
+      - name: hs0_lcpll_ips_refclk_sel
+        width: 3
+      - name: hs0_lcpll_ips_pin_en
+        width: 1
+      - name: rsvd1
+        width: 4
+
+  - name: ch0_rx_pcs_cfg0
+    fields:
+      - name: rx_data_width
+        width: 4
+      - name: rx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: rx_precode_byp_en
+        width: 1
+      - name: rx_precode_endian
+        width: 1
+      - name: rx_gray_byp_en
+        width: 1
+      - name: rx_gray_endian
+        width: 1
+      - name: rx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 5
+      - name: rxprbs_linkacq_cnt
+        width: 8
+      - name: rsvd2
+        width: 3
+
+  - name: ch0_rx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 22
+      - name: rx_sample_count
+        width: 3
+      - name: rsvd1
+        width: 7
+
+  - name: ch0_tx_pcs_cfg0
+    fields:
+      - name: tx_data_width
+        width: 4
+      - name: tx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: tx_precode_byp_en
+        width: 1
+      - name: tx_precode_endian
+        width: 1
+      - name: tx_gray_byp_en
+        width: 1
+      - name: tx_gray_endian
+        width: 1
+      - name: tx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 7
+      - name: rxprbserr_loopback
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: tx_prbs_force_mode
+        width: 1
+      - name: rsvd3
+        width: 2
+
+  - name: ch0_tx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 15
+      - name: tx_sample_period
+        width: 3
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0309C
+
+  - name: ch0_pma_misc_cfg0
+    fields:
+      - name: rsvd
+        width: 22
+      - name: txoutclkctl
+        width: 3
+      - name: rsvd1
+        width: 4
+      - name: rxoutclkctl
+        width: 3
+
+  - meta:
+      pad_until: 0x030BC
+
+  - name: ch0_chclk_cfg3
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprogdivsel
+        width: 10
+      - name: rxout_div
+        width: 3
+      - name: rsvd1
+        width: 3
+
+  - meta:
+      pad_until: 0x030DC
+
+  - name: ch0_tx_ctrl_cfg3
+    fields:
+      - name: txprogdivsel
+        width: 10
+      - name: rsvd
+        width: 3
+      - name: txout_div
+        width: 2
+      - name: rsvd1
+        width: 17
+
+  - meta:
+      pad_until: 0x030F0
+
+  - name: hsclk0_lcpll_lgc_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: lcplllocken
+        width: 1
+      - name: rsvd1
+        width: 20
+
+  - name: hsclk0_lcpll_lgc_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: bypass
+        width: 1
+      - name: rsvd1
+        width: 1
+      - name: sdm_widthsel
+        width: 2
+      - name: rsvd2
+        width: 21
+
+  - meta:
+      pad_until: 0x03100
+
+  - name: ch0_reset_time_cfg0
+    fields:
+      - name: rsvd
+        width: 10
+      - name: tx_pma_reset_time
+        width: 5
+      - name: tx_pcs_reset_time
+        width: 5
+      - name: rsvd1
+        width: 12
+
+  - name: ch0_reset_time_cfg1
+    fields:
+      - name: rx_pma_reset_time
+        width: 5
+      - name: rsvd
+        width: 27
+
+  - meta:
+      pad_until: 0x0310C
+
+  - name: ch0_reset_time_cfg3
+    fields:
+      - name: rx_pcs_reset_time
+        width: 11
+      - name: rsvd
+        width: 21
+
+  - meta:
+      pad_until: 0x03130
+
+  - name: ch0_fabric_intf_cfg0
+    fields:
+      - name: rsvd
+        width: 23
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd1
+        width: 8
+
+  - name: ch0_fabric_intf_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: a_loopback
+        width: 3
+      - name: rsvd1
+        width: 22
+
+  - meta:
+      pad_until: 0x03194
+
+  - name: ch0_rx_apt_cfg5
+    fields:
+      - name: rsvd
+        width: 16
+      - name: coe_en
+        width: 1
+      - name: testcon
+        width: 4
+      - name: rsvd1
+        width: 11
+
+  - meta:
+      pad_until: 0x031B4
+
+  - name: ch0_rx_apt_cfg13
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_hm01
+        width: 9
+      - name: rsvd1
+        width: 8
+      - name: initdac_hm02
+        width: 8
+
+  - name: ch0_rx_apt_cfg14
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hm03
+        width: 7
+      - name: rsvd1
+        width: 9
+      - name: initdac_hm04
+        width: 7
+
+  - name: ch0_rx_apt_cfg15
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hm05
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hm06
+        width: 6
+
+  - name: ch0_rx_apt_cfg16
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hm07
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hm08
+        width: 4
+
+  - name: ch0_rx_apt_cfg17
+    fields:
+      - name: initdac_hp01
+        width: 9
+      - name: rsvd
+        width: 23
+
+  - name: ch0_rx_apt_cfg18
+    fields:
+      - name: rsvd
+        width: 8
+      - name: initdac_hp03
+        width: 8
+      - name: rsvd1
+        width: 9
+      - name: initdac_hp04
+        width: 7
+
+  - name: ch0_rx_apt_cfg19
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hp05
+        width: 7
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp06
+        width: 6
+
+  - name: ch0_rx_apt_cfg20
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp07
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp08
+        width: 6
+
+  - name: ch0_rx_apt_cfg21
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp09
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp10
+        width: 6
+
+  - name: ch0_rx_apt_cfg22
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp11
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp12
+        width: 6
+
+  - name: ch0_rx_apt_cfg23
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp13
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp14
+        width: 6
+
+  - name: ch0_rx_apt_cfg24
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp15
+        width: 6
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp16
+        width: 5
+
+  - name: ch0_rx_apt_cfg25
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp17
+        width: 5
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp18
+        width: 5
+
+  - name: ch0_rx_apt_cfg26
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp19
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp20
+        width: 4
+
+  - name: ch0_rx_apt_cfg27
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp21
+        width: 4
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp22
+        width: 4
+
+  - name: ch0_rx_apt_cfg28
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp23
+        width: 4
+      - name: rsvd1
+        width: 16
+
+  - name: ch0_rx_apt_cfg29
+    fields:
+      - name: rsvd
+        width: 22
+      - name: initdac_agc
+        width: 6
+      - name: rsvd1
+        width: 4
+
+  - name: ch0_rx_apt_cfg30
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kl
+        width: 5
+      - name: rsvd1
+        width: 20
+
+  - name: ch0_rx_apt_cfg31
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kh
+        width: 7
+      - name: rsvd1
+        width: 5
+      - name: initdac_os_loop
+        width: 7
+      - name: rsvd2
+        width: 6
+
+  - meta:
+      pad_until: 0x03234
+
+  - name: ch0_rx_apt_cfg45
+    fields:
+      - name: rsvd
+        width: 27
+      - name: initdac_hp02
+        width: 5
+
+  - meta:
+      pad_until: 0x03248
+
+  - name: ch0_rx_apt_cfg50
+    fields:
+      - name: ffe_hp01_exhold
+        width: 1
+      - name: ffe_hp02_exhold
+        width: 1
+      - name: ffe_hp03_exhold
+        width: 1
+      - name: ffe_hp04_exhold
+        width: 1
+      - name: ffe_hp05_exhold
+        width: 1
+      - name: ffe_hp06_exhold
+        width: 1
+      - name: ffe_hp07_exhold
+        width: 1
+      - name: ffe_hp08_exhold
+        width: 1
+      - name: ffe_hp09_exhold
+        width: 1
+      - name: ffe_hp10_exhold
+        width: 1
+      - name: ffe_hp11_exhold
+        width: 1
+      - name: ffe_hp12_exhold
+        width: 1
+      - name: ffe_hp13_exhold
+        width: 1
+      - name: ffe_hp14_exhold
+        width: 1
+      - name: ffe_hp15_exhold
+        width: 1
+      - name: ffe_hp16_exhold
+        width: 1
+      - name: ffe_hp17_exhold
+        width: 1
+      - name: ffe_hp18_exhold
+        width: 1
+      - name: ffe_hp19_exhold
+        width: 1
+      - name: ffe_hp20_exhold
+        width: 1
+      - name: ffe_hp21_exhold
+        width: 1
+      - name: ffe_hp22_exhold
+        width: 1
+      - name: ffe_hp23_exhold
+        width: 1
+      - name: ffe_hm01_exhold
+        width: 1
+      - name: ffe_hm02_exhold
+        width: 1
+      - name: ffe_hm03_exhold
+        width: 1
+      - name: ffe_hm04_exhold
+        width: 1
+      - name: ffe_hm05_exhold
+        width: 1
+      - name: ffe_hm06_exhold
+        width: 1
+      - name: ffe_hm07_exhold
+        width: 1
+      - name: ffe_hm08_exhold
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - name: ch0_rx_apt_cfg51
+    fields:
+      - name: ffe_hp01_overrd
+        width: 1
+      - name: ffe_hp02_overrd
+        width: 1
+      - name: ffe_hp03_overrd
+        width: 1
+      - name: ffe_hp04_overrd
+        width: 1
+      - name: ffe_hp05_overrd
+        width: 1
+      - name: ffe_hp06_overrd
+        width: 1
+      - name: ffe_hp07_overrd
+        width: 1
+      - name: ffe_hp08_overrd
+        width: 1
+      - name: ffe_hp09_overrd
+        width: 1
+      - name: ffe_hp10_overrd
+        width: 1
+      - name: ffe_hp11_overrd
+        width: 1
+      - name: ffe_hp12_overrd
+        width: 1
+      - name: ffe_hp13_overrd
+        width: 1
+      - name: ffe_hp14_overrd
+        width: 1
+      - name: ffe_hp15_overrd
+        width: 1
+      - name: ffe_hp16_overrd
+        width: 1
+      - name: ffe_hp17_overrd
+        width: 1
+      - name: ffe_hp18_overrd
+        width: 1
+      - name: ffe_hp19_overrd
+        width: 1
+      - name: ffe_hp20_overrd
+        width: 1
+      - name: ffe_hp21_overrd
+        width: 1
+      - name: ffe_hp22_overrd
+        width: 1
+      - name: ffe_hp23_overrd
+        width: 1
+      - name: ffe_hm01_overrd
+        width: 1
+      - name: ffe_hm02_overrd
+        width: 1
+      - name: ffe_hm03_overrd
+        width: 1
+      - name: ffe_hm04_overrd
+        width: 1
+      - name: ffe_hm05_overrd
+        width: 1
+      - name: ffe_hm06_overrd
+        width: 1
+      - name: ffe_hm07_overrd
+        width: 1
+      - name: ffe_hm08_overrd
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - meta:
+      pad_until: 0x03254
+
+  - name: ch0_rx_apt_cfg53
+    fields:
+      - name: rsvd
+        width: 10
+      - name: os_exhold
+        width: 1
+      - name: kl_exhold
+        width: 1
+      - name: kh_exhold
+        width: 1
+      - name: agc_exhold
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: os_overrd
+        width: 1
+      - name: kl_overrd
+        width: 1
+      - name: kh_overrd
+        width: 1
+      - name: agc_overrd
+        width: 1
+      - name: rsvd2
+        width: 7
+      - name: selmini
+        width: 1
+      - name: rsvd3
+        width: 3
+
+  - name: ch0_rx_apt_cfg54
+    fields:
+      - name: rsvd
+        width: 28
+      - name: main_ovride
+        width: 1
+      - name: main_exhold
+        width: 1
+      - name: rsvd1
+        width: 2
+
+  - meta:
+      pad_until: 0x03260
+
+  - name: ch0_rx_apt_cfg56
+    fields:
+      - name: rsvd
+        width: 15
+      - name: testc
+        width: 2
+      - name: testen
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0328C
+
+  - name: ch0_rx_pad_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: accap_en
+        width: 1
+      - name: lshift_en
+        width: 1
+      - name: rsvd1
+        width: 19
+
+  - name: ch0_rx_pad_cfg1
+    fields:
+      - name: rsvd
+        width: 4
+      - name: rterm_vcom_mode
+        width: 2
+      - name: rsvd1
+        width: 26
+
+
+  # CH1 config + reset/HSCLK0 shared (DRP 0x0Dxx, byte 0x34xx)
+
+  - meta:
+      pad_until: 0x03440
+
+  - name: txrstdone_dist_sel
+    fields:
+      - name: ch0_distnorth_sel
+        width: 2
+      - name: ch0_distsouth_sel
+        width: 2
+      - name: ch0_consumpt_sel
+        width: 3
+      - name: rsvd
+        width: 1
+      - name: ch1_distnorth_sel
+        width: 2
+      - name: ch1_distsouth_sel
+        width: 2
+      - name: ch1_consumpt_sel
+        width: 3
+      - name: rsvd1
+        width: 1
+      - name: ch2_distnorth_sel
+        width: 2
+      - name: ch2_distsouth_sel
+        width: 2
+      - name: ch2_consumpt_sel
+        width: 3
+      - name: rsvd2
+        width: 1
+      - name: ch3_distnorth_sel
+        width: 2
+      - name: ch3_distsouth_sel
+        width: 2
+      - name: ch3_consumpt_sel
+        width: 3
+      - name: rsvd3
+        width: 1
+
+  - name: rxrstdone_dist_sel
+    fields:
+      - name: ch0_distnorth_sel
+        width: 2
+      - name: ch0_distsouth_sel
+        width: 2
+      - name: ch0_consumpt_sel
+        width: 3
+      - name: rsvd
+        width: 1
+      - name: ch1_distnorth_sel
+        width: 2
+      - name: ch1_distsouth_sel
+        width: 2
+      - name: ch1_consumpt_sel
+        width: 3
+      - name: rsvd1
+        width: 1
+      - name: ch2_distnorth_sel
+        width: 2
+      - name: ch2_distsouth_sel
+        width: 2
+      - name: ch2_consumpt_sel
+        width: 3
+      - name: rsvd2
+        width: 1
+      - name: ch3_distnorth_sel
+        width: 2
+      - name: ch3_distsouth_sel
+        width: 2
+      - name: ch3_consumpt_sel
+        width: 3
+      - name: rsvd3
+        width: 1
+
+  - name: mst_reset_cfg
+    fields:
+      - name: ch0_tx_lcpll0_reset_en
+        width: 1
+      - name: ch0_tx_lcpll1_reset_en
+        width: 1
+      - name: ch0_tx_progdiv_reset_en
+        width: 1
+      - name: ch0_tx_ch_reset_en
+        width: 1
+      - name: ch1_tx_lcpll0_reset_en
+        width: 1
+      - name: ch1_tx_lcpll1_reset_en
+        width: 1
+      - name: ch1_tx_progdiv_reset_en
+        width: 1
+      - name: ch1_tx_ch_reset_en
+        width: 1
+      - name: ch2_tx_lcpll0_reset_en
+        width: 1
+      - name: ch2_tx_lcpll1_reset_en
+        width: 1
+      - name: ch2_tx_progdiv_reset_en
+        width: 1
+      - name: ch2_tx_ch_reset_en
+        width: 1
+      - name: ch3_tx_lcpll0_reset_en
+        width: 1
+      - name: ch3_tx_lcpll1_reset_en
+        width: 1
+      - name: ch3_tx_progdiv_reset_en
+        width: 1
+      - name: ch3_tx_ch_reset_en
+        width: 1
+      - name: ch0_rx_lcpll0_reset_en
+        width: 1
+      - name: ch0_rx_lcpll1_reset_en
+        width: 1
+      - name: ch0_rx_ilo_reset_en
+        width: 1
+      - name: ch0_rx_progdiv_reset_en
+        width: 1
+      - name: ch0_rx_ch_reset_en
+        width: 1
+      - name: ch1_rx_lcpll0_reset_en
+        width: 1
+      - name: ch1_rx_lcpll1_reset_en
+        width: 1
+      - name: ch1_rx_ilo_reset_en
+        width: 1
+      - name: ch1_rx_progdiv_reset_en
+        width: 1
+      - name: ch1_rx_ch_reset_en
+        width: 1
+      - name: ch2_rx_lcpll0_reset_en
+        width: 1
+      - name: ch2_rx_lcpll1_reset_en
+        width: 1
+      - name: ch2_rx_ilo_reset_en
+        width: 1
+      - name: ch2_rx_progdiv_reset_en
+        width: 1
+      - name: ch2_rx_ch_reset_en
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - meta:
+      pad_until: 0x03450
+
+  - name: ch1_rx_pcs_cfg0
+    fields:
+      - name: rx_data_width
+        width: 4
+      - name: rx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: rx_precode_byp_en
+        width: 1
+      - name: rx_precode_endian
+        width: 1
+      - name: rx_gray_byp_en
+        width: 1
+      - name: rx_gray_endian
+        width: 1
+      - name: rx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 5
+      - name: rxprbs_linkacq_cnt
+        width: 8
+      - name: rsvd2
+        width: 3
+
+  - name: ch1_rx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 22
+      - name: rx_sample_count
+        width: 3
+      - name: rsvd1
+        width: 7
+
+  - name: ch1_tx_pcs_cfg0
+    fields:
+      - name: tx_data_width
+        width: 4
+      - name: tx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: tx_precode_byp_en
+        width: 1
+      - name: tx_precode_endian
+        width: 1
+      - name: tx_gray_byp_en
+        width: 1
+      - name: tx_gray_endian
+        width: 1
+      - name: tx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 7
+      - name: rxprbserr_loopback
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: tx_prbs_force_mode
+        width: 1
+      - name: rsvd3
+        width: 2
+
+  - name: ch1_tx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 15
+      - name: tx_sample_period
+        width: 3
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0349C
+
+  - name: ch1_pma_misc_cfg0
+    fields:
+      - name: rsvd
+        width: 22
+      - name: txoutclkctl
+        width: 3
+      - name: rsvd1
+        width: 4
+      - name: rxoutclkctl
+        width: 3
+
+  - meta:
+      pad_until: 0x034BC
+
+  - name: ch1_chclk_cfg3
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprogdivsel
+        width: 10
+      - name: rxout_div
+        width: 3
+      - name: rsvd1
+        width: 3
+
+  - meta:
+      pad_until: 0x034DC
+
+  - name: ch1_tx_ctrl_cfg3
+    fields:
+      - name: txprogdivsel
+        width: 10
+      - name: rsvd
+        width: 3
+      - name: txout_div
+        width: 2
+      - name: rsvd1
+        width: 17
+
+  - meta:
+      pad_until: 0x034F0
+
+  - name: hsclk0_lcpll_cfg0
+    fields:
+      - name: rsvd
+        width: 20
+      - name: lcpll_prediv
+        width: 5
+      - name: rsvd1
+        width: 7
+
+  - meta:
+      pad_until: 0x034FC
+
+  - name: hsclk0_hsdist_cfg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: hsdist_div2sel
+        width: 1
+      - name: rsvd1
+        width: 15
+
+  - name: ch1_reset_time_cfg0
+    fields:
+      - name: rsvd
+        width: 10
+      - name: tx_pma_reset_time
+        width: 5
+      - name: tx_pcs_reset_time
+        width: 5
+      - name: rsvd1
+        width: 12
+
+  - name: ch1_reset_time_cfg1
+    fields:
+      - name: rx_pma_reset_time
+        width: 5
+      - name: rsvd
+        width: 27
+
+  - meta:
+      pad_until: 0x0350C
+
+  - name: ch1_reset_time_cfg3
+    fields:
+      - name: rx_pcs_reset_time
+        width: 11
+      - name: rsvd
+        width: 21
+
+  - meta:
+      pad_until: 0x03530
+
+  - name: ch1_fabric_intf_cfg0
+    fields:
+      - name: rsvd
+        width: 23
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd1
+        width: 8
+
+  - name: ch1_fabric_intf_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: a_loopback
+        width: 3
+      - name: rsvd1
+        width: 22
+
+  - meta:
+      pad_until: 0x03594
+
+  - name: ch1_rx_apt_cfg5
+    fields:
+      - name: rsvd
+        width: 16
+      - name: coe_en
+        width: 1
+      - name: testcon
+        width: 4
+      - name: rsvd1
+        width: 11
+
+  - meta:
+      pad_until: 0x035B4
+
+  - name: ch1_rx_apt_cfg13
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_hm01
+        width: 9
+      - name: rsvd1
+        width: 8
+      - name: initdac_hm02
+        width: 8
+
+  - name: ch1_rx_apt_cfg14
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hm03
+        width: 7
+      - name: rsvd1
+        width: 9
+      - name: initdac_hm04
+        width: 7
+
+  - name: ch1_rx_apt_cfg15
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hm05
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hm06
+        width: 6
+
+  - name: ch1_rx_apt_cfg16
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hm07
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hm08
+        width: 4
+
+  - name: ch1_rx_apt_cfg17
+    fields:
+      - name: initdac_hp01
+        width: 9
+      - name: rsvd
+        width: 23
+
+  - name: ch1_rx_apt_cfg18
+    fields:
+      - name: rsvd
+        width: 8
+      - name: initdac_hp03
+        width: 8
+      - name: rsvd1
+        width: 9
+      - name: initdac_hp04
+        width: 7
+
+  - name: ch1_rx_apt_cfg19
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hp05
+        width: 7
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp06
+        width: 6
+
+  - name: ch1_rx_apt_cfg20
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp07
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp08
+        width: 6
+
+  - name: ch1_rx_apt_cfg21
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp09
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp10
+        width: 6
+
+  - name: ch1_rx_apt_cfg22
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp11
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp12
+        width: 6
+
+  - name: ch1_rx_apt_cfg23
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp13
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp14
+        width: 6
+
+  - name: ch1_rx_apt_cfg24
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp15
+        width: 6
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp16
+        width: 5
+
+  - name: ch1_rx_apt_cfg25
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp17
+        width: 5
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp18
+        width: 5
+
+  - name: ch1_rx_apt_cfg26
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp19
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp20
+        width: 4
+
+  - name: ch1_rx_apt_cfg27
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp21
+        width: 4
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp22
+        width: 4
+
+  - name: ch1_rx_apt_cfg28
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp23
+        width: 4
+      - name: rsvd1
+        width: 16
+
+  - name: ch1_rx_apt_cfg29
+    fields:
+      - name: rsvd
+        width: 22
+      - name: initdac_agc
+        width: 6
+      - name: rsvd1
+        width: 4
+
+  - name: ch1_rx_apt_cfg30
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kl
+        width: 5
+      - name: rsvd1
+        width: 20
+
+  - name: ch1_rx_apt_cfg31
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kh
+        width: 7
+      - name: rsvd1
+        width: 5
+      - name: initdac_os_loop
+        width: 7
+      - name: rsvd2
+        width: 6
+
+  - meta:
+      pad_until: 0x03634
+
+  - name: ch1_rx_apt_cfg45
+    fields:
+      - name: rsvd
+        width: 27
+      - name: initdac_hp02
+        width: 5
+
+  - meta:
+      pad_until: 0x03648
+
+  - name: ch1_rx_apt_cfg50
+    fields:
+      - name: ffe_hp01_exhold
+        width: 1
+      - name: ffe_hp02_exhold
+        width: 1
+      - name: ffe_hp03_exhold
+        width: 1
+      - name: ffe_hp04_exhold
+        width: 1
+      - name: ffe_hp05_exhold
+        width: 1
+      - name: ffe_hp06_exhold
+        width: 1
+      - name: ffe_hp07_exhold
+        width: 1
+      - name: ffe_hp08_exhold
+        width: 1
+      - name: ffe_hp09_exhold
+        width: 1
+      - name: ffe_hp10_exhold
+        width: 1
+      - name: ffe_hp11_exhold
+        width: 1
+      - name: ffe_hp12_exhold
+        width: 1
+      - name: ffe_hp13_exhold
+        width: 1
+      - name: ffe_hp14_exhold
+        width: 1
+      - name: ffe_hp15_exhold
+        width: 1
+      - name: ffe_hp16_exhold
+        width: 1
+      - name: ffe_hp17_exhold
+        width: 1
+      - name: ffe_hp18_exhold
+        width: 1
+      - name: ffe_hp19_exhold
+        width: 1
+      - name: ffe_hp20_exhold
+        width: 1
+      - name: ffe_hp21_exhold
+        width: 1
+      - name: ffe_hp22_exhold
+        width: 1
+      - name: ffe_hp23_exhold
+        width: 1
+      - name: ffe_hm01_exhold
+        width: 1
+      - name: ffe_hm02_exhold
+        width: 1
+      - name: ffe_hm03_exhold
+        width: 1
+      - name: ffe_hm04_exhold
+        width: 1
+      - name: ffe_hm05_exhold
+        width: 1
+      - name: ffe_hm06_exhold
+        width: 1
+      - name: ffe_hm07_exhold
+        width: 1
+      - name: ffe_hm08_exhold
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - name: ch1_rx_apt_cfg51
+    fields:
+      - name: ffe_hp01_overrd
+        width: 1
+      - name: ffe_hp02_overrd
+        width: 1
+      - name: ffe_hp03_overrd
+        width: 1
+      - name: ffe_hp04_overrd
+        width: 1
+      - name: ffe_hp05_overrd
+        width: 1
+      - name: ffe_hp06_overrd
+        width: 1
+      - name: ffe_hp07_overrd
+        width: 1
+      - name: ffe_hp08_overrd
+        width: 1
+      - name: ffe_hp09_overrd
+        width: 1
+      - name: ffe_hp10_overrd
+        width: 1
+      - name: ffe_hp11_overrd
+        width: 1
+      - name: ffe_hp12_overrd
+        width: 1
+      - name: ffe_hp13_overrd
+        width: 1
+      - name: ffe_hp14_overrd
+        width: 1
+      - name: ffe_hp15_overrd
+        width: 1
+      - name: ffe_hp16_overrd
+        width: 1
+      - name: ffe_hp17_overrd
+        width: 1
+      - name: ffe_hp18_overrd
+        width: 1
+      - name: ffe_hp19_overrd
+        width: 1
+      - name: ffe_hp20_overrd
+        width: 1
+      - name: ffe_hp21_overrd
+        width: 1
+      - name: ffe_hp22_overrd
+        width: 1
+      - name: ffe_hp23_overrd
+        width: 1
+      - name: ffe_hm01_overrd
+        width: 1
+      - name: ffe_hm02_overrd
+        width: 1
+      - name: ffe_hm03_overrd
+        width: 1
+      - name: ffe_hm04_overrd
+        width: 1
+      - name: ffe_hm05_overrd
+        width: 1
+      - name: ffe_hm06_overrd
+        width: 1
+      - name: ffe_hm07_overrd
+        width: 1
+      - name: ffe_hm08_overrd
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - meta:
+      pad_until: 0x03654
+
+  - name: ch1_rx_apt_cfg53
+    fields:
+      - name: rsvd
+        width: 10
+      - name: os_exhold
+        width: 1
+      - name: kl_exhold
+        width: 1
+      - name: kh_exhold
+        width: 1
+      - name: agc_exhold
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: os_overrd
+        width: 1
+      - name: kl_overrd
+        width: 1
+      - name: kh_overrd
+        width: 1
+      - name: agc_overrd
+        width: 1
+      - name: rsvd2
+        width: 7
+      - name: selmini
+        width: 1
+      - name: rsvd3
+        width: 3
+
+  - name: ch1_rx_apt_cfg54
+    fields:
+      - name: rsvd
+        width: 28
+      - name: main_ovride
+        width: 1
+      - name: main_exhold
+        width: 1
+      - name: rsvd1
+        width: 2
+
+  - meta:
+      pad_until: 0x03660
+
+  - name: ch1_rx_apt_cfg56
+    fields:
+      - name: rsvd
+        width: 15
+      - name: testc
+        width: 2
+      - name: testen
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0368C
+
+  - name: ch1_rx_pad_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: accap_en
+        width: 1
+      - name: lshift_en
+        width: 1
+      - name: rsvd1
+        width: 19
+
+  - name: ch1_rx_pad_cfg1
+    fields:
+      - name: rsvd
+        width: 4
+      - name: rterm_vcom_mode
+        width: 2
+      - name: rsvd1
+        width: 26
+
+
+  # CH2 config + A_CFG/PIN/HSCLK1 shared (DRP 0x0Exx, byte 0x38xx)
+
+  - meta:
+      pad_until: 0x03840
+
+  - name: pin_cfg0
+    fields:
+      - name: rsvd
+        width: 6
+      - name: hs0_lcpll_sdm_pin_en
+        width: 1
+      - name: rsvd1
+        width: 9
+      - name: hs1_lcpll_sdm_pin_en
+        width: 1
+      - name: rsvd2
+        width: 15
+
+  - meta:
+      pad_until: 0x03848
+
+  - name: a_cfg1
+    fields:
+      - name: a_hs0_lcpllfbdiv
+        width: 8
+      - name: rsvd
+        width: 8
+      - name: a_hs1_lcpllfbdiv
+        width: 8
+      - name: rsvd1
+        width: 8
+
+  - name: a_cfg2
+    fields:
+      - name: a_hs0_lcpllsdmdata
+        width: 26
+      - name: rsvd
+        width: 6
+
+  - name: ch2_rx_pcs_cfg0
+    fields:
+      - name: rx_data_width
+        width: 4
+      - name: rx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: rx_precode_byp_en
+        width: 1
+      - name: rx_precode_endian
+        width: 1
+      - name: rx_gray_byp_en
+        width: 1
+      - name: rx_gray_endian
+        width: 1
+      - name: rx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 5
+      - name: rxprbs_linkacq_cnt
+        width: 8
+      - name: rsvd2
+        width: 3
+
+  - name: ch2_rx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 22
+      - name: rx_sample_count
+        width: 3
+      - name: rsvd1
+        width: 7
+
+  - name: ch2_tx_pcs_cfg0
+    fields:
+      - name: tx_data_width
+        width: 4
+      - name: tx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: tx_precode_byp_en
+        width: 1
+      - name: tx_precode_endian
+        width: 1
+      - name: tx_gray_byp_en
+        width: 1
+      - name: tx_gray_endian
+        width: 1
+      - name: tx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 7
+      - name: rxprbserr_loopback
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: tx_prbs_force_mode
+        width: 1
+      - name: rsvd3
+        width: 2
+
+  - name: ch2_tx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 15
+      - name: tx_sample_period
+        width: 3
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x0389C
+
+  - name: ch2_pma_misc_cfg0
+    fields:
+      - name: rsvd
+        width: 22
+      - name: txoutclkctl
+        width: 3
+      - name: rsvd1
+        width: 4
+      - name: rxoutclkctl
+        width: 3
+
+  - meta:
+      pad_until: 0x038BC
+
+  - name: ch2_chclk_cfg3
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprogdivsel
+        width: 10
+      - name: rxout_div
+        width: 3
+      - name: rsvd1
+        width: 3
+
+  - meta:
+      pad_until: 0x038DC
+
+  - name: ch2_tx_ctrl_cfg3
+    fields:
+      - name: txprogdivsel
+        width: 10
+      - name: rsvd
+        width: 3
+      - name: txout_div
+        width: 2
+      - name: rsvd1
+        width: 17
+
+  - meta:
+      pad_until: 0x038F0
+
+  - name: hsclk1_lcpll_lgc_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: lcplllocken
+        width: 1
+      - name: rsvd1
+        width: 20
+
+  - name: hsclk1_lcpll_lgc_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: bypass
+        width: 1
+      - name: rsvd1
+        width: 1
+      - name: sdm_widthsel
+        width: 2
+      - name: rsvd2
+        width: 21
+
+  - meta:
+      pad_until: 0x03900
+
+  - name: ch2_reset_time_cfg0
+    fields:
+      - name: rsvd
+        width: 10
+      - name: tx_pma_reset_time
+        width: 5
+      - name: tx_pcs_reset_time
+        width: 5
+      - name: rsvd1
+        width: 12
+
+  - name: ch2_reset_time_cfg1
+    fields:
+      - name: rx_pma_reset_time
+        width: 5
+      - name: rsvd
+        width: 27
+
+  - meta:
+      pad_until: 0x0390C
+
+  - name: ch2_reset_time_cfg3
+    fields:
+      - name: rx_pcs_reset_time
+        width: 11
+      - name: rsvd
+        width: 21
+
+  - meta:
+      pad_until: 0x03930
+
+  - name: ch2_fabric_intf_cfg0
+    fields:
+      - name: rsvd
+        width: 23
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd1
+        width: 8
+
+  - name: ch2_fabric_intf_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: a_loopback
+        width: 3
+      - name: rsvd1
+        width: 22
+
+  - meta:
+      pad_until: 0x03994
+
+  - name: ch2_rx_apt_cfg5
+    fields:
+      - name: rsvd
+        width: 16
+      - name: coe_en
+        width: 1
+      - name: testcon
+        width: 4
+      - name: rsvd1
+        width: 11
+
+  - meta:
+      pad_until: 0x039B4
+
+  - name: ch2_rx_apt_cfg13
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_hm01
+        width: 9
+      - name: rsvd1
+        width: 8
+      - name: initdac_hm02
+        width: 8
+
+  - name: ch2_rx_apt_cfg14
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hm03
+        width: 7
+      - name: rsvd1
+        width: 9
+      - name: initdac_hm04
+        width: 7
+
+  - name: ch2_rx_apt_cfg15
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hm05
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hm06
+        width: 6
+
+  - name: ch2_rx_apt_cfg16
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hm07
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hm08
+        width: 4
+
+  - name: ch2_rx_apt_cfg17
+    fields:
+      - name: initdac_hp01
+        width: 9
+      - name: rsvd
+        width: 23
+
+  - name: ch2_rx_apt_cfg18
+    fields:
+      - name: rsvd
+        width: 8
+      - name: initdac_hp03
+        width: 8
+      - name: rsvd1
+        width: 9
+      - name: initdac_hp04
+        width: 7
+
+  - name: ch2_rx_apt_cfg19
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hp05
+        width: 7
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp06
+        width: 6
+
+  - name: ch2_rx_apt_cfg20
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp07
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp08
+        width: 6
+
+  - name: ch2_rx_apt_cfg21
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp09
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp10
+        width: 6
+
+  - name: ch2_rx_apt_cfg22
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp11
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp12
+        width: 6
+
+  - name: ch2_rx_apt_cfg23
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp13
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp14
+        width: 6
+
+  - name: ch2_rx_apt_cfg24
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp15
+        width: 6
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp16
+        width: 5
+
+  - name: ch2_rx_apt_cfg25
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp17
+        width: 5
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp18
+        width: 5
+
+  - name: ch2_rx_apt_cfg26
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp19
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp20
+        width: 4
+
+  - name: ch2_rx_apt_cfg27
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp21
+        width: 4
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp22
+        width: 4
+
+  - name: ch2_rx_apt_cfg28
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp23
+        width: 4
+      - name: rsvd1
+        width: 16
+
+  - name: ch2_rx_apt_cfg29
+    fields:
+      - name: rsvd
+        width: 22
+      - name: initdac_agc
+        width: 6
+      - name: rsvd1
+        width: 4
+
+  - name: ch2_rx_apt_cfg30
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kl
+        width: 5
+      - name: rsvd1
+        width: 20
+
+  - name: ch2_rx_apt_cfg31
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kh
+        width: 7
+      - name: rsvd1
+        width: 5
+      - name: initdac_os_loop
+        width: 7
+      - name: rsvd2
+        width: 6
+
+  - meta:
+      pad_until: 0x03A34
+
+  - name: ch2_rx_apt_cfg45
+    fields:
+      - name: rsvd
+        width: 27
+      - name: initdac_hp02
+        width: 5
+
+  - meta:
+      pad_until: 0x03A48
+
+  - name: ch2_rx_apt_cfg50
+    fields:
+      - name: ffe_hp01_exhold
+        width: 1
+      - name: ffe_hp02_exhold
+        width: 1
+      - name: ffe_hp03_exhold
+        width: 1
+      - name: ffe_hp04_exhold
+        width: 1
+      - name: ffe_hp05_exhold
+        width: 1
+      - name: ffe_hp06_exhold
+        width: 1
+      - name: ffe_hp07_exhold
+        width: 1
+      - name: ffe_hp08_exhold
+        width: 1
+      - name: ffe_hp09_exhold
+        width: 1
+      - name: ffe_hp10_exhold
+        width: 1
+      - name: ffe_hp11_exhold
+        width: 1
+      - name: ffe_hp12_exhold
+        width: 1
+      - name: ffe_hp13_exhold
+        width: 1
+      - name: ffe_hp14_exhold
+        width: 1
+      - name: ffe_hp15_exhold
+        width: 1
+      - name: ffe_hp16_exhold
+        width: 1
+      - name: ffe_hp17_exhold
+        width: 1
+      - name: ffe_hp18_exhold
+        width: 1
+      - name: ffe_hp19_exhold
+        width: 1
+      - name: ffe_hp20_exhold
+        width: 1
+      - name: ffe_hp21_exhold
+        width: 1
+      - name: ffe_hp22_exhold
+        width: 1
+      - name: ffe_hp23_exhold
+        width: 1
+      - name: ffe_hm01_exhold
+        width: 1
+      - name: ffe_hm02_exhold
+        width: 1
+      - name: ffe_hm03_exhold
+        width: 1
+      - name: ffe_hm04_exhold
+        width: 1
+      - name: ffe_hm05_exhold
+        width: 1
+      - name: ffe_hm06_exhold
+        width: 1
+      - name: ffe_hm07_exhold
+        width: 1
+      - name: ffe_hm08_exhold
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - name: ch2_rx_apt_cfg51
+    fields:
+      - name: ffe_hp01_overrd
+        width: 1
+      - name: ffe_hp02_overrd
+        width: 1
+      - name: ffe_hp03_overrd
+        width: 1
+      - name: ffe_hp04_overrd
+        width: 1
+      - name: ffe_hp05_overrd
+        width: 1
+      - name: ffe_hp06_overrd
+        width: 1
+      - name: ffe_hp07_overrd
+        width: 1
+      - name: ffe_hp08_overrd
+        width: 1
+      - name: ffe_hp09_overrd
+        width: 1
+      - name: ffe_hp10_overrd
+        width: 1
+      - name: ffe_hp11_overrd
+        width: 1
+      - name: ffe_hp12_overrd
+        width: 1
+      - name: ffe_hp13_overrd
+        width: 1
+      - name: ffe_hp14_overrd
+        width: 1
+      - name: ffe_hp15_overrd
+        width: 1
+      - name: ffe_hp16_overrd
+        width: 1
+      - name: ffe_hp17_overrd
+        width: 1
+      - name: ffe_hp18_overrd
+        width: 1
+      - name: ffe_hp19_overrd
+        width: 1
+      - name: ffe_hp20_overrd
+        width: 1
+      - name: ffe_hp21_overrd
+        width: 1
+      - name: ffe_hp22_overrd
+        width: 1
+      - name: ffe_hp23_overrd
+        width: 1
+      - name: ffe_hm01_overrd
+        width: 1
+      - name: ffe_hm02_overrd
+        width: 1
+      - name: ffe_hm03_overrd
+        width: 1
+      - name: ffe_hm04_overrd
+        width: 1
+      - name: ffe_hm05_overrd
+        width: 1
+      - name: ffe_hm06_overrd
+        width: 1
+      - name: ffe_hm07_overrd
+        width: 1
+      - name: ffe_hm08_overrd
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - meta:
+      pad_until: 0x03A54
+
+  - name: ch2_rx_apt_cfg53
+    fields:
+      - name: rsvd
+        width: 10
+      - name: os_exhold
+        width: 1
+      - name: kl_exhold
+        width: 1
+      - name: kh_exhold
+        width: 1
+      - name: agc_exhold
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: os_overrd
+        width: 1
+      - name: kl_overrd
+        width: 1
+      - name: kh_overrd
+        width: 1
+      - name: agc_overrd
+        width: 1
+      - name: rsvd2
+        width: 7
+      - name: selmini
+        width: 1
+      - name: rsvd3
+        width: 3
+
+  - name: ch2_rx_apt_cfg54
+    fields:
+      - name: rsvd
+        width: 28
+      - name: main_ovride
+        width: 1
+      - name: main_exhold
+        width: 1
+      - name: rsvd1
+        width: 2
+
+  - meta:
+      pad_until: 0x03A60
+
+  - name: ch2_rx_apt_cfg56
+    fields:
+      - name: rsvd
+        width: 15
+      - name: testc
+        width: 2
+      - name: testen
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x03A8C
+
+  - name: ch2_rx_pad_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: accap_en
+        width: 1
+      - name: lshift_en
+        width: 1
+      - name: rsvd1
+        width: 19
+
+  - name: ch2_rx_pad_cfg1
+    fields:
+      - name: rsvd
+        width: 4
+      - name: rterm_vcom_mode
+        width: 2
+      - name: rsvd1
+        width: 26
+
+
+  # CH3 config + A_CFG/HSCLK1 shared (DRP 0x0Fxx, byte 0x3Cxx)
+
+  - meta:
+      pad_until: 0x03C44
+
+  - name: a_cfg4
+    fields:
+      - name: a_hs1_lcpllsdmdata
+        width: 26
+      - name: rsvd
+        width: 6
+
+  - meta:
+      pad_until: 0x03C4C
+
+  - name: hs1_lcpll_ips_cfg
+    fields:
+      - name: rsvd
+        width: 24
+      - name: hs1_lcpll_ips_refclk_sel
+        width: 3
+      - name: hs1_lcpll_ips_pin_en
+        width: 1
+      - name: rsvd1
+        width: 4
+
+  - name: ch3_rx_pcs_cfg0
+    fields:
+      - name: rx_data_width
+        width: 4
+      - name: rx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: rx_precode_byp_en
+        width: 1
+      - name: rx_precode_endian
+        width: 1
+      - name: rx_gray_byp_en
+        width: 1
+      - name: rx_gray_endian
+        width: 1
+      - name: rx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 5
+      - name: rxprbs_linkacq_cnt
+        width: 8
+      - name: rsvd2
+        width: 3
+
+  - name: ch3_rx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 22
+      - name: rx_sample_count
+        width: 3
+      - name: rsvd1
+        width: 7
+
+  - name: ch3_tx_pcs_cfg0
+    fields:
+      - name: tx_data_width
+        width: 4
+      - name: tx_pma_data_width
+        width: 1
+      - name: rsvd
+        width: 5
+      - name: tx_precode_byp_en
+        width: 1
+      - name: tx_precode_endian
+        width: 1
+      - name: tx_gray_byp_en
+        width: 1
+      - name: tx_gray_endian
+        width: 1
+      - name: tx_usrclk_sel
+        width: 2
+      - name: rsvd1
+        width: 7
+      - name: rxprbserr_loopback
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: tx_prbs_force_mode
+        width: 1
+      - name: rsvd3
+        width: 2
+
+  - name: ch3_tx_pcs_cfg1
+    fields:
+      - name: rsvd
+        width: 15
+      - name: tx_sample_period
+        width: 3
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x03C9C
+
+  - name: ch3_pma_misc_cfg0
+    fields:
+      - name: rsvd
+        width: 22
+      - name: txoutclkctl
+        width: 3
+      - name: rsvd1
+        width: 4
+      - name: rxoutclkctl
+        width: 3
+
+  - meta:
+      pad_until: 0x03CBC
+
+  - name: ch3_chclk_cfg3
+    fields:
+      - name: rsvd
+        width: 16
+      - name: rxprogdivsel
+        width: 10
+      - name: rxout_div
+        width: 3
+      - name: rsvd1
+        width: 3
+
+  - meta:
+      pad_until: 0x03CDC
+
+  - name: ch3_tx_ctrl_cfg3
+    fields:
+      - name: txprogdivsel
+        width: 10
+      - name: rsvd
+        width: 3
+      - name: txout_div
+        width: 2
+      - name: rsvd1
+        width: 17
+
+  - meta:
+      pad_until: 0x03CF0
+
+  - name: hsclk1_lcpll_cfg0
+    fields:
+      - name: rsvd
+        width: 20
+      - name: lcpll_prediv
+        width: 5
+      - name: rsvd1
+        width: 7
+
+  - meta:
+      pad_until: 0x03CFC
+
+  - name: hsclk1_hsdist_cfg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: hsdist_div2sel
+        width: 1
+      - name: rsvd1
+        width: 15
+
+  - name: ch3_reset_time_cfg0
+    fields:
+      - name: rsvd
+        width: 10
+      - name: tx_pma_reset_time
+        width: 5
+      - name: tx_pcs_reset_time
+        width: 5
+      - name: rsvd1
+        width: 12
+
+  - name: ch3_reset_time_cfg1
+    fields:
+      - name: rx_pma_reset_time
+        width: 5
+      - name: rsvd
+        width: 27
+
+  - meta:
+      pad_until: 0x03D0C
+
+  - name: ch3_reset_time_cfg3
+    fields:
+      - name: rx_pcs_reset_time
+        width: 11
+      - name: rsvd
+        width: 21
+
+  - meta:
+      pad_until: 0x03D30
+
+  - name: ch3_fabric_intf_cfg0
+    fields:
+      - name: rsvd
+        width: 23
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd1
+        width: 8
+
+  - name: ch3_fabric_intf_cfg1
+    fields:
+      - name: rsvd
+        width: 7
+      - name: a_loopback
+        width: 3
+      - name: rsvd1
+        width: 22
+
+  - meta:
+      pad_until: 0x03D94
+
+  - name: ch3_rx_apt_cfg5
+    fields:
+      - name: rsvd
+        width: 16
+      - name: coe_en
+        width: 1
+      - name: testcon
+        width: 4
+      - name: rsvd1
+        width: 11
+
+  - meta:
+      pad_until: 0x03DB4
+
+  - name: ch3_rx_apt_cfg13
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_hm01
+        width: 9
+      - name: rsvd1
+        width: 8
+      - name: initdac_hm02
+        width: 8
+
+  - name: ch3_rx_apt_cfg14
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hm03
+        width: 7
+      - name: rsvd1
+        width: 9
+      - name: initdac_hm04
+        width: 7
+
+  - name: ch3_rx_apt_cfg15
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hm05
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hm06
+        width: 6
+
+  - name: ch3_rx_apt_cfg16
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hm07
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hm08
+        width: 4
+
+  - name: ch3_rx_apt_cfg17
+    fields:
+      - name: initdac_hp01
+        width: 9
+      - name: rsvd
+        width: 23
+
+  - name: ch3_rx_apt_cfg18
+    fields:
+      - name: rsvd
+        width: 8
+      - name: initdac_hp03
+        width: 8
+      - name: rsvd1
+        width: 9
+      - name: initdac_hp04
+        width: 7
+
+  - name: ch3_rx_apt_cfg19
+    fields:
+      - name: rsvd
+        width: 9
+      - name: initdac_hp05
+        width: 7
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp06
+        width: 6
+
+  - name: ch3_rx_apt_cfg20
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp07
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp08
+        width: 6
+
+  - name: ch3_rx_apt_cfg21
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp09
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp10
+        width: 6
+
+  - name: ch3_rx_apt_cfg22
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp11
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp12
+        width: 6
+
+  - name: ch3_rx_apt_cfg23
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp13
+        width: 6
+      - name: rsvd1
+        width: 10
+      - name: initdac_hp14
+        width: 6
+
+  - name: ch3_rx_apt_cfg24
+    fields:
+      - name: rsvd
+        width: 10
+      - name: initdac_hp15
+        width: 6
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp16
+        width: 5
+
+  - name: ch3_rx_apt_cfg25
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp17
+        width: 5
+      - name: rsvd1
+        width: 11
+      - name: initdac_hp18
+        width: 5
+
+  - name: ch3_rx_apt_cfg26
+    fields:
+      - name: rsvd
+        width: 11
+      - name: initdac_hp19
+        width: 5
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp20
+        width: 4
+
+  - name: ch3_rx_apt_cfg27
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp21
+        width: 4
+      - name: rsvd1
+        width: 12
+      - name: initdac_hp22
+        width: 4
+
+  - name: ch3_rx_apt_cfg28
+    fields:
+      - name: rsvd
+        width: 12
+      - name: initdac_hp23
+        width: 4
+      - name: rsvd1
+        width: 16
+
+  - name: ch3_rx_apt_cfg29
+    fields:
+      - name: rsvd
+        width: 22
+      - name: initdac_agc
+        width: 6
+      - name: rsvd1
+        width: 4
+
+  - name: ch3_rx_apt_cfg30
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kl
+        width: 5
+      - name: rsvd1
+        width: 20
+
+  - name: ch3_rx_apt_cfg31
+    fields:
+      - name: rsvd
+        width: 7
+      - name: initdac_kh
+        width: 7
+      - name: rsvd1
+        width: 5
+      - name: initdac_os_loop
+        width: 7
+      - name: rsvd2
+        width: 6
+
+  - meta:
+      pad_until: 0x03E34
+
+  - name: ch3_rx_apt_cfg45
+    fields:
+      - name: rsvd
+        width: 27
+      - name: initdac_hp02
+        width: 5
+
+  - meta:
+      pad_until: 0x03E48
+
+  - name: ch3_rx_apt_cfg50
+    fields:
+      - name: ffe_hp01_exhold
+        width: 1
+      - name: ffe_hp02_exhold
+        width: 1
+      - name: ffe_hp03_exhold
+        width: 1
+      - name: ffe_hp04_exhold
+        width: 1
+      - name: ffe_hp05_exhold
+        width: 1
+      - name: ffe_hp06_exhold
+        width: 1
+      - name: ffe_hp07_exhold
+        width: 1
+      - name: ffe_hp08_exhold
+        width: 1
+      - name: ffe_hp09_exhold
+        width: 1
+      - name: ffe_hp10_exhold
+        width: 1
+      - name: ffe_hp11_exhold
+        width: 1
+      - name: ffe_hp12_exhold
+        width: 1
+      - name: ffe_hp13_exhold
+        width: 1
+      - name: ffe_hp14_exhold
+        width: 1
+      - name: ffe_hp15_exhold
+        width: 1
+      - name: ffe_hp16_exhold
+        width: 1
+      - name: ffe_hp17_exhold
+        width: 1
+      - name: ffe_hp18_exhold
+        width: 1
+      - name: ffe_hp19_exhold
+        width: 1
+      - name: ffe_hp20_exhold
+        width: 1
+      - name: ffe_hp21_exhold
+        width: 1
+      - name: ffe_hp22_exhold
+        width: 1
+      - name: ffe_hp23_exhold
+        width: 1
+      - name: ffe_hm01_exhold
+        width: 1
+      - name: ffe_hm02_exhold
+        width: 1
+      - name: ffe_hm03_exhold
+        width: 1
+      - name: ffe_hm04_exhold
+        width: 1
+      - name: ffe_hm05_exhold
+        width: 1
+      - name: ffe_hm06_exhold
+        width: 1
+      - name: ffe_hm07_exhold
+        width: 1
+      - name: ffe_hm08_exhold
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - name: ch3_rx_apt_cfg51
+    fields:
+      - name: ffe_hp01_overrd
+        width: 1
+      - name: ffe_hp02_overrd
+        width: 1
+      - name: ffe_hp03_overrd
+        width: 1
+      - name: ffe_hp04_overrd
+        width: 1
+      - name: ffe_hp05_overrd
+        width: 1
+      - name: ffe_hp06_overrd
+        width: 1
+      - name: ffe_hp07_overrd
+        width: 1
+      - name: ffe_hp08_overrd
+        width: 1
+      - name: ffe_hp09_overrd
+        width: 1
+      - name: ffe_hp10_overrd
+        width: 1
+      - name: ffe_hp11_overrd
+        width: 1
+      - name: ffe_hp12_overrd
+        width: 1
+      - name: ffe_hp13_overrd
+        width: 1
+      - name: ffe_hp14_overrd
+        width: 1
+      - name: ffe_hp15_overrd
+        width: 1
+      - name: ffe_hp16_overrd
+        width: 1
+      - name: ffe_hp17_overrd
+        width: 1
+      - name: ffe_hp18_overrd
+        width: 1
+      - name: ffe_hp19_overrd
+        width: 1
+      - name: ffe_hp20_overrd
+        width: 1
+      - name: ffe_hp21_overrd
+        width: 1
+      - name: ffe_hp22_overrd
+        width: 1
+      - name: ffe_hp23_overrd
+        width: 1
+      - name: ffe_hm01_overrd
+        width: 1
+      - name: ffe_hm02_overrd
+        width: 1
+      - name: ffe_hm03_overrd
+        width: 1
+      - name: ffe_hm04_overrd
+        width: 1
+      - name: ffe_hm05_overrd
+        width: 1
+      - name: ffe_hm06_overrd
+        width: 1
+      - name: ffe_hm07_overrd
+        width: 1
+      - name: ffe_hm08_overrd
+        width: 1
+      - name: rsvd
+        width: 1
+
+  - meta:
+      pad_until: 0x03E54
+
+  - name: ch3_rx_apt_cfg53
+    fields:
+      - name: rsvd
+        width: 10
+      - name: os_exhold
+        width: 1
+      - name: kl_exhold
+        width: 1
+      - name: kh_exhold
+        width: 1
+      - name: agc_exhold
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: os_overrd
+        width: 1
+      - name: kl_overrd
+        width: 1
+      - name: kh_overrd
+        width: 1
+      - name: agc_overrd
+        width: 1
+      - name: rsvd2
+        width: 7
+      - name: selmini
+        width: 1
+      - name: rsvd3
+        width: 3
+
+  - name: ch3_rx_apt_cfg54
+    fields:
+      - name: rsvd
+        width: 28
+      - name: main_ovride
+        width: 1
+      - name: main_exhold
+        width: 1
+      - name: rsvd1
+        width: 2
+
+  - meta:
+      pad_until: 0x03E60
+
+  - name: ch3_rx_apt_cfg56
+    fields:
+      - name: rsvd
+        width: 15
+      - name: testc
+        width: 2
+      - name: testen
+        width: 1
+      - name: rsvd1
+        width: 14
+
+  - meta:
+      pad_until: 0x03E8C
+
+  - name: ch3_rx_pad_cfg0
+    fields:
+      - name: rsvd
+        width: 11
+      - name: accap_en
+        width: 1
+      - name: lshift_en
+        width: 1
+      - name: rsvd1
+        width: 19
+
+  - name: ch3_rx_pad_cfg1
+    fields:
+      - name: rsvd
+        width: 4
+      - name: rterm_vcom_mode
+        width: 2
+      - name: rsvd1
+        width: 26
+

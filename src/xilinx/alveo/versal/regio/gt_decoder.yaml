@@ -1,13 +1,11 @@
-name: gt
+name: gt_decoder
 
 blocks:
-  gt: &gt
-    name: gt
-    info: Placeholder for Xilinx GT registers.
-    regs: []
+  gtm_regs: &gtm_regs
+    !include ../src/xilinx/alveo/versal/regio/gtm_regs.yaml
 
 interfaces:
-  - block: *gt
+  - block: *gtm_regs
     address: 0x0000
-    width: 18
-    name: gt
+    width: 14
+    name: gtm

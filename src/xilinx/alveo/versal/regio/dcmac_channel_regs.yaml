@@ -1,0 +1,1664 @@
+name: dcmac_channel_regs
+info: |
+  AMD DCMAC Per-Channel Registers (C0-C5 canonical, C0_ prefix stripped).
+  Ref: AMD DCMAC Register Map v1.4
+  Mount at channel base address: C0=0x01000, C1=0x02000, ..., C5=0x06000.
+  Note: stat_tx_ecc_correctable/uncorrectable_count at offsets 0x2D0/0x2D8
+    are global registers that reside within C0 address space.
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  - name: channel_configuration_tx
+    fields:
+      - name: rsvd
+        width: 1
+      - name: ctl_tx_ignore_fcs
+        width: 1
+      - name: ctl_tx_send_lfi
+        width: 1
+      - name: ctl_tx_send_rfi
+        width: 1
+      - name: ctl_tx_send_idle
+        width: 1
+      - name: ctl_tx_custom_preamble_enable
+        width: 1
+      - name: rsvd1
+        width: 2
+      - name: ctl_tx_ipg_value
+        width: 4
+      - name: rsvd2
+        width: 4
+      - name: ctl_tx_corrupt_fcs_on_err
+        width: 2
+      - name: rsvd3
+        width: 14
+
+  - name: channel_configuration_rx
+    fields:
+      - name: rsvd
+        width: 1
+      - name: ctl_rx_delete_fcs
+        width: 1
+      - name: ctl_rx_ignore_fcs
+        width: 1
+      - name: ctl_rx_process_lfi
+        width: 1
+      - name: ctl_rx_check_sfd
+        width: 1
+      - name: ctl_rx_check_preamble
+        width: 1
+      - name: ctl_rx_ignore_inrange
+        width: 1
+      - name: rsvd1
+        width: 9
+      - name: ctl_rx_max_packet_len
+        width: 14
+      - name: rsvd2
+        width: 2
+
+  - meta:
+      pad_until: 0x00030
+
+  - name: channel_control_reg_rx
+
+  - meta:
+      pad_until: 0x00038
+
+  - name: channel_control_reg_tx
+
+  - meta:
+      pad_until: 0x00040
+
+  - name: tx_mode_reg
+    fields:
+      - name: rsvd
+        width: 2
+      - name: ctl_tx_use_custom_vl_length_minus1
+        width: 1
+      - name: ctl_tx_use_custom_vl_marker_ids
+        width: 1
+      - name: ctl_tx_tick_reg_mode_sel
+        width: 1
+      - name: ctl_tx_flexif_select
+        width: 2
+      - name: ctl_tx_flexif_am_mode
+        width: 1
+      - name: ctl_tx_flexif_pcs_wide_mode
+        width: 1
+      - name: ctl_tx_pma_lane_mux
+        width: 2
+      - name: ctl_tx_alt_serdes_clk_mux_disable
+        width: 1
+      - name: rsvd1
+        width: 4
+      - name: ctl_tx_fec_mode
+        width: 5
+      - name: ctl_tx_fec_transcode_bypass
+        width: 1
+      - name: ctl_tx_fec_four_lane_pmd
+        width: 1
+      - name: rsvd2
+        width: 9
+
+  - name: rx_mode_reg
+    fields:
+      - name: rsvd
+        width: 4
+      - name: ctl_pcs_rx_ts_en
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: ctl_rx_test_pattern
+        width: 1
+      - name: ctl_rx_use_custom_vl_length_minus1
+        width: 1
+      - name: ctl_rx_use_custom_vl_marker_ids
+        width: 1
+      - name: ctl_rx_tick_reg_mode_sel
+        width: 1
+      - name: ctl_rx_pma_lane_mux
+        width: 2
+      - name: rsvd2
+        width: 2
+      - name: ctl_rx_fec_mode
+        width: 5
+      - name: ctl_rx_fec_bypass_indication
+        width: 1
+      - name: ctl_rx_fec_bypass_correction
+        width: 1
+      - name: ctl_rx_fec_transcode_clause49
+        width: 1
+      - name: ctl_rx_fec_alignment_bypass
+        width: 1
+      - name: ctl_rx_fec_transcode_bypass
+        width: 1
+      - name: ctl_rx_degrade_enable
+        width: 1
+      - name: ctl_rx_fec_ext_align_buff_enable
+        width: 1
+      - name: rsvd3
+        width: 4
+
+  - name: rx_fec_slice_configuration1
+
+  - name: rx_fec_slice_configuration2
+
+  - name: rx_fec_slice_configuration3
+
+  - name: configuration_1588_reg
+    fields:
+      - name: rsvd
+        width: 4
+      - name: ctl_tx_ptp_sat_enable
+        width: 2
+      - name: rsvd1
+        width: 26
+
+  - name: configuration_tx_1588_systimer_config
+
+  - name: configuration_tx_1588_timestamp_config
+
+  - name: configuration_tx_flow_control_timer
+
+  - name: configuration_tx_flow_control_ref_quanta01
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_pause_quanta1
+        width: 16
+
+  - name: configuration_tx_flow_control_ref_quanta23
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_pause_quanta3
+        width: 16
+
+  - name: configuration_tx_flow_control_ref_quanta45
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_pause_quanta5
+        width: 16
+
+  - name: configuration_tx_flow_control_ref_quanta67
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_pause_quanta7
+        width: 16
+
+  - name: configuration_tx_flow_control_ref_quanta8
+
+  - name: configuration_tx_flow_control_gpp_da_lsb
+
+  - name: configuration_tx_flow_control_gpp_da_msb
+
+  - name: configuration_tx_flow_control_gpp_sa_lsb
+
+  - name: configuration_tx_flow_control_gpp_sa_msb
+
+  - name: configuration_tx_flow_control_ppp_da_lsb
+
+  - name: configuration_tx_flow_control_ppp_da_msb
+
+  - name: configuration_tx_flow_control_ppp_sa_lsb
+
+  - name: configuration_tx_flow_control_ppp_sa_msb
+
+  - name: configuration_tx_flow_control_gpp_etype_op
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_opcode_gpp
+        width: 16
+
+  - name: configuration_tx_flow_control_ppp_etype_op
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_tx_opcode_ppp
+        width: 16
+
+  - name: configuration_rx
+    fields:
+      - name: rsvd
+        width: 2
+      - name: ctl_rx_flexif_pcs_wide_mode
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: configuration_rx_1588_systimer_config
+
+  - name: configuration_rx_1588_timestamp_config
+
+  - name: configuration_rx_flow_control_reg1
+    fields:
+      - name: rsvd
+        width: 1
+      - name: ctl_rx_enable_pcp
+        width: 1
+      - name: ctl_rx_enable_gpp
+        width: 1
+      - name: ctl_rx_enable_ppp
+        width: 1
+      - name: ctl_rx_check_ack
+        width: 1
+      - name: ctl_rx_forward_control
+        width: 1
+      - name: ctl_rx_check_mcast_gcp
+        width: 1
+      - name: ctl_rx_check_ucast_gcp
+        width: 1
+      - name: ctl_rx_check_sa_gcp
+        width: 1
+      - name: ctl_rx_check_etype_gcp
+        width: 1
+      - name: ctl_rx_check_opcode_gcp
+        width: 1
+      - name: ctl_rx_check_mcast_pcp
+        width: 1
+      - name: ctl_rx_check_ucast_pcp
+        width: 1
+      - name: ctl_rx_check_sa_pcp
+        width: 1
+      - name: ctl_rx_check_etype_pcp
+        width: 1
+      - name: ctl_rx_check_opcode_pcp
+        width: 1
+      - name: ctl_rx_check_mcast_gpp
+        width: 1
+      - name: ctl_rx_check_ucast_gpp
+        width: 1
+      - name: ctl_rx_check_sa_gpp
+        width: 1
+      - name: ctl_rx_check_etype_gpp
+        width: 1
+      - name: ctl_rx_check_opcode_gpp
+        width: 1
+      - name: ctl_rx_check_mcast_ppp
+        width: 1
+      - name: ctl_rx_check_ucast_ppp
+        width: 1
+      - name: ctl_rx_check_sa_ppp
+        width: 1
+      - name: ctl_rx_check_etype_ppp
+        width: 1
+      - name: ctl_rx_check_opcode_ppp
+        width: 1
+      - name: rsvd1
+        width: 6
+
+  - name: configuration_rx_flow_control_reg2
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_rx_opcode_ppp
+        width: 16
+
+  - name: configuration_rx_flow_control_gpp_etype_op_reg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_rx_opcode_gpp
+        width: 16
+
+  - name: configuration_rx_flow_control_gcp_pcp_type_reg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_rx_etype_pcp
+        width: 16
+
+  - name: configuration_rx_flow_control_pcp_op_reg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_rx_opcode_max_pcp
+        width: 16
+
+  - name: configuration_rx_flow_control_gcp_op_reg
+    fields:
+      - name: rsvd
+        width: 16
+      - name: ctl_rx_opcode_max_gcp
+        width: 16
+
+  - name: configuration_rx_flow_control_da_reg1_lsb
+
+  - name: configuration_rx_flow_control_da_reg1_msb
+
+  - name: configuration_rx_flow_control_da_reg2_lsb
+
+  - name: configuration_rx_flow_control_da_reg2_msb
+
+  - name: configuration_rx_flow_control_sa_reg1_lsb
+
+  - name: configuration_rx_flow_control_sa_reg1_msb
+
+  - meta:
+      pad_until: 0x000F0
+
+  - name: port_control_reg_rx
+    fields:
+      - name: rsvd
+        width: 1
+      - name: soft_rx_serdes_reset
+        width: 1
+      - name: rsvd1
+        width: 30
+
+  - name: port_tick_reg_rx
+
+  - name: port_control_reg_tx
+    fields:
+      - name: rsvd
+        width: 1
+      - name: soft_tx_serdes_reset
+        width: 1
+      - name: rsvd1
+        width: 30
+
+  - name: port_tick_reg_tx
+
+  - name: stat_chan_tx_mac_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_tsmac_ovf
+        width: 1
+      - name: stat_tx_tsmac_unf
+        width: 1
+      - name: stat_tx_packet_small
+        width: 1
+      - name: stat_tx_sic_overflow
+        width: 1
+      - name: rsvd1
+        width: 27
+
+  - name: stat_chan_tx_mac_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_tsmac_ovf
+        width: 1
+      - name: stat_tx_tsmac_unf
+        width: 1
+      - name: stat_tx_packet_small
+        width: 1
+      - name: stat_tx_sic_overflow
+        width: 1
+      - name: rsvd1
+        width: 27
+
+  - name: stat_chan_tx_statistics_ready
+    access: ro
+
+  - meta:
+      pad_until: 0x00140
+
+  - name: stat_chan_rx_mac_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_local_fault
+        width: 1
+      - name: stat_rx_internal_local_fault
+        width: 1
+      - name: stat_rx_received_local_fault
+        width: 1
+      - name: stat_rx_bad_preamble
+        width: 1
+      - name: stat_rx_bad_sfd
+        width: 1
+      - name: stat_rx_got_signal_os
+        width: 1
+      - name: stat_rx_invalid_start
+        width: 1
+      - name: stat_rx_bad_code
+        width: 1
+      - name: rsvd1
+        width: 23
+
+  - name: stat_chan_rx_mac_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_local_fault
+        width: 1
+      - name: stat_rx_internal_local_fault
+        width: 1
+      - name: stat_rx_received_local_fault
+        width: 1
+      - name: stat_rx_bad_preamble
+        width: 1
+      - name: stat_rx_bad_sfd
+        width: 1
+      - name: stat_rx_got_signal_os
+        width: 1
+      - name: stat_rx_invalid_start
+        width: 1
+      - name: stat_rx_bad_code
+        width: 1
+      - name: rsvd1
+        width: 23
+
+  - name: stat_chan_rx_statistics_ready
+    access: ro
+
+  - meta:
+      pad_until: 0x00180
+
+  - name: stat_port_tx_mac_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_axis_err
+        width: 1
+      - name: rsvd1
+        width: 30
+
+  - name: stat_port_tx_mac_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_axis_err
+        width: 1
+      - name: rsvd1
+        width: 30
+
+  - meta:
+      pad_until: 0x001C0
+
+  - name: stat_port_rx_mac_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_axis_err
+        width: 1
+      - name: stat_rx_phy2ts_buf_err
+        width: 1
+      - name: stat_rx_macif_fifo_ovf
+        width: 1
+      - name: rsvd1
+        width: 28
+
+  - name: stat_port_rx_mac_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_axis_err
+        width: 1
+      - name: stat_rx_phy2ts_buf_err
+        width: 1
+      - name: stat_rx_macif_fifo_ovf
+        width: 1
+      - name: rsvd1
+        width: 28
+
+  - meta:
+      pad_until: 0x00200
+
+  - name: stat_tx_total_bytes_lsb
+    access: ro
+
+  - name: stat_tx_total_bytes_msb
+    access: ro
+
+  - name: stat_tx_total_good_bytes_lsb
+    access: ro
+
+  - name: stat_tx_total_good_bytes_msb
+    access: ro
+
+  - name: stat_tx_total_packets_lsb
+    access: ro
+
+  - name: stat_tx_total_packets_msb
+    access: ro
+
+  - name: stat_tx_total_good_packets_lsb
+    access: ro
+
+  - name: stat_tx_total_good_packets_msb
+    access: ro
+
+  - name: stat_tx_frame_error_lsb
+    access: ro
+
+  - name: stat_tx_frame_error_msb
+    access: ro
+
+  - name: stat_tx_bad_fcs_lsb
+    access: ro
+
+  - name: stat_tx_bad_fcs_msb
+    access: ro
+
+  - name: stat_tx_packet_64_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_64_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_65_127_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_65_127_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_128_255_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_128_255_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_256_511_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_256_511_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_512_1023_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_512_1023_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_1024_1518_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_1024_1518_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_1519_1522_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_1519_1522_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_1523_1548_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_1523_1548_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_1549_2047_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_1549_2047_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_2048_4095_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_2048_4095_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_4096_8191_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_4096_8191_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_8192_9215_bytes_lsb
+    access: ro
+
+  - name: stat_tx_packet_8192_9215_bytes_msb
+    access: ro
+
+  - name: stat_tx_packet_large
+    access: ro
+
+  - meta:
+      pad_until: 0x00298
+
+  - name: stat_tx_unicast_lsb
+    access: ro
+
+  - name: stat_tx_unicast_msb
+    access: ro
+
+  - name: stat_tx_multicast_lsb
+    access: ro
+
+  - name: stat_tx_multicast_msb
+    access: ro
+
+  - name: stat_tx_broadcast_lsb
+    access: ro
+
+  - name: stat_tx_broadcast_msb
+    access: ro
+
+  - name: stat_tx_vlan_lsb
+    access: ro
+
+  - name: stat_tx_vlan_msb
+    access: ro
+
+  - name: stat_tx_pause_lsb
+    access: ro
+
+  - name: stat_tx_pause_msb
+    access: ro
+
+  - name: stat_tx_user_pause_lsb
+    access: ro
+
+  - name: stat_tx_user_pause_msb
+    access: ro
+
+  - name: stat_tx_mac_cycle_count_lsb
+    access: ro
+
+  - name: stat_tx_mac_cycle_count_msb
+    access: ro
+
+  - name: stat_tx_ecc_correctable_count
+    access: ro
+
+  - meta:
+      pad_until: 0x002D8
+
+  - name: stat_tx_ecc_uncorrectable_count
+    access: ro
+
+  - meta:
+      pad_until: 0x00400
+
+  - name: stat_rx_total_bytes_lsb
+    access: ro
+
+  - name: stat_rx_total_bytes_msb
+    access: ro
+
+  - name: stat_rx_total_good_bytes_lsb
+    access: ro
+
+  - name: stat_rx_total_good_bytes_msb
+    access: ro
+
+  - name: stat_rx_total_packets_lsb
+    access: ro
+
+  - name: stat_rx_total_packets_msb
+    access: ro
+
+  - name: stat_rx_total_good_packets_lsb
+    access: ro
+
+  - name: stat_rx_total_good_packets_msb
+    access: ro
+
+  - name: stat_rx_packet_small_lsb
+    access: ro
+
+  - name: stat_rx_packet_small_msb
+    access: ro
+
+  - name: stat_rx_bad_code_count_lsb
+    access: ro
+
+  - name: stat_rx_bad_code_count_msb
+    access: ro
+
+  - name: stat_rx_bad_fcs_lsb
+    access: ro
+
+  - name: stat_rx_bad_fcs_msb
+    access: ro
+
+  - name: stat_rx_packet_bad_fcs_lsb
+    access: ro
+
+  - name: stat_rx_packet_bad_fcs_msb
+    access: ro
+
+  - name: stat_rx_stomped_fcs_lsb
+    access: ro
+
+  - name: stat_rx_stomped_fcs_msb
+    access: ro
+
+  - name: stat_rx_truncated_lsb
+    access: ro
+
+  - name: stat_rx_truncated_msb
+    access: ro
+
+  - name: stat_rx_packet_64_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_64_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_65_127_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_65_127_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_128_255_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_128_255_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_256_511_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_256_511_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_512_1023_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_512_1023_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_1024_1518_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_1024_1518_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_1519_1522_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_1519_1522_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_1523_1548_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_1523_1548_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_1549_2047_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_1549_2047_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_2048_4095_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_2048_4095_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_4096_8191_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_4096_8191_bytes_msb
+    access: ro
+
+  - name: stat_rx_packet_8192_9215_bytes_lsb
+    access: ro
+
+  - name: stat_rx_packet_8192_9215_bytes_msb
+    access: ro
+
+  - name: stat_rx_toolong
+    access: ro
+
+  - meta:
+      pad_until: 0x004B8
+
+  - name: stat_rx_packet_large
+    access: ro
+
+  - meta:
+      pad_until: 0x004C0
+
+  - name: stat_rx_jabber
+    access: ro
+
+  - meta:
+      pad_until: 0x004C8
+
+  - name: stat_rx_oversize
+    access: ro
+
+  - meta:
+      pad_until: 0x004D0
+
+  - name: stat_rx_unicast_lsb
+    access: ro
+
+  - name: stat_rx_unicast_msb
+    access: ro
+
+  - name: stat_rx_multicast_lsb
+    access: ro
+
+  - name: stat_rx_multicast_msb
+    access: ro
+
+  - name: stat_rx_broadcast_lsb
+    access: ro
+
+  - name: stat_rx_broadcast_msb
+    access: ro
+
+  - name: stat_rx_vlan_lsb
+    access: ro
+
+  - name: stat_rx_vlan_msb
+    access: ro
+
+  - name: stat_rx_pause_lsb
+    access: ro
+
+  - name: stat_rx_pause_msb
+    access: ro
+
+  - name: stat_rx_user_pause_lsb
+    access: ro
+
+  - name: stat_rx_user_pause_msb
+    access: ro
+
+  - name: stat_rx_inrangeerr_lsb
+    access: ro
+
+  - name: stat_rx_inrangeerr_msb
+    access: ro
+
+  - name: stat_rx_mac_cycle_count_lsb
+    access: ro
+
+  - name: stat_rx_mac_cycle_count_msb
+    access: ro
+
+  - meta:
+      pad_until: 0x00800
+
+  - name: stat_port_tx_phy_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_flex_fifo_err
+        width: 1
+      - name: stat_tx_flex_coa
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: stat_port_tx_phy_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_flex_fifo_err
+        width: 1
+      - name: stat_tx_flex_coa
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: stat_port_tx_statistics_ready
+    access: ro
+
+  - name: stat_port_tx_fec_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_fec_pcs_block_lock
+        width: 1
+      - name: stat_tx_fec_pcs_am_lock
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: stat_port_tx_fec_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_tx_fec_pcs_block_lock
+        width: 1
+      - name: stat_tx_fec_pcs_am_lock
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - meta:
+      pad_until: 0x00880
+
+  - name: monitor_tx_1588_sample_systimer_lsb
+    access: ro
+
+  - name: monitor_tx_1588_sample_systimer_msb
+    access: ro
+
+  - name: monitor_tx_1588_incr_systimer_lsb
+    access: ro
+
+  - name: monitor_tx_1588_incr_systimer_msb
+    access: ro
+
+  - meta:
+      pad_until: 0x00900
+
+  - name: stat_tx_pcs_bad_code_lsb
+    access: ro
+
+  - name: stat_tx_pcs_bad_code_msb
+    access: ro
+
+  - name: stat_tx_pcs_cycle_count_lsb
+    access: ro
+
+  - name: stat_tx_pcs_cycle_count_msb
+    access: ro
+
+  - meta:
+      pad_until: 0x00C00
+
+  - name: stat_port_rx_phy_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_block_lock
+        width: 1
+      - name: stat_rx_aligned
+        width: 1
+      - name: stat_rx_misaligned
+        width: 1
+      - name: stat_rx_aligned_err
+        width: 1
+      - name: stat_rx_hi_ber
+        width: 1
+      - name: stat_rx_framing_err
+        width: 1
+      - name: stat_rx_pcs_bad_code
+        width: 1
+      - name: stat_rx_synced
+        width: 1
+      - name: stat_rx_synced_err
+        width: 1
+      - name: stat_rx_bip_err
+        width: 1
+      - name: stat_rx_flex_fifo_err
+        width: 1
+      - name: rsvd1
+        width: 20
+
+  - name: stat_port_rx_phy_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_block_lock
+        width: 1
+      - name: stat_rx_aligned
+        width: 1
+      - name: stat_rx_misaligned
+        width: 1
+      - name: stat_rx_aligned_err
+        width: 1
+      - name: stat_rx_hi_ber
+        width: 1
+      - name: stat_rx_framing_err
+        width: 1
+      - name: stat_rx_pcs_bad_code
+        width: 1
+      - name: stat_rx_synced
+        width: 1
+      - name: stat_rx_synced_err
+        width: 1
+      - name: stat_rx_bip_err
+        width: 1
+      - name: stat_rx_flex_fifo_err
+        width: 1
+      - name: rsvd1
+        width: 20
+
+  - name: stat_port_rx_statistics_ready
+    access: ro
+
+  - name: stat_port_rx_block_lock_reg
+    access: ro
+
+  - name: stat_port_rx_lane_sync_reg
+    access: ro
+
+  - name: stat_port_rx_lane_sync_err_reg
+    access: ro
+
+  - name: stat_port_rx_am_repeat_err_reg
+    access: ro
+
+  - name: stat_port_rx_lane_demuxed
+    access: ro
+
+  - name: stat_port_rx_pcs_lane_num_reg0
+    access: ro
+    fields:
+      - name: rsvd
+        width: 5
+      - name: stat_rx_vl_number_1
+        width: 5
+      - name: stat_rx_vl_number_2
+        width: 5
+      - name: stat_rx_vl_number_3
+        width: 5
+      - name: stat_rx_vl_number_4
+        width: 5
+      - name: stat_rx_vl_number_5
+        width: 5
+      - name: rsvd1
+        width: 2
+
+  - name: stat_port_rx_pcs_lane_num_reg1
+    access: ro
+    fields:
+      - name: rsvd
+        width: 5
+      - name: stat_rx_vl_number_7
+        width: 5
+      - name: stat_rx_vl_number_8
+        width: 5
+      - name: stat_rx_vl_number_9
+        width: 5
+      - name: stat_rx_vl_number_10
+        width: 5
+      - name: stat_rx_vl_number_11
+        width: 5
+      - name: rsvd1
+        width: 2
+
+  - name: stat_port_rx_pcs_lane_num_reg2
+    access: ro
+    fields:
+      - name: rsvd
+        width: 5
+      - name: stat_rx_vl_number_13
+        width: 5
+      - name: stat_rx_vl_number_14
+        width: 5
+      - name: stat_rx_vl_number_15
+        width: 5
+      - name: stat_rx_vl_number_16
+        width: 5
+      - name: stat_rx_vl_number_17
+        width: 5
+      - name: rsvd1
+        width: 2
+
+  - name: stat_port_rx_pcs_lane_num_reg3
+    access: ro
+    fields:
+      - name: rsvd
+        width: 5
+      - name: stat_rx_vl_number_19
+        width: 5
+      - name: rsvd1
+        width: 22
+
+  - name: stat_port_rx_bip_override_reg
+    access: ro
+
+  - name: stat_port_rx_fec_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_fec_hi_ser
+        width: 1
+      - name: stat_rx_fec_lane_lock
+        width: 4
+      - name: stat_rx_fec_degraded_ser
+        width: 1
+      - name: stat_rx_fec_rm_degraded
+        width: 1
+      - name: rsvd1
+        width: 24
+
+  - name: stat_port_rx_fec_rt_status_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_fec_hi_ser
+        width: 1
+      - name: stat_rx_fec_lane_lock
+        width: 4
+      - name: stat_rx_fec_degraded_ser
+        width: 1
+      - name: stat_rx_fec_rm_degraded
+        width: 1
+      - name: rsvd1
+        width: 24
+
+  - name: stat_port_rx_fec_map_reg
+    access: ro
+
+  - name: stat_port_rx_fec_lane_fill_reg0
+    access: ro
+    fields:
+      - name: rsvd
+        width: 15
+      - name: stat_rx_fec_delay_1
+        width: 15
+      - name: rsvd1
+        width: 2
+
+  - name: stat_port_rx_fec_lane_fill_reg1
+    access: ro
+    fields:
+      - name: rsvd
+        width: 15
+      - name: stat_rx_fec_delay_3
+        width: 15
+      - name: rsvd1
+        width: 2
+
+  - name: stat_port_rx_pcs_lane_ui_delay_reg0
+    access: ro
+    fields:
+      - name: rsvd
+        width: 8
+      - name: stat_rx_pcs_lane_ui_delay_1
+        width: 7
+      - name: rsvd1
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_2
+        width: 7
+      - name: rsvd2
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_3
+        width: 7
+      - name: rsvd3
+        width: 1
+
+  - name: stat_port_rx_pcs_lane_ui_delay_reg1
+    access: ro
+    fields:
+      - name: rsvd
+        width: 8
+      - name: stat_rx_pcs_lane_ui_delay_5
+        width: 7
+      - name: rsvd1
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_6
+        width: 7
+      - name: rsvd2
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_7
+        width: 7
+      - name: rsvd3
+        width: 1
+
+  - name: stat_port_rx_pcs_lane_ui_delay_reg2
+    access: ro
+    fields:
+      - name: rsvd
+        width: 8
+      - name: stat_rx_pcs_lane_ui_delay_9
+        width: 7
+      - name: rsvd1
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_10
+        width: 7
+      - name: rsvd2
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_11
+        width: 7
+      - name: rsvd3
+        width: 1
+
+  - name: stat_port_rx_pcs_lane_ui_delay_reg3
+    access: ro
+    fields:
+      - name: rsvd
+        width: 8
+      - name: stat_rx_pcs_lane_ui_delay_13
+        width: 7
+      - name: rsvd1
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_14
+        width: 7
+      - name: rsvd2
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_15
+        width: 7
+      - name: rsvd3
+        width: 1
+
+  - name: stat_port_rx_pcs_lane_ui_delay_reg4
+    access: ro
+    fields:
+      - name: rsvd
+        width: 8
+      - name: stat_rx_pcs_lane_ui_delay_17
+        width: 7
+      - name: rsvd1
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_18
+        width: 7
+      - name: rsvd2
+        width: 1
+      - name: stat_rx_pcs_lane_ui_delay_19
+        width: 7
+      - name: rsvd3
+        width: 1
+
+  - name: stat_port_rx_lane_aligner_almost_full
+    access: ro
+
+  - name: stat_port_rx_ecc_err_reg
+    access: ro
+    fields:
+      - name: rsvd
+        width: 1
+      - name: stat_rx_ecc_err_a1
+        width: 1
+      - name: stat_rx_ecc_err_b0
+        width: 1
+      - name: stat_rx_ecc_err_b1
+        width: 1
+      - name: rsvd1
+        width: 28
+
+  - meta:
+      pad_until: 0x00C80
+
+  - name: monitor_rx_1588_sample_systimer_lsb
+    access: ro
+
+  - name: monitor_rx_1588_sample_systimer_msb
+    access: ro
+
+  - name: monitor_rx_1588_incr_systimer_lsb
+    access: ro
+
+  - name: monitor_rx_1588_incr_systimer_msb
+    access: ro
+
+  - meta:
+      pad_until: 0x00D00
+
+  - name: stat_rx_bip_err_0_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_0_msb
+    access: ro
+
+  - name: stat_rx_bip_err_1_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_1_msb
+    access: ro
+
+  - name: stat_rx_bip_err_2_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_2_msb
+    access: ro
+
+  - name: stat_rx_bip_err_3_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_3_msb
+    access: ro
+
+  - name: stat_rx_bip_err_4_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_4_msb
+    access: ro
+
+  - name: stat_rx_bip_err_5_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_5_msb
+    access: ro
+
+  - name: stat_rx_bip_err_6_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_6_msb
+    access: ro
+
+  - name: stat_rx_bip_err_7_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_7_msb
+    access: ro
+
+  - name: stat_rx_bip_err_8_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_8_msb
+    access: ro
+
+  - name: stat_rx_bip_err_9_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_9_msb
+    access: ro
+
+  - name: stat_rx_bip_err_10_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_10_msb
+    access: ro
+
+  - name: stat_rx_bip_err_11_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_11_msb
+    access: ro
+
+  - name: stat_rx_bip_err_12_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_12_msb
+    access: ro
+
+  - name: stat_rx_bip_err_13_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_13_msb
+    access: ro
+
+  - name: stat_rx_bip_err_14_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_14_msb
+    access: ro
+
+  - name: stat_rx_bip_err_15_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_15_msb
+    access: ro
+
+  - name: stat_rx_bip_err_16_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_16_msb
+    access: ro
+
+  - name: stat_rx_bip_err_17_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_17_msb
+    access: ro
+
+  - name: stat_rx_bip_err_18_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_18_msb
+    access: ro
+
+  - name: stat_rx_bip_err_19_lsb
+    access: ro
+
+  - name: stat_rx_bip_err_19_msb
+    access: ro
+
+  - name: stat_rx_framing_err_0_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_0_msb
+    access: ro
+
+  - name: stat_rx_framing_err_1_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_1_msb
+    access: ro
+
+  - name: stat_rx_framing_err_2_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_2_msb
+    access: ro
+
+  - name: stat_rx_framing_err_3_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_3_msb
+    access: ro
+
+  - name: stat_rx_framing_err_4_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_4_msb
+    access: ro
+
+  - name: stat_rx_framing_err_5_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_5_msb
+    access: ro
+
+  - name: stat_rx_framing_err_6_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_6_msb
+    access: ro
+
+  - name: stat_rx_framing_err_7_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_7_msb
+    access: ro
+
+  - name: stat_rx_framing_err_8_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_8_msb
+    access: ro
+
+  - name: stat_rx_framing_err_9_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_9_msb
+    access: ro
+
+  - name: stat_rx_framing_err_10_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_10_msb
+    access: ro
+
+  - name: stat_rx_framing_err_11_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_11_msb
+    access: ro
+
+  - name: stat_rx_framing_err_12_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_12_msb
+    access: ro
+
+  - name: stat_rx_framing_err_13_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_13_msb
+    access: ro
+
+  - name: stat_rx_framing_err_14_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_14_msb
+    access: ro
+
+  - name: stat_rx_framing_err_15_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_15_msb
+    access: ro
+
+  - name: stat_rx_framing_err_16_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_16_msb
+    access: ro
+
+  - name: stat_rx_framing_err_17_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_17_msb
+    access: ro
+
+  - name: stat_rx_framing_err_18_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_18_msb
+    access: ro
+
+  - name: stat_rx_framing_err_19_lsb
+    access: ro
+
+  - name: stat_rx_framing_err_19_msb
+    access: ro
+
+  - name: stat_rx_pcs_bad_code_lsb
+    access: ro
+
+  - name: stat_rx_pcs_bad_code_msb
+    access: ro
+
+  - name: stat_rx_fec_cw_lsb
+    access: ro
+
+  - name: stat_rx_fec_cw_msb
+    access: ro
+
+  - name: stat_rx_fec_corrected_cw_lsb
+    access: ro
+
+  - name: stat_rx_fec_corrected_cw_msb
+    access: ro
+
+  - name: stat_rx_fec_uncorrected_cw_lsb
+    access: ro
+
+  - name: stat_rx_fec_uncorrected_cw_msb
+    access: ro
+
+  - name: stat_rx_fec_cw_bh_lsb
+    access: ro
+
+  - name: stat_rx_fec_cw_bh_msb
+    access: ro
+
+  - name: stat_rx_fec_corrected_cw_bh_lsb
+    access: ro
+
+  - name: stat_rx_fec_corrected_cw_bh_msb
+    access: ro
+
+  - name: stat_rx_fec_uncorrected_cw_bh_lsb
+    access: ro
+
+  - name: stat_rx_fec_uncorrected_cw_bh_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l0_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l0_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l1_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l1_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l2_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l2_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l3_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_0to1_l3_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l0_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l0_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l1_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l1_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l2_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l2_msb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l3_lsb
+    access: ro
+
+  - name: stat_rx_fec_bit_err_1to0_l3_msb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l0_lsb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l0_msb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l1_lsb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l1_msb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l2_lsb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l2_msb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l3_lsb
+    access: ro
+
+  - name: stat_rx_fec_err_count_l3_msb
+    access: ro
+
+  - name: stat_rx_pcs_cycle_count_lsb
+    access: ro
+
+  - name: stat_rx_pcs_cycle_count_msb
+    access: ro
+
+  - name: stat_rx_ecc_count
+    access: ro
+    fields:
+      - name: rsvd
+        width: 16
+      - name: stat_rx_ecc_uncorrectable_count
+        width: 16
+
