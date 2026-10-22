@@ -101,17 +101,17 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // AXI4-S interfaces — shell side of the DUT
     // =========================================================================
-    // H2C output: packet_intf in core clock domain (DUT crosses from aclk)
+    // H2C output: adapter drives this; META_WID = PKT_H2C_META_WID {tcrc, qid}
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_H2C_META_WID   )
     ) pkt_h2c (.clk(aclk));
 
-    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC).
-    // Meta carries {c2h_tcrc[31:0], qid[QID_WID-1:0]}; upper 32 bits are CRC.
+    // C2H input: adapter receives this; META_WID = PKT_C2H_META_WID {size, tcrc, qid}
+    // The adapter unpacks all three fields; no separate pkt_c2h_size wire needed.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID + 32       )
+        .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h (.clk(aclk));
 
     // Drive interface signals to known values from time 0.
@@ -126,10 +126,6 @@ module xilinx_qdma_st_adapter_unit_test;
         pkt_c2h.meta = '0;
         pkt_h2c.rdy  = 1'b1;
     end
-
-    // C2H packet length, supplied upstream by the C2H FIFO.  Driven directly
-    // here: the adapter just forwards it to ctrl_len and the completion.
-    packet_pkg::size_t pkt_c2h_size = '0;
 
     // Sticky record that a completion fired.  cmpt_tvalid is a single-cycle
     // pulse on the last beat's handshake, so tests cannot reliably sample it
@@ -200,8 +196,7 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
         .pkt_h2c,
-        .pkt_c2h,
-        .pkt_c2h_size
+        .pkt_c2h
     );
 
     // =========================================================================
@@ -326,8 +321,9 @@ module xilinx_qdma_st_adapter_unit_test;
     endtask
 
     // Send a C2H packet via packet_intf (byte-level, auto-computes mty).
-    // Data is big-endian byte array as expected by packet_intf.
-    // QID is in meta[QID_WID-1:0]; meta[META_WID-1:QID_WID] carries tcrc (zero here).
+    // Packs pkt_c2h_meta_t {size, tcrc=0, qid} into meta; size is the full
+    // packet length so it is valid from the first beat (store-and-forward
+    // semantics: the upstream FIFO knows the length before releasing the SOP).
     task automatic send_c2h_packet(
         input int                 num_bytes,
         input logic [QID_WID-1:0] qid        = '0,
@@ -335,25 +331,24 @@ module xilinx_qdma_st_adapter_unit_test;
     );
         int bytes_remaining;
         logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat_data;
-        logic [QID_WID+31:0] meta;
+        pkt_c2h_meta_t c2h_meta;
+        logic [PKT_C2H_META_WID-1:0] meta;
         logic [5:0] beat_mty;
         logic beat_eop;
 
-        // Stand in for the upstream store-and-forward FIFO: the length is
-        // presented for the whole packet, valid from the first beat.
-        pkt_c2h_size = 16'(num_bytes);
-        meta = {{32{1'b0}}, qid};
+        c2h_meta.size = 16'(num_bytes);
+        c2h_meta.tcrc = '0;
+        c2h_meta.qid  = QID_WID'(qid);
+        meta = PKT_C2H_META_WID'(c2h_meta);
 
         bytes_remaining = num_bytes;
         while (bytes_remaining > 0) begin
-            // Fill beat data with random bytes
             for (int b = 0; b < AXIS_DATA_BYTE_WID; b++)
                 beat_data[b] = $urandom;
 
             beat_eop = (bytes_remaining <= AXIS_DATA_BYTE_WID);
             beat_mty = beat_eop ? 6'(AXIS_DATA_BYTE_WID - bytes_remaining) : 6'd0;
 
-            // Inter-beat gap
             if (twait > 0) repeat (twait) @(pkt_c2h.cb_tx);
 
             pkt_c2h.send(
@@ -377,13 +372,15 @@ module xilinx_qdma_st_adapter_unit_test;
         );
         int  beats;
         bit  last;
+        pkt_h2c_meta_t h2c_meta;
         beats = 0;
         last  = 1'b0;
         num_bytes = 0;
         while (!last) begin
             @(posedge aclk iff (pkt_h2c.vld && pkt_h2c.rdy));
             beats++;
-            qid  = pkt_h2c.meta;
+            h2c_meta = pkt_h2c.meta;
+            qid  = QID_WID'(h2c_meta.qid);
             err  = pkt_h2c.err;
             last = pkt_h2c.eop;
             if (last) num_bytes = beats*AXIS_DATA_BYTE_WID - pkt_h2c.mty;

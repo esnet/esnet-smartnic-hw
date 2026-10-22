@@ -37,11 +37,8 @@ module xilinx_alveo_shell
     // -----------------------------------------------------------------------
     // DMA streams, QDMA clock domain — toward the platform's QDMA adapter
     // -----------------------------------------------------------------------
-    packet_intf.rx pkt_h2c_dma,  // H2C: from the adapter
-    packet_intf.tx pkt_c2h_dma,  // C2H: to the adapter
-
-    // Length of the packet on pkt_c2h_dma, for the adapter's ctrl_len
-    output packet_pkg::size_t pkt_c2h_dma_size,
+    packet_intf.rx pkt_h2c_dma,  // H2C: from the adapter; META_WID = PKT_H2C_META_WID
+    packet_intf.tx pkt_c2h_dma,  // C2H: to the adapter;   META_WID = PKT_C2H_META_WID
 
     // -----------------------------------------------------------------------
     // DMA streams, core clock domain — shell-typed axi4s toward the core
@@ -115,10 +112,9 @@ module xilinx_alveo_shell
         .core_clk         ( core_clk         ),
         .core_srst        ( core_srst        ),
         .axil_if          ( axil_qdma_st     ),
-        .pkt_h2c_dma      ( pkt_h2c_dma      ),
-        .pkt_c2h_dma      ( pkt_c2h_dma      ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
-        .axis_h2c         ( axis_h2c         ),
+        .pkt_h2c_dma      ( pkt_h2c_dma ),
+        .pkt_c2h_dma      ( pkt_c2h_dma ),
+        .axis_h2c         ( axis_h2c   ),
         .axis_c2h         ( axis_c2h         )
     );
 

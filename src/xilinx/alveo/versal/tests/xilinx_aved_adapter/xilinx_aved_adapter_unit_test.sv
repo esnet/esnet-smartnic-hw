@@ -72,20 +72,20 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    packet_pkg::size_t pkt_c2h_dma_size;
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // DMA streams between adapter and shell, in the management clock domain
+    // DMA streams between adapter and shell, in the PCIE0 (QDMA) clock domain.
+    // Meta widths match PKT_H2C_META_WID / PKT_C2H_META_WID from xilinx_qdma_pkg.
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::PKT_H2C_META_WID   )
     ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID + 32       )
+        .META_WID      ( xilinx_qdma_pkg::PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     wire pci_rstn_in;
@@ -222,11 +222,10 @@ module xilinx_aved_adapter_unit_test;
         .dma0_usr_flr_0_done_fnc   (    ),
         .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
-        .axil_if                   ( axil_app_if ),
+        .axil_if ( axil_app_if ),
         // DMA streams (PCIE0 clock domain; the shell owns the CDC)
-        .pkt_h2c                   ( pkt_h2c_dma      ),
-        .pkt_c2h                   ( pkt_c2h_dma      ),
-        .pkt_c2h_size              ( pkt_c2h_dma_size )
+        .pkt_h2c ( pkt_h2c_dma ),
+        .pkt_c2h ( pkt_c2h_dma )
     );
 
     xilinx_alveo_versal_shell DUT_shell (
@@ -236,9 +235,8 @@ module xilinx_aved_adapter_unit_test;
         .axil_top         ( axil_app_if       ),
         .dma_aclk         ( m_axi_pcie0_aclk  ),
         .dma_aresetn      ( rstn_pl0_100mhz   ),
-        .pkt_h2c_dma      ( pkt_h2c_dma       ),
-        .pkt_c2h_dma      ( pkt_c2h_dma       ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size  ),
+        .pkt_h2c_dma ( pkt_h2c_dma ),
+        .pkt_c2h_dma ( pkt_c2h_dma ),
         .shell_if
     );
 

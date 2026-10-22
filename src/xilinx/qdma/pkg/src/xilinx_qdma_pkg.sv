@@ -57,4 +57,27 @@ package xilinx_qdma_pkg;
     localparam int AXIS_TDEST_WID = $bits(axis_tdest_t);
     localparam int AXIS_TUSER_WID = $bits(axis_tuser_t);
 
+    // packet_intf meta layouts for the H2C and C2H DMA boundary interfaces.
+    //
+    // H2C: the adapter packs the QDMA-supplied tcrc and qid into meta.
+    //      xilinx_alveo_qdma_st extracts tcrc as crc_in for packet_crc_rx.
+    //
+    // C2H: xilinx_alveo_qdma_st packs the generated tcrc, the queue id, and
+    //      the store-and-forward packet size (available at the FIFO output)
+    //      into meta.  The adapter unpacks all three, eliminating the separate
+    //      pkt_c2h_size wire from the module boundary.
+    typedef struct packed {
+        logic [31:0] tcrc;
+        qid_t        qid;
+    } pkt_h2c_meta_t;
+
+    typedef struct packed {
+        len_t        size;
+        logic [31:0] tcrc;
+        qid_t        qid;
+    } pkt_c2h_meta_t;
+
+    localparam int PKT_H2C_META_WID = $bits(pkt_h2c_meta_t);  // 32 + QID_WID
+    localparam int PKT_C2H_META_WID = $bits(pkt_c2h_meta_t);  // 48 + QID_WID
+
 endpackage : xilinx_qdma_pkg

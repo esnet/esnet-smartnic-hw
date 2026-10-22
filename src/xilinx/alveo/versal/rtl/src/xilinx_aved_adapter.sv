@@ -157,11 +157,8 @@ module xilinx_aved_adapter (
     // DMA streams — both in the PCIE0 (QDMA) clock domain.  Buffering, the
     // crossing to the core clock domain, loopback and the DMA registers all
     // live above this module, in xilinx_alveo_qdma_st.
-    packet_intf.tx pkt_h2c,  // H2C: host-to-core, drives toward the shell
-    packet_intf.rx pkt_c2h,  // C2H: core-to-host, receives from the shell
-
-    // Length of the packet on pkt_c2h, supplied by the shell's C2H FIFO
-    input  packet_pkg::size_t pkt_c2h_size
+    packet_intf.tx pkt_h2c,  // H2C: host-to-core; META_WID = PKT_H2C_META_WID
+    packet_intf.rx pkt_c2h   // C2H: core-to-host; META_WID = PKT_C2H_META_WID
 );
 
     // =========================================================================
@@ -316,8 +313,7 @@ module xilinx_aved_adapter (
 
         // Stream interfaces
         .pkt_h2c,
-        .pkt_c2h,
-        .pkt_c2h_size
+        .pkt_c2h
     );
 
     // =========================================================================

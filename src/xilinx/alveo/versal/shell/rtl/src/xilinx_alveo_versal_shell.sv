@@ -38,9 +38,8 @@ module xilinx_alveo_versal_shell
     // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
     input  wire logic       dma_aclk,
     input  wire logic       dma_aresetn,
-    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA
-    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA
-    output packet_pkg::size_t pkt_c2h_dma_size,
+    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA; META_WID = PKT_H2C_META_WID
+    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA;   META_WID = PKT_C2H_META_WID
 
     // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
@@ -128,7 +127,6 @@ module xilinx_alveo_versal_shell
         .axil_qdma_st     ( axil_qdma_st ),
         .pkt_h2c_dma,
         .pkt_c2h_dma,
-        .pkt_c2h_dma_size,
         .axis_h2c,
         .axis_c2h
     );

@@ -30,19 +30,16 @@ module xilinx_alveo_versal_shell_unit_test;
     // =========================================================================
     axi4l_intf axil_if  ();
 
-    // C2H packet length, published by the shell's C2H FIFO for the adapter.
-    packet_pkg::size_t pkt_c2h_dma_size;
-
     // DMA streams. The QDMA adapter is above the shell in the real design,
     // so these are terminated rather than driven.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_H2C_META_WID   )
     ) pkt_h2c_dma (.clk(axil_if.aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID + 32       )
+        .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(axil_if.aclk));
 
     shell_intf #(
@@ -69,9 +66,8 @@ module xilinx_alveo_versal_shell_unit_test;
         .axil_top         ( axil_if          ),
         .dma_aclk         ( axil_if.aclk     ),
         .dma_aresetn      ( axil_if.aresetn  ),
-        .pkt_h2c_dma      ( pkt_h2c_dma      ),
-        .pkt_c2h_dma      ( pkt_c2h_dma      ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
+        .pkt_h2c_dma ( pkt_h2c_dma ),
+        .pkt_c2h_dma ( pkt_c2h_dma ),
         .shell_if
     );
 

@@ -89,12 +89,12 @@ module xilinx_alveo_usplus_shell
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::PKT_H2C_META_WID   )
     ) pkt_h2c_dma__unused (.clk(axil_top.aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID + 32       )
+        .META_WID      ( xilinx_qdma_pkg::PKT_C2H_META_WID   )
     ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
 
     axi4s_intf #(
@@ -129,10 +129,9 @@ module xilinx_alveo_usplus_shell
         .axil_hw,
         .axil_core,
         .axil_qdma_st     ( axil_qdma_st__unused ),
-        .pkt_h2c_dma      ( pkt_h2c_dma__unused  ),
-        .pkt_c2h_dma      ( pkt_c2h_dma__unused  ),
-        .pkt_c2h_dma_size (                      ),
-        .axis_h2c         ( axis_h2c__unused     ),
+        .pkt_h2c_dma ( pkt_h2c_dma__unused ),
+        .pkt_c2h_dma ( pkt_c2h_dma__unused ),
+        .axis_h2c    ( axis_h2c__unused    ),
         .axis_c2h         ( axis_c2h__unused     )
     );
 
