@@ -731,6 +731,23 @@ module xilinx_qdma_st_adapter_unit_test;
             `FAIL_UNLESS_EQUAL(captured_cmpt_len, 16'(PKT_BYTES));
         `SVTEST_END
 
+        // C2H: desc_used is always 1 so the DPDK PMD does not zero the length.
+        `SVTEST(c2h_cmpt_desc_used_set)
+            localparam int PKT_BYTES = 64;
+            logic desc_used_captured;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
+                    begin
+                        automatic c2h_cmpt_data_t cmpt_data_unpacked = cmpt_data;
+                        desc_used_captured = cmpt_data_unpacked.desc_used;
+                    end
+                end
+            join
+            `FAIL_UNLESS_EQUAL(desc_used_captured, 1'b1);
+        `SVTEST_END
+
         // Descriptor credits are always idle.
         `SVTEST(credits_idle)
             repeat (16) @(posedge aclk);

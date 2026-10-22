@@ -34,16 +34,20 @@ package xilinx_qdma_pkg;
     // (Internal) C2H completion data format — 8B entry (cmpt_size = 2'b00).
     // Matches union qdma_ul_st_cmpt_ring, the layout the upstream QDMA DPDK
     // PMD parses:
-    //   [3:0]   data_frmt, color, err, desc_used — inserted by the DMA
+    //   [0]     data_frmt — Standard(0)/User(1) format; user provides, DMA stamps 0
+    //   [1]     color     — DMA stamps; user provides 0
+    //   [2]     err       — DMA stamps descriptor error; user provides 0
+    //   [3]     desc_used — user must set 1: packet consumes a C2H descriptor
     //   [19:4]  length
     //   [23:20] reserved
     //   [63:24] user defined
     typedef struct packed {
-        pkt_id_t    pkt_id;    // [51:36]
-        qid_t       qid;       // [35:24]
-        logic [3:0] user_rsv;  // [23:20]
-        len_t       len;       // [19:4]
-        logic [3:0] dma_rsv;   // [3:0]
+        pkt_id_t    pkt_id;      // [51:36]
+        qid_t       qid;         // [35:24]
+        logic [3:0] user_rsv;    // [23:20]
+        len_t       len;         // [19:4]
+        logic       desc_used;   // [3]   must be 1 — packet consumes C2H descriptor
+        logic [2:0] dma_rsv;     // [2:0] DMA-stamped; user provides 0
     } c2h_cmpt_data_t;
 
     // (External) AXI-S types

@@ -174,6 +174,7 @@ module xilinx_qdma_st_adapter
     // Completion: one per EOP
     c2h_cmpt_data_t cmpt_data_packed;
     assign cmpt_data_packed.dma_rsv  = '0;
+    assign cmpt_data_packed.desc_used = 1'b1;
     assign cmpt_data_packed.user_rsv = '0;
     assign cmpt_data_packed.len    = c2h_meta.size;
     assign cmpt_data_packed.pkt_id = c2h_pld_pkt_id;
