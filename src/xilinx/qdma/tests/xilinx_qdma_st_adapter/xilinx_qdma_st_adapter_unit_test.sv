@@ -444,23 +444,42 @@ module xilinx_qdma_st_adapter_unit_test;
             `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID - 1);
         `SVTEST_END
 
-        // H2C: zero_byte carries no payload and cannot be represented on
-        // packet_intf, so the adapter marks it errored and the FIFO drops it.
+        // H2C: zero_byte cannot be represented on packet_intf; the adapter marks
+        // it errored so the store-and-forward FIFO upstream discards it.  At the
+        // adapter boundary the packet still appears on pkt_h2c (packet_crc_rx
+        // passes data through unchanged), but err is asserted on the EOP beat.
         `SVTEST(_h2c_zero_byte)
-            send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
-            expect_no_h2c_packet(64);
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            fork
+                send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
         `SVTEST_END
 
-        // H2C: an errored packet is dropped rather than forwarded to the core.
-        `SVTEST(h2c_err_dropped)
-            send_h2c_packet(.num_beats(1), .err(1'b1));
-            expect_no_h2c_packet(64);
+        // H2C: an QDMA-signalled error is marked on the EOP beat; the upstream
+        // FIFO (DROP_ERRORED=1) discards it before the core sees it.
+        `SVTEST(h2c_err_marked)
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            fork
+                send_h2c_packet(.num_beats(1), .err(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
         `SVTEST_END
 
-        // H2C: a good packet still gets through after an errored one is dropped.
+        // H2C: a good packet following an errored one passes through with err=0.
+        // The adapter marks the errored packet on pkt_h2c, then presents the
+        // good packet independently; the FIFO upstream handles the drop.
         `SVTEST(h2c_err_does_not_block)
             int bytes; logic [QID_WID-1:0] qid; logic err;
-            send_h2c_packet(.num_beats(2), .err(1'b1));
+            // Drain the errored packet (err=1 on EOP beat of the 2-beat packet)
+            fork
+                send_h2c_packet(.num_beats(2), .err(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
+            // Good packet follows — must arrive with err=0
             fork
                 send_h2c_packet(.num_beats(1), .qid(11'h2C));
                 recv_h2c_packet(bytes, qid, err);
@@ -700,9 +719,15 @@ module xilinx_qdma_st_adapter_unit_test;
                     // Capture ctrl_len on first output beat
                     @(posedge aclk iff (c2h_tvalid && c2h_tready));
                     captured_ctrl_len = c2h_ctrl_len;
-                    // Capture cmpt_data.len on EOP (completion fires on last beat)
+                    // Capture cmpt_data.len on EOP (completion fires on last beat).
+                    // len sits at cmpt_data[19:4] per c2h_cmpt_data_t (PG347/DPDK
+                    // completion layout) — not [15:0], which would also catch
+                    // dma_rsv at [3:0].
                     @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
-                    captured_cmpt_len = cmpt_data[15:0];
+                    begin
+                        automatic c2h_cmpt_data_t cmpt_data_unpacked = cmpt_data;
+                        captured_cmpt_len = cmpt_data_unpacked.len;
+                    end
                 end
             join
             `FAIL_UNLESS_EQUAL(captured_ctrl_len, 16'(PKT_BYTES));
