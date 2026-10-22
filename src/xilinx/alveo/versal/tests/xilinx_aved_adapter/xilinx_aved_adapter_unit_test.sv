@@ -85,7 +85,7 @@ module xilinx_aved_adapter_unit_test;
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::QID_WID + 32       )
     ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     wire pci_rstn_in;

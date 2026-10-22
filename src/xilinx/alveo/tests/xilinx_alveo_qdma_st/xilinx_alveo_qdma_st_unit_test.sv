@@ -39,7 +39,7 @@ module xilinx_alveo_qdma_st_unit_test;
 
     packet_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .META_WID(QID_WID))
         pkt_h2c_dma  (.clk(aclk));      // TB drives  (QDMA domain)
-    packet_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .META_WID(QID_WID))
+    packet_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .META_WID(QID_WID + 32))
         pkt_c2h_dma  (.clk(aclk));      // TB receives (QDMA domain)
     // Shell-typed axi4s, core clock domain.  tid carries the queue ID.
     localparam int TID_WID = QID_WID;
@@ -216,6 +216,28 @@ module xilinx_alveo_qdma_st_unit_test;
             beats++;
             if (eop) break;
         end
+        num_bytes = beats * AXIS_DATA_BYTE_WID - mty;
+    endtask
+
+    // Receive one C2H packet from pkt_c2h_dma (META_WID = QID_WID + 32).
+    // Only the low QID_WID bits of meta are returned as qid.
+    task automatic recv_pkt_c2h(
+        output int                 num_bytes,
+        output logic [QID_WID-1:0] qid,
+        output logic               err
+    );
+        logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat;
+        logic [QID_WID+31:0] meta;
+        logic [5:0] mty;
+        logic eop;
+        int beats = 0;
+        num_bytes = 0;
+        forever begin
+            pkt_c2h_dma.receive(beat, eop, mty, err, meta);
+            beats++;
+            if (eop) break;
+        end
+        qid       = meta[QID_WID-1:0];
         num_bytes = beats * AXIS_DATA_BYTE_WID - mty;
     endtask
 
@@ -442,7 +464,7 @@ module xilinx_alveo_qdma_st_unit_test;
             set_loopback(1'b1);
             fork
                 send_pkt(pkt_h2c_dma, 128, 12'h0C5);
-                recv_pkt(pkt_c2h_dma, bytes, qid, err);
+                recv_pkt_c2h(bytes, qid, err);
             join
             `FAIL_UNLESS_EQUAL(bytes, 128);
             `FAIL_UNLESS_EQUAL(qid, 12'h0C5);
@@ -456,7 +478,7 @@ module xilinx_alveo_qdma_st_unit_test;
             set_loopback(1'b1);
             fork
                 send_pkt(pkt_h2c_dma, 128, 12'h00C);
-                recv_pkt(pkt_c2h_dma, bytes, qid, err);
+                recv_pkt_c2h(bytes, qid, err);
                 expect_idle_core(192);
             join
             `FAIL_UNLESS_EQUAL(qid, 12'h00C);
@@ -484,7 +506,7 @@ module xilinx_alveo_qdma_st_unit_test;
             `FAIL_UNLESS_EQUAL(qid, 12'h055);
             fork
                 send_axis(64, 12'h02B);
-                recv_pkt(pkt_c2h_dma, bytes, qid, err);
+                recv_pkt_c2h(bytes, qid, err);
             join
             `FAIL_UNLESS_EQUAL(bytes, 64);
             `FAIL_UNLESS_EQUAL(qid, 12'h02B);
@@ -541,7 +563,7 @@ module xilinx_alveo_qdma_st_unit_test;
             for (int i = 0; i < PKTS; i++) begin
                 fork
                     send_axis(BYTES_PER, 12'h033);
-                    recv_pkt(pkt_c2h_dma, bytes, qid, err);
+                    recv_pkt_c2h(bytes, qid, err);
                 join
             end
             settle_counts();
@@ -563,7 +585,7 @@ module xilinx_alveo_qdma_st_unit_test;
             clear_all_counts();
             fork
                 send_pkt(pkt_h2c_dma, BYTES, 12'h044);
-                recv_pkt(pkt_c2h_dma, bytes, qid, err);
+                recv_pkt_c2h(bytes, qid, err);
             join
             settle_counts();
             check_counts(cnt_h2c_in,  "h2c_in",  1, BYTES, 0, 0);

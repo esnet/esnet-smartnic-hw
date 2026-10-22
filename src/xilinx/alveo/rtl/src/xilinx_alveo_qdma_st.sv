@@ -79,6 +79,10 @@ module xilinx_alveo_qdma_st
     localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 256 ? MIN_FIFO_DEPTH : 256;
     localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
+    // C2H meta width: QID in low bits, generated CRC in high 32 bits.
+    // The CRC is computed before the C2H FIFO and carried through its descriptor.
+    localparam int PKT_C2H_META_WID = QID_WID + 32;
+
     // =========================================================================
     // Register space
     //
@@ -204,10 +208,11 @@ module xilinx_alveo_qdma_st
     // needs for c2h_ctrl_len and the completion.
     // =========================================================================
 
-    // FIFO input interface (core clock domain), sourced via packet_loopback
+    // FIFO input interface (core clock domain), after CRC generator.
+    // Meta carries {crc[31:0], qid[QID_WID-1:0]}.
     packet_intf #(
-        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID  ),
+        .META_WID      ( PKT_C2H_META_WID    )
     ) pkt_c2h_fifo (.clk(core_clk));
 
     packet_event_intf evt_c2h_in  (.clk(core_clk));
@@ -249,16 +254,53 @@ module xilinx_alveo_qdma_st
         .META_WID      ( QID_WID            )
     ) pkt_c2h_core (.clk(core_clk));
 
+    // Loopback output (pre-CRC): driven by the loopback switch, consumed by
+    // the CRC generator.  Meta carries only QID; CRC is not yet present.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_lb_out (.clk(core_clk));
+
+    // CRC generator output: same width as input (META_WID = QID_WID).
+    // The generated CRC is on the out-of-band crc_out port, not in meta.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( QID_WID            )
+    ) pkt_c2h_crc_out (.clk(core_clk));
+
     packet_loopback i_packet_loopback (
         .srst          ( core_srst               ),
         .packet_tx_in  ( pkt_h2c_fifo            ),
         .packet_tx_out ( pkt_h2c_core            ),
         .packet_rx_in  ( pkt_c2h_core            ),
-        .packet_rx_out ( pkt_c2h_fifo            ),
+        .packet_rx_out ( pkt_c2h_lb_out          ),
         .en            ( core_loopback_en        ),
         .en_mon        ( core_loopback_en_mon    ),
         .switching     ( core_loopback_switching )
     );
+
+    // CRC generator: computes CRC32 over C2H packet data before the FIFO.
+    // crc_out is registered on the input EOP beat and valid at the output EOP,
+    // coinciding exactly with the descriptor write in the FIFO.  It is packed
+    // into the upper 32 bits of pkt_c2h_fifo.meta so the store-and-forward
+    // descriptor carries it across the clock domain alongside the QID.
+    logic [31:0] c2h_crc_out;
+
+    packet_crc_tx i_packet_crc_tx__c2h (
+        .srst    ( core_srst       ),
+        .from_tx ( pkt_c2h_lb_out  ),
+        .to_rx   ( pkt_c2h_crc_out ),
+        .crc_out ( c2h_crc_out     )
+    );
+
+    // Wire pkt_c2h_crc_out → pkt_c2h_fifo, widening meta to carry the CRC.
+    assign pkt_c2h_fifo.vld  = pkt_c2h_crc_out.vld;
+    assign pkt_c2h_fifo.data = pkt_c2h_crc_out.data;
+    assign pkt_c2h_fifo.eop  = pkt_c2h_crc_out.eop;
+    assign pkt_c2h_fifo.mty  = pkt_c2h_crc_out.mty;
+    assign pkt_c2h_fifo.err  = pkt_c2h_crc_out.err;
+    assign pkt_c2h_fifo.meta = {c2h_crc_out, pkt_c2h_crc_out.meta};
+    assign pkt_c2h_crc_out.rdy = pkt_c2h_fifo.rdy;
 
     // =========================================================================
     // packet_intf <-> axi4s_intf conversion (core clock domain)

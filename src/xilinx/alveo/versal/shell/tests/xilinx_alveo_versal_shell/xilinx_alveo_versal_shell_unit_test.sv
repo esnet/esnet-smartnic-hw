@@ -42,7 +42,7 @@ module xilinx_alveo_versal_shell_unit_test;
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( QID_WID + 32       )
     ) pkt_c2h_dma (.clk(axil_if.aclk));
 
     shell_intf #(

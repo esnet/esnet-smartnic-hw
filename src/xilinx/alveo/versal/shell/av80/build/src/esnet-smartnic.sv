@@ -35,7 +35,7 @@ module esnet_smartnic
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( QID_WID + 32       )
     ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     packet_pkg::size_t pkt_c2h_dma_size;

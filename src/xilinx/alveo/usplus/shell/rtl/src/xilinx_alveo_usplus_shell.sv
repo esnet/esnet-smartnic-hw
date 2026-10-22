@@ -94,7 +94,7 @@ module xilinx_alveo_usplus_shell
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::QID_WID + 32       )
     ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
 
     axi4s_intf #(

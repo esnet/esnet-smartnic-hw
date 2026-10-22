@@ -107,10 +107,11 @@ module xilinx_qdma_st_adapter_unit_test;
         .META_WID      ( QID_WID            )
     ) pkt_h2c (.clk(aclk));
 
-    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
+    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC).
+    // Meta carries {c2h_tcrc[31:0], qid[QID_WID-1:0]}; upper 32 bits are CRC.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( QID_WID + 32       )
     ) pkt_c2h (.clk(aclk));
 
     // Drive interface signals to known values from time 0.
@@ -326,7 +327,7 @@ module xilinx_qdma_st_adapter_unit_test;
 
     // Send a C2H packet via packet_intf (byte-level, auto-computes mty).
     // Data is big-endian byte array as expected by packet_intf.
-    // QID is carried in packet_intf.meta.
+    // QID is in meta[QID_WID-1:0]; meta[META_WID-1:QID_WID] carries tcrc (zero here).
     task automatic send_c2h_packet(
         input int                 num_bytes,
         input logic [QID_WID-1:0] qid        = '0,
@@ -334,12 +335,14 @@ module xilinx_qdma_st_adapter_unit_test;
     );
         int bytes_remaining;
         logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat_data;
+        logic [QID_WID+31:0] meta;
         logic [5:0] beat_mty;
         logic beat_eop;
 
         // Stand in for the upstream store-and-forward FIFO: the length is
         // presented for the whole packet, valid from the first beat.
         pkt_c2h_size = 16'(num_bytes);
+        meta = {{32{1'b0}}, qid};
 
         bytes_remaining = num_bytes;
         while (bytes_remaining > 0) begin
@@ -358,7 +361,7 @@ module xilinx_qdma_st_adapter_unit_test;
                 ._eop  ( beat_eop  ),
                 ._mty  ( beat_mty  ),
                 ._err  ( 1'b0      ),
-                ._meta ( qid       )
+                ._meta ( meta      )
             );
 
             bytes_remaining -= AXIS_DATA_BYTE_WID;
