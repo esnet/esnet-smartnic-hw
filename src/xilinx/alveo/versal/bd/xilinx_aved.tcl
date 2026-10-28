@@ -72,6 +72,11 @@ connect_bd_net \
 # per parameter) triggers a full CIPS re-validation on each call; with
 # SR-IOV enabled this becomes prohibitively slow (~50 re-validations).
 # -------------------------------------------------------------------------
+#
+# CPM_PCIE0_QDMA_PARITY_SETTINGS (GUI: Data Protection) = Check_Parity is
+# required for the H2C engine to drive a valid dma0_m_axis_h2c_tcrc at EOP;
+# with None the sideband reads 0 and the inline CRC check in
+# xilinx_qdma_st_adapter rejects every packet.
 set cips [get_bd_cells cips]
 
 set pcie0_params [list \
@@ -106,6 +111,7 @@ set pcie0_params [list \
     CPM_PCIE0_PF0_BAR2_QDMA_TYPE          AXI_Bridge_Master \
     CPM_PCIE0_PF0_PCIEBAR2AXIBAR_QDMA_2   0x0000020300000000 \
     CPM_PCIE0_DMA_INTF                     AXI4S \
+    CPM_PCIE0_QDMA_PARITY_SETTINGS         Check_Parity \
     CPM_PCIE0_PF1_CFG_DEV_ID              9138 \
     CPM_PCIE0_PF1_BASE_CLASS_VALUE        02 \
     CPM_PCIE0_PF1_SUB_CLASS_VALUE         80 \
