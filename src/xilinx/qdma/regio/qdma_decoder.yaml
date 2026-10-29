@@ -18,6 +18,30 @@ info: |
   loopback enabled h2c_out still counts, and c2h_in counts the reflected H2C
   traffic rather than anything the core sent.
 
+  capture and playback are packet debug instances on the QDMA-side packet
+  interfaces, in the QDMA clock domain.  Each is isolated from the datapath
+  until its control.enable bit is set, which is independent of the other.
+
+    capture   taps the H2C stream as it arrives from the DMA engine, ahead of
+              the CRC check, and so records the CRC the engine supplied in its
+              meta.  While enabled, H2C is diverted into the capture buffer
+              and the datapath receives nothing.  The meta is
+              {tcrc[31:0], qid} (xilinx_qdma_pkg pkt_h2c_meta_t).
+
+    playback  injects a packet into the C2H stream toward the DMA engine.
+              While enabled, the playback packet replaces the datapath, which
+              is held backpressured (nothing is dropped).  The meta must be
+              supplied as {size[15:0], tcrc[31:0], qid} (xilinx_qdma_pkg
+              pkt_c2h_meta_t); size must equal the packet length in bytes.
+
+  Enable changes take effect at the next packet boundary.
+
+decoders:
+  pkt_playback: &pkt_playback
+    !include src/packet/regio/packet_playback_decoder.yaml
+  pkt_capture: &pkt_capture
+    !include src/packet/regio/packet_capture_decoder.yaml
+
 blocks:
   config: &config
     !include ../src/xilinx/qdma/regio/qdma.yaml
@@ -50,3 +74,13 @@ interfaces:
     width: 8
     address: 0x0400
     name: c2h_out
+
+  # Packet debug instances (QDMA clock domain).
+  - decoder: *pkt_capture
+    address: 0x1000
+    width: 12
+    name: capture
+  - decoder: *pkt_playback
+    address: 0x2000
+    width: 12
+    name: playback

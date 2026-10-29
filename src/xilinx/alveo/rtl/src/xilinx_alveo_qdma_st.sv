@@ -14,8 +14,11 @@
 //   - C2H CRC generation (packet_crc_tx) on the core-clock side, before
 //     the C2H FIFO; the result is packed into the descriptor meta field
 //   - a register-controlled loopback that reflects H2C back as C2H
-//   - the register space: loopback control/status plus packet counters on
-//     both sides of each FIFO
+//   - packet debug: a packet_capture tapping the H2C stream from the DMA
+//     engine and a packet_playback injecting into the C2H stream toward it,
+//     each isolated from the datapath until its register enable is set
+//   - the register space: loopback control/status, packet counters on both
+//     sides of each FIFO, and the capture/playback blocks
 //   - the packet_intf <-> axi4s_intf conversion and the metadata remap
 //     between QDMA and shell types
 //
@@ -93,6 +96,8 @@ module xilinx_alveo_qdma_st
     axi4l_intf axil_h2c_out ();
     axi4l_intf axil_c2h_in  ();
     axi4l_intf axil_c2h_out ();
+    axi4l_intf axil_capture ();
+    axi4l_intf axil_playback ();
 
     qdma_decoder i_qdma_decoder (
         .axil_if         ( axil_if      ),
@@ -100,7 +105,9 @@ module xilinx_alveo_qdma_st
         .h2c_in_axil_if  ( axil_h2c_in  ),
         .h2c_out_axil_if ( axil_h2c_out ),
         .c2h_in_axil_if  ( axil_c2h_in  ),
-        .c2h_out_axil_if ( axil_c2h_out )
+        .c2h_out_axil_if ( axil_c2h_out ),
+        .capture_axil_if  ( axil_capture  ),
+        .playback_axil_if ( axil_playback )
     );
 
     // =========================================================================
@@ -173,8 +180,40 @@ module xilinx_alveo_qdma_st
     // The checked interface carries only QID in meta, dropping the tcrc field
     // that the downstream FIFO and core don't need.
     // =========================================================================
+    // H2C stream steered by the capture enable: to the checker (datapath), or
+    // to the capture buffer (debug).  Both are on the DMA-side meta layout.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( PKT_H2C_META_WID   )
+    ) pkt_h2c_chk (.clk(aclk));
+
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( PKT_H2C_META_WID   )
+    ) pkt_h2c_cap (.clk(aclk));
+
+    logic h2c_capture_en;
+
+    packet_intf_1to2_demux i_packet_intf_1to2_demux__h2c_capture (
+        .srst    ( ~aresetn       ),
+        .from_tx ( pkt_h2c_dma    ),
+        .to_rx_0 ( pkt_h2c_chk    ),
+        .to_rx_1 ( pkt_h2c_cap    ),
+        .sel     ( h2c_capture_en )
+    );
+
+    // Taps the H2C stream ahead of the CRC check, so the meta carries the
+    // tcrc supplied by the DMA engine.
+    packet_capture i_packet_capture__h2c (
+        .clk       ( aclk            ),
+        .srst      ( ~aresetn        ),
+        .en        ( h2c_capture_en  ),
+        .axil_if   ( axil_capture    ),
+        .packet_if ( pkt_h2c_cap     )
+    );
+
     pkt_h2c_meta_t h2c_dma_meta;
-    assign h2c_dma_meta = pkt_h2c_dma.meta;
+    assign h2c_dma_meta = pkt_h2c_chk.meta;
 
     // Checked H2C interface (QDMA clock domain), QID-only meta → H2C FIFO.
     packet_intf #(
@@ -191,7 +230,7 @@ module xilinx_alveo_qdma_st
 
     packet_crc_rx i_packet_crc_rx__h2c (
         .srst    ( ~aresetn          ),
-        .from_tx ( pkt_h2c_dma      ),
+        .from_tx ( pkt_h2c_chk      ),
         .to_rx   ( pkt_h2c_crc_out  ),
         .crc_in  ( h2c_dma_meta.tcrc )
     );
@@ -281,13 +320,45 @@ module xilinx_alveo_qdma_st
     assign c2h_dma_meta.tcrc = pkt_c2h_fifo_out.meta[C2H_FIFO_META_WID-1 -: 32];
     assign c2h_dma_meta.qid  = QID_WID'(pkt_c2h_fifo_out.meta);
 
-    assign pkt_c2h_dma.vld  = pkt_c2h_fifo_out.vld;
-    assign pkt_c2h_dma.data = pkt_c2h_fifo_out.data;
-    assign pkt_c2h_dma.eop  = pkt_c2h_fifo_out.eop;
-    assign pkt_c2h_dma.mty  = pkt_c2h_fifo_out.mty;
-    assign pkt_c2h_dma.err  = pkt_c2h_fifo_out.err;
-    assign pkt_c2h_dma.meta = PKT_C2H_META_WID'(c2h_dma_meta);
-    assign pkt_c2h_fifo_out.rdy = pkt_c2h_dma.rdy;
+    // Datapath C2H stream toward the DMA engine, before the playback mux.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( PKT_C2H_META_WID   )
+    ) pkt_c2h_chk (.clk(aclk));
+
+    assign pkt_c2h_chk.vld  = pkt_c2h_fifo_out.vld;
+    assign pkt_c2h_chk.data = pkt_c2h_fifo_out.data;
+    assign pkt_c2h_chk.eop  = pkt_c2h_fifo_out.eop;
+    assign pkt_c2h_chk.mty  = pkt_c2h_fifo_out.mty;
+    assign pkt_c2h_chk.err  = pkt_c2h_fifo_out.err;
+    assign pkt_c2h_chk.meta = PKT_C2H_META_WID'(c2h_dma_meta);
+    assign pkt_c2h_fifo_out.rdy = pkt_c2h_chk.rdy;
+
+    // Playback stream, in the DMA-side meta layout.  The meta (including size
+    // and tcrc) is supplied by the playback registers.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .META_WID      ( PKT_C2H_META_WID   )
+    ) pkt_c2h_play (.clk(aclk));
+
+    logic c2h_playback_en;
+
+    packet_playback i_packet_playback__c2h (
+        .clk       ( aclk             ),
+        .srst      ( ~aresetn         ),
+        .en        ( c2h_playback_en  ),
+        .axil_if   ( axil_playback    ),
+        .packet_if ( pkt_c2h_play     )
+    );
+
+    // The datapath is backpressured, not drained, while playback is selected.
+    packet_intf_2to1_mux i_packet_intf_2to1_mux__c2h_playback (
+        .srst      ( ~aresetn         ),
+        .from_tx_0 ( pkt_c2h_chk      ),
+        .from_tx_1 ( pkt_c2h_play     ),
+        .to_rx     ( pkt_c2h_dma      ),
+        .sel       ( c2h_playback_en  )
+    );
 
     // =========================================================================
     // Loopback switch (core clock domain)

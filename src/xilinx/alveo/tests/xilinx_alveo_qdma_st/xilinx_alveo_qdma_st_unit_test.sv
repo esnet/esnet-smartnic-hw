@@ -13,6 +13,11 @@ module xilinx_alveo_qdma_st_unit_test;
     localparam int QID_WID     = 12;
     localparam int MAX_PKT_LEN = 9100;
 
+    // Packet debug blocks in the qdma_decoder address map
+    localparam int CAPTURE_BASE  = 'h1000;
+    localparam int PLAYBACK_BASE = 'h2000;
+    localparam int DEBUG_MEM_SIZE = 16384;
+
     // =========================================================================
     // Clocks and reset
     //
@@ -105,6 +110,10 @@ module xilinx_alveo_qdma_st_unit_test;
     // C2H DMA monitor: receives completed C2H packets from the DUT.
     packet_intf_monitor #(AXIS_DATA_BYTE_WID, pkt_c2h_meta_t) c2h_dma_monitor;
 
+    // Packet debug agents: capture taps the H2C stream, playback injects C2H.
+    packet_capture_monitor #(pkt_h2c_meta_t) h2c_capture;
+    packet_playback_driver #(pkt_c2h_meta_t) c2h_playback;
+
     // Register agents
     axi4l_verif_pkg::axi4l_reg_agent axil_reg_agent;
     packet_verif_pkg::packet_counters_reg_agent cnt_h2c_in;
@@ -123,6 +132,11 @@ module xilinx_alveo_qdma_st_unit_test;
 
         axil_reg_agent = new("axil_reg_agent");
         axil_reg_agent.axil_vif = axil_if;
+        h2c_capture = new("h2c_capture", DEBUG_MEM_SIZE, AXIS_DATA_BYTE_WID*8,
+                          axil_reg_agent, CAPTURE_BASE);
+        c2h_playback = new("c2h_playback", DEBUG_MEM_SIZE, AXIS_DATA_BYTE_WID*8,
+                           axil_reg_agent, PLAYBACK_BASE);
+
         cnt_h2c_in  = new("cnt_h2c_in",  axil_reg_agent, 'h0100);
         cnt_h2c_out = new("cnt_h2c_out", axil_reg_agent, 'h0200);
         cnt_c2h_in  = new("cnt_c2h_in",  axil_reg_agent, 'h0300);
@@ -306,6 +320,54 @@ module xilinx_alveo_qdma_st_unit_test;
             @(posedge aclk);
             `FAIL_IF_LOG(pkt_c2h_dma.vld, "unexpected packet on pkt_c2h_dma")
         end
+    endtask
+
+    // =========================================================================
+    // Packet debug helpers
+    //
+    // The enables take effect at a packet boundary after crossing from the
+    // management clock, so allow them to settle before driving traffic.
+    // =========================================================================
+    task automatic set_capture_en(input bit en);
+        reg_write(CAPTURE_BASE + packet_capture_reg_pkg::OFFSET_CONTROL, 32'(en) << 1);
+        repeat (32) @(posedge aclk);
+    endtask
+
+    task automatic set_playback_en(input bit en);
+        reg_write(PLAYBACK_BASE + packet_playback_reg_pkg::OFFSET_CONTROL, 32'(en) << 1);
+        repeat (32) @(posedge aclk);
+    endtask
+
+    // Capture one H2C packet while send_h2c / send_h2c_bad_crc drives it.
+    task automatic capture_h2c(output packet#(pkt_h2c_meta_t) pkt);
+        bit error, timeout;
+        h2c_capture.capture(pkt, error, timeout);
+        `FAIL_IF_LOG(error,   "capture reported an error")
+        `FAIL_IF_LOG(timeout, "capture timed out")
+    endtask
+
+    // Play one packet into C2H with the given QDMA-side meta.
+    task automatic play_c2h(
+        input int                 num_bytes,
+        input logic [QID_WID-1:0] qid,
+        input logic [31:0]        tcrc,
+        input byte                seed = 8'h00
+    );
+        byte data[];
+        pkt_c2h_meta_t meta;
+        packet_raw#(pkt_c2h_meta_t) pkt;
+        bit error, timeout;
+
+        data = new[num_bytes];
+        for (int i = 0; i < num_bytes; i++) data[i] = seed + i;
+
+        meta.size = 16'(num_bytes);
+        meta.tcrc = tcrc;
+        meta.qid  = QID_WID'(qid);
+        pkt = packet_raw#(pkt_c2h_meta_t)::create_from_bytes("c2h_play", data, meta, 1'b0);
+        c2h_playback.send_one(pkt, error, timeout);
+        `FAIL_IF_LOG(error,   "playback reported an error")
+        `FAIL_IF_LOG(timeout, "playback timed out")
     endtask
 
     // =========================================================================
@@ -500,6 +562,176 @@ module xilinx_alveo_qdma_st_unit_test;
             join
             `FAIL_UNLESS_EQUAL(bytes, 64)
             `FAIL_UNLESS_EQUAL(qid, 12'h02B)
+        `SVTEST_END
+
+        // ---------------------------------------------------------------
+        // Packet debug (capture / playback)
+        // ---------------------------------------------------------------
+
+        // Both blocks decode at their windows and report their parameterization.
+        `SVTEST(debug_blocks_decode)
+            int sz, meta_wid;
+            h2c_capture.read_mem_size(sz);
+            `FAIL_UNLESS_EQUAL(sz, DEBUG_MEM_SIZE)
+            h2c_capture.read_meta_width(meta_wid);
+            `FAIL_UNLESS_EQUAL(meta_wid, PKT_H2C_META_WID)
+            c2h_playback.read_mem_size(sz);
+            `FAIL_UNLESS_EQUAL(sz, DEBUG_MEM_SIZE)
+            c2h_playback.read_meta_width(meta_wid);
+            `FAIL_UNLESS_EQUAL(meta_wid, PKT_C2H_META_WID)
+        `SVTEST_END
+
+        // Disabled by default: neither block is in the datapath, so both
+        // directions pass traffic with the debug blocks present and idle.
+        `SVTEST(debug_isolated_by_default)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            logic err;
+            fork
+                send_h2c(128, 12'h0D1);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 128)
+            `FAIL_UNLESS_EQUAL(qid, 12'h0D1)
+            fork
+                send_axis(128, 12'h0D2);
+                recv_c2h_dma(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 128)
+            `FAIL_UNLESS_EQUAL(qid, 12'h0D2)
+        `SVTEST_END
+
+        // Capture enabled: the H2C packet lands in the capture buffer intact,
+        // with the DMA engine's tcrc and qid in its meta, and the core sees
+        // nothing.
+        `SVTEST(capture_h2c_diverts_and_records)
+            packet#(pkt_h2c_meta_t) cap;
+            byte exp_data[];
+            byte got_data[];
+            pkt_h2c_meta_t exp_meta, got_meta;
+            packet_raw#(pkt_h2c_meta_t) exp_pkt;
+            localparam int BYTES = 200;
+            localparam byte SEED = 8'h5A;
+
+            exp_data = new[BYTES];
+            for (int i = 0; i < BYTES; i++) exp_data[i] = SEED + i;
+            exp_pkt = packet_raw#(pkt_h2c_meta_t)::create_from_bytes("exp", exp_data, '0, 1'b0);
+            exp_meta.tcrc = exp_pkt.crc();
+            exp_meta.qid  = QID_WID'(12'h2A5);
+
+            set_capture_en(1'b1);
+            fork
+                send_h2c(BYTES, 12'h2A5, 1'b0, SEED);
+                capture_h2c(cap);
+                expect_idle_core(1024);
+            join
+
+            `FAIL_UNLESS_EQUAL(cap.size(), BYTES)
+            got_data = cap.to_bytes();
+            for (int i = 0; i < BYTES; i++)
+                `FAIL_UNLESS_EQUAL(got_data[i], exp_data[i])
+            got_meta = cap.get_meta();
+            `FAIL_UNLESS_EQUAL(got_meta.tcrc, exp_meta.tcrc)
+            `FAIL_UNLESS_EQUAL(got_meta.qid,  exp_meta.qid)
+        `SVTEST_END
+
+        // Capture sits ahead of the CRC check, so a packet with a wrong tcrc is
+        // captured whole, with the wrong tcrc visible in the meta.
+        `SVTEST(capture_h2c_records_bad_crc)
+            packet#(pkt_h2c_meta_t) cap;
+            byte exp_data[];
+            packet_raw#(pkt_h2c_meta_t) exp_pkt;
+            pkt_h2c_meta_t got_meta;
+            localparam int BYTES = 100;
+
+            exp_data = new[BYTES];
+            for (int i = 0; i < BYTES; i++) exp_data[i] = 8'(i);
+            exp_pkt = packet_raw#(pkt_h2c_meta_t)::create_from_bytes("exp", exp_data, '0, 1'b0);
+
+            set_capture_en(1'b1);
+            fork
+                send_h2c_bad_crc(BYTES, 12'h003);
+                capture_h2c(cap);
+            join
+
+            `FAIL_UNLESS_EQUAL(cap.size(), BYTES)
+            got_meta = cap.get_meta();
+            `FAIL_UNLESS_EQUAL(got_meta.tcrc, exp_pkt.crc() ^ 32'hFFFF_FFFF)
+        `SVTEST_END
+
+        // Clearing the capture enable restores the datapath.
+        `SVTEST(capture_disable_restores_datapath)
+            packet#(pkt_h2c_meta_t) cap;
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            set_capture_en(1'b1);
+            fork
+                send_h2c(64, 12'h011);
+                capture_h2c(cap);
+            join
+            set_capture_en(1'b0);
+            fork
+                send_h2c(96, 12'h012);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 96)
+            `FAIL_UNLESS_EQUAL(qid, 12'h012)
+        `SVTEST_END
+
+        // Playback enabled: the injected packet reaches the DMA engine with
+        // the data and the meta (size, tcrc, qid) programmed in the registers.
+        `SVTEST(playback_c2h_injects)
+            packet#(pkt_c2h_meta_t) rx;
+            pkt_c2h_meta_t meta;
+            byte got_data[];
+            localparam int BYTES = 150;
+            localparam byte SEED = 8'hC3;
+
+            set_playback_en(1'b1);
+            fork
+                play_c2h(BYTES, 12'h5C3, 32'hDEAD_BEEF, SEED);
+                c2h_dma_monitor.receive(rx);
+            join
+
+            `FAIL_UNLESS_EQUAL(rx.size(), BYTES)
+            got_data = rx.to_bytes();
+            for (int i = 0; i < BYTES; i++)
+                `FAIL_UNLESS_EQUAL(got_data[i], byte'(SEED + i))
+            meta = rx.get_meta();
+            `FAIL_UNLESS_EQUAL(meta.size, 16'(BYTES))
+            `FAIL_UNLESS_EQUAL(meta.tcrc, 32'hDEAD_BEEF)
+            `FAIL_UNLESS_EQUAL(meta.qid,  QID_WID'(12'h5C3))
+        `SVTEST_END
+
+        // While playback is selected the datapath is held, not drained: a
+        // packet sent from the core is delivered once playback is disabled.
+        `SVTEST(playback_holds_datapath_until_disabled)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            logic err;
+            set_playback_en(1'b1);
+            send_axis(128, 12'h0E1);
+            expect_idle_dma(256);
+            fork
+                set_playback_en(1'b0);
+                recv_c2h_dma(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 128)
+            `FAIL_UNLESS_EQUAL(qid, 12'h0E1)
+        `SVTEST_END
+
+        // The two enables are independent: playback on, capture off leaves
+        // H2C on the datapath.
+        `SVTEST(debug_enables_independent)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            set_playback_en(1'b1);
+            fork
+                send_h2c(64, 12'h0F1);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 64)
+            `FAIL_UNLESS_EQUAL(qid, 12'h0F1)
         `SVTEST_END
 
         // ---------------------------------------------------------------
