@@ -195,9 +195,29 @@ module xilinx_alveo_qdma_st_unit_test;
     endtask
 
     // =========================================================================
+    // tcrc of a packet, in the DMA engine's convention: CRC-32/MPEG-2 over
+    // whole beats, each shifted in last byte first, the final beat zero-padded.
+    // =========================================================================
+    function automatic logic [31:0] qdma_tcrc_bytes(input byte raw[]);
+        int  nbeats = (raw.size() + AXIS_DATA_BYTE_WID - 1) / AXIS_DATA_BYTE_WID;
+        byte rev[] = new[nbeats * AXIS_DATA_BYTE_WID];
+        foreach (rev[i]) begin
+            int src = (i / AXIS_DATA_BYTE_WID) * AXIS_DATA_BYTE_WID
+                    + (AXIS_DATA_BYTE_WID - 1 - (i % AXIS_DATA_BYTE_WID));
+            rev[i] = (src < raw.size()) ? raw[src] : 8'h00;
+        end
+        return crc_verif_pkg::calculate(32, crc_pkg::CRC32_MPEG2.POLY, crc_pkg::CRC32_MPEG2.INIT,
+                                        0, 0, crc_pkg::CRC32_MPEG2.XOROUT, rev);
+    endfunction
+
+    function automatic logic [31:0] qdma_tcrc(input packet_raw#(pkt_h2c_meta_t) pkt);
+        return qdma_tcrc_bytes(pkt.to_bytes());
+    endfunction
+
+    // =========================================================================
     // H2C send helper
     //
-    // Builds a deterministic byte array, computes the correct CRC-32 over it,
+    // Builds a deterministic byte array, computes the correct tcrc over it,
     // packs both into pkt_h2c_meta_t, and sends via the packet_intf_driver.
     // The DUT's packet_crc_rx will verify the CRC against pkt_h2c_dma.meta.tcrc.
     // =========================================================================
@@ -216,7 +236,7 @@ module xilinx_alveo_qdma_st_unit_test;
         for (int i = 0; i < num_bytes; i++) data[i] = seed + i;
 
         pkt = packet_raw#(pkt_h2c_meta_t)::create_from_bytes("h2c_pkt", data, '0, err);
-        meta.tcrc = pkt.crc();
+        meta.tcrc = qdma_tcrc(pkt);
         meta.qid  = QID_WID'(qid);
         pkt.set_meta(meta);
         h2c_driver.send(pkt);
@@ -236,7 +256,7 @@ module xilinx_alveo_qdma_st_unit_test;
         for (int i = 0; i < num_bytes; i++) data[i] = 8'(i);
 
         pkt = packet_raw#(pkt_h2c_meta_t)::create_from_bytes("h2c_bad_crc", data, '0, 1'b0);
-        meta.tcrc = pkt.crc() ^ 32'hFFFF_FFFF;  // flip all bits — guaranteed mismatch
+        meta.tcrc = qdma_tcrc(pkt) ^ 32'hFFFF_FFFF;  // flip all bits — guaranteed mismatch
         meta.qid  = QID_WID'(qid);
         pkt.set_meta(meta);
         h2c_driver.send(pkt);
@@ -489,6 +509,29 @@ module xilinx_alveo_qdma_st_unit_test;
             `FAIL_UNLESS_EQUAL(c2h_meta.size, 16'd37)
         `SVTEST_END
 
+        // C2H: the tcrc packed into the DMA meta is the engine's convention,
+        // over the whole packet including the zero-padded final beat.
+        `SVTEST(c2h_tcrc_generated)
+            int sizes[] = '{64, 100, 200, 37};
+            foreach (sizes[k]) begin
+                logic [PKT_C2H_META_WID-1:0] meta_at_sop;
+                pkt_c2h_meta_t c2h_meta;
+                byte data[] = new[sizes[k]];
+                foreach (data[i]) data[i] = 8'(i);
+                fork
+                    send_axis(sizes[k], 12'h0AB);
+                    begin
+                        @(posedge aclk iff (pkt_c2h_dma.vld && pkt_c2h_dma.rdy));
+                        meta_at_sop = pkt_c2h_dma.meta;
+                    end
+                join
+                c2h_meta = meta_at_sop;
+                `FAIL_UNLESS_EQUAL(c2h_meta.tcrc, qdma_tcrc_bytes(data))
+                // let the rest of the packet drain
+                repeat (4 * sizes[k] / AXIS_DATA_BYTE_WID + 64) @(posedge aclk);
+            end
+        `SVTEST_END
+
         // ---------------------------------------------------------------
         // Loopback
         // ---------------------------------------------------------------
@@ -616,7 +659,7 @@ module xilinx_alveo_qdma_st_unit_test;
             exp_data = new[BYTES];
             for (int i = 0; i < BYTES; i++) exp_data[i] = SEED + i;
             exp_pkt = packet_raw#(pkt_h2c_meta_t)::create_from_bytes("exp", exp_data, '0, 1'b0);
-            exp_meta.tcrc = exp_pkt.crc();
+            exp_meta.tcrc = qdma_tcrc(exp_pkt);
             exp_meta.qid  = QID_WID'(12'h2A5);
 
             set_capture_en(1'b1);
@@ -656,7 +699,7 @@ module xilinx_alveo_qdma_st_unit_test;
 
             `FAIL_UNLESS_EQUAL(cap.size(), BYTES)
             got_meta = cap.get_meta();
-            `FAIL_UNLESS_EQUAL(got_meta.tcrc, exp_pkt.crc() ^ 32'hFFFF_FFFF)
+            `FAIL_UNLESS_EQUAL(got_meta.tcrc, qdma_tcrc(exp_pkt) ^ 32'hFFFF_FFFF)
         `SVTEST_END
 
         // Clearing the capture enable restores the datapath.

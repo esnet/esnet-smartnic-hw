@@ -84,6 +84,18 @@ module xilinx_alveo_qdma_st
     localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
     // =========================================================================
+    // tcrc convention
+    //
+    // The DMA engine's tcrc is not the Ethernet CRC-32.  It has the same
+    // polynomial and init, but is non-reflected with no final xor, and is
+    // computed over whole 512-bit beats: each beat is shifted in MSB first
+    // (last byte first), the zero-padded final beat included.  This is the
+    // packet_crc_rx/tx configuration below; it matches the engine in both
+    // directions (verified on Versal hardware).
+    // =========================================================================
+    localparam crc_pkg::crc_config_t QDMA_TCRC_CONFIG = crc_pkg::CRC32_MPEG2;
+
+    // =========================================================================
     // Register space
     //
     // axil_if is split by qdma_decoder into the config/status block and four
@@ -173,7 +185,8 @@ module xilinx_alveo_qdma_st
     //
     // packet_crc_rx sits before the FIFO in the QDMA clock domain.  It reads
     // the tcrc field from pkt_h2c_dma.meta (pkt_h2c_meta_t) and compares it
-    // against the CRC accumulated over the packet data.  On mismatch it asserts
+    // against the CRC accumulated over the packet data, in the engine's tcrc
+    // convention (see QDMA_TCRC_CONFIG).  On mismatch it asserts
     // err on the output EOP beat; DROP_ERRORED then discards the packet and
     // counts it without passing it to the core.
     //
@@ -228,7 +241,11 @@ module xilinx_alveo_qdma_st
         .META_WID      ( PKT_H2C_META_WID   )
     ) pkt_h2c_crc_out (.clk(aclk));
 
-    packet_crc_rx i_packet_crc_rx__h2c (
+    packet_crc_rx #(
+        .CONFIG       ( QDMA_TCRC_CONFIG ),
+        .TRIM         ( 0                ),
+        .BYTE_REVERSE ( 1                )
+    ) i_packet_crc_rx__h2c (
         .srst    ( ~aresetn          ),
         .from_tx ( pkt_h2c_chk      ),
         .to_rx   ( pkt_h2c_crc_out  ),
@@ -408,7 +425,11 @@ module xilinx_alveo_qdma_st
     // coinciding exactly with the descriptor write in the FIFO.
     logic [31:0] c2h_crc_out;
 
-    packet_crc_tx i_packet_crc_tx__c2h (
+    packet_crc_tx #(
+        .CONFIG       ( QDMA_TCRC_CONFIG ),
+        .TRIM         ( 0                ),
+        .BYTE_REVERSE ( 1                )
+    ) i_packet_crc_tx__c2h (
         .srst    ( core_srst       ),
         .from_tx ( pkt_c2h_lb_out  ),
         .to_rx   ( pkt_c2h_crc_out ),
