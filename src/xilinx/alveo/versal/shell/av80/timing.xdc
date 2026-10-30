@@ -4,7 +4,7 @@
 create_generated_clock -name core_clk \
     [get_pins i_xilinx_alveo_versal_shell/i_xilinx_versal_core_clk/inst/clock_primitive_inst/MMCME5_inst/CLKOUT0]
 
-# DCMAC clk_wiz output clocks derived from qsfp0_322mhz_clk via IBUFDS_GTME5/BUFG_GT/MMCME5
+# DCMAC clk_wiz output clocks derived from qsfp2_322mhz_clk via IBUFDS_GTME5/BUFG_GT/MMCME5
 #create_generated_clock -name dcmac_core_clk \
 #    [get_pins i_xilinx_alveo_versal_shell/dcmac_wrapper_0/i_clk_wiz/inst/clock_primitive_inst/MMCME5_inst/CLKOUT0]
 #create_generated_clock -name dcmac_axis_clk \
@@ -12,8 +12,8 @@ create_generated_clock -name core_clk \
 #create_generated_clock -name dcmac_ts_clk \
 #    [get_pins i_xilinx_alveo_versal_shell/dcmac_wrapper_0/i_clk_wiz/inst/clock_primitive_inst/MMCME5_inst/CLKOUT2]
 
-# QSFP0 GT reference clock (322.265625 MHz)
-create_clock -period 3.102 -name qsfp0_322mhz_clk [get_ports qsfp0_322mhz_clk_p]
+# QSFP2 GT reference clock (322.265625 MHz)
+create_clock -period 3.102 -name qsfp2_322mhz_clk [get_ports qsfp2_322mhz_clk_p]
 
 # SMBus SCL/SDA are asynchronous to the internal clocks; synchronization is handled internally by smbus_v1_1_0 IP.
 set_false_path -from [get_ports {smbus_0_scl_io smbus_0_sda_io}]
