@@ -9,8 +9,6 @@ __all__ = (
     'QdmaC2hMeta',
 )
 
-import zlib
-
 # Metadata layouts of the QDMA packet interfaces (xilinx_qdma_pkg).  The packed
 # structs list the most significant field first:
 #
@@ -28,9 +26,42 @@ _TCRC_MASK = (1 << QDMA_TCRC_WID) - 1
 _SIZE_MASK = (1 << QDMA_SIZE_WID) - 1
 
 
+QDMA_DATA_BYTE_WID = 64   # QDMA AXI-S beat width (512 bits)
+_CRC_POLY = 0x04c11db7
+_CRC_INIT = 0xffffffff
+
+
+def _crc_beat(crc, beat):
+    # MSB-first CRC over one beat, taken as a little-endian integer: the last
+    # byte is shifted in first.
+    for byte in reversed(beat):
+        crc ^= byte << 24
+        for _ in range(8):
+            crc = ((crc << 1) ^ _CRC_POLY if crc & 0x80000000 else crc << 1) & _TCRC_MASK
+    return crc
+
+
 def qdma_crc(data):
-    """IEEE 802.3 CRC-32 of a packet payload, as carried in the QDMA tcrc."""
-    return zlib.crc32(bytes(data)) & _TCRC_MASK
+    """CRC the QDMA engine carries in tcrc for a packet payload.
+
+    This is not the Ethernet CRC-32 (zlib.crc32).  It uses the same polynomial
+    (0x04c11db7) and init (0xffffffff) but is non-reflected with no final xor,
+    and is computed beat by beat over the 512-bit AXI-S data bus:
+
+      - each beat is treated as one integer (byte 0 least significant) and
+        shifted in MSB first, so the last byte of the beat enters first;
+      - the state carries across the beats of a packet, in order;
+      - the final beat is zero-padded to a full beat and the padding is part
+        of the CRC.
+
+    Empirically derived from H2C captures of 60, 64 and 196 byte packets.
+    """
+    data = bytes(data)
+    data += bytes(-len(data) % QDMA_DATA_BYTE_WID)
+    crc = _CRC_INIT
+    for i in range(0, len(data), QDMA_DATA_BYTE_WID):
+        crc = _crc_beat(crc, data[i:i + QDMA_DATA_BYTE_WID])
+    return crc
 
 
 class QdmaH2cMeta():
@@ -49,7 +80,7 @@ class QdmaH2cMeta():
         return ((self.tcrc & _TCRC_MASK) << QDMA_QID_WID) | (self.qid & _QID_MASK)
 
     def crc_ok(self, data):
-        """True if the tcrc matches the CRC-32 of the packet payload."""
+        """True if the tcrc matches the qdma_crc of the packet payload."""
         return self.tcrc == qdma_crc(data)
 
     def __eq__(self, other):

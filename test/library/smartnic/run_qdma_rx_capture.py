@@ -8,7 +8,7 @@ the capture buffer and the datapath receives nothing; the capture is disabled
 again on exit.
 
 For each packet the script prints the size, qid and tcrc, compares the tcrc to
-the CRC-32 of the captured payload, and dumps the leading bytes.
+the QDMA CRC of the captured payload (see qdma_crc), and dumps the payload.
 
 Configuration via environment variables (regio does not forward CLI args to the script):
 
@@ -17,7 +17,7 @@ Configuration via environment variables (regio does not forward CLI args to the 
 
 Variables:
     QDMA_RX_COUNT  Number of packets to capture (default: 1)
-    QDMA_RX_DUMP   Payload bytes to hex-dump per packet (default: 64)
+    QDMA_RX_DUMP   Payload bytes to hex-dump per packet (default: all)
     QDMA_RX_SCAPY  Set to 1 to also decode each packet as Ethernet with scapy
 
 While the script waits, send traffic from the host to the QDMA queue.  Ctrl-C
@@ -26,6 +26,7 @@ abandons the wait and disables the capture.
 
 import os
 import sys
+import zlib
 
 # Ensure test/library/ is on the path so that the 'smartnic' package resolves.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -34,7 +35,7 @@ from smartnic.lib.qdma_meta import qdma_crc
 from smartnic.lib.qdma_packet_capture_protocol import QdmaPacketCaptureProtocol
 
 COUNT = int(os.environ.get('QDMA_RX_COUNT', '1'))
-DUMP  = int(os.environ.get('QDMA_RX_DUMP', '64'))
+DUMP  = int(os.environ.get('QDMA_RX_DUMP', '65535'))
 SCAPY = os.environ.get('QDMA_RX_SCAPY', '0') == '1'
 DEBUG = 0
 
@@ -49,12 +50,12 @@ def hexdump(data, limit):
 
 
 def crc_match(tcrc, data):
-    """Name the common CRC conventions that match tcrc ([] if none do)."""
-    crc = qdma_crc(data)
+    """Name the alternative CRC conventions that match tcrc ([] if none do)."""
+    crc = zlib.crc32(bytes(data))
     candidates = {
-        'crc32':              crc,
-        'crc32 inverted':     crc ^ 0xffffffff,
-        'crc32 byte-swapped': int.from_bytes(crc.to_bytes(4, 'little'), 'big'),
+        'ethernet crc32':              crc,
+        'ethernet crc32 inverted':     crc ^ 0xffffffff,
+        'ethernet crc32 byte-swapped': int.from_bytes(crc.to_bytes(4, 'little'), 'big'),
     }
     return [name for name, value in candidates.items() if value == tcrc]
 
