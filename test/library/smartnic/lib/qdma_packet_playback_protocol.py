@@ -11,7 +11,7 @@ class QdmaPacketPlaybackProtocol(PacketPlaybackProtocol):
 
     The metadata the DMA engine needs with each packet (qid, tcrc and the
     packet size) is built from the arguments to send().  tcrc defaults to the
-    CRC-32 of the payload; pass it explicitly to inject a bad CRC.
+    qdma_crc of the payload; pass it explicitly to inject a bad CRC.
     """
 
     def __init__(self, proxy, name='QDMA Playback', debug=0, **kargs):
