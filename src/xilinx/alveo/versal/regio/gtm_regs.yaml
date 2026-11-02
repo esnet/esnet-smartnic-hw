@@ -13,6 +13,9 @@ regs:
 
   # CH0 status (DRP 0x08xx, byte 0x20xx)
 
+  - meta:
+      pad_until: 0x02058
+
   - name: ch0_coe_status_tx_gb_dbg6
     access: ro
     fields:
