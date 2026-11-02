@@ -7,8 +7,8 @@ blocks:
 decoders:
   dcmac_decoder: &dcmac_decoder
     !include ../src/xilinx/dcmac/regio/dcmac_decoder.yaml
-  gt_decoder: &gt_decoder
-    !include ../src/xilinx/alveo/versal/regio/gt_decoder.yaml
+  gtm_decoder: &gtm_decoder
+    !include ../src/xilinx/gtm/regio/gtm_decoder.yaml
   qdma_decoder: &qdma_decoder
     !include ../src/xilinx/qdma/regio/qdma_decoder.yaml
 
@@ -23,25 +23,25 @@ interfaces:
     suffix: '1'
     name: dcmac
 
-  - decoder: *gt_decoder
+  - decoder: *gtm_decoder
     address: 0x080000
     suffix: '0'
-    name: gt
+    name: gtm
 
-  - decoder: *gt_decoder
+  - decoder: *gtm_decoder
     address: 0x084000
     suffix: '1'
-    name: gt
+    name: gtm
 
-  - decoder: *gt_decoder
+  - decoder: *gtm_decoder
     address: 0x088000
     suffix: '2'
-    name: gt
+    name: gtm
 
-  - decoder: *gt_decoder
+  - decoder: *gtm_decoder
     address: 0x08C000
     suffix: '3'
-    name: gt
+    name: gtm
 
   - decoder: *qdma_decoder
     address: 0x090000
@@ -51,4 +51,3 @@ interfaces:
     address: 0x091000
     width: 12
     name: versal_hw_regs
-

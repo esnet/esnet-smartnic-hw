@@ -1,8 +1,8 @@
-name: gt_decoder
+name: gtm_decoder
 
 blocks:
   gtm_regs: &gtm_regs
-    !include ../src/xilinx/alveo/versal/regio/gtm_regs.yaml
+    !include ../src/xilinx/gtm/regio/gtm_regs.yaml
 
 interfaces:
   - block: *gtm_regs

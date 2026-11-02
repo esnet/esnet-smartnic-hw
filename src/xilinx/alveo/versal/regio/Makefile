@@ -10,10 +10,8 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML = \
     versal_hw_regs.yaml \
-    gtm_regs.yaml \
 
 REG_DECODER_YAML = \
-    gt_decoder.yaml \
     xilinx_alveo_versal_decoder.yaml
 
 # ----------------------------------------------------

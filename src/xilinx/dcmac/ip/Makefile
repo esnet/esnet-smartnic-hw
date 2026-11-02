@@ -33,8 +33,7 @@ export BOARD
 # ----------------------------------------------------
 IP_LIST = \
     xilinx_dcmac_0 \
-    xilinx_dcmac_0_clk_wiz_0 \
-    xilinx_gt_0
+    xilinx_dcmac_0_clk_wiz_0
 
 # ----------------------------------------------------
 # Simulation sources
@@ -65,25 +64,9 @@ IP_SIM_SRC_FILES = \
     xilinx_dcmac_0/dcmac_v3_0_0/xilinx_dcmac_0_wrapper.v \
     xilinx_dcmac_0/ip_0/sim/xilinx_dcmac_0_axi_apb_bridge.vhd \
     xilinx_dcmac_0/xilinx_dcmac_0.v \
-    xilinx_gt_0/xilinx_gt_0_powergood_logic.v \
-    xilinx_gt_0/xilinx_gt_0_reset_ip.v \
-    xilinx_gt_0/xilinx_gt_0_quad_top.v \
-    xilinx_gt_0/xilinx_gt_0_intf_quad_map.v \
-    xilinx_gt_0/xilinx_gt_0_inst.v \
-    xilinx_gt_0/ip_0/xilinx_gt_0_gt_quad_base_0_axi_lite_to_apb3_inst.v \
-    xilinx_gt_0/ip_0/xilinx_gt_0_gt_quad_base_0_inst.v \
-    xilinx_gt_0/ip_0/sim/xilinx_gt_0_gt_quad_base_0.v \
-    xilinx_gt_0/sim/xilinx_gt_0.v \
     xilinx_dcmac_0_clk_wiz_0/xilinx_dcmac_0_clk_wiz_0_clocking_structure.v \
     xilinx_dcmac_0_clk_wiz_0/xilinx_dcmac_0_clk_wiz_0_clk_wiz_top.v \
     xilinx_dcmac_0_clk_wiz_0/sim/xilinx_dcmac_0_clk_wiz_0.v
-#    xilinx_gt_0/xilinx_gt_0_pos_edge_detector.v \
-#    xilinx_gt_0/xilinx_gt_0_progdivresetdone_delay.v \
-#    xilinx_dcmac_0_clk_wiz_0/xilinx_dcmac_0_clk_wiz_0_sim_netlist.v
-#    xilinx_dcmac_0_gtwiz_versal_0/xilinx_dcmac_0_gtwiz_versal_0_sim_netlist.v \
-#    xilinx_dcmac_0/xilinx_dcmac_0_sim_netlist.v \
-#    xilinx_gt_0/xilinx_gt_0_sim_netlist.v \
-#    xilinx_dcmac_1/xilinx_dcmac_1.v
 
 IP_SIM_INC_DIRS =
 

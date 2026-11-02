@@ -185,7 +185,7 @@ module dcmac_wrapper (
             // =========================================================================
             // GT wrapper instance.
             // =========================================================================
-            xilinx_gt_wrapper i_xilinx_gt_wrapper (
+            xilinx_gtm_wrapper i_xilinx_gtm_wrapper (
                 .gtwiz_freerun_clk              (init_clk),
                 .QUAD0_GTREFCLK0                (gt_refclk0),
 

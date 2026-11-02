@@ -26,6 +26,7 @@ SUBCOMPONENTS = \
     sync.rtl@common \
     axi4l.rtl@common \
     axi4s.rtl@common \
+    xilinx.gtm.rtl \
     xilinx.dcmac.ip
 
 EXT_LIBS =

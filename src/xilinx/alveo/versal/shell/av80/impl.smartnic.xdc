@@ -55,9 +55,9 @@ set_property -dict { PACKAGE_PIN W12  } [get_ports "qsfp3_4x_gtx_p[3]"]     ;# B
 
 # Map DCMAC and GTM_QUAD Instances to the correct floorplan sites.
 # set_property LOC DCMAC_X1Y1 [get_cells -hier -filter {REF_NAME == DCMAC}]
-# set_property LOC GTM_QUAD_X1Y7 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[0].i_xilinx_gt_wrapper/i_xilinx_gt_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
-# set_property LOC GTM_QUAD_X1Y8 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[1].i_xilinx_gt_wrapper/i_xilinx_gt_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
+# set_property LOC GTM_QUAD_X1Y7 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[0].i_xilinx_gtm_wrapper/i_xilinx_gtm_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
+# set_property LOC GTM_QUAD_X1Y8 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[1].i_xilinx_gtm_wrapper/i_xilinx_gtm_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
 
 set_property LOC DCMAC_X0Y2 [get_cells -hier -filter {REF_NAME == DCMAC}]
-set_property LOC GTM_QUAD_X0Y9 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[0].i_xilinx_gt_wrapper/i_xilinx_gt_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
-set_property LOC GTM_QUAD_X0Y10 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[1].i_xilinx_gt_wrapper/i_xilinx_gt_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
+set_property LOC GTM_QUAD_X0Y9 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[0].i_xilinx_gtm_wrapper/i_xilinx_gtm_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]
+set_property LOC GTM_QUAD_X0Y10 [get_cells -hierarchical -filter {REF_NAME =~ GTME5_QUAD && NAME == i_xilinx_alveo_versal_shell/dcmac_wrapper_0/g_gt[1].i_xilinx_gtm_wrapper/i_xilinx_gtm_0/inst/intf_quad_map_inst/quad_top_inst/gt_quad_base_0_inst/inst/quad_inst}]

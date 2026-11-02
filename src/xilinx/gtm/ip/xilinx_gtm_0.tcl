@@ -1,4 +1,4 @@
-set module_name xilinx_gt_0
+set module_name xilinx_gtm_0
 
 create_ip -name gtwiz_versal -vendor xilinx.com -library ip -version 1.0 -module_name $module_name -dir . -force
 

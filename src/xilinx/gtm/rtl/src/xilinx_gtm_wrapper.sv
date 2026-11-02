@@ -1,5 +1,5 @@
-// Xilinx Versal GT Wrapper
-module xilinx_gt_wrapper (
+// Xilinx Versal GTM Wrapper
+module xilinx_gtm_wrapper (
     // Clocks/resets.
     input  logic        gtwiz_freerun_clk,
     input  logic        QUAD0_GTREFCLK0,
@@ -254,9 +254,9 @@ module xilinx_gt_wrapper (
     //       generic instance name commented out) to enable trivial diffs to simplify upgrades or changes,
     //       identify added/removed signals, etc.
 
-xilinx_gt_0 i_xilinx_gt_0 (
+xilinx_gtm_0 i_xilinx_gtm_0 (
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-//xilinx_gt_0 your_instance_name (
+//xilinx_gtm_0 your_instance_name (
   .gtpowergood(gtpowergood),                                            // output wire gtpowergood
   .gtwiz_freerun_clk(gtwiz_freerun_clk),                                // input wire gtwiz_freerun_clk
   .QUAD0_GTREFCLK0(QUAD0_GTREFCLK0),                                    // input wire QUAD0_GTREFCLK0
@@ -343,4 +343,4 @@ xilinx_gt_0 i_xilinx_gt_0 (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-endmodule : xilinx_gt_wrapper
+endmodule : xilinx_gtm_wrapper

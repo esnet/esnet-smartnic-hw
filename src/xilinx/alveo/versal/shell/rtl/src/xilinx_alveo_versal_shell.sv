@@ -152,10 +152,10 @@ module xilinx_alveo_versal_shell
         .axil_if                ( axil_hw ),
         .dcmac0_axil_if         ( axil_dcmac[0] ),
         .dcmac1_axil_if         ( axil_dcmac[1] ),
-        .gt0_axil_if            ( axil_gt[0][0] ),
-        .gt1_axil_if            ( axil_gt[0][1] ),
-        .gt2_axil_if            ( axil_gt[1][0] ),
-        .gt3_axil_if            ( axil_gt[1][1] ),
+        .gtm0_axil_if           ( axil_gt[0][0] ),
+        .gtm1_axil_if           ( axil_gt[0][1] ),
+        .gtm2_axil_if           ( axil_gt[1][0] ),
+        .gtm3_axil_if           ( axil_gt[1][1] ),
         .qdma_axil_if           ( axil_qdma_st ),
         .versal_hw_regs_axil_if ( axil_versal_hw_regs )
     );
