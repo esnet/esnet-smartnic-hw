@@ -10,7 +10,7 @@ regs:
 
   - name: channel_configuration_tx
     fields:
-      - name: rsvd
+      - name: ctl_tx_fcs_ins_enable
         width: 1
       - name: ctl_tx_ignore_fcs
         width: 1
@@ -35,7 +35,7 @@ regs:
 
   - name: channel_configuration_rx
     fields:
-      - name: rsvd
+      - name: ctl_rx_is_clause_49
         width: 1
       - name: ctl_rx_delete_fcs
         width: 1
@@ -60,9 +60,15 @@ regs:
       pad_until: 0x00030
 
   - name: channel_control_reg_rx
+    fields:
+      - name: soft_rx_mac_channel_flush
+        width: 1
 
   - meta:
       pad_until: 0x00038
 
   - name: channel_control_reg_tx
+    fields:
+      - name: soft_tx_mac_channel_flush
+        width: 1
 

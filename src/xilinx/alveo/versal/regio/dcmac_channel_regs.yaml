@@ -12,7 +12,7 @@ regs:
 
   - name: channel_configuration_tx
     fields:
-      - name: rsvd
+      - name: ctl_tx_fcs_ins_enable
         width: 1
       - name: ctl_tx_ignore_fcs
         width: 1
@@ -37,7 +37,7 @@ regs:
 
   - name: channel_configuration_rx
     fields:
-      - name: rsvd
+      - name: ctl_rx_is_clause_49
         width: 1
       - name: ctl_rx_delete_fcs
         width: 1
@@ -62,18 +62,24 @@ regs:
       pad_until: 0x00030
 
   - name: channel_control_reg_rx
+    fields:
+      - name: soft_rx_mac_channel_flush
+        width: 1
 
   - meta:
       pad_until: 0x00038
 
   - name: channel_control_reg_tx
+    fields:
+      - name: soft_tx_mac_channel_flush
+        width: 1
 
   - meta:
       pad_until: 0x00040
 
   - name: tx_mode_reg
     fields:
-      - name: rsvd
+      - name: ctl_tx_data_rate
         width: 2
       - name: ctl_tx_use_custom_vl_length_minus1
         width: 1
@@ -104,8 +110,10 @@ regs:
 
   - name: rx_mode_reg
     fields:
+      - name: ctl_rx_data_rate
+        width: 2
       - name: rsvd
-        width: 4
+        width: 2
       - name: ctl_pcs_rx_ts_en
         width: 1
       - name: rsvd1
@@ -142,89 +150,138 @@ regs:
         width: 4
 
   - name: rx_fec_slice_configuration1
+    fields:
+      - name: ctl_rx_degrade_interval
+        width: 32
 
   - name: rx_fec_slice_configuration2
+    fields:
+      - name: ctl_rx_degrade_act_thresh
+        width: 32
 
   - name: rx_fec_slice_configuration3
+    fields:
+      - name: ctl_rx_degrade_deact_thresh
+        width: 32
 
   - name: configuration_1588_reg
     fields:
+      - name: ctl_tx_ptp_1step_enable
+        width: 1
       - name: rsvd
-        width: 4
+        width: 3
       - name: ctl_tx_ptp_sat_enable
         width: 2
       - name: rsvd1
         width: 26
 
   - name: configuration_tx_1588_systimer_config
+    fields:
+      - name: ctl_tx_ptp_st_offset
+        width: 16
 
   - name: configuration_tx_1588_timestamp_config
+    fields:
+      - name: rsvd
+        width: 4
+      - name: ctl_tx_ptp_latency_adjust
+        width: 20
 
   - name: configuration_tx_flow_control_timer
+    fields:
+      - name: ctl_tx_pause_refresh_timer
+        width: 16
 
   - name: configuration_tx_flow_control_ref_quanta01
     fields:
-      - name: rsvd
+      - name: ctl_tx_pause_quanta0
         width: 16
       - name: ctl_tx_pause_quanta1
         width: 16
 
   - name: configuration_tx_flow_control_ref_quanta23
     fields:
-      - name: rsvd
+      - name: ctl_tx_pause_quanta2
         width: 16
       - name: ctl_tx_pause_quanta3
         width: 16
 
   - name: configuration_tx_flow_control_ref_quanta45
     fields:
-      - name: rsvd
+      - name: ctl_tx_pause_quanta4
         width: 16
       - name: ctl_tx_pause_quanta5
         width: 16
 
   - name: configuration_tx_flow_control_ref_quanta67
     fields:
-      - name: rsvd
+      - name: ctl_tx_pause_quanta6
         width: 16
       - name: ctl_tx_pause_quanta7
         width: 16
 
   - name: configuration_tx_flow_control_ref_quanta8
+    fields:
+      - name: ctl_tx_pause_quanta8
+        width: 16
 
   - name: configuration_tx_flow_control_gpp_da_lsb
+    fields:
+      - name: ctl_tx_da_gpp
+        width: 32
 
   - name: configuration_tx_flow_control_gpp_da_msb
+    fields:
+      - name: ctl_tx_da_gpp
+        width: 16
 
   - name: configuration_tx_flow_control_gpp_sa_lsb
+    fields:
+      - name: ctl_tx_sa_gpp
+        width: 32
 
   - name: configuration_tx_flow_control_gpp_sa_msb
+    fields:
+      - name: ctl_tx_sa_gpp
+        width: 16
 
   - name: configuration_tx_flow_control_ppp_da_lsb
+    fields:
+      - name: ctl_tx_da_ppp
+        width: 32
 
   - name: configuration_tx_flow_control_ppp_da_msb
+    fields:
+      - name: ctl_tx_da_ppp
+        width: 16
 
   - name: configuration_tx_flow_control_ppp_sa_lsb
+    fields:
+      - name: ctl_tx_sa_ppp
+        width: 32
 
   - name: configuration_tx_flow_control_ppp_sa_msb
+    fields:
+      - name: ctl_tx_sa_ppp
+        width: 16
 
   - name: configuration_tx_flow_control_gpp_etype_op
     fields:
-      - name: rsvd
+      - name: ctl_tx_ethertype_gpp
         width: 16
       - name: ctl_tx_opcode_gpp
         width: 16
 
   - name: configuration_tx_flow_control_ppp_etype_op
     fields:
-      - name: rsvd
+      - name: ctl_tx_ethertype_ppp
         width: 16
       - name: ctl_tx_opcode_ppp
         width: 16
 
   - name: configuration_rx
     fields:
-      - name: rsvd
+      - name: ctl_rx_flexif_select
         width: 2
       - name: ctl_rx_flexif_pcs_wide_mode
         width: 1
@@ -232,12 +289,20 @@ regs:
         width: 29
 
   - name: configuration_rx_1588_systimer_config
+    fields:
+      - name: ctl_rx_ptp_st_offset
+        width: 16
 
   - name: configuration_rx_1588_timestamp_config
+    fields:
+      - name: rsvd
+        width: 4
+      - name: ctl_rx_ptp_latency_adjust
+        width: 20
 
   - name: configuration_rx_flow_control_reg1
     fields:
-      - name: rsvd
+      - name: ctl_rx_enable_gcp
         width: 1
       - name: ctl_rx_enable_pcp
         width: 1
@@ -294,57 +359,75 @@ regs:
 
   - name: configuration_rx_flow_control_reg2
     fields:
-      - name: rsvd
+      - name: ctl_rx_etype_ppp
         width: 16
       - name: ctl_rx_opcode_ppp
         width: 16
 
   - name: configuration_rx_flow_control_gpp_etype_op_reg
     fields:
-      - name: rsvd
+      - name: ctl_rx_etype_gpp
         width: 16
       - name: ctl_rx_opcode_gpp
         width: 16
 
   - name: configuration_rx_flow_control_gcp_pcp_type_reg
     fields:
-      - name: rsvd
+      - name: ctl_rx_etype_gcp
         width: 16
       - name: ctl_rx_etype_pcp
         width: 16
 
   - name: configuration_rx_flow_control_pcp_op_reg
     fields:
-      - name: rsvd
+      - name: ctl_rx_opcode_min_pcp
         width: 16
       - name: ctl_rx_opcode_max_pcp
         width: 16
 
   - name: configuration_rx_flow_control_gcp_op_reg
     fields:
-      - name: rsvd
+      - name: ctl_rx_opcode_min_gcp
         width: 16
       - name: ctl_rx_opcode_max_gcp
         width: 16
 
   - name: configuration_rx_flow_control_da_reg1_lsb
+    fields:
+      - name: ctl_rx_pause_da_ucast
+        width: 32
 
   - name: configuration_rx_flow_control_da_reg1_msb
+    fields:
+      - name: ctl_rx_pause_da_ucast
+        width: 16
 
   - name: configuration_rx_flow_control_da_reg2_lsb
+    fields:
+      - name: ctl_rx_pause_da_mcast
+        width: 32
 
   - name: configuration_rx_flow_control_da_reg2_msb
+    fields:
+      - name: ctl_rx_pause_da_mcast
+        width: 16
 
   - name: configuration_rx_flow_control_sa_reg1_lsb
+    fields:
+      - name: ctl_rx_pause_sa
+        width: 32
 
   - name: configuration_rx_flow_control_sa_reg1_msb
+    fields:
+      - name: ctl_rx_pause_sa
+        width: 16
 
   - meta:
       pad_until: 0x000F0
 
   - name: port_control_reg_rx
     fields:
-      - name: rsvd
+      - name: soft_rx_flexif_reset
         width: 1
       - name: soft_rx_serdes_reset
         width: 1
@@ -352,10 +435,13 @@ regs:
         width: 30
 
   - name: port_tick_reg_rx
+    fields:
+      - name: rx_port_soft_pm_tick
+        width: 1
 
   - name: port_control_reg_tx
     fields:
-      - name: rsvd
+      - name: soft_tx_flexif_reset
         width: 1
       - name: soft_tx_serdes_reset
         width: 1
@@ -363,11 +449,14 @@ regs:
         width: 30
 
   - name: port_tick_reg_tx
+    fields:
+      - name: tx_port_soft_pm_tick
+        width: 1
 
   - name: stat_chan_tx_mac_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_local_fault
         width: 1
       - name: stat_tx_tsmac_ovf
         width: 1
@@ -383,7 +472,7 @@ regs:
   - name: stat_chan_tx_mac_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_local_fault
         width: 1
       - name: stat_tx_tsmac_ovf
         width: 1
@@ -398,6 +487,9 @@ regs:
 
   - name: stat_chan_tx_statistics_ready
     access: ro
+    fields:
+      - name: stat_tx_channel_mac_statistics_ready
+        width: 1
 
   - meta:
       pad_until: 0x00140
@@ -405,7 +497,7 @@ regs:
   - name: stat_chan_rx_mac_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_remote_fault
         width: 1
       - name: stat_rx_local_fault
         width: 1
@@ -429,7 +521,7 @@ regs:
   - name: stat_chan_rx_mac_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_remote_fault
         width: 1
       - name: stat_rx_local_fault
         width: 1
@@ -452,6 +544,9 @@ regs:
 
   - name: stat_chan_rx_statistics_ready
     access: ro
+    fields:
+      - name: stat_rx_channel_mac_statistics_ready
+        width: 1
 
   - meta:
       pad_until: 0x00180
@@ -459,7 +554,7 @@ regs:
   - name: stat_port_tx_mac_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_axis_unf
         width: 1
       - name: stat_tx_axis_err
         width: 1
@@ -469,7 +564,7 @@ regs:
   - name: stat_port_tx_mac_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_axis_unf
         width: 1
       - name: stat_tx_axis_err
         width: 1
@@ -482,7 +577,7 @@ regs:
   - name: stat_port_rx_mac_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_axis_fifo_overflow
         width: 1
       - name: stat_rx_axis_err
         width: 1
@@ -496,7 +591,7 @@ regs:
   - name: stat_port_rx_mac_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_axis_fifo_overflow
         width: 1
       - name: stat_rx_axis_err
         width: 1
@@ -512,375 +607,726 @@ regs:
 
   - name: stat_tx_total_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_total_bytes
+        width: 32
 
   - name: stat_tx_total_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_total_bytes
+        width: 21
 
   - name: stat_tx_total_good_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_total_good_bytes
+        width: 32
 
   - name: stat_tx_total_good_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_total_good_bytes
+        width: 21
 
   - name: stat_tx_total_packets_lsb
     access: ro
+    fields:
+      - name: stat_tx_total_packets
+        width: 32
 
   - name: stat_tx_total_packets_msb
     access: ro
+    fields:
+      - name: stat_tx_total_packets
+        width: 15
 
   - name: stat_tx_total_good_packets_lsb
     access: ro
+    fields:
+      - name: stat_tx_total_good_packets
+        width: 32
 
   - name: stat_tx_total_good_packets_msb
     access: ro
+    fields:
+      - name: stat_tx_total_good_packets
+        width: 15
 
   - name: stat_tx_frame_error_lsb
     access: ro
+    fields:
+      - name: stat_tx_frame_error
+        width: 32
 
   - name: stat_tx_frame_error_msb
     access: ro
+    fields:
+      - name: stat_tx_frame_error
+        width: 15
 
   - name: stat_tx_bad_fcs_lsb
     access: ro
+    fields:
+      - name: stat_tx_bad_fcs
+        width: 32
 
   - name: stat_tx_bad_fcs_msb
     access: ro
+    fields:
+      - name: stat_tx_bad_fcs
+        width: 15
 
   - name: stat_tx_packet_64_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_64_bytes
+        width: 32
 
   - name: stat_tx_packet_64_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_64_bytes
+        width: 15
 
   - name: stat_tx_packet_65_127_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_65_127_bytes
+        width: 32
 
   - name: stat_tx_packet_65_127_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_65_127_bytes
+        width: 14
 
   - name: stat_tx_packet_128_255_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_128_255_bytes
+        width: 32
 
   - name: stat_tx_packet_128_255_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_128_255_bytes
+        width: 13
 
   - name: stat_tx_packet_256_511_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_256_511_bytes
+        width: 32
 
   - name: stat_tx_packet_256_511_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_256_511_bytes
+        width: 12
 
   - name: stat_tx_packet_512_1023_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_512_1023_bytes
+        width: 32
 
   - name: stat_tx_packet_512_1023_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_512_1023_bytes
+        width: 11
 
   - name: stat_tx_packet_1024_1518_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_1024_1518_bytes
+        width: 32
 
   - name: stat_tx_packet_1024_1518_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_1024_1518_bytes
+        width: 10
 
   - name: stat_tx_packet_1519_1522_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_1519_1522_bytes
+        width: 32
 
   - name: stat_tx_packet_1519_1522_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_1519_1522_bytes
+        width: 10
 
   - name: stat_tx_packet_1523_1548_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_1523_1548_bytes
+        width: 32
 
   - name: stat_tx_packet_1523_1548_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_1523_1548_bytes
+        width: 10
 
   - name: stat_tx_packet_1549_2047_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_1549_2047_bytes
+        width: 32
 
   - name: stat_tx_packet_1549_2047_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_1549_2047_bytes
+        width: 9
 
   - name: stat_tx_packet_2048_4095_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_2048_4095_bytes
+        width: 32
 
   - name: stat_tx_packet_2048_4095_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_2048_4095_bytes
+        width: 8
 
   - name: stat_tx_packet_4096_8191_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_4096_8191_bytes
+        width: 32
 
   - name: stat_tx_packet_4096_8191_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_4096_8191_bytes
+        width: 7
 
   - name: stat_tx_packet_8192_9215_bytes_lsb
     access: ro
+    fields:
+      - name: stat_tx_packet_8192_9215_bytes
+        width: 32
 
   - name: stat_tx_packet_8192_9215_bytes_msb
     access: ro
+    fields:
+      - name: stat_tx_packet_8192_9215_bytes
+        width: 7
 
   - name: stat_tx_packet_large
     access: ro
+    fields:
+      - name: stat_tx_packet_large
+        width: 32
 
   - meta:
       pad_until: 0x00298
 
   - name: stat_tx_unicast_lsb
     access: ro
+    fields:
+      - name: stat_tx_unicast
+        width: 32
 
   - name: stat_tx_unicast_msb
     access: ro
+    fields:
+      - name: stat_tx_unicast
+        width: 15
 
   - name: stat_tx_multicast_lsb
     access: ro
+    fields:
+      - name: stat_tx_multicast
+        width: 32
 
   - name: stat_tx_multicast_msb
     access: ro
+    fields:
+      - name: stat_tx_multicast
+        width: 15
 
   - name: stat_tx_broadcast_lsb
     access: ro
+    fields:
+      - name: stat_tx_broadcast
+        width: 32
 
   - name: stat_tx_broadcast_msb
     access: ro
+    fields:
+      - name: stat_tx_broadcast
+        width: 15
 
   - name: stat_tx_vlan_lsb
     access: ro
+    fields:
+      - name: stat_tx_vlan
+        width: 32
 
   - name: stat_tx_vlan_msb
     access: ro
+    fields:
+      - name: stat_tx_vlan
+        width: 15
 
   - name: stat_tx_pause_lsb
     access: ro
+    fields:
+      - name: stat_tx_pause
+        width: 32
 
   - name: stat_tx_pause_msb
     access: ro
+    fields:
+      - name: stat_tx_pause
+        width: 15
 
   - name: stat_tx_user_pause_lsb
     access: ro
+    fields:
+      - name: stat_tx_user_pause
+        width: 32
 
   - name: stat_tx_user_pause_msb
     access: ro
+    fields:
+      - name: stat_tx_user_pause
+        width: 15
 
   - name: stat_tx_mac_cycle_count_lsb
     access: ro
+    fields:
+      - name: stat_tx_mac_cycle_count
+        width: 32
 
   - name: stat_tx_mac_cycle_count_msb
     access: ro
+    fields:
+      - name: stat_tx_mac_cycle_count
+        width: 14
 
   - name: stat_tx_ecc_correctable_count
     access: ro
+    fields:
+      - name: stat_tx_ecc_correctable_count
+        width: 16
 
   - meta:
       pad_until: 0x002D8
 
   - name: stat_tx_ecc_uncorrectable_count
     access: ro
+    fields:
+      - name: stat_tx_ecc_uncorrectable_count
+        width: 16
 
   - meta:
       pad_until: 0x00400
 
   - name: stat_rx_total_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_total_bytes
+        width: 32
 
   - name: stat_rx_total_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_total_bytes
+        width: 21
 
   - name: stat_rx_total_good_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_total_good_bytes
+        width: 32
 
   - name: stat_rx_total_good_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_total_good_bytes
+        width: 21
 
   - name: stat_rx_total_packets_lsb
     access: ro
+    fields:
+      - name: stat_rx_total_packets
+        width: 32
 
   - name: stat_rx_total_packets_msb
     access: ro
+    fields:
+      - name: stat_rx_total_packets
+        width: 15
 
   - name: stat_rx_total_good_packets_lsb
     access: ro
+    fields:
+      - name: stat_rx_total_good_packets
+        width: 32
 
   - name: stat_rx_total_good_packets_msb
     access: ro
+    fields:
+      - name: stat_rx_total_good_packets
+        width: 15
 
   - name: stat_rx_packet_small_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_small
+        width: 32
 
   - name: stat_rx_packet_small_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_small
+        width: 15
 
   - name: stat_rx_bad_code_count_lsb
     access: ro
+    fields:
+      - name: stat_rx_bad_code_count
+        width: 32
 
   - name: stat_rx_bad_code_count_msb
     access: ro
+    fields:
+      - name: stat_rx_bad_code_count
+        width: 18
 
   - name: stat_rx_bad_fcs_lsb
     access: ro
+    fields:
+      - name: stat_rx_bad_fcs
+        width: 32
 
   - name: stat_rx_bad_fcs_msb
     access: ro
+    fields:
+      - name: stat_rx_bad_fcs
+        width: 15
 
   - name: stat_rx_packet_bad_fcs_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_bad_fcs
+        width: 32
 
   - name: stat_rx_packet_bad_fcs_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_bad_fcs
+        width: 15
 
   - name: stat_rx_stomped_fcs_lsb
     access: ro
+    fields:
+      - name: stat_rx_stomped_fcs
+        width: 32
 
   - name: stat_rx_stomped_fcs_msb
     access: ro
+    fields:
+      - name: stat_rx_stomped_fcs
+        width: 15
 
   - name: stat_rx_truncated_lsb
     access: ro
+    fields:
+      - name: stat_rx_truncated
+        width: 32
 
   - name: stat_rx_truncated_msb
     access: ro
+    fields:
+      - name: stat_rx_truncated
+        width: 15
 
   - name: stat_rx_packet_64_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_64_bytes
+        width: 32
 
   - name: stat_rx_packet_64_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_64_bytes
+        width: 15
 
   - name: stat_rx_packet_65_127_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_65_127_bytes
+        width: 32
 
   - name: stat_rx_packet_65_127_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_65_127_bytes
+        width: 14
 
   - name: stat_rx_packet_128_255_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_128_255_bytes
+        width: 32
 
   - name: stat_rx_packet_128_255_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_128_255_bytes
+        width: 13
 
   - name: stat_rx_packet_256_511_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_256_511_bytes
+        width: 32
 
   - name: stat_rx_packet_256_511_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_256_511_bytes
+        width: 12
 
   - name: stat_rx_packet_512_1023_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_512_1023_bytes
+        width: 32
 
   - name: stat_rx_packet_512_1023_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_512_1023_bytes
+        width: 11
 
   - name: stat_rx_packet_1024_1518_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_1024_1518_bytes
+        width: 32
 
   - name: stat_rx_packet_1024_1518_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_1024_1518_bytes
+        width: 10
 
   - name: stat_rx_packet_1519_1522_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_1519_1522_bytes
+        width: 32
 
   - name: stat_rx_packet_1519_1522_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_1519_1522_bytes
+        width: 10
 
   - name: stat_rx_packet_1523_1548_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_1523_1548_bytes
+        width: 32
 
   - name: stat_rx_packet_1523_1548_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_1523_1548_bytes
+        width: 10
 
   - name: stat_rx_packet_1549_2047_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_1549_2047_bytes
+        width: 32
 
   - name: stat_rx_packet_1549_2047_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_1549_2047_bytes
+        width: 9
 
   - name: stat_rx_packet_2048_4095_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_2048_4095_bytes
+        width: 32
 
   - name: stat_rx_packet_2048_4095_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_2048_4095_bytes
+        width: 8
 
   - name: stat_rx_packet_4096_8191_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_4096_8191_bytes
+        width: 32
 
   - name: stat_rx_packet_4096_8191_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_4096_8191_bytes
+        width: 7
 
   - name: stat_rx_packet_8192_9215_bytes_lsb
     access: ro
+    fields:
+      - name: stat_rx_packet_8192_9215_bytes
+        width: 32
 
   - name: stat_rx_packet_8192_9215_bytes_msb
     access: ro
+    fields:
+      - name: stat_rx_packet_8192_9215_bytes
+        width: 7
 
   - name: stat_rx_toolong
     access: ro
+    fields:
+      - name: stat_rx_toolong
+        width: 32
 
   - meta:
       pad_until: 0x004B8
 
   - name: stat_rx_packet_large
     access: ro
+    fields:
+      - name: stat_rx_packet_large
+        width: 32
 
   - meta:
       pad_until: 0x004C0
 
   - name: stat_rx_jabber
     access: ro
+    fields:
+      - name: stat_rx_jabber
+        width: 32
 
   - meta:
       pad_until: 0x004C8
 
   - name: stat_rx_oversize
     access: ro
+    fields:
+      - name: stat_rx_oversize
+        width: 32
 
   - meta:
       pad_until: 0x004D0
 
   - name: stat_rx_unicast_lsb
     access: ro
+    fields:
+      - name: stat_rx_unicast
+        width: 32
 
   - name: stat_rx_unicast_msb
     access: ro
+    fields:
+      - name: stat_rx_unicast
+        width: 15
 
   - name: stat_rx_multicast_lsb
     access: ro
+    fields:
+      - name: stat_rx_multicast
+        width: 32
 
   - name: stat_rx_multicast_msb
     access: ro
+    fields:
+      - name: stat_rx_multicast
+        width: 15
 
   - name: stat_rx_broadcast_lsb
     access: ro
+    fields:
+      - name: stat_rx_broadcast
+        width: 32
 
   - name: stat_rx_broadcast_msb
     access: ro
+    fields:
+      - name: stat_rx_broadcast
+        width: 15
 
   - name: stat_rx_vlan_lsb
     access: ro
+    fields:
+      - name: stat_rx_vlan
+        width: 32
 
   - name: stat_rx_vlan_msb
     access: ro
+    fields:
+      - name: stat_rx_vlan
+        width: 15
 
   - name: stat_rx_pause_lsb
     access: ro
+    fields:
+      - name: stat_rx_pause
+        width: 32
 
   - name: stat_rx_pause_msb
     access: ro
+    fields:
+      - name: stat_rx_pause
+        width: 15
 
   - name: stat_rx_user_pause_lsb
     access: ro
+    fields:
+      - name: stat_rx_user_pause
+        width: 32
 
   - name: stat_rx_user_pause_msb
     access: ro
+    fields:
+      - name: stat_rx_user_pause
+        width: 15
 
   - name: stat_rx_inrangeerr_lsb
     access: ro
+    fields:
+      - name: stat_rx_inrangeerr
+        width: 32
 
   - name: stat_rx_inrangeerr_msb
     access: ro
+    fields:
+      - name: stat_rx_inrangeerr
+        width: 15
 
   - name: stat_rx_mac_cycle_count_lsb
     access: ro
+    fields:
+      - name: stat_rx_mac_cycle_count
+        width: 32
 
   - name: stat_rx_mac_cycle_count_msb
     access: ro
+    fields:
+      - name: stat_rx_mac_cycle_count
+        width: 14
 
   - meta:
       pad_until: 0x00800
@@ -888,7 +1334,7 @@ regs:
   - name: stat_port_tx_phy_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_pcs_bad_code
         width: 1
       - name: stat_tx_flex_fifo_err
         width: 1
@@ -900,7 +1346,7 @@ regs:
   - name: stat_port_tx_phy_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_pcs_bad_code
         width: 1
       - name: stat_tx_flex_fifo_err
         width: 1
@@ -911,11 +1357,14 @@ regs:
 
   - name: stat_port_tx_statistics_ready
     access: ro
+    fields:
+      - name: stat_tx_port_statistics_ready
+        width: 1
 
   - name: stat_port_tx_fec_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_fec_pcs_lane_align
         width: 1
       - name: stat_tx_fec_pcs_block_lock
         width: 1
@@ -927,7 +1376,7 @@ regs:
   - name: stat_port_tx_fec_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_tx_fec_pcs_lane_align
         width: 1
       - name: stat_tx_fec_pcs_block_lock
         width: 1
@@ -941,30 +1390,54 @@ regs:
 
   - name: monitor_tx_1588_sample_systimer_lsb
     access: ro
+    fields:
+      - name: sample_tx_ptp_systimer
+        width: 32
 
   - name: monitor_tx_1588_sample_systimer_msb
     access: ro
+    fields:
+      - name: sample_tx_ptp_systimer
+        width: 23
 
   - name: monitor_tx_1588_incr_systimer_lsb
     access: ro
+    fields:
+      - name: sample_tx_ptp_increment
+        width: 32
 
   - name: monitor_tx_1588_incr_systimer_msb
     access: ro
+    fields:
+      - name: sample_tx_ptp_increment
+        width: 18
 
   - meta:
       pad_until: 0x00900
 
   - name: stat_tx_pcs_bad_code_lsb
     access: ro
+    fields:
+      - name: stat_tx_pcs_bad_code_count
+        width: 32
 
   - name: stat_tx_pcs_bad_code_msb
     access: ro
+    fields:
+      - name: stat_tx_pcs_bad_code_count
+        width: 21
 
   - name: stat_tx_pcs_cycle_count_lsb
     access: ro
+    fields:
+      - name: stat_tx_pcs_cycle_count
+        width: 32
 
   - name: stat_tx_pcs_cycle_count_msb
     access: ro
+    fields:
+      - name: stat_tx_pcs_cycle_count
+        width: 14
 
   - meta:
       pad_until: 0x00C00
@@ -972,7 +1445,7 @@ regs:
   - name: stat_port_rx_phy_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_status
         width: 1
       - name: stat_rx_block_lock
         width: 1
@@ -1002,7 +1475,7 @@ regs:
   - name: stat_port_rx_phy_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_status
         width: 1
       - name: stat_rx_block_lock
         width: 1
@@ -1031,26 +1504,44 @@ regs:
 
   - name: stat_port_rx_statistics_ready
     access: ro
+    fields:
+      - name: stat_rx_port_statistics_ready
+        width: 1
 
   - name: stat_port_rx_block_lock_reg
     access: ro
+    fields:
+      - name: stat_rx_block_lock
+        width: 20
 
   - name: stat_port_rx_lane_sync_reg
     access: ro
+    fields:
+      - name: stat_rx_synced
+        width: 20
 
   - name: stat_port_rx_lane_sync_err_reg
     access: ro
+    fields:
+      - name: stat_rx_synced_err
+        width: 20
 
   - name: stat_port_rx_am_repeat_err_reg
     access: ro
+    fields:
+      - name: stat_rx_mf_repeat_err
+        width: 20
 
   - name: stat_port_rx_lane_demuxed
     access: ro
+    fields:
+      - name: stat_rx_vl_demuxed
+        width: 20
 
   - name: stat_port_rx_pcs_lane_num_reg0
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_vl_number_0
         width: 5
       - name: stat_rx_vl_number_1
         width: 5
@@ -1068,7 +1559,7 @@ regs:
   - name: stat_port_rx_pcs_lane_num_reg1
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_vl_number_6
         width: 5
       - name: stat_rx_vl_number_7
         width: 5
@@ -1086,7 +1577,7 @@ regs:
   - name: stat_port_rx_pcs_lane_num_reg2
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_vl_number_12
         width: 5
       - name: stat_rx_vl_number_13
         width: 5
@@ -1104,7 +1595,7 @@ regs:
   - name: stat_port_rx_pcs_lane_num_reg3
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_vl_number_18
         width: 5
       - name: stat_rx_vl_number_19
         width: 5
@@ -1113,11 +1604,14 @@ regs:
 
   - name: stat_port_rx_bip_override_reg
     access: ro
+    fields:
+      - name: stat_rx_lane0_vlm_bip7
+        width: 8
 
   - name: stat_port_rx_fec_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_fec_aligned
         width: 1
       - name: stat_rx_fec_hi_ser
         width: 1
@@ -1133,7 +1627,7 @@ regs:
   - name: stat_port_rx_fec_rt_status_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_fec_aligned
         width: 1
       - name: stat_rx_fec_hi_ser
         width: 1
@@ -1148,11 +1642,14 @@ regs:
 
   - name: stat_port_rx_fec_map_reg
     access: ro
+    fields:
+      - name: stat_rx_fec_mapping
+        width: 16
 
   - name: stat_port_rx_fec_lane_fill_reg0
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_fec_delay_0
         width: 15
       - name: stat_rx_fec_delay_1
         width: 15
@@ -1162,7 +1659,7 @@ regs:
   - name: stat_port_rx_fec_lane_fill_reg1
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_fec_delay_2
         width: 15
       - name: stat_rx_fec_delay_3
         width: 15
@@ -1172,8 +1669,10 @@ regs:
   - name: stat_port_rx_pcs_lane_ui_delay_reg0
     access: ro
     fields:
+      - name: stat_rx_pcs_lane_ui_delay_0
+        width: 7
       - name: rsvd
-        width: 8
+        width: 1
       - name: stat_rx_pcs_lane_ui_delay_1
         width: 7
       - name: rsvd1
@@ -1190,8 +1689,10 @@ regs:
   - name: stat_port_rx_pcs_lane_ui_delay_reg1
     access: ro
     fields:
+      - name: stat_rx_pcs_lane_ui_delay_4
+        width: 7
       - name: rsvd
-        width: 8
+        width: 1
       - name: stat_rx_pcs_lane_ui_delay_5
         width: 7
       - name: rsvd1
@@ -1208,8 +1709,10 @@ regs:
   - name: stat_port_rx_pcs_lane_ui_delay_reg2
     access: ro
     fields:
+      - name: stat_rx_pcs_lane_ui_delay_8
+        width: 7
       - name: rsvd
-        width: 8
+        width: 1
       - name: stat_rx_pcs_lane_ui_delay_9
         width: 7
       - name: rsvd1
@@ -1226,8 +1729,10 @@ regs:
   - name: stat_port_rx_pcs_lane_ui_delay_reg3
     access: ro
     fields:
+      - name: stat_rx_pcs_lane_ui_delay_12
+        width: 7
       - name: rsvd
-        width: 8
+        width: 1
       - name: stat_rx_pcs_lane_ui_delay_13
         width: 7
       - name: rsvd1
@@ -1244,8 +1749,10 @@ regs:
   - name: stat_port_rx_pcs_lane_ui_delay_reg4
     access: ro
     fields:
+      - name: stat_rx_pcs_lane_ui_delay_16
+        width: 7
       - name: rsvd
-        width: 8
+        width: 1
       - name: stat_rx_pcs_lane_ui_delay_17
         width: 7
       - name: rsvd1
@@ -1261,11 +1768,14 @@ regs:
 
   - name: stat_port_rx_lane_aligner_almost_full
     access: ro
+    fields:
+      - name: stat_rx_lane_aligner_almost_full
+        width: 20
 
   - name: stat_port_rx_ecc_err_reg
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_ecc_err_a0
         width: 1
       - name: stat_rx_ecc_err_a1
         width: 1
@@ -1281,383 +1791,755 @@ regs:
 
   - name: monitor_rx_1588_sample_systimer_lsb
     access: ro
+    fields:
+      - name: sample_rx_ptp_systimer
+        width: 32
 
   - name: monitor_rx_1588_sample_systimer_msb
     access: ro
+    fields:
+      - name: sample_rx_ptp_systimer
+        width: 23
 
   - name: monitor_rx_1588_incr_systimer_lsb
     access: ro
+    fields:
+      - name: sample_rx_ptp_increment
+        width: 32
 
   - name: monitor_rx_1588_incr_systimer_msb
     access: ro
+    fields:
+      - name: sample_rx_ptp_increment
+        width: 18
 
   - meta:
       pad_until: 0x00D00
 
   - name: stat_rx_bip_err_0_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_0
+        width: 32
 
   - name: stat_rx_bip_err_0_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_0
+        width: 21
 
   - name: stat_rx_bip_err_1_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_1
+        width: 32
 
   - name: stat_rx_bip_err_1_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_1
+        width: 21
 
   - name: stat_rx_bip_err_2_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_2
+        width: 32
 
   - name: stat_rx_bip_err_2_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_2
+        width: 21
 
   - name: stat_rx_bip_err_3_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_3
+        width: 32
 
   - name: stat_rx_bip_err_3_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_3
+        width: 21
 
   - name: stat_rx_bip_err_4_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_4
+        width: 32
 
   - name: stat_rx_bip_err_4_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_4
+        width: 21
 
   - name: stat_rx_bip_err_5_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_5
+        width: 32
 
   - name: stat_rx_bip_err_5_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_5
+        width: 21
 
   - name: stat_rx_bip_err_6_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_6
+        width: 32
 
   - name: stat_rx_bip_err_6_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_6
+        width: 21
 
   - name: stat_rx_bip_err_7_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_7
+        width: 32
 
   - name: stat_rx_bip_err_7_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_7
+        width: 21
 
   - name: stat_rx_bip_err_8_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_8
+        width: 32
 
   - name: stat_rx_bip_err_8_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_8
+        width: 21
 
   - name: stat_rx_bip_err_9_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_9
+        width: 32
 
   - name: stat_rx_bip_err_9_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_9
+        width: 21
 
   - name: stat_rx_bip_err_10_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_10
+        width: 32
 
   - name: stat_rx_bip_err_10_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_10
+        width: 21
 
   - name: stat_rx_bip_err_11_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_11
+        width: 32
 
   - name: stat_rx_bip_err_11_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_11
+        width: 21
 
   - name: stat_rx_bip_err_12_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_12
+        width: 32
 
   - name: stat_rx_bip_err_12_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_12
+        width: 21
 
   - name: stat_rx_bip_err_13_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_13
+        width: 32
 
   - name: stat_rx_bip_err_13_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_13
+        width: 21
 
   - name: stat_rx_bip_err_14_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_14
+        width: 32
 
   - name: stat_rx_bip_err_14_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_14
+        width: 21
 
   - name: stat_rx_bip_err_15_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_15
+        width: 32
 
   - name: stat_rx_bip_err_15_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_15
+        width: 21
 
   - name: stat_rx_bip_err_16_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_16
+        width: 32
 
   - name: stat_rx_bip_err_16_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_16
+        width: 21
 
   - name: stat_rx_bip_err_17_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_17
+        width: 32
 
   - name: stat_rx_bip_err_17_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_17
+        width: 21
 
   - name: stat_rx_bip_err_18_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_18
+        width: 32
 
   - name: stat_rx_bip_err_18_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_18
+        width: 21
 
   - name: stat_rx_bip_err_19_lsb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_19
+        width: 32
 
   - name: stat_rx_bip_err_19_msb
     access: ro
+    fields:
+      - name: stat_rx_bip_err_19
+        width: 21
 
   - name: stat_rx_framing_err_0_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_0
+        width: 32
 
   - name: stat_rx_framing_err_0_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_0
+        width: 21
 
   - name: stat_rx_framing_err_1_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_1
+        width: 32
 
   - name: stat_rx_framing_err_1_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_1
+        width: 21
 
   - name: stat_rx_framing_err_2_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_2
+        width: 32
 
   - name: stat_rx_framing_err_2_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_2
+        width: 21
 
   - name: stat_rx_framing_err_3_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_3
+        width: 32
 
   - name: stat_rx_framing_err_3_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_3
+        width: 21
 
   - name: stat_rx_framing_err_4_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_4
+        width: 32
 
   - name: stat_rx_framing_err_4_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_4
+        width: 21
 
   - name: stat_rx_framing_err_5_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_5
+        width: 32
 
   - name: stat_rx_framing_err_5_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_5
+        width: 21
 
   - name: stat_rx_framing_err_6_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_6
+        width: 32
 
   - name: stat_rx_framing_err_6_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_6
+        width: 21
 
   - name: stat_rx_framing_err_7_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_7
+        width: 32
 
   - name: stat_rx_framing_err_7_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_7
+        width: 21
 
   - name: stat_rx_framing_err_8_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_8
+        width: 32
 
   - name: stat_rx_framing_err_8_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_8
+        width: 21
 
   - name: stat_rx_framing_err_9_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_9
+        width: 32
 
   - name: stat_rx_framing_err_9_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_9
+        width: 21
 
   - name: stat_rx_framing_err_10_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_10
+        width: 32
 
   - name: stat_rx_framing_err_10_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_10
+        width: 21
 
   - name: stat_rx_framing_err_11_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_11
+        width: 32
 
   - name: stat_rx_framing_err_11_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_11
+        width: 21
 
   - name: stat_rx_framing_err_12_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_12
+        width: 32
 
   - name: stat_rx_framing_err_12_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_12
+        width: 21
 
   - name: stat_rx_framing_err_13_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_13
+        width: 32
 
   - name: stat_rx_framing_err_13_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_13
+        width: 21
 
   - name: stat_rx_framing_err_14_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_14
+        width: 32
 
   - name: stat_rx_framing_err_14_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_14
+        width: 21
 
   - name: stat_rx_framing_err_15_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_15
+        width: 32
 
   - name: stat_rx_framing_err_15_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_15
+        width: 21
 
   - name: stat_rx_framing_err_16_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_16
+        width: 32
 
   - name: stat_rx_framing_err_16_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_16
+        width: 21
 
   - name: stat_rx_framing_err_17_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_17
+        width: 32
 
   - name: stat_rx_framing_err_17_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_17
+        width: 21
 
   - name: stat_rx_framing_err_18_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_18
+        width: 32
 
   - name: stat_rx_framing_err_18_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_18
+        width: 21
 
   - name: stat_rx_framing_err_19_lsb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_19
+        width: 32
 
   - name: stat_rx_framing_err_19_msb
     access: ro
+    fields:
+      - name: stat_rx_framing_err_19
+        width: 21
 
   - name: stat_rx_pcs_bad_code_lsb
     access: ro
+    fields:
+      - name: stat_rx_pcs_bad_code_count
+        width: 32
 
   - name: stat_rx_pcs_bad_code_msb
     access: ro
+    fields:
+      - name: stat_rx_pcs_bad_code_count
+        width: 21
 
   - name: stat_rx_fec_cw_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_cw
+        width: 32
 
   - name: stat_rx_fec_cw_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_cw
+        width: 21
 
   - name: stat_rx_fec_corrected_cw_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_corrected_cw
+        width: 32
 
   - name: stat_rx_fec_corrected_cw_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_corrected_cw
+        width: 21
 
   - name: stat_rx_fec_uncorrected_cw_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_uncorrected_cw
+        width: 32
 
   - name: stat_rx_fec_uncorrected_cw_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_uncorrected_cw
+        width: 21
 
   - name: stat_rx_fec_cw_bh_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_cw_bh
+        width: 32
 
   - name: stat_rx_fec_cw_bh_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_cw_bh
+        width: 21
 
   - name: stat_rx_fec_corrected_cw_bh_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_corrected_cw_bh
+        width: 32
 
   - name: stat_rx_fec_corrected_cw_bh_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_corrected_cw_bh
+        width: 21
 
   - name: stat_rx_fec_uncorrected_cw_bh_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_uncorrected_cw_bh
+        width: 32
 
   - name: stat_rx_fec_uncorrected_cw_bh_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_uncorrected_cw_bh
+        width: 21
 
   - name: stat_rx_fec_bit_err_0to1_l0_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l0
+        width: 32
 
   - name: stat_rx_fec_bit_err_0to1_l0_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l0
+        width: 21
 
   - name: stat_rx_fec_bit_err_0to1_l1_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l1
+        width: 32
 
   - name: stat_rx_fec_bit_err_0to1_l1_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l1
+        width: 21
 
   - name: stat_rx_fec_bit_err_0to1_l2_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l2
+        width: 32
 
   - name: stat_rx_fec_bit_err_0to1_l2_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l2
+        width: 21
 
   - name: stat_rx_fec_bit_err_0to1_l3_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l3
+        width: 32
 
   - name: stat_rx_fec_bit_err_0to1_l3_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_0to1_l3
+        width: 21
 
   - name: stat_rx_fec_bit_err_1to0_l0_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l0
+        width: 32
 
   - name: stat_rx_fec_bit_err_1to0_l0_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l0
+        width: 21
 
   - name: stat_rx_fec_bit_err_1to0_l1_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l1
+        width: 32
 
   - name: stat_rx_fec_bit_err_1to0_l1_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l1
+        width: 21
 
   - name: stat_rx_fec_bit_err_1to0_l2_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l2
+        width: 32
 
   - name: stat_rx_fec_bit_err_1to0_l2_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l2
+        width: 21
 
   - name: stat_rx_fec_bit_err_1to0_l3_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l3
+        width: 32
 
   - name: stat_rx_fec_bit_err_1to0_l3_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_bit_err_1to0_l3
+        width: 21
 
   - name: stat_rx_fec_err_count_l0_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l0
+        width: 32
 
   - name: stat_rx_fec_err_count_l0_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l0
+        width: 21
 
   - name: stat_rx_fec_err_count_l1_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l1
+        width: 32
 
   - name: stat_rx_fec_err_count_l1_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l1
+        width: 21
 
   - name: stat_rx_fec_err_count_l2_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l2
+        width: 32
 
   - name: stat_rx_fec_err_count_l2_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l2
+        width: 21
 
   - name: stat_rx_fec_err_count_l3_lsb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l3
+        width: 32
 
   - name: stat_rx_fec_err_count_l3_msb
     access: ro
+    fields:
+      - name: stat_rx_fec_err_count_l3
+        width: 21
 
   - name: stat_rx_pcs_cycle_count_lsb
     access: ro
+    fields:
+      - name: stat_rx_pcs_cycle_count
+        width: 32
 
   - name: stat_rx_pcs_cycle_count_msb
     access: ro
+    fields:
+      - name: stat_rx_pcs_cycle_count
+        width: 14
 
   - name: stat_rx_ecc_count
     access: ro
     fields:
-      - name: rsvd
+      - name: stat_rx_ecc_correctable_count
         width: 16
       - name: stat_rx_ecc_uncorrectable_count
         width: 16
