@@ -26,6 +26,7 @@ jobs ?= 16
 #------- Targets -------
 
 build: bitfile package
+build_shell: shell_bitfile shell_package
 
 # Include targets for config validation
 # - checks Vivado version
@@ -102,6 +103,16 @@ bitfile : build_app
 	@echo
 	@echo "Done."
 
+shell_bitfile: config config_check
+	@echo
+	@echo "Starting shell build $(BUILD_NAME)..."
+	@echo "----------------------------------------------------------"
+	@$(MAKE) -s -C $(PROJ_ROOT) -f makefile.esnet bitfile \
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) APP_NAME=$(APP_NAME) max_pkt_len=$(max_pkt_len) jobs=$(jobs) \
+		plugin_dir=$(ONS_ROOT)/plugin/stub
+	@echo
+	@echo "Done."
+
 prune_build:
 	@echo "Pruning $(BUILD_NAME)..."
 	@echo
@@ -119,6 +130,15 @@ package : | $(ARTIFACTS_BUILD_DIR)
 	@$(MAKE) -s -C $(PROJ_ROOT)/src/smartnic/regio reg APP_ROOT=$(APP_ROOT)
 	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
 		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR)
+	@echo
+	@echo "Done."
+
+shell_package : | $(ARTIFACTS_BUILD_DIR)
+	@echo "----------------------------------------------------------"
+	@echo "Packaging build $(BUILD_NAME) ..."
+	@$(MAKE) -C $(PROJ_ROOT) -f makefile.esnet package \
+		BOARD=$(BOARD) BUILD_NAME=$(BUILD_NAME) APP_ROOT=$(APP_ROOT) ARTIFACTS_BUILD_DIR=$(ARTIFACTS_BUILD_DIR) \
+		plugin_dir=$(ONS_ROOT)/plugin/stub
 	@echo
 	@echo "Done."
 
