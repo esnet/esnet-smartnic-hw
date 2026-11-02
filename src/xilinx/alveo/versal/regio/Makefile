@@ -13,7 +13,7 @@ REG_BLOCK_YAML = \
     gtm_regs.yaml \
     dcmac_global_regs.yaml \
     dcmac_channel_regs.yaml \
-    dcmac_channel_small_regs.yaml
+    dcmac_channel_tdm_regs.yaml
 
 REG_DECODER_YAML = \
     dcmac_decoder.yaml \
