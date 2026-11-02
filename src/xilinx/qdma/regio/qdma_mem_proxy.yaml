@@ -1,0 +1,213 @@
+name: qdma_mem_proxy
+info: |
+  This register map describes a register-indirect proxy interface
+  for interacting with a generic memory.
+protocol:
+  name: mem_proxy
+  source: !include src/mem/proxy/regio/mem_proxy_protocol.py
+regs:
+  - default:
+      width: 32
+      access: rw
+      init: 0
+
+  - name: info
+    desc: Info (type)
+    access: ro
+    fields:
+        - name: mem_type
+          desc: underlying memory type.
+          width: 4
+          enum:
+            0 : UNSPECIFIED
+            1 : SRAM
+            2 : DDR
+            3 : HBM
+        - name: access
+          desc: access type.
+          width: 4
+          enum:
+            0 : UNSPECIFIED
+            1 : READ_WRITE
+            2 : READ_ONLY
+        - name: alignment
+          desc: alignment (in bytes) for memory accesses.
+          width: 12
+
+  - name: info_depth
+    desc: Info (depth)
+    access: ro
+    fields:
+        - name:  words
+          desc:  memory depth in words
+          width: 32
+
+  - name: info_size_upper
+    desc: Info (size in bytes, bits 63:32)
+    access: ro
+    width: 32
+
+  - name: info_size_lower
+    desc: Info (size in bytes, bits 31:0)
+    access: ro
+    width: 32
+
+  - name: info_burst
+    desc: Info (burst)
+    access: ro
+    fields:
+        - name: min
+          desc: minimum burst size (in bytes)
+          width: 9
+        - name: rsvd0
+          desc: reserved
+          width: 7
+        - name: max
+          desc: maximum burst size (in bytes)
+          width: 9
+        - name: rsvd1
+          desc: reserved
+          width: 7
+
+  - name: control
+    desc: Block control register
+    access: rw
+    fields:
+        - name: reset
+          desc: (Soft) block reset.
+          width: 1
+          init: 0
+        - name: enable
+          desc: (Soft) block enable.
+          width: 1
+          init: 1
+
+  - name: monitor
+    desc: Block monitor register
+    access: ro
+    fields:
+        - name: reset_mon
+          desc: Block reset monitor.
+          width: 1
+        - name: enable_mon
+          desc: Block enable monitor.
+          width: 1
+        - name: ready_mon
+          desc: Block ready monitor.
+          width: 1
+        - name: state_mon
+          desc: Block state monitor.
+          width: 8
+          enum:
+            0  : RESET
+            1  : INIT_DEBOUNCE
+            2  : INIT_PENDING
+            3  : IDLE
+            4  : READ_REQ
+            5  : READ_PENDING
+            6  : WRITE_REQ
+            7  : WRITE_PENDING
+            8  : CLEAR_REQ
+            9  : CLEAR_DEBOUNCE
+            10 : CLEAR_PENDING
+            11 : DONE
+            12 : ERROR
+            13 : TIMEOUT
+
+  - name: command
+    desc: Command register
+    access: wr_evt
+    fields:
+        - name: code
+          desc: Command code.
+          width: 8
+          enum:
+            0 : NOP
+            1 : READ
+            2 : WRITE
+            3 : CLEAR
+
+  - name: status
+    desc: Status register
+    access: rd_evt
+    fields:
+        - name: code
+          desc: Status code.
+          width: 8
+          enum:
+            0 : RESET
+            1 : READY
+            2 : BUSY
+        - name: done
+          desc: Done flag. Indicates that last operation completed successfully. Sticky until read or until new transaction received.
+          width: 1
+        - name: error
+          desc: Error flag. Indicates that last operation terminated with error. Sticky until read or until new transaction received.
+          width: 1
+        - name: timeout
+          desc: Timeout flag. Indicates that last operation timed out. Sticky until read or until new transaction received.
+          width: 1
+        - name: burst_size
+          desc: Number of bytes written/read in last successful operation; For READ operations, specifies the number of valid bytes in the read_data array.
+          width: 9
+        - name: rsvd
+          desc: reserved
+          width: 7
+
+  - name: addr
+    desc: Address register (for READ/WRITE operations). Must be aligned according to info.alignment.
+    access: rw
+    width: 32
+
+  - name: burst
+    desc: Burst config register (for READ/WRITE operations).
+    fields:
+      - name: len
+        desc: Burst length for READ/WRITE operations only (ignored for other operations).
+              Overall burst size is burst.len * info_burst.min (bytes).
+              A value of 0 is equivalent to no burst, i.e. burst length == 1.
+        width: 8
+
+  - name: wr_data
+    desc: Write data register (for WRITE operations).
+            Implemented as a byte array, where -
+              write_data[0].byte_0 contains byte 0 of write data.
+              write_data[(command.burst_size-1) div 4].byte_((command.burst_size-1) mod 4) contains last byte of write data.
+              write_data[i, i > (command.burst_size-1) div 4] are ignored.
+    access: rw
+    fields:
+        - name: byte_0
+          desc: 0th byte of selected dword
+          width: 8
+        - name: byte_1
+          desc: 1st byte of selected dword
+          width: 8
+        - name: byte_2
+          desc: 2nd byte of selected dword
+          width: 8
+        - name: byte_3
+          desc: 3rd byte of selected dword
+          width: 8
+    count: 16
+
+  - name: rd_data
+    desc: Read data register (for READ operations).
+            Implemented as a byte array, where -
+              read_data[0].byte_0 contains byte 0 of read data.
+              read_data[(status.burst_size-1) div 4].byte_((status.burst_size-1) mod 4) contains last byte of read data.
+              read_data[i, i > (status.burst_size-1) div 4] are ignored.
+    access: ro
+    fields:
+        - name: byte_0
+          desc: 0th byte of selected dword
+          width: 8
+        - name: byte_1
+          desc: 1st byte of selected dword
+          width: 8
+        - name: byte_2
+          desc: 2nd byte of selected dword
+          width: 8
+        - name: byte_3
+          desc: 3rd byte of selected dword
+          width: 8
+    count: 16

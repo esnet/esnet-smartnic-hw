@@ -36,11 +36,16 @@ info: |
 
   Enable changes take effect at the next packet boundary.
 
+# The capture/playback decoders, and the blocks beneath them, are renamed
+# copies of src/packet/regio and src/mem/proxy/regio (qdma_counters likewise
+# for packet_counters).  The core registers the library blocks under their
+# own names, and regio-elaborate rejects the duplicate when both reach the
+# top-level map.  Keep the copies identical to the library layout.
 decoders:
   pkt_playback: &pkt_playback
-    !include src/packet/regio/packet_playback_decoder.yaml
+    !include ../src/xilinx/qdma/regio/qdma_pkt_playback_decoder.yaml
   pkt_capture: &pkt_capture
-    !include src/packet/regio/packet_capture_decoder.yaml
+    !include ../src/xilinx/qdma/regio/qdma_pkt_capture_decoder.yaml
 
 blocks:
   config: &config
