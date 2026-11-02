@@ -133,7 +133,11 @@ module xilinx_qdma_st_adapter
     pkt_c2h_meta_t c2h_meta;
     assign c2h_meta = pkt_c2h.meta;
 
-    assign c2h_tvalid        = pkt_c2h.vld;
+    // A beat is offered only when the completion path can also take it
+    // (see pkt_c2h.rdy below).  Offering it while cmpt_tready is low would let
+    // the engine consume the beat while pkt_c2h holds it, so the same beat
+    // would be presented, and consumed, again.
+    assign c2h_tvalid        = pkt_c2h.vld && cmpt_tready;
     assign c2h_tdata         = {<<8{pkt_c2h.data}};  // big-endian → little-endian
     assign c2h_tlast         = pkt_c2h.eop;
     assign c2h_ctrl_qid      = QID_WID'(c2h_meta.qid);

@@ -223,6 +223,13 @@ module xilinx_qdma_st_adapter_unit_test;
     endproperty
     a_cmpt_on_eop: assert property (p_cmpt_on_eop);
 
+    // Every beat the engine accepts is a beat the adapter advances past.
+    property p_c2h_accept_advances;
+        @(posedge aclk) disable iff (!aresetn)
+        (c2h_tvalid && c2h_tready) |-> pkt_c2h.rdy;
+    endproperty
+    a_c2h_accept_advances: assert property (p_c2h_accept_advances);
+
     // Note: pkt_c2h feeds into packet_fifo (store-and-forward), which decouples
     // the input from the output side.  pkt_c2h.rdy reflects FIFO capacity, not
     // downstream c2h_tready / cmpt_tready.  Functional backpressure correctness
@@ -613,7 +620,13 @@ module xilinx_qdma_st_adapter_unit_test;
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
-                    repeat (4) @(posedge aclk);
+                    // The engine must not see a beat it could consume while
+                    // the completion path is stalled.
+                    repeat (4) begin
+                        @(posedge aclk);
+                        `FAIL_IF_LOG(c2h_tvalid && c2h_tready,
+                                     "c2h beat consumable while cmpt_tready is low")
+                    end
                     cmpt_tready = 1'b1;
                 end
             join
