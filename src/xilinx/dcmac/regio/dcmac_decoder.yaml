@@ -8,13 +8,13 @@ info: |
 
 blocks:
   dcmac_global: &dcmac_global
-    !include ../src/xilinx/alveo/versal/regio/dcmac_global_regs.yaml
+    !include ../src/xilinx/dcmac/regio/dcmac_global_regs.yaml
 
   dcmac_channel: &dcmac_channel
-    !include ../src/xilinx/alveo/versal/regio/dcmac_channel_regs.yaml
+    !include ../src/xilinx/dcmac/regio/dcmac_channel_regs.yaml
 
   dcmac_channel_tdm: &dcmac_channel_tdm
-    !include ../src/xilinx/alveo/versal/regio/dcmac_channel_tdm_regs.yaml
+    !include ../src/xilinx/dcmac/regio/dcmac_channel_tdm_regs.yaml
 
 interfaces:
   - block: *dcmac_global

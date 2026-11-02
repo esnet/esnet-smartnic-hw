@@ -1,6 +1,6 @@
-name: dcmac_channel_small_regs
+name: dcmac_channel_tdm_regs
 info: |
-  AMD DCMAC Small Channel Registers (C6-C39 canonical, C6_ prefix stripped).
+  AMD DCMAC TDM Channel Registers (C6-C39 canonical, C6_ prefix stripped).
   Ref: AMD DCMAC Register Map v1.4
   Mount at channel base address: C6=0x07000, C7=0x08000, ..., C39=0x28000.
 regs:

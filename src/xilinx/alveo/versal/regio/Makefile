@@ -11,12 +11,8 @@ include $(COMPONENT_ROOT)/config.mk
 REG_BLOCK_YAML = \
     versal_hw_regs.yaml \
     gtm_regs.yaml \
-    dcmac_global_regs.yaml \
-    dcmac_channel_regs.yaml \
-    dcmac_channel_tdm_regs.yaml
 
 REG_DECODER_YAML = \
-    dcmac_decoder.yaml \
     gt_decoder.yaml \
     xilinx_alveo_versal_decoder.yaml
 

@@ -6,7 +6,7 @@ blocks:
 
 decoders:
   dcmac_decoder: &dcmac_decoder
-    !include ../src/xilinx/alveo/versal/regio/dcmac_decoder.yaml
+    !include ../src/xilinx/dcmac/regio/dcmac_decoder.yaml
   gt_decoder: &gt_decoder
     !include ../src/xilinx/alveo/versal/regio/gt_decoder.yaml
   qdma_decoder: &qdma_decoder
