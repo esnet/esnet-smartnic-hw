@@ -102,9 +102,7 @@ module xilinx_qdma_st_adapter
     // =========================================================================
     // H2C stream — flat QDMA signals → packet_intf (pkt_h2c_meta_t)
     //
-    // Packs {h2c_tcrc, h2c_qid} into meta.  The tcrc is valid at EOP only when
-    // the QDMA IP's data protection (parity) setting is enabled in the
-    // platform wrapper; with protection disabled it reads 0.
+    // Packs {h2c_tcrc, h2c_qid} into meta.  The tcrc is valid at EOP.
     // xilinx_alveo_qdma_st extracts it as crc_in for packet_crc_rx.
     //
     // zero_byte marks a transfer with no payload (packet_intf cannot represent
