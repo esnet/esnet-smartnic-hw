@@ -144,7 +144,7 @@ module xilinx_qdma_st_adapter
     assign c2h_ctrl_has_cmpt = 1'b1;
     assign c2h_ctrl_marker   = 1'b0;
     assign c2h_mty           = pkt_c2h.eop ? pkt_c2h.mty : '0;
-    assign c2h_tcrc          = c2h_meta.tcrc;
+    assign c2h_tcrc          = c2h_meta.tcrc;  // valid on the EOP beat only
 
     // ECC over the C2H ctrl bus.  Field order and widths per PG347:
     //   {24'h0, has_cmpt, marker, port_id[2:0], qid[11:0], len[15:0]} = 57 bits

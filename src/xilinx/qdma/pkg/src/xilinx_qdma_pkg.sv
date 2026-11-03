@@ -69,7 +69,8 @@ package xilinx_qdma_pkg;
     // C2H: xilinx_alveo_qdma_st packs the generated tcrc, the queue id, and
     //      the store-and-forward packet size (available at the FIFO output)
     //      into meta.  The adapter unpacks all three, eliminating the separate
-    //      pkt_c2h_size wire from the module boundary.
+    //      pkt_c2h_size wire from the module boundary.  tcrc is valid on the
+    //      EOP beat only; size and qid are valid on every beat.
     typedef struct packed {
         logic [31:0] tcrc;
         qid_t        qid;

@@ -11,7 +11,7 @@
 //     packet_fifo per direction
 //   - H2C CRC check (packet_crc_rx) on the QDMA-clock input, before the
 //     H2C FIFO; mismatches mark err so DROP_ERRORED discards the packet
-//   - C2H CRC generation (packet_crc_tx) on the core-clock side, before
+//   - C2H CRC generation (packet_crc_tx) on the QDMA-clock output, after
 //     the C2H FIFO; the result is packed into the descriptor meta field
 //   - a register-controlled loopback that reflects H2C back as C2H
 //   - packet debug: a packet_capture tapping the H2C stream from the DMA
@@ -30,7 +30,8 @@
 // xilinx_qdma_pkg: pkt_h2c_meta_t {tcrc, qid} and
 // pkt_c2h_meta_t {size, tcrc, qid}.  size is packed here at the C2H FIFO
 // output, where the store-and-forward length is first available, which
-// eliminates the separate pkt_c2h_dma_size port.
+// eliminates the separate pkt_c2h_dma_size port.  tcrc is generated after
+// that, from the FIFO output stream.
 // =========================================================================
 module xilinx_alveo_qdma_st
     import xilinx_qdma_pkg::*;
@@ -295,9 +296,11 @@ module xilinx_alveo_qdma_st
     // (size, tcrc, qid) are packed into pkt_c2h_dma.meta as pkt_c2h_meta_t.
     // =========================================================================
 
-    // Internal C2H FIFO interface: carries {tcrc, qid} while crossing domains.
+    // Internal C2H FIFO interface: carries qid while crossing domains.
     // size is not yet known inside the FIFO; it is added at the output.
-    localparam int C2H_FIFO_META_WID = 32 + QID_WID;  // {tcrc[31:0], qid}
+    // tcrc is generated after the FIFO, on the QDMA clock.
+    localparam int C2H_FIFO_META_WID  = QID_WID;
+    localparam int C2H_SIZED_META_WID = $bits(packet_pkg::size_t) + QID_WID;  // {size, qid}
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
@@ -331,11 +334,48 @@ module xilinx_alveo_qdma_st
         .pkt_size      ( pkt_c2h_size      )
     );
 
-    // Widen to full pkt_c2h_meta_t, inserting size at the top.
+    // Pack size into meta at the FIFO output.  pkt_c2h_size is held for the
+    // duration of the current output packet; it travels through the CRC
+    // generator in meta so it stays aligned with the delayed beats.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID  ),
+        .META_WID      ( C2H_SIZED_META_WID  )
+    ) pkt_c2h_sized (.clk(aclk));
+
+    assign pkt_c2h_sized.vld  = pkt_c2h_fifo_out.vld;
+    assign pkt_c2h_sized.data = pkt_c2h_fifo_out.data;
+    assign pkt_c2h_sized.eop  = pkt_c2h_fifo_out.eop;
+    assign pkt_c2h_sized.mty  = pkt_c2h_fifo_out.mty;
+    assign pkt_c2h_sized.err  = pkt_c2h_fifo_out.err;
+    assign pkt_c2h_sized.meta = {pkt_c2h_size, pkt_c2h_fifo_out.meta};
+    assign pkt_c2h_fifo_out.rdy = pkt_c2h_sized.rdy;
+
+    // CRC generator: computes the engine's tcrc over the C2H packet data on
+    // the QDMA clock, after the FIFO.  crc_out is valid only on the output
+    // EOP beat; tcrc is consumed with tlast, so it need not hold elsewhere.
+    packet_intf #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID  ),
+        .META_WID      ( C2H_SIZED_META_WID  )
+    ) pkt_c2h_crc_out (.clk(aclk));
+
+    logic [31:0] c2h_crc_out;
+
+    packet_crc_tx #(
+        .CONFIG       ( QDMA_TCRC_CONFIG ),
+        .TRIM         ( 0                ),
+        .BYTE_REVERSE ( 1                )
+    ) i_packet_crc_tx__c2h (
+        .srst    ( ~aresetn        ),
+        .from_tx ( pkt_c2h_sized   ),
+        .to_rx   ( pkt_c2h_crc_out ),
+        .crc_out ( c2h_crc_out     )
+    );
+
+    // Widen to full pkt_c2h_meta_t.
     pkt_c2h_meta_t c2h_dma_meta;
-    assign c2h_dma_meta.size = pkt_c2h_size;
-    assign c2h_dma_meta.tcrc = pkt_c2h_fifo_out.meta[C2H_FIFO_META_WID-1 -: 32];
-    assign c2h_dma_meta.qid  = QID_WID'(pkt_c2h_fifo_out.meta);
+    assign c2h_dma_meta.size = pkt_c2h_crc_out.meta[C2H_SIZED_META_WID-1 -: $bits(packet_pkg::size_t)];
+    assign c2h_dma_meta.tcrc = c2h_crc_out;
+    assign c2h_dma_meta.qid  = QID_WID'(pkt_c2h_crc_out.meta);
 
     // Datapath C2H stream toward the DMA engine, before the playback mux.
     packet_intf #(
@@ -343,13 +383,13 @@ module xilinx_alveo_qdma_st
         .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h_chk (.clk(aclk));
 
-    assign pkt_c2h_chk.vld  = pkt_c2h_fifo_out.vld;
-    assign pkt_c2h_chk.data = pkt_c2h_fifo_out.data;
-    assign pkt_c2h_chk.eop  = pkt_c2h_fifo_out.eop;
-    assign pkt_c2h_chk.mty  = pkt_c2h_fifo_out.mty;
-    assign pkt_c2h_chk.err  = pkt_c2h_fifo_out.err;
+    assign pkt_c2h_chk.vld  = pkt_c2h_crc_out.vld;
+    assign pkt_c2h_chk.data = pkt_c2h_crc_out.data;
+    assign pkt_c2h_chk.eop  = pkt_c2h_crc_out.eop;
+    assign pkt_c2h_chk.mty  = pkt_c2h_crc_out.mty;
+    assign pkt_c2h_chk.err  = pkt_c2h_crc_out.err;
     assign pkt_c2h_chk.meta = PKT_C2H_META_WID'(c2h_dma_meta);
-    assign pkt_c2h_fifo_out.rdy = pkt_c2h_chk.rdy;
+    assign pkt_c2h_crc_out.rdy = pkt_c2h_chk.rdy;
 
     // Playback stream, in the DMA-side meta layout.  The meta (including size
     // and tcrc) is supplied by the playback registers.
@@ -397,17 +437,11 @@ module xilinx_alveo_qdma_st
         .META_WID      ( QID_WID            )
     ) pkt_c2h_core (.clk(core_clk));
 
-    // Loopback output (pre-CRC): loopback switch drives this; CRC generator reads it.
+    // Loopback output: loopback switch drives this; the C2H FIFO reads it.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
         .META_WID      ( QID_WID            )
     ) pkt_c2h_lb_out (.clk(core_clk));
-
-    // CRC generator output: same META_WID as input (CRC is out-of-band).
-    packet_intf #(
-        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
-    ) pkt_c2h_crc_out (.clk(core_clk));
 
     packet_loopback i_packet_loopback (
         .srst          ( core_srst               ),
@@ -420,30 +454,13 @@ module xilinx_alveo_qdma_st
         .switching     ( core_loopback_switching )
     );
 
-    // CRC generator: computes CRC32 over C2H packet data before the FIFO.
-    // crc_out is registered on the input EOP beat and valid at the output EOP,
-    // coinciding exactly with the descriptor write in the FIFO.
-    logic [31:0] c2h_crc_out;
-
-    packet_crc_tx #(
-        .CONFIG       ( QDMA_TCRC_CONFIG ),
-        .TRIM         ( 0                ),
-        .BYTE_REVERSE ( 1                )
-    ) i_packet_crc_tx__c2h (
-        .srst    ( core_srst       ),
-        .from_tx ( pkt_c2h_lb_out  ),
-        .to_rx   ( pkt_c2h_crc_out ),
-        .crc_out ( c2h_crc_out     )
-    );
-
-    // Pack {tcrc, qid} into the FIFO input meta (size added at FIFO output).
-    assign pkt_c2h_fifo.vld  = pkt_c2h_crc_out.vld;
-    assign pkt_c2h_fifo.data = pkt_c2h_crc_out.data;
-    assign pkt_c2h_fifo.eop  = pkt_c2h_crc_out.eop;
-    assign pkt_c2h_fifo.mty  = pkt_c2h_crc_out.mty;
-    assign pkt_c2h_fifo.err  = pkt_c2h_crc_out.err;
-    assign pkt_c2h_fifo.meta = {c2h_crc_out, pkt_c2h_crc_out.meta};
-    assign pkt_c2h_crc_out.rdy = pkt_c2h_fifo.rdy;
+    assign pkt_c2h_fifo.vld  = pkt_c2h_lb_out.vld;
+    assign pkt_c2h_fifo.data = pkt_c2h_lb_out.data;
+    assign pkt_c2h_fifo.eop  = pkt_c2h_lb_out.eop;
+    assign pkt_c2h_fifo.mty  = pkt_c2h_lb_out.mty;
+    assign pkt_c2h_fifo.err  = pkt_c2h_lb_out.err;
+    assign pkt_c2h_fifo.meta = pkt_c2h_lb_out.meta;
+    assign pkt_c2h_lb_out.rdy = pkt_c2h_fifo.rdy;
 
     // =========================================================================
     // packet_intf <-> axi4s_intf conversion (core clock domain)

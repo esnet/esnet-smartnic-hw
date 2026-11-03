@@ -510,22 +510,23 @@ module xilinx_alveo_qdma_st_unit_test;
         `SVTEST_END
 
         // C2H: the tcrc packed into the DMA meta is the engine's convention,
-        // over the whole packet including the zero-padded final beat.
+        // over the whole packet including the zero-padded final beat.  It is
+        // generated after the FIFO and is valid on the EOP beat only.
         `SVTEST(c2h_tcrc_generated)
             int sizes[] = '{64, 100, 200, 37};
             foreach (sizes[k]) begin
-                logic [PKT_C2H_META_WID-1:0] meta_at_sop;
+                logic [PKT_C2H_META_WID-1:0] meta_at_eop;
                 pkt_c2h_meta_t c2h_meta;
                 byte data[] = new[sizes[k]];
                 foreach (data[i]) data[i] = 8'(i);
                 fork
                     send_axis(sizes[k], 12'h0AB);
                     begin
-                        @(posedge aclk iff (pkt_c2h_dma.vld && pkt_c2h_dma.rdy));
-                        meta_at_sop = pkt_c2h_dma.meta;
+                        @(posedge aclk iff (pkt_c2h_dma.vld && pkt_c2h_dma.rdy && pkt_c2h_dma.eop));
+                        meta_at_eop = pkt_c2h_dma.meta;
                     end
                 join
-                c2h_meta = meta_at_sop;
+                c2h_meta = meta_at_eop;
                 `FAIL_UNLESS_EQUAL(c2h_meta.tcrc, qdma_tcrc_bytes(data))
                 // let the rest of the packet drain
                 repeat (4 * sizes[k] / AXIS_DATA_BYTE_WID + 64) @(posedge aclk);
