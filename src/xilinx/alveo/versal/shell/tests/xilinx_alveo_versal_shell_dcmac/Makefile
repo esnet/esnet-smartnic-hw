@@ -21,6 +21,7 @@ SIM_OPTS =
 SUBCOMPONENTS ?= \
     xilinx.alveo.versal.shell.rtl \
     xilinx.alveo.versal.regio.verif \
+    xilinx.gtm.regio.verif \
     xilinx.alveo.versal.pkg \
     xilinx.qdma.pkg \
     smartnic.core.rtl \

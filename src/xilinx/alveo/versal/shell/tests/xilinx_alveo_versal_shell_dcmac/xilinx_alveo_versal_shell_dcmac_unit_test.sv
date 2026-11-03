@@ -7,6 +7,7 @@ module xilinx_alveo_versal_shell_dcmac_unit_test;
     import packet_verif_pkg::*;
     import xilinx_qdma_pkg::*;
     import xilinx_alveo_versal_reg_verif_pkg::*;
+    import xilinx_gtm_reg_verif_pkg::*;
     import smartnic_pkg::*;
 
     string name = "xilinx_alveo_versal_shell_dcmac_ut";
@@ -164,9 +165,9 @@ module xilinx_alveo_versal_shell_dcmac_unit_test;
     integer gt_loopback3_p_1;
     integer gt_loopback3_n_1;
 
-    `define GT_QUAD_0 DUT.dcmac_wrapper_0.g_gt[0].i_xilinx_gt_wrapper.i_xilinx_gt_0\
+    `define GT_QUAD_0 DUT.dcmac_wrapper_0.g_gt[0].i_xilinx_gtm_wrapper.i_xilinx_gtm_0\
         .inst.intf_quad_map_inst.quad_top_inst.gt_quad_base_0_inst.inst.quad_inst
-    `define GT_QUAD_1 DUT.dcmac_wrapper_0.g_gt[1].i_xilinx_gt_wrapper.i_xilinx_gt_0\
+    `define GT_QUAD_1 DUT.dcmac_wrapper_0.g_gt[1].i_xilinx_gtm_wrapper.i_xilinx_gtm_0\
         .inst.intf_quad_map_inst.quad_top_inst.gt_quad_base_0_inst.inst.quad_inst
 
     always @(*) begin
