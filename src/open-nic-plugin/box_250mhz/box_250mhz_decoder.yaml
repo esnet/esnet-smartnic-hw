@@ -1,0 +1,11 @@
+name: box_250mhz
+
+decoders:
+  smartnic_250mhz_decoder: &smartnic
+    !include ../src/smartnic_250mhz/regio/smartnic_250mhz_decoder.yaml
+
+interfaces:
+  - decoder: *smartnic
+    address: 0x00000
+    width: 16
+    name: smartnic_250mhz
