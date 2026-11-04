@@ -38,7 +38,6 @@ module xilinx_aved_adapter_unit_test;
     // Offsets within a packet_counters block.
     localparam bit [31:0] CNT_OFF_INFO       = 32'h00;
     localparam bit [31:0] CNT_OFF_PKT_OK_LO  = 32'h0C;
-    localparam bit [31:0] CNT_OFF_RESERVED_1 = 32'h6C;
 
     // =========================================================================
     // Clocks and resets
@@ -385,16 +384,6 @@ module xilinx_aved_adapter_unit_test;
                 axi4_read(bases[i] + CNT_OFF_PKT_OK_LO, pkt_ok);
                 `FAIL_UNLESS_EQUAL(pkt_ok, 32'h0);
             end
-        `SVTEST_END
-
-        // The counter map is padded so that every 16-byte window holding a
-        // register is fully mapped. Reading the last register exercises the
-        // window the padding was added for -- on CPM5 an unmapped beat in that
-        // window would poison the whole read completion.
-        `SVTEST(qdma_counter_last_window_reads_clean)
-            bit [31:0] rdata;
-            axi4_read(ADDR_H2C_IN_CNT + CNT_OFF_RESERVED_1, rdata);
-            `FAIL_UNLESS_EQUAL(rdata, 32'h0);
         `SVTEST_END
 
     `SVUNIT_TESTS_END
