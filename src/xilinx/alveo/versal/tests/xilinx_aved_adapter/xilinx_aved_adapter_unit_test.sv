@@ -24,8 +24,8 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
-    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x010000.
-    localparam bit [31:0] QDMA_BASE       = 32'h210000;
+    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x004000.
+    localparam bit [31:0] QDMA_BASE       = 32'h204000;
     localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
     localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
 

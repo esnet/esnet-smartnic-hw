@@ -21,7 +21,7 @@ module core
     // Interfaces
     axi4l_intf axil_if ();
 
-    axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
+    axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_rx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));  // todo: fix axis clks.
     axi4s_intf #(.DATA_BYTE_WID(shell_if.PORT_DATA_BYTE_WID), .TID_WID(PORT_AXIS_TID_WID), .TDEST_WID(PORT_AXIS_TDEST_WID), .TUSER_WID(PORT_AXIS_TUSER_WID)) axis_port_tx [shell_if.NUM_PORTS] (.aclk(port_clk[0]));
 
     axi4s_intf #(.DATA_BYTE_WID(shell_if.DMA_ST_DATA_BYTE_WID), .TID_WID(shell_if.DMA_ST_AXIS_TID_WID), .TDEST_WID(DMA_ST_AXIS_TDEST_WID), .TUSER_WID(DMA_ST_AXIS_TUSER_WID)) axis_h2c (.aclk(clk));
@@ -53,8 +53,8 @@ module core
         .axil_if,
         .axis_port_rx,
         .axis_port_tx,
-        .axis_h2c,
-        .axis_c2h
+        .axis_h2c ( axis_h2c ),
+        .axis_c2h ( axis_c2h )
     );
 
 endmodule : core
@@ -178,7 +178,8 @@ module smartnic_wrapper
             port_axis_tuser_t axis_port_tx_tuser;
 
             // temporarily connect cmac clocks to core_clk (prior to DCMAC instantiations).
-            assign cmac_clk[g_port] = core_clk; // axis_port_rx[g_port].aclk;
+            // assign cmac_clk[g_port] = core_clk;
+            assign cmac_clk[g_port] = axis_port_rx[g_port].aclk;
 
             // CMAC Rx
             assign s_axis_cmac_rx_322mhz_tvalid[g_port]            = axis_port_rx[g_port].tvalid;

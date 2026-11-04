@@ -1,0 +1,11 @@
+name: gtm_decoder
+
+blocks:
+  gtm_regs: &gtm_regs
+    !include ../src/xilinx/gtm/regio/gtm_regs.yaml
+
+interfaces:
+  - block: *gtm_regs
+    address: 0x0000
+    width: 14
+    name: gtm

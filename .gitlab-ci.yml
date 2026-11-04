@@ -483,6 +483,16 @@ build_udplb_fec_av80:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: udplb_fec_av80
     SN_HW_BOARD: av80
+  rules:
+    - when: manual
+      allow_failure: true
+
+build_p4_only_av80:
+  extends: .versal_pdi
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_only_av80
+    SN_HW_BOARD: av80
 
 build_shell_au55c:
   extends: .bitfile
@@ -712,6 +722,11 @@ hwapi_udplb_fec_av80:
   needs:
     - build_udplb_fec_av80
 
+hwapi_p4_only_av80:
+  extends: .hwapi_versal
+  needs:
+    - build_p4_only_av80
+
 hwapi_shell_au55c:
   extends: .hwapi
   needs:
@@ -810,6 +825,13 @@ fw_udplb_fec_av80:
     SN_HW_API_JOB: hwapi_udplb_fec_av80
   needs:
     - hwapi_udplb_fec_av80
+
+fw_p4_only_av80:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_only_av80
+  needs:
+    - hwapi_p4_only_av80
 
 fw_shell_au55c:
   extends: .trigger_fw

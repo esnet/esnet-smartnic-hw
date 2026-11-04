@@ -28,6 +28,7 @@ SUBCOMPONENTS = \
     packet.rtl@common \
     shell.pkg \
     shell.rtl \
+    xilinx.dcmac.rtl \
     xilinx.alveo.rtl \
     xilinx.qdma.pkg \
     xilinx.alveo.versal.ip \
