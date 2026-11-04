@@ -317,6 +317,7 @@ set assoc_busifs [join {
 } :]
 set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports m_axi_pcie0_aclk]
 
+
 # Write the build ID into the PMC JTAG CSR USECODE register
 # (register address is 0xF11A0008).
 if {[info exists env(BITSTREAM_USERID)] && $env(BITSTREAM_USERID) ne ""} {
@@ -326,5 +327,26 @@ if {[info exists env(BITSTREAM_USERID)] && $env(BITSTREAM_USERID) ne ""} {
 } else {
     puts "WARNING: Missing USERID ... JTAG_USERCODE register not set."
 }
+
+# =========================================================================
+# QSFP GT interface ports and 322 MHz reference clock
+#
+# qsfp2_4x and qsfp3_4x are GT RTL interface ports for the two QSFP
+# cages. qsfp2_322mhz is the differential reference clock for the GTM
+# bank (Bank 111, 322.265625 MHz = 2x 161.1328125 MHz).
+#
+# These ports are commented out in the AMD base design; they are added
+# here following the same pattern as the PCIE0 and clock/reset additions.
+# =========================================================================
+
+set qsfp2_4x [create_bd_intf_port \
+    -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 qsfp2_4x]
+
+set qsfp3_4x [create_bd_intf_port \
+    -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 qsfp3_4x]
+
+set qsfp2_322mhz [create_bd_intf_port \
+    -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 qsfp2_322mhz]
+set_property CONFIG.FREQ_HZ {322265625} $qsfp2_322mhz
 
 save_bd_design

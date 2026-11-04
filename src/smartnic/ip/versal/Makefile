@@ -51,10 +51,18 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-#    clk_wiz_0/clk_wiz_0_clk_wiz.v \
-#    clk_wiz_0/clk_wiz_0.v \
-#    clk_wiz_1/clk_wiz_1_clk_wiz.v \
-#    clk_wiz_1/clk_wiz_1.v \
+    clk_wiz_0/clk_wiz_0_clocking_MBUFGCE_CE_DLY.v \
+    clk_wiz_0/clk_wiz_0_clocking_structure.v \
+    clk_wiz_0/clk_wiz_0_clocking_cmt_dpll_fd_cal.sv \
+    clk_wiz_0/clk_wiz_0_clocking_Synchronizer3.sv \
+    clk_wiz_0/clk_wiz_0_clk_wiz_top.v \
+    clk_wiz_0/sim/clk_wiz_0.v \
+    clk_wiz_1/clk_wiz_1_clocking_MBUFGCE_CE_DLY.v \
+    clk_wiz_1/clk_wiz_1_clocking_structure.v \
+    clk_wiz_1/clk_wiz_1_clocking_cmt_dpll_fd_cal.sv \
+    clk_wiz_1/clk_wiz_1_clocking_Synchronizer3.sv \
+    clk_wiz_1/clk_wiz_1_clk_wiz_top.v \
+    clk_wiz_1/sim/clk_wiz_1.v
 
 IP_SIM_INC_DIRS =
 

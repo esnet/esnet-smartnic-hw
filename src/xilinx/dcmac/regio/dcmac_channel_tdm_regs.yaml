@@ -1,0 +1,74 @@
+name: dcmac_channel_tdm_regs
+info: |
+  AMD DCMAC TDM Channel Registers (C6-C39 canonical, C6_ prefix stripped).
+  Ref: AMD DCMAC Register Map v1.4
+  Mount at channel base address: C6=0x07000, C7=0x08000, ..., C39=0x28000.
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  - name: channel_configuration_tx
+    fields:
+      - name: ctl_tx_fcs_ins_enable
+        width: 1
+      - name: ctl_tx_ignore_fcs
+        width: 1
+      - name: ctl_tx_send_lfi
+        width: 1
+      - name: ctl_tx_send_rfi
+        width: 1
+      - name: ctl_tx_send_idle
+        width: 1
+      - name: ctl_tx_custom_preamble_enable
+        width: 1
+      - name: rsvd1
+        width: 2
+      - name: ctl_tx_ipg_value
+        width: 4
+      - name: rsvd2
+        width: 4
+      - name: ctl_tx_corrupt_fcs_on_err
+        width: 2
+      - name: rsvd3
+        width: 14
+
+  - name: channel_configuration_rx
+    fields:
+      - name: ctl_rx_is_clause_49
+        width: 1
+      - name: ctl_rx_delete_fcs
+        width: 1
+      - name: ctl_rx_ignore_fcs
+        width: 1
+      - name: ctl_rx_process_lfi
+        width: 1
+      - name: ctl_rx_check_sfd
+        width: 1
+      - name: ctl_rx_check_preamble
+        width: 1
+      - name: ctl_rx_ignore_inrange
+        width: 1
+      - name: rsvd1
+        width: 9
+      - name: ctl_rx_max_packet_len
+        width: 14
+      - name: rsvd2
+        width: 2
+
+  - meta:
+      pad_until: 0x00030
+
+  - name: channel_control_reg_rx
+    fields:
+      - name: soft_rx_mac_channel_flush
+        width: 1
+
+  - meta:
+      pad_until: 0x00038
+
+  - name: channel_control_reg_tx
+    fields:
+      - name: soft_tx_mac_channel_flush
+        width: 1
+

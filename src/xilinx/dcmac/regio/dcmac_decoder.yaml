@@ -1,0 +1,224 @@
+name: dcmac_decoder
+info: |
+  AMD DCMAC Register Decoder.
+  Single address space 0x00000-0x28038:
+    0x00000: global registers
+    0x01000-0x06000: per-channel registers C0-C5 (full featured)
+    0x07000-0x28000: per-channel registers C6-C39 (TDM)
+
+blocks:
+  dcmac_global: &dcmac_global
+    !include ../src/xilinx/dcmac/regio/dcmac_global_regs.yaml
+
+  dcmac_channel: &dcmac_channel
+    !include ../src/xilinx/dcmac/regio/dcmac_channel_regs.yaml
+
+  dcmac_channel_tdm: &dcmac_channel_tdm
+    !include ../src/xilinx/dcmac/regio/dcmac_channel_tdm_regs.yaml
+
+interfaces:
+  - block: *dcmac_global
+    address: 0x00000
+    width: 9
+    name: global
+
+  - block: *dcmac_channel
+    address: 0x01000
+    width: 12
+    name: ch0
+
+  - block: *dcmac_channel
+    address: 0x02000
+    width: 12
+    name: ch1
+
+  - block: *dcmac_channel
+    address: 0x03000
+    width: 12
+    name: ch2
+
+  - block: *dcmac_channel
+    address: 0x04000
+    width: 12
+    name: ch3
+
+  - block: *dcmac_channel
+    address: 0x05000
+    width: 12
+    name: ch4
+
+  - block: *dcmac_channel
+    address: 0x06000
+    width: 12
+    name: ch5
+
+  - block: *dcmac_channel_tdm
+    address: 0x07000
+    width: 6
+    name: ch6
+
+  - block: *dcmac_channel_tdm
+    address: 0x08000
+    width: 6
+    name: ch7
+
+  - block: *dcmac_channel_tdm
+    address: 0x09000
+    width: 6
+    name: ch8
+
+  - block: *dcmac_channel_tdm
+    address: 0x0A000
+    width: 6
+    name: ch9
+
+  - block: *dcmac_channel_tdm
+    address: 0x0B000
+    width: 6
+    name: ch10
+
+  - block: *dcmac_channel_tdm
+    address: 0x0C000
+    width: 6
+    name: ch11
+
+  - block: *dcmac_channel_tdm
+    address: 0x0D000
+    width: 6
+    name: ch12
+
+  - block: *dcmac_channel_tdm
+    address: 0x0E000
+    width: 6
+    name: ch13
+
+  - block: *dcmac_channel_tdm
+    address: 0x0F000
+    width: 6
+    name: ch14
+
+  - block: *dcmac_channel_tdm
+    address: 0x10000
+    width: 6
+    name: ch15
+
+  - block: *dcmac_channel_tdm
+    address: 0x11000
+    width: 6
+    name: ch16
+
+  - block: *dcmac_channel_tdm
+    address: 0x12000
+    width: 6
+    name: ch17
+
+  - block: *dcmac_channel_tdm
+    address: 0x13000
+    width: 6
+    name: ch18
+
+  - block: *dcmac_channel_tdm
+    address: 0x14000
+    width: 6
+    name: ch19
+
+  - block: *dcmac_channel_tdm
+    address: 0x15000
+    width: 6
+    name: ch20
+
+  - block: *dcmac_channel_tdm
+    address: 0x16000
+    width: 6
+    name: ch21
+
+  - block: *dcmac_channel_tdm
+    address: 0x17000
+    width: 6
+    name: ch22
+
+  - block: *dcmac_channel_tdm
+    address: 0x18000
+    width: 6
+    name: ch23
+
+  - block: *dcmac_channel_tdm
+    address: 0x19000
+    width: 6
+    name: ch24
+
+  - block: *dcmac_channel_tdm
+    address: 0x1A000
+    width: 6
+    name: ch25
+
+  - block: *dcmac_channel_tdm
+    address: 0x1B000
+    width: 6
+    name: ch26
+
+  - block: *dcmac_channel_tdm
+    address: 0x1C000
+    width: 6
+    name: ch27
+
+  - block: *dcmac_channel_tdm
+    address: 0x1D000
+    width: 6
+    name: ch28
+
+  - block: *dcmac_channel_tdm
+    address: 0x1E000
+    width: 6
+    name: ch29
+
+  - block: *dcmac_channel_tdm
+    address: 0x1F000
+    width: 6
+    name: ch30
+
+  - block: *dcmac_channel_tdm
+    address: 0x20000
+    width: 6
+    name: ch31
+
+  - block: *dcmac_channel_tdm
+    address: 0x21000
+    width: 6
+    name: ch32
+
+  - block: *dcmac_channel_tdm
+    address: 0x22000
+    width: 6
+    name: ch33
+
+  - block: *dcmac_channel_tdm
+    address: 0x23000
+    width: 6
+    name: ch34
+
+  - block: *dcmac_channel_tdm
+    address: 0x24000
+    width: 6
+    name: ch35
+
+  - block: *dcmac_channel_tdm
+    address: 0x25000
+    width: 6
+    name: ch36
+
+  - block: *dcmac_channel_tdm
+    address: 0x26000
+    width: 6
+    name: ch37
+
+  - block: *dcmac_channel_tdm
+    address: 0x27000
+    width: 6
+    name: ch38
+
+  - block: *dcmac_channel_tdm
+    address: 0x28000
+    width: 6
+    name: ch39
+

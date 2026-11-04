@@ -1,0 +1,58 @@
+name: versal_hw_regs
+info: versal hardware control and status registers.
+regs:
+  - default:
+      width: 32
+
+  - name: dcmac_gt_reset_ctrl
+    access: rw
+    info: DCMAC GT reset control. Write 1 to assert the corresponding reset.
+    fields:
+      - name: gt_reset_all
+        width: 1
+        init: 0
+      - name: gt_reset_tx_datapath
+        width: 1
+        init: 0
+      - name: gt_reset_rx_datapath
+        width: 1
+        init: 0
+
+  - name: dcmac_gt_status
+    access: ro
+    info: DCMAC GT reset status.
+    fields:
+      - name: gt_tx_reset_done
+        width: 2
+      - name: gt_rx_reset_done
+        width: 2
+      - name: gtpowergood
+        width: 2
+      - name: clk_wiz_locked
+        width: 1
+
+  - name: dcmac_gt_loopback_ctrl
+    access: rw
+    info: DCMAC GT loopback and equalizer controls.
+    fields:
+      - name: gt_loopback
+        width: 3
+        init: 0
+      - name: gt_rxcdrhold
+        width: 1
+        init: 0
+      - name: gt_line_rate
+        width: 8
+        init: 0
+      - name: gt_txprecursor
+        width: 6
+        init: 3
+      - name: gt_txpostcursor
+        width: 6
+        init: 9
+      - name: gt_txmaincursor
+        width: 7
+        init: 75
+      - name: dcmac_lpbk_en
+        width: 1
+        init: 1

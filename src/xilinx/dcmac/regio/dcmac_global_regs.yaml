@@ -1,0 +1,252 @@
+name: dcmac_global_regs
+info: |
+  AMD DCMAC Global Registers.
+  Ref: AMD DCMAC Register Map v1.4
+  Covers global config and status registers at 0x00000-0x001B0.
+regs:
+  - default:
+      width: 32
+      access: rw
+
+  - name: configuration_revision
+    access: ro
+    fields:
+      - name: ctl_revision
+        width: 32
+
+  - name: global_mode
+    fields:
+      - name: ctl_tx_independent_tsmac_and_phy_mode
+        width: 1
+      - name: ctl_tx_all_ch_tick_reg_mode_sel
+        width: 1
+      - name: rsvd1
+        width: 2
+      - name: ctl_rx_independent_tsmac_and_phy_mode
+        width: 1
+      - name: ctl_rx_all_ch_tick_reg_mode_sel
+        width: 1
+      - name: rsvd2
+        width: 2
+      - name: ctl_tx_axis_cfg
+        width: 1
+      - name: rsvd3
+        width: 3
+      - name: ctl_rx_axis_cfg
+        width: 1
+      - name: rsvd4
+        width: 3
+      - name: ctl_tx_pcs_active_ports
+        width: 3
+      - name: rsvd5
+        width: 1
+      - name: ctl_rx_pcs_active_ports
+        width: 3
+      - name: rsvd6
+        width: 1
+      - name: ctl_rx_fec_errind_mode
+        width: 1
+      - name: ctl_tx_fec_ck_unique_flip
+        width: 1
+      - name: ctl_rx_fec_ck_unique_flip
+        width: 1
+      - name: rsvd7
+        width: 5
+
+  - name: test_debug
+    fields:
+      - name: ctl_test_mode_pin_char
+        width: 1
+      - name: rsvd
+        width: 3
+      - name: ctl_test_mode_memcel
+        width: 4
+      - name: ctl_rx_phy_debug_select
+        width: 5
+      - name: ctl_rx_mac_debug_select
+        width: 4
+      - name: ctl_tx_phy_debug_select
+        width: 4
+      - name: ctl_tx_mac_debug_select
+        width: 4
+      - name: ctl_rx_ecc_err_clear
+        width: 1
+      - name: ctl_tx_ecc_err_clear
+        width: 1
+      - name: ctl_tx_ecc_err_count_tick
+        width: 1
+      - name: ctl_axi_af_thresh_override
+        width: 4
+
+  - name: ema_configuration
+    fields:
+      - name: ctl_mem_ctrl
+        width: 10
+
+  - name: clock_disable
+    fields:
+      - name: ctl_mem_disable_rx_axi_clk
+        width: 1
+      - name: ctl_mem_disable_tx_axi_clk
+        width: 1
+      - name: ctl_mem_disable_rx_macif_clk
+        width: 1
+      - name: ctl_mem_disable_tx_macif_clk
+        width: 1
+      - name: ctl_mem_disable_rx_core_clk
+        width: 1
+      - name: ctl_mem_disable_tx_core_clk
+        width: 1
+      - name: ctl_mem_disable_rx_flexif_clk
+        width: 6
+      - name: ctl_mem_disable_tx_flexif_clk
+        width: 6
+      - name: ctl_mem_disable_rx_serdes_clk
+        width: 6
+      - name: ctl_mem_disable_tx_serdes_clk
+        width: 6
+      - name: rsvd1
+        width: 2
+
+  - name: block_disable
+    fields:
+      - name: ctl_mem_disable_rx_pcs_cpcs
+        width: 6
+      - name: ctl_mem_disable_rx_pcs_align_buffer
+        width: 6
+      - name: ctl_mem_disable_rx_pcs_decoder
+        width: 1
+      - name: rsvd1
+        width: 3
+      - name: ctl_mem_disable_tx_pcs_cpcs
+        width: 6
+      - name: ctl_mem_disable_tx_ts2phy
+        width: 1
+      - name: ctl_mem_disable_tx_pcs_encoder
+        width: 1
+      - name: rsvd2
+        width: 8
+
+  - name: configuration_empty0
+    fields:
+      - name: ctl_rsvd0
+        width: 32
+
+  - name: configuration_empty1
+    fields:
+      - name: ctl_rsvd1
+        width: 32
+
+  - name: configuration_empty2
+    fields:
+      - name: ctl_rsvd2
+        width: 32
+
+  - name: configuration_empty3
+    fields:
+      - name: ctl_rsvd3
+        width: 32
+
+  - name: configuration_empty4
+    fields:
+      - name: ctl_rsvd4
+        width: 32
+
+  - name: configuration_empty5
+    fields:
+      - name: ctl_rsvd5
+        width: 32
+
+  - name: configuration_empty6
+    fields:
+      - name: ctl_rsvd6
+        width: 32
+
+  - name: configuration_empty7
+    fields:
+      - name: axis_taf_bp_thresh
+        width: 32
+
+  - name: mac_config_reg_tx_wr
+    fields:
+      - name: mac_tx_cfg_data
+        width: 8
+      - name: mac_tx_cfg_index
+        width: 5
+      - name: rsvd1
+        width: 3
+      - name: mac_tx_cfg_channel
+        width: 6
+      - name: rsvd2
+        width: 2
+      - name: mac_tx_cfg_wr
+        width: 1
+      - name: rsvd3
+        width: 3
+      - name: mac_tx_cfg_enable
+        width: 1
+      - name: rsvd4
+        width: 3
+
+  - name: mac_config_reg_tx_rd
+    access: ro
+    fields:
+      - name: mac_tx_cfg_data_rd
+        width: 8
+
+  - meta:
+      pad_until: 0x000F0
+
+  - name: global_control_reg_rx
+    fields:
+      - name: soft_rx_core_reset
+        width: 1
+      - name: soft_rx_macif_reset
+        width: 1
+      - name: soft_rx_axi_reset
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: all_channel_mac_tick_reg_rx
+    fields:
+      - name: rx_all_channel_mac_soft_pm_tick
+        width: 1
+
+  - name: global_control_reg_tx
+    fields:
+      - name: soft_tx_core_reset
+        width: 1
+      - name: soft_tx_macif_reset
+        width: 1
+      - name: soft_tx_axi_reset
+        width: 1
+      - name: rsvd1
+        width: 29
+
+  - name: all_channel_mac_tick_reg_tx
+    fields:
+      - name: tx_all_channel_mac_soft_pm_tick
+        width: 1
+
+  - meta:
+      pad_until: 0x001B0
+
+  - name: stat_tx_ecc_err_reg
+    access: ro
+    fields:
+      - name: stat_tx_ecc0_err0
+        width: 1
+      - name: stat_tx_ecc0_err1
+        width: 1
+      - name: stat_tx_ecc1_err0
+        width: 1
+      - name: stat_tx_ecc1_err1
+        width: 1
+      - name: stat_tx_ecc2_err0
+        width: 1
+      - name: stat_tx_ecc2_err1
+        width: 1
+      - name: rsvd1
+        width: 26
+

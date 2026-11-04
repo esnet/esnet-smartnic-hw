@@ -26,7 +26,7 @@ SUBCOMPONENTS = \
     shell.rtl \
     smartnic.rtl \
     axi4s.rtl@$(COMMON_LIB_NAME) \
-	axi4l.rtl@$(COMMON_LIB_NAME)
+    axi4l.rtl@$(COMMON_LIB_NAME)
 
 EXT_LIBS =
 
