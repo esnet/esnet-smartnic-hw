@@ -36,8 +36,6 @@ module dcmac_wrapper (
     input logic [6:0] gt_txmaincursor,
     input logic       gt_rxcdrhold,
 
-    input logic       dcmac_lpbk_en,
-
     // Clock outputs
     output logic axis_clk_out,
 
@@ -141,7 +139,6 @@ module dcmac_wrapper (
 
     // GT data buses
     logic [1:0][3:0][255:0] rxdata_in;
-    logic [1:0][3:0][255:0] rxdata_in_mux;
     logic [1:0][3:0][255:0] txdata_out;
 
    
@@ -270,23 +267,6 @@ module dcmac_wrapper (
         .rst_out (tx_core_reset)
     );
 
-//    assign rxdata_in_mux = dcmac_lpbk_en ? txdata_out : rxdata_in;
-    assign rxdata_in_mux = rxdata_in;
-
-    logic [1:0][3:0][255:0] rxdata_in_mux_q;
-    always_ff @(posedge rx_usrclk2[0]) rxdata_in_mux_q[0] <= rxdata_in_mux[0];
-    always_ff @(posedge rx_usrclk2[1]) rxdata_in_mux_q[1] <= rxdata_in_mux[1];
-/*
-    assign _rxdata_in[0][0] = txdata_out[0][0];
-    assign _rxdata_in[0][1] = txdata_out[0][1];
-    assign _rxdata_in[0][2] = txdata_out[1][0];
-    assign _rxdata_in[0][3] = txdata_out[1][1];
-
-    assign _rxdata_in[1][0] = txdata_out[0][2];
-    assign _rxdata_in[1][1] = txdata_out[0][3];
-    assign _rxdata_in[1][2] = txdata_out[1][2];
-    assign _rxdata_in[1][3] = txdata_out[1][3];
-*/
     xilinx_dcmac_wrapper i_xilinx_dcmac_wrapper (
         .tx_usrclk      (tx_usrclk),
         .rx_usrclk      (rx_usrclk),
@@ -298,17 +278,11 @@ module dcmac_wrapper (
         .rx_serdes_reset (rx_serdes_reset),
         .tx_core_reset  (tx_core_reset),
         .rx_core_reset  (rx_core_reset),
-//        .rxdata_in      (rxdata_in_mux_q),
-        .rxdata_in      (rxdata_in_mux),
+        .rxdata_in      (rxdata_in),
         .txdata_out     (txdata_out),
         .axis_rx        (axis_rx),
         .axis_tx        (axis_tx),
         .axil_if        (axil_dcmac)
     );
-/*
-    axi4s_intf_connector axis_connector (
-        .from_tx(axis_tx),
-        .to_rx(axis_rx)
-    );
-*/
+
 endmodule : dcmac_wrapper

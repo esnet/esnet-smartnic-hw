@@ -235,7 +235,6 @@ module xilinx_alveo_versal_shell
         .gt_txpostcursor          ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txpostcursor ),
         .gt_txmaincursor          ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txmaincursor ),
         .gt_rxcdrhold             ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.gt_rxcdrhold ),
-        .dcmac_lpbk_en            ( versal_hw_regs_reg_if.dcmac_gt_loopback_ctrl.dcmac_lpbk_en ),
         .axis_clk_out             ( axis_clk_out ),
         .axis_rx                  ( axis_port_rx ),
         .axis_tx                  ( axis_port_tx ),
