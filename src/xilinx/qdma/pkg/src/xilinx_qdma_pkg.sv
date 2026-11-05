@@ -34,16 +34,20 @@ package xilinx_qdma_pkg;
     // (Internal) C2H completion data format — 8B entry (cmpt_size = 2'b00).
     // Matches union qdma_ul_st_cmpt_ring, the layout the upstream QDMA DPDK
     // PMD parses:
-    //   [3:0]   data_frmt, color, err, desc_used — inserted by the DMA
+    //   [0]     data_frmt — Standard(0)/User(1) format; user provides, DMA stamps 0
+    //   [1]     color     — DMA stamps; user provides 0
+    //   [2]     err       — DMA stamps descriptor error; user provides 0
+    //   [3]     desc_used — user must set 1: packet consumes a C2H descriptor
     //   [19:4]  length
     //   [23:20] reserved
     //   [63:24] user defined
     typedef struct packed {
-        pkt_id_t    pkt_id;    // [51:36]
-        qid_t       qid;       // [35:24]
-        logic [3:0] user_rsv;  // [23:20]
-        len_t       len;       // [19:4]
-        logic [3:0] dma_rsv;   // [3:0]
+        pkt_id_t    pkt_id;      // [51:36]
+        qid_t       qid;         // [35:24]
+        logic [3:0] user_rsv;    // [23:20]
+        len_t       len;         // [19:4]
+        logic       desc_used;   // [3]   must be 1 — packet consumes C2H descriptor
+        logic [2:0] dma_rsv;     // [2:0] DMA-stamped; user provides 0
     } c2h_cmpt_data_t;
 
     // (External) AXI-S types
@@ -56,5 +60,29 @@ package xilinx_qdma_pkg;
     localparam int AXIS_TID_WID = $bits(axis_tid_t);
     localparam int AXIS_TDEST_WID = $bits(axis_tdest_t);
     localparam int AXIS_TUSER_WID = $bits(axis_tuser_t);
+
+    // packet_intf meta layouts for the H2C and C2H DMA boundary interfaces.
+    //
+    // H2C: the adapter packs the QDMA-supplied tcrc and qid into meta.
+    //      xilinx_alveo_qdma_st extracts tcrc as crc_in for packet_crc_rx.
+    //
+    // C2H: xilinx_alveo_qdma_st packs the generated tcrc, the queue id, and
+    //      the store-and-forward packet size (available at the FIFO output)
+    //      into meta.  The adapter unpacks all three, eliminating the separate
+    //      pkt_c2h_size wire from the module boundary.  tcrc is valid on the
+    //      EOP beat only; size and qid are valid on every beat.
+    typedef struct packed {
+        logic [31:0] tcrc;
+        qid_t        qid;
+    } pkt_h2c_meta_t;
+
+    typedef struct packed {
+        len_t        size;
+        logic [31:0] tcrc;
+        qid_t        qid;
+    } pkt_c2h_meta_t;
+
+    localparam int PKT_H2C_META_WID = $bits(pkt_h2c_meta_t);  // 32 + QID_WID
+    localparam int PKT_C2H_META_WID = $bits(pkt_c2h_meta_t);  // 48 + QID_WID
 
 endpackage : xilinx_qdma_pkg

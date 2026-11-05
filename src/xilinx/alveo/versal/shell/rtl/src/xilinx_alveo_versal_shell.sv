@@ -45,9 +45,8 @@ module xilinx_alveo_versal_shell
     // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
     input  wire logic       dma_aclk,
     input  wire logic       dma_aresetn,
-    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA
-    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA
-    output packet_pkg::size_t pkt_c2h_dma_size,
+    packet_intf.rx          pkt_h2c_dma,  // H2C from CPM5 QDMA; META_WID = PKT_H2C_META_WID
+    packet_intf.tx          pkt_c2h_dma,  // C2H to CPM5 QDMA;   META_WID = PKT_C2H_META_WID
 
     // -------------------------------------------------------------------------
     // To/from application core — standard ESnet shell-core boundary
@@ -135,7 +134,6 @@ module xilinx_alveo_versal_shell
         .axil_qdma_st     ( axil_qdma_st ),
         .pkt_h2c_dma,
         .pkt_c2h_dma,
-        .pkt_c2h_dma_size,
         .axis_h2c,
         .axis_c2h
     );
@@ -256,25 +254,14 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     shell_adapter__shell i_shell_adapter__shell (
         .shell_if,
-//<<<<<<< HEAD
-//        .clk        ( core_clk  ),
-//        .srst       ( core_srst ),
-//        .mgmt_clk   ( axil_core.aclk    ),
-//        .mgmt_srst  ( ~axil_core.aresetn ),
-//        .clk_100mhz ( sys_clk_100mhz ),
-//        .port_clk   ( '{default: core_clk}  ),
-//        .port_srst  ( '{default: core_srst} ),
-//=======
-        .clk        ( core_clk ),        // presently unused by smartnic core?
-        .srst       ( ~axil_core.aresetn ),  // connected to smartnic mod_rstn
-        .mgmt_clk   ( axil_core.aclk ),      // presently unused by smartnic core?
-//        .mgmt_srst  ( ~axil_core.aresetn ),  // presently unused by smartnic core
-        .mgmt_srst  ( 1'b0 ),  // presently unused by smartnic core
-        .clk_100mhz ( sys_clk_100mhz ),      // presently unused by smartnic core?
+        .clk        ( core_clk  ),
+        .srst       ( core_srst ),
+        .mgmt_clk   ( axil_core.aclk    ),
+        .mgmt_srst  ( ~axil_core.aresetn ),
+        .clk_100mhz ( sys_clk_100mhz ),
         .port_clk   ( {axis_port_rx[1].aclk, axis_port_rx[0].aclk} ),
 //        .port_srst  ( '{default: ~axil_core.aresetn} ),
         .port_srst  ( '{default: 1'b0} ),     // presently unused by smartnic core
-//>>>>>>> 
         .axil_if    ( axil_core ),
         .axis_port_rx,
         .axis_port_tx,

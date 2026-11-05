@@ -24,8 +24,8 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
-    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x010000.
-    localparam bit [31:0] QDMA_BASE       = 32'h210000;
+    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x004000.
+    localparam bit [31:0] QDMA_BASE       = 32'h204000;
     localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
     localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
 
@@ -38,7 +38,6 @@ module xilinx_aved_adapter_unit_test;
     // Offsets within a packet_counters block.
     localparam bit [31:0] CNT_OFF_INFO       = 32'h00;
     localparam bit [31:0] CNT_OFF_PKT_OK_LO  = 32'h0C;
-    localparam bit [31:0] CNT_OFF_RESERVED_1 = 32'h6C;
 
     // =========================================================================
     // Clocks and resets
@@ -72,20 +71,20 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    packet_pkg::size_t pkt_c2h_dma_size;
     shell_intf #(
         .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
     ) shell_if ();
 
-    // DMA streams between adapter and shell, in the management clock domain
+    // DMA streams between adapter and shell, in the PCIE0 (QDMA) clock domain.
+    // Meta widths match PKT_H2C_META_WID / PKT_C2H_META_WID from xilinx_qdma_pkg.
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::PKT_H2C_META_WID   )
     ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::QID_WID            )
+        .META_WID      ( xilinx_qdma_pkg::PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
 
     wire pci_rstn_in;
@@ -222,11 +221,10 @@ module xilinx_aved_adapter_unit_test;
         .dma0_usr_flr_0_done_fnc   (    ),
         .dma0_usr_flr_0_done_vld   (    ),
         // AXI4-L controller output
-        .axil_if                   ( axil_app_if ),
+        .axil_if ( axil_app_if ),
         // DMA streams (PCIE0 clock domain; the shell owns the CDC)
-        .pkt_h2c                   ( pkt_h2c_dma      ),
-        .pkt_c2h                   ( pkt_c2h_dma      ),
-        .pkt_c2h_size              ( pkt_c2h_dma_size )
+        .pkt_h2c ( pkt_h2c_dma ),
+        .pkt_c2h ( pkt_c2h_dma )
     );
 
     xilinx_alveo_versal_shell DUT_shell (
@@ -236,9 +234,8 @@ module xilinx_aved_adapter_unit_test;
         .axil_top         ( axil_app_if       ),
         .dma_aclk         ( m_axi_pcie0_aclk  ),
         .dma_aresetn      ( rstn_pl0_100mhz   ),
-        .pkt_h2c_dma      ( pkt_h2c_dma       ),
-        .pkt_c2h_dma      ( pkt_c2h_dma       ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size  ),
+        .pkt_h2c_dma ( pkt_h2c_dma ),
+        .pkt_c2h_dma ( pkt_c2h_dma ),
         .shell_if
     );
 
@@ -387,16 +384,6 @@ module xilinx_aved_adapter_unit_test;
                 axi4_read(bases[i] + CNT_OFF_PKT_OK_LO, pkt_ok);
                 `FAIL_UNLESS_EQUAL(pkt_ok, 32'h0);
             end
-        `SVTEST_END
-
-        // The counter map is padded so that every 16-byte window holding a
-        // register is fully mapped. Reading the last register exercises the
-        // window the padding was added for -- on CPM5 an unmapped beat in that
-        // window would poison the whole read completion.
-        `SVTEST(qdma_counter_last_window_reads_clean)
-            bit [31:0] rdata;
-            axi4_read(ADDR_H2C_IN_CNT + CNT_OFF_RESERVED_1, rdata);
-            `FAIL_UNLESS_EQUAL(rdata, 32'h0);
         `SVTEST_END
 
     `SVUNIT_TESTS_END

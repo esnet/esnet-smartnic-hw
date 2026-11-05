@@ -1,0 +1,100 @@
+name: qdma_pkt_capture
+info: |
+  This register map describes a register block for
+  control of a packet capture (extraction) function.
+regs:
+  - default:
+      width: 32
+      access: rw
+      init: 0
+
+  - name: info
+    desc: Info (provides parameterization details).
+    access: ro
+    fields:
+        - name: mem_size
+          desc: packet data RAM size (in bytes)
+          width: 20
+        - name: meta_width
+          desc: width of (opaque) packet metadata (in bits).
+          width: 10
+
+  - name: control
+    access: rw
+    fields:
+        - name:  reset
+          desc:  soft reset.
+          width: 1
+          init:  0
+        - name:  enable
+          desc:  enable capture function. Controls an output pin that could (e.g.) drive an output select demux.
+          width: 1
+          init:  0
+
+  - name: monitor
+    access: ro
+    fields:
+        - name:  reset
+          desc:  reset status
+          width: 1
+        - name:  init_done
+          desc:  memory init done
+          width: 1
+
+  - name: command
+    desc: Command register
+    access: wr_evt
+    fields:
+        - name: code
+          desc: Command code.
+          width: 8
+          enum:
+            0 : NOP
+            1 : CAPTURE
+
+  - name: status
+    desc: Capture status register.
+    access: rd_evt
+    fields:
+        - name: code
+          desc: Status code.
+          width: 8
+          enum:
+            0 : RESET
+            1 : DISABLED
+            2 : READY
+            3 : BUSY
+        - name: done
+          desc: Done flag. Indicates that last operation completed successfully. Sticky until read or until new transaction received.
+          width: 1
+        - name: error
+          desc: Error flag. Indicates that last operation terminated with error. Sticky until read or until new transaction received.
+          width: 1
+        - name: rsvd
+          width: 6
+          desc: Reserved field.
+        - name: packet_bytes
+          width: 16
+          desc: Number of bytes received in last capture.
+
+  - name: meta
+    desc: metadata register. Reports value of metadata accompanying packet data in last capture.
+            Implemented as a byte array, where -
+              meta[0].byte_0 contains byte 0 of metadata.
+              meta[(info.meta_size-1) div 32].byte_(((info.meta_size-1) div 8) mod 4) contains last byte of metadata.
+              meta[i, i > (info.meta_size-1) div 32] are ignored.
+    access: ro
+    fields:
+        - name: byte_0
+          desc: 0th byte of selected dword
+          width: 8
+        - name: byte_1
+          desc: 1st byte of selected dword
+          width: 8
+        - name: byte_2
+          desc: 2nd byte of selected dword
+          width: 8
+        - name: byte_3
+          desc: 3rd byte of selected dword
+          width: 8
+    count: 8

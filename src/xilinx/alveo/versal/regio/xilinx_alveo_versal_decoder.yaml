@@ -13,41 +13,41 @@ decoders:
     !include ../src/xilinx/qdma/regio/qdma_decoder.yaml
 
 interfaces:
-  - decoder: *dcmac_decoder
+  - block: *versal_hw_regs
     address: 0x000000
-    suffix: '0'
-    name: dcmac
+    width: 12
+    name: versal_hw_regs
+
+  - decoder: *qdma_decoder
+    address: 0x004000
+    name: qdma
 
   - decoder: *dcmac_decoder
     address: 0x040000
+    suffix: '0'
+    name: dcmac
+
+  - decoder: *dcmac_decoder
+    address: 0x080000
     suffix: '1'
     name: dcmac
 
   - decoder: *gtm_decoder
-    address: 0x080000
+    address: 0x0C0000
     suffix: '0'
     name: gtm
 
   - decoder: *gtm_decoder
-    address: 0x084000
+    address: 0x0C4000
     suffix: '1'
     name: gtm
 
   - decoder: *gtm_decoder
-    address: 0x088000
+    address: 0x0C8000
     suffix: '2'
     name: gtm
 
   - decoder: *gtm_decoder
-    address: 0x08C000
+    address: 0x0CC000
     suffix: '3'
     name: gtm
-
-  - decoder: *qdma_decoder
-    address: 0x090000
-    name: qdma
-
-  - block: *versal_hw_regs
-    address: 0x091000
-    width: 12
-    name: versal_hw_regs

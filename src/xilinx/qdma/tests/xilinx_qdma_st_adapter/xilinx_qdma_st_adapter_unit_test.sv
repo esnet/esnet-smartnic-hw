@@ -101,16 +101,17 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // AXI4-S interfaces — shell side of the DUT
     // =========================================================================
-    // H2C output: packet_intf in core clock domain (DUT crosses from aclk)
+    // H2C output: adapter drives this; META_WID = PKT_H2C_META_WID {tcrc, qid}
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_H2C_META_WID   )
     ) pkt_h2c (.clk(aclk));
 
-    // C2H input: packet_intf in core clock domain (separate clock for ASYNC FIFO CDC)
+    // C2H input: adapter receives this; META_WID = PKT_C2H_META_WID {size, tcrc, qid}
+    // The adapter unpacks all three fields; no separate pkt_c2h_size wire needed.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h (.clk(aclk));
 
     // Drive interface signals to known values from time 0.
@@ -125,10 +126,6 @@ module xilinx_qdma_st_adapter_unit_test;
         pkt_c2h.meta = '0;
         pkt_h2c.rdy  = 1'b1;
     end
-
-    // C2H packet length, supplied upstream by the C2H FIFO.  Driven directly
-    // here: the adapter just forwards it to ctrl_len and the completion.
-    packet_pkg::size_t pkt_c2h_size = '0;
 
     // Sticky record that a completion fired.  cmpt_tvalid is a single-cycle
     // pulse on the last beat's handshake, so tests cannot reliably sample it
@@ -199,8 +196,7 @@ module xilinx_qdma_st_adapter_unit_test;
         .dsc_crdt_valid,
         .dsc_crdt_rdy,
         .pkt_h2c,
-        .pkt_c2h,
-        .pkt_c2h_size
+        .pkt_c2h
     );
 
     // =========================================================================
@@ -226,6 +222,13 @@ module xilinx_qdma_st_adapter_unit_test;
         cmpt_tvalid |-> (c2h_tvalid && c2h_tready && c2h_tlast);
     endproperty
     a_cmpt_on_eop: assert property (p_cmpt_on_eop);
+
+    // Every beat the engine accepts is a beat the adapter advances past.
+    property p_c2h_accept_advances;
+        @(posedge aclk) disable iff (!aresetn)
+        (c2h_tvalid && c2h_tready) |-> pkt_c2h.rdy;
+    endproperty
+    a_c2h_accept_advances: assert property (p_c2h_accept_advances);
 
     // Note: pkt_c2h feeds into packet_fifo (store-and-forward), which decouples
     // the input from the output side.  pkt_c2h.rdy reflects FIFO capacity, not
@@ -325,8 +328,9 @@ module xilinx_qdma_st_adapter_unit_test;
     endtask
 
     // Send a C2H packet via packet_intf (byte-level, auto-computes mty).
-    // Data is big-endian byte array as expected by packet_intf.
-    // QID is carried in packet_intf.meta.
+    // Packs pkt_c2h_meta_t {size, tcrc=0, qid} into meta; size is the full
+    // packet length so it is valid from the first beat (store-and-forward
+    // semantics: the upstream FIFO knows the length before releasing the SOP).
     task automatic send_c2h_packet(
         input int                 num_bytes,
         input logic [QID_WID-1:0] qid        = '0,
@@ -334,23 +338,24 @@ module xilinx_qdma_st_adapter_unit_test;
     );
         int bytes_remaining;
         logic [0:AXIS_DATA_BYTE_WID-1][7:0] beat_data;
+        pkt_c2h_meta_t c2h_meta;
+        logic [PKT_C2H_META_WID-1:0] meta;
         logic [5:0] beat_mty;
         logic beat_eop;
 
-        // Stand in for the upstream store-and-forward FIFO: the length is
-        // presented for the whole packet, valid from the first beat.
-        pkt_c2h_size = 16'(num_bytes);
+        c2h_meta.size = 16'(num_bytes);
+        c2h_meta.tcrc = '0;
+        c2h_meta.qid  = QID_WID'(qid);
+        meta = PKT_C2H_META_WID'(c2h_meta);
 
         bytes_remaining = num_bytes;
         while (bytes_remaining > 0) begin
-            // Fill beat data with random bytes
             for (int b = 0; b < AXIS_DATA_BYTE_WID; b++)
                 beat_data[b] = $urandom;
 
             beat_eop = (bytes_remaining <= AXIS_DATA_BYTE_WID);
             beat_mty = beat_eop ? 6'(AXIS_DATA_BYTE_WID - bytes_remaining) : 6'd0;
 
-            // Inter-beat gap
             if (twait > 0) repeat (twait) @(pkt_c2h.cb_tx);
 
             pkt_c2h.send(
@@ -358,7 +363,7 @@ module xilinx_qdma_st_adapter_unit_test;
                 ._eop  ( beat_eop  ),
                 ._mty  ( beat_mty  ),
                 ._err  ( 1'b0      ),
-                ._meta ( qid       )
+                ._meta ( meta      )
             );
 
             bytes_remaining -= AXIS_DATA_BYTE_WID;
@@ -374,13 +379,15 @@ module xilinx_qdma_st_adapter_unit_test;
         );
         int  beats;
         bit  last;
+        pkt_h2c_meta_t h2c_meta;
         beats = 0;
         last  = 1'b0;
         num_bytes = 0;
         while (!last) begin
             @(posedge aclk iff (pkt_h2c.vld && pkt_h2c.rdy));
             beats++;
-            qid  = pkt_h2c.meta;
+            h2c_meta = pkt_h2c.meta;
+            qid  = QID_WID'(h2c_meta.qid);
             err  = pkt_h2c.err;
             last = pkt_h2c.eop;
             if (last) num_bytes = beats*AXIS_DATA_BYTE_WID - pkt_h2c.mty;
@@ -441,23 +448,42 @@ module xilinx_qdma_st_adapter_unit_test;
             `FAIL_UNLESS_EQUAL(bytes, AXIS_DATA_BYTE_WID - 1);
         `SVTEST_END
 
-        // H2C: zero_byte carries no payload and cannot be represented on
-        // packet_intf, so the adapter marks it errored and the FIFO drops it.
+        // H2C: zero_byte cannot be represented on packet_intf; the adapter marks
+        // it errored so the store-and-forward FIFO upstream discards it.  At the
+        // adapter boundary the packet still appears on pkt_h2c (packet_crc_rx
+        // passes data through unchanged), but err is asserted on the EOP beat.
         `SVTEST(_h2c_zero_byte)
-            send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
-            expect_no_h2c_packet(64);
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            fork
+                send_h2c_packet(.num_beats(1), .last_mty('0), .zero_byte(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
         `SVTEST_END
 
-        // H2C: an errored packet is dropped rather than forwarded to the core.
-        `SVTEST(h2c_err_dropped)
-            send_h2c_packet(.num_beats(1), .err(1'b1));
-            expect_no_h2c_packet(64);
+        // H2C: an QDMA-signalled error is marked on the EOP beat; the upstream
+        // FIFO (DROP_ERRORED=1) discards it before the core sees it.
+        `SVTEST(h2c_err_marked)
+            int bytes; logic [QID_WID-1:0] qid; logic err;
+            fork
+                send_h2c_packet(.num_beats(1), .err(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
         `SVTEST_END
 
-        // H2C: a good packet still gets through after an errored one is dropped.
+        // H2C: a good packet following an errored one passes through with err=0.
+        // The adapter marks the errored packet on pkt_h2c, then presents the
+        // good packet independently; the FIFO upstream handles the drop.
         `SVTEST(h2c_err_does_not_block)
             int bytes; logic [QID_WID-1:0] qid; logic err;
-            send_h2c_packet(.num_beats(2), .err(1'b1));
+            // Drain the errored packet (err=1 on EOP beat of the 2-beat packet)
+            fork
+                send_h2c_packet(.num_beats(2), .err(1'b1));
+                recv_h2c_packet(bytes, qid, err);
+            join
+            `FAIL_UNLESS_EQUAL(err, 1'b1);
+            // Good packet follows — must arrive with err=0
             fork
                 send_h2c_packet(.num_beats(1), .qid(11'h2C));
                 recv_h2c_packet(bytes, qid, err);
@@ -594,7 +620,13 @@ module xilinx_qdma_st_adapter_unit_test;
             fork
                 send_c2h_packet(.num_bytes(4 * AXIS_DATA_BYTE_WID));
                 begin
-                    repeat (4) @(posedge aclk);
+                    // The engine must not see a beat it could consume while
+                    // the completion path is stalled.
+                    repeat (4) begin
+                        @(posedge aclk);
+                        `FAIL_IF_LOG(c2h_tvalid && c2h_tready,
+                                     "c2h beat consumable while cmpt_tready is low")
+                    end
                     cmpt_tready = 1'b1;
                 end
             join
@@ -697,13 +729,36 @@ module xilinx_qdma_st_adapter_unit_test;
                     // Capture ctrl_len on first output beat
                     @(posedge aclk iff (c2h_tvalid && c2h_tready));
                     captured_ctrl_len = c2h_ctrl_len;
-                    // Capture cmpt_data.len on EOP (completion fires on last beat)
+                    // Capture cmpt_data.len on EOP (completion fires on last beat).
+                    // len sits at cmpt_data[19:4] per c2h_cmpt_data_t (PG347/DPDK
+                    // completion layout) — not [15:0], which would also catch
+                    // dma_rsv at [3:0].
                     @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
-                    captured_cmpt_len = cmpt_data[15:0];
+                    begin
+                        automatic c2h_cmpt_data_t cmpt_data_unpacked = cmpt_data;
+                        captured_cmpt_len = cmpt_data_unpacked.len;
+                    end
                 end
             join
             `FAIL_UNLESS_EQUAL(captured_ctrl_len, 16'(PKT_BYTES));
             `FAIL_UNLESS_EQUAL(captured_cmpt_len, 16'(PKT_BYTES));
+        `SVTEST_END
+
+        // C2H: desc_used is always 1 so the DPDK PMD does not zero the length.
+        `SVTEST(c2h_cmpt_desc_used_set)
+            localparam int PKT_BYTES = 64;
+            logic desc_used_captured;
+            fork
+                send_c2h_packet(.num_bytes(PKT_BYTES));
+                begin
+                    @(posedge aclk iff (cmpt_tvalid && cmpt_tready));
+                    begin
+                        automatic c2h_cmpt_data_t cmpt_data_unpacked = cmpt_data;
+                        desc_used_captured = cmpt_data_unpacked.desc_used;
+                    end
+                end
+            join
+            `FAIL_UNLESS_EQUAL(desc_used_captured, 1'b1);
         `SVTEST_END
 
         // Descriptor credits are always idle.

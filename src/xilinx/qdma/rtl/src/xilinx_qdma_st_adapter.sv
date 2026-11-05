@@ -10,18 +10,17 @@
 //
 // Responsibilities:
 //   H2C: flat QDMA signals → packet_intf
+//        meta carries pkt_h2c_meta_t {tcrc, qid}; xilinx_alveo_qdma_st
+//        uses tcrc as crc_in for the inline H2C CRC checker.
 //   C2H: packet_intf → flat QDMA signals + completions + ECC
+//        meta carries pkt_c2h_meta_t {size, tcrc, qid}; all three fields
+//        are unpacked here, eliminating the separate pkt_c2h_size port.
 //        Descriptor credits kept at zero (simple mode).
 //
-// Everything here is in the QDMA clock domain and is a direct signal mapping:
-// mty maps natively in both directions and the QID travels in
-// packet_intf.meta.  Buffering, the crossing to the core clock domain, the
-// loopback switch and the register space live upstream in
+// Everything here is in the QDMA clock domain and is a direct signal
+// mapping.  Buffering, the clock-domain crossing, the CRC check/generate,
+// the loopback switch and the register space live upstream in
 // xilinx_alveo_qdma_st.
-//
-// c2h_ctrl_len and the completion length come from pkt_c2h_size rather than
-// being derived here: QDMA needs the length at the first beat, which only the
-// store-and-forward FIFO upstream knows.
 //
 // FLR, user interrupts, queue status, and TM descriptor status are
 // PCIe function-level concerns and belong in the caller (e.g.
@@ -94,55 +93,58 @@ module xilinx_qdma_st_adapter
 
     // -----------------------------------------------------------------------
     // Packet interfaces (QDMA clock domain).
-    // The QID travels in the metadata field in both directions.
+    // meta carries pkt_h2c_meta_t / pkt_c2h_meta_t — see xilinx_qdma_pkg.
     // -----------------------------------------------------------------------
-    packet_intf.tx pkt_h2c,  // H2C: drives upstream
-    packet_intf.rx pkt_c2h,  // C2H: receives from upstream
-
-    // Length of the packet currently presented on pkt_c2h, held for its
-    // duration.  packet_pkg::size_t is 16 bits — the same width as the QDMA
-    // ctrl_len and completion len fields, so no resizing is needed below.
-    input  packet_pkg::size_t pkt_c2h_size
+    packet_intf.tx pkt_h2c,  // H2C: drives upstream; META_WID = PKT_H2C_META_WID
+    packet_intf.rx pkt_c2h   // C2H: receives from upstream; META_WID = PKT_C2H_META_WID
 );
 
+    // =========================================================================
+    // H2C stream — flat QDMA signals → packet_intf (pkt_h2c_meta_t)
+    //
+    // Packs {h2c_tcrc, h2c_qid} into meta.  The tcrc is valid at EOP.
+    // xilinx_alveo_qdma_st extracts it as crc_in for packet_crc_rx.
+    //
+    // zero_byte marks a transfer with no payload (packet_intf cannot represent
+    // mty == DATA_BYTE_WID); it is marked errored so the upstream
+    // store-and-forward FIFO (DROP_ERRORED=1) discards and counts it.
+    // =========================================================================
+    pkt_h2c_meta_t h2c_meta;
+    assign h2c_meta.tcrc = h2c_tcrc;
+    assign h2c_meta.qid  = QID_WID'(h2c_qid);
 
-    // =========================================================================
-    // H2C stream — flat QDMA signals → packet_intf
-    //
-    // mty maps natively onto packet_intf and the QID travels in the metadata
-    // field.
-    //
-    // zero_byte marks a transfer carrying no payload, which packet_intf cannot
-    // represent (mty tops out one byte short of a full beat). Such packets are
-    // marked errored so the store-and-forward FIFO upstream discards them and
-    // counts them, rather than passing a beat of undefined payload onward.
-    // =========================================================================
     assign pkt_h2c.vld  = h2c_tvalid;
     assign pkt_h2c.data = {<<8{h2c_tdata}};  // little-endian → big-endian
     assign pkt_h2c.eop  = h2c_tlast;
     assign pkt_h2c.mty  = h2c_tlast ? h2c_mty : '0;
     assign pkt_h2c.err  = h2c_err || h2c_zero_byte;
-    assign pkt_h2c.meta = h2c_qid;
+    assign pkt_h2c.meta = PKT_H2C_META_WID'(h2c_meta);
     assign h2c_tready   = pkt_h2c.rdy;
 
     // =========================================================================
-    // C2H stream — packet_intf → flat QDMA signals
+    // C2H stream — packet_intf (pkt_c2h_meta_t) → flat QDMA signals
     //
-    // mty maps natively; the QID is carried in packet_intf.meta and extracted
-    // for ctrl_qid and completions.  The length arrives on pkt_c2h_size.
+    // Unpacks meta into size (→ ctrl_len, cmpt.len), tcrc (→ c2h_tcrc) and
+    // qid (→ ctrl_qid, completions).  size is the store-and-forward packet
+    // length packed upstream at the FIFO output, available from the first beat.
     // =========================================================================
+    pkt_c2h_meta_t c2h_meta;
+    assign c2h_meta = pkt_c2h.meta;
 
-    // --- Flat C2H data outputs (QDMA clock domain) ---
-    assign c2h_tvalid        = pkt_c2h.vld;
+    // A beat is offered only when the completion path can also take it
+    // (see pkt_c2h.rdy below).  Offering it while cmpt_tready is low would let
+    // the engine consume the beat while pkt_c2h holds it, so the same beat
+    // would be presented, and consumed, again.
+    assign c2h_tvalid        = pkt_c2h.vld && cmpt_tready;
     assign c2h_tdata         = {<<8{pkt_c2h.data}};  // big-endian → little-endian
     assign c2h_tlast         = pkt_c2h.eop;
-    assign c2h_ctrl_qid      = pkt_c2h.meta[QID_WID-1:0];
-    assign c2h_ctrl_len      = pkt_c2h_size;
+    assign c2h_ctrl_qid      = QID_WID'(c2h_meta.qid);
+    assign c2h_ctrl_len      = c2h_meta.size;
     assign c2h_ctrl_port_id  = '0;
     assign c2h_ctrl_has_cmpt = 1'b1;
     assign c2h_ctrl_marker   = 1'b0;
     assign c2h_mty           = pkt_c2h.eop ? pkt_c2h.mty : '0;
-    assign c2h_tcrc          = '0;
+    assign c2h_tcrc          = c2h_meta.tcrc;  // valid on the EOP beat only
 
     // ECC over the C2H ctrl bus.  Field order and widths per PG347:
     //   {24'h0, has_cmpt, marker, port_id[2:0], qid[11:0], len[15:0]} = 57 bits
@@ -176,15 +178,16 @@ module xilinx_qdma_st_adapter
     // Completion: one per EOP
     c2h_cmpt_data_t cmpt_data_packed;
     assign cmpt_data_packed.dma_rsv  = '0;
+    assign cmpt_data_packed.desc_used = 1'b1;
     assign cmpt_data_packed.user_rsv = '0;
-    assign cmpt_data_packed.len    = pkt_c2h_size;
+    assign cmpt_data_packed.len    = c2h_meta.size;
     assign cmpt_data_packed.pkt_id = c2h_pld_pkt_id;
-    assign cmpt_data_packed.qid    = pkt_c2h.meta[QID_WID-1:0];
+    assign cmpt_data_packed.qid    = 12'(c2h_meta.qid);
 
     assign cmpt_tvalid          = pkt_c2h.vld && pkt_c2h.rdy && pkt_c2h.eop;
     assign cmpt_data            = cmpt_data_packed;
     assign cmpt_size            = 2'b00;   // 8-byte completion
-    assign cmpt_qid             = pkt_c2h.meta[QID_WID-1:0];
+    assign cmpt_qid             = QID_WID'(c2h_meta.qid);
     assign cmpt_port_id         = '0;
     assign cmpt_cmpt_type       = 2'b11;   // HAS_PLD
     assign cmpt_wait_pld_pkt_id = c2h_pld_pkt_id;

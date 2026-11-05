@@ -28,17 +28,18 @@ module esnet_smartnic
 
     // DMA interfaces between adapter and shell, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens inside xilinx_alveo_shell.
+    // meta widths are defined by PKT_H2C_META_WID / PKT_C2H_META_WID in
+    // xilinx_qdma_pkg; the packet size is packed into the C2H meta at the
+    // FIFO output, so no separate size wire is needed.
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_H2C_META_WID   )
     ) pkt_h2c_dma (.clk(m_axi_pcie0_aclk));
 
     packet_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
-        .META_WID      ( QID_WID            )
+        .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(m_axi_pcie0_aclk));
-
-    packet_pkg::size_t pkt_c2h_dma_size;
 
     // AVED top-level
     // NOTE: for compatibility with AVED constraints, this instance must
@@ -56,9 +57,8 @@ module esnet_smartnic
     // Convert AVED application interface signals to interfaces
     xilinx_aved_adapter i_xilinx_aved_adapter (
         .*,
-        .pkt_h2c      ( pkt_h2c_dma      ),
-        .pkt_c2h      ( pkt_c2h_dma      ),
-        .pkt_c2h_size ( pkt_c2h_dma_size )
+        .pkt_h2c ( pkt_h2c_dma ),
+        .pkt_c2h ( pkt_c2h_dma )
     );
 
     // AXI-L debug core: ILA + VIO between adapter and shell adapter
@@ -85,8 +85,6 @@ module esnet_smartnic
         .dma_aresetn      ( m_axi_pcie0_aresetn ),
         .pkt_h2c_dma      ( pkt_h2c_dma ),
         .pkt_c2h_dma      ( pkt_c2h_dma ),
-        .pkt_c2h_dma_size ( pkt_c2h_dma_size ),
-
         .shell_if
     );
 
