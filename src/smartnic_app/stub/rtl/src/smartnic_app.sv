@@ -137,15 +137,9 @@ module smartnic_app
 
     generate
         for (genvar j = 0; j < NUM_PORTS; j += 1) begin
-            assign axis_app_egr_tuser_pid          [(j)*16 +: 16] = axis_app_egr_tuser[j].pid;
-            assign axis_app_egr_tuser_trunc_enable [(j)* 1 +:  1] = axis_app_egr_tuser[j].trunc_enable;
-            assign axis_app_egr_tuser_trunc_length [(j)*16 +: 16] = axis_app_egr_tuser[j].trunc_length;
             assign axis_app_egr_tuser_rss_enable   [(j)* 1 +:  1] = axis_app_egr_tuser[j].rss_enable;
             assign axis_app_egr_tuser_rss_entropy  [(j)*12 +: 12] = axis_app_egr_tuser[j].rss_entropy;
 
-            assign axis_app_igr_tuser[j].pid          = axis_app_igr_tuser_pid[(j)*16 +: 16];
-            assign axis_app_igr_tuser[j].trunc_enable = '0;
-            assign axis_app_igr_tuser[j].trunc_length = '0;
             assign axis_app_igr_tuser[j].rss_enable   = '0;
             assign axis_app_igr_tuser[j].rss_entropy  = '0;
         end

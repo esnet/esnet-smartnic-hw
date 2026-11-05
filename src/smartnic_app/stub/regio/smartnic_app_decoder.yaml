@@ -1,0 +1,14 @@
+name: smartnic_app
+
+blocks:
+  empty: &empty
+    name: empty
+    info: |
+      This block is a placeholder for the smartnic_app stub, which has no registers.
+    regs: []
+
+interfaces:
+  - block: *empty
+    address: 0x000000
+    width: 19
+    name: empty
