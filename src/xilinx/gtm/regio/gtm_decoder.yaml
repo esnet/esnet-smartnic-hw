@@ -1,4 +1,5 @@
 name: gtm_decoder
+visible: true
 
 blocks:
   gtm_regs: &gtm_regs
@@ -8,4 +9,4 @@ interfaces:
   - block: *gtm_regs
     address: 0x0000
     width: 14
-    name: gtm
+    name: regs

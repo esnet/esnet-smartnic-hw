@@ -1,5 +1,5 @@
-name: versal_hw_regs
-info: versal hardware control and status registers.
+name: dcmac_regs
+info: DCMAC hardware control and status registers.
 regs:
   - default:
       width: 32

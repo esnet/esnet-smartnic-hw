@@ -1,4 +1,4 @@
-name: dcmac_global_regs
+name: dcmac_mac_glbl_regs
 info: |
   AMD DCMAC Global Registers.
   Ref: AMD DCMAC Register Map v1.4
