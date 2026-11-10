@@ -239,6 +239,11 @@ From the esnet-smartnic-hw directory:
    In addition to the bitfile, it includes firmware driver files, regmap yaml files, the source p4 file,
    and any wireshark .lua files.
 
+   Hardware API artifacts use the layout `esnet-smartnic-hwapi/<BOARD>/`, with
+   board names such as `au280`, `au55c`, and `av80`. Each board directory contains
+   its firmware images, register maps, and supporting files. CI handoff artifacts
+   use the same layout so multiple boards can share one hardware API deliverable.
+
    For more details about the `p4_only` design, as well as simulating the P4 program,  refer to the
    [p4_only README](examples/p4_only/README.md).
 
