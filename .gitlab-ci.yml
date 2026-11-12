@@ -648,6 +648,32 @@ validate_udplb_fec_u280:
       dotenv: hwapi.env
   timeout: 30m
 
+.hwapi_gather:
+  stage: package
+  extends: .common
+  tags:
+    - ht-misc
+  before_script: []
+  script:
+    # GitLab extracts all needed artifacts into this workspace, merging board directories.
+    - test -d esnet-smartnic-hwapi
+    - |
+      cat <<_EOF > hwapi.env
+      SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
+      _EOF
+    - cat hwapi.env
+  artifacts:
+    name: "artifacts.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-smartnic-hwapi
+      - robot-framework-test.tar.bz2
+    expire_in: 3 month
+    reports:
+      dotenv: hwapi.env
+  timeout: 30m
+
 hwapi_p4_and_verilog:
   extends: .hwapi
   needs:
@@ -717,6 +743,16 @@ hwapi_shell_au280:
   extends: .hwapi
   needs:
     - build_shell_au280
+
+hwapi_shell:
+  extends: .hwapi_gather
+  variables:
+    SN_HW_APP_NAME: shell
+  needs:
+    - job: hwapi_shell_au280
+      artifacts: true
+    - job: hwapi_shell_au55c
+      artifacts: true
 
 .trigger_fw:
   stage: trigger_downstream

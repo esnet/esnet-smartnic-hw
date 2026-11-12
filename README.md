@@ -244,6 +244,10 @@ From the esnet-smartnic-hw directory:
    its firmware images, register maps, and supporting files. CI handoff artifacts
    use the same layout so multiple boards can share one hardware API deliverable.
 
+   In CI, `hwapi_shell` gathers the `hwapi_shell_au280` and `hwapi_shell_au55c`
+   artifacts into one archive containing both board directories. Other applications
+   can extend `.hwapi_gather` and list their board-specific hwapi jobs in `needs`.
+
    For more details about the `p4_only` design, as well as simulating the P4 program,  refer to the
    [p4_only README](examples/p4_only/README.md).
 
