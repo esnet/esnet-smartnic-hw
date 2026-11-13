@@ -4,7 +4,7 @@
 #
 # Selects the appropriate board-family shell build include based on BOARD:
 #   av*  -> versal_shell_build.mk  (Versal / V80)
-#   au*  -> usplus_shell_build.mk  (UltraScale+ / Alveo U-series) [future]
+#   au*  -> usplus_shell_build.mk  (UltraScale+ / Alveo U-series)
 #
 # See shell_build_base.mk for the common shell+core assembly logic and its
 # required/optional inputs.

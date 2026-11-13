@@ -199,11 +199,12 @@ $(__SPC_CONFIGURED): $(__SPC_STAMP) | $(__SPC_COMP_DIR)
 	@echo "build:       .shell_build"                                            >> $(__SPC_COMP_DIR)/Makefile
 	@echo "build_clean: .shell_build_clean"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "pdi:         .shell_build_pdi"                                        >> $(__SPC_COMP_DIR)/Makefile
+	@echo "bitstream:   .shell_build_bitstream"                                  >> $(__SPC_COMP_DIR)/Makefile
 	@echo "regio:       .shell_build_regio"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "info:        .shell_build_info"                                       >> $(__SPC_COMP_DIR)/Makefile
 	@echo "hwapi:       .shell_build_hwapi"                                      >> $(__SPC_COMP_DIR)/Makefile
 	@echo "p4_driver:   .shell_build_p4_driver"                                  >> $(__SPC_COMP_DIR)/Makefile
-	@echo ".PHONY: build build_clean pdi regio info hwapi p4_driver"             >> $(__SPC_COMP_DIR)/Makefile
+	@echo ".PHONY: build build_clean pdi bitstream regio info hwapi p4_driver"   >> $(__SPC_COMP_DIR)/Makefile
 	@touch $@
 	@echo "Done."
 
@@ -233,12 +234,16 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 .PHONY: .shell_proj_build
 
 .shell_proj_build_clean: $(__SPC_CONFIGURED)
-	@$(SMARTNIC_BUILD_CMD) build_clean
+	@$(SMARTNIC_COMP_CMD) build_clean
 .PHONY: .shell_proj_build_clean
 
 .shell_proj_pdi: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_COMP_CMD) pdi
 .PHONY: .shell_proj_pdi
+
+.shell_proj_bitstream: $(__SPC_CONFIGURED)
+	@$(SMARTNIC_COMP_CMD) bitstream
+.PHONY: .shell_proj_bitstream
 
 .shell_proj_regio: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_COMP_CMD) regio
