@@ -51,9 +51,3 @@ assembly; on Versal, use `pdi` to also generate the firmware PDI variants.
 `build_clean` removes assembly output, `clean` removes the selected board's
 build directory, and `clean_all` removes all board builds. `restore` restores
 the backup saved by the configuration flow when the build settings change.
-
-## Bring-up status
-
-The UltraScale+ DMA path still needs integration with the shared QDMA adapter
-and datapath before this example can produce a qualified hardware-test image.
-The SmartNIC core's DMA connection is a subsequent bring-up step.

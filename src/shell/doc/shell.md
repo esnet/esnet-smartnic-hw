@@ -57,7 +57,7 @@ input counter block's `OTHER` packet and byte bins. OOR takes priority over
 CRC/QDMA errors; in-range errored packets use `ERR`. Each packet contributes
 to one bin, with all bins sharing the block's snapshot and clear controls.
 Raw DMA capture/playback retain their native metadata for debug.
-The UltraScale+ wrapper will gain this shared path during its DMA integration.
+Both UltraScale+ and Versal route their DMA streams through this shared path.
 
 Adapter Modules
 -----------------------------

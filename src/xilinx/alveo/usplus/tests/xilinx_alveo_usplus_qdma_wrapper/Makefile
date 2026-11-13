@@ -39,4 +39,19 @@ SIM_OPTS =
 # -----------------------------------------------
 # Use common testcase Makefile
 # -----------------------------------------------
+SRC_FILES = \
+    qdma_ip_model.sv \
+    ../../rtl/src/xilinx_alveo_host.sv \
+    ../../rtl/src/xilinx_alveo_qdma_wrapper.sv
+
+# Compile the real host/wrapper with a local native-IP model. PCIe protocol
+# behavior is outside this integration test; the adapter and DMA path are real.
+SUBCOMPONENTS = \
+    axi4l.verif@common \
+    packet.verif@common \
+    xilinx.alveo.usplus.pkg \
+    xilinx.alveo.rtl \
+    xilinx.qdma.rtl
+EXT_LIBS = unisims_ver
+
 include ../test_base.mk

@@ -14,16 +14,13 @@ module xilinx_alveo_host
     // Clocks (output)
     output logic                     clk_125mhz,
     output logic                     clk_250mhz,
-    output logic                     srst_250mhz,
     // -- AXI-L (Controller)
     axi4l_intf.controller            axil_if,
-    // -- AXI-L (Peripheral)
-    axi4l_intf.peripheral            axil_qdma,
     // -- DMA (streaming)
-    output logic                     axis_aclk,
-    output logic                     axis_aresetn,
-    axi4s_intf.tx                    axis_h2c,
-    axi4s_intf.rx                    axis_c2h
+    output logic                     dma_aclk,
+    output logic                     dma_aresetn,
+    packet_intf.tx                   pkt_h2c_dma,
+    packet_intf.rx                   pkt_c2h_dma
 );
 
     // =========================================================================
@@ -35,6 +32,52 @@ module xilinx_alveo_host
     // Signals
     // =========================================================================
     logic __pcie_rstn;
+
+    logic                axi_aclk;
+    logic                axi_aresetn;
+    logic [15 : 0]       dsc_crdt_in_crdt;
+    logic [10 : 0]       dsc_crdt_in_qid;
+    logic                dsc_crdt_in_dir;
+    logic                dsc_crdt_in_fence;
+    logic                dsc_crdt_in_vld;
+    logic                dsc_crdt_in_rdy;
+    logic [511 : 0]      m_axis_h2c_tdata;
+    logic [31 : 0]       m_axis_h2c_tcrc;
+    logic [10 : 0]       m_axis_h2c_tuser_qid;
+    logic [2 : 0]        m_axis_h2c_tuser_port_id;
+    logic                m_axis_h2c_tuser_err;
+    logic [31 : 0]       m_axis_h2c_tuser_mdata;
+    logic [5 : 0]        m_axis_h2c_tuser_mty;
+    logic                m_axis_h2c_tuser_zero_byte;
+    logic                m_axis_h2c_tvalid;
+    logic                m_axis_h2c_tlast;
+    logic                m_axis_h2c_tready;
+    logic [511 : 0]      s_axis_c2h_tdata;
+    logic [31 : 0]       s_axis_c2h_tcrc;
+    logic                s_axis_c2h_ctrl_marker;
+    logic [2 : 0]        s_axis_c2h_ctrl_port_id;
+    logic [6 : 0]        s_axis_c2h_ctrl_ecc;
+    logic [15 : 0]       s_axis_c2h_ctrl_len;
+    logic [10 : 0]       s_axis_c2h_ctrl_qid;
+    logic                s_axis_c2h_ctrl_has_cmpt;
+    logic [5 : 0]        s_axis_c2h_mty;
+    logic                s_axis_c2h_tvalid;
+    logic                s_axis_c2h_tlast;
+    logic                s_axis_c2h_tready;
+    logic [511 : 0]      s_axis_c2h_cmpt_tdata;
+    logic [1 : 0]        s_axis_c2h_cmpt_size;
+    logic [15 : 0]       s_axis_c2h_cmpt_dpar;
+    logic                s_axis_c2h_cmpt_tvalid;
+    logic [10 : 0]       s_axis_c2h_cmpt_ctrl_qid;
+    logic [1 : 0]        s_axis_c2h_cmpt_ctrl_cmpt_type;
+    logic [15 : 0]       s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id;
+    logic [2 : 0]        s_axis_c2h_cmpt_ctrl_port_id;
+    logic                s_axis_c2h_cmpt_ctrl_marker;
+    logic                s_axis_c2h_cmpt_ctrl_user_trig;
+    logic [2 : 0]        s_axis_c2h_cmpt_ctrl_col_idx;
+    logic [2 : 0]        s_axis_c2h_cmpt_ctrl_err_idx;
+    logic                s_axis_c2h_cmpt_tready;
+    logic                s_axis_c2h_cmpt_ctrl_no_wrb_marker;
 
     // =========================================================================
     // Interfaces
@@ -60,10 +103,106 @@ module xilinx_alveo_host
         .pcie_txp,
         .pcie_txn,
         .axil_if ( __axil_if__250mhz ),
-        .axis_h2c,
-        .axis_c2h
+        .axi_aclk,
+        .axi_aresetn,
+        .dsc_crdt_in_crdt,
+        .dsc_crdt_in_qid,
+        .dsc_crdt_in_dir,
+        .dsc_crdt_in_fence,
+        .dsc_crdt_in_vld,
+        .dsc_crdt_in_rdy,
+        .m_axis_h2c_tdata,
+        .m_axis_h2c_tcrc,
+        .m_axis_h2c_tuser_qid,
+        .m_axis_h2c_tuser_port_id,
+        .m_axis_h2c_tuser_err,
+        .m_axis_h2c_tuser_mdata,
+        .m_axis_h2c_tuser_mty,
+        .m_axis_h2c_tuser_zero_byte,
+        .m_axis_h2c_tvalid,
+        .m_axis_h2c_tlast,
+        .m_axis_h2c_tready,
+        .s_axis_c2h_tdata,
+        .s_axis_c2h_tcrc,
+        .s_axis_c2h_ctrl_marker,
+        .s_axis_c2h_ctrl_port_id,
+        .s_axis_c2h_ctrl_ecc,
+        .s_axis_c2h_ctrl_len,
+        .s_axis_c2h_ctrl_qid,
+        .s_axis_c2h_ctrl_has_cmpt,
+        .s_axis_c2h_mty,
+        .s_axis_c2h_tvalid,
+        .s_axis_c2h_tlast,
+        .s_axis_c2h_tready,
+        .s_axis_c2h_cmpt_tdata,
+        .s_axis_c2h_cmpt_size,
+        .s_axis_c2h_cmpt_dpar,
+        .s_axis_c2h_cmpt_tvalid,
+        .s_axis_c2h_cmpt_ctrl_qid,
+        .s_axis_c2h_cmpt_ctrl_cmpt_type,
+        .s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id,
+        .s_axis_c2h_cmpt_ctrl_port_id,
+        .s_axis_c2h_cmpt_ctrl_marker,
+        .s_axis_c2h_cmpt_ctrl_user_trig,
+        .s_axis_c2h_cmpt_ctrl_col_idx,
+        .s_axis_c2h_cmpt_ctrl_err_idx,
+        .s_axis_c2h_cmpt_tready,
+        .s_axis_c2h_cmpt_ctrl_no_wrb_marker
     );
      
+    // Native QDMA streams stay in the DMA clock domain until the shared shell.
+    xilinx_qdma_st_adapter #(
+        .QID_WID ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID )
+    ) i_xilinx_qdma_st_adapter (
+        .aclk ( axi_aclk ),
+        .aresetn ( axi_aresetn ),
+        .h2c_tvalid              ( m_axis_h2c_tvalid ),
+        .h2c_tdata               ( m_axis_h2c_tdata ),
+        .h2c_tlast               ( m_axis_h2c_tlast ),
+        .h2c_tready              ( m_axis_h2c_tready ),
+        .h2c_qid                 ( m_axis_h2c_tuser_qid ),
+        .h2c_port_id             ( m_axis_h2c_tuser_port_id ),
+        .h2c_mdata               ( m_axis_h2c_tuser_mdata ),
+        .h2c_mty                 ( m_axis_h2c_tuser_mty ),
+        .h2c_tcrc                ( m_axis_h2c_tcrc ),
+        .h2c_err                 ( m_axis_h2c_tuser_err ),
+        .h2c_zero_byte           ( m_axis_h2c_tuser_zero_byte ),
+        .c2h_tvalid              ( s_axis_c2h_tvalid ),
+        .c2h_tdata               ( s_axis_c2h_tdata ),
+        .c2h_tlast               ( s_axis_c2h_tlast ),
+        .c2h_tready              ( s_axis_c2h_tready ),
+        .c2h_ctrl_qid            ( s_axis_c2h_ctrl_qid ),
+        .c2h_ctrl_len            ( s_axis_c2h_ctrl_len ),
+        .c2h_ctrl_port_id        ( s_axis_c2h_ctrl_port_id ),
+        .c2h_ctrl_has_cmpt       ( s_axis_c2h_ctrl_has_cmpt ),
+        .c2h_ctrl_marker         ( s_axis_c2h_ctrl_marker ),
+        .c2h_mty                 ( s_axis_c2h_mty ),
+        .c2h_ecc                 ( s_axis_c2h_ctrl_ecc ),
+        .c2h_tcrc                ( s_axis_c2h_tcrc ),
+        .cmpt_tvalid             ( s_axis_c2h_cmpt_tvalid ),
+        .cmpt_data               ( s_axis_c2h_cmpt_tdata ),
+        .cmpt_size               ( s_axis_c2h_cmpt_size ),
+        .cmpt_qid                ( s_axis_c2h_cmpt_ctrl_qid ),
+        .cmpt_port_id            ( s_axis_c2h_cmpt_ctrl_port_id ),
+        .cmpt_cmpt_type          ( s_axis_c2h_cmpt_ctrl_cmpt_type ),
+        .cmpt_wait_pld_pkt_id    ( s_axis_c2h_cmpt_ctrl_wait_pld_pkt_id ),
+        .cmpt_dpar               ( s_axis_c2h_cmpt_dpar ),
+        .cmpt_col_idx            ( s_axis_c2h_cmpt_ctrl_col_idx ),
+        .cmpt_err_idx            ( s_axis_c2h_cmpt_ctrl_err_idx ),
+        .cmpt_user_trig          ( s_axis_c2h_cmpt_ctrl_user_trig ),
+        .cmpt_marker             ( s_axis_c2h_cmpt_ctrl_marker ),
+        .cmpt_no_wrb_marker      ( s_axis_c2h_cmpt_ctrl_no_wrb_marker ),
+        .cmpt_tready             ( s_axis_c2h_cmpt_tready ),
+        .dsc_crdt_crdt           ( dsc_crdt_in_crdt ),
+        .dsc_crdt_dir            ( dsc_crdt_in_dir ),
+        .dsc_crdt_fence          ( dsc_crdt_in_fence ),
+        .dsc_crdt_qid            ( dsc_crdt_in_qid ),
+        .dsc_crdt_valid          ( dsc_crdt_in_vld ),
+        .dsc_crdt_rdy            ( dsc_crdt_in_rdy ),
+        .pkt_h2c ( pkt_h2c_dma ),
+        .pkt_c2h ( pkt_c2h_dma )
+    );
+
     // =========================================================================
     // AXI-L ILA (250MHz domain)
     // =========================================================================
@@ -93,15 +232,15 @@ module xilinx_alveo_host
     // =========================================================================
     // AXI-L clock divider (250MHz to 125MHz)
     // =========================================================================
-    assign clk_250mhz = __axil_if__250mhz.aclk;
+    assign clk_250mhz = axi_aclk;
 
     xilinx_alveo_clk_axil i_xilinx_alveo_clk_axil (
         .clk_in1  ( clk_250mhz ),
         .clk_out1 ( clk_125mhz )
     );
 
-    assign axis_aclk = clk_250mhz;
-    assign axis_aresetn = __axil_if__250mhz.aresetn;
+    assign dma_aclk = axi_aclk;
+    assign dma_aresetn = axi_aresetn;
 
     // =========================================================================
     // AXI-L synchronizer (250Mhz to 125MHz)
@@ -111,9 +250,6 @@ module xilinx_alveo_host
         .clk_to_peripheral        ( clk_125mhz ),
         .axi4l_if_to_peripheral   ( axil_if )
     );
-
-    // TEMP: Tie off unused AXI-L interface
-    axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term__qdma (.axi4l_if(axil_qdma));
 
     // =========================================================================
     // AXI-L ILA (125MHz domain)

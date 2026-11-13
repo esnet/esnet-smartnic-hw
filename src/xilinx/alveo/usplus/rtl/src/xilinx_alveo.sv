@@ -22,8 +22,11 @@ module xilinx_alveo
     axi4s_intf.tx         axis_cmac_rx [NUM_CMAC],
     axi4s_intf.rx         axis_cmac_tx [NUM_CMAC],
     // -- DMA (streaming)
-    axi4s_intf.tx         axis_h2c,
-    axi4s_intf.rx         axis_c2h,
+    output logic         dma_aclk,
+    output logic         dma_aresetn,
+    packet_intf.tx       pkt_h2c_dma,
+    packet_intf.rx       pkt_c2h_dma,
+    axi4l_intf.controller axil_qdma_st,
     // -- AXI-L (Controller, to top-level regmap)
     axi4l_intf.controller axil_top,
     // -- AXI-L (Peripheral, from top-level regmap, to h/w layer decoder)
@@ -50,16 +53,12 @@ module xilinx_alveo
     logic core_clk;
     logic core_srst;
 
-    logic axis_qdma_aclk;
-    logic axis_qdma_aresetn;
-
     logic clk_100mhz_freerun;
 
     // =========================================================================
     // Interfaces
     // =========================================================================
     axi4l_intf #() axil_syscfg ();
-    axi4l_intf #() axil_qdma ();
     axi4l_intf #() axil_cmac [NUM_CMAC] ();
     axi4l_intf #() axil_sysmon ();
     axi4l_intf #() axil_qspi ();
@@ -67,44 +66,6 @@ module xilinx_alveo
     // =========================================================================
     // Host
     // =========================================================================
-    // (Local) interfaces
-    axi4s_intf #(
-        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
-        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
-    ) __axis_h2c (.aclk(axis_qdma_aclk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
-        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
-    ) __axis_h2c__core_clk (.aclk(core_clk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
-        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
-    ) __axis_c2h__core_clk (.aclk(core_clk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID(xilinx_qdma_pkg::AXIS_DATA_BYTE_WID), .TID_WID  (xilinx_qdma_pkg::AXIS_TID_WID),
-        .TDEST_WID    (xilinx_qdma_pkg::AXIS_TDEST_WID),     .TUSER_WID(xilinx_qdma_pkg::AXIS_TUSER_WID)
-    ) __axis_c2h (.aclk(axis_qdma_aclk));
-
-    // (Local) signals
-    xilinx_qdma_pkg::axis_tid_t   __axis_h2c_tid;
-    xilinx_qdma_pkg::axis_tdest_t __axis_h2c_tdest;
-    xilinx_qdma_pkg::axis_tuser_t __axis_h2c_tuser;
-
-    dma_st_axis_tid_t   axis_h2c_tid;
-    dma_st_axis_tdest_t axis_h2c_tdest;
-    dma_st_axis_tuser_t axis_h2c_tuser;
-
-    dma_st_axis_tid_t   axis_c2h_tid;
-    dma_st_axis_tdest_t axis_c2h_tdest;
-    dma_st_axis_tuser_t axis_c2h_tuser;
-
-    xilinx_qdma_pkg::axis_tid_t   __axis_c2h_tid;
-    xilinx_qdma_pkg::axis_tdest_t __axis_c2h_tdest;
-    xilinx_qdma_pkg::axis_tuser_t __axis_c2h_tuser;
-
     // Host instantiation
     xilinx_alveo_host #(
         .PCIE_LINK_WID ( alveo_hw_if.PCIE_LINK_WID )
@@ -119,72 +80,11 @@ module xilinx_alveo
         .clk_125mhz,
         .clk_250mhz,
         .axil_if       ( axil_top ),
-        .axil_qdma,
-        .axis_aclk     ( axis_qdma_aclk ),
-        .axis_aresetn  ( axis_qdma_aresetn ),
-        .axis_h2c      ( __axis_h2c ),
-        .axis_c2h      ( __axis_c2h )
+        .dma_aclk,
+        .dma_aresetn,
+        .pkt_h2c_dma,
+        .pkt_c2h_dma
     );
-
-    // AXI-S CDC
-    axi4s_fifo_async #(
-        .DEPTH        ( 32 )
-    ) i_axi4s_fifo_async__h2c (
-        .from_tx      ( __axis_h2c ),
-        .from_tx_srst ( !axis_qdma_aresetn ),
-        .to_rx        ( __axis_h2c__core_clk ),
-        .to_rx_srst   ( core_srst )
-    );
-
-    axi4s_fifo_async #(
-        .DEPTH        ( 32 )
-    ) i_axi4s_fifo_async__c2h (
-        .from_tx      ( __axis_c2h__core_clk ),
-        .from_tx_srst ( core_srst ),
-        .to_rx        ( __axis_c2h ),
-        .to_rx_srst   ( !axis_qdma_aresetn )
-    );
-
-    // Map between Alveo interfaces and QDMA interfaces
-    // -- H2C
-    assign axis_h2c.tvalid  = __axis_h2c__core_clk.tvalid;
-    assign axis_h2c.tlast   = __axis_h2c__core_clk.tlast;
-    assign axis_h2c.tkeep   = __axis_h2c__core_clk.tkeep;
-    assign axis_h2c.tdata   = __axis_h2c__core_clk.tdata;
-
-    assign __axis_h2c_tid   = __axis_h2c__core_clk.tid;
-    assign axis_h2c_tid.qid = __axis_h2c_tid.qid;
-    assign axis_h2c.tid     = axis_h2c_tid;
-
-    assign __axis_h2c_tdest      = __axis_h2c__core_clk.tdest;
-    assign axis_h2c_tdest.unused = '0;
-    assign axis_h2c.tdest        = axis_h2c_tdest;
-
-    assign __axis_h2c_tuser   = __axis_h2c__core_clk.tuser;
-    assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
-    assign axis_h2c.tuser     = axis_h2c_tuser;
-
-    assign __axis_h2c__core_clk.tready = axis_h2c.tready;
-
-    // -- C2H
-    assign __axis_c2h__core_clk.tvalid = axis_c2h.tvalid;
-    assign __axis_c2h__core_clk.tlast  = axis_c2h.tlast;
-    assign __axis_c2h__core_clk.tkeep  = axis_c2h.tkeep;
-    assign __axis_c2h__core_clk.tdata  = axis_c2h.tdata;
-
-    assign axis_c2h_tid             = axis_c2h.tid;
-    assign __axis_c2h_tid.qid       = axis_c2h_tid.qid;
-    assign __axis_c2h__core_clk.tid = __axis_c2h_tid;
-
-    assign axis_c2h_tdest             = axis_c2h.tdest;
-    assign __axis_c2h_tdest.unused    = 1'b0;
-    assign __axis_c2h__core_clk.tdest = __axis_c2h_tdest;
-
-    assign axis_c2h_tuser             = axis_c2h.tuser;
-    assign __axis_c2h_tuser.err       = axis_c2h_tuser.err;
-    assign __axis_c2h__core_clk.tuser = __axis_c2h_tuser;
-
-    assign axis_c2h.tready = __axis_c2h__core_clk.tready;
 
     // =========================================================================
     // Clock/reset generators
@@ -225,7 +125,7 @@ module xilinx_alveo
     xilinx_alveo_usplus_decoder i_xilinx_alveo_usplus_decoder (
         .axil_if        ( axil_hw ),
         .syscfg_axil_if ( axil_syscfg ),
-        .qdma_axil_if   ( axil_qdma ),
+        .qdma_axil_if   ( axil_qdma_st ),
         .cmac0_axil_if  ( axil_cmac[0] ),
         .cmac1_axil_if  ( axil_cmac[1] ),
         .sysmon_axil_if ( axil_sysmon ),
@@ -427,7 +327,7 @@ module xilinx_alveo
             // TODO: Add QSPI instance
         end : g__qspi
         else begin : g__no_qspi
-            axi4l_intf_peripheral_term (.axi4l_if (axil_qspi));
+            axi4l_intf_peripheral_term i_axi4l_term__qspi (.axi4l_if (axil_qspi));
         end : g__no_qspi
     endgenerate
 

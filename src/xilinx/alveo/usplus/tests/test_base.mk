@@ -24,10 +24,10 @@ SIM ?= xsim
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk for details)
 # ----------------------------------------------------
-SUBCOMPONENTS = \
+SUBCOMPONENTS ?= \
     xilinx.alveo.usplus.rtl
 
-EXT_LIBS =
+EXT_LIBS ?=
 
 # ----------------------------------------------------
 # Defines

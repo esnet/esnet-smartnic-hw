@@ -9,8 +9,8 @@
 //   Supports a variety of 'core' implementations (applications) using
 //   the abstract shell_intf connection to user logic.
 //
-//   Uses the common xilinx_alveo_shell module for JTAG reset control and
-//   the top-level hw/core AXI-L decoder.
+//   Uses the common xilinx_alveo_shell module for JTAG reset control,
+//   the top-level hw/core AXI-L decoder, and the DMA datapath.
 //
 // =========================================================================
 module xilinx_alveo_usplus_shell
@@ -41,13 +41,12 @@ module xilinx_alveo_usplus_shell
     axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_rx [xilinx_alveo_usplus_pkg::NUM_CMAC] (.aclk(shell_if.clk));
     axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::CMAC_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::CMAC_AXIS_TUSER_WID)) __axis_cmac_tx [xilinx_alveo_usplus_pkg::NUM_CMAC] (.aclk(shell_if.clk));
 
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_h2c (.aclk(shell_if.clk));
-    axi4s_intf #(.DATA_BYTE_WID(xilinx_alveo_usplus_pkg::DMA_ST_DATA_BYTE_WID), .TID_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID), .TDEST_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID), .TUSER_WID(xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID)) __axis_c2h (.aclk(shell_if.clk));
-
     // =========================================================================
     // Signals
     // =========================================================================
     logic pci_rstn;
+    logic dma_aclk;
+    logic dma_aresetn;
 
     logic clk;
     logic srst;
@@ -80,59 +79,34 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
-    // UltraScale+ does not route its DMA streams through the common shell:
-    // xilinx_alveo below already presents them as axi4s in the core domain,
-    // having done its own CDC.  The common shell's DMA datapath is therefore
-    // left unconnected here and its registers unreachable.  Terminate the
-    // interfaces so the ports are legally driven.
-    axi4l_intf #() axil_qdma_st__unused ();
-
+    axi4l_intf axil_qdma_st ();
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::PKT_H2C_META_WID   )
-    ) pkt_h2c_dma__unused (.clk(axil_top.aclk));
-
+        .META_WID ( xilinx_qdma_pkg::PKT_H2C_META_WID )
+    ) pkt_h2c_dma (.clk(dma_aclk));
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
-        .META_WID      ( xilinx_qdma_pkg::PKT_C2H_META_WID   )
-    ) pkt_c2h_dma__unused (.clk(axil_top.aclk));
+        .META_WID ( xilinx_qdma_pkg::PKT_C2H_META_WID )
+    ) pkt_c2h_dma (.clk(dma_aclk));
 
-    axi4s_intf #(
-        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
-        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
-        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
-    ) axis_h2c__unused (.aclk(clk));
-
-    axi4s_intf #(
-        .DATA_BYTE_WID ( shell_if.DMA_ST_DATA_BYTE_WID ),
-        .TID_WID       ( shell_if.DMA_ST_AXIS_TID_WID  ),
-        .TDEST_WID     ( DMA_ST_AXIS_TDEST_WID         ),
-        .TUSER_WID     ( DMA_ST_AXIS_TUSER_WID         )
-    ) axis_c2h__unused (.aclk(clk));
-
-    axi4l_intf_controller_term i_axi4l_term__qdma_st (.axi4l_if (axil_qdma_st__unused));
-    packet_intf_tx_term  i_packet_term__h2c_dma  (.to_rx   (pkt_h2c_dma__unused));
-    packet_intf_rx_sink  i_packet_sink__c2h_dma  (.from_tx (pkt_c2h_dma__unused));
-    axi4s_intf_rx_sink   i_axi4s_sink__h2c      (.from_tx (axis_h2c__unused));
-    axi4s_intf_tx_term   i_axi4s_term__c2h      (.to_rx   (axis_c2h__unused));
-
-    xilinx_alveo_shell i_xilinx_alveo_shell (
+    xilinx_alveo_shell #(
+        .QID_WID ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID )
+    ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
         .core_srst      ( srst ),
-        .dma_aclk       ( axil_top.aclk ),
-        .dma_aresetn    ( axil_top.aresetn ),
+        .dma_aclk       ( dma_aclk ),
+        .dma_aresetn    ( dma_aresetn ),
         .axil_top,
         .axil_hw,
         .axil_core,
-        .axil_qdma_st     ( axil_qdma_st__unused ),
-        .pkt_h2c_dma ( pkt_h2c_dma__unused ),
-        .pkt_c2h_dma ( pkt_c2h_dma__unused ),
-        .axis_h2c    ( axis_h2c__unused    ),
-        .axis_c2h         ( axis_c2h__unused     )
+        .axil_qdma_st,
+        .pkt_h2c_dma,
+        .pkt_c2h_dma,
+        .axis_h2c,
+        .axis_c2h
     );
 
     // =========================================================================
@@ -153,8 +127,11 @@ module xilinx_alveo_usplus_shell
         .clk_333mhz,
         .axis_cmac_rx ( __axis_cmac_rx ),
         .axis_cmac_tx ( __axis_cmac_tx ),
-        .axis_h2c ( __axis_h2c ),
-        .axis_c2h ( __axis_c2h ),
+        .dma_aclk,
+        .dma_aresetn,
+        .pkt_h2c_dma,
+        .pkt_c2h_dma,
+        .axil_qdma_st,
         .axil_top,
         .axil_hw
     );
@@ -227,63 +204,4 @@ module xilinx_alveo_usplus_shell
         end : g__port
     endgenerate
 
-    // -- DMA (H2C)
-    xilinx_alveo_usplus_pkg::dma_st_axis_tid_t   __axis_h2c_tid;
-    xilinx_alveo_usplus_pkg::dma_st_axis_tdest_t __axis_h2c_tdest;
-    xilinx_alveo_usplus_pkg::dma_st_axis_tuser_t __axis_h2c_tuser;
-
-    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] axis_h2c_tid;
-    shell_pkg::dma_st_axis_tdest_t axis_h2c_tdest;
-    shell_pkg::dma_st_axis_tuser_t axis_h2c_tuser;
-
-    assign __axis_h2c_tid   = __axis_h2c.tid;
-    assign axis_h2c_tid       = __axis_h2c_tid.qid;
-
-    assign __axis_h2c_tdest = __axis_h2c.tdest;
-    assign axis_h2c_tdest.unused = 1'b0;
-
-    assign __axis_h2c_tuser   = __axis_h2c.tuser;
-    assign axis_h2c_tuser.err = __axis_h2c_tuser.err;
-
-    axi4s_intf_set_meta #(
-        .TID_WID    ( shell_if.DMA_ST_AXIS_TID_WID ),
-        .TDEST_WID  ( shell_pkg::DMA_ST_AXIS_TDEST_WID ),
-        .TUSER_WID  ( shell_pkg::DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_intf_set_meta__h2c (
-        .from_tx ( __axis_h2c ),
-        .to_rx   ( axis_h2c ),
-        .tid     ( axis_h2c_tid ),
-        .tdest   ( axis_h2c_tdest ),
-        .tuser   ( axis_h2c_tuser )
-    );
-
-    // -- DMA (C2H)
-    logic [shell_if.DMA_ST_AXIS_TID_WID-1:0] axis_c2h_tid;
-    shell_pkg::dma_st_axis_tdest_t axis_c2h_tdest;
-    shell_pkg::dma_st_axis_tuser_t axis_c2h_tuser;
-
-    xilinx_alveo_usplus_pkg::dma_st_axis_tid_t   __axis_c2h_tid;
-    xilinx_alveo_usplus_pkg::dma_st_axis_tdest_t __axis_c2h_tdest;
-    xilinx_alveo_usplus_pkg::dma_st_axis_tuser_t __axis_c2h_tuser;
-
-    assign axis_c2h_tid       = axis_c2h.tid;
-    assign __axis_c2h_tid.qid = axis_c2h_tid;
-
-    assign axis_c2h_tdest     = axis_c2h.tdest;
-    assign __axis_c2h_tdest.unused = 1'b0;
-
-    assign axis_c2h_tuser       = axis_c2h.tuser;
-    assign __axis_c2h_tuser.err = axis_c2h_tuser.err;
-
-    axi4s_intf_set_meta #(
-        .TID_WID    ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TID_WID ),
-        .TDEST_WID  ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TDEST_WID ),
-        .TUSER_WID  ( xilinx_alveo_usplus_pkg::DMA_ST_AXIS_TUSER_WID )
-    ) i_axi4s_intf_set_meta__c2h (
-        .from_tx ( axis_c2h ),
-        .to_rx   ( __axis_c2h ),
-        .tid     ( __axis_c2h_tid ),
-        .tdest   ( __axis_c2h_tdest ),
-        .tuser   ( __axis_c2h_tuser )
-    );
 endmodule : xilinx_alveo_usplus_shell
