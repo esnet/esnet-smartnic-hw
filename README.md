@@ -244,9 +244,12 @@ From the esnet-smartnic-hw directory:
    its firmware images, register maps, and supporting files. CI handoff artifacts
    use the same layout so multiple boards can share one hardware API deliverable.
 
-   In CI, `hwapi_shell` gathers the `hwapi_shell_au280` and `hwapi_shell_au55c`
-   artifacts into one archive containing both board directories. Other applications
-   can extend `.hwapi_gather` and list their board-specific hwapi jobs in `needs`.
+   In CI, `hwapi_shell` gathers the `hwapi_shell_au280`, `hwapi_shell_au55c`, and
+   `hwapi_shell_av80` artifacts into one archive containing all three board directories.
+   Other applications can extend `.hwapi_gather` and list their board-specific hwapi jobs in `needs`.
+   Versal builds default `SN_HW_APP_DIR` to `SN_HW_APP_NAME`; the V80 shell overrides
+   it to `versal_shell`, building from `examples/versal_shell` while reporting the
+   application name as `shell`.
 
    For more details about the `p4_only` design, as well as simulating the P4 program,  refer to the
    [p4_only README](examples/p4_only/README.md).
