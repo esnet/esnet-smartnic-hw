@@ -20,6 +20,7 @@ interfaces:
 
   - decoder: *qdma_decoder
     address: 0x004000
+    width: 14
     name: qdma
 
   - decoder: *dcmac_decoder
