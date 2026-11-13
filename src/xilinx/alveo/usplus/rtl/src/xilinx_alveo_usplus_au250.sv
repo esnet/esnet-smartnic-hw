@@ -1,11 +1,11 @@
-module xilinx_alveo_au250
-    import xilinx_alveo_au250_pkg::*;
+module xilinx_alveo_usplus_au250
+    import xilinx_alveo_usplus_au250_pkg::*;
 (
     // Top-level I/O (AU250)
-    `include "xilinx_alveo_au250_io.svh"
+    `include "xilinx_alveo_usplus_au250_io.svh"
     ,
     // Alveo logic
-    xilinx_alveo_hw_intf.hw  alveo_hw_if
+    xilinx_alveo_usplus_hw_intf.hw  alveo_hw_if
 );
 
     // =========================================================================
@@ -34,7 +34,7 @@ module xilinx_alveo_au250
 
     // Clock gen (250MHz to 100MHz)
     // TODO: derive sys_clk from free-running source
-    xilinx_alveo_clk_100mhz i_xilinx_alveo_clk_100mhz (
+    xilinx_alveo_usplus_clk_100mhz i_xilinx_alveo_usplus_clk_100mhz (
         .clk_in1  ( alveo_hw_if.clk_250mhz ),
         .clk_out1 ( alveo_hw_if.sys_clk_100mhz )
     );
@@ -53,4 +53,4 @@ module xilinx_alveo_au250
         end : g__no_cms
     endgenerate
 
-endmodule : xilinx_alveo_au250
+endmodule : xilinx_alveo_usplus_au250

@@ -1,15 +1,15 @@
 module esnet_shell
-    import xilinx_alveo_au280_pkg::*;
+    import xilinx_alveo_usplus_au280_pkg::*;
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
-    `include "xilinx_alveo_au280_io.svh"
+    `include "xilinx_alveo_usplus_au280_io.svh"
 );
-    xilinx_alveo_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
+    xilinx_alveo_usplus_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
 
     shell_intf shell_if ();
 
-    xilinx_alveo_au280 i_xilinx_au280 (.*);
+    xilinx_alveo_usplus_au280 i_xilinx_alveo_usplus_au280 (.*);
 
     xilinx_alveo_usplus_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )

@@ -1,11 +1,11 @@
-module xilinx_alveo_au55c
-    import xilinx_alveo_au55c_pkg::*;
+module xilinx_alveo_usplus_au55c
+    import xilinx_alveo_usplus_au55c_pkg::*;
 (
     // Top-level I/O (AU55C)
-    `include "xilinx_alveo_au55c_io.svh"
+    `include "xilinx_alveo_usplus_au55c_io.svh"
     ,
     // Alveo logic
-    xilinx_alveo_hw_intf.hw  alveo_hw_if
+    xilinx_alveo_usplus_hw_intf.hw  alveo_hw_if
 );
 
     // =========================================================================
@@ -58,4 +58,4 @@ module xilinx_alveo_au55c
         end : g__no_cms
     endgenerate
 
-endmodule : xilinx_alveo_au55c
+endmodule : xilinx_alveo_usplus_au55c

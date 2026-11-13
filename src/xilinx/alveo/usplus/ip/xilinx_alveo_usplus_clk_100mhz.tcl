@@ -1,4 +1,4 @@
-set module_name xilinx_alveo_clk_100mhz
+set module_name xilinx_alveo_usplus_clk_100mhz
 
 create_ip -name clk_wiz -vendor xilinx.com -library ip -module_name $module_name -dir . -force
 

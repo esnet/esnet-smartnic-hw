@@ -4,7 +4,7 @@
 //   Implements ESnet standard shell on UltraScale+ Alveo architecture.
 //
 //   Supports a variety of hardware implementations (Alveo boards) using
-//   the abstract xilinx_alveo_hw_intf connection to the physical layer.
+//   the abstract xilinx_alveo_usplus_hw_intf connection to the physical layer.
 //
 //   Supports a variety of 'core' implementations (applications) using
 //   the abstract shell_intf connection to user logic.
@@ -19,7 +19,7 @@ module xilinx_alveo_usplus_shell
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
     // To/from physical layer (hardware)
-    xilinx_alveo_hw_intf.alveo alveo_hw_if,
+    xilinx_alveo_usplus_hw_intf.alveo alveo_hw_if,
     // To/from core (application)
     shell_intf.shell shell_if
 );
@@ -114,9 +114,9 @@ module xilinx_alveo_usplus_shell
     // axil_top drives the PCIe AXI-L into the QDMA; axil_hw receives the
     // decoded hw sub-space from the top-level shell_decoder.
     // =========================================================================
-    xilinx_alveo #(
+    xilinx_alveo_usplus #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
-    ) i_xilinx_alveo  (
+    ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
         .clk,

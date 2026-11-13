@@ -1,4 +1,4 @@
-set module_name xilinx_alveo_axil_ila
+set module_name xilinx_alveo_usplus_axil_ila
 
 create_ip -name ila -vendor xilinx.com -library ip -module_name $module_name -dir . -force
 

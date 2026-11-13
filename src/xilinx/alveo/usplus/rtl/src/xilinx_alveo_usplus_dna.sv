@@ -1,4 +1,4 @@
-module xilinx_alveo_dna #(
+module xilinx_alveo_usplus_dna #(
     parameter bit [95:0] SIM_VALUE = 96'hBBAA_9988_7766_5544_3322_1100
 ) (
     // Clock/reset
@@ -100,4 +100,4 @@ module xilinx_alveo_dna #(
     assign valid = done;
 
 
-endmodule : xilinx_alveo_dna
+endmodule : xilinx_alveo_usplus_dna

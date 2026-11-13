@@ -1,10 +1,10 @@
-module xilinx_alveo
+module xilinx_alveo_usplus
     import xilinx_alveo_usplus_pkg::*;
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
     // To/from physical layer (hardware)
-    xilinx_alveo_hw_intf.alveo  alveo_hw_if,
+    xilinx_alveo_usplus_hw_intf.alveo  alveo_hw_if,
 
     // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
     input  wire logic     pci_rstn,
@@ -67,9 +67,9 @@ module xilinx_alveo
     // Host
     // =========================================================================
     // Host instantiation
-    xilinx_alveo_host #(
+    xilinx_alveo_usplus_host #(
         .PCIE_LINK_WID ( alveo_hw_if.PCIE_LINK_WID )
-    ) i_xilinx_alveo_host (
+    ) i_xilinx_alveo_usplus_host (
         .pcie_rstn     ( pci_rstn ),
         .pcie_refclk_p ( alveo_hw_if.pcie_refclk_p ),
         .pcie_refclk_n ( alveo_hw_if.pcie_refclk_n ),
@@ -90,7 +90,7 @@ module xilinx_alveo
     // Clock/reset generators
     // =========================================================================
     // Clock gen (250MHz to 100MHz/333MHz)
-    xilinx_alveo_clk i_xilinx_alveo_clk (
+    xilinx_alveo_usplus_clk i_xilinx_alveo_usplus_clk (
         .clk_in1  ( clk_250mhz ),
         .clk_out1 ( clk_333mhz )
     );
@@ -175,7 +175,7 @@ module xilinx_alveo
     assign reg_if.usr_access_nxt_v = 1'b1;
 
     // DNA access port
-    xilinx_alveo_dna i_xilinx_alveo_dna (
+    xilinx_alveo_usplus_dna i_xilinx_alveo_usplus_dna (
         .clk   ( axil_syscfg.aclk ),
         .srst  ( !axil_syscfg.aresetn ),
         .valid ( dna_valid ),
@@ -234,9 +234,9 @@ module xilinx_alveo
             xilinx_cmac_pkg::axis_tuser_t __axis_cmac_tx_tuser;
 
             // CMAC instantatiation
-            xilinx_alveo_cmac #(
+            xilinx_alveo_usplus_cmac #(
                 .PORT_ID ( g_cmac )
-            ) i_xilinx_alveo_cmac (
+            ) i_xilinx_alveo_usplus_cmac (
                 .clk           ( core_clk ),
                 .srst          ( core_srst ),
                 .qsfp_refclk_p ( alveo_hw_if.qsfp_refclk_p[g_cmac] ),
@@ -331,4 +331,4 @@ module xilinx_alveo
         end : g__no_qspi
     endgenerate
 
-endmodule : xilinx_alveo
+endmodule : xilinx_alveo_usplus

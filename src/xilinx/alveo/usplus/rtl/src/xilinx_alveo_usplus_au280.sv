@@ -1,11 +1,11 @@
-module xilinx_alveo_au280
-    import xilinx_alveo_au280_pkg::*;
+module xilinx_alveo_usplus_au280
+    import xilinx_alveo_usplus_au280_pkg::*;
 (
     // I/O (AU280)
-    `include "xilinx_alveo_au280_io.svh"
+    `include "xilinx_alveo_usplus_au280_io.svh"
     ,
     // Alveo logic
-    xilinx_alveo_hw_intf.hw  alveo_hw_if
+    xilinx_alveo_usplus_hw_intf.hw  alveo_hw_if
 );
 
     // =========================================================================
@@ -58,4 +58,4 @@ module xilinx_alveo_au280
         end : g__no_cms
     endgenerate
 
-endmodule : xilinx_alveo_au280
+endmodule : xilinx_alveo_usplus_au280

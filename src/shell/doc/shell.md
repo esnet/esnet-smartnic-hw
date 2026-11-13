@@ -12,7 +12,7 @@ Shell (`shell`) Layer
 -----------------------------
 This layer defines a common set of logic and IP for implementing a simple shell for network card implementations. This includes instantiations of MAC, PCIe, QDMA and system monitoring IP. It also includes a top level register decoder and register blocks for controlling shell-level functions.
 
-The southbound interface (to the `hw`) is architecture/vendor-specific. A common `xilinx_alveo_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers. For Versal AVED platforms, the `xilinx_aved_app_intf` serves the equivalent role.
+The southbound interface (to the `hw`) is architecture/vendor-specific. A common `xilinx_alveo_usplus_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers. For Versal AVED platforms, the `xilinx_aved_app_intf` serves the equivalent role.
 
 Core (`core`) Layer
 ----------------------------
@@ -32,7 +32,7 @@ Interfaces
 -----------------------------
 Interfaces have been captured to define the boundaries between the different layers.
 
-An Alveo-specific `shell` and set of `hw` implementations (for AU280, AU55C and AU250) has been captured. These are in the `xilinx.alveo` library. A common `xilinx_alveo_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers.
+An Alveo-specific `shell` and set of `hw` implementations (for AU280, AU55C and AU250) has been captured. These are in the `xilinx.alveo` library. A common `xilinx_alveo_usplus_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers.
 
 The `shell_intf` defines the connectivity between the shell and the core. It is a **flat SV interface** — all signals are plain `logic` with no embedded interface instances, ensuring compatibility with Vivado OOC synthesis and DFX flows. Parameters control the number of network ports (`NUM_PORTS`), network port data width (`PORT_DATA_BYTE_WID`), and AXI-L address width (`AXIL_ADDR_WID`). DMA stream width and queue count are fixed by `shell_pkg` and cannot be overridden at interface instantiation.
 

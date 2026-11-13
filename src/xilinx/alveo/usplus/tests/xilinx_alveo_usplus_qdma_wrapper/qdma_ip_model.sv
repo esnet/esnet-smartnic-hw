@@ -313,12 +313,12 @@ module xilinx_alveo_usplus_qdma (
     end
 endmodule
 
-module xilinx_alveo_clk_axil (input wire clk_in1, output logic clk_out1 = 0);
+module xilinx_alveo_usplus_clk_axil (input wire clk_in1, output logic clk_out1 = 0);
     always @(posedge clk_in1) clk_out1 <= ~clk_out1;
 endmodule
 
 // The ILA is observational and has no behavior in this boundary test.
-module xilinx_alveo_axil_ila (
+module xilinx_alveo_usplus_axil_ila (
     input wire clk,
     input wire [0:0] probe0,
     input wire [31:0] probe1,

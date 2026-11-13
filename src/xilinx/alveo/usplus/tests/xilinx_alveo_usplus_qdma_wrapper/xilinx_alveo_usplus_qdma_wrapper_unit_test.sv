@@ -7,7 +7,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     string name = "xilinx_alveo_usplus_qdma_wrapper_ut";
     svunit_testcase svunit_ut;
     `define SVUNIT_TIMEOUT 500us
-    `define IP DUT.i_xilinx_alveo_qdma.i_xilinx_alveo_usplus_qdma
+    `define IP DUT.i_xilinx_alveo_usplus_qdma.i_xilinx_alveo_usplus_qdma
 
     logic pcie_rstn = 0;
     logic pcie_refclk_p = 0;
@@ -31,7 +31,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
                  .TDEST_WID(shell_pkg::DMA_ST_AXIS_TDEST_WID),
                  .TUSER_WID(shell_pkg::DMA_ST_AXIS_TUSER_WID)) axis_c2h (.aclk(core_clk));
 
-    xilinx_alveo_host DUT (.*);
+    xilinx_alveo_usplus_host DUT (.*);
     xilinx_alveo_qdma_st #(.QID_WID(11)) i_datapath (
         .aclk(dma_aclk), .aresetn(dma_aresetn),
         .core_clk, .core_srst(~dma_aresetn),

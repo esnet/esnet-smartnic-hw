@@ -1,9 +1,9 @@
 `include "svunit_defines.svh"
 
-module xilinx_alveo_dna_unit_test;
+module xilinx_alveo_usplus_dna_unit_test;
     import svunit_pkg::svunit_testcase;
 
-    string name = "xilinx_alveo_dna_ut";
+    string name = "xilinx_alveo_usplus_dna_ut";
     svunit_testcase svunit_ut;
     
     //===================================
@@ -20,7 +20,7 @@ module xilinx_alveo_dna_unit_test;
     logic valid;
     logic [95:0] dna;
 
-    xilinx_alveo_dna #(
+    xilinx_alveo_usplus_dna #(
         .SIM_VALUE ( SIM_VALUE )
     ) DUT (.*);
 

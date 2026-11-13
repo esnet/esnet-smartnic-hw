@@ -1,4 +1,4 @@
-module xilinx_alveo_cmac #(
+module xilinx_alveo_usplus_cmac #(
     parameter int PORT_ID = 0
 ) (
     // Clock/reset
@@ -86,4 +86,4 @@ module xilinx_alveo_cmac #(
     assign __axis_tx.tuser = axis_tx.tuser;
     assign axis_tx.tready = __axis_tx.tready;
 
-endmodule : xilinx_alveo_cmac
+endmodule : xilinx_alveo_usplus_cmac

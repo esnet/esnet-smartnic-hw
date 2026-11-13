@@ -41,8 +41,8 @@ SIM_OPTS =
 # -----------------------------------------------
 SRC_FILES = \
     qdma_ip_model.sv \
-    ../../rtl/src/xilinx_alveo_host.sv \
-    ../../rtl/src/xilinx_alveo_qdma_wrapper.sv
+    ../../rtl/src/xilinx_alveo_usplus_host.sv \
+    ../../rtl/src/xilinx_alveo_usplus_qdma_wrapper.sv
 
 # Compile the real host/wrapper with a local native-IP model. PCIe protocol
 # behavior is outside this integration test; the adapter and DMA path are real.

@@ -1,4 +1,4 @@
-package xilinx_alveo_au250_pkg;
+package xilinx_alveo_usplus_au250_pkg;
 
     // --------------------------------------------------------------
     // Parameters
@@ -6,4 +6,4 @@ package xilinx_alveo_au250_pkg;
     localparam int PCIE_LINK_WID = 16;
     localparam int NUM_QSFP = 2;
 
-endpackage : xilinx_alveo_au250_pkg
+endpackage : xilinx_alveo_usplus_au250_pkg

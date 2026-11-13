@@ -29,10 +29,10 @@ include $(CFG_ROOT)/vivado_ip.mk
 #   not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    xilinx_alveo_clk_axil \
-    xilinx_alveo_clk \
-    xilinx_alveo_clk_100mhz \
-    xilinx_alveo_axil_ila \
+    xilinx_alveo_usplus_clk_axil \
+    xilinx_alveo_usplus_clk \
+    xilinx_alveo_usplus_clk_100mhz \
+    xilinx_alveo_usplus_axil_ila \
     xilinx_alveo_usplus_qdma
 
 # ----------------------------------------------------
@@ -58,13 +58,13 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    xilinx_alveo_clk/xilinx_alveo_clk_clk_wiz.v \
-    xilinx_alveo_clk/xilinx_alveo_clk.v \
-    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz_clk_wiz.v \
-    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
-    xilinx_alveo_clk_axil/xilinx_alveo_clk_axil_clk_wiz.v \
-    xilinx_alveo_clk_axil/xilinx_alveo_clk_axil.v \
-    xilinx_alveo_axil_ila/sim/xilinx_alveo_axil_ila.v \
+    xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk_clk_wiz.v \
+    xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk.v \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz_clk_wiz.v \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz.v \
+    xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil_clk_wiz.v \
+    xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil.v \
+    xilinx_alveo_usplus_axil_ila/sim/xilinx_alveo_usplus_axil_ila.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_channel.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_common.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtwizard_gtye4.v \

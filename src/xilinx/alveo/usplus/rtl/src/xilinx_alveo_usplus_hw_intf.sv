@@ -1,4 +1,4 @@
-interface xilinx_alveo_hw_intf #(
+interface xilinx_alveo_usplus_hw_intf #(
     parameter int NUM_QSFP = 2,
     parameter int PCIE_LINK_WID = 16
 );
@@ -65,5 +65,5 @@ interface xilinx_alveo_hw_intf #(
         output clk_333mhz
     );
 
-endinterface : xilinx_alveo_hw_intf
+endinterface : xilinx_alveo_usplus_hw_intf
 

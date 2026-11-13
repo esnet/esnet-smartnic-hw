@@ -1,4 +1,4 @@
-module xilinx_alveo_host
+module xilinx_alveo_usplus_host
 #(
     parameter int PCIE_LINK_WID = 16
 ) (
@@ -92,9 +92,9 @@ module xilinx_alveo_host
     // =========================================================================
     // QDMA IP
     // =========================================================================
-    xilinx_alveo_qdma_wrapper #(
+    xilinx_alveo_usplus_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
-    ) i_xilinx_alveo_qdma (
+    ) i_xilinx_alveo_usplus_qdma (
         .pcie_rstn ( __pcie_rstn ),
         .pcie_refclk_p,
         .pcie_refclk_n,
@@ -206,7 +206,7 @@ module xilinx_alveo_host
     // =========================================================================
     // AXI-L ILA (250MHz domain)
     // =========================================================================
-    xilinx_alveo_axil_ila i_xilinx_alveo_axil_ila__250mhz (
+    xilinx_alveo_usplus_axil_ila i_xilinx_alveo_usplus_axil_ila__250mhz (
         .clk     ( __axil_if__250mhz.aclk ),
         .probe0  ( __axil_if__250mhz.wready ),
         .probe1  ( __axil_if__250mhz.awaddr ),
@@ -234,7 +234,7 @@ module xilinx_alveo_host
     // =========================================================================
     assign clk_250mhz = axi_aclk;
 
-    xilinx_alveo_clk_axil i_xilinx_alveo_clk_axil (
+    xilinx_alveo_usplus_clk_axil i_xilinx_alveo_usplus_clk_axil (
         .clk_in1  ( clk_250mhz ),
         .clk_out1 ( clk_125mhz )
     );
@@ -254,7 +254,7 @@ module xilinx_alveo_host
     // =========================================================================
     // AXI-L ILA (125MHz domain)
     // =========================================================================
-    xilinx_alveo_axil_ila i_xilinx_alveo_axil_ila__125mhz (
+    xilinx_alveo_usplus_axil_ila i_xilinx_alveo_usplus_axil_ila__125mhz (
         .clk     ( axil_if.aclk ),
         .probe0  ( axil_if.wready ),
         .probe1  ( axil_if.awaddr ),
@@ -277,4 +277,4 @@ module xilinx_alveo_host
         .probe18 ( axil_if.awprot )
     );
 
-endmodule : xilinx_alveo_host
+endmodule : xilinx_alveo_usplus_host
