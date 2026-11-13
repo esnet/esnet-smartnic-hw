@@ -9,18 +9,19 @@ set_property -dict {
     CONFIG.en_transceiver_status_ports {false}
     CONFIG.dsc_byp_mode {Descriptor_bypass_and_internal}
     CONFIG.testname {st}
+    CONFIG.pf0_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf1_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf2_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf3_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.dma_reset_source_sel {Phy_Ready}
     CONFIG.pf0_bar2_scale_qdma {Megabytes}
-    CONFIG.pf0_bar2_size_qdma {4}
+    CONFIG.pf0_bar2_size_qdma {8}
     CONFIG.pf1_bar2_scale_qdma {Megabytes}
-    CONFIG.pf1_bar2_size_qdma {4}
+    CONFIG.pf1_bar2_size_qdma {8}
     CONFIG.pf2_bar2_scale_qdma {Megabytes}
-    CONFIG.pf2_bar2_size_qdma {4}
+    CONFIG.pf2_bar2_size_qdma {8}
     CONFIG.pf3_bar2_scale_qdma {Megabytes}
-    CONFIG.pf3_bar2_size_qdma {4}
+    CONFIG.pf3_bar2_size_qdma {8}
     CONFIG.PF0_MSIX_CAP_TABLE_SIZE_qdma {009}
     CONFIG.PF1_MSIX_CAP_TABLE_SIZE_qdma {008}
     CONFIG.PF2_MSIX_CAP_TABLE_SIZE_qdma {008}
