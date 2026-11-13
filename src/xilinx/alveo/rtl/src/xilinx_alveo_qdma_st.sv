@@ -259,14 +259,15 @@ module xilinx_alveo_qdma_st
     pkt_h2c_meta_t h2c_checked_meta;
     assign h2c_checked_meta = pkt_h2c_crc_out.meta;
     localparam int CORE_QUEUES = 2 ** axis_h2c.TID_WID;
+    logic h2c_qid_oor;
+    assign h2c_qid_oor = int'(h2c_checked_meta.qid) >= CORE_QUEUES;
 
     // Narrow: strip tcrc from meta — FIFO and core only need QID.
     assign pkt_h2c_checked.vld  = pkt_h2c_crc_out.vld;
     assign pkt_h2c_checked.data = pkt_h2c_crc_out.data;
     assign pkt_h2c_checked.eop  = pkt_h2c_crc_out.eop;
     assign pkt_h2c_checked.mty  = pkt_h2c_crc_out.mty;
-    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err
-                               || (int'(h2c_checked_meta.qid) >= CORE_QUEUES);
+    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err || h2c_qid_oor;
     assign pkt_h2c_checked.meta = QID_WID'(pkt_h2c_crc_out.meta);
     assign pkt_h2c_crc_out.rdy  = pkt_h2c_checked.rdy;
 
@@ -281,6 +282,17 @@ module xilinx_alveo_qdma_st
     // event reports delivery.
     packet_event_intf evt_h2c_in  (.clk(aclk));
     packet_event_intf evt_h2c_out (.clk(core_clk));
+    packet_event_intf evt_h2c_in_counts (.clk(aclk));
+
+    // FIFO input events coincide with the accepted EOP beat. Classify that
+    // beat's full QID before narrowing: OOR uses OTHER (STATUS_UNDEFINED),
+    // with priority over CRC/QDMA errors. The FIFO still sees err and drops
+    // the packet; only its counter classification changes.
+    assign evt_h2c_in_counts.evt = evt_h2c_in.evt;
+    assign evt_h2c_in_counts.size = evt_h2c_in.size;
+    assign evt_h2c_in_counts.status = evt_h2c_in.evt && h2c_qid_oor
+                                    ? packet_pkg::STATUS_UNDEFINED
+                                    : evt_h2c_in.status;
 
     packet_fifo #(
         .ASYNC           ( 1              ),
@@ -556,7 +568,8 @@ module xilinx_alveo_qdma_st
     //
     // The _in counters see every packet offered to the FIFO and report why one
     // was dropped; the _out counters only ever report STATUS_OK, so they count
-    // what the FIFO released.
+    // what the FIFO released. H2C input OOR packets use OTHER; in-range
+    // CRC/QDMA errors use ERR. All bins share one snapshot and clear control.
     //
     // Both taps are on the FIFO itself, which is upstream of the loopback
     // switch.  So with loopback enabled h2c_out still counts, even though the
@@ -566,7 +579,7 @@ module xilinx_alveo_qdma_st
     packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_in (
         .clk      ( aclk         ),
         .axil_if  ( axil_h2c_in  ),
-        .event_if ( evt_h2c_in   )
+        .event_if ( evt_h2c_in_counts )
     );
 
     packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_out (

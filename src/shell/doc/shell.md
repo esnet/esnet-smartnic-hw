@@ -52,8 +52,11 @@ and 12 bits for CPM5. Soft QDMA is configured for 512 queues; CPM5 retains its
 allocation among PFs and VFs is a software policy.
 
 The shared DMA datapath checks the full native H2C QID before narrowing it.
-Packets outside the shell's queue space are dropped and counted as errors by
-the H2C FIFO. Raw DMA capture/playback retain their native metadata for debug.
+Packets outside the shell's queue space are dropped and counted in the H2C
+input counter block's `OTHER` packet and byte bins. OOR takes priority over
+CRC/QDMA errors; in-range errored packets use `ERR`. Each packet contributes
+to one bin, with all bins sharing the block's snapshot and clear controls.
+Raw DMA capture/playback retain their native metadata for debug.
 The UltraScale+ wrapper will gain this shared path during its DMA integration.
 
 Adapter Modules
