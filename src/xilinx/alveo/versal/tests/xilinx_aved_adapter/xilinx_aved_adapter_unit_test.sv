@@ -71,9 +71,7 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    shell_intf #(
-        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
-    ) shell_if ();
+    shell_intf shell_if ();
 
     // DMA streams between adapter and shell, in the PCIE0 (QDMA) clock domain.
     // Meta widths match PKT_H2C_META_WID / PKT_C2H_META_WID from xilinx_qdma_pkg.

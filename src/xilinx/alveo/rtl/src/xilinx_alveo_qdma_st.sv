@@ -253,12 +253,20 @@ module xilinx_alveo_qdma_st
         .crc_in  ( h2c_dma_meta.tcrc )
     );
 
+    // Check the full native QID before any narrowing to the core interface.
+    // Mark out-of-range packets errored so the store-and-forward FIFO drops
+    // and counts them, rather than aliasing them onto a supported queue.
+    pkt_h2c_meta_t h2c_checked_meta;
+    assign h2c_checked_meta = pkt_h2c_crc_out.meta;
+    localparam int CORE_QUEUES = 2 ** axis_h2c.TID_WID;
+
     // Narrow: strip tcrc from meta — FIFO and core only need QID.
     assign pkt_h2c_checked.vld  = pkt_h2c_crc_out.vld;
     assign pkt_h2c_checked.data = pkt_h2c_crc_out.data;
     assign pkt_h2c_checked.eop  = pkt_h2c_crc_out.eop;
     assign pkt_h2c_checked.mty  = pkt_h2c_crc_out.mty;
-    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err;
+    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err
+                               || (int'(h2c_checked_meta.qid) >= CORE_QUEUES);
     assign pkt_h2c_checked.meta = QID_WID'(pkt_h2c_crc_out.meta);
     assign pkt_h2c_crc_out.rdy  = pkt_h2c_checked.rdy;
 

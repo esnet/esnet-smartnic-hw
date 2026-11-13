@@ -48,7 +48,7 @@ module xilinx_alveo_qdma_st_unit_test;
     packet_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .META_WID(PKT_C2H_META_WID))
         pkt_c2h_dma (.clk(aclk));
 
-    localparam int TID_WID = QID_WID;
+    localparam int TID_WID = shell_pkg::DMA_ST_QID_WID;
 
     axi4s_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID               ),
@@ -467,6 +467,34 @@ module xilinx_alveo_qdma_st_unit_test;
             expect_idle_core(128);
         `SVTEST_END
 
+        // Full-width native QIDs must be checked before the 9-bit shell
+        // boundary: 512 would otherwise alias queue 0, and 4095 queue 511.
+        `SVTEST(h2c_out_of_range_qids_dropped)
+            clear_all_counts();
+            send_h2c(128, 12'd512);
+            send_h2c(128, 12'd4095);
+            expect_idle_core(128);
+            check_counts(cnt_h2c_in, "h2c_in", 0, 0, 2, 256);
+            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+        `SVTEST_END
+
+        `SVTEST(h2c_queue_limit_and_recovery)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            send_h2c(64, 12'd512);
+            fork
+                send_h2c(65, 12'd511);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 65)
+            `FAIL_UNLESS_EQUAL(qid, 12'd511)
+            fork
+                send_h2c(64, 12'd0);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(qid, 12'd0)
+        `SVTEST_END
+
         // H2C: a dropped packet does not block the next good one.
         `SVTEST(h2c_bad_crc_does_not_block)
             int bytes;
@@ -499,7 +527,7 @@ module xilinx_alveo_qdma_st_unit_test;
             logic [PKT_C2H_META_WID-1:0] meta_at_sop;
             pkt_c2h_meta_t c2h_meta;
             fork
-                send_axis(37, 12'h7FF);
+                send_axis(37, 12'h1FF);
                 begin
                     @(posedge aclk iff (pkt_c2h_dma.vld && pkt_c2h_dma.rdy));
                     meta_at_sop = pkt_c2h_dma.meta;
@@ -507,6 +535,7 @@ module xilinx_alveo_qdma_st_unit_test;
             join
             c2h_meta = meta_at_sop;
             `FAIL_UNLESS_EQUAL(c2h_meta.size, 16'd37)
+            `FAIL_UNLESS_EQUAL(c2h_meta.qid, 12'd511)
         `SVTEST_END
 
         // C2H: the tcrc packed into the DMA meta is the engine's convention,

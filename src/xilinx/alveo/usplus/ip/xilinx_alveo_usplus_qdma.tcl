@@ -43,6 +43,9 @@ set_property -dict {
     CONFIG.num_queues {512}
 } [get_ips $module_name]
 
+# Allocate only the queue resources used by the common shell contract
+# (shell_pkg::DMA_ST_QUEUES).
+
 # Customize for board/application
 switch $env(BOARD) {
     au55c {

@@ -47,9 +47,7 @@ module xilinx_alveo_versal_shell_dcmac_unit_test;
         .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(axil_if.aclk));
 
-    shell_intf #(
-        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
-    ) shell_if ();
+    shell_intf shell_if ();
 
 
     // =========================================================================

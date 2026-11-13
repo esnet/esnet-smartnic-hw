@@ -1,10 +1,8 @@
 // Platform constants for Alveo UltraScale+ cards.
 //
-// The DMA queue count is a property of the platform's QDMA implementation:
-// the UltraScale+ soft QDMA IP carries an 11-bit queue ID (2048 queues),
-// whereas CPM5 on Versal carries 12 bits (4096). Each platform top-level
-// passes its own value to shell_intf so the shell-core boundary is sized to
-// what the hardware can actually address.
+// Native soft-QDMA ports carry 11-bit queue IDs even when the IP is
+// configured for 512 queues. The application-facing queue space is defined
+// separately in shell_pkg.
 package xilinx_alveo_usplus_pkg;
 
     // --------------------------------------------------------------
@@ -13,8 +11,7 @@ package xilinx_alveo_usplus_pkg;
     localparam int NUM_CMAC = 2;
 
     localparam int DMA_ST_DATA_BYTE_WID = 64;
-    localparam int DMA_ST_QUEUES = 2048;
-    localparam int DMA_ST_QID_WID = DMA_ST_QUEUES > 1 ? $clog2(DMA_ST_QUEUES) : 1;
+    localparam int DMA_ST_QID_WID = 11;
 
     localparam int CMAC_DATA_BYTE_WID = 64;
 

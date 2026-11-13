@@ -1,5 +1,10 @@
 package shell_pkg;
 
+    // Common application-facing DMA geometry.
+    localparam int DMA_ST_DATA_BYTE_WID = 64;
+    localparam int DMA_ST_QUEUES = 512;
+    localparam int DMA_ST_QID_WID = $clog2(DMA_ST_QUEUES);
+
     // --------------------------------------------------------------
     // Semantic typedefs
     // (used by shell adapters for metadata field packing/unpacking)
@@ -8,10 +13,7 @@ package shell_pkg;
 
     // DMA streaming
     //
-    // tid carries the queue ID, whose width depends on the platform's DMA
-    // engine. It is therefore not defined here: shell_intf derives it from its
-    // DMA_ST_QUEUES parameter, which each platform top-level supplies from its
-    // own package.
+    // tid carries the queue ID, sized from the common queue space.
     typedef unused_t                              dma_st_axis_tdest_t;
     typedef struct packed {logic rss_enable; logic [11:0] rss_entropy;}  dma_st_axis_tuser_t;
 
