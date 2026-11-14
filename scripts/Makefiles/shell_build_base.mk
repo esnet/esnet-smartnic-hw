@@ -80,10 +80,10 @@ APP_CELL_DCPS  ?=
 TOP_DCP_FILE := $(__SB_SHELL_OUT)/$(TOP).synth.dcp
 CELL_DCPS    := $(CORE_CELL_DCPS) $(APP_CELL_DCPS)
 
-# Re-run from link if any input DCP changes; wildcard avoids Make errors
-# on first run before the DCPs exist.
+# Track every input, including checkpoints not yet created by synthesis.
 __SB_ALL_CELL_DCP_PATHS := $(foreach cd,$(CELL_DCPS),$(word 2,$(subst :, ,$(cd))))
-STAGE_DEPS := $(wildcard $(TOP_DCP_FILE) $(__SB_ALL_CELL_DCP_PATHS))
+__SB_INPUT_DCPS := $(sort $(TOP_DCP_FILE) $(__SB_ALL_CELL_DCP_PATHS))
+STAGE_DEPS := $(__SB_INPUT_DCPS)
 
 # -----------------------------------------------
 # Subcomponents
@@ -107,6 +107,12 @@ SRC_LIST_FILES :=
 # Defines _np_link, _np_opt, ..., _pre_synth, _build_clean, etc.
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
+
+# Synthesis refreshes these files in recursive makes. Run a validation recipe
+# afterward so Make re-reads their mtimes before deciding whether to relink.
+# FORCE runs the check on every invocation; unchanged mtimes preserve no-op builds.
+$(__SB_INPUT_DCPS): FORCE | _pre_synth
+	@test -f "$@" || { echo "Error: Missing input checkpoint after synthesis: $@" >&2; exit 1; }
 
 # -----------------------------------------------
 # Targets (dot-prefixed to avoid becoming Make's default goal)
