@@ -330,12 +330,13 @@ module xilinx_cmac_wrapper #(
     // =========================================================================
     // Resets
     // =========================================================================
+    // Release reset on the free-running init clock so GT clock startup can proceed.
     sync_reset #(
         .INPUT_ACTIVE_HIGH ( 1 )
     ) i_sync_reset__sys_reset (
         .clk_in  ( clk ),
         .rst_in  ( srst ),
-        .clk_out ( cmac_clk ),
+        .clk_out ( init_clk ),
         .rst_out ( sys_reset )
     );
 
