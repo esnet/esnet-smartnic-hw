@@ -13,9 +13,12 @@ TOP := esnet_shell
 BUILD_STAGES := link opt place place_opt route route_opt
 SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/regio/esnet-smartnic-top.yaml
 
-CONSTRAINTS_XDC_IMPL += $(SMARTNIC_ROOT)/open-nic-shell/constr/$(BOARD)/pins.xdc
+__USB_BOARD_CONSTRAINTS := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/build/$(BOARD)
+CONSTRAINTS_XDC_IMPL += $(addprefix $(__USB_BOARD_CONSTRAINTS)/,general.xdc pins.xdc)
 
 include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_build_base.mk
+
+$(COMPONENT_OUT_PATH)/.done/link: $(CONSTRAINTS_XDC_IMPL)
 
 __USB_BITSTREAM_SCRIPT := $(SMARTNIC_ROOT)/scripts/usplus/write_bitstream.tcl
 __USB_BITSTREAM := $(COMPONENT_OUT_PATH)/$(TOP).bit

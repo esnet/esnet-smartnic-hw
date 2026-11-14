@@ -28,8 +28,6 @@ BUILD_ID ?= $(BUILD_TIMESTAMP)
 
 DEFINES = BOARD=$(BOARD) __$(BOARD)__
 
-CONSTRAINTS_XDC_USER = $(abspath $(wildcard $(BOARD)/*.xdc))
-
 # ----------------------------------------------------
 # Sources
 #   List source files and include directories for component.
@@ -60,9 +58,9 @@ SUBCOMPONENTS = \
 # Shell synthesis leaves i_core as a black box. The project assembly flow
 # inserts the selected core DCP and owns implementation and bitstream output.
 OOC = 0
-CONSTRAINTS_XDC_SYNTH = $(CONSTRAINTS_XDC_USER)
+CONSTRAINTS_XDC_SYNTH = $(abspath $(BOARD)/timing.xdc)
 BUILD_STAGES = synth
-STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl
+STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl $(CONSTRAINTS_XDC_SYNTH)
 
 all: synth
 

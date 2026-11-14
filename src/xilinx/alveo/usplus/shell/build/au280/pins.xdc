@@ -1,1 +1,447 @@
-../../../../../../open-nic-shell/constr/au280/pins.xdc
+# AU280 shell pin assignments.
+# Sources:
+#   Xilinx Board Store 2020.2, AU280 production board files v1.1.
+#   https://github.com/Xilinx/XilinxBoardStore/tree/2020.2/boards/Xilinx/au280/production/1.1
+#   PG348 v4.0, Alveo Card U280 I/O Constraints.
+#   https://docs.amd.com/r/en-US/pg348-cms-subsystem/Alveo-Card-U280-I/O-Constraints
+
+# Serial data pads are placed by the QDMA and CMAC IP GT constraints.
+
+# PCIe.
+set_property -dict {PACKAGE_PIN AR15} [get_ports {pcie_refclk_p}]
+set_property -dict {PACKAGE_PIN AR14} [get_ports {pcie_refclk_n}]
+set_property -dict {PACKAGE_PIN BH26 IOSTANDARD LVCMOS18} [get_ports {pcie_rstn}]
+
+# QSFP reference clocks.
+set_property -dict {PACKAGE_PIN T42} [get_ports {qsfp_refclk_p[0]}]
+set_property -dict {PACKAGE_PIN T43} [get_ports {qsfp_refclk_n[0]}]
+set_property -dict {PACKAGE_PIN P42} [get_ports {qsfp_refclk_p[1]}]
+set_property -dict {PACKAGE_PIN P43} [get_ports {qsfp_refclk_n[1]}]
+
+# 100 MHz system clock (SYSCLK3).
+set_property -dict {PACKAGE_PIN G31 IOSTANDARD LVDS DQS_BIAS TRUE} [get_ports {sys_clk_3_p}]
+set_property -dict {PACKAGE_PIN F31 IOSTANDARD LVDS DQS_BIAS TRUE} [get_ports {sys_clk_3_n}]
+
+# Satellite controller.
+set_property -dict {PACKAGE_PIN D29 IOSTANDARD LVCMOS18 DRIVE 4} [get_ports {satellite_uart_0_txd}]
+set_property -dict {PACKAGE_PIN E28 IOSTANDARD LVCMOS18} [get_ports {satellite_uart_0_rxd}]
+set_property -dict {PACKAGE_PIN K28 IOSTANDARD LVCMOS18} [get_ports {satellite_gpio[0]}]
+set_property -dict {PACKAGE_PIN J29 IOSTANDARD LVCMOS18} [get_ports {satellite_gpio[1]}]
+set_property -dict {PACKAGE_PIN K29 IOSTANDARD LVCMOS18} [get_ports {satellite_gpio[2]}]
+set_property -dict {PACKAGE_PIN J31 IOSTANDARD LVCMOS18} [get_ports {satellite_gpio[3]}]
+
+# HBM temperature alarm.
+# The shell drives this output low while HBM is unused.
+set_property -dict {PACKAGE_PIN D32 IOSTANDARD LVCMOS18 PULLDOWN TRUE} [get_ports {hbm_cattrip}]
+
+# Complete upstream pin reference
+# All package-pin assignments listed in the sources above, including unused
+# interfaces and any explicit no-connect entries. Signal names are the upstream
+# board names. The shell column identifies the explicit constraints above;
+# serial data pads can also be used through the IP GT constraints.
+# A dash denotes an unspecified I/O standard or no explicit shell assignment.
+# This reference table is comments only and does not apply constraints.
+# Listed package pins: 401.
+#
+# Package pin  Board signal                     I/O standard         Shell port
+# BJ43         sysclk0_p                        LVDS                 -
+# BJ44         sysclk0_n                        LVDS                 -
+# BH6          sysclk1_p                        LVDS                 -
+# BJ6          sysclk1_n                        LVDS                 -
+# G31          sysclk3_p                        LVDS                 sys_clk_3_p
+# F31          sysclk3_n                        LVDS                 sys_clk_3_n
+# B31          IIC_MAIN_RESET_B_LS              LVCMOS18             -
+# C30          IIC_SCL_MAIN                     LVCMOS18             -
+# C33          IIC_SDA_MAIN                     LVCMOS18             -
+# D31          IIC_MUX0_INTB_FPGA               LVCMOS18             -
+# L30          CPU_RESET                        LVCMOS18             -
+# D32          HBM_CATTRIP                      LVCMOS18             hbm_cattrip
+# B33          USB_UART_TX                      LVCMOS18             -
+# A28          USB_UART_RX                      LVCMOS18             -
+# BH41         c0_ddr4_act_n                    -                    -
+# BF46         c0_ddr4_adr0                     -                    -
+# BG43         c0_ddr4_adr1                     -                    -
+# BK45         c0_ddr4_adr2                     -                    -
+# BF42         c0_ddr4_adr3                     -                    -
+# BL45         c0_ddr4_adr4                     -                    -
+# BF43         c0_ddr4_adr5                     -                    -
+# BG42         c0_ddr4_adr6                     -                    -
+# BL43         c0_ddr4_adr7                     -                    -
+# BK43         c0_ddr4_adr8                     -                    -
+# BM42         c0_ddr4_adr9                     -                    -
+# BG45         c0_ddr4_adr10                    -                    -
+# BD41         c0_ddr4_adr11                    -                    -
+# BL42         c0_ddr4_adr12                    -                    -
+# BE44         c0_ddr4_adr13                    -                    -
+# BE43         c0_ddr4_adr14                    -                    -
+# BL46         c0_ddr4_adr15                    -                    -
+# BH44         c0_ddr4_adr16                    -                    -
+# BH45         c0_ddr4_ba0                      -                    -
+# BM47         c0_ddr4_ba1                      -                    -
+# BF41         c0_ddr4_bg0                      -                    -
+# BE41         c0_ddr4_bg1                      -                    -
+# BJ46         c0_ddr4_ck_c0                    -                    -
+# BH46         c0_ddr4_ck_t0                    -                    -
+# BH42         c0_ddr4_cke0                     -                    -
+# BK46         c0_ddr4_cs0_n                    -                    -
+# BN32         c0_ddr4_dq0                      -                    -
+# BP32         c0_ddr4_dq1                      -                    -
+# BL30         c0_ddr4_dq2                      -                    -
+# BM30         c0_ddr4_dq3                      -                    -
+# BP29         c0_ddr4_dq4                      -                    -
+# BP28         c0_ddr4_dq5                      -                    -
+# BP31         c0_ddr4_dq6                      -                    -
+# BN31         c0_ddr4_dq7                      -                    -
+# BJ31         c0_ddr4_dq8                      -                    -
+# BH31         c0_ddr4_dq9                      -                    -
+# BF32         c0_ddr4_dq10                     -                    -
+# BF33         c0_ddr4_dq11                     -                    -
+# BH29         c0_ddr4_dq12                     -                    -
+# BH30         c0_ddr4_dq13                     -                    -
+# BF31         c0_ddr4_dq14                     -                    -
+# BG32         c0_ddr4_dq15                     -                    -
+# BK31         c0_ddr4_dq16                     -                    -
+# BL31         c0_ddr4_dq17                     -                    -
+# BK33         c0_ddr4_dq18                     -                    -
+# BL33         c0_ddr4_dq19                     -                    -
+# BL32         c0_ddr4_dq20                     -                    -
+# BM33         c0_ddr4_dq21                     -                    -
+# BN34         c0_ddr4_dq22                     -                    -
+# BP34         c0_ddr4_dq23                     -                    -
+# BH34         c0_ddr4_dq24                     -                    -
+# BH35         c0_ddr4_dq25                     -                    -
+# BF35         c0_ddr4_dq26                     -                    -
+# BF36         c0_ddr4_dq27                     -                    -
+# BJ33         c0_ddr4_dq28                     -                    -
+# BJ34         c0_ddr4_dq29                     -                    -
+# BG34         c0_ddr4_dq30                     -                    -
+# BG35         c0_ddr4_dq31                     -                    -
+# BM52         c0_ddr4_dq32                     -                    -
+# BL53         c0_ddr4_dq33                     -                    -
+# BL52         c0_ddr4_dq34                     -                    -
+# BL51         c0_ddr4_dq35                     -                    -
+# BN50         c0_ddr4_dq36                     -                    -
+# BN51         c0_ddr4_dq37                     -                    -
+# BN49         c0_ddr4_dq38                     -                    -
+# BM48         c0_ddr4_dq39                     -                    -
+# BE50         c0_ddr4_dq40                     -                    -
+# BE49         c0_ddr4_dq41                     -                    -
+# BE51         c0_ddr4_dq42                     -                    -
+# BD51         c0_ddr4_dq43                     -                    -
+# BF52         c0_ddr4_dq44                     -                    -
+# BF51         c0_ddr4_dq45                     -                    -
+# BG50         c0_ddr4_dq46                     -                    -
+# BF50         c0_ddr4_dq47                     -                    -
+# BH50         c0_ddr4_dq48                     -                    -
+# BJ51         c0_ddr4_dq49                     -                    -
+# BH51         c0_ddr4_dq50                     -                    -
+# BH49         c0_ddr4_dq51                     -                    -
+# BK50         c0_ddr4_dq52                     -                    -
+# BK51         c0_ddr4_dq53                     -                    -
+# BJ49         c0_ddr4_dq54                     -                    -
+# BJ48         c0_ddr4_dq55                     -                    -
+# BN44         c0_ddr4_dq56                     -                    -
+# BN45         c0_ddr4_dq57                     -                    -
+# BM44         c0_ddr4_dq58                     -                    -
+# BM45         c0_ddr4_dq59                     -                    -
+# BP43         c0_ddr4_dq60                     -                    -
+# BP44         c0_ddr4_dq61                     -                    -
+# BN47         c0_ddr4_dq62                     -                    -
+# BP47         c0_ddr4_dq63                     -                    -
+# BG54         c0_ddr4_dq64                     -                    -
+# BG53         c0_ddr4_dq65                     -                    -
+# BE53         c0_ddr4_dq66                     -                    -
+# BE54         c0_ddr4_dq67                     -                    -
+# BH52         c0_ddr4_dq68                     -                    -
+# BG52         c0_ddr4_dq69                     -                    -
+# BK54         c0_ddr4_dq70                     -                    -
+# BK53         c0_ddr4_dq71                     -                    -
+# BN30         c0_ddr4_dqs_c0                   -                    -
+# BN29         c0_ddr4_dqs_t0                   -                    -
+# BM29         c0_ddr4_dqs_c1                   -                    -
+# BM28         c0_ddr4_dqs_t1                   -                    -
+# BK30         c0_ddr4_dqs_c2                   -                    -
+# BJ29         c0_ddr4_dqs_t2                   -                    -
+# BG30         c0_ddr4_dqs_c3                   -                    -
+# BG29         c0_ddr4_dqs_t3                   -                    -
+# BM35         c0_ddr4_dqs_c4                   -                    -
+# BL35         c0_ddr4_dqs_t4                   -                    -
+# BN35         c0_ddr4_dqs_c5                   -                    -
+# BM34         c0_ddr4_dqs_t5                   -                    -
+# BK35         c0_ddr4_dqs_c6                   -                    -
+# BK34         c0_ddr4_dqs_t6                   -                    -
+# BJ32         c0_ddr4_dqs_c7                   -                    -
+# BH32         c0_ddr4_dqs_t7                   -                    -
+# BM50         c0_ddr4_dqs_c8                   -                    -
+# BM49         c0_ddr4_dqs_t8                   -                    -
+# BP49         c0_ddr4_dqs_c9                   -                    -
+# BP48         c0_ddr4_dqs_t9                   -                    -
+# BF48         c0_ddr4_dqs_c10                  -                    -
+# BF47         c0_ddr4_dqs_t10                  -                    -
+# BG49         c0_ddr4_dqs_c11                  -                    -
+# BG48         c0_ddr4_dqs_t11                  -                    -
+# BJ47         c0_ddr4_dqs_c12                  -                    -
+# BH47         c0_ddr4_dqs_t12                  -                    -
+# BK49         c0_ddr4_dqs_c13                  -                    -
+# BK48         c0_ddr4_dqs_t13                  -                    -
+# BP46         c0_ddr4_dqs_c14                  -                    -
+# BN46         c0_ddr4_dqs_t14                  -                    -
+# BP42         c0_ddr4_dqs_c15                  -                    -
+# BN42         c0_ddr4_dqs_t15                  -                    -
+# BJ54         c0_ddr4_dqs_c16                  -                    -
+# BH54         c0_ddr4_dqs_t16                  -                    -
+# BJ53         c0_ddr4_dqs_c17                  -                    -
+# BJ52         c0_ddr4_dqs_t17                  -                    -
+# BG44         c0_ddr4_odt0                     -                    -
+# BG33         c0_ddr4_reset_n                  LVCMOS12             -
+# BF45         c0_ddr4_parity                   -                    -
+# BG3          c1_ddr4_act_n                    -                    -
+# BF7          c1_ddr4_adr0                     -                    -
+# BK1          c1_ddr4_adr1                     -                    -
+# BF6          c1_ddr4_adr2                     -                    -
+# BF5          c1_ddr4_adr3                     -                    -
+# BE3          c1_ddr4_adr4                     -                    -
+# BE6          c1_ddr4_adr5                     -                    -
+# BE5          c1_ddr4_adr6                     -                    -
+# BG7          c1_ddr4_adr7                     -                    -
+# BJ1          c1_ddr4_adr8                     -                    -
+# BG2          c1_ddr4_adr9                     -                    -
+# BJ8          c1_ddr4_adr10                    -                    -
+# BE4          c1_ddr4_adr11                    -                    -
+# BL2          c1_ddr4_adr12                    -                    -
+# BK5          c1_ddr4_adr13                    -                    -
+# BK8          c1_ddr4_adr14                    -                    -
+# BJ4          c1_ddr4_adr15                    -                    -
+# BF8          c1_ddr4_adr16                    -                    -
+# BG8          c1_ddr4_ba0                      -                    -
+# BK4          c1_ddr4_ba1                      -                    -
+# BF3          c1_ddr4_bg0                      -                    -
+# BF2          c1_ddr4_bg1                      -                    -
+# BJ2          c1_ddr4_ck_c0                    -                    -
+# BJ3          c1_ddr4_ck_t0                    -                    -
+# BE1          c1_ddr4_cke0                     -                    -
+# BL3          c1_ddr4_cs0_n                    -                    -
+# A11          c1_ddr4_dq0                      -                    -
+# A10          c1_ddr4_dq1                      -                    -
+# A9           c1_ddr4_dq2                      -                    -
+# A8           c1_ddr4_dq3                      -                    -
+# B12          c1_ddr4_dq4                      -                    -
+# B10          c1_ddr4_dq5                      -                    -
+# C12          c1_ddr4_dq6                      -                    -
+# B11          c1_ddr4_dq7                      -                    -
+# E11          c1_ddr4_dq8                      -                    -
+# D11          c1_ddr4_dq9                      -                    -
+# E12          c1_ddr4_dq10                     -                    -
+# F11          c1_ddr4_dq11                     -                    -
+# F10          c1_ddr4_dq12                     -                    -
+# E9           c1_ddr4_dq13                     -                    -
+# F9           c1_ddr4_dq14                     -                    -
+# G11          c1_ddr4_dq15                     -                    -
+# H12          c1_ddr4_dq16                     -                    -
+# G13          c1_ddr4_dq17                     -                    -
+# H13          c1_ddr4_dq18                     -                    -
+# H14          c1_ddr4_dq19                     -                    -
+# J11          c1_ddr4_dq20                     -                    -
+# J12          c1_ddr4_dq21                     -                    -
+# J15          c1_ddr4_dq22                     -                    -
+# J14          c1_ddr4_dq23                     -                    -
+# A14          c1_ddr4_dq24                     -                    -
+# C15          c1_ddr4_dq25                     -                    -
+# A15          c1_ddr4_dq26                     -                    -
+# B15          c1_ddr4_dq27                     -                    -
+# F15          c1_ddr4_dq28                     -                    -
+# E14          c1_ddr4_dq29                     -                    -
+# F14          c1_ddr4_dq30                     -                    -
+# F13          c1_ddr4_dq31                     -                    -
+# BM3          c1_ddr4_dq32                     -                    -
+# BM4          c1_ddr4_dq33                     -                    -
+# BM5          c1_ddr4_dq34                     -                    -
+# BL6          c1_ddr4_dq35                     -                    -
+# BN4          c1_ddr4_dq36                     -                    -
+# BN5          c1_ddr4_dq37                     -                    -
+# BN6          c1_ddr4_dq38                     -                    -
+# BN7          c1_ddr4_dq39                     -                    -
+# BJ9          c1_ddr4_dq40                     -                    -
+# BK9          c1_ddr4_dq41                     -                    -
+# BK10         c1_ddr4_dq42                     -                    -
+# BL10         c1_ddr4_dq43                     -                    -
+# BM9          c1_ddr4_dq44                     -                    -
+# BN9          c1_ddr4_dq45                     -                    -
+# BN10         c1_ddr4_dq46                     -                    -
+# BM10         c1_ddr4_dq47                     -                    -
+# BM15         c1_ddr4_dq48                     -                    -
+# BM14         c1_ddr4_dq49                     -                    -
+# BL15         c1_ddr4_dq50                     -                    -
+# BM13         c1_ddr4_dq51                     -                    -
+# BN12         c1_ddr4_dq52                     -                    -
+# BM12         c1_ddr4_dq53                     -                    -
+# BP13         c1_ddr4_dq54                     -                    -
+# BP14         c1_ddr4_dq55                     -                    -
+# BJ13         c1_ddr4_dq56                     -                    -
+# BJ12         c1_ddr4_dq57                     -                    -
+# BH15         c1_ddr4_dq58                     -                    -
+# BH14         c1_ddr4_dq59                     -                    -
+# BK14         c1_ddr4_dq60                     -                    -
+# BK15         c1_ddr4_dq61                     -                    -
+# BL12         c1_ddr4_dq62                     -                    -
+# BL13         c1_ddr4_dq63                     -                    -
+# BE9          c1_ddr4_dq64                     -                    -
+# BE10         c1_ddr4_dq65                     -                    -
+# BF10         c1_ddr4_dq66                     -                    -
+# BE11         c1_ddr4_dq67                     -                    -
+# BG13         c1_ddr4_dq68                     -                    -
+# BG12         c1_ddr4_dq69                     -                    -
+# BG9          c1_ddr4_dq70                     -                    -
+# BG10         c1_ddr4_dq71                     -                    -
+# A13          c1_ddr4_dqs_c0                   -                    -
+# B13          c1_ddr4_dqs_t0                   -                    -
+# C9           c1_ddr4_dqs_c1                   -                    -
+# C10          c1_ddr4_dqs_t1                   -                    -
+# D9           c1_ddr4_dqs_c2                   -                    -
+# D10          c1_ddr4_dqs_t2                   -                    -
+# G10          c1_ddr4_dqs_c3                   -                    -
+# H10          c1_ddr4_dqs_t3                   -                    -
+# G15          c1_ddr4_dqs_c4                   -                    -
+# H15          c1_ddr4_dqs_t4                   -                    -
+# K13          c1_ddr4_dqs_c5                   -                    -
+# K14          c1_ddr4_dqs_t5                   -                    -
+# D14          c1_ddr4_dqs_c6                   -                    -
+# D15          c1_ddr4_dqs_t6                   -                    -
+# D12          c1_ddr4_dqs_c7                   -                    -
+# E13          c1_ddr4_dqs_t7                   -                    -
+# BM7          c1_ddr4_dqs_c8                   -                    -
+# BL7          c1_ddr4_dqs_t8                   -                    -
+# BP6          c1_ddr4_dqs_c9                   -                    -
+# BP7          c1_ddr4_dqs_t9                   -                    -
+# BM8          c1_ddr4_dqs_c10                  -                    -
+# BL8          c1_ddr4_dqs_t10                  -                    -
+# BP8          c1_ddr4_dqs_c11                  -                    -
+# BP9          c1_ddr4_dqs_t11                  -                    -
+# BN14         c1_ddr4_dqs_c12                  -                    -
+# BN15         c1_ddr4_dqs_t12                  -                    -
+# BP11         c1_ddr4_dqs_c13                  -                    -
+# BP12         c1_ddr4_dqs_t13                  -                    -
+# BK13         c1_ddr4_dqs_c14                  -                    -
+# BJ14         c1_ddr4_dqs_t14                  -                    -
+# BK11         c1_ddr4_dqs_c15                  -                    -
+# BJ11         c1_ddr4_dqs_t15                  -                    -
+# BF11         c1_ddr4_dqs_c16                  -                    -
+# BF12         c1_ddr4_dqs_t16                  -                    -
+# BH9          c1_ddr4_dqs_c17                  -                    -
+# BH10         c1_ddr4_dqs_t17                  -                    -
+# BH2          c1_ddr4_odt0                     -                    -
+# BH12         c1_ddr4_reset_n                  LVCMOS12             -
+# BH1          c1_ddr4_parity                   -                    -
+# AR14         pcie_mgt_clkn                    -                    pcie_refclk_n
+# AR15         pcie_mgt_clkp                    -                    pcie_refclk_p
+# AL1          pcie_rx0_n                       -                    -
+# AL2          pcie_rx0_p                       -                    -
+# AM3          pcie_rx1_n                       -                    -
+# AM4          pcie_rx1_p                       -                    -
+# AN5          pcie_rx2_n                       -                    -
+# AN6          pcie_rx2_p                       -                    -
+# AN1          pcie_rx3_n                       -                    -
+# AN2          pcie_rx3_p                       -                    -
+# AP3          pcie_rx4_n                       -                    -
+# AP4          pcie_rx4_p                       -                    -
+# AR1          pcie_rx5_n                       -                    -
+# AR2          pcie_rx5_p                       -                    -
+# AT3          pcie_rx6_n                       -                    -
+# AT4          pcie_rx6_p                       -                    -
+# AU1          pcie_rx7_n                       -                    -
+# AU2          pcie_rx7_p                       -                    -
+# AV3          pcie_rx8_n                       -                    -
+# AV4          pcie_rx8_p                       -                    -
+# AW5          pcie_rx9_n                       -                    -
+# AW6          pcie_rx9_p                       -                    -
+# AW1          pcie_rx10_n                      -                    -
+# AW2          pcie_rx10_p                      -                    -
+# AY3          pcie_rx11_n                      -                    -
+# AY4          pcie_rx11_p                      -                    -
+# BA5          pcie_rx12_n                      -                    -
+# BA6          pcie_rx12_p                      -                    -
+# BA1          pcie_rx13_n                      -                    -
+# BA2          pcie_rx13_p                      -                    -
+# BB3          pcie_rx14_n                      -                    -
+# BB4          pcie_rx14_p                      -                    -
+# BC1          pcie_rx15_n                      -                    -
+# BC2          pcie_rx15_p                      -                    -
+# AL10         pcie_tx0_n                       -                    -
+# AL11         pcie_tx0_p                       -                    -
+# AM8          pcie_tx1_n                       -                    -
+# AM9          pcie_tx1_p                       -                    -
+# AN10         pcie_tx2_n                       -                    -
+# AN11         pcie_tx2_p                       -                    -
+# AP8          pcie_tx3_n                       -                    -
+# AP9          pcie_tx3_p                       -                    -
+# AR10         pcie_tx4_n                       -                    -
+# AR11         pcie_tx4_p                       -                    -
+# AR6          pcie_tx5_n                       -                    -
+# AR7          pcie_tx5_p                       -                    -
+# AT8          pcie_tx6_n                       -                    -
+# AT9          pcie_tx6_p                       -                    -
+# AU10         pcie_tx7_n                       -                    -
+# AU11         pcie_tx7_p                       -                    -
+# AU6          pcie_tx8_n                       -                    -
+# AU7          pcie_tx8_p                       -                    -
+# AV8          pcie_tx9_n                       -                    -
+# AV9          pcie_tx9_p                       -                    -
+# AW10         pcie_tx10_n                      -                    -
+# AW11         pcie_tx10_p                      -                    -
+# AY8          pcie_tx11_n                      -                    -
+# AY9          pcie_tx11_p                      -                    -
+# BA10         pcie_tx12_n                      -                    -
+# BA11         pcie_tx12_p                      -                    -
+# BB8          pcie_tx13_n                      -                    -
+# BB9          pcie_tx13_p                      -                    -
+# BC10         pcie_tx14_n                      -                    -
+# BC11         pcie_tx14_p                      -                    -
+# BC6          pcie_tx15_n                      -                    -
+# BC7          pcie_tx15_p                      -                    -
+# BH26         pcie_perstn_rst                  LVCMOS18             pcie_rstn
+# L49          qsfp0_TX_N0                      -                    -
+# L48          qsfp0_TX_P0                      -                    -
+# L54          qsfp0_RX_N0                      -                    -
+# L53          qsfp0_RX_P0                      -                    -
+# L45          qsfp0_TX_N1                      -                    -
+# L44          qsfp0_TX_P1                      -                    -
+# K52          qsfp0_RX_N1                      -                    -
+# K51          qsfp0_RX_P1                      -                    -
+# K47          qsfp0_TX_N2                      -                    -
+# K46          qsfp0_TX_P2                      -                    -
+# J54          qsfp0_RX_N2                      -                    -
+# J53          qsfp0_RX_P2                      -                    -
+# J49          qsfp0_TX_N3                      -                    -
+# J48          qsfp0_TX_P3                      -                    -
+# H52          qsfp0_RX_N3                      -                    -
+# H51          qsfp0_RX_P3                      -                    -
+# T43          qsfp0_156mhz_n                   -                    qsfp_refclk_n[0]
+# T42          qsfp0_156mhz_p                   -                    qsfp_refclk_p[0]
+# R41          qsfp0_161mhz_n                   -                    -
+# R40          qsfp0_161mhz_p                   -                    -
+# G49          qsfp1_TX_N0                      -                    -
+# G48          qsfp1_TX_P0                      -                    -
+# G54          qsfp1_RX_N0                      -                    -
+# G53          qsfp1_RX_P0                      -                    -
+# E49          qsfp1_TX_N1                      -                    -
+# E48          qsfp1_TX_P1                      -                    -
+# F52          qsfp1_RX_N1                      -                    -
+# F51          qsfp1_RX_P1                      -                    -
+# C49          qsfp1_TX_N2                      -                    -
+# C48          qsfp1_TX_P2                      -                    -
+# E54          qsfp1_RX_N2                      -                    -
+# E53          qsfp1_RX_P2                      -                    -
+# A50          qsfp1_TX_N3                      -                    -
+# A49          qsfp1_TX_P3                      -                    -
+# D52          qsfp1_RX_N3                      -                    -
+# D51          qsfp1_RX_P3                      -                    -
+# P43          qsfp1_156mhz_n                   -                    qsfp_refclk_n[1]
+# P42          qsfp1_156mhz_p                   -                    qsfp_refclk_p[1]
+# M43          qsfp1_161mhz_n                   -                    -
+# M42          qsfp1_161mhz_p                   -                    -
+# D29          satellite_uart_txd               LVCMOS18             satellite_uart_0_txd
+# E28          satellite_uart_rxd               LVCMOS18             satellite_uart_0_rxd
+# K28          satellite_gpio[0]                LVCMOS18             satellite_gpio[0]
+# J29          satellite_gpio[1]                LVCMOS18             satellite_gpio[1]
+# K29          satellite_gpio[2]                LVCMOS18             satellite_gpio[2]
+# J31          satellite_gpio[3]                LVCMOS18             satellite_gpio[3]
