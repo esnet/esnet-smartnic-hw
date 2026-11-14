@@ -52,6 +52,9 @@ module xilinx_alveo_usplus_au280
             // TODO: add CMS instance
         end : g__cms
         else begin : g__no_cms
+            // UART idle level while card management is disabled.
+            assign satellite_uart_0_txd = 1'b1;
+
             // Tie off unused CMS AXI-L interface
             axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (alveo_hw_if.axil_cms));
 

@@ -48,6 +48,13 @@ module xilinx_alveo_usplus_au250
             // TODO: add CMS instance
         end : g__cms
         else begin : g__no_cms
+            // Release module reset, enable normal power, and deselect the I2C interface.
+            assign qsfp_resetl  = '1;
+            assign qsfp_lpmode  = '0;
+            assign qsfp_modsell = '1;
+            // UART idle level while card management is disabled.
+            assign satellite_uart_0_txd = 1'b1;
+
             // Tie off unused CMS AXI-L interface
             axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (alveo_hw_if.axil_cms));
 
