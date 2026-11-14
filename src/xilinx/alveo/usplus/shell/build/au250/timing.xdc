@@ -5,7 +5,10 @@
 # PCIe reference clock: 100 MHz.
 create_clock -period 10.000 -name pcie_refclk [get_ports {pcie_refclk_p}]
 
-# The shell derives its 100 MHz clock from the QDMA 250 MHz clock;
+# SYSCLK1_300: 300 MHz, used to generate the free-running 100 MHz system clock.
+create_clock -period 3.333 -name sys_clk_300mhz [get_ports {clk1_300mhz_p}]
+
+# The shell derives its 100 MHz clock from the board's 300 MHz oscillator;
 # the clock-wizard IP supplies the generated-clock constraints.
 
 # CMAC IP constrains its reference and generated clocks.

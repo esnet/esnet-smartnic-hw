@@ -31,6 +31,10 @@ set_property -dict {PACKAGE_PIN AV21 IOSTANDARD LVCMOS12} [get_ports {qsfp_intl[
 set_property -dict {PACKAGE_PIN AV22 IOSTANDARD LVCMOS12 DRIVE 8} [get_ports {qsfp_lpmode[1]}]
 set_property -dict {PACKAGE_PIN AY20 IOSTANDARD LVCMOS12 DRIVE 8} [get_ports {qsfp_modsell[1]}]
 
+# 300 MHz system clock (SYSCLK1_300).
+set_property -dict {PACKAGE_PIN AW20 IOSTANDARD LVDS} [get_ports {clk1_300mhz_p}]
+set_property -dict {PACKAGE_PIN AW19 IOSTANDARD LVDS} [get_ports {clk1_300mhz_n}]
+
 # Satellite controller.
 set_property -dict {PACKAGE_PIN BB19 IOSTANDARD LVCMOS12 DRIVE 4} [get_ports {satellite_uart_0_txd}]
 set_property -dict {PACKAGE_PIN BA19 IOSTANDARD LVCMOS12} [get_ports {satellite_uart_0_rxd}]
@@ -51,8 +55,8 @@ set_property -dict {PACKAGE_PIN AN21 IOSTANDARD LVCMOS12} [get_ports {satellite_
 # Package pin  Board signal                     I/O standard         Shell port
 # AY38         SYSCLK0_300_N                    DIFF_POD12_DCI       -
 # AY37         SYSCLK0_300_P                    DIFF_POD12_DCI       -
-# AW19         SYSCLK1_300_N                    LVDS                 -
-# AW20         SYSCLK1_300_P                    LVDS                 -
+# AW19         SYSCLK1_300_N                    LVDS                 clk1_300mhz_n
+# AW20         SYSCLK1_300_P                    LVDS                 clk1_300mhz_p
 # E32          SYSCLK2_300_N                    DIFF_POD12_DCI       -
 # F32          SYSCLK2_300_P                    DIFF_POD12_DCI       -
 # H16          SYSCLK3_300_N                    DIFF_POD12_DCI       -

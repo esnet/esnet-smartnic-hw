@@ -32,10 +32,11 @@ module xilinx_alveo_usplus_au250
     assign pcie_txp = alveo_hw_if.pcie_txp;
     assign pcie_txn = alveo_hw_if.pcie_txn;
 
-    // Clock gen (250MHz to 100MHz)
-    // TODO: derive sys_clk from free-running source
+    // Free-running system clock (300MHz to 100MHz)
+    wire logic clk1_300mhz;
+    IBUFDS sys_clk_ibuf_inst (.I(clk1_300mhz_p), .IB(clk1_300mhz_n), .O(clk1_300mhz));
     xilinx_alveo_usplus_clk_100mhz i_xilinx_alveo_usplus_clk_100mhz (
-        .clk_in1  ( alveo_hw_if.clk_250mhz ),
+        .clk_in1  ( clk1_300mhz ),
         .clk_out1 ( alveo_hw_if.sys_clk_100mhz )
     );
 

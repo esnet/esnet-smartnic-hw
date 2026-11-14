@@ -21,6 +21,10 @@
     output wire logic [PCIE_LINK_WID-1:0] pcie_txn,
     input  wire logic                     pcie_rstn,
 
+    // Free-running clock
+    input  wire logic                     clk1_300mhz_p,
+    input  wire logic                     clk1_300mhz_n,
+
     // Satellite controller
     input  wire logic                     satellite_uart_0_rxd,
     output wire logic                     satellite_uart_0_txd,
