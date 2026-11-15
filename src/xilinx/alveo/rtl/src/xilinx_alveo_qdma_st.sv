@@ -75,13 +75,13 @@ module xilinx_alveo_qdma_st
     //
     // Both FIFOs are store-and-forward, so each must hold strictly more than
     // one maximum-length packet (packet_fifo_core checks DEPTH > MAX_PKT_WORDS).
-    // 256 words of 64 bytes covers packets up to just under 16 kB, which
-    // includes the 9100-byte jumbo default; beyond that, grow to the next power
-    // of two that clears the check.
+    // A minimum depth of 512 words selects block RAM and uses its full depth
+    // at the 64-byte data width. Grow to the next power of two as needed for
+    // larger maximum packets.
     // =========================================================================
     localparam int MAX_PKT_WORDS  = (MAX_PKT_LEN + AXIS_DATA_BYTE_WID - 1) / AXIS_DATA_BYTE_WID;
     localparam int MIN_FIFO_DEPTH = 2 ** $clog2(MAX_PKT_WORDS + 1);
-    localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 256 ? MIN_FIFO_DEPTH : 256;
+    localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 512 ? MIN_FIFO_DEPTH : 512;
     localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
     // =========================================================================
