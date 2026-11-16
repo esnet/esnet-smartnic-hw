@@ -665,6 +665,7 @@ validate_udplb_fec_u280:
       cat <<_EOF > hwapi.env
       SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
       SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=multi
       SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
       _EOF
     - cat hwapi.env
