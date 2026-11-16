@@ -52,7 +52,8 @@ P4_EGR_METADATA ?=
 # Options to pass to p4 compiler
 ifneq ($(P4_IGR_FILE),)
 P4_OPTS_DEFAULT := CONFIG.PKT_RATE {150} \
-                   CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
+                   CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true} \
+                   CONFIG.EN_STATS_REG {true}
 else
 P4_OPTS_DEFAULT :=
 endif

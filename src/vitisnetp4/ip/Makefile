@@ -9,7 +9,7 @@ include $(VITISNETP4_COMPONENT_ROOT)/config.mk
 # VitisNetP4 IP config
 # (additional options specified in $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
-P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true}
+P4_OPTS ?= CONFIG.PKT_RATE {150} CONFIG.OUTPUT_METADATA_FOR_DROPPED_PKTS {true} CONFIG.EN_STATS_REG {true}
 
 # ----------------------------------------------------
 # Defines
