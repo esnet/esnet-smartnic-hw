@@ -9,7 +9,7 @@ Documentation    SmartNIC egress queue (smartnic_egress_qs) hardware tests.
 Library          smartnic.tests.egress_qs.Library
 Variables        variables
 Variables        smartnic.lib.config
-Test Setup       Egr Qs Testcase Setup    ${dev}    ${num_p4_proc}
+Test Setup       Egr Qs Testcase Setup    ${dev}
 Test Teardown    Testcase Teardown        ${dev}
 Test Timeout     3 minutes
 

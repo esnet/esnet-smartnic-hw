@@ -5,6 +5,8 @@ import time
 
 from robot.api.deco import keyword, library
 
+import smartnic.lib.config as config
+
 from smartnic.lib.config       import *
 from smartnic.lib.packets      import *
 from smartnic.lib.probes       import *
@@ -100,9 +102,12 @@ def _pf_probe_names(port):
 # Setup
 # ---------------------------------------------------------------------------
 
-def egr_qs_testcase_setup(dev, num_p4_proc):
-    testcase_setup(dev, num_p4_proc)
-    p4_bypass_config(dev=dev, num_p4_proc=num_p4_proc, enable=1, port_type=0)  # port_type=0 (PHY).
+def egr_qs_testcase_setup(dev):
+    testcase_setup(dev)
+    if config.VERSAL:
+        from robot.libraries.BuiltIn import BuiltIn
+        BuiltIn().skip('Egress QS not implemented on Versal platform.')
+    p4_bypass_config(dev=dev, enable=1, port_type=0)  # port_type=0 (PHY).
     _egr_qs_enable(dev)
     _pq(dev).clear_all_counts()
 
@@ -514,8 +519,8 @@ def egr_qs_performance_test(dev, port, num, size, mpps, gbps):
 class Library:
 
     @keyword
-    def egr_qs_testcase_setup(self, dev, num_p4_proc):
-        egr_qs_testcase_setup(dev, num_p4_proc)
+    def egr_qs_testcase_setup(self, dev):
+        egr_qs_testcase_setup(dev)
 
     @keyword
     def testcase_teardown(self, dev):

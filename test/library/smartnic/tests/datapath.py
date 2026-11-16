@@ -5,6 +5,8 @@ import math
 
 from robot.api.deco import keyword, library
 
+import smartnic.lib.config as config
+
 from smartnic.lib.config  import *
 from smartnic.lib.packets import *
 from smartnic.lib.probes  import *
@@ -29,8 +31,8 @@ class Library:
         pkt_trunc_test(dev, num, len, port)
 
     @keyword
-    def p4_bypass_port_num_test(self, dev, num, port, num_p4_proc):
-        p4_bypass_port_num_test(dev, num, port, num_p4_proc)
+    def p4_bypass_port_num_test(self, dev, num, port):
+        p4_bypass_port_num_test(dev, num, port)
 
     @keyword
     def phy_path_test(self, dev, num, port):
@@ -49,8 +51,8 @@ class Library:
         app_bypass_reconfig_test(dev, num, size, port)
 
     @keyword
-    def hdr_length_reconfig_test(self, dev, num, size, port, num_p4_proc):
-        hdr_length_reconfig_test(dev, num, size, port, num_p4_proc)
+    def hdr_length_reconfig_test(self, dev, num, size, port):
+        hdr_length_reconfig_test(dev, num, size, port)
 
     @keyword
     def drops_to_bypass_test(self, dev, num, port):
@@ -69,8 +71,8 @@ class Library:
         drops_to_cmac_test(dev, num, size, port)
 
     @keyword
-    def testcase_setup(self, dev, num_p4_proc):
-        testcase_setup(dev, num_p4_proc)
+    def testcase_setup(self, dev):
+        testcase_setup(dev)
         
     @keyword
     def testcase_teardown(self, dev):
@@ -81,8 +83,8 @@ class Library:
         clear_switch_stats()
 
     @keyword
-    def hdr_length_config(self, dev, num_p4_proc, length):
-        hdr_length_config(dev, num_p4_proc, length)
+    def hdr_length_config(self, dev, length):
+        hdr_length_config(dev, length)
 
     @keyword
     def smartnic_app_fec_test(self, dev, num, port):
@@ -121,6 +123,7 @@ def pkt_accelerator_test(dev, port):
 
     tx_pkt = one_packet(size)
 
+    #pkt_accelerator_config (dev=dev, port=port, mux_out_sel=0, gt=True)  # mux_out_sel=0 (APP).
     pkt_accelerator_config (dev=dev, port=port, mux_out_sel=0, gt=False)  # mux_out_sel=0 (APP).
     pkt_accelerator_inject (dev, num, tx_pkt, port)
 
@@ -169,12 +172,12 @@ def random_traffic_test(dev, port):
 #===================================================================================================
 # P4 processor (p4_proc) tests
 #===================================================================================================
-def p4_bypass_port_num_test(dev, num, port, num_p4_proc):
+def p4_bypass_port_num_test(dev, num, port):
     # Note: switching ports with 'port_num' reg is supported by:
     # 'p4_proc_igr' for 'p4_only' apps, or 'p4_proc_egr' for 'multi_proc' apps.
 
     # configure to 'swap' ports.
-    if (num_p4_proc==2):
+    if (config.NUM_P4_PROC==2):
         if (port==0): dev.bar2.p4_proc_egr.p4_proc.p4_bypass_config.p4_bypass_egr_port_num_0 = 1
         else:         dev.bar2.p4_proc_egr.p4_proc.p4_bypass_config.p4_bypass_egr_port_num_1 = 0
     else:
@@ -241,7 +244,7 @@ def phy_path_test(dev, num, port):
     pkt_playback_config (dev=dev, port=port, mux_out_sel=2)  # mux_out_sel=2 (BYPASS).
     pkt_capture_config (dev, port)
 
-    cmac_loopback_config(dev=dev, port=port, enable=1, gt=False)  # enable smartnic cmac loopback.
+    cmac_loopback_config(dev=dev, port=port, enable=1, gt=True)  # enable smartnic cmac loopback.
 
     if (port==0):
         dev.bar2.smartnic_regs.smartnic_demux_out_sel.port0=0                        # BYPASS to PHY0.
@@ -339,7 +342,7 @@ def app_bypass_reconfig_test(dev, num, size, port):
 #---------------------------------------------------------------------------------------------------
 # Note: The smartnic datapath is NOT presently designed to pass the following test (Oct 3 2025, PB).
 #---------------------------------------------------------------------------------------------------
-def hdr_length_reconfig_test(dev, num, size, port, num_p4_proc):
+def hdr_length_reconfig_test(dev, num, size, port):
     tx_pkt = []
 
     # configure and enable packet accelerator(s).
@@ -352,10 +355,10 @@ def hdr_length_reconfig_test(dev, num, size, port, num_p4_proc):
 
     # iteratively reconfigure 'hdr_length' while pkt accelerator runs.
     for i in range(10):
-        hdr_length_config(dev, num_p4_proc, 128)
+        hdr_length_config(dev, 128)
         time.sleep(0.1) # wait in seconds, runtime before reconfig.
 
-        hdr_length_config(dev, num_p4_proc, 0)
+        hdr_length_config(dev, 0)
         time.sleep(0.1) # wait in seconds, runtime before reconfig.
 
     # extract packets
@@ -388,7 +391,7 @@ def drops_from_cmac_test(dev, num, size, port):
     FIFO_DEPTH = 1306 # 1024-4 (fifo_async) + 2x143 (axi4s_pkt_discard_ovfl).
 
     # configure datapath to buffer PHY traffic in ingress FIFOs.
-    pkt_playback_config (dev=dev, port=port, mux_out_sel=2)       # mux_out_sel=2 (BYPASS).
+    pkt_playback_config (dev=dev, port=port, mux_out_sel=2)       # mux_out_sel=2 (HOST to BYPASS).
     cmac_loopback_config(dev=dev, port=port, enable=1, gt=False)  # enable smartnic cmac loopback.
 
     if (port==0): dev.bar2.smartnic_regs.smartnic_mux_out_sel[0]._r.value=2   # PHY0 to BYPASS.
@@ -399,6 +402,7 @@ def drops_from_cmac_test(dev, num, size, port):
     # send packets.
     tx_pkt = one_packet(size)
     for i in range(num): pkt_playback (dev, tx_pkt, 2+port, port)  # playback from PF (2=PF0, 3=PF1).
+
 
     # compare expected pkt and byte counts.
     if (port==0):
@@ -411,27 +415,47 @@ def drops_from_cmac_test(dev, num, size, port):
     bytes = num * size
     check_probes (names, num, bytes, False)  # disable ZERO checks.
 
-    if (port==0): names = ['drops_ovfl_from_cmac_0']
-    else:         names = ['drops_ovfl_from_cmac_1']
+    metrics = read_probes()
+    if (port==0):
+        drop_pkts  = metrics['drops_ovfl_from_cmac_0.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_from_cmac_0.byte_count']['value']
+        good_pkts  = metrics['probe_from_cmac_0.pkt_count']['value']
+        good_bytes = metrics['probe_from_cmac_0.byte_count']['value']
+    else:
+        drop_pkts  = metrics['drops_ovfl_from_cmac_1.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_from_cmac_1.byte_count']['value']
+        good_pkts  = metrics['probe_from_cmac_1.pkt_count']['value']
+        good_bytes = metrics['probe_from_cmac_1.byte_count']['value']
 
-    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+1) # also accounts for buffering in open-nic-shell.
-    bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
+    _num = math.floor(FIFO_DEPTH/math.ceil(size/64))
+    _bytes = _num * size
+
+    if (good_pkts < _num):
+            raise AssertionError(f'Number of good packets {good_pkts} BELOW expected {_num}!')
+    if (good_bytes < _bytes):
+            raise AssertionError(f'Number of good bytes {good_bytes} BELOW expected {_bytes}!')
+    if ((good_pkts + drop_pkts) != num):
+            raise AssertionError(f'Sum of good {good_pkts} and dropped {drop_pkts} did NOT match expected {num}!')
+    if ((good_bytes + drop_bytes) != bytes):
+            raise AssertionError(f'Sum of good {good_bytes} and dropped {drop_bytes} did NOT match expected {bytes}!')
+    # Note: If drop counts are zero, test fails due to "KeyError: 'drops_ovfl_to_host_0.pkt_count'"
+
 
     # release and capture packets held in ingress FIFOs.
     pkt_capture_config (dev, port)
     dev.bar2.smartnic_regs.switch_config.igr_sw_tpause = 0  # deassert 'tpause' to igr FIFOs.
 
-    for i in range(_num):
+    for i in range(good_pkts):
         pkt_capture_trigger (dev)
         pkt_capture_read (dev, tx_pkt)
+
 
     # compare expected pkt and byte counts.
     if (port==0): names = ['probe_from_cmac_0', 'probe_to_bypass_0', 'probe_to_pf0_vf2']
     else:         names = ['probe_from_cmac_1', 'probe_to_bypass_1', 'probe_to_pf1_vf2']
 
-    bytes = _num * size
-    check_probes (names, _num, bytes, False)  # disable ZERO checks.
+    check_probes (names, good_pkts, good_bytes, False)  # disable ZERO checks.
+
 
     # validate that subsequent traffic passes properly.
     pkt_playback_capture_test (dev=dev, num=10, size=size, port=port, enable_probes=False)
@@ -466,18 +490,32 @@ def drops_to_host_test(dev, num, size, port):
     bytes = num * size
     check_probes (names, num, bytes, False)  # disable ZERO checks.
 
-    if (port==0): names = ['drops_ovfl_to_host_0']
-    else:         names = ['drops_ovfl_to_host_1']
 
-    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64))
-    bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
+    metrics = read_probes()
 
-    if (port==0): names = ['probe_to_host_0']
-    else:         names = ['probe_to_host_1']
+    if (port==0):
+        drop_pkts  = metrics['drops_ovfl_to_host_0.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_to_host_0.byte_count']['value']
+        good_pkts  = metrics['probe_to_host_0.pkt_count']['value']
+        good_bytes = metrics['probe_to_host_0.byte_count']['value']
+    else:
+        drop_pkts  = metrics['drops_ovfl_to_host_1.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_to_host_1.byte_count']['value']
+        good_pkts  = metrics['probe_to_host_1.pkt_count']['value']
+        good_bytes = metrics['probe_to_host_1.byte_count']['value']
 
-    bytes = _num * size
-    check_probes (names, _num, bytes, False)  # disable ZERO checks.
+    _num = math.floor(FIFO_DEPTH/math.ceil(size/64))
+    _bytes = _num * size
+
+    if (good_pkts < _num):
+            raise AssertionError(f'Number of good packets {good_pkts} BELOW expected {_num}!')
+    if (good_bytes < _bytes):
+            raise AssertionError(f'Number of good bytes {good_bytes} BELOW expected {_bytes}!')
+    if ((good_pkts + drop_pkts) != num):
+            raise AssertionError(f'Sum of good {good_pkts} and dropped {drop_pkts} did NOT match expected {num}!')
+    if ((good_bytes + drop_bytes) != bytes):
+            raise AssertionError(f'Sum of good {good_bytes} and dropped {drop_bytes} did NOT match expected {bytes}!')
+    # Note: If drop counts are zero, test fails due to "KeyError: 'drops_ovfl_to_host_0.pkt_count'"
 
 #---------------------------------------------------------------------------------------------------
 def drops_to_cmac_test(dev, num, size, port):
@@ -497,18 +535,32 @@ def drops_to_cmac_test(dev, num, size, port):
     bytes = num * size
     check_probes (names, num, bytes, False)  # disable ZERO checks.
 
-    if (port==0): names = ['drops_ovfl_to_cmac_0']
-    else:         names = ['drops_ovfl_to_cmac_1']
 
-    _num = math.ceil(FIFO_DEPTH/math.ceil(size/64)+2) # also accounts for buffering in open-nic-shell.
-    bytes = (num-_num) * size
-    check_probes (names, (num-_num), bytes, False)  # disable ZERO checks.
+    metrics = read_probes()
 
-    if (port==0): names = ['probe_to_cmac_0']
-    else:         names = ['probe_to_cmac_1']
+    if (port==0):
+        drop_pkts  = metrics['drops_ovfl_to_cmac_0.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_to_cmac_0.byte_count']['value']
+        good_pkts  = metrics['probe_to_cmac_0.pkt_count']['value']
+        good_bytes = metrics['probe_to_cmac_0.byte_count']['value']
+    else:
+        drop_pkts  = metrics['drops_ovfl_to_cmac_1.pkt_count']['value']
+        drop_bytes = metrics['drops_ovfl_to_cmac_1.byte_count']['value']
+        good_pkts  = metrics['probe_to_cmac_1.pkt_count']['value']
+        good_bytes = metrics['probe_to_cmac_1.byte_count']['value']
 
-    bytes = _num * size
-    check_probes (names, _num, bytes, False)  # disable ZERO checks.
+    _num = math.floor(FIFO_DEPTH/math.ceil(size/64))
+    _bytes = _num * size
+
+    if (good_pkts < _num):
+            raise AssertionError(f'Number of good packets {good_pkts} BELOW expected {_num}!')
+    if (good_bytes < _bytes):
+            raise AssertionError(f'Number of good bytes {good_bytes} BELOW expected {_bytes}!')
+    if ((good_pkts + drop_pkts) != num):
+            raise AssertionError(f'Sum of good {good_pkts} and dropped {drop_pkts} did NOT match expected {num}!')
+    if ((good_bytes + drop_bytes) != bytes):
+            raise AssertionError(f'Sum of good {good_bytes} and dropped {drop_bytes} did NOT match expected {bytes}!')
+    # Note: If drop counts are zero, test fails due to "KeyError: 'drops_ovfl_to_cmac_0.pkt_count'"
 
 
 #===================================================================================================

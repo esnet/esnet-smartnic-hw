@@ -3,7 +3,7 @@ Documentation    Smartnic datapath tests.
 Library          smartnic.tests.datapath.Library
 Variables        variables
 Variables        smartnic.lib.config
-Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
+Test Setup       Testcase Setup       ${dev}
 Test Teardown    Testcase Teardown    ${dev}
 Test Timeout     1 minute
 
@@ -14,7 +14,7 @@ Test Timeout     1 minute
 # Basic Traffic Tests
 # ----------------------------
 Datapath - Packet Playback Capture Test - Port 0
-    Pkt Playback Capture Test    dev=${dev}    num=${pkt_num}    size=${128}    port=${0}
+    Pkt Playback Capture Test    dev=${dev}    num=${pkt_num}    size=${pkt_size}    port=${0}
 
 Datapath - Packet Accelerator Test - Port 0
     Pkt Accelerator Test    dev=${dev}    port=${0}
@@ -29,19 +29,19 @@ Datapath - HdrLen 0 - Random Traffic - Port 1
     Random Traffic Test     dev=${dev}    port=${1}
 
 Datapath - HdrLen 64 - Random Traffic - Port 0
-    Hdr Length Config       dev=${dev}    num_p4_proc=${num_p4_proc}    length=${64}
+    Hdr Length Config       dev=${dev}    length=${64}
     Random Traffic Test     dev=${dev}    port=${0}
 
 Datapath - HdrLen 64 - Random Traffic - Port 1
-    Hdr Length Config       dev=${dev}    num_p4_proc=${num_p4_proc}    length=${64}
+    Hdr Length Config       dev=${dev}    length=${64}
     Random Traffic Test     dev=${dev}    port=${1}
 
 Datapath - HdrLen 192 - Random Traffic - Port 0
-    Hdr Length Config       dev=${dev}    num_p4_proc=${num_p4_proc}    length=${192}
+    Hdr Length Config       dev=${dev}    length=${192}
     Random Traffic Test     dev=${dev}    port=${0}
 
 Datapath - HdrLen 192 - Random Traffic - Port 1
-    Hdr Length Config       dev=${dev}    num_p4_proc=${num_p4_proc}    length=${192}
+    Hdr Length Config       dev=${dev}    length=${192}
     Random Traffic Test     dev=${dev}    port=${1}
 
 
@@ -49,10 +49,10 @@ Datapath - HdrLen 192 - Random Traffic - Port 1
 # P4 Processor Tests
 # ----------------------------
 Datapath - P4 Bypass Port Num - Port 0
-    P4 Bypass Port Num Test     dev=${dev}    num=${pkt_num}    port=${0}    num_p4_proc=${num_p4_proc}
+    P4 Bypass Port Num Test     dev=${dev}    num=${pkt_num}    port=${0}
 
 Datapath - P4 Bypass Port Num - Port 1
-    P4 Bypass Port Num Test     dev=${dev}    num=${pkt_num}    port=${1}    num_p4_proc=${num_p4_proc}
+    P4 Bypass Port Num Test     dev=${dev}    num=${pkt_num}    port=${1}
 
 Datapath - Packet Truncation - Port 0
     Pkt Trunc Test              dev=${dev}    num=${pkt_num}    len=${pkt_size}    port=${0}
@@ -76,10 +76,15 @@ Datapath - Bypass Swap Test - Port 0
 Datapath - Bypass Swap Test - Port 1
     Bypass Swap Test            dev=${dev}    num=${pkt_num}    port=${1}
 
+# Note: The following app probe tests assume a default passthru mode for the 'smartnic_app_igr'
+#       and 'smartnic_app_egr' RTL functions.  This test should be omitted from the regression
+#       for applications that fail this requirement.
 Datapath - Smartnic App Probes Test - Port 0
+    [Tags]    robot:skip
     Smartnic App Probes Test    dev=${dev}    num=${pkt_num}    port=${0}
 
 Datapath - Smartnic App Probes Test - Port 1
+    [Tags]    robot:skip
     Smartnic App Probes Test    dev=${dev}    num=${pkt_num}    port=${1}
 
 
@@ -90,8 +95,9 @@ Datapath - App Bypass Reconfig Test - Both Ports
     App Bypass Reconfig Test    dev=${dev}    num=${15}    size=${1472}    port=${2}
 
 # Note: the smartnic datapath is NOT presently designed to pass the following test (Oct 3 2025, PB).
-#Datapath - Hdr Length Reconfig Test - Both Ports
-#    Hdr Length Reconfig Test    dev=${dev}    num=${15}    size=${1472}    port=${2}    num_p4_proc=${num_p4_proc}
+Datapath - Hdr Length Reconfig Test - Both Ports
+    [Tags]    robot:skip
+    Hdr Length Reconfig Test    dev=${dev}    num=${15}    size=${1472}    port=${2}
 
 
 # ----------------------------
@@ -125,15 +131,17 @@ Datapath - Drops To CMAC Test - Port 1
 # ----------------------------
 # FEC Application Tests - Not included in smartnic hw regression suite.
 # ----------------------------
-#Datapath - FEC Application Test - Port 0
-#    Smartnic App FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
-#
-#Datapath - UDPLB FEC Application Test - Port 0
-#    #[Timeout]    5 minutes
-#    FOR    ${i}    IN RANGE    10    #100
-#        Smartnic App UDPLB FEC Test    dev=${dev}    size=${pkt_size}    port=${0}
-#        ${pkt_size}=    Evaluate    ${pkt_size} + 513
-#    END
+Datapath - FEC Application Test - Port 0
+    [Tags]    robot:skip
+    Smartnic App FEC Test    dev=${dev}    num=${pkt_num}    port=${0}
+
+Datapath - UDPLB FEC Application Test - Port 0
+    [Tags]    robot:skip
+    #[Timeout]    5 minutes
+    FOR    ${i}    IN RANGE    10    #100
+        Smartnic App UDPLB FEC Test    dev=${dev}    size=${pkt_size}    port=${0}
+        ${pkt_size}=    Evaluate    ${pkt_size} + 513
+    END
 
 
 *** Comments ***

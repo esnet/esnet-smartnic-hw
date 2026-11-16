@@ -14,16 +14,16 @@ class Library:
         performance_test(dev, port, num, size, mpps, gbps, gt, mux_out_sel)
 
     @keyword
-    def testcase_setup(self, dev, num_p4_proc):
-        testcase_setup(dev, num_p4_proc)
+    def testcase_setup(self, dev):
+        testcase_setup(dev)
         
     @keyword
     def testcase_teardown(self, dev):
         testcase_teardown(dev)
         
     @keyword
-    def hdr_length_config(self, dev, num_p4_proc, length):
-        hdr_length_config(dev, num_p4_proc, length)
+    def hdr_length_config(self, dev, length):
+        hdr_length_config(dev, length)
 
 
 

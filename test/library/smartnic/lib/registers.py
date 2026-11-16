@@ -41,7 +41,7 @@ def reg_block_rd(dev, block):
             print(f"{register['path']} = 0x{rd_value:x}")
 
 #---------------------------------------------------------------------------------------------------
-def reg_blocks(paths, root, num_p4_proc):
+def reg_blocks(paths, root, NUM_P4_PROC):
     # parses path list and extracts list of top-level blocks within specified root block.
 
     blocks = []
@@ -53,10 +53,13 @@ def reg_blocks(paths, root, num_p4_proc):
             'cmac0','qsfp28_i2c0','cmac_adapter0','cmac1','qsfp28_i2c1','cmac_adapter1',
             'sysmon0','sysmon1','sysmon2','qspi','cms']
 
+    # omit specified versal shell blocks.
+    omit.extend(['shell_cfg','qdma','dcmac0','dcmac1'])
+
     # omit HBM blocks
     omit.append('smartnic_egr_qs')
 
-    if (num_p4_proc==1): omit.append('p4_proc_egr')
+    if (NUM_P4_PROC==1): omit.append('p4_proc_egr')
 
     for path in paths:
         if path and path.startswith(prefix):

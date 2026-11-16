@@ -3,7 +3,7 @@ Documentation    Basic register tests.
 Library          smartnic.tests.registers.Library
 Variables        variables
 Variables        smartnic.lib.config
-Test Setup       Testcase Setup       ${dev}    ${num_p4_proc}
+Test Setup       Testcase Setup       ${dev}
 Test Teardown    Testcase Teardown    ${dev}
 Test Timeout     1 minute
 
@@ -22,7 +22,7 @@ Registers - FW Word to Bytes Endian Test
 
 Registers - Write-Read Test
     FOR    ${i}    IN RANGE    3
-        Reg Wr Rd Test    dev=${dev}    num_p4_proc=${num_p4_proc}
+        Reg Wr Rd Test    dev=${dev}
     END
 
 Registers - Timestamp Test
