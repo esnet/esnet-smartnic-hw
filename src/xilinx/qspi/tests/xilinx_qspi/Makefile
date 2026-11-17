@@ -8,7 +8,7 @@ waves ?= OFF
 SIM ?= xsim
 
 SUBCOMPONENTS = xilinx.qspi.rtl
-EXT_LIBS =
+EXT_LIBS = unisims_ver
 
 all: build_test sim
 build_test: _build_test

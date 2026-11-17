@@ -1,10 +1,12 @@
 `include "svunit_defines.svh"
 
-module xilinx_qspi_unit_test;
+module xilinx_qspi_test #(
+    parameter bit USE_CDC = 0
+);
     import svunit_pkg::svunit_testcase;
     import axi4l_pkg::*;
 
-    string name = "xilinx_qspi_ut";
+    string name = USE_CDC ? "xilinx_qspi_cdc_ut" : "xilinx_qspi_ut";
     svunit_testcase svunit_ut;
     `define SVUNIT_TIMEOUT 500us
 
@@ -20,13 +22,31 @@ module xilinx_qspi_unit_test;
     logic clk = 1'b0;
     logic reset_n = 1'b0;
     logic irq;
+    logic controller_clk = 1'b0;
+    logic sys_clk = 1'b0;
     always #10ns clk = ~clk; // 50 MHz reference, 25 MHz SPI SCK.
+    always #4ns controller_clk = ~controller_clk; // 125 MHz shell bus.
+    always #5ns sys_clk = ~sys_clk; // Free-running 100 MHz system clock.
 
     axi4l_intf #(.ADDR_WID(12)) axil_if ();
-    assign axil_if.aclk = clk;
+    assign axil_if.aclk = USE_CDC ? controller_clk : clk;
     assign axil_if.aresetn = reset_n;
 
-    xilinx_qspi DUT (.axil_if, .irq);
+    if (USE_CDC) begin : g_cdc
+        logic qspi_clk;
+        axi4l_intf axil_qspi ();
+        BUFGCE_DIV #(.BUFGCE_DIVIDE(2)) i_bufgce_div (
+            .I(sys_clk), .CE(1'b1), .CLR(1'b0), .O(qspi_clk)
+        );
+        axi4l_intf_cdc i_axi4l_intf_cdc (
+            .axi4l_if_from_controller(axil_if),
+            .clk_to_peripheral(qspi_clk),
+            .axi4l_if_to_peripheral(axil_qspi)
+        );
+        xilinx_qspi DUT (.axil_if(axil_qspi), .irq);
+    end else begin : g_direct
+        xilinx_qspi DUT (.axil_if, .irq);
+    end
 
     function void build();
         svunit_ut = new(name);
@@ -35,7 +55,7 @@ module xilinx_qspi_unit_test;
     task reset_dut();
         reset_n = 1'b0;
         repeat (16) @(posedge clk);
-        @(negedge clk) reset_n = 1'b1;
+        @(negedge axil_if.aclk) reset_n = 1'b1;
         repeat (32) @(posedge clk);
     endtask
 
@@ -150,4 +170,34 @@ module xilinx_qspi_unit_test;
 
     `SVUNIT_TESTS_END
 
+endmodule : xilinx_qspi_test
+
+module xilinx_qspi_unit_test;
+    xilinx_qspi_test #(.USE_CDC(0)) test_instance ();
+    svunit_pkg::svunit_testcase svunit_ut;
+    function void build();
+        test_instance.build();
+        svunit_ut = test_instance.svunit_ut;
+    endfunction
+    function void __register_tests();
+        test_instance.__register_tests();
+    endfunction
+    task run();
+        test_instance.run();
+    endtask
 endmodule : xilinx_qspi_unit_test
+
+module xilinx_qspi_cdc_unit_test;
+    xilinx_qspi_test #(.USE_CDC(1)) test_instance ();
+    svunit_pkg::svunit_testcase svunit_ut;
+    function void build();
+        test_instance.build();
+        svunit_ut = test_instance.svunit_ut;
+    endfunction
+    function void __register_tests();
+        test_instance.__register_tests();
+    endfunction
+    task run();
+        test_instance.run();
+    endtask
+endmodule : xilinx_qspi_cdc_unit_test

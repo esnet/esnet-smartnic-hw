@@ -34,11 +34,6 @@ module xilinx_alveo_usplus
 );
 
     // =========================================================================
-    // Parameters
-    // =========================================================================
-    localparam bit INCLUDE_QSPI = 0;
-
-    // =========================================================================
     // Parameter checking
     // =========================================================================
     initial begin
@@ -322,13 +317,29 @@ module xilinx_alveo_usplus
     // =========================================================================
     // QSPI flash access
     // =========================================================================
-    generate
-        if (INCLUDE_QSPI) begin : g__qspi
-            // TODO: Add QSPI instance
-        end : g__qspi
-        else begin : g__no_qspi
-            axi4l_intf_peripheral_term i_axi4l_term__qspi (.axi4l_if (axil_qspi));
-        end : g__no_qspi
-    endgenerate
+    logic qspi_clk;
+    axi4l_intf axil_qspi__50mhz ();
+
+    // Free-running 50 MHz reference produces 25 MHz SPI SCK.
+    BUFGCE_DIV #(
+        .BUFGCE_DIVIDE ( 2 )
+    ) i_bufgce_div__qspi (
+        .I   ( clk_100mhz_freerun ),
+        .CE  ( 1'b1 ),
+        .CLR ( 1'b0 ),
+        .O   ( qspi_clk )
+    );
+
+    // The CDC also synchronizes the peripheral reset into the QSPI domain.
+    axi4l_intf_cdc i_axi4l_intf_cdc__qspi (
+        .axi4l_if_from_controller ( axil_qspi ),
+        .clk_to_peripheral        ( qspi_clk ),
+        .axi4l_if_to_peripheral   ( axil_qspi__50mhz )
+    );
+
+    xilinx_qspi i_xilinx_qspi (
+        .axil_if ( axil_qspi__50mhz ),
+        .irq     ( ) // Register access uses polling.
+    );
 
 endmodule : xilinx_alveo_usplus

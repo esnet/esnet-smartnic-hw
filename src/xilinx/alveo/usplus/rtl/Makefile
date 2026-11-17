@@ -22,6 +22,7 @@ SUBCOMPONENTS = \
     xilinx.alveo.usplus.regio.rtl \
     xilinx.qdma.rtl \
     xilinx.cmac.rtl \
+    xilinx.qspi.rtl \
     xilinx.sysmon.rtl
 
 EXT_LIBS =

@@ -31,3 +31,22 @@ The IP's internal constraints do not replace these external timing
 requirements. See [PG153: Constraining the IP](https://docs.amd.com/r/en-US/pg153-axi-quad-spi/Constraining-the-IP).
 Micron command decoding assumes default VCR/NVCR dummy-cycle settings;
 see [PG153: Micron Memory](https://docs.amd.com/r/en-US/pg153-axi-quad-spi/Micron-Memory).
+
+The UltraScale+ Alveo shell runs this component from a 50 MHz clock divided
+from its free-running 100 MHz system clock, producing 25 MHz SCK. The common
+AXI-Lite CDC carries register transactions and synchronizes reset from the
+shell bus. Software polls the existing QSPI window at BAR2 + `0x220000`;
+the interrupt output is unused.
+
+The shell's `qspi.xdc` constrains the STARTUP flash clock, data, and select
+paths using conservative Micron STR timing limits. It budgets each board
+clock/data/select path independently at 0–2 ns propagation. Those bounds
+are assumptions to validate against the board routing, rather than measured
+trace delays. Runtime SPI timing is independent of the boot configuration
+settings in each board's `general.xdc`.
+
+Transmit setup is checked over the half-SCK period from a falling-edge data
+launch to the following rising-edge capture. The hold check uses the next
+falling-edge change; the intervening reference-clock edge does not update
+the transmit data. The receive path uses the IP's documented two-cycle
+capture relationship.
