@@ -5,6 +5,8 @@ COMPONENT_ROOT := ../..
 
 include $(COMPONENT_ROOT)/config.mk
 
+include $(CFG_ROOT)/vivado_ip.mk
+
 # ----------------------------------------------------
 # IP listing
 #
@@ -25,7 +27,7 @@ include $(COMPONENT_ROOT)/config.mk
 #	not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    xilinx_qspi
+    xilinx_axi_quad_spi
 
 # ----------------------------------------------------
 # Simulation sources
@@ -50,13 +52,13 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    xilinx_qspi/xilinx_qspi_sim_netlist.v
+    xilinx_axi_quad_spi/sim/xilinx_axi_quad_spi.vhd
 
 IP_SIM_INC_DIRS =
 
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
-EXT_LIBS =
+EXT_LIBS = axi_quad_spi_v$(IP_VER_AXI_QUAD_SPI)
 
 # ----------------------------------------------------
 # Options
