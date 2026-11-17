@@ -57,6 +57,7 @@ module xilinx_alveo_usplus
     axi4l_intf #() axil_cmac [NUM_CMAC] ();
     axi4l_intf #() axil_sysmon ();
     axi4l_intf #() axil_qspi ();
+    axi4l_intf #() axil_cms ();
 
     // =========================================================================
     // Host
@@ -125,7 +126,7 @@ module xilinx_alveo_usplus
         .cmac1_axil_if  ( axil_cmac[1] ),
         .sysmon_axil_if ( axil_sysmon ),
         .qspi_axil_if   ( axil_qspi ),
-        .cms_axil_if    ( alveo_hw_if.axil_cms )
+        .cms_axil_if    ( axil_cms )
     );
 
     // =========================================================================
@@ -317,29 +318,38 @@ module xilinx_alveo_usplus
     // =========================================================================
     // QSPI flash access
     // =========================================================================
-    logic qspi_clk;
+    logic mgmt_clk_50mhz;
     axi4l_intf axil_qspi__50mhz ();
 
-    // Free-running 50 MHz reference produces 25 MHz SPI SCK.
+    // Shared free-running 50 MHz peripheral clock; SPI SCK is 25 MHz.
     BUFGCE_DIV #(
         .BUFGCE_DIVIDE ( 2 )
-    ) i_bufgce_div__qspi (
+    ) i_bufgce_div__mgmt (
         .I   ( clk_100mhz_freerun ),
         .CE  ( 1'b1 ),
         .CLR ( 1'b0 ),
-        .O   ( qspi_clk )
+        .O   ( mgmt_clk_50mhz )
     );
 
     // The CDC also synchronizes the peripheral reset into the QSPI domain.
     axi4l_intf_cdc i_axi4l_intf_cdc__qspi (
         .axi4l_if_from_controller ( axil_qspi ),
-        .clk_to_peripheral        ( qspi_clk ),
+        .clk_to_peripheral        ( mgmt_clk_50mhz ),
         .axi4l_if_to_peripheral   ( axil_qspi__50mhz )
     );
 
     xilinx_qspi i_xilinx_qspi (
         .axil_if ( axil_qspi__50mhz ),
         .irq     ( ) // Register access uses polling.
+    );
+
+    // =========================================================================
+    // Card management access (board I/O is connected in the hardware layer)
+    // =========================================================================
+    axi4l_intf_cdc i_axi4l_intf_cdc__cms (
+        .axi4l_if_from_controller ( axil_cms ),
+        .clk_to_peripheral        ( mgmt_clk_50mhz ),
+        .axi4l_if_to_peripheral   ( alveo_hw_if.axil_cms )
     );
 
 endmodule : xilinx_alveo_usplus

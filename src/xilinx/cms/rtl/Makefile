@@ -23,8 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    axi4l.rtl@$(COMMON_LIB_NAME) \
-    xilinx.cms.ip
+    axi4l.rtl@$(COMMON_LIB_NAME)
 EXT_LIBS =
 
 # ----------------------------------------------------

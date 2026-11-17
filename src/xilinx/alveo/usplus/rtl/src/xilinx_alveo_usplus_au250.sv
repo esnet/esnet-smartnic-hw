@@ -9,11 +9,6 @@ module xilinx_alveo_usplus_au250
 );
 
     // =========================================================================
-    // Parameters
-    // =========================================================================
-    localparam bit INCLUDE_CMS = 0;
-
-    // =========================================================================
     // Port assignments
     // =========================================================================
     // QSFP
@@ -43,22 +38,21 @@ module xilinx_alveo_usplus_au250
     // =========================================================================
     // Card management subsystem
     // =========================================================================
-    generate
-        if (INCLUDE_CMS) begin : g__cms
-            // TODO: add CMS instance
-        end : g__cms
-        else begin : g__no_cms
-            // Release module reset, enable normal power, and deselect the I2C interface.
-            assign qsfp_resetl  = '1;
-            assign qsfp_lpmode  = '0;
-            assign qsfp_modsell = '1;
-            // UART idle level while card management is disabled.
-            assign satellite_uart_0_txd = 1'b1;
-
-            // Tie off unused CMS AXI-L interface
-            axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (alveo_hw_if.axil_cms));
-
-        end : g__no_cms
-    endgenerate
+    xilinx_alveo_usplus_cms i_xilinx_alveo_usplus_cms (
+        .axil_if            ( alveo_hw_if.axil_cms ),
+        .satellite_uart_rxd ( satellite_uart_0_rxd ),
+        .satellite_uart_txd ( satellite_uart_0_txd ),
+        .satellite_gpio     ( satellite_gpio ),
+        // HBM monitoring remains disabled until HBM controllers supply these.
+        .hbm_temp_1  ( 7'd0 ),
+        .hbm_temp_2  ( 7'd0 ),
+        .hbm_cattrip ( 1'b0 ),
+        .qsfp_modprsl ( qsfp_modprsl ),
+        .qsfp_intl    ( qsfp_intl ),
+        .qsfp_resetl  ( qsfp_resetl ),
+        .qsfp_lpmode  ( qsfp_lpmode ),
+        .qsfp_modsell ( qsfp_modsell ),
+        .irq ( ) // Software polls the CMS register window.
+    );
 
 endmodule : xilinx_alveo_usplus_au250

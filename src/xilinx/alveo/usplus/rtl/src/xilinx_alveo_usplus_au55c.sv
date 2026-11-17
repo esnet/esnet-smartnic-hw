@@ -9,11 +9,6 @@ module xilinx_alveo_usplus_au55c
 );
 
     // =========================================================================
-    // Parameters
-    // =========================================================================
-    localparam bit INCLUDE_CMS = 0;
-
-    // =========================================================================
     // HBM cattrip
     // =========================================================================
     // This pin must be tied to 0; otherwise the board might be unrecoverable
@@ -47,18 +42,21 @@ module xilinx_alveo_usplus_au55c
     // =========================================================================
     // Card management subsystem
     // =========================================================================
-    generate
-        if (INCLUDE_CMS) begin : g__cms
-            // TODO: add CMS instance
-        end : g__cms
-        else begin : g__no_cms
-            // UART idle level while card management is disabled.
-            assign satellite_uart_0_txd = 1'b1;
-
-            // Tie off unused CMS AXI-L interface
-            axi4l_intf_peripheral_term i_axi4l_intf_peripheral_term (.axi4l_if (alveo_hw_if.axil_cms));
-
-        end : g__no_cms
-    endgenerate
+    xilinx_alveo_usplus_cms i_xilinx_alveo_usplus_cms (
+        .axil_if            ( alveo_hw_if.axil_cms ),
+        .satellite_uart_rxd ( satellite_uart_0_rxd ),
+        .satellite_uart_txd ( satellite_uart_0_txd ),
+        .satellite_gpio     ( satellite_gpio ),
+        // HBM monitoring remains disabled until HBM controllers supply these.
+        .hbm_temp_1  ( 7'd0 ),
+        .hbm_temp_2  ( 7'd0 ),
+        .hbm_cattrip ( 1'b0 ),
+        .qsfp_modprsl ( '1 ),
+        .qsfp_intl    ( '1 ),
+        .qsfp_resetl  ( ),
+        .qsfp_lpmode  ( ),
+        .qsfp_modsell ( ),
+        .irq ( ) // Software polls the CMS register window.
+    );
 
 endmodule : xilinx_alveo_usplus_au55c

@@ -33,6 +33,7 @@ IP_LIST = \
     xilinx_alveo_usplus_clk \
     xilinx_alveo_usplus_clk_100mhz \
     xilinx_alveo_usplus_axil_ila \
+    xilinx_usplus_cms_subsystem \
     xilinx_alveo_usplus_qdma
 
 # ----------------------------------------------------
@@ -124,6 +125,12 @@ IP_SIM_SRC_FILES = \
 IP_SIM_INC_DIRS = \
     xilinx_alveo_usplus_qdma/ip_0/source
 
+# CMS expands into a device-specific block design. Use its flattened functional
+# model so simulation does not depend on generated block-design instance names.
+CMS_DCP := $(COMPONENT_OUT_PATH)/xilinx_usplus_cms_subsystem/xilinx_usplus_cms_subsystem.dcp
+CMS_SIM_NETLIST := $(COMPONENT_OUT_PATH)/xilinx_usplus_cms_subsystem/xilinx_usplus_cms_subsystem_sim_netlist.v
+SRC_FILES = $(CMS_SIM_NETLIST)
+
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 EXT_LIBS = \
@@ -169,3 +176,9 @@ proj_clean: _ip_proj_clean
 # Import Vivado IP management targets
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_manage_ip.mk
+
+# Finish IP synthesis before generating simulation products in the same project.
+_ip_sim_sources.intermediate: $(CMS_DCP)
+
+$(CMS_SIM_NETLIST): $(CMS_DCP) cms_sim.tcl _ip_sim_sources.intermediate
+	@vivado -mode batch -nojournal -nolog -source cms_sim.tcl -tclargs $(CMS_DCP) $@

@@ -31,6 +31,9 @@ EXT_LIBS =
 # Defines
 # ----------------------------------------------------
 DEFINES =
+ifeq ($(BOARD),au250)
+DEFINES += XILINX_USPLUS_CMS_QSFP_IO
+endif
 
 # ----------------------------------------------------
 # Options
