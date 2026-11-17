@@ -16,10 +16,11 @@ bitstream:   .shell_proj_bitstream
 reg_package: .shell_proj_regio
 info:        .shell_proj_info
 hwapi:       .shell_proj_hwapi
+package:     .shell_proj_package
 p4_driver:   .shell_proj_p4_driver
 build_clean: .shell_proj_build_clean
 clean:       .shell_proj_clean
 clean_all:   .shell_proj_clean_all
 restore:     .shell_proj_restore
 
-.PHONY: config build pdi bitstream reg_package info hwapi p4_driver build_clean clean clean_all restore
+.PHONY: config build pdi bitstream reg_package info hwapi package p4_driver build_clean clean clean_all restore

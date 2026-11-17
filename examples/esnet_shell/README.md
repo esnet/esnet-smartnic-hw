@@ -30,12 +30,33 @@ make info BOARD=au55c
 make reg_package BOARD=au55c
 make BOARD=au55c
 make hwapi BOARD=au55c
+make package BOARD=au55c
 ```
 
 `config` creates the local project configuration. `info` shows the selected
 shell, core, checkpoints, and outputs. `reg_package` generates the register
 map for the selected platform and core. `hwapi` packages that map and the
 programming artifacts after a successful build.
+
+`package` runs `hwapi` and writes
+`artifacts/artifacts.<board>.esnet_shell.0.zip`. The archive contains the
+`esnet-smartnic-hwapi/<board>/` tree expected by the firmware repository, including
+the compressed programming files, debug probes, register map, and optional
+directories required by its importer. It uses the existing build outputs
+without rerunning implementation.
+
+Set `SHELL_PACKAGE_VERSION` to override the archive version (the default is
+`BUILD_ID`, or `0` when unset), and `SHELL_PACKAGE_DIR` to select another
+output directory. For example:
+
+```sh
+make package BOARD=au280 SHELL_PACKAGE_VERSION=123
+make package BOARD=av80
+```
+
+Copy the ZIP into the firmware repository's `sn-hw/` directory and set
+`SN_HW_BOARD`, `SN_HW_APP_NAME=esnet_shell`, and `SN_HW_VER` to match its name.
+CI package jobs use `hwapi` directly and GitLab archives the same tree.
 
 Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
 `build/<board>/out/esnet_smartnic/build/`:

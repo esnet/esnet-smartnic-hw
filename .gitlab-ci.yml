@@ -325,6 +325,35 @@ shell_ip_au55c:
     expire_in: 2 weeks
   timeout: 10h
 
+# Native shell builds use the board-selected flow rather than OpenNIC CI.
+.shell_bitstream:
+  variables:
+    SN_HW_APP_DIR: $SN_HW_APP_NAME
+  stage: bitfile
+  extends: .common
+  tags:
+    - ht-synth
+  script:
+    - |
+      cat <<_EOF >> bitfile.env
+      EXAMPLES_DIR=$EXAMPLES_DIR
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_APP_DIR=$SN_HW_APP_DIR
+      SN_HW_BOARD=$SN_HW_BOARD
+      _EOF
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR bitstream BOARD=$SN_HW_BOARD
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR reg_package BOARD=$SN_HW_BOARD
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - $EXAMPLES_DIR/$SN_HW_APP_DIR/build
+    when: always
+    expire_in: 2 weeks
+    reports:
+      dotenv: bitfile.env
+  needs: []
+  timeout: 10h
+
 .versal_pdi:
   stage: bitfile
   extends: .common_versal
@@ -499,23 +528,30 @@ build_p4_only_av80:
     SN_HW_BOARD: av80
 
 build_shell_au55c:
-  extends: .bitfile
+  extends: .shell_bitstream
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: au55c
-  needs:
-    - ons_ip_au55c
   when: manual
 
 build_shell_au280:
-  extends: .bitfile
+  extends: .shell_bitstream
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
+  when: manual
+
+build_shell_au250:
+  extends: .shell_bitstream
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
+    SN_HW_BOARD: au250
   when: manual
 
 .validate:
@@ -624,7 +660,7 @@ validate_udplb_fec_u280:
         hwapi.env
   timeout: 30m
 
-.hwapi_versal:
+.hwapi_shell:
   stage: package
   extends: .common
   tags:
@@ -640,7 +676,7 @@ validate_udplb_fec_u280:
       SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
       _EOF
     - cat hwapi.env
-    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR hwapi SHELL_HWAPI_DIR=${CI_PROJECT_DIR}/esnet-smartnic-hwapi/${SN_HW_BOARD}
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR hwapi BOARD=$SN_HW_BOARD SHELL_HWAPI_DIR=${CI_PROJECT_DIR}/esnet-smartnic-hwapi/${SN_HW_BOARD}
 
   artifacts:
     name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
@@ -730,24 +766,29 @@ hwapi_udplb_fec_u280:
     - build_udplb_fec_u280
 
 hwapi_udplb_fec_av80:
-  extends: .hwapi_versal
+  extends: .hwapi_shell
   needs:
     - build_udplb_fec_av80
 
 hwapi_p4_only_av80:
-  extends: .hwapi_versal
+  extends: .hwapi_shell
   needs:
     - build_p4_only_av80
 
 hwapi_shell_au55c:
-  extends: .hwapi
+  extends: .hwapi_shell
   needs:
     - build_shell_au55c
 
 hwapi_shell_au280:
-  extends: .hwapi
+  extends: .hwapi_shell
   needs:
     - build_shell_au280
+
+hwapi_shell_au250:
+  extends: .hwapi_shell
+  needs:
+    - build_shell_au250
 
 hwapi_shell:
   extends: .hwapi_gather
@@ -757,6 +798,8 @@ hwapi_shell:
     - job: hwapi_shell_au280
       artifacts: true
     - job: hwapi_shell_au55c
+      artifacts: true
+    - job: hwapi_shell_au250
       artifacts: true
     - job: hwapi_shell_av80
       artifacts: true
@@ -907,11 +950,11 @@ build_shell_av80:
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: versal_shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: av80
   when: always
 
 hwapi_shell_av80:
-  extends: .hwapi_versal
+  extends: .hwapi_shell
   needs:
     - build_shell_av80

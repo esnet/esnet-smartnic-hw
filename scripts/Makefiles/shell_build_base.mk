@@ -278,15 +278,17 @@ SHELL_HWAPI_DIR        ?= $(COMPONENT_OUT_PATH)/hwapi
 SHELL_HWAPI_FW_DIR     := $(SHELL_HWAPI_DIR)/firmware
 SHELL_HWAPI_SW_DIR     := $(SHELL_HWAPI_DIR)/software
 SHELL_HWAPI_REGMAP_DIR := $(SHELL_HWAPI_DIR)/regmap
-SHELL_HWAPI_P4_DRV_DIR := $(strip $(if $(or $(P4_IGR_FILE),$(P4_EGR_FILE)),\
-                              $(SHELL_HWAPI_DIR)/libvitisnetp4drv))
+SHELL_HWAPI_P4_DRV_DIR := $(SHELL_HWAPI_DIR)/libvitisnetp4drv
 
 SHELL_HWAPI_DIRS := \
     $(SHELL_HWAPI_DIR) \
     $(SHELL_HWAPI_FW_DIR) \
     $(SHELL_HWAPI_SW_DIR) \
     $(SHELL_HWAPI_REGMAP_DIR) \
+    $(SHELL_HWAPI_REGMAP_DIR)/spec \
+    $(SHELL_HWAPI_DIR)/wireshark \
     $(SHELL_HWAPI_P4_DRV_DIR)
+# The firmware importer expects these directories even without P4 or dissectors.
 $(SHELL_HWAPI_DIRS):
 	@mkdir -p $@
 

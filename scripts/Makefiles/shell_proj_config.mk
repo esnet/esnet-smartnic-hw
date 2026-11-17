@@ -259,8 +259,19 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 	        echo "Error: project not configured — run 'make build' first."; \
 	        exit 1; \
 	    }
-	@$(SMARTNIC_COMP_CMD) hwapi
+	@$(SMARTNIC_COMP_CMD) hwapi SHELL_HWAPI_DIR=$(SHELL_HWAPI_DIR)
 .PHONY: .shell_proj_hwapi
+
+# Local equivalent of the firmware-facing GitLab artifact archive.
+SHELL_HWAPI_DIR ?= $(__SPC_BUILD_OUT_DIR)/esnet_smartnic/build/hwapi
+SHELL_PACKAGE_DIR ?= $(CURDIR)/artifacts
+SHELL_PACKAGE_VERSION ?= $(or $(BUILD_ID),0)
+SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(notdir $(CURDIR)).$(SHELL_PACKAGE_VERSION).zip
+
+.shell_proj_package: .shell_proj_hwapi
+	@python3 $(SMARTNIC_ROOT)/scripts/package_hwapi.py \
+	    --hwapi-dir $(SHELL_HWAPI_DIR) --output $(SHELL_PACKAGE_FILE) --board $(BOARD)
+.PHONY: .shell_proj_package
 
 .shell_proj_p4_driver: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_COMP_CMD) p4_driver
