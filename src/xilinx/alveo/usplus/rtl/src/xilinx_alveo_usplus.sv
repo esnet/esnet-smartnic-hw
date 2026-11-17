@@ -22,10 +22,10 @@ module xilinx_alveo_usplus
     axi4s_intf.tx         axis_cmac_rx [NUM_CMAC],
     axi4s_intf.rx         axis_cmac_tx [NUM_CMAC],
     // -- DMA (streaming)
-    output logic         dma_aclk,
-    output logic         dma_aresetn,
-    packet_intf.tx       pkt_h2c_dma,
-    packet_intf.rx       pkt_c2h_dma,
+    output logic          dma_aclk,
+    output logic          dma_aresetn,
+    packet_intf.tx        pkt_h2c_dma,
+    packet_intf.rx        pkt_c2h_dma,
     axi4l_intf.controller axil_qdma_st,
     // -- AXI-L (Controller, to top-level regmap)
     axi4l_intf.controller axil_top,
