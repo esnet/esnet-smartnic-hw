@@ -28,7 +28,8 @@ Each core must expose the `shell_intf.core` boundary.
 make config BOARD=au55c
 make info BOARD=au55c
 make reg_package BOARD=au55c
-make BOARD=au55c
+make build BOARD=au55c
+make image BOARD=au55c
 make hwapi BOARD=au55c
 make package BOARD=au55c
 ```
@@ -65,10 +66,20 @@ Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
 - Versal: `esnet_smartnic_app.pdi`, `esnet_smartnic_nofpt.pdi`, and
   `esnet_smartnic.ltx`, together with the hardware PDI and XSA.
 
-Explicit `bitstream` (UltraScale+) and `pdi` (Versal) targets select the same
-programming outputs as the default target. `build` runs the platform hardware
-assembly; on Versal, use `pdi` to also generate the firmware PDI variants.
+The public targets are the same for every board. `build` implements the
+design through routing and post-route optimization. `image` also exports
+the platform's programming files: BIT/BIN/LTX on UltraScale+, or the
+hardware and firmware PDIs, XSA, and LTX on Versal. Plain `make` defaults to
+`image`; board selection and the native export steps happen internally.
 
 `build_clean` removes assembly output, `clean` removes the selected board's
 build directory, and `clean_all` removes all board builds. `restore` restores
 the backup saved by the configuration flow when the build settings change.
+
+CI jobs named `build_esnet_shell_<board>` and `hwapi_esnet_shell_<board>`
+build and package this native example. `hwapi_esnet_shell` gathers all four
+boards into one deliverable. The existing `build_shell_au55c` and
+`build_shell_au280` jobs continue to build the OpenNIC `examples/shell`
+design; their `hwapi_shell` gather and bootstrap trigger retain the upstream
+handoff. The V80 shell job uses this native example under the handoff name
+`shell`.

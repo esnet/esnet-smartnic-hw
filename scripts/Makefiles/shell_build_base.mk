@@ -40,7 +40,7 @@
 #
 # Targets provided (dot-prefixed so they are skipped by Make when selecting
 # the default goal; expose with public names in the including Makefile):
-#   .shell_build        - build through the last BUILD_STAGES entry
+#   .shell_build        - implement through route_opt
 #   .shell_build_clean  - clean via _build_clean
 #   .shell_build_info   - print shell build configuration
 
@@ -120,7 +120,7 @@ $(__SB_INPUT_DCPS): FORCE | _pre_synth
 #   build: .shell_build
 #   clean: .shell_build_clean
 # -----------------------------------------------
-.shell_build: _np_$(lastword $(BUILD_STAGES))
+.shell_build: _np_route_opt
 .PHONY: .shell_build
 
 .shell_build_clean: _build_clean

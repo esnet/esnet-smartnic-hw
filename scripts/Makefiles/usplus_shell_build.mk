@@ -31,8 +31,8 @@ __USB_BITSTREAM := $(COMPONENT_OUT_PATH)/$(TOP).bit
 __USB_BIN := $(COMPONENT_OUT_PATH)/$(TOP).bin
 __USB_LTX := $(COMPONENT_OUT_PATH)/$(TOP).ltx
 
-.shell_build_bitstream: _np_bitstream
-.PHONY: .shell_build_bitstream
+.shell_build_image: _np_bitstream
+.PHONY: .shell_build_image
 
 .shell_build_info: .usplus_shell_build_info
 .usplus_shell_build_info:

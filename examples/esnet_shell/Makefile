@@ -5,14 +5,13 @@ BOARD          ?= av80
 CORE_BUILD_REF ?= core.stub.build
 
 # The platform build flow is selected by BOARD in shell_build.mk.
-.DEFAULT_GOAL := $(if $(filter av%,$(BOARD)),pdi,bitstream)
+.DEFAULT_GOAL := image
 
 include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_proj_config.mk
 
 config:      .configure
 build:       .shell_proj_build
-pdi:         .shell_proj_pdi
-bitstream:   .shell_proj_bitstream
+image:       .shell_proj_image
 reg_package: .shell_proj_regio
 info:        .shell_proj_info
 hwapi:       .shell_proj_hwapi
@@ -23,4 +22,4 @@ clean:       .shell_proj_clean
 clean_all:   .shell_proj_clean_all
 restore:     .shell_proj_restore
 
-.PHONY: config build pdi bitstream reg_package info hwapi package p4_driver build_clean clean clean_all restore
+.PHONY: config build image reg_package info hwapi package p4_driver build_clean clean clean_all restore

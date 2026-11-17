@@ -1,6 +1,6 @@
 # p4_only example build
 
-.DEFAULT_GOAL := pdi
+.DEFAULT_GOAL := image
 
 SMARTNIC_ROOT  := $(abspath ../..)
 BOARD          ?= av80
@@ -14,7 +14,7 @@ P4_IGR_FILE    ?= $(CURDIR)/p4/p4_only.p4
 include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_proj_config.mk
 
 build:       .shell_proj_build
-pdi:         .shell_proj_pdi
+image:       .shell_proj_image
 reg_package: .shell_proj_regio
 info:        .shell_proj_info
 hwapi:       .shell_proj_hwapi
@@ -24,4 +24,4 @@ clean:       .shell_proj_clean
 clean_all:   .shell_proj_clean_all
 restore:     .shell_proj_restore
 
-.PHONY: build pdi reg_package info hwapi p4_driver build_clean clean clean_all restore
+.PHONY: build image reg_package info hwapi p4_driver build_clean clean clean_all restore
