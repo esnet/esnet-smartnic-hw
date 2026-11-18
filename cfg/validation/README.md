@@ -19,7 +19,7 @@ The default label is `<board>.<example-directory>`, for example
 separate build configuration.
 
 Image, register-package, and driver targets retain command transcripts in
-`build/<board>/validation-inputs/`. The manual IP-preparation job retains
+`build/<board>/validation-inputs/`. The IP-preparation job retains
 its transcript at
 `examples/esnet_shell/build/<board>/out/validation-inputs/ip.log`, alongside
 cached output products. The adapter supplies these required transcripts

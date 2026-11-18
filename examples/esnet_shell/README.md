@@ -92,7 +92,7 @@ and downloads its output artifacts; it also reads the cache. The build
 refreshes the IP configuration so changed configurations are regenerated
 while unchanged output products are reused.
 
-The manual `shell_ip_av80` job uses the Versal tool environment to prepare
+The automatic `shell_ip_av80` job uses the Versal tool environment to prepare
 AVED's patched block design and the DCMAC, GTM, clocking, and debug IP.
 All Versal image jobs require its output artifacts and read its cache.
 Other examples link their Xilinx output tree to those prepared artifacts,

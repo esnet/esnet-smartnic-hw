@@ -327,9 +327,7 @@ shell_ip_av80:
   extends: .shell_ip_versal
   variables:
     SN_HW_BOARD: av80
-  rules:
-    - when: manual
-      allow_failure: true
+  when: always
 
 .bitfile:
   stage: bitfile
