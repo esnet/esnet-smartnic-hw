@@ -313,7 +313,15 @@ module xilinx_alveo_usplus
     // =========================================================================
     // System monitor
     // =========================================================================
-    xilinx_sysmon_wrapper i_xilinx_sysmon_wrapper (.axil_if (axil_sysmon));
+    axi4l_intf axil_sysmon__100mhz ();
+
+    axi4l_intf_cdc i_axi4l_intf_cdc__sysmon (
+        .axi4l_if_from_controller ( axil_sysmon ),
+        .clk_to_peripheral        ( clk_100mhz_freerun ),
+        .axi4l_if_to_peripheral   ( axil_sysmon__100mhz )
+    );
+
+    xilinx_sysmon_wrapper i_xilinx_sysmon_wrapper (.axil_if (axil_sysmon__100mhz));
 
     // =========================================================================
     // QSPI flash access

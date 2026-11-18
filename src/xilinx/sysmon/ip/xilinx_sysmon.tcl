@@ -2,6 +2,7 @@ set module_name xilinx_sysmon
 create_ip -name system_management_wiz -vendor xilinx.com -library ip -module_name $module_name -dir . -force
 set_property -dict {
     CONFIG.INTERFACE_SELECTION {Enable_AXI}
+    CONFIG.DCLK_FREQUENCY {100}
     CONFIG.ENABLE_RESET {false}
     CONFIG.OT_ALARM {false} 
     CONFIG.USER_TEMP_ALARM {false} 

@@ -1,4 +1,10 @@
-# UltraScale+ Alveo card management
+# UltraScale+ Alveo management
+
+SYSMON uses the free-running 100 MHz board clock and its own library
+AXI-Lite CDC from the 125 MHz register bus, including reset synchronization.
+Its divide-by-20 setting produces a 5 MHz ADC clock. The register window
+starts at BAR2 + `0x210000` and spans 8 KiB, matching the IP address width;
+addresses above this window are not forwarded to SYSMON.
 
 `xilinx_alveo_usplus_cms` connects the board-specific CMS Subsystem 4.0 IP,
 `xilinx_usplus_cms_subsystem`, to a 32-bit AXI-Lite interface and the card's

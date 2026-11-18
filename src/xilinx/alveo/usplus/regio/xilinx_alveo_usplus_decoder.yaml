@@ -38,7 +38,7 @@ interfaces:
 
   - decoder: *sysmon_decoder
     address: 0x010000
-    width: 14
+    width: 13
     name: sysmon
 
   - block: *qspi
