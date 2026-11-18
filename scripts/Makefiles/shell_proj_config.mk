@@ -237,11 +237,11 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 .PHONY: .shell_proj_build_clean
 
 .shell_proj_image: $(__SPC_CONFIGURED)
-	@$(SMARTNIC_COMP_CMD) image
+	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/image.log -- $(SMARTNIC_COMP_CMD) image
 .PHONY: .shell_proj_image
 
 .shell_proj_regio: $(__SPC_CONFIGURED)
-	@$(SMARTNIC_COMP_CMD) regio
+	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/reg_package.log -- $(SMARTNIC_COMP_CMD) regio
 .PHONY: .shell_proj_regio
 
 .shell_proj_info: $(__SPC_CONFIGURED)
@@ -269,7 +269,7 @@ SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(notdir $(CURDIR)
 .PHONY: .shell_proj_package
 
 .shell_proj_p4_driver: $(__SPC_CONFIGURED)
-	@$(SMARTNIC_COMP_CMD) p4_driver
+	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/p4_driver.log -- $(SMARTNIC_COMP_CMD) p4_driver
 .PHONY: .shell_proj_p4_driver
 
 # -----------------------------------------------
@@ -299,3 +299,17 @@ SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(notdir $(CURDIR)
 	@rm -rf $(CURDIR)/build
 	@echo "Done."
 .PHONY: .shell_proj_clean_all
+
+# Shell-specific paths and waiver scopes; validation itself is library-owned.
+VALIDATION_NAME ?= $(BOARD).$(notdir $(CURDIR))
+VALIDATION_DIR ?= $(BUILD_DIR)/validation
+VALIDATION_TOP ?= $(if $(filter $(BOARD),au55c au280 au250),esnet_shell,esnet_smartnic)
+VALIDATION_CHECKPOINT ?= $(__SPC_BUILD_OUT_DIR)/esnet_smartnic/build/$(VALIDATION_TOP).route_opt.dcp
+VALIDATION_INPUTS ?= $(wildcard $(foreach phase,synth link opt place place_opt route,$(__SPC_BUILD_OUT_DIR)/esnet_smartnic/build/$(VALIDATION_TOP).$(phase).dcp))
+VALIDATION_LOGS ?=
+VALIDATION_TRANSCRIPTS ?= image=$(BUILD_DIR)/validation-inputs/image.log reg_package=$(BUILD_DIR)/validation-inputs/reg_package.log p4_driver=$(BUILD_DIR)/validation-inputs/p4_driver.log ip=$(SMARTNIC_ROOT)/examples/esnet_shell/build/$(BOARD)/out/validation-inputs/ip.log
+VALIDATION_LOG_ROOTS ?= products=$(__SPC_BUILD_OUT_DIR) shell_ip=$(SMARTNIC_ROOT)/examples/esnet_shell/build/$(BOARD)/out
+VALIDATION_ARCH := $(if $(filter $(BOARD),au55c au280 au250),usplus,versal)
+VALIDATION_WAIVER_DIRS ?= $(SMARTNIC_ROOT)/cfg/validation $(CURDIR)/validation
+VALIDATION_WAIVER_SETS ?= common $(VALIDATION_ARCH) $(BOARD) $(VALIDATION_NAME)
+include $(SCRIPTS_ROOT)/Makefiles/vivado_validate.mk

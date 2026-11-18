@@ -244,10 +244,14 @@ shell_ip_cache_key:
   tags:
     - ht-synth
   script:
-    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD
-    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
-    # Traverse the complete shell dependency tree, including all generated IP.
-    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.usplus.shell.rtl@smartnic BOARD=$SN_HW_BOARD
+    - |
+      python3 esnet-fpga-library/scripts/vivado/validation/run_logged.py \
+          --log examples/esnet_shell/build/$SN_HW_BOARD/out/validation-inputs/ip.log \
+          -- bash -euo pipefail -c '
+          make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD
+          make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+          make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.usplus.shell.rtl@smartnic BOARD=$SN_HW_BOARD
+          '
   artifacts:
     paths:
       - examples/esnet_shell/build/$SN_HW_BOARD/out
@@ -265,13 +269,16 @@ shell_ip_cache_key:
     - .shell_ip
     - .common_versal
   script:
-    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
-    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
-    # Refresh the AVED BD explicitly, including its pipeline-specific JTAG USERCODE.
-    - make -s -C src/xilinx/alveo/versal/bd _bd_refresh BOARD=$SN_HW_BOARD LIB_OUTPUT_ROOT=$CI_PROJECT_DIR/examples/esnet_shell/build/$SN_HW_BOARD/out/smartnic BUILD_ID=$BUILD_ID
-    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.bd@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
-    # Traverse the shell RTL dependencies for DCMAC, GTM, clocking, and debug IP.
-    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.shell.rtl@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+    - |
+      python3 esnet-fpga-library/scripts/vivado/validation/run_logged.py \
+          --log examples/esnet_shell/build/$SN_HW_BOARD/out/validation-inputs/ip.log \
+          -- bash -euo pipefail -c '
+          make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+          make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+          make -s -C src/xilinx/alveo/versal/bd _bd_refresh BOARD=$SN_HW_BOARD LIB_OUTPUT_ROOT=$CI_PROJECT_DIR/examples/esnet_shell/build/$SN_HW_BOARD/out/smartnic BUILD_ID=$BUILD_ID
+          make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.bd@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+          make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.shell.rtl@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+          '
   timeout: 8h
 
 smartnic_ip_au280:
@@ -1080,4 +1087,73 @@ hwapi_esnet_shell:
     - job: hwapi_esnet_shell_au250
       artifacts: true
     - job: hwapi_esnet_shell_av80
+      artifacts: true
+
+
+.validate_shell:
+  stage: validate
+  tags:
+    - ht-synth
+  script:
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR validate BOARD=$SN_HW_BOARD
+  artifacts:
+    when: always
+    paths:
+      - $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation
+    reports:
+      junit: $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation/junit.xml
+    expire_in: 2 weeks
+  allow_failure: true
+  timeout: 2h
+
+.validate_shell_usplus:
+  extends:
+    - .common
+    - .validate_shell
+
+.validate_shell_versal:
+  extends:
+    - .common_versal
+    - .validate_shell
+
+validate_esnet_shell_au55c:
+  extends: .validate_shell_usplus
+  needs:
+    - job: build_esnet_shell_au55c
+      artifacts: true
+
+validate_esnet_shell_au280:
+  extends: .validate_shell_usplus
+  needs:
+    - job: build_esnet_shell_au280
+      artifacts: true
+
+validate_esnet_shell_au250:
+  extends: .validate_shell_usplus
+  needs:
+    - job: build_esnet_shell_au250
+      artifacts: true
+
+validate_shell_av80:
+  extends: .validate_shell_versal
+  needs:
+    - job: build_shell_av80
+      artifacts: true
+
+validate_esnet_shell_av80:
+  extends: .validate_shell_versal
+  needs:
+    - job: build_esnet_shell_av80
+      artifacts: true
+
+validate_p4_only_av80:
+  extends: .validate_shell_versal
+  needs:
+    - job: build_p4_only_av80
+      artifacts: true
+
+validate_udplb_fec_av80:
+  extends: .validate_shell_versal
+  needs:
+    - job: build_udplb_fec_av80
       artifacts: true

@@ -62,7 +62,7 @@ class Fixture:
         toolchain = self.root / "toolchain/Makefiles"
         toolchain.mkdir(parents=True)
         library = REPO / "esnet-fpga-library/scripts/Makefiles"
-        for name in ("vivado_build_non_proj.mk", "vivado_base.mk"):
+        for name in ("vivado_build_non_proj.mk", "vivado_base.mk", "vivado_validate.mk"):
             (toolchain / name).symlink_to(library / name)
         (toolchain / "vivado_compile.mk").write_text(
             ".PHONY: FORCE _compile_synth\nFORCE:\n_compile_synth:\n"
