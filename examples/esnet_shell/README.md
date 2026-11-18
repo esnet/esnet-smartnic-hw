@@ -91,3 +91,13 @@ native UltraScale+ image build. Each image job requires that board's IP job
 and downloads its output artifacts; it also reads the cache. The build
 refreshes the IP configuration so changed configurations are regenerated
 while unchanged output products are reused.
+
+The manual `shell_ip_av80` job uses the Versal tool environment to prepare
+AVED's patched block design and the DCMAC, GTM, clocking, and debug IP.
+All Versal image jobs require its output artifacts and read its cache.
+Other examples link their Xilinx output tree to those prepared artifacts,
+preserving the paths in generated Vivado projects.
+Cache keys also include the producing job's Vivado version. AVED's block
+design is explicitly refreshed before synthesis: its JTAG USERCODE contains
+the pipeline build ID, so a new ID can require BD synthesis even when the
+other IP remains reusable. Image jobs use the same pipeline build ID.

@@ -260,6 +260,20 @@ shell_ip_cache_key:
   needs:
     - shell_ip_cache_key
 
+.shell_ip_versal:
+  extends:
+    - .shell_ip
+    - .common_versal
+  script:
+    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+    # Refresh the AVED BD explicitly, including its pipeline-specific JTAG USERCODE.
+    - make -s -C src/xilinx/alveo/versal/bd _bd_refresh BOARD=$SN_HW_BOARD LIB_OUTPUT_ROOT=$CI_PROJECT_DIR/examples/esnet_shell/build/$SN_HW_BOARD/out/smartnic BUILD_ID=$BUILD_ID
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.bd@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+    # Traverse the shell RTL dependencies for DCMAC, GTM, clocking, and debug IP.
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.versal.shell.rtl@smartnic BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+  timeout: 8h
+
 smartnic_ip_au280:
   extends: .smartnic_ip
   variables:
@@ -298,6 +312,14 @@ shell_ip_au250:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
+
+shell_ip_av80:
+  extends: .shell_ip_versal
+  variables:
+    SN_HW_BOARD: av80
   rules:
     - when: manual
       allow_failure: true
@@ -386,6 +408,31 @@ shell_ip_au250:
   extends:
     - .common_versal
     - .shell_image
+  before_script:
+    - !reference [.common_versal, before_script]
+    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+    # Other examples reuse the prepared Xilinx tree at its original paths.
+    - |
+      shell_xilinx="$CI_PROJECT_DIR/examples/esnet_shell/build/$SN_HW_BOARD/out/smartnic/xilinx"
+      app_xilinx="$CI_PROJECT_DIR/$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/out/smartnic/xilinx"
+      test -d "$shell_xilinx"
+      if [ "$app_xilinx" != "$shell_xilinx" ]; then
+          mkdir -p "$(dirname "$app_xilinx")"
+          ln -srT "$shell_xilinx" "$app_xilinx"
+      fi
+  artifacts:
+    paths:
+      - $EXAMPLES_DIR/$SN_HW_APP_DIR/build
+      - examples/esnet_shell/build/$SN_HW_BOARD/out
+  cache:
+    <<: *shell_ip_cache
+    policy: pull
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_av80
+      artifacts: true
 
 
 build_p4_and_verilog:
