@@ -83,3 +83,11 @@ boards into one deliverable. The existing `build_shell_au55c` and
 design; their `hwapi_shell` gather and bootstrap trigger retain the upstream
 handoff. The V80 shell job uses this native example under the handoff name
 `shell`.
+
+The manual `shell_ip_<board>` jobs generate the UltraScale+ shell's IP into
+this example's build output tree and cache it by board, tool version, and
+library dependencies. Run the matching manual IP job before starting a
+native UltraScale+ image build. Each image job requires that board's IP job
+and downloads its output artifacts; it also reads the cache. The build
+refreshes the IP configuration so changed configurations are regenerated
+while unchanged output products are reused.

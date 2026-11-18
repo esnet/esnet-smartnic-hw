@@ -244,15 +244,18 @@ shell_ip_cache_key:
   tags:
     - ht-synth
   script:
-    - make -s -C src refresh
-    - make -s -C src synth COMPONENT=xilinx.alveo.usplus.rtl BOARD=$SN_HW_BOARD
+    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+    # Traverse the complete shell dependency tree, including all generated IP.
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src synth COMPONENT=xilinx.alveo.usplus.shell.rtl@smartnic BOARD=$SN_HW_BOARD
   artifacts:
     paths:
-      - .out
-  cache:
-    - key: cache-shell_ip-$SN_HW_BOARD-$SHELL_IP_CACHE_KEY
-      paths:
-        - .out
+      - examples/esnet_shell/build/$SN_HW_BOARD/out
+  cache: &shell_ip_cache
+    key: cache-shell_ip-native-$VIVADO_VERSION-$SN_HW_BOARD-$SHELL_IP_CACHE_KEY
+    paths:
+      - examples/esnet_shell/build/$SN_HW_BOARD/out
+    policy: pull-push
   timeout: 4h
   needs:
     - shell_ip_cache_key
@@ -287,6 +290,14 @@ shell_ip_au55c:
   extends: .shell_ip
   variables:
     SN_HW_BOARD: au55c
+  rules:
+    - when: manual
+      allow_failure: true
+
+shell_ip_au250:
+  extends: .shell_ip
+  variables:
+    SN_HW_BOARD: au250
   rules:
     - when: manual
       allow_failure: true
@@ -361,6 +372,15 @@ shell_ip_au55c:
   extends:
     - .common
     - .shell_image
+  before_script:
+    - !reference [.common, before_script]
+    - make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD
+    - make -s -C examples/esnet_shell/build/$SN_HW_BOARD/src refresh BOARD=$SN_HW_BOARD
+  cache:
+    <<: *shell_ip_cache
+    policy: pull
+  needs:
+    - shell_ip_cache_key
 
 .shell_image_versal:
   extends:
@@ -934,6 +954,11 @@ build_esnet_shell_au55c:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: esnet_shell
     SN_HW_BOARD: au55c
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au55c
+      artifacts: true
   when: manual
 
 hwapi_esnet_shell_au55c:
@@ -948,6 +973,11 @@ build_esnet_shell_au280:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: esnet_shell
     SN_HW_BOARD: au280
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au280
+      artifacts: true
   when: manual
 
 hwapi_esnet_shell_au280:
@@ -962,6 +992,11 @@ build_esnet_shell_au250:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: esnet_shell
     SN_HW_BOARD: au250
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au250
+      artifacts: true
   when: manual
 
 hwapi_esnet_shell_au250:
