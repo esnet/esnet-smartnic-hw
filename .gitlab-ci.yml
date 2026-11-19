@@ -169,13 +169,20 @@ ons_ip_cache_key:
 .ons_ip:
   stage: ip
   extends: .common
+  variables:
+    RUN_LOGGED_CONSOLE_FILTER: &vivado_console_filter "$CI_PROJECT_DIR/esnet-fpga-library/scripts/vivado/console_filters/vivado-progress.json"
   tags:
     - ht-synth
   script:
-    - make -f makefile.esnet project_ip BOARD=$SN_HW_BOARD
+    - |
+      python3 esnet-fpga-library/scripts/run_logged.py \
+          --log ci-logs/$CI_JOB_NAME.log \
+          -- make -f makefile.esnet project_ip BOARD=$SN_HW_BOARD
   artifacts:
     paths:
       - open-nic-shell/build
+      - ci-logs
+    when: always
   cache:
     - key: cache-ons_ip-$SN_HW_BOARD-$ONS_IP_CACHE_KEY
       paths:
@@ -205,15 +212,24 @@ ons_ip_au250:
 .smartnic_ip:
   stage: ip
   extends: .common
+  variables:
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
   tags:
     - ht-synth
   script:
-    - make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
-    - make -s -C src synth COMPONENT=smartnic.build BOARD=$SN_HW_BOARD
-    - make -s -C src synth COMPONENT=smartnic_app.build BOARD=$SN_HW_BOARD
+    - |
+      python3 esnet-fpga-library/scripts/run_logged.py \
+          --log ci-logs/$CI_JOB_NAME.log \
+          -- bash -euo pipefail -c '
+          make -s -C src synth COMPONENT=smartnic_250mhz.build BOARD=$SN_HW_BOARD
+          make -s -C src synth COMPONENT=smartnic.build BOARD=$SN_HW_BOARD
+          make -s -C src synth COMPONENT=smartnic_app.build BOARD=$SN_HW_BOARD
+          '
   artifacts:
     paths:
       - .out
+      - ci-logs
+    when: always
   timeout: 2h
   needs: []
 
@@ -241,6 +257,8 @@ shell_ip_cache_key:
 .shell_ip:
   stage: ip
   extends: .common
+  variables:
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
   tags:
     - ht-synth
   script:
@@ -255,6 +273,7 @@ shell_ip_cache_key:
   artifacts:
     paths:
       - examples/esnet_shell/build/$SN_HW_BOARD/out
+    when: always
   cache: &shell_ip_cache
     key: cache-shell_ip-native-$VIVADO_VERSION-$SN_HW_BOARD-$SHELL_IP_CACHE_KEY
     paths:
@@ -333,6 +352,7 @@ shell_ip_av80:
   stage: bitfile
   extends: .common
   variables:
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
     IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
   tags:
     - ht-synth
@@ -344,18 +364,24 @@ shell_ip_av80:
       SN_HW_BOARD=$SN_HW_BOARD
       _EOF
     - cat bitfile.env
-    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-    - make -s -C src refresh
-    - mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION
-    - cp -pr .out/$SN_HW_BOARD/$VIVADO_VERSION $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
-    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-    - make -s prune_build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+    - |
+      python3 esnet-fpga-library/scripts/run_logged.py \
+          --log ci-logs/$CI_JOB_NAME.log \
+          -- bash -euo pipefail -c '
+          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          make -s -C src refresh
+          mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION
+          cp -pr .out/$SN_HW_BOARD/$VIVADO_VERSION $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
+          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          make -s prune_build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          '
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
       - .out
       - $EXAMPLES_DIR/$SN_HW_APP_NAME
       - open-nic-shell/build
+      - ci-logs
     when: always
     reports:
       dotenv:
@@ -367,6 +393,7 @@ shell_ip_av80:
 # Environment templates own the container image and before_script.
 .shell_image:
   variables:
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
     SN_HW_APP_DIR: $SN_HW_APP_NAME
   stage: bitfile
   tags:
