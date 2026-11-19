@@ -26,7 +26,7 @@ module xilinx_alveo_usplus_au280
     assign qsfp_txp = alveo_hw_if.qsfp_txp;
     assign qsfp_txn = alveo_hw_if.qsfp_txn;
     // PCIe
-    assign alveo_hw_if.pcie_rstn = pcie_rstn;
+    IBUF i_ibuf_pcie_rstn (.I(pcie_rstn), .O(alveo_hw_if.pcie_rstn));
     assign alveo_hw_if.pcie_refclk_p = pcie_refclk_p;
     assign alveo_hw_if.pcie_refclk_n = pcie_refclk_n;
     assign alveo_hw_if.pcie_rxp = pcie_rxp;

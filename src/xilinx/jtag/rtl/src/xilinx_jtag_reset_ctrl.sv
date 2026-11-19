@@ -6,6 +6,7 @@ module xilinx_jtag_reset_ctrl (
     output wire logic rstn_out   // Outgoing reset (potentially overridden by JTAG)
 );
     logic jtag_reset;
+    logic resetn_async;
     logic [2:0] status_async;
     logic [2:0] status_sync;
 
@@ -34,6 +35,17 @@ module xilinx_jtag_reset_ctrl (
         .probe_out0 ( jtag_reset     ) // Active-high
     );
 
-    assign rstn_out = rstn_in & !jtag_reset;
+    assign resetn_async = rstn_in & !jtag_reset;
+
+    // Assert immediately, including while the debug clock is stopped. Release
+    // synchronously so downstream reset synchronizers see a registered source.
+    sync_areset #(
+        .INPUT_ACTIVE_HIGH ( 0 ),
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__rstn_out (
+        .rst_in  ( resetn_async ),
+        .clk_out ( debug_clk    ),
+        .rst_out ( rstn_out     )
+    );
 
 endmodule : xilinx_jtag_reset_ctrl

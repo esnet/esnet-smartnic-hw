@@ -45,7 +45,7 @@ module xilinx_jtag_reset_ctrl_unit_test;
             rstn_in = 1'b1;
             ready = 1'b1;
             #1ns;
-            `FAIL_UNLESS(rstn_out === 1'b1)
+            `FAIL_UNLESS(rstn_out === 1'b0)
             `FAIL_UNLESS(DUT.i_xilinx_jtag_reset_vio.probe_in0 === 1'b0)
             `FAIL_UNLESS(DUT.i_xilinx_jtag_reset_vio.probe_in1 === 1'b0)
             `FAIL_UNLESS(DUT.i_xilinx_jtag_reset_vio.probe_in2 === 1'b0)
@@ -87,8 +87,9 @@ module xilinx_jtag_reset_ctrl_unit_test;
             @(negedge debug_clk);
             force DUT.jtag_reset = 1'b0;
             #1ns;
-            `FAIL_UNLESS(rstn_out === 1'b1)
+            `FAIL_UNLESS(rstn_out === 1'b0)
             `FAIL_UNLESS(DUT.i_xilinx_jtag_reset_vio.probe_in1 === 1'b0)
+            check_reset_release();
             settle();
             `FAIL_UNLESS(DUT.i_xilinx_jtag_reset_vio.probe_in1 === 1'b1)
             rstn_in = 1'b0;
@@ -97,6 +98,56 @@ module xilinx_jtag_reset_ctrl_unit_test;
             force DUT.jtag_reset = 1'b0;
             #1ns;
             `FAIL_UNLESS(rstn_out === 1'b0)
+        `SVTEST_END
+
+        `SVTEST(raw_reset_release_waits_for_debug_clock)
+            stop_debug_clock();
+            rstn_in = 1'b1;
+            #20ns;
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            debug_clk_enable = 1'b1;
+            check_reset_release();
+        `SVTEST_END
+
+        `SVTEST(jtag_asserts_immediately_and_release_waits_for_clock)
+            rstn_in = 1'b1;
+            settle();
+            stop_debug_clock();
+            force DUT.jtag_reset = 1'b1;
+            #1ns;
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            force DUT.jtag_reset = 1'b0;
+            #20ns;
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            debug_clk_enable = 1'b1;
+            check_reset_release();
+        `SVTEST_END
+
+        `SVTEST(reassertion_restarts_release_pipeline)
+            @(negedge debug_clk);
+            rstn_in = 1'b1;
+            repeat (sync_pkg::RETIMING_STAGES - 1) @(posedge debug_clk);
+            #1ps;
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            @(negedge debug_clk);
+            rstn_in = 1'b0;
+            #1ns;
+            rstn_in = 1'b1;
+            check_reset_release();
+        `SVTEST_END
+
+        `SVTEST(reset_sources_must_both_release)
+            force DUT.jtag_reset = 1'b1;
+            rstn_in = 1'b1;
+            settle();
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            rstn_in = 1'b0;
+            force DUT.jtag_reset = 1'b0;
+            settle();
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            @(negedge debug_clk);
+            rstn_in = 1'b1;
+            check_reset_release();
         `SVTEST_END
 
         `SVTEST(ready_is_monitored_during_reset)
@@ -112,6 +163,14 @@ module xilinx_jtag_reset_ctrl_unit_test;
         `SVTEST_END
 
     `SVUNIT_TESTS_END
+
+    task check_reset_release();
+        for (int i = 1; i <= sync_pkg::RETIMING_STAGES; i++) begin
+            @(posedge debug_clk);
+            #1ps;
+            `FAIL_UNLESS(rstn_out === (i == sync_pkg::RETIMING_STAGES))
+        end
+    endtask
 
     task settle();
         repeat (8) @(posedge debug_clk);

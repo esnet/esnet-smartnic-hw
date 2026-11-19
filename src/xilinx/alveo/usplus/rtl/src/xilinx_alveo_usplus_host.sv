@@ -31,8 +31,6 @@ module xilinx_alveo_usplus_host
     // =========================================================================
     // Signals
     // =========================================================================
-    logic __pcie_rstn;
-
     logic                axi_aclk;
     logic                axi_aresetn;
     logic [15 : 0]       dsc_crdt_in_crdt;
@@ -85,17 +83,12 @@ module xilinx_alveo_usplus_host
     axi4l_intf #() __axil_if__250mhz ();
 
     // =========================================================================
-    // PCIe reset input buffer
-    // =========================================================================
-    IBUF i_ibuf_pcie_rstn (.I(pcie_rstn), .O(__pcie_rstn));
-
-    // =========================================================================
     // QDMA IP
     // =========================================================================
     xilinx_alveo_usplus_qdma_wrapper #(
         .PCIE_LINK_WID   ( PCIE_LINK_WID )
     ) i_xilinx_alveo_usplus_qdma (
-        .pcie_rstn ( __pcie_rstn ),
+        .pcie_rstn ( pcie_rstn ),
         .pcie_refclk_p,
         .pcie_refclk_n,
         .pcie_rxp,
