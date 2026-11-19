@@ -44,3 +44,33 @@ The IP simulation build exports a flattened functional model from the
 synthesized checkpoint, including the firmware-initialized memories.
 This avoids dependencies on generated block-design names and tests the
 native hardware without the card-information fetch FSM or its model.
+
+## AXI-Lite ILA CDC waivers
+
+[The ILA waiver file](ip/xilinx_alveo_usplus_axil_ila.waivers.xdc) is
+registered through `VALIDATION_WAIVER_REFS` in
+`scripts/Makefiles/shell_proj_config.mk` for the
+`xilinx_alveo_usplus_axil_ila` reference. Vivado applies
+it relative to each instance, including references uniquified during
+synthesis, without depending on shell hierarchy or instance names.
+
+It covers three internal path families:
+
+- Capture-control reset or trigger-memory configuration to counter enables.
+- Arm handshake to advanced-trigger state enables.
+- Trigger-memory configuration to advanced-trigger flags.
+
+The generated vendor files `ila_v6_2/constraints/ila.xdc` and `ila_impl.xdc`
+explicitly false-path these transfers. Reapplying the vendor implementation
+constraints after optimization leaves the CDC-1 findings unchanged. The
+additional validation waivers match these reviewed source/destination pin
+families, separately for each instance of this IP reference, and apply only
+to CDC-1. They exclude probe inputs, paths crossing the IP boundary, other
+IP references, and other CDC rules.
+
+These waivers load only when collecting validation reports. They add no
+timing exceptions and do not change the saved checkpoint. Review the
+waiver coverage when changing the ILA IP version or configuration; these
+waivers accept vendor-managed CDC behavior and are not an independent proof
+of CDC safety. Waived paths and unused waivers are retained in the native
+validation reports.

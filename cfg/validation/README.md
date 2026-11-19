@@ -57,8 +57,8 @@ policy. Existing ONS validation remains separate.
 
 ## Design and per-build waivers
 
-No waivers are enabled by default. Waiver data stays in the design
-repository, rather than in the common library.
+Waiver data stays in the design repository, rather than in the common
+library. The common JSON waiver set is empty.
 
 The adapter supplies two search directories:
 
@@ -79,6 +79,10 @@ JSON file can hold narrowly scoped message or constraint exceptions.
 Explicit `VALIDATION_WAIVERS` and `VALIDATION_WAIVER_TCL` lists override
 automatic selection. Optional JSON `builds` lists use `VALIDATION_NAME`,
 not board-specific fields.
+
+Module- or IP-owned waiver files can be registered with
+`VALIDATION_WAIVER_REFS` as `REF=PATH` mappings. The library applies each
+file relative to every matching instance using `read_xdc -ref`.
 
 Review findings before adding exceptions. Do not lower timing thresholds,
 suppress entire message severities, or waive CDC checks globally.
