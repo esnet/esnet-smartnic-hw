@@ -245,7 +245,7 @@ shell_ip_cache_key:
     - ht-synth
   script:
     - |
-      python3 esnet-fpga-library/scripts/vivado/validation/run_logged.py \
+      python3 esnet-fpga-library/scripts/run_logged.py \
           --log examples/esnet_shell/build/$SN_HW_BOARD/out/validation-inputs/ip.log \
           -- bash -euo pipefail -c '
           make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD
@@ -270,7 +270,7 @@ shell_ip_cache_key:
     - .common_versal
   script:
     - |
-      python3 esnet-fpga-library/scripts/vivado/validation/run_logged.py \
+      python3 esnet-fpga-library/scripts/run_logged.py \
           --log examples/esnet_shell/build/$SN_HW_BOARD/out/validation-inputs/ip.log \
           -- bash -euo pipefail -c '
           make -s -C examples/esnet_shell config BOARD=$SN_HW_BOARD BUILD_ID=$BUILD_ID

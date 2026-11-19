@@ -237,11 +237,11 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 .PHONY: .shell_proj_build_clean
 
 .shell_proj_image: $(__SPC_CONFIGURED)
-	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/image.log -- $(SMARTNIC_COMP_CMD) image
+	@python3 $(SCRIPTS_ROOT)/run_logged.py --log $(BUILD_DIR)/validation-inputs/image.log -- $(SMARTNIC_COMP_CMD) image
 .PHONY: .shell_proj_image
 
 .shell_proj_regio: $(__SPC_CONFIGURED)
-	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/reg_package.log -- $(SMARTNIC_COMP_CMD) regio
+	@python3 $(SCRIPTS_ROOT)/run_logged.py --log $(BUILD_DIR)/validation-inputs/reg_package.log -- $(SMARTNIC_COMP_CMD) regio
 .PHONY: .shell_proj_regio
 
 .shell_proj_info: $(__SPC_CONFIGURED)
@@ -269,7 +269,7 @@ SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(notdir $(CURDIR)
 .PHONY: .shell_proj_package
 
 .shell_proj_p4_driver: $(__SPC_CONFIGURED)
-	@python3 $(SCRIPTS_ROOT)/vivado/validation/run_logged.py --log $(BUILD_DIR)/validation-inputs/p4_driver.log -- $(SMARTNIC_COMP_CMD) p4_driver
+	@python3 $(SCRIPTS_ROOT)/run_logged.py --log $(BUILD_DIR)/validation-inputs/p4_driver.log -- $(SMARTNIC_COMP_CMD) p4_driver
 .PHONY: .shell_proj_p4_driver
 
 # -----------------------------------------------

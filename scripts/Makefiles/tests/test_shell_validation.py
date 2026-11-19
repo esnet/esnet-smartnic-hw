@@ -73,7 +73,7 @@ class NativeValidationCI(unittest.TestCase):
                 fake = root / "bin/make"
                 fake.write_text("#!/bin/sh\necho \"$*\" >> \"$CALLS\"\ncase \" $* \" in *' synth '*) echo 'CRITICAL WARNING: [TEST-1] Nested failure'; exit 17;; esac\n")
                 fake.chmod(0o755)
-                script = self.resolve(template)["script"][0].replace("esnet-fpga-library/scripts/vivado/validation/run_logged.py", str(REPO / "esnet-fpga-library/scripts/vivado/validation/run_logged.py"))
+                script = self.resolve(template)["script"][0].replace("esnet-fpga-library/scripts/run_logged.py", str(REPO / "esnet-fpga-library/scripts/run_logged.py"))
                 env = os.environ.copy()
                 env.update(PATH=str(root / "bin") + os.pathsep + env["PATH"], SN_HW_BOARD="av80" if template.endswith("versal") else "au55c", BUILD_ID="1234", CI_PROJECT_DIR=tmp, CALLS=str(root / "calls"))
                 result = subprocess.run(["bash", "-eu", "-c", script], cwd=root, env=env, capture_output=True, text=True)
