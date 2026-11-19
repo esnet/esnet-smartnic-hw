@@ -16,6 +16,7 @@ SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/regio/esn
 __USB_BOARD_CONSTRAINTS := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/build/$(BOARD)
 CONSTRAINTS_XDC_IMPL += $(addprefix $(__USB_BOARD_CONSTRAINTS)/,general.xdc pins.xdc)
 CONSTRAINTS_XDC_IMPL += $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/build/qspi.xdc
+CONSTRAINTS_XDC_IMPL += $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/build/usr_access.xdc
 
 __USB_EXPORT_DIR := $(SMARTNIC_ROOT)/scripts/usplus
 __USB_EXPORT_HOOK := $(__USB_EXPORT_DIR)/write_bitstream.post.tcl
