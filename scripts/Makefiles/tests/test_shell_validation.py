@@ -65,6 +65,26 @@ class NativeValidationCI(unittest.TestCase):
                     self.assertFalse((need if isinstance(need, str) else need["job"]).startswith("validate_"), name)
         self.assertEqual(self.ci["validate_p4_only_u280"]["extends"], ".validate")
 
+    def test_automatic_native_builds_require_successful_prerequisites(self):
+        for name in ("shell_ip_av80", "build_shell_av80", "build_p4_only_av80"):
+            with self.subTest(job=name):
+                job = self.resolve(name)
+                self.assertEqual(job.get("when", "on_success"), "on_success")
+                self.assertIs(job.get("allow_failure", False), False)
+                self.assertNotIn("rules", job)
+        for name in ("build_shell_av80", "build_p4_only_av80"):
+            self.assertIn({"job": "shell_ip_av80", "artifacts": True}, self.resolve(name)["needs"])
+
+    def test_manual_native_builds_remain_optional(self):
+        for name in ("build_esnet_shell_au55c", "build_esnet_shell_au280",
+                     "build_esnet_shell_au250", "build_esnet_shell_av80"):
+            job = self.resolve(name)
+            self.assertEqual(job["when"], "manual")
+            self.assertTrue(job.get("allow_failure", True))
+        rule = self.resolve("build_udplb_fec_av80")["rules"][0]
+        self.assertEqual(rule["when"], "manual")
+        self.assertTrue(rule["allow_failure"])
+
     def test_ip_job_transcripts_preserve_failure_from_nested_make(self):
         for template in (".shell_ip", ".shell_ip_versal"):
             with self.subTest(template=template), tempfile.TemporaryDirectory() as tmp:

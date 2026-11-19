@@ -346,7 +346,6 @@ shell_ip_av80:
   extends: .shell_ip_versal
   variables:
     SN_HW_BOARD: av80
-  when: always
 
 .bitfile:
   stage: bitfile
@@ -419,7 +418,7 @@ shell_ip_av80:
     reports:
       dotenv: shell_image.env
   needs: []
-  when: always
+  when: on_success
   timeout: 10h
 
 .shell_image_usplus:
@@ -1019,7 +1018,6 @@ build_shell_av80:
     SN_HW_APP_NAME: shell
     SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: av80
-  when: always
 
 hwapi_shell_av80:
   extends: .hwapi_shell
