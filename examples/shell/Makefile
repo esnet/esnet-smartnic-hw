@@ -12,9 +12,6 @@ SMARTNIC_DIR := ../..
 # APP_NAME - Application name. Used for default naming conventions below.
 #export APP_NAME := $(notdir $(abspath $(CURDIR)))
 
-# P4_FILE - Full pathname of application p4 file.
-#export P4_FILE := $(CURDIR)/p4/$(APP_NAME).p4
-
 # ARTIFACTS_DIR - Full pathname of root artifacts directory.
 #export ARTIFACTS_DIR := $(CURDIR)/artifacts
 
