@@ -121,8 +121,25 @@ module xilinx_alveo_qdma_st_unit_test;
     packet_verif_pkg::packet_counters_reg_agent cnt_c2h_in;
     packet_verif_pkg::packet_counters_reg_agent cnt_c2h_out;
 
+    axi4s_verif_pkg::axi4s_driver #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_T        ( bit [TID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) c2h_driver;
+    axi4s_verif_pkg::axi4s_monitor #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_T        ( bit [TID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) h2c_monitor;
+
     function void build();
         svunit_ut = new(name);
+        c2h_driver = new("c2h_driver");
+        c2h_driver.axis_vif = axis_c2h;
+        h2c_monitor = new("h2c_monitor");
+        h2c_monitor.axis_vif = axis_h2c;
 
         h2c_driver = new("h2c_driver");
         h2c_driver.packet_vif = pkt_h2c_dma;
@@ -159,9 +176,9 @@ module xilinx_alveo_qdma_st_unit_test;
     endtask
 
     task idle();
-        axil_if.idle_controller();
+        axil_reg_agent.idle();
         h2c_driver.idle();
-        axis_c2h.idle_tx();
+        c2h_driver.idle();
         pkt_c2h_dma.rdy <= 1'b1;
         axis_h2c.tready <= 1'b1;
     endtask
@@ -170,19 +187,25 @@ module xilinx_alveo_qdma_st_unit_test;
     // Register access
     // =========================================================================
     task automatic reg_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.write(addr, data, resp, timeout);
+        axil_reg_agent.lock();
+        axil_reg_agent._write(addr, data, error, timeout, msg);
+        axil_reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "AXI-L write timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L write returned an error response")
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic reg_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.read(addr, data, resp, timeout);
+        axil_reg_agent.lock();
+        axil_reg_agent._read(addr, data, error, timeout, msg);
+        axil_reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "AXI-L read timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L read returned an error response")
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic set_loopback(input bit mode);
@@ -283,8 +306,7 @@ module xilinx_alveo_qdma_st_unit_test;
     endtask
 
     // =========================================================================
-    // Core-side (axi4s) helpers — unchanged; axis_c2h/axis_h2c are plain
-    // axi4s_intf so we drive/sample them directly.
+    // Core-side AXI4-Stream helpers
     // =========================================================================
     task automatic send_axis(
         input int                 num_bytes,
@@ -303,7 +325,7 @@ module xilinx_alveo_qdma_st_unit_test;
                 tkeep[b] = (b < this_beat);
             end
             tlast = (remaining <= AXIS_DATA_BYTE_WID);
-            axis_c2h.send(tdata, tkeep, tlast, TID_WID'(qid));
+            c2h_driver.send_beat(tdata, tkeep, tlast, TID_WID'(qid));
             remaining -= AXIS_DATA_BYTE_WID;
             idx       += AXIS_DATA_BYTE_WID;
         end
@@ -321,7 +343,7 @@ module xilinx_alveo_qdma_st_unit_test;
         logic [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] tuser;
         num_bytes = 0;
         forever begin
-            axis_h2c.receive(tdata, tkeep, tlast, tid, tdest, tuser);
+            h2c_monitor.receive_beat(tdata, tkeep, tlast, tid, tdest, tuser);
             for (int b = 0; b < AXIS_DATA_BYTE_WID; b++) if (tkeep[b]) num_bytes++;
             if (tlast) break;
         end

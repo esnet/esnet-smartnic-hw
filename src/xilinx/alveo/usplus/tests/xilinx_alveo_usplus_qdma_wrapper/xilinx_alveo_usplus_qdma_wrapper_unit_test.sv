@@ -38,8 +38,29 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
         .axil_if, .pkt_h2c_dma, .pkt_c2h_dma, .axis_h2c, .axis_c2h
     );
 
+    axi4l_verif_pkg::axi4l_reg_agent #() reg_agent;
+
+    axi4s_verif_pkg::axi4s_driver #(
+        .DATA_BYTE_WID ( shell_pkg::DMA_ST_DATA_BYTE_WID ),
+        .TID_T        ( bit [shell_pkg::DMA_ST_QID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) c2h_driver;
+    axi4s_verif_pkg::axi4s_monitor #(
+        .DATA_BYTE_WID ( shell_pkg::DMA_ST_DATA_BYTE_WID ),
+        .TID_T        ( bit [shell_pkg::DMA_ST_QID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) h2c_monitor;
+
     function void build();
         svunit_ut = new(name);
+        c2h_driver = new("c2h_driver");
+        c2h_driver.axis_vif = axis_c2h;
+        h2c_monitor = new("h2c_monitor");
+        h2c_monitor.axis_vif = axis_h2c;
+        reg_agent = new("reg_agent", 256, 256);
+        reg_agent.axil_vif = `IP.axil_test_if;
     endfunction
 
     task automatic reset_link();
@@ -54,12 +75,12 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
 
     task setup();
         svunit_ut.setup();
-        `IP.axil_test_if.idle_controller();
+        reg_agent.idle();
         `IP.tb_h2c_valid = 0;
         `IP.tb_c2h_ready = 1;
         `IP.tb_cmpt_ready = 1;
-        axis_h2c.idle_rx();
-        axis_c2h.idle_tx();
+        h2c_monitor.idle();
+        c2h_driver.idle();
         reset_link();
     endtask
 
@@ -99,7 +120,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
         logic [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] user_meta;
         int offset = 0;
         do begin
-            axis_h2c.receive(data, keep, last, tid, dest, user_meta);
+            h2c_monitor.receive_beat(data, keep, last, tid, dest, user_meta);
             `FAIL_UNLESS_EQUAL(tid, qid)
             `FAIL_UNLESS_EQUAL(user_meta, '0)
             for (int i = 0; i < 64; i++) begin
@@ -126,7 +147,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
                 word_data[i] = data[offset+i];
                 keep[i] = 1;
             end
-            axis_c2h.send(word_data, keep, offset+n == data.size(), qid);
+            c2h_driver.send_beat(word_data, keep, offset+n == data.size(), qid);
         end
     endtask
 
@@ -150,19 +171,25 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     endtask
 
     task automatic reg_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        `IP.axil_test_if.write(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF(timeout)
-        `FAIL_UNLESS_EQUAL(resp, axi4l_pkg::RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic reg_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        `IP.axil_test_if.read(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF(timeout)
-        `FAIL_UNLESS_EQUAL(resp, axi4l_pkg::RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic check_counter(input bit [31:0] offset, input int expected);

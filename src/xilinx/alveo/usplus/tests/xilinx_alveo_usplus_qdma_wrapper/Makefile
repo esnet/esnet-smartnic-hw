@@ -48,6 +48,7 @@ SRC_FILES = \
 # behavior is outside this integration test; the adapter and DMA path are real.
 SUBCOMPONENTS = \
     axi4l.verif@common \
+    axi4s.verif@common \
     packet.verif@common \
     xilinx.alveo.usplus.pkg \
     xilinx.alveo.rtl \

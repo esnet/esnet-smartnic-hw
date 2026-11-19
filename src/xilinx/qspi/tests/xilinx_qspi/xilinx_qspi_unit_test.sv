@@ -48,8 +48,13 @@ module xilinx_qspi_test #(
         xilinx_qspi DUT (.axil_if, .irq);
     end
 
+    axi4l_verif_pkg::axi4l_reg_agent #(.ADDR_WID(12)) reg_agent;
+
     function void build();
         svunit_ut = new(name);
+        reg_agent = new("reg_agent", 256, 256);
+        reg_agent.axil_vif = axil_if;
+        reg_agent.set_random_aw_w_alignment(1);
     endfunction
 
     task reset_dut();
@@ -61,29 +66,35 @@ module xilinx_qspi_test #(
 
     task setup();
         svunit_ut.setup();
-        axil_if.idle_controller();
+        reg_agent.idle();
         reset_dut();
     endtask
 
     task teardown();
         svunit_ut.teardown();
-        axil_if.idle_controller();
+        reg_agent.idle();
     endtask
 
     task automatic reg_read(input int addr, output bit [31:0] data);
-        resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.read(addr, data, resp, timeout, 256);
+        reg_agent.lock();
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "QSPI AXI-Lite read timed out")
-        `FAIL_UNLESS_EQUAL(resp, RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic reg_write(input int addr, input bit [31:0] data);
-        resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.write(addr, data, resp, timeout, 256, 1'b1);
+        reg_agent.lock();
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "QSPI AXI-Lite write timed out")
-        `FAIL_UNLESS_EQUAL(resp, RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task check_reset_registers();

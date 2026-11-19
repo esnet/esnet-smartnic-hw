@@ -23,6 +23,7 @@ SIM ?= xsim
 # ----------------------------------------------------
 SUBCOMPONENTS ?= \
     axi4l.verif@common \
+    axi4s.verif@common \
     packet.verif@common \
     xilinx.alveo.rtl
 

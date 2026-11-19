@@ -10,7 +10,7 @@ override RUN_DIR = run_$(BOARD)_$(SEED)
 CMS_IP_DIR = $(call get_lib_component_out_path_from_ref,xilinx.alveo.usplus.ip,$(LIB_OUTPUT_ROOT))/xilinx_usplus_cms_subsystem
 CMS_SIM_NETLIST = $(CMS_IP_DIR)/xilinx_usplus_cms_subsystem_sim_netlist.v
 SRC_FILES = ../../rtl/src/xilinx_alveo_usplus_cms.sv $(CMS_SIM_NETLIST)
-SUBCOMPONENTS = axi4l.rtl@common
+SUBCOMPONENTS = axi4l.verif@common
 EXT_LIBS = unisims_ver unimacro_ver secureip
 ifeq ($(BOARD),au250)
 DEFINES = XILINX_USPLUS_CMS_QSFP_IO

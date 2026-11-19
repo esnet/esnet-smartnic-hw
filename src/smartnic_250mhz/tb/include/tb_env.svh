@@ -97,7 +97,7 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
     endfunction
 
     task idle();
-        axil_vif.idle_controller();
+        reg_agent.idle();
         for (int i=0; i < NUM_INTF; i++) begin
             env_h2c[i].idle();
             env_c2h[i].idle();
@@ -125,7 +125,14 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
             output bit timeout,
             input  int TIMEOUT=128
         );
-        axil_vif.read(addr, data, error, timeout, TIMEOUT);
+        int saved_timeout;
+        string msg;
+        reg_agent.lock();
+        saved_timeout = reg_agent.get_rd_timeout();
+        reg_agent.set_rd_timeout(TIMEOUT);
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.set_rd_timeout(saved_timeout);
+        reg_agent.unlock();
     endtask
 
     task write(
@@ -135,7 +142,14 @@ class tb_env #(parameter int NUM_INTF = 2) extends std_verif_pkg::basic_env;
             output bit timeout,
             input  int TIMEOUT=32
         );
-        axil_vif.write(addr, data, error, timeout, TIMEOUT);
+        int saved_timeout;
+        string msg;
+        reg_agent.lock();
+        saved_timeout = reg_agent.get_wr_timeout();
+        reg_agent.set_wr_timeout(TIMEOUT);
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.set_wr_timeout(saved_timeout);
+        reg_agent.unlock();
     endtask
 
     task wait_reset_done(

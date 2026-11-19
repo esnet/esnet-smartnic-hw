@@ -7,7 +7,7 @@ SEED ?= 0
 waves ?= OFF
 SIM ?= xsim
 
-SUBCOMPONENTS = xilinx.qspi.rtl
+SUBCOMPONENTS = xilinx.qspi.rtl axi4l.verif@common
 EXT_LIBS = unisims_ver
 
 all: build_test sim

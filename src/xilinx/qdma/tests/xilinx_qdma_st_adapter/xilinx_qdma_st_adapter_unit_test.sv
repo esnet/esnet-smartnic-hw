@@ -249,8 +249,12 @@ module xilinx_qdma_st_adapter_unit_test;
     // =========================================================================
     // Build
     // =========================================================================
+    packet_verif_pkg::packet_intf_driver #(AXIS_DATA_BYTE_WID, pkt_c2h_meta_t) c2h_driver;
+
     function void build();
         svunit_ut = new(name);
+        c2h_driver = new("c2h_driver");
+        c2h_driver.packet_vif = pkt_c2h;
     endfunction
 
     // =========================================================================
@@ -356,9 +360,9 @@ module xilinx_qdma_st_adapter_unit_test;
             beat_eop = (bytes_remaining <= AXIS_DATA_BYTE_WID);
             beat_mty = beat_eop ? 6'(AXIS_DATA_BYTE_WID - bytes_remaining) : 6'd0;
 
-            if (twait > 0) repeat (twait) @(pkt_c2h.cb_tx);
+            if (twait > 0) c2h_driver.wait_n(twait);
 
-            pkt_c2h.send(
+            c2h_driver.send_beat(
                 ._data ( beat_data ),
                 ._eop  ( beat_eop  ),
                 ._mty  ( beat_mty  ),

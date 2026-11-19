@@ -84,8 +84,12 @@ module xilinx_alveo_versal_shell_unit_test;
     // =========================================================================
     // Build
     // =========================================================================
+    axi4l_verif_pkg::axi4l_reg_agent #() reg_agent;
+
     function void build();
         svunit_ut = new(name);
+        reg_agent = new("reg_agent", 256, 256);
+        reg_agent.axil_vif = axil_if;
     endfunction
 
     // =========================================================================
@@ -93,7 +97,7 @@ module xilinx_alveo_versal_shell_unit_test;
     // =========================================================================
     task setup();
         svunit_ut.setup();
-        axil_if.idle_controller();
+        reg_agent.idle();
         axil_if.aresetn = 1'b0;
         pci_rstn_in     = 1'b0;
         repeat (8) @(posedge axil_if.aclk);
@@ -110,19 +114,25 @@ module xilinx_alveo_versal_shell_unit_test;
     // Helpers
     // =========================================================================
     task automatic axil_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.write(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+        `FAIL_IF_LOG(error, msg);
     endtask
 
     task automatic axil_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.read(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+        `FAIL_IF_LOG(error, msg);
     endtask
 
     // =========================================================================

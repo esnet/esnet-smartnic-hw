@@ -22,6 +22,7 @@ SIM ?= xsim
 # Dependencies
 # ----------------------------------------------------
 SUBCOMPONENTS ?= \
+    axi4l.verif@common \
     xilinx.alveo.versal.shell.rtl \
     xilinx.alveo.versal.pkg \
     core.stub.rtl

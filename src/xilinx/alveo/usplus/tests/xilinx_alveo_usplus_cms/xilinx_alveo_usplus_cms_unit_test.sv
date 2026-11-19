@@ -37,8 +37,13 @@ module xilinx_alveo_usplus_cms_unit_test;
         .qsfp_resetl, .qsfp_lpmode, .qsfp_modsell, .irq
     );
 
+    axi4l_verif_pkg::axi4l_reg_agent #() reg_agent;
+
     function void build();
         svunit_ut = new(name);
+        reg_agent = new("reg_agent", 1024, 1024);
+        reg_agent.axil_vif = axil_host;
+        reg_agent.set_random_aw_w_alignment(1);
     endfunction
     task reset_dut();
         reset_n = 0;
@@ -48,26 +53,32 @@ module xilinx_alveo_usplus_cms_unit_test;
     endtask
     task setup();
         svunit_ut.setup();
-        axil_host.idle_controller();
+        reg_agent.idle();
         reset_dut();
     endtask
     task teardown();
         svunit_ut.teardown();
-        axil_host.idle_controller();
+        reg_agent.idle();
     endtask
     task automatic reg_read(input int addr, output bit [31:0] data);
-        resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_host.read(addr, data, resp, timeout, 1024);
+        reg_agent.lock();
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "CMS read timed out")
-        `FAIL_UNLESS_EQUAL(resp, RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
     task automatic reg_write(input int addr, input bit [31:0] data);
-        resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_host.write(addr, data, resp, timeout, 1024, 1'b1);
+        reg_agent.lock();
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "CMS write timed out")
-        `FAIL_UNLESS_EQUAL(resp, RESP_OKAY)
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     `SVUNIT_TESTS_BEGIN
