@@ -27,7 +27,6 @@ module smartnic_bypass #(
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_igr_sw_drop      [NUM_CMAC] (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_bypass_fifo   [NUM_CMAC] (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_from_bypass_fifo [NUM_CMAC] (.aclk(core_clk));
-    axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_to_bypass_drop   [NUM_CMAC] (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_demux_in  [NUM_CMAC] (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_demux_out [NUM_CMAC][2] (.aclk(core_clk));
     axi4s_intf  #(.DATA_BYTE_WID(64), .TID_WID(PORT_WID), .TDEST_WID(PORT_WID))  axis_bypass_mux_in    [NUM_CMAC][2] (.aclk(core_clk));
