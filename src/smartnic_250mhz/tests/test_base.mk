@@ -80,8 +80,12 @@ clean:      _clean_test _clean_sim
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/svunit.mk
 
-# Add testbench as top module (in addition to SVUnit testrunner)
+# Attach the shared testbench to the simulator's root hierarchy.
+ifeq ($(SIM),verilator)
+SRC_FILES += ../common/verilator_bind.sv
+else
 TOP += smartnic_250mhz__tb.tb
+endif
 
 # ----------------------------------------------------
 # Import sim targets (backend selected by SIM variable)
