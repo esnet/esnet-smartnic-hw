@@ -105,5 +105,7 @@ other IP remains reusable. Image jobs use the same pipeline build ID.
 `make validate BOARD=<board>` checks the existing final routed checkpoint,
 constraint coverage, critical warnings, and CDC findings, and writes reports,
 JSON, and JUnit results under `build/<board>/validation/`. Native CI validation
-jobs are advisory. See [validation and waivers](../../cfg/validation/README.md)
-for logging requirements, pass criteria, and waiver configuration.
+reports are collected in the image jobs and checked by lightweight validation
+jobs. These are advisory unless `SHELL_VALIDATION_REQUIRED=1`. See
+[validation and waivers](../../cfg/validation/README.md) for logging
+requirements, pass criteria, and waiver configuration.

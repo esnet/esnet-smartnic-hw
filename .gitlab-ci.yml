@@ -15,6 +15,7 @@ variables:
   SEED: 0
   RANDOMIZE_SEED: 0
   BUILD_ID: $CI_PIPELINE_ID
+  SHELL_VALIDATION_REQUIRED: "0"
 
 .common:
   image: $CI_REGISTRY/ht/xilinx-tools-docker:100594-g31ff8c4d
@@ -392,6 +393,8 @@ shell_ip_av80:
 # Environment templates own the container image and before_script.
 .shell_image:
   variables:
+    RUNNER_SCRIPT_TIMEOUT: 10h
+    RUNNER_AFTER_SCRIPT_TIMEOUT: 1h
     RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
     SN_HW_APP_DIR: $SN_HW_APP_NAME
   stage: bitfile
@@ -404,11 +407,27 @@ shell_ip_av80:
       SN_HW_APP_NAME=$SN_HW_APP_NAME
       SN_HW_APP_DIR=$SN_HW_APP_DIR
       SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_BUILD_JOB_NUMBER=$CI_JOB_ID
       _EOF
     - cat shell_image.env
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR image BOARD=$SN_HW_BOARD
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR reg_package BOARD=$SN_HW_BOARD
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR p4_driver BOARD=$SN_HW_BOARD
+  after_script:
+    - |
+      validation_dir="$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation"
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        mkdir -p "$validation_dir"
+        if make -s -C "$EXAMPLES_DIR/$SN_HW_APP_DIR" validate BOARD="$SN_HW_BOARD"; then
+          validation_status=0
+        else
+          validation_status=$?
+        fi
+        printf '%s\n' "$validation_status" > "$validation_dir/ci-$CI_JOB_ID.exitcode"
+      fi
+      python3 esnet-fpga-library/scripts/vivado/build_summary.py \
+        --name "$SN_HW_APP_DIR/$SN_HW_BOARD" --status "$CI_JOB_STATUS" \
+        --timing-report "$validation_dir/timing.rpt"
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -419,7 +438,7 @@ shell_ip_av80:
       dotenv: shell_image.env
   needs: []
   when: on_success
-  timeout: 10h
+  timeout: 11h 15m
 
 .shell_image_usplus:
   extends:
@@ -1114,11 +1133,17 @@ hwapi_esnet_shell:
 
 
 .validate_shell:
+  extends: .common
   stage: validate
+  before_script: []
   tags:
-    - ht-synth
+    - ht-misc
   script:
-    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR validate BOARD=$SN_HW_BOARD
+    - |
+      validation_dir="$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation"
+      python3 esnet-fpga-library/scripts/vivado/validation/validate_build.py \
+        --summary-only --output-dir "$validation_dir" \
+        --status-file "$validation_dir/ci-${SN_HW_BUILD_JOB_NUMBER:-missing}.exitcode"
   artifacts:
     when: always
     paths:
@@ -1126,57 +1151,51 @@ hwapi_esnet_shell:
     reports:
       junit: $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation/junit.xml
     expire_in: 2 weeks
-  allow_failure: true
-  timeout: 2h
-
-.validate_shell_usplus:
-  extends:
-    - .common
-    - .validate_shell
-
-.validate_shell_versal:
-  extends:
-    - .common_versal
-    - .validate_shell
+  rules:
+    - if: '$SHELL_VALIDATION_REQUIRED == "1"'
+      allow_failure: false
+    - when: on_success
+      allow_failure: true
+  timeout: 30m
 
 validate_esnet_shell_au55c:
-  extends: .validate_shell_usplus
+  extends: .validate_shell
   needs:
     - job: build_esnet_shell_au55c
       artifacts: true
 
 validate_esnet_shell_au280:
-  extends: .validate_shell_usplus
+  extends: .validate_shell
   needs:
     - job: build_esnet_shell_au280
       artifacts: true
 
 validate_esnet_shell_au250:
-  extends: .validate_shell_usplus
+  extends: .validate_shell
   needs:
     - job: build_esnet_shell_au250
       artifacts: true
 
 validate_shell_av80:
-  extends: .validate_shell_versal
+  extends: .validate_shell
   needs:
     - job: build_shell_av80
       artifacts: true
 
 validate_esnet_shell_av80:
-  extends: .validate_shell_versal
+  extends: .validate_shell
   needs:
     - job: build_esnet_shell_av80
       artifacts: true
 
 validate_p4_only_av80:
-  extends: .validate_shell_versal
+  extends: .validate_shell
   needs:
     - job: build_p4_only_av80
       artifacts: true
 
 validate_udplb_fec_av80:
-  extends: .validate_shell_versal
+  extends: .validate_shell
   needs:
     - job: build_udplb_fec_av80
       artifacts: true

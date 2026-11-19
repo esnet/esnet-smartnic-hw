@@ -39,7 +39,7 @@ class NativeValidationCI(unittest.TestCase):
             result = merge(result, self.resolve(parent))
         return merge(result, {key: value for key, value in job.items() if key != "extends"})
 
-    def test_every_native_image_has_advisory_validation_in_its_tool_environment(self):
+    def test_every_native_image_collects_reports_for_a_lightweight_gate(self):
         builds = [name for name, value in self.ci.items() if not name.startswith(".")
                   and isinstance(value, dict) and value.get("extends") in (".shell_image_usplus", ".shell_image_versal")]
         self.assertEqual(len(builds), 7)
@@ -47,13 +47,126 @@ class NativeValidationCI(unittest.TestCase):
             name = "validate_" + build.removeprefix("build_")
             job = self.resolve(name)
             self.assertEqual(job["needs"], [{"job": build, "artifacts": True}])
-            self.assertEqual(job["image"], self.resolve(build)["image"])
-            self.assertTrue(job["allow_failure"])
+            self.assertEqual(job["image"], self.resolve(".common")["image"])
+            self.assertEqual(job["before_script"], [])
+            image = self.resolve(build)
+            self.assertEqual(image["after_script"], self.ci[".shell_image"]["after_script"])
+            self.assertIn("SN_HW_BUILD_JOB_NUMBER=$CI_JOB_ID", image["script"][0])
+            self.assertEqual(image["variables"]["RUNNER_AFTER_SCRIPT_TIMEOUT"], "1h")
+            self.assertNotIn("make ", "\n".join(job["script"]))
             self.assertEqual(job["stage"], "validate")
             self.assertEqual(job["artifacts"]["when"], "always")
             self.assertIn("junit", job["artifacts"]["reports"])
-            self.assertIn("ht-synth", job["tags"])
+            self.assertEqual(job["tags"], ["ht-misc"])
             self.assertNotIn("when", job)  # Run after successful builds, without an extra manual step.
+
+    def test_validation_policy_defaults_to_advisory_and_can_be_required(self):
+        self.assertEqual(self.ci["variables"]["SHELL_VALIDATION_REQUIRED"], "0")
+        self.assertEqual(self.resolve(".validate_shell")["rules"], [
+            {"if": '$SHELL_VALIDATION_REQUIRED == "1"', "allow_failure": False},
+            {"when": "on_success", "allow_failure": True},
+        ])
+
+    def run_ci_script(self, script, root, **variables):
+        env = os.environ.copy()
+        env.update(PATH=str(root / "bin") + os.pathsep + env["PATH"],
+                   EXAMPLES_DIR="examples", SN_HW_APP_DIR="esnet_shell", SN_HW_BOARD="au55c",
+                   CI_JOB_ID="1234", CI_JOB_STATUS="success", SN_HW_BUILD_JOB_NUMBER="1234",
+                   VALIDATION_EXIT="0")
+        env.update(variables)
+        script = script.replace("esnet-fpga-library/scripts/", str(REPO / "esnet-fpga-library/scripts") + "/")
+        return subprocess.run(["bash", "-eu", "-c", script], cwd=root, env=env,
+                              capture_output=True, text=True)
+
+    def prepare_collection(self, root):
+        (root / "bin").mkdir()
+        fake = root / "bin/make"
+        fake.write_text("""#!/bin/sh
+echo called >> calls
+report_dir=examples/esnet_shell/build/au55c/validation
+mkdir -p "$report_dir"
+printf '%s\\n' '{"name":"fixture","passed":true,"findings":[],"unused_waivers":[],"checked":{"integrity":true,"timing":true,"routing":true,"constraints":true,"critical_warnings":true,"cdc":true,"drc":true,"methodology":true}}' > "$report_dir/summary.json"
+printf '<testsuites/>\\n' > "$report_dir/junit.xml"
+exit "$VALIDATION_EXIT"
+""")
+        fake.chmod(0o755)
+        return root / "examples/esnet_shell/build/au55c/validation"
+
+    def test_collection_preserves_build_success_but_gate_checks_validation_exit(self):
+        collect = self.resolve(".shell_image")["after_script"][0]
+        gate = self.resolve(".validate_shell")["script"][0]
+        for status in (0, 1, 2, 127):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                reports = self.prepare_collection(root)
+                result = self.run_ci_script(collect, root, VALIDATION_EXIT=str(status))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual((reports / "ci-1234.exitcode").read_text(), f"{status}\n")
+                self.assertIn("Build: success", result.stdout)
+                result = self.run_ci_script(gate, root)
+                self.assertEqual(result.returncode, 0 if status == 0 else 1, result.stderr)
+
+    def test_final_summary_includes_routed_timing_or_explicitly_unavailable(self):
+        collect = self.resolve(".shell_image")["after_script"][0]
+        header = "WNS(ns) TNS(ns) TNS Failing Endpoints TNS Total Endpoints WHS(ns) THS(ns) THS Failing Endpoints THS Total Endpoints WPWS(ns) TPWS(ns) TPWS Failing Endpoints TPWS Total Endpoints"
+        for values in ("0.125 0.000 0 1000 0.025 0.000 0 1000 0.100 0.000 0 500",
+                       "-0.125 -2.000 16 1000 -0.025 -0.050 2 1000 0.100 0.000 0 500",
+                       "incomplete", None):
+            with self.subTest(values=values), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                reports = self.prepare_collection(root)
+                reports.mkdir(parents=True)
+                if values is not None:
+                    (reports / "timing.rpt").write_text(f"{header}\n------\n{values}\n")
+                result = self.run_ci_script(collect, root)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                summary = result.stdout.split("Build summary", 1)[1]
+                if values is None or values == "incomplete":
+                    self.assertIn("Final routed timing: unavailable", summary)
+                else:
+                    verdict = "FAIL" if values.startswith("-") else "PASS"
+                    self.assertIn(f"Final routed timing: {verdict}", summary)
+                    self.assertIn(header, summary)
+                    self.assertIn(values, summary)
+                    self.assertNotIn("unavailable", summary)
+
+    def test_gate_rejects_missing_stale_or_malformed_results(self):
+        collect = self.resolve(".shell_image")["after_script"][0]
+        gate = self.resolve(".validate_shell")["script"][0]
+        for damage in ("missing_status", "stale_status", "malformed_status", "missing_summary", "missing_junit", "missing_job_id"):
+            with self.subTest(damage=damage), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                reports = self.prepare_collection(root)
+                self.assertEqual(self.run_ci_script(collect, root).returncode, 0)
+                status = reports / "ci-1234.exitcode"
+                variables = {}
+                if damage == "missing_status":
+                    status.unlink()
+                elif damage == "stale_status":
+                    status.rename(reports / "ci-1233.exitcode")
+                elif damage == "malformed_status":
+                    status.write_text("unknown\n")
+                elif damage == "missing_summary":
+                    (reports / "summary.json").unlink()
+                elif damage == "missing_junit":
+                    (reports / "junit.xml").unlink()
+                else:
+                    variables["SN_HW_BUILD_JOB_NUMBER"] = ""
+                self.assertNotEqual(self.run_ci_script(gate, root, **variables).returncode, 0)
+
+    def test_failed_and_canceled_images_skip_report_collection(self):
+        collect = self.resolve(".shell_image")["after_script"][0]
+        for status in ("failed", "canceled"):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                reports = self.prepare_collection(root)
+                result = self.run_ci_script(collect, root, CI_JOB_STATUS=status)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertFalse((root / "calls").exists())
+                self.assertFalse(reports.exists())
+                self.assertIn(f"Build: {status}", result.stdout)
+                self.assertIn("Final routed timing: unavailable (build did not succeed)", result.stdout)
+                self.assertNotIn("Validation reports:", result.stdout)
 
     def test_packaging_and_downstream_jobs_are_not_gated_by_validation(self):
         for name, value in self.ci.items():

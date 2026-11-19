@@ -28,10 +28,32 @@ Missing transcripts from older builds cause an integrity failure; those
 builds cannot establish warning completeness without rerunning the logged
 preparation/build steps.
 
-Seven native CI validation jobs use the matching tool environments and
-publish results even on failure. They use `allow_failure: true` and do not
-gate packaging or downstream triggers. Existing ONS validation remains
-separate.
+Native image jobs run validation in `after_script`, using the same tool
+environment as the build. Validation findings do not fail an otherwise
+successful image job. The build artifacts include the reports and a
+completion status tied to the producing job ID. The validator prints its
+per-category summary during collection. The library's `build_summary.py`
+then prints the build status and final routed timing table, including setup,
+hold, and pulse-width slack and endpoint counts. Missing or incomplete timing
+reports are shown as unavailable. Failed image jobs skip validation and
+report timing as unavailable. The job reserves up to one hour for validation
+after the existing ten-hour build allowance, plus fifteen minutes for
+artifact upload; runner timeout limits must accommodate this allowance.
+
+The seven validation jobs run on `ht-misc`. They use the validator's
+`--summary-only` mode to print the saved validation summary and return its
+status without invoking Vivado. A required collection status file ties the
+results to the producing build job. Missing, incomplete, or failed results
+fail the validation job. Reports and JUnit results are published even when
+the gate fails.
+
+By default, these jobs are advisory (`allow_failure: true`). Set the pipeline
+variable `SHELL_VALIDATION_REQUIRED=1` to make failed validation fail the
+pipeline. HWAPI packaging and firmware/card-testing triggers retain their
+direct build dependencies, so they can use an image even if validation
+fails. A release or promotion job that requires validated artifacts must
+explicitly `need` its corresponding validation job and use the required
+policy. Existing ONS validation remains separate.
 
 ## Design and per-build waivers
 
