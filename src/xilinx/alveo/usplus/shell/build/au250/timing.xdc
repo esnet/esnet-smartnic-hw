@@ -13,9 +13,14 @@ create_clock -period 3.333 -name sys_clk_300mhz [get_ports {clk1_300mhz_p}]
 
 # CMAC IP constrains its reference and generated clocks.
 # PCIe PERST# is asynchronous; QDMA synchronizes reset internally.
-set_false_path -through [get_ports {pcie_rstn}]
+set_false_path -from [get_ports {pcie_rstn}]
 
 # CMS satellite GPIO and UART are asynchronous to the FPGA clocks.
 # https://docs.amd.com/r/en-US/pg348-cms-subsystem/I/O-Signal-Description
 set_false_path -from [get_ports {satellite_gpio[*] satellite_uart_0_rxd}]
 set_false_path -to [get_ports {satellite_uart_0_txd}]
+
+# CMS QSFP status and control signals are asynchronous to the FPGA clocks.
+# https://docs.amd.com/r/en-US/pg348-cms-subsystem/I/O-Signal-Description
+set_false_path -from [get_ports {qsfp_intl[*] qsfp_modprsl[*]}]
+set_false_path -to [get_ports {qsfp_lpmode[*] qsfp_modsell[*] qsfp_resetl[*]}]
