@@ -28,12 +28,13 @@ REGIO_GENERATE_OPTS :=
 all: reg compile synth
 
 reg:     _reg
+pre:     _reg_pre
 compile: _reg_compile
 synth:   _reg_synth
 info:    _reg_info
 clean:   _reg_clean
 
-.PHONY: all reg compile synth info clean
+.PHONY: all reg pre compile synth info clean
 
 # -----------------------------------------------
 # Include regio targets
