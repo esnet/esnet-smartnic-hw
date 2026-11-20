@@ -1,4 +1,4 @@
-# Validation-only CDC-1 waivers scoped to xilinx_alveo_usplus_axil_ila (ILA 6.2).
+# Validation-only CDC waivers scoped to xilinx_alveo_usplus_axil_ila (ILA 6.2).
 # ila_v6_2/constraints/ila.xdc explicitly false-paths the arm transfer to
 # advanced-trigger state enables and U_SCRST to trigger-counter enables.
 # ila_impl.xdc false-paths trigger-memory data to counters and trigger flags.
@@ -33,3 +33,14 @@ create_waiver -scoped -type CDC -id CDC-1 -user esnet \
     -description {ILA vendor-excepted trigger-memory configuration to advanced-trigger flags} \
     -from [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/ADV_TRIG.u_adv_trig/fsm_mem_data_reg*/RAM*/CLK}] \
     -to [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/ADV_TRIG.u_adv_trig/FLAG*_O_reg/D}]
+
+# Vendor configuration transfers; ila.xdc false-paths both two-stage buses.
+create_waiver -scoped -type CDC -id CDC-6 -user esnet \
+    -description {ILA vendor-excepted debug configuration bus transfer} \
+    -from [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/u_ila_regs/reg_stream_ffd/I_EN_CTL_EQ1.U_CTL/xsdb_reg_reg*/C}] \
+    -to [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/debug_data_in_sync1_reg*/D}]
+
+create_waiver -scoped -type CDC -id CDC-6 -user esnet \
+    -description {ILA vendor-excepted capture-address configuration bus transfer} \
+    -from [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/u_ila_cap_ctrl/u_cap_addrgen/*.cfg_data_vec_reg*/C}] \
+    -to [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/u_ila_cap_ctrl/u_cap_addrgen/cfg_data_vec_sync1_reg*/D}]

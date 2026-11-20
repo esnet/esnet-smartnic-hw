@@ -54,7 +54,7 @@ registered through `VALIDATION_WAIVER_REFS` in
 it relative to each instance, including references uniquified during
 synthesis, without depending on shell hierarchy or instance names.
 
-It covers three internal path families:
+Its CDC-1 waivers cover three internal path families:
 
 - Capture-control reset or trigger-memory configuration to counter enables.
 - Arm handshake to advanced-trigger state enables.
@@ -64,9 +64,11 @@ The generated vendor files `ila_v6_2/constraints/ila.xdc` and `ila_impl.xdc`
 explicitly false-path these transfers. Reapplying the vendor implementation
 constraints after optimization leaves the CDC-1 findings unchanged. The
 additional validation waivers match these reviewed source/destination pin
-families, separately for each instance of this IP reference, and apply only
-to CDC-1. They exclude probe inputs, paths crossing the IP boundary, other
-IP references, and other CDC rules.
+families separately for each instance of this IP reference. Additional
+CDC-6 waivers cover the vendor-excepted debug-data and capture-address
+configuration buses, each with two destination synchronizer stages. These
+waivers exclude probe inputs, paths crossing the IP boundary, other IP
+references, and other CDC rules.
 
 These waivers load only when collecting validation reports. They add no
 timing exceptions and do not change the saved checkpoint. Review the
@@ -74,3 +76,15 @@ waiver coverage when changing the ILA IP version or configuration; these
 waivers accept vendor-managed CDC behavior and are not an independent proof
 of CDC safety. Waived paths and unused waivers are retained in the native
 validation reports.
+
+## FIFO pointer CDC waivers
+
+Native shell validation also registers the common library's
+`src/sync/build/sync_ctr/waivers.xdc` for the `sync_ctr` reference. The FIFO
+controllers increment their binary pointers by one per accepted operation;
+`sync_ctr` registers their Gray encoding before the three-stage destination
+synchronizer. The component-owned CDC-6 waiver covers only that transfer.
+It does not waive arbitrary changing buses passing through `sync_meta`.
+Source-period max-delay and minimum-clock-period bus-skew constraints still
+bound the physical crossing. Both FIFO domains must be initialized before
+use, and reset flushes the FIFO through its coordinated reset handling.

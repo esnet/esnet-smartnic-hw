@@ -312,5 +312,7 @@ VALIDATION_LOG_ROOTS ?= products=$(__SPC_BUILD_OUT_DIR) shell_ip=$(SMARTNIC_ROOT
 VALIDATION_ARCH := $(if $(filter $(BOARD),au55c au280 au250),usplus,versal)
 VALIDATION_WAIVER_DIRS ?= $(SMARTNIC_ROOT)/cfg/validation $(CURDIR)/validation
 VALIDATION_WAIVER_SETS ?= common $(VALIDATION_ARCH) $(BOARD) $(VALIDATION_NAME)
-VALIDATION_WAIVER_REFS ?= $(if $(filter usplus,$(VALIDATION_ARCH)),xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc)
+VALIDATION_WAIVER_REFS ?= $(if $(filter usplus,$(VALIDATION_ARCH)),\
+    sync_ctr=$(LIB_ROOT)/src/sync/build/sync_ctr/waivers.xdc \
+    xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc)
 include $(SCRIPTS_ROOT)/Makefiles/vivado_validate.mk
