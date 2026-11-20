@@ -45,6 +45,16 @@ create_waiver -scoped -type CDC -id CDC-6 -user esnet \
     -from [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/u_ila_cap_ctrl/u_cap_addrgen/*.cfg_data_vec_reg*/C}] \
     -to [get_pins -hierarchical -filter {NAME =~ *ila_core_inst/u_ila_cap_ctrl/u_cap_addrgen/cfg_data_vec_sync1_reg*/D}]
 
+# Trigger-match calibration to the nested slice output register. ila.xdc
+# contains a commented CDC-10 rule for this hierarchy variant; its disabled
+# status is not treated as vendor approval. The reviewed routed crossing is
+# covered by an active false path. Keep the waiver inside the trigger-match
+# circuitry; the nested register can be absent after optimization.
+create_waiver -quiet -scoped -type CDC -id CDC-10 -user esnet \
+    -description {ILA reviewed trigger-match calibration transfer to nested slice output register} \
+    -from [get_pins -quiet -hierarchical -filter {NAME =~ *ila_core_inst/u_trig/N_DDR_TC.N_DDR_TC_INST*.U_TC/allx_typeA_match_detection.ltlib_v1_0_3_allx_typeA_inst/DUT/u_srl_drive/CLK}] \
+    -to [get_pins -quiet -hierarchical -filter {NAME =~ *ila_core_inst/u_trig/N_DDR_TC.N_DDR_TC_INST*.U_TC/allx_typeA_match_detection.ltlib_v1_0_3_allx_typeA_inst/DUT/I_WHOLE_SLICE.G_SLICE_IDX*.U_ALL_SRL_SLICE/I_IS_TERMINATION_SLICE_W_OUTPUT_REG.DOUT_O_reg/D}]
+
 # CDC-15 families below are explicitly excepted by ila.xdc/ila_impl.xdc.
 # These are vendor control/configuration and status-readback protocols, not
 # user probe-data crossings. Keep source and destination families paired.
