@@ -57,8 +57,8 @@ policy. Existing ONS validation remains separate.
 
 ## Design and per-build waivers
 
-Waiver data stays in the design repository, rather than in the common
-library. The common JSON waiver set is empty.
+Design and per-build waiver data stays in the design repository. Component
+waivers live with their owning modules. The common JSON waiver set is empty.
 
 The adapter supplies two search directories:
 
@@ -83,6 +83,10 @@ not board-specific fields.
 Module- or IP-owned waiver files can be registered with
 `VALIDATION_WAIVER_REFS` as `REF=PATH` mappings. The library applies each
 file relative to every matching instance using `read_xdc -ref`.
+
+Native UltraScale+ and Versal builds register the library's `fifo_core`
+payload waiver. Its scope and pointer/reset requirements are documented in
+the [FIFO README](../../esnet-fpga-library/src/fifo/README.md#xilinx-fifo-payload-cdc-waiver).
 
 Review findings before adding exceptions. Do not lower timing thresholds,
 suppress entire message severities, or waive CDC checks globally.
