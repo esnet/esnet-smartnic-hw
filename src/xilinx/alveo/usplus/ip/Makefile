@@ -31,7 +31,6 @@ include $(CFG_ROOT)/vivado_ip.mk
 IP_LIST = \
     xilinx_alveo_usplus_clk_axil \
     xilinx_alveo_usplus_clk \
-    xilinx_alveo_usplus_clk_100mhz \
     xilinx_alveo_usplus_axil_ila \
     xilinx_usplus_cms_subsystem \
     xilinx_alveo_usplus_qdma
@@ -61,8 +60,6 @@ IP_LIST = \
 IP_SIM_SRC_FILES = \
     xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk_clk_wiz.v \
     xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk.v \
-    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz_clk_wiz.v \
-    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz.v \
     xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil_clk_wiz.v \
     xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil.v \
     xilinx_alveo_usplus_axil_ila/sim/xilinx_alveo_usplus_axil_ila.v \
@@ -121,6 +118,14 @@ IP_SIM_SRC_FILES = \
     xilinx_alveo_usplus_qdma/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip.v \
     xilinx_alveo_usplus_qdma/xilinx_alveo_usplus_qdmahdl/verilog/xilinx_alveo_usplus_qdma_core_top.sv \
     xilinx_alveo_usplus_qdma/sim/xilinx_alveo_usplus_qdma.sv
+
+# U250 derives its free-running 100 MHz clock from the 300 MHz input.
+ifeq ($(BOARD),au250)
+IP_LIST += xilinx_alveo_usplus_clk_100mhz
+IP_SIM_SRC_FILES += \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz_clk_wiz.v \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz.v
+endif
 
 IP_SIM_INC_DIRS = \
     xilinx_alveo_usplus_qdma/ip_0/source
