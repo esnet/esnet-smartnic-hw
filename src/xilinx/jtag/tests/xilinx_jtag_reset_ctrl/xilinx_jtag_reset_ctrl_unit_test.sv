@@ -106,7 +106,7 @@ module xilinx_jtag_reset_ctrl_unit_test;
             #20ns;
             `FAIL_UNLESS(rstn_out === 1'b0)
             debug_clk_enable = 1'b1;
-            check_reset_release();
+            check_reset_release(2 * sync_pkg::RETIMING_STAGES);
         `SVTEST_END
 
         `SVTEST(jtag_asserts_immediately_and_release_waits_for_clock)
@@ -126,14 +126,14 @@ module xilinx_jtag_reset_ctrl_unit_test;
         `SVTEST(reassertion_restarts_release_pipeline)
             @(negedge debug_clk);
             rstn_in = 1'b1;
-            repeat (sync_pkg::RETIMING_STAGES - 1) @(posedge debug_clk);
+            repeat (2 * sync_pkg::RETIMING_STAGES - 1) @(posedge debug_clk);
             #1ps;
             `FAIL_UNLESS(rstn_out === 1'b0)
             @(negedge debug_clk);
             rstn_in = 1'b0;
             #1ns;
             rstn_in = 1'b1;
-            check_reset_release();
+            check_reset_release(2 * sync_pkg::RETIMING_STAGES);
         `SVTEST_END
 
         `SVTEST(reset_sources_must_both_release)
@@ -147,7 +147,18 @@ module xilinx_jtag_reset_ctrl_unit_test;
             `FAIL_UNLESS(rstn_out === 1'b0)
             @(negedge debug_clk);
             rstn_in = 1'b1;
-            check_reset_release();
+            check_reset_release(2 * sync_pkg::RETIMING_STAGES);
+        `SVTEST_END
+
+        `SVTEST(short_raw_reset_pulse_restarts_both_pipelines)
+            rstn_in = 1'b1;
+            settle();
+            @(negedge debug_clk);
+            rstn_in = 1'b0;
+            #1ns;
+            `FAIL_UNLESS(rstn_out === 1'b0)
+            rstn_in = 1'b1;
+            check_reset_release(2 * sync_pkg::RETIMING_STAGES);
         `SVTEST_END
 
         `SVTEST(ready_is_monitored_during_reset)
@@ -164,16 +175,16 @@ module xilinx_jtag_reset_ctrl_unit_test;
 
     `SVUNIT_TESTS_END
 
-    task check_reset_release();
-        for (int i = 1; i <= sync_pkg::RETIMING_STAGES; i++) begin
+    task check_reset_release(input int cycles = sync_pkg::RETIMING_STAGES);
+        for (int i = 1; i <= cycles; i++) begin
             @(posedge debug_clk);
             #1ps;
-            `FAIL_UNLESS(rstn_out === (i == sync_pkg::RETIMING_STAGES))
+            `FAIL_UNLESS(rstn_out === (i == cycles))
         end
     endtask
 
     task settle();
-        repeat (8) @(posedge debug_clk);
+        repeat (12) @(posedge debug_clk);
         #1ps;
     endtask
 
