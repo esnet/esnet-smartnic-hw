@@ -310,6 +310,9 @@ VALIDATION_LOGS ?=
 VALIDATION_TRANSCRIPTS ?= image=$(BUILD_DIR)/validation-inputs/image.log reg_package=$(BUILD_DIR)/validation-inputs/reg_package.log p4_driver=$(BUILD_DIR)/validation-inputs/p4_driver.log ip=$(SMARTNIC_ROOT)/examples/esnet_shell/build/$(BOARD)/out/validation-inputs/ip.log
 VALIDATION_LOG_ROOTS ?= products=$(__SPC_BUILD_OUT_DIR) shell_ip=$(SMARTNIC_ROOT)/examples/esnet_shell/build/$(BOARD)/out
 VALIDATION_ARCH := $(if $(filter $(BOARD),au55c au280 au250),usplus,versal)
+# Inspect generated IP checkpoints, including when they were restored from cache.
+VALIDATION_WAIVER_INPUTS ?= $(if $(filter usplus,$(VALIDATION_ARCH)),\
+    $(foreach n,0 1,cmac_$(n)=$(__SPC_BUILD_OUT_DIR)/smartnic/xilinx/cmac/ip/xilinx_cmac_$(n)/xilinx_cmac_$(n).dcp))
 VALIDATION_WAIVER_DIRS ?= $(SMARTNIC_ROOT)/cfg/validation $(CURDIR)/validation
 VALIDATION_WAIVER_SETS ?= common $(VALIDATION_ARCH) $(BOARD) $(VALIDATION_NAME)
 VALIDATION_WAIVER_REFS ?= \

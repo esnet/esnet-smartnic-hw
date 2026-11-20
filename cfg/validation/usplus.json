@@ -1,0 +1,25 @@
+{
+  "waivers": [
+    {
+      "name": "cmac-unused-an-lt-license",
+      "category": "critical_warnings",
+      "id": "Vivado 12-1790",
+      "detail": "Evaluation License Warning: This design contains one or more IP cores that use separately licensed features\\. If the design has been configured to make use of evaluation features, please note that these features will cease to function after a certain period of time\\. Please consult the core datasheet to determine whether the core which you have configured will be affected\\. Evaluation features should NOT be used in production systems\\.\\nEvaluation cores found in this design:\\n(?:IP core 'xilinx_cmac_0' \\(cmac_usplus_core\\) was generated with multiple features:\\nIP feature 'cmac_an_lt@2020\\.05' was enabled using a design_linking license\\.\\nIP feature 'cmac_usplus@2020\\.05' was enabled using a bought license\\.\\nIP core 'xilinx_cmac_1' \\(cmac_usplus_core\\) was generated with multiple features:\\nIP feature 'cmac_an_lt@2020\\.05' was enabled using a design_linking license\\.\\nIP feature 'cmac_usplus@2020\\.05' was enabled using a bought license\\.|IP core 'xilinx_cmac_1' \\(cmac_usplus_core\\) was generated with multiple features:\\nIP feature 'cmac_an_lt@2020\\.05' was enabled using a design_linking license\\.\\nIP feature 'cmac_usplus@2020\\.05' was enabled using a bought license\\.\\nIP core 'xilinx_cmac_0' \\(cmac_usplus_core\\) was generated with multiple features:\\nIP feature 'cmac_an_lt@2020\\.05' was enabled using a design_linking license\\.\\nIP feature 'cmac_usplus@2020\\.05' was enabled using a bought license\\.)",
+      "source": "(?:image|products/esnet_smartnic/build/esnet_shell\\.bitstream\\.log)",
+      "max_count": 2,
+      "reason": "PG203 Licensing and Ordering permits ignoring cmac_an_lt licensing warnings when AN/LT is unused. Both generated CAUI4 CMAC checkpoints must have AN/LT and its TX trainer disabled and a purchased base CMAC license. https://docs.amd.com/r/en-US/pg203-cmac-usplus/Licensing-and-Ordering",
+      "evidence": [
+        {
+          "input": "cmac_0",
+          "member": "xilinx_cmac_0_stub.v",
+          "pattern": "CORE_GENERATION_INFO = \"xilinx_cmac_0,cmac_usplus_core,\\{(?=[^\"\\n]*,C_CMAC_CAUI4_MODE=1[,}])(?=[^\"\\n]*,C_INCLUDE_AUTO_NEG_LT_LOGIC=0[,}])(?=[^\"\\n]*,C_INCLUDE_AN_LT_TX_TRAINER=0[,}])(?=[^\"\\n]*,x_ipLicense=cmac_usplus@2020\\.05\\(bought\\)[,}])(?=[^\"\\n]*,x_ipLicense=cmac_an_lt@2020\\.05\\(design_linking\\)[,}])[^\"\\n]*\\}\""
+        },
+        {
+          "input": "cmac_1",
+          "member": "xilinx_cmac_1_stub.v",
+          "pattern": "CORE_GENERATION_INFO = \"xilinx_cmac_1,cmac_usplus_core,\\{(?=[^\"\\n]*,C_CMAC_CAUI4_MODE=1[,}])(?=[^\"\\n]*,C_INCLUDE_AUTO_NEG_LT_LOGIC=0[,}])(?=[^\"\\n]*,C_INCLUDE_AN_LT_TX_TRAINER=0[,}])(?=[^\"\\n]*,x_ipLicense=cmac_usplus@2020\\.05\\(bought\\)[,}])(?=[^\"\\n]*,x_ipLicense=cmac_an_lt@2020\\.05\\(design_linking\\)[,}])[^\"\\n]*\\}\""
+        }
+      ]
+    }
+  ]
+}

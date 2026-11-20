@@ -149,3 +149,30 @@ It does not waive arbitrary changing buses passing through `sync_meta`.
 Source-period max-delay and minimum-clock-period bus-skew constraints still
 bound the physical crossing. Both FIFO domains must be initialized before
 use, and reset flushes the FIFO through its coordinated reset handling.
+
+## CMAC license validation
+
+The CMACs use CAUI4, with auto-negotiation/link training (AN/LT) and the AN/LT
+TX trainer disabled. Generated CMAC checkpoints nevertheless list the
+separately licensed `cmac_an_lt` feature as `design_linking`, causing Vivado
+`12-1790` during bitstream generation. The base `cmac_usplus` feature has a
+purchased license. [PG203 licensing guidance](https://docs.amd.com/r/en-US/pg203-cmac-usplus/Licensing-and-Ordering)
+explicitly permits ignoring the AN/LT license warning when that feature
+is not required.
+
+The [UltraScale+ validation policy](../../../../cfg/validation/usplus.json)
+waives only the complete warning listing both expected CMACs, with
+`cmac_an_lt@2020.05` using `design_linking` and `cmac_usplus@2020.05` using
+`bought` licenses. It accepts at most two copies: the image transcript and
+the bitstream phase log. Other IP cores, license states, incomplete listings,
+and log sources remain unwaived.
+
+Before applying this exception, validation inspects `CORE_GENERATION_INFO`
+in each generated CMAC checkpoint's Verilog stub. Both checkpoints must
+confirm CAUI4 mode, disabled AN/LT and TX trainer, and the reviewed license
+states. Missing or newer-than-route checkpoints, changed settings, and
+unrecognized metadata fail validation. The shell adapter supplies these
+inputs from the example's generated IP tree; configuration evidence and
+checkpoint hashes are retained in the validation JSON. Revisit the policy
+when changing CMAC configuration or licensing. This exception does not
+suppress the original Vivado warning in build logs.

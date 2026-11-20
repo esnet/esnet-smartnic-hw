@@ -230,6 +230,13 @@ exit "$VALIDATION_EXIT"
                                         cwd=tmp, env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("validate_build.py", result.stdout)
+                if board.startswith("au"):
+                    for n in (0, 1):
+                        self.assertIn(f'--waiver-input "cmac_{n}={tmp}/build/out/smartnic/xilinx/cmac/ip/xilinx_cmac_{n}/xilinx_cmac_{n}.dcp"', result.stdout)
+                    self.assertIn("cfg/validation/usplus.json", result.stdout)
+                else:
+                    self.assertNotIn("--waiver-input", result.stdout)
+                    self.assertNotIn("cfg/validation/usplus.json", result.stdout)
                 self.assertIn(("esnet_shell" if board.startswith("au") else "esnet_smartnic") + ".route_opt.dcp", result.stdout)
                 self.assertNotIn("vivado -", result.stdout)
                 self.assertNotIn("Configuring", result.stdout)

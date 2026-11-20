@@ -84,6 +84,12 @@ Module- or IP-owned waiver files can be registered with
 `VALIDATION_WAIVER_REFS` as `REF=PATH` mappings. The library applies each
 file relative to every matching instance using `read_xdc -ref`.
 
+UltraScale+ builds select `usplus.json` for the guarded CMAC AN/LT license
+exception. Its configuration checks and rationale are documented in the
+[UltraScale+ README](../../src/xilinx/alveo/usplus/README.md#cmac-license-validation).
+The shell adapter supplies the generated CMAC checkpoints through
+`VALIDATION_WAIVER_INPUTS`; a missing or changed configuration fails validation.
+
 Native UltraScale+ and Versal builds register the library's `fifo_core`,
 `sync_ctr`, and `sync_bus` waivers. Their scopes and protocol requirements
 are documented in the [FIFO README](../../esnet-fpga-library/src/fifo/README.md#xilinx-fifo-payload-cdc-waiver)
