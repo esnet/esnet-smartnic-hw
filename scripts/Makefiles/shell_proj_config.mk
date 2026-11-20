@@ -317,5 +317,7 @@ VALIDATION_WAIVER_REFS ?= \
     sync_ctr=$(LIB_ROOT)/src/sync/build/sync_ctr/waivers.xdc \
     sync_bus=$(LIB_ROOT)/src/sync/build/sync_bus/waivers.xdc \
     $(if $(filter usplus,$(VALIDATION_ARCH)),\
-    xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc)
+    xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc \
+    xilinx_alveo_usplus_qdma=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_qdma.waivers.xdc \
+    dbg_hub=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/dbg_hub.waivers.xdc)
 include $(SCRIPTS_ROOT)/Makefiles/vivado_validate.mk

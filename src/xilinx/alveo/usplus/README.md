@@ -70,12 +70,57 @@ configuration buses, each with two destination synchronizer stages. These
 waivers exclude probe inputs, paths crossing the IP boundary, other IP
 references, and other CDC rules.
 
+CDC-15 waivers additionally cover vendor-excepted trigger-memory state
+data, counter-load configuration, arm-handshake resets and capture/trigger
+state, sample-counter and comparator configuration, and status readback
+into the XSDB registers.
+The status families are captured-sample counts, advanced-trigger enable
+and sequencer state, trigger flags, capture/trigger status, and latched
+capture configuration. Each waiver pairs reviewed source and destination
+families within one ILA instance. The generated `ila.xdc` and
+`ila_impl.xdc` explicitly except these transfers; the paths remain reported
+by `report_cdc` despite their active timing exceptions.
+
 These waivers load only when collecting validation reports. They add no
 timing exceptions and do not change the saved checkpoint. Review the
 waiver coverage when changing the ILA IP version or configuration; these
 waivers accept vendor-managed CDC behavior and are not an independent proof
 of CDC safety. Waived paths and unused waivers are retained in the native
 validation reports.
+
+## QDMA calibration CDC waiver
+
+[The QDMA waiver file](ip/xilinx_alveo_usplus_qdma.waivers.xdc) is scoped to
+the generated `xilinx_alveo_usplus_qdma` IP reference. It covers only the
+CDC-15 transfer from `U_TXOUTCLK_FREQ_COUNTER/testclk_cnt_reg` to
+`freq_cnt_o_reg` inside the PCIe GT Wizard's CPLL calibration logic.
+
+In the reviewed QDMA 5.1 / GT Wizard 1.7.22 implementation, the counter
+enable is synchronized into the measured-clock domain. The reference-domain
+FSM stops the measurement, waits in `HOLD_STATE` until its hold count reaches
+15, then captures the frequency result in `UPDATE_STATE`. The generated
+`*_pcie4c_ip_gt.xdc` explicitly false-paths this held-result transfer. The
+waiver excludes other GT controls, resets, QDMA queues, and packet data.
+Review the protocol and generated exceptions again when changing IP version
+or configuration.
+
+## Debug-hub FIFO CDC waiver
+
+[The debug-hub waiver file](ip/dbg_hub.waivers.xdc) is scoped to Vivado's
+automatically inserted `dbg_hub` reference. The reviewed XSDB 3.0.5 hub
+uses FIFO Generator 13.1.5 for its command read/write FIFOs. Their
+dual-clock RAM payloads are protected by the vendor FIFO pointer protocol;
+the affected RAM write-clock to output-register paths already have active
+false-path exceptions in the checkpoint.
+
+The CDC-15 waiver covers only the `U_CMD6_RD/U_RD_FIFO` and
+`U_CMD6_WR/U_WR_FIFO` distributed RAM to `gpr1.dout_i_reg` transfers.
+It excludes FIFO controls, other debug-hub logic, and application FIFOs.
+The QDMA and debug-hub waivers are registered only for native UltraScale+
+validation and, like the ILA waivers, do not change RTL or timing exceptions.
+Reassess their endpoint coverage when changing Vivado or IP versions.
+These waivers accept the vendor CDC contracts; they are not independent
+proofs of the internal protocols.
 
 ## FIFO pointer CDC waivers
 
