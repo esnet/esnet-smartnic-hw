@@ -314,7 +314,8 @@ VALIDATION_WAIVER_DIRS ?= $(SMARTNIC_ROOT)/cfg/validation $(CURDIR)/validation
 VALIDATION_WAIVER_SETS ?= common $(VALIDATION_ARCH) $(BOARD) $(VALIDATION_NAME)
 VALIDATION_WAIVER_REFS ?= \
     fifo_core=$(LIB_ROOT)/src/fifo/build/fifo_core/waivers.xdc \
-    $(if $(filter usplus,$(VALIDATION_ARCH)),\
     sync_ctr=$(LIB_ROOT)/src/sync/build/sync_ctr/waivers.xdc \
+    sync_bus=$(LIB_ROOT)/src/sync/build/sync_bus/waivers.xdc \
+    $(if $(filter usplus,$(VALIDATION_ARCH)),\
     xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc)
 include $(SCRIPTS_ROOT)/Makefiles/vivado_validate.mk

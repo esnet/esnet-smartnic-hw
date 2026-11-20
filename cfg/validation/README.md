@@ -84,9 +84,10 @@ Module- or IP-owned waiver files can be registered with
 `VALIDATION_WAIVER_REFS` as `REF=PATH` mappings. The library applies each
 file relative to every matching instance using `read_xdc -ref`.
 
-Native UltraScale+ and Versal builds register the library's `fifo_core`
-payload waiver. Its scope and pointer/reset requirements are documented in
-the [FIFO README](../../esnet-fpga-library/src/fifo/README.md#xilinx-fifo-payload-cdc-waiver).
+Native UltraScale+ and Versal builds register the library's `fifo_core`,
+`sync_ctr`, and `sync_bus` waivers. Their scopes and protocol requirements
+are documented in the [FIFO README](../../esnet-fpga-library/src/fifo/README.md#xilinx-fifo-payload-cdc-waiver)
+and [synchronizer README](../../esnet-fpga-library/src/sync/README.md).
 
 Review findings before adding exceptions. Do not lower timing thresholds,
 suppress entire message severities, or waive CDC checks globally.
