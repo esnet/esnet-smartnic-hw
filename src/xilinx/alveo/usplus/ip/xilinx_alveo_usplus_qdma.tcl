@@ -53,7 +53,6 @@ switch $env(BOARD) {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU55C}
         } [get_ips $module_name]
@@ -62,7 +61,6 @@ switch $env(BOARD) {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU250}
         } [get_ips $module_name]
@@ -72,9 +70,11 @@ switch $env(BOARD) {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU280}
         } [get_ips $module_name]
     }
 }
+
+# Board wrappers buffer PCIe reset and constrain its physical pin.
+set_property CONFIG.SYS_RST_N_BOARD_INTERFACE {Custom} [get_ips $module_name]

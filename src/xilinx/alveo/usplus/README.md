@@ -4,7 +4,8 @@ SYSMON uses the free-running 100 MHz board clock and its own library
 AXI-Lite CDC from the 125 MHz register bus, including reset synchronization.
 Its divide-by-20 setting produces a 5 MHz ADC clock. The register window
 starts at BAR2 + `0x210000` and spans 8 KiB, matching the IP address width;
-addresses above this window are not forwarded to SYSMON.
+addresses above this window are not forwarded to SYSMON. Only on-chip
+sensors are enabled; the wrapper has no external VP/VN analog inputs.
 
 `xilinx_alveo_usplus_cms` connects the board-specific CMS Subsystem 4.0 IP,
 `xilinx_usplus_cms_subsystem`, to a 32-bit AXI-Lite interface and the card's
@@ -44,6 +45,10 @@ The IP simulation build exports a flattened functional model from the
 synthesized checkpoint, including the firmware-initialized memories.
 This avoids dependencies on generated block-design names and tests the
 native hardware without the card-information fetch FSM or its model.
+
+PCIe reset is buffered by the board wrappers, which also constrain its
+package pin. QDMA therefore uses a custom reset board interface and receives
+the buffered logic signal.
 
 ## AXI-Lite ILA CDC waivers
 

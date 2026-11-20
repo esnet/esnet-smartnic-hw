@@ -1,5 +1,6 @@
 set module_name xilinx_sysmon
 create_ip -name system_management_wiz -vendor xilinx.com -library ip -module_name $module_name -dir . -force
+# Only on-chip sensors are connected; external analog inputs are unused.
 set_property -dict {
     CONFIG.INTERFACE_SELECTION {Enable_AXI}
     CONFIG.DCLK_FREQUENCY {100}
@@ -9,7 +10,7 @@ set_property -dict {
     CONFIG.VCCINT_ALARM {false} 
     CONFIG.VCCAUX_ALARM {false} 
     CONFIG.ENABLE_VBRAM_ALARM {false} 
-    CONFIG.CHANNEL_ENABLE_VP_VN {true} 
+    CONFIG.CHANNEL_ENABLE_VP_VN {false}
     CONFIG.AVERAGE_ENABLE_VBRAM {true} 
     CONFIG.AVERAGE_ENABLE_TEMPERATURE {true} 
     CONFIG.AVERAGE_ENABLE_VCCINT {true} 
