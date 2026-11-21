@@ -90,6 +90,11 @@ exception. Its configuration checks and rationale are documented in the
 The shell adapter supplies the generated CMAC checkpoints through
 `VALIDATION_WAIVER_INPUTS`; a missing or changed configuration fails validation.
 
+V80 builds select `av80.json` for the reviewed CPM5 dedicated-GT
+constant-clock coverage exception. Its scope and vendor timing rationale
+are documented with the [AVED block design integration](../../src/xilinx/alveo/versal/bd/README.md#cpm5-dedicated-gt-coverage-waiver).
+It does not waive ordinary unconstrained endpoints or DCMAC findings.
+
 Native UltraScale+ and Versal builds register the library's `fifo_core`,
 `sync_ctr`, and `sync_bus` waivers. Their scopes and protocol requirements
 are documented in the [FIFO README](../../esnet-fpga-library/src/fifo/README.md#xilinx-fifo-payload-cdc-waiver)
