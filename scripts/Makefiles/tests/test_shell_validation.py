@@ -216,6 +216,11 @@ exit "$VALIDATION_EXIT"
                 self.assertTrue(log.read_text().endswith("BUILD_EXIT_CODE=17\n"))
                 calls = (root / "calls").read_text().splitlines()
                 self.assertEqual(len(calls), 4 if template.endswith("versal") else 3)
+                if template.endswith("versal"):
+                    self.assertIn("_bd_refresh", calls[2])
+                    self.assertIn("COMPONENT=xilinx.alveo.versal.bd@smartnic", calls[3])
+                    for call in (calls[0], calls[2], calls[3]):
+                        self.assertIn("BUILD_ID=1234", call.split())
 
     def test_make_validate_only_schedules_the_checker_for_all_native_examples(self):
         for example, board in [("esnet_shell", "au55c"), ("esnet_shell", "au280"), ("esnet_shell", "au250"),
