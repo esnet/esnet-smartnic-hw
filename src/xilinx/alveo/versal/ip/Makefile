@@ -11,7 +11,9 @@ IP_LIST = \
 # clk_wizard emits no sim/ wrapper; the post-synthesis netlist is the
 # simulation model, and it instantiates MMCME5/BUFG from unisims.
 IP_SIM_SRC_FILES = \
-    xilinx_versal_core_clk/xilinx_versal_core_clk_sim_netlist.v
+    xilinx_versal_core_clk/xilinx_versal_core_clk_clocking_structure.v \
+    xilinx_versal_core_clk/xilinx_versal_core_clk_clk_wiz_top.v \
+    xilinx_versal_core_clk/sim/xilinx_versal_core_clk.v
 
 IP_SIM_INC_DIRS =
 

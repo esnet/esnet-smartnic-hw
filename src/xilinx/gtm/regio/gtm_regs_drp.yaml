@@ -1,3 +1,9 @@
+# ================================================================================================
+# Note: This file is provided for reference only.  It is not used in the SmartNIC design implmentation.
+#       It reflects the DRC addressing captured in the AMD .xlsx file, which increments the address
+#       by one for each 32-bit register.  The AXI4-Lite addressing used in the SmartNIC implementation
+#       can address each byte and therefore increments the address by 4 for each 32-bit GTM register.
+# ================================================================================================
 name: gtm_regs
 info: |
   Versal GTM Transceiver Registers
@@ -1400,10 +1406,18 @@ regs:
   - name: ch0_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch0_fabric_intf_cfg1
@@ -1413,7 +1427,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch0_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch0_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch0_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x0C65
@@ -2178,10 +2223,18 @@ regs:
   - name: ch1_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch1_fabric_intf_cfg1
@@ -2191,7 +2244,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch1_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch1_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch1_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x0D65
@@ -2854,10 +2938,18 @@ regs:
   - name: ch2_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch2_fabric_intf_cfg1
@@ -2867,7 +2959,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch2_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch2_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch2_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x0E65
@@ -3513,10 +3636,18 @@ regs:
   - name: ch3_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch3_fabric_intf_cfg1
@@ -3526,7 +3657,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch3_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch3_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch3_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x0F65

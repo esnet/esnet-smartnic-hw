@@ -1401,10 +1401,18 @@ regs:
   - name: ch0_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch0_fabric_intf_cfg1
@@ -1414,7 +1422,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch0_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch0_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch0_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x03194
@@ -2179,10 +2218,18 @@ regs:
   - name: ch1_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch1_fabric_intf_cfg1
@@ -2192,7 +2239,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch1_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch1_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch1_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x03594
@@ -2855,10 +2933,18 @@ regs:
   - name: ch2_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch2_fabric_intf_cfg1
@@ -2868,7 +2954,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch2_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch2_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch2_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x03994
@@ -3514,10 +3631,18 @@ regs:
   - name: ch3_fabric_intf_cfg0
     fields:
       - name: rsvd
-        width: 23
-      - name: loopback_pin_en
+        width: 5
+      - name: rxprbs_pin_en
         width: 1
       - name: rsvd1
+        width: 10
+      - name: txprbs_pin_en
+        width: 1
+      - name: rsvd2
+        width: 6
+      - name: loopback_pin_en
+        width: 1
+      - name: rsvd3
         width: 8
 
   - name: ch3_fabric_intf_cfg1
@@ -3527,7 +3652,38 @@ regs:
       - name: a_loopback
         width: 3
       - name: rsvd1
-        width: 22
+        width: 3
+      - name: a_rxqprbsen
+        width: 1
+      - name: rsvd2
+        width: 5
+      - name: a_rxprbssel
+        width: 4
+      - name: rsvd3
+        width: 9
+
+  - name: ch3_fabric_intf_cfg2
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch3_fabric_intf_cfg3
+    fields:
+      - name: rsvd
+        width: 32
+
+  - name: ch3_fabric_intf_cfg4
+    fields:
+      - name: rsvd
+        width: 12
+      - name: a_txprbssel
+        width: 4
+      - name: rsvd1
+        width: 14
+      - name: a_txqprbsen
+        width: 1
+      - name: rsvd2
+        width: 1
 
   - meta:
       pad_until: 0x03D94
