@@ -1,3 +1,9 @@
+# ============================================================================
+# Shared configuration
+# ============================================================================
+
+# Pipeline and tool environments
+
 include:
   - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
 
@@ -35,6 +41,38 @@ variables:
   before_script:
     - !reference [.common, before_script]
     - cp -r /tools/AVED/smbus_v1_1 src/xilinx/aved/hw/amd_v80_gen5x8_25.1/src/iprepo/
+
+# Shared console-filter definition for both build flows.
+.vivado_logging:
+  variables:
+    RUN_LOGGED_CONSOLE_FILTER: &vivado_console_filter "$CI_PROJECT_DIR/esnet-fpga-library/scripts/vivado/console_filters/vivado-progress.json"
+
+# Firmware handoff template
+
+.trigger_fw:
+  stage: trigger_downstream
+  variables:
+    SN_HW_GROUP: $CI_PROJECT_NAMESPACE
+    SN_HW_REPO: $CI_PROJECT_NAME
+    SN_HW_BRANCH: $CI_COMMIT_BRANCH
+    SN_HW_APP_NAME: $SN_HW_APP_NAME
+    SN_HW_BOARD: $SN_HW_BOARD
+    # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
+    ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
+  trigger:
+    project: ht/esnet-smartnic-fw
+    branch: main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+      allow_failure: true
+
+# ============================================================================
+# Simulation
+# ============================================================================
+
+# P4 and RTL simulation
 
 p4bm:
   stage: p4_sim
@@ -146,6 +184,12 @@ sim_platform:
   timeout: 8h
   needs: []
 
+# ============================================================================
+# OpenNIC Shell (ONS) flow
+# ============================================================================
+
+# IP preparation
+
 ons_ip_cache_key:
   stage: ip
   extends: .common
@@ -171,7 +215,7 @@ ons_ip_cache_key:
   stage: ip
   extends: .common
   variables:
-    RUN_LOGGED_CONSOLE_FILTER: &vivado_console_filter "$CI_PROJECT_DIR/esnet-fpga-library/scripts/vivado/console_filters/vivado-progress.json"
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
   tags:
     - ht-synth
   script:
@@ -191,24 +235,6 @@ ons_ip_cache_key:
   timeout: 4h
   needs:
     - ons_ip_cache_key
-
-ons_ip_au280:
-  extends: .ons_ip
-  variables:
-    SN_HW_BOARD: au280
-
-ons_ip_au55c:
-  extends: .ons_ip
-  variables:
-    SN_HW_BOARD: au55c
-
-ons_ip_au250:
-  extends: .ons_ip
-  variables:
-    SN_HW_BOARD: au250
-  rules:
-    - when: manual
-      allow_failure: true
 
 .smartnic_ip:
   stage: ip
@@ -233,6 +259,503 @@ ons_ip_au250:
     when: always
   timeout: 2h
   needs: []
+
+ons_ip_au280:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au280
+
+ons_ip_au55c:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au55c
+
+ons_ip_au250:
+  extends: .ons_ip
+  variables:
+    SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
+
+smartnic_ip_au280:
+  extends: .smartnic_ip
+  variables:
+    SN_HW_BOARD: au280
+
+smartnic_ip_au55c:
+  extends: .smartnic_ip
+  variables:
+    SN_HW_BOARD: au55c
+
+smartnic_ip_au250:
+  extends: .smartnic_ip
+  variables:
+    SN_HW_BOARD: au250
+  rules:
+    - when: manual
+      allow_failure: true
+
+# Image, validation and packaging templates
+
+.bitfile:
+  stage: bitfile
+  extends: .common
+  variables:
+    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
+    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
+  tags:
+    - ht-synth
+  script:
+    - |
+      cat <<_EOF >> bitfile.env
+      EXAMPLES_DIR=$EXAMPLES_DIR
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      _EOF
+    - cat bitfile.env
+    - |
+      python3 esnet-fpga-library/scripts/run_logged.py \
+          --log ci-logs/$CI_JOB_NAME.log \
+          -- bash -euo pipefail -c '
+          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          make -s -C src refresh
+          mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION
+          cp -pr .out/$SN_HW_BOARD/$VIVADO_VERSION $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
+          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          make -s prune_build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+          '
+  artifacts:
+    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
+    paths:
+      - .out
+      - $EXAMPLES_DIR/$SN_HW_APP_NAME
+      - open-nic-shell/build
+      - ci-logs
+    when: always
+    reports:
+      dotenv:
+        bitfile.env
+    expire_in: 2 weeks
+  timeout: 10h
+
+
+.validate:
+  stage: validate
+  extends: .common
+  tags:
+    - ht-misc
+  variables:
+    VALIDATE_WNS_MIN: "-0.100"
+    VALIDATE_TNS_MIN: "-100.0"
+  script:
+    - make -s validate BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
+  artifacts:
+    reports:
+      junit:
+        - open-nic-shell/build/${SN_HW_BOARD}_open-nic-ci/build_summary.xml
+  timeout: 30m
+  rules:
+    - allow_failure: true
+
+.hwapi:
+  stage: package
+  extends: .common
+  tags:
+    - ht-misc
+  before_script: []
+  script:
+    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
+    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.open-nic-ci.0.zip
+    - |
+      cat <<_EOF >> hwapi.env
+      SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
+      SN_HW_APP_NAME=$SN_HW_APP_NAME
+      SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
+      _EOF
+    - cat hwapi.env
+
+    # Capture Robot Framework files for inclusion in containers built by downstream pipelines.
+    - |
+      app_suite="suites/${SN_HW_APP_NAME}"
+      if ! [ -d "test/${app_suite}" ]; then
+          app_suite=''
+      fi
+      tar -cjf robot-framework-test.tar.bz2 -C test library suites/smartnic ${app_suite}
+
+  artifacts:
+    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
+    paths:
+      - esnet-smartnic-hwapi
+      - robot-framework-test.tar.bz2
+    when: always
+    expire_in: 3 month
+    reports:
+      dotenv:
+        hwapi.env
+  timeout: 30m
+
+# p4_and_verilog
+
+build_p4_and_verilog:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_and_verilog
+    SN_HW_BOARD: au55c
+  needs:
+    - ons_ip_au55c
+    - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_p4_and_verilog:
+  extends: .validate
+  needs:
+    - build_p4_and_verilog
+
+hwapi_p4_and_verilog:
+  extends: .hwapi
+  needs:
+    - build_p4_and_verilog
+
+fw_p4_and_verilog:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_and_verilog
+  needs:
+    - hwapi_p4_and_verilog
+
+# p2p
+
+build_p2p:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p2p
+    SN_HW_BOARD: au250
+  needs:
+    - ons_ip_au250
+    - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_p2p:
+  extends: .validate
+  needs:
+    - build_p2p
+
+hwapi_p2p:
+  extends: .hwapi
+  needs:
+    - build_p2p
+
+# p4_only_u280
+
+build_p4_only_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_only
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_p4_only_u280:
+  extends: .validate
+  needs:
+    - build_p4_only_u280
+
+hwapi_p4_only_u280:
+  extends: .hwapi
+  needs:
+    - build_p4_only_u280
+
+fw_p4_only_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_only_u280
+  needs:
+    - hwapi_p4_only_u280
+
+# p4_only_u55c
+
+build_p4_only_u55c:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_only
+    SN_HW_BOARD: au55c
+  needs:
+    - ons_ip_au55c
+    - smartnic_ip_au55c
+
+validate_p4_only_u55c:
+  extends: .validate
+  needs:
+    - build_p4_only_u55c
+
+hwapi_p4_only_u55c:
+  extends: .hwapi
+  needs:
+    - build_p4_only_u55c
+
+fw_p4_only_u55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_only_u55c
+  needs:
+    - hwapi_p4_only_u55c
+
+# p4_with_extern
+
+build_p4_with_extern:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_with_extern
+    SN_HW_BOARD: au250
+  needs:
+    - ons_ip_au250
+    - smartnic_ip_au250
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_p4_with_extern:
+  extends: .validate
+  needs:
+    - build_p4_with_extern
+
+hwapi_p4_with_extern:
+  extends: .hwapi
+  needs:
+    - build_p4_with_extern
+
+fw_p4_with_extern:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_with_extern
+  needs:
+    - hwapi_p4_with_extern
+
+# p4_multi_proc_u280
+
+build_p4_multi_proc_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+
+validate_p4_multi_proc_u280:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u280
+
+hwapi_p4_multi_proc_u280:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u280
+
+fw_p4_multi_proc_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u280
+  needs:
+    - hwapi_p4_multi_proc_u280
+
+# p4_multi_proc_u55c
+
+build_p4_multi_proc_u55c:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_multi_proc
+    SN_HW_BOARD: au55c
+  needs:
+    - ons_ip_au55c
+    - smartnic_ip_au55c
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_p4_multi_proc_u55c:
+  extends: .validate
+  needs:
+    - build_p4_multi_proc_u55c
+
+hwapi_p4_multi_proc_u55c:
+  extends: .hwapi
+  needs:
+    - build_p4_multi_proc_u55c
+
+fw_p4_multi_proc_u55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_multi_proc_u55c
+  needs:
+    - hwapi_p4_multi_proc_u55c
+
+# sar_test_u280
+
+build_sar_test_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: sar_test
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_sar_test_u280:
+  extends: .validate
+  needs:
+    - build_sar_test_u280
+
+hwapi_sar_test_u280:
+  extends: .hwapi
+  needs:
+    - build_sar_test_u280
+
+fw_sar_test_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_sar_test_u280
+  needs:
+    - hwapi_sar_test_u280
+
+# fec_test_u280
+
+build_fec_test_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: fec_test
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_fec_test_u280:
+  extends: .validate
+  needs:
+    - build_fec_test_u280
+
+hwapi_fec_test_u280:
+  extends: .hwapi
+  needs:
+    - build_fec_test_u280
+
+fw_fec_test_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_fec_test_u280
+  needs:
+    - hwapi_fec_test_u280
+
+# udplb_fec_u280
+
+build_udplb_fec_u280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: udplb_fec
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+    - smartnic_ip_au280
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_udplb_fec_u280:
+  extends: .validate
+  needs:
+    - build_udplb_fec_u280
+
+hwapi_udplb_fec_u280:
+  extends: .hwapi
+  needs:
+    - build_udplb_fec_u280
+
+fw_udplb_fec_u280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_udplb_fec_u280
+  needs:
+    - hwapi_udplb_fec_u280
+
+# shell_au55c
+
+build_shell_au55c:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_BOARD: au55c
+  needs:
+    - ons_ip_au55c
+  when: manual
+
+hwapi_shell_au55c:
+  extends: .hwapi
+  needs:
+    - build_shell_au55c
+
+fw_shell_au55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_shell_au55c
+  needs:
+    - hwapi_shell_au55c
+
+# shell_au280
+
+build_shell_au280:
+  extends: .bitfile
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_BOARD: au280
+  needs:
+    - ons_ip_au280
+  when: manual
+
+hwapi_shell_au280:
+  extends: .hwapi
+  needs:
+    - build_shell_au280
+
+fw_shell_au280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_shell_au280
+  needs:
+    - hwapi_shell_au280
+
+# ============================================================================
+# Native ESnet shell flow
+# ============================================================================
+
+# IP preparation
 
 shell_ip_cache_key:
   stage: ip
@@ -301,24 +824,6 @@ shell_ip_cache_key:
           '
   timeout: 8h
 
-smartnic_ip_au280:
-  extends: .smartnic_ip
-  variables:
-    SN_HW_BOARD: au280
-
-smartnic_ip_au55c:
-  extends: .smartnic_ip
-  variables:
-    SN_HW_BOARD: au55c
-
-smartnic_ip_au250:
-  extends: .smartnic_ip
-  variables:
-    SN_HW_BOARD: au250
-  rules:
-    - when: manual
-      allow_failure: true
-
 shell_ip_au280:
   extends: .shell_ip
   variables:
@@ -348,49 +853,8 @@ shell_ip_av80:
   variables:
     SN_HW_BOARD: av80
 
-.bitfile:
-  stage: bitfile
-  extends: .common
-  variables:
-    RUN_LOGGED_CONSOLE_FILTER: *vivado_console_filter
-    IMPL_STRATEGY: Performance_ExplorePostRoutePhysOpt
-  tags:
-    - ht-synth
-  script:
-    - |
-      cat <<_EOF >> bitfile.env
-      EXAMPLES_DIR=$EXAMPLES_DIR
-      SN_HW_APP_NAME=$SN_HW_APP_NAME
-      SN_HW_BOARD=$SN_HW_BOARD
-      _EOF
-    - cat bitfile.env
-    - |
-      python3 esnet-fpga-library/scripts/run_logged.py \
-          --log ci-logs/$CI_JOB_NAME.log \
-          -- bash -euo pipefail -c '
-          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME config BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-          make -s -C src refresh
-          mkdir -p $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION
-          cp -pr .out/$SN_HW_BOARD/$VIVADO_VERSION $EXAMPLES_DIR/$SN_HW_APP_NAME/.app/out/$SN_HW_BOARD/$VIVADO_VERSION/smartnic 2>/dev/null && echo "Using pre-generated SmartNIC IP" || echo "No pre-generated SmartNIC IP available."
-          make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-          make -s prune_build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-          '
-  artifacts:
-    name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
-    paths:
-      - .out
-      - $EXAMPLES_DIR/$SN_HW_APP_NAME
-      - open-nic-shell/build
-      - ci-logs
-    when: always
-    reports:
-      dotenv:
-        bitfile.env
-    expire_in: 2 weeks
-  timeout: 10h
+# Image, validation and packaging templates
 
-# Image workflow shared by native UltraScale+ and Versal shell builds.
-# Environment templates own the container image and before_script.
 .shell_image:
   variables:
     RUNNER_SCRIPT_TIMEOUT: 10h
@@ -484,272 +948,30 @@ shell_ip_av80:
     - job: shell_ip_av80
       artifacts: true
 
-
-build_p4_and_verilog:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_and_verilog
-    SN_HW_BOARD: au55c
-  needs:
-    - ons_ip_au55c
-    - smartnic_ip_au55c
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_p2p:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p2p
-    SN_HW_BOARD: au250
-  needs:
-    - ons_ip_au250
-    - smartnic_ip_au250
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_p4_only_u280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_only
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-    - smartnic_ip_au280
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_p4_only_u55c:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_only
-    SN_HW_BOARD: au55c
-  needs:
-    - ons_ip_au55c
-    - smartnic_ip_au55c
-
-build_p4_with_extern:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_with_extern
-    SN_HW_BOARD: au250
-  needs:
-    - ons_ip_au250
-    - smartnic_ip_au250
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_p4_multi_proc_u280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_multi_proc
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-    - smartnic_ip_au280
-
-build_p4_multi_proc_u55c:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_multi_proc
-    SN_HW_BOARD: au55c
-  needs:
-    - ons_ip_au55c
-    - smartnic_ip_au55c
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_sar_test_u280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: sar_test
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-    - smartnic_ip_au280
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_fec_test_u280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: fec_test
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-    - smartnic_ip_au280
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_udplb_fec_u280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: udplb_fec
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-    - smartnic_ip_au280
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_udplb_fec_av80:
-  extends: .shell_image_versal
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: udplb_fec_av80
-    SN_HW_BOARD: av80
-  rules:
-    - when: manual
-      allow_failure: true
-
-build_p4_only_av80:
-  extends: .shell_image_versal
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: p4_only_av80
-    SN_HW_BOARD: av80
-
-build_shell_au55c:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_BOARD: au55c
-  needs:
-    - ons_ip_au55c
-  when: manual
-
-build_shell_au280:
-  extends: .bitfile
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_BOARD: au280
-  needs:
-    - ons_ip_au280
-  when: manual
-
-.validate:
+.validate_shell:
+  extends: .common
   stage: validate
-  extends: .common
-  tags:
-    - ht-misc
-  variables:
-    VALIDATE_WNS_MIN: "-0.100"
-    VALIDATE_TNS_MIN: "-100.0"
-  script:
-    - make -s validate BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
-  artifacts:
-    reports:
-      junit:
-        - open-nic-shell/build/${SN_HW_BOARD}_open-nic-ci/build_summary.xml
-  timeout: 30m
-  rules:
-    - allow_failure: true
-
-validate_p4_and_verilog:
-  extends: .validate
-  needs:
-    - build_p4_and_verilog
-
-validate_p2p:
-  extends: .validate
-  needs:
-    - build_p2p
-
-validate_p4_only_u280:
-  extends: .validate
-  needs:
-    - build_p4_only_u280
-
-validate_p4_only_u55c:
-  extends: .validate
-  needs:
-    - build_p4_only_u55c
-
-validate_p4_with_extern:
-  extends: .validate
-  needs:
-    - build_p4_with_extern
-
-validate_p4_multi_proc_u280:
-  extends: .validate
-  needs:
-    - build_p4_multi_proc_u280
-
-validate_p4_multi_proc_u55c:
-  extends: .validate
-  needs:
-    - build_p4_multi_proc_u55c
-
-validate_sar_test_u280:
-  extends: .validate
-  needs:
-    - build_sar_test_u280
-
-validate_fec_test_u280:
-  extends: .validate
-  needs:
-    - build_fec_test_u280
-
-validate_udplb_fec_u280:
-  extends: .validate
-  needs:
-    - build_udplb_fec_u280
-
-.hwapi:
-  stage: package
-  extends: .common
-  tags:
-    - ht-misc
   before_script: []
+  tags:
+    - ht-misc
   script:
-    - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
-    - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.open-nic-ci.0.zip
     - |
-      cat <<_EOF >> hwapi.env
-      SN_HW_HWAPI_JOB_NUMBER=$CI_JOB_ID
-      SN_HW_APP_NAME=$SN_HW_APP_NAME
-      SN_HW_BOARD=$SN_HW_BOARD
-      SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
-      _EOF
-    - cat hwapi.env
-
-    # Capture Robot Framework files for inclusion in containers built by downstream pipelines.
-    - |
-      app_suite="suites/${SN_HW_APP_NAME}"
-      if ! [ -d "test/${app_suite}" ]; then
-          app_suite=''
-      fi
-      tar -cjf robot-framework-test.tar.bz2 -C test library suites/smartnic ${app_suite}
-
+      validation_dir="$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation"
+      python3 esnet-fpga-library/scripts/vivado/validation/validate_build.py \
+        --summary-only --output-dir "$validation_dir" \
+        --status-file "$validation_dir/ci-${SN_HW_BUILD_JOB_NUMBER:-missing}.exitcode"
   artifacts:
-    name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
-    paths:
-      - esnet-smartnic-hwapi
-      - robot-framework-test.tar.bz2
     when: always
-    expire_in: 3 month
+    paths:
+      - $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation
     reports:
-      dotenv:
-        hwapi.env
+      junit: $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation/junit.xml
+    expire_in: 2 weeks
+  rules:
+    - if: '$SHELL_VALIDATION_REQUIRED == "1"'
+      allow_failure: false
+    - when: on_success
+      allow_failure: true
   timeout: 30m
 
 .hwapi_shell:
@@ -780,6 +1002,178 @@ validate_udplb_fec_u280:
       dotenv: hwapi.env
   timeout: 30m
 
+# Native shell: au55c
+
+build_esnet_shell_au55c:
+  extends: .shell_image_usplus
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
+    SN_HW_BOARD: au55c
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au55c
+      artifacts: true
+  when: manual
+
+validate_esnet_shell_au55c:
+  extends: .validate_shell
+  needs:
+    - job: build_esnet_shell_au55c
+      artifacts: true
+
+hwapi_esnet_shell_au55c:
+  extends: .hwapi_shell
+  needs:
+    - build_esnet_shell_au55c
+
+# Native shell: au280
+
+build_esnet_shell_au280:
+  extends: .shell_image_usplus
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
+    SN_HW_BOARD: au280
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au280
+      artifacts: true
+  when: manual
+
+validate_esnet_shell_au280:
+  extends: .validate_shell
+  needs:
+    - job: build_esnet_shell_au280
+      artifacts: true
+
+hwapi_esnet_shell_au280:
+  extends: .hwapi_shell
+  needs:
+    - build_esnet_shell_au280
+
+# Native shell: au250
+
+build_esnet_shell_au250:
+  extends: .shell_image_usplus
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
+    SN_HW_BOARD: au250
+  needs:
+    - job: shell_ip_cache_key
+      artifacts: true
+    - job: shell_ip_au250
+      artifacts: true
+  when: manual
+
+validate_esnet_shell_au250:
+  extends: .validate_shell
+  needs:
+    - job: build_esnet_shell_au250
+      artifacts: true
+
+hwapi_esnet_shell_au250:
+  extends: .hwapi_shell
+  needs:
+    - build_esnet_shell_au250
+
+# Native shell: av80
+
+build_esnet_shell_av80:
+  extends: .shell_image_versal
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
+    SN_HW_BOARD: av80
+
+validate_esnet_shell_av80:
+  extends: .validate_shell
+  needs:
+    - job: build_esnet_shell_av80
+      artifacts: true
+
+hwapi_esnet_shell_av80:
+  extends: .hwapi_shell
+  needs:
+    - build_esnet_shell_av80
+
+fw_shell_av80:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_esnet_shell_av80
+  needs:
+    - hwapi_esnet_shell_av80
+
+# p4_only_av80
+
+build_p4_only_av80:
+  extends: .shell_image_versal
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: p4_only_av80
+    SN_HW_BOARD: av80
+
+validate_p4_only_av80:
+  extends: .validate_shell
+  needs:
+    - job: build_p4_only_av80
+      artifacts: true
+
+hwapi_p4_only_av80:
+  extends: .hwapi_shell
+  needs:
+    - build_p4_only_av80
+
+fw_p4_only_av80:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_p4_only_av80
+  needs:
+    - hwapi_p4_only_av80
+
+# udplb_fec_av80
+
+build_udplb_fec_av80:
+  extends: .shell_image_versal
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: udplb_fec_av80
+    SN_HW_BOARD: av80
+  rules:
+    - when: manual
+      allow_failure: true
+
+validate_udplb_fec_av80:
+  extends: .validate_shell
+  needs:
+    - job: build_udplb_fec_av80
+      artifacts: true
+
+hwapi_udplb_fec_av80:
+  extends: .hwapi_shell
+  needs:
+    - build_udplb_fec_av80
+
+fw_udplb_fec_av80:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_udplb_fec_av80
+  needs:
+    - hwapi_udplb_fec_av80
+
+# ============================================================================
+# Bootstrap handoff (ONS UltraScale+ and native ESnet V80)
+# ============================================================================
+
+# Combined shell bundle and bootstrap trigger
+
 .hwapi_gather:
   stage: package
   extends: .common
@@ -807,76 +1201,6 @@ validate_udplb_fec_u280:
       dotenv: hwapi.env
   timeout: 30m
 
-hwapi_p4_and_verilog:
-  extends: .hwapi
-  needs:
-    - build_p4_and_verilog
-
-hwapi_p2p:
-  extends: .hwapi
-  needs:
-    - build_p2p
-
-hwapi_p4_only_u280:
-  extends: .hwapi
-  needs:
-    - build_p4_only_u280
-
-hwapi_p4_only_u55c:
-  extends: .hwapi
-  needs:
-    - build_p4_only_u55c
-
-hwapi_p4_with_extern:
-  extends: .hwapi
-  needs:
-    - build_p4_with_extern
-
-hwapi_p4_multi_proc_u280:
-  extends: .hwapi
-  needs:
-    - build_p4_multi_proc_u280
-
-hwapi_p4_multi_proc_u55c:
-  extends: .hwapi
-  needs:
-    - build_p4_multi_proc_u55c
-
-hwapi_sar_test_u280:
-  extends: .hwapi
-  needs:
-    - build_sar_test_u280
-
-hwapi_fec_test_u280:
-  extends: .hwapi
-  needs:
-    - build_fec_test_u280
-
-hwapi_udplb_fec_u280:
-  extends: .hwapi
-  needs:
-    - build_udplb_fec_u280
-
-hwapi_udplb_fec_av80:
-  extends: .hwapi_shell
-  needs:
-    - build_udplb_fec_av80
-
-hwapi_p4_only_av80:
-  extends: .hwapi_shell
-  needs:
-    - build_p4_only_av80
-
-hwapi_shell_au55c:
-  extends: .hwapi
-  needs:
-    - build_shell_au55c
-
-hwapi_shell_au280:
-  extends: .hwapi
-  needs:
-    - build_shell_au280
-
 hwapi_shell:
   extends: .hwapi_gather
   variables:
@@ -888,25 +1212,6 @@ hwapi_shell:
       artifacts: true
     - job: hwapi_esnet_shell_av80
       artifacts: true
-
-.trigger_fw:
-  stage: trigger_downstream
-  variables:
-    SN_HW_GROUP: $CI_PROJECT_NAMESPACE
-    SN_HW_REPO: $CI_PROJECT_NAME
-    SN_HW_BRANCH: $CI_COMMIT_BRANCH
-    SN_HW_APP_NAME: $SN_HW_APP_NAME
-    SN_HW_BOARD: $SN_HW_BOARD
-    # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
-    ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
-  trigger:
-    project: ht/esnet-smartnic-fw
-    branch: main
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-      when: manual
-      allow_failure: true
 
 trigger_bootstrap:
   stage: trigger_downstream
@@ -930,237 +1235,4 @@ trigger_bootstrap:
       allow_failure: true
   needs:
     - job: hwapi_shell
-      artifacts: true
-
-fw_p4_and_verilog:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_and_verilog
-  needs:
-    - hwapi_p4_and_verilog
-
-fw_p4_only_u280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_only_u280
-  needs:
-    - hwapi_p4_only_u280
-
-fw_p4_only_u55c:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_only_u55c
-  needs:
-    - hwapi_p4_only_u55c
-
-fw_p4_with_extern:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_with_extern
-  needs:
-    - hwapi_p4_with_extern
-
-fw_p4_multi_proc_u280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_multi_proc_u280
-  needs:
-    - hwapi_p4_multi_proc_u280
-
-fw_p4_multi_proc_u55c:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_multi_proc_u55c
-  needs:
-    - hwapi_p4_multi_proc_u55c
-
-fw_sar_test_u280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_sar_test_u280
-  needs:
-    - hwapi_sar_test_u280
-
-fw_fec_test_u280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_fec_test_u280
-  needs:
-    - hwapi_fec_test_u280
-
-fw_udplb_fec_u280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_udplb_fec_u280
-  needs:
-    - hwapi_udplb_fec_u280
-
-fw_udplb_fec_av80:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_udplb_fec_av80
-  needs:
-    - hwapi_udplb_fec_av80
-
-fw_p4_only_av80:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_p4_only_av80
-  needs:
-    - hwapi_p4_only_av80
-
-fw_shell_au55c:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_shell_au55c
-  needs:
-    - hwapi_shell_au55c
-
-fw_shell_au280:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_shell_au280
-  needs:
-    - hwapi_shell_au280
-
-fw_shell_av80:
-  extends: .trigger_fw
-  variables:
-    SN_HW_API_JOB: hwapi_esnet_shell_av80
-  needs:
-    - hwapi_esnet_shell_av80
-
-build_esnet_shell_au55c:
-  extends: .shell_image_usplus
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: esnet_shell
-    SN_HW_BOARD: au55c
-  needs:
-    - job: shell_ip_cache_key
-      artifacts: true
-    - job: shell_ip_au55c
-      artifacts: true
-  when: manual
-
-hwapi_esnet_shell_au55c:
-  extends: .hwapi_shell
-  needs:
-    - build_esnet_shell_au55c
-
-
-build_esnet_shell_au280:
-  extends: .shell_image_usplus
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: esnet_shell
-    SN_HW_BOARD: au280
-  needs:
-    - job: shell_ip_cache_key
-      artifacts: true
-    - job: shell_ip_au280
-      artifacts: true
-  when: manual
-
-hwapi_esnet_shell_au280:
-  extends: .hwapi_shell
-  needs:
-    - build_esnet_shell_au280
-
-
-build_esnet_shell_au250:
-  extends: .shell_image_usplus
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: esnet_shell
-    SN_HW_BOARD: au250
-  needs:
-    - job: shell_ip_cache_key
-      artifacts: true
-    - job: shell_ip_au250
-      artifacts: true
-  when: manual
-
-hwapi_esnet_shell_au250:
-  extends: .hwapi_shell
-  needs:
-    - build_esnet_shell_au250
-
-
-build_esnet_shell_av80:
-  extends: .shell_image_versal
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: esnet_shell
-    SN_HW_BOARD: av80
-
-hwapi_esnet_shell_av80:
-  extends: .hwapi_shell
-  needs:
-    - build_esnet_shell_av80
-
-.validate_shell:
-  extends: .common
-  stage: validate
-  before_script: []
-  tags:
-    - ht-misc
-  script:
-    - |
-      validation_dir="$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation"
-      python3 esnet-fpga-library/scripts/vivado/validation/validate_build.py \
-        --summary-only --output-dir "$validation_dir" \
-        --status-file "$validation_dir/ci-${SN_HW_BUILD_JOB_NUMBER:-missing}.exitcode"
-  artifacts:
-    when: always
-    paths:
-      - $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation
-    reports:
-      junit: $EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation/junit.xml
-    expire_in: 2 weeks
-  rules:
-    - if: '$SHELL_VALIDATION_REQUIRED == "1"'
-      allow_failure: false
-    - when: on_success
-      allow_failure: true
-  timeout: 30m
-
-validate_esnet_shell_au55c:
-  extends: .validate_shell
-  needs:
-    - job: build_esnet_shell_au55c
-      artifacts: true
-
-validate_esnet_shell_au280:
-  extends: .validate_shell
-  needs:
-    - job: build_esnet_shell_au280
-      artifacts: true
-
-validate_esnet_shell_au250:
-  extends: .validate_shell
-  needs:
-    - job: build_esnet_shell_au250
-      artifacts: true
-
-validate_esnet_shell_av80:
-  extends: .validate_shell
-  needs:
-    - job: build_esnet_shell_av80
-      artifacts: true
-
-validate_p4_only_av80:
-  extends: .validate_shell
-  needs:
-    - job: build_p4_only_av80
-      artifacts: true
-
-validate_udplb_fec_av80:
-  extends: .validate_shell
-  needs:
-    - job: build_udplb_fec_av80
       artifacts: true
