@@ -1,6 +1,6 @@
-name: dcmac_channel_regs
+name: dcmac_mac_chan_regs
 info: |
-  AMD DCMAC Per-Channel Registers (C0-C5 canonical, C0_ prefix stripped).
+  AMD DCMAC Channel Registers (C0-C5 canonical).
   Ref: AMD DCMAC Register Map v1.4
   Mount at channel base address: C0=0x01000, C1=0x02000, ..., C5=0x06000.
   Note: stat_tx_ecc_correctable/uncorrectable_count at offsets 0x2D0/0x2D8

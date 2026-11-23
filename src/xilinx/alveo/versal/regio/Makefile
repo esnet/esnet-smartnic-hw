@@ -8,8 +8,7 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 # Regmap YAML sources
 # -----------------------------------------------
-REG_BLOCK_YAML = \
-    versal_hw_regs.yaml \
+REG_BLOCK_YAML =
 
 REG_DECODER_YAML = \
     xilinx_alveo_versal_decoder.yaml

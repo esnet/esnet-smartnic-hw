@@ -2,7 +2,7 @@
 //
 // Integrates xilinx_dcmac_wrapper with GT clocking (IBUFDS_GTME5, BUFG_GT,
 // MBUFG_GT), xilinx_dcmac_0_clk_wiz_0, and xilinx_dcmac_0_gtwiz_versal_0.
-// Based on xilinx_dcmac_0_exdes.sv example design (single 400GE channel, QUAD0 only).
+// Based on xilinx_dcmac_0_exdes.sv example design.
 
 module dcmac_wrapper (
     // GT reference clock (differential)
@@ -18,26 +18,6 @@ module dcmac_wrapper (
     // Free-running clock for GT wizard (e.g. 100 MHz system clock)
     input logic	 init_clk,
 
-    // GT reset / control
-    input  logic gt_reset_all_in,
-    input  logic gt_reset_tx_datapath_in,
-    input  logic gt_reset_rx_datapath_in,
-
-    output logic [1:0] gt_tx_reset_done,
-    output logic [1:0] gt_rx_reset_done,
-    output logic [1:0] gtpowergood,
-    output logic       clk_wiz_locked,
-
-    // GT equalizer / loopback controls
-    input logic [2:0] gt_loopback,
-    input logic [7:0] gt_line_rate,
-    input logic [5:0] gt_txprecursor,
-    input logic [5:0] gt_txpostcursor,
-    input logic [6:0] gt_txmaincursor,
-    input logic       gt_rxcdrhold,
-
-    input logic       dcmac_lpbk_en,
-
     // Clock outputs
     output logic axis_clk_out,
 
@@ -45,10 +25,34 @@ module dcmac_wrapper (
     axi4s_intf.tx axis_rx [2],
     axi4s_intf.rx axis_tx [2],
 
-    // AXI-L interfaces
-    axi4l_intf.peripheral axil_dcmac,
-    axi4l_intf.peripheral axil_gt [2]
+    // AXI-L interface
+    axi4l_intf.peripheral axil_if
 );
+
+    // =========================================================================
+    // AXI-L decoder
+    // =========================================================================
+    axi4l_intf #() axil_if_regs   ();
+    axi4l_intf #() axil_if_gtm[2] ();
+    axi4l_intf #() axil_if_mac    ();
+
+    dcmac_decoder i_dcmac_decoder (
+        .axil_if        ( axil_if        ),
+        .regs_axil_if   ( axil_if_regs   ),
+        .gtm0_axil_if   ( axil_if_gtm[0] ),
+        .gtm1_axil_if   ( axil_if_gtm[1] ),
+        .mac_axil_if    ( axil_if_mac    )
+    );
+
+    // =========================================================================
+    // DCMAC register block
+    // =========================================================================
+    dcmac_regs_reg_intf dcmac_regs_reg_if ();
+
+    dcmac_regs_reg_blk i_dcmac_regs_reg_blk (
+        .axil_if    ( axil_if_regs    ),
+        .reg_blk_if ( dcmac_regs_reg_if )
+    );
 
     // =========================================================================
     // GT refclk and BUFG_GT → clk_wiz input
@@ -90,6 +94,7 @@ module dcmac_wrapper (
     logic core_clk;
     logic axis_clk;
     logic ts_clk_0;
+    logic clk_wiz_locked;
     xilinx_dcmac_0_clk_wiz_0 i_clk_wiz (
         .reset   (1'b0),
         .clk_in1 (clk_wiz_in),
@@ -99,29 +104,35 @@ module dcmac_wrapper (
         .clk_out3 (ts_clk_0)
     );
 
-    assign axis_clk_out  = axis_clk;
+    assign axis_clk_out = axis_clk;
 
 
     // =========================================================================
     // GT wizard reset / done
     // =========================================================================
     logic [7:0] gt_reset_ctr = '1;
-    always_ff @(posedge init_clk) if (clk_wiz_locked && gt_reset_ctr != '0) gt_reset_ctr <= gt_reset_ctr-1;
+    always_ff @(posedge init_clk)
+        if (clk_wiz_locked && gt_reset_ctr != '0) gt_reset_ctr <= gt_reset_ctr-1;
 
     logic  _gt_reset_all_in;
-    assign _gt_reset_all_in = gt_reset_all_in | ((gt_reset_ctr != '0) && (gt_reset_ctr != '1));
+    assign _gt_reset_all_in = dcmac_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_all | 
+                              ( (gt_reset_ctr != '0) && (gt_reset_ctr != '1) );
 
     logic [1:0] rst_tx_done;
     logic [1:0] rst_rx_done;
+    logic [1:0] gtpowergood;
 
-    assign gt_tx_reset_done = rst_tx_done;
-    assign gt_rx_reset_done = rst_rx_done;
+    assign dcmac_regs_reg_if.dcmac_gt_status_nxt_v = 1'b1;
+    assign dcmac_regs_reg_if.dcmac_gt_status_nxt.gt_tx_reset_done = rst_tx_done;
+    assign dcmac_regs_reg_if.dcmac_gt_status_nxt.gt_rx_reset_done = rst_rx_done;
+    assign dcmac_regs_reg_if.dcmac_gt_status_nxt.gtpowergood      = gtpowergood;
+    assign dcmac_regs_reg_if.dcmac_gt_status_nxt.clk_wiz_locked   = clk_wiz_locked;
 
     logic _gt_tx_reset_done;
     logic _gt_rx_reset_done;
 
-    assign _gt_tx_reset_done = &gt_tx_reset_done;
-    assign _gt_rx_reset_done = &gt_rx_reset_done;
+    assign _gt_tx_reset_done = &rst_tx_done;
+    assign _gt_rx_reset_done = &rst_rx_done;
 
 
     // =========================================================================
@@ -141,7 +152,6 @@ module dcmac_wrapper (
 
     // GT data buses
     logic [1:0][3:0][255:0] rxdata_in;
-    logic [1:0][3:0][255:0] rxdata_in_mux;
     logic [1:0][3:0][255:0] txdata_out;
 
    
@@ -153,84 +163,84 @@ module dcmac_wrapper (
             MBUFG_GT #(
                 .MODE ("PERFORMANCE")
             ) i_mbufg_gt_tx (
-                .O1      (tx_usrclk[i]),   // ~664 MHz
-                .O2      (tx_usrclk2[i]),  // ~332 MHz
-                .O3      (),
-                .O4      (),
-                .CE      (1'b1),
-                .CEMASK  (1'b0),
-                .CLR     (tx_clr_out[i]),
-                .CLRB_LEAF (tx_clrb_leaf_out[i]),
-                .CLRMASK (1'b0),
-                .DIV     (3'd0),
-                .I       (ch0_txoutclk[i])
+                .O1         (tx_usrclk[i]),   // ~664 MHz
+                .O2         (tx_usrclk2[i]),  // ~332 MHz
+                .O3         (),
+                .O4         (),
+                .CE         (1'b1),
+                .CEMASK     (1'b0),
+                .CLR        (tx_clr_out[i]),
+                .CLRB_LEAF  (tx_clrb_leaf_out[i]),
+                .CLRMASK    (1'b0),
+                .DIV        (3'd0),
+                .I          (ch0_txoutclk[i])
             );
 
             MBUFG_GT #(
                 .MODE ("PERFORMANCE")
             ) i_mbufg_gt_rx (
-                .O1      (rx_usrclk[i]),
-                .O2      (rx_usrclk2[i]),
-                .O3      (),
-                .O4      (),
-                .CE      (1'b1),
-                .CEMASK  (1'b0),
-                .CLR     (rx_clr_out[i]),
-                .CLRB_LEAF (rx_clrb_leaf_out[i]),
-                .CLRMASK (1'b0),
-                .DIV     (3'd0),
-                .I       (ch0_rxoutclk[i])
+                .O1         (rx_usrclk[i]),
+                .O2         (rx_usrclk2[i]),
+                .O3         (),
+                .O4         (),
+                .CE         (1'b1),
+                .CEMASK     (1'b0),
+                .CLR        (rx_clr_out[i]),
+                .CLRB_LEAF  (rx_clrb_leaf_out[i]),
+                .CLRMASK    (1'b0),
+                .DIV        (3'd0),
+                .I          (ch0_rxoutclk[i])
             );
 
             // =========================================================================
             // GT wrapper instance.
             // =========================================================================
             xilinx_gtm_wrapper i_xilinx_gtm_wrapper (
-                .gtwiz_freerun_clk              (init_clk),
-                .QUAD0_GTREFCLK0                (gt_refclk0),
+                .gtwiz_freerun_clk         (init_clk),
+                .QUAD0_GTREFCLK0           (gt_refclk0),
 
                 // Recovered clocks → MBUFG_GT
-                .QUAD0_TX0_outclk               (ch0_txoutclk[i]),
-                .QUAD0_RX0_outclk               (ch0_rxoutclk[i]),
+                .QUAD0_TX0_outclk          (ch0_txoutclk[i]),
+                .QUAD0_RX0_outclk          (ch0_rxoutclk[i]),
 
                 // User clocks from MBUFG_GT (all four lanes share channel 0 clocks)
-                .gt_tx_usrclk                   (tx_usrclk2[i]),
-                .gt_rx_usrclk                   (rx_usrclk2[i]),
+                .gt_tx_usrclk              (tx_usrclk2[i]),
+                .gt_rx_usrclk              (rx_usrclk2[i]),
 
                 // INTF0 reset control
-                .INTF0_TX_clr_out               (tx_clr_out[i]),
-                .INTF0_TX_clrb_leaf_out         (tx_clrb_leaf_out[i]),
-                .INTF0_RX_clr_out               (rx_clr_out[i]),
-                .INTF0_RX_clrb_leaf_out         (rx_clrb_leaf_out[i]),
-                .INTF0_rst_all_in               (_gt_reset_all_in),
-                .INTF0_rst_tx_datapath_in       (gt_reset_tx_datapath_in),
-                .INTF0_rst_tx_done_out          (rst_tx_done[i]),
-                .INTF0_rst_rx_datapath_in       (gt_reset_rx_datapath_in),
-                .INTF0_rst_rx_done_out          (rst_rx_done[i]),
+                .INTF0_TX_clr_out          (tx_clr_out[i]),
+                .INTF0_TX_clrb_leaf_out    (tx_clrb_leaf_out[i]),
+                .INTF0_RX_clr_out          (rx_clr_out[i]),
+                .INTF0_RX_clrb_leaf_out    (rx_clrb_leaf_out[i]),
+                .INTF0_rst_all_in          (_gt_reset_all_in),
+                .INTF0_rst_tx_datapath_in  (dcmac_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_tx_datapath),
+                .INTF0_rst_tx_done_out     (rst_tx_done[i]),
+                .INTF0_rst_rx_datapath_in  (dcmac_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_rx_datapath),
+                .INTF0_rst_rx_done_out     (rst_rx_done[i]),
 
                 // GT configuration
-                .gt_loopback                    (gt_loopback),
-                .gt_txrate                      (gt_line_rate),
-                .gt_txprecursor                 (gt_txprecursor),
-                .gt_txpostcursor                (gt_txpostcursor),
-                .gt_txmaincursor                (gt_txmaincursor),
-                .gt_rxrate                      (gt_line_rate),
-                .gt_rxcdrhold                   (gt_rxcdrhold),
+                .gt_loopback               (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_loopback),
+                .gt_txrate                 (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_line_rate),
+                .gt_txprecursor            (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txprecursor),
+                .gt_txpostcursor           (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txpostcursor),
+                .gt_txmaincursor           (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_txmaincursor),
+                .gt_rxrate                 (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_line_rate),
+                .gt_rxcdrhold              (dcmac_regs_reg_if.dcmac_gt_loopback_ctrl.gt_rxcdrhold),
 
-                .gtpowergood                    (gtpowergood[i]),
+                .gtpowergood               (gtpowergood[i]),
 
                 // Serial IO connections
-                .QUAD0_rxp                      (gt_rxp_in[i]),
-                .QUAD0_rxn                      (gt_rxn_in[i]),
-                .QUAD0_txp                      (gt_txp_out[i]),
-                .QUAD0_txn                      (gt_txn_out[i]),
+                .QUAD0_rxp                 (gt_rxp_in[i]),
+                .QUAD0_rxn                 (gt_rxn_in[i]),
+                .QUAD0_txp                 (gt_txp_out[i]),
+                .QUAD0_txn                 (gt_txn_out[i]),
 
                 // Internal bus connections
-                .gt_txdata                      (txdata_out[i]),
-                .gt_rxdata                      (rxdata_in[i]),
+                .gt_txdata                 (txdata_out[i]),
+                .gt_rxdata                 (rxdata_in[i]),
 
                 // QUAD0 AXI-Lite
-                .axil_if                        (axil_gt[i])
+                .axil_if                   (axil_if_gtm[i])
             );
 
         end : g_gt
@@ -270,45 +280,22 @@ module dcmac_wrapper (
         .rst_out (tx_core_reset)
     );
 
-//    assign rxdata_in_mux = dcmac_lpbk_en ? txdata_out : rxdata_in;
-    assign rxdata_in_mux = rxdata_in;
-
-    logic [1:0][3:0][255:0] rxdata_in_mux_q;
-    always_ff @(posedge rx_usrclk2[0]) rxdata_in_mux_q[0] <= rxdata_in_mux[0];
-    always_ff @(posedge rx_usrclk2[1]) rxdata_in_mux_q[1] <= rxdata_in_mux[1];
-/*
-    assign _rxdata_in[0][0] = txdata_out[0][0];
-    assign _rxdata_in[0][1] = txdata_out[0][1];
-    assign _rxdata_in[0][2] = txdata_out[1][0];
-    assign _rxdata_in[0][3] = txdata_out[1][1];
-
-    assign _rxdata_in[1][0] = txdata_out[0][2];
-    assign _rxdata_in[1][1] = txdata_out[0][3];
-    assign _rxdata_in[1][2] = txdata_out[1][2];
-    assign _rxdata_in[1][3] = txdata_out[1][3];
-*/
     xilinx_dcmac_wrapper i_xilinx_dcmac_wrapper (
-        .tx_usrclk      (tx_usrclk),
-        .rx_usrclk      (rx_usrclk),
-        .tx_usrclk2     (tx_usrclk2),
-        .rx_usrclk2     (rx_usrclk2),
-        .core_clk       (core_clk),
-        .ts_clk_0       (ts_clk_0),
-        .tx_serdes_reset (tx_serdes_reset),
-        .rx_serdes_reset (rx_serdes_reset),
-        .tx_core_reset  (tx_core_reset),
-        .rx_core_reset  (rx_core_reset),
-//        .rxdata_in      (rxdata_in_mux_q),
-        .rxdata_in      (rxdata_in_mux),
-        .txdata_out     (txdata_out),
-        .axis_rx        (axis_rx),
-        .axis_tx        (axis_tx),
-        .axil_if        (axil_dcmac)
+        .tx_usrclk        (tx_usrclk),
+        .rx_usrclk        (rx_usrclk),
+        .tx_usrclk2       (tx_usrclk2),
+        .rx_usrclk2       (rx_usrclk2),
+        .core_clk         (core_clk),
+        .ts_clk_0         (ts_clk_0),
+        .tx_serdes_reset  (tx_serdes_reset),
+        .rx_serdes_reset  (rx_serdes_reset),
+        .tx_core_reset    (tx_core_reset),
+        .rx_core_reset    (rx_core_reset),
+        .rxdata_in        (rxdata_in),
+        .txdata_out       (txdata_out),
+        .axis_rx          (axis_rx),
+        .axis_tx          (axis_tx),
+        .axil_if          (axil_if_mac)
     );
-/*
-    axi4s_intf_connector axis_connector (
-        .from_tx(axis_tx),
-        .to_rx(axis_rx)
-    );
-*/
+
 endmodule : dcmac_wrapper

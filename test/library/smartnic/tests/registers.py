@@ -6,6 +6,8 @@ import time
 from typing import List, Dict, Any
 from robot.api.deco import keyword, library
 
+import smartnic.lib.config as config
+
 from smartnic.lib.config import *
 
 #---------------------------------------------------------------------------------------------------
@@ -20,16 +22,16 @@ class Library:
         endian_check_unpacked_to_packed(dev, exp_data)
 
     @keyword
-    def reg_wr_rd_test(self, dev, num_p4_proc):
-        reg_wr_rd_test(dev, num_p4_proc)
+    def reg_wr_rd_test(self, dev):
+        reg_wr_rd_test(dev)
 
     @keyword
     def timestamp_test(self, dev):
         timestamp_test(dev)
 
     @keyword
-    def testcase_setup(self, dev, num_p4_proc):
-        testcase_setup(dev, num_p4_proc)
+    def testcase_setup(self, dev):
+        testcase_setup(dev)
         
     @keyword
     def testcase_teardown(self, dev):
@@ -66,12 +68,12 @@ def endian_check_unpacked_to_packed(dev, exp_data):
         raise AssertionError(f'Wrote unpacked 0x{exp_data:08x}, got packed 0x{got_data:08x}')
 
 #---------------------------------------------------------------------------------------------------
-def reg_wr_rd_test(dev, num_p4_proc):
+def reg_wr_rd_test(dev):
     # extract all 'bar2' register paths
     paths = str(dev.bar2(formatter='path')).split()
 
     # list all 'smartnic' blocks, but omit 'open-nic-shell' blocks.
-    smartnic_blocks = reg_blocks(paths, 'bar2', num_p4_proc)
+    smartnic_blocks = reg_blocks(paths, 'bar2', config.NUM_P4_PROC)
 
     for block in smartnic_blocks:
         # list all 'block' register paths.
@@ -110,14 +112,21 @@ def reg_wr_rd(dev, reg, width):
 
 #---------------------------------------------------------------------------------------------------
 def timestamp_test(dev):
-    # test free-running timestamp counter.  expect delta = 2.00 sec (200 x 10ms).
-    check_rd_timestamp(dev, 'bar2.smartnic_regs.freerun_rd', 200)
+    if config.VERSAL:
+        freerun_exp = 204
+        cases = [ {'incr': 0x2ccccccd, 'exp': 196},    # incr = 2.8 ns/clk,      exp = 1.96 sec.
+                  {'incr': 0x2db6db6e, 'exp': 200},    # incr = 2.857143 ns/clk, exp = 2.00 sec.
+                  {'incr': 0x2e666666, 'exp': 203} ]   # incr = 2.9 ns/clk,      exp = 2.03 sec.
+    else:
+        freerun_exp = 200   # expect delta = 2.00 sec (200 x 10ms).
+        cases = [ {'incr': 0x2dbed634, 'exp': 196},    # incr = 2.859091 ns/clk, exp = 1.96 sec.
+                  {'incr': 0x2e8ba2e9, 'exp': 200},    # incr = 2.909091 ns/clk, exp = 2.00 sec.
+                  {'incr': 0x2f586fce, 'exp': 203} ]   # incr = 2.959091 ns/clk, exp = 2.03 sec.
+
+    # test free-running timestamp counter.
+    check_rd_timestamp(dev, 'bar2.smartnic_regs.freerun_rd', freerun_exp)
 
     # test programmable timestamp counter (including programmable increment).
-    cases = [ {'incr': 0x2dbed634, 'exp': 196},    # incr = 2.859091 ns/clk, exp = 1.96 sec.
-              {'incr': 0x2e8ba2e9, 'exp': 200},    # incr = 2.909091 ns/clk, exp = 2.00 sec.
-              {'incr': 0x2f586fce, 'exp': 203} ]   # incr = 2.959091 ns/clk, exp = 2.03 sec.
-
     for case in cases:
         dev.bar2.smartnic_regs.timestamp_incr = case['incr']  # write timestamp increment.
 

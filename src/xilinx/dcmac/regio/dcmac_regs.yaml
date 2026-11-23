@@ -1,5 +1,5 @@
-name: versal_hw_regs
-info: versal hardware control and status registers.
+name: dcmac_regs
+info: DCMAC hardware control and status registers.
 regs:
   - default:
       width: 32
@@ -53,6 +53,3 @@ regs:
       - name: gt_txmaincursor
         width: 7
         init: 75
-      - name: dcmac_lpbk_en
-        width: 1
-        init: 1
