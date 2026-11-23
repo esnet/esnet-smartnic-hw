@@ -201,9 +201,13 @@ exit "$VALIDATION_EXIT"
         self.assertEqual(self.resolve("hwapi_shell")["needs"], [
             {"job": name, "artifacts": True} for name in
             ("hwapi_shell_au280", "hwapi_shell_au55c", "hwapi_esnet_shell_av80")])
-        self.assertEqual(self.resolve("fw_shell_av80")["needs"], ["hwapi_esnet_shell_av80"])
-        self.assertEqual(self.resolve("fw_shell_av80")["variables"]["SN_HW_API_JOB"],
-                         "hwapi_esnet_shell_av80")
+        for board in ("au55c", "au280", "au250", "av80"):
+            trigger = self.resolve("fw_shell_av80" if board == "av80" else "fw_esnet_shell_" + board)
+            package = "hwapi_esnet_shell_" + board
+            self.assertEqual(trigger["needs"], [package])
+            self.assertEqual(trigger["variables"]["SN_HW_API_JOB"], package)
+            self.assertEqual(trigger["trigger"], self.resolve(".trigger_fw")["trigger"])
+            self.assertEqual(trigger["rules"], self.resolve(".trigger_fw")["rules"])
 
     def test_manual_native_builds_remain_optional(self):
         for name in ("build_esnet_shell_au55c", "build_esnet_shell_au280",

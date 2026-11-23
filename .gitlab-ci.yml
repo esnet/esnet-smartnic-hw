@@ -1029,6 +1029,13 @@ hwapi_esnet_shell_au55c:
   needs:
     - build_esnet_shell_au55c
 
+fw_esnet_shell_au55c:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_esnet_shell_au55c
+  needs:
+    - hwapi_esnet_shell_au55c
+
 # Native shell: au280
 
 build_esnet_shell_au280:
@@ -1056,6 +1063,13 @@ hwapi_esnet_shell_au280:
   needs:
     - build_esnet_shell_au280
 
+fw_esnet_shell_au280:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_esnet_shell_au280
+  needs:
+    - hwapi_esnet_shell_au280
+
 # Native shell: au250
 
 build_esnet_shell_au250:
@@ -1082,6 +1096,13 @@ hwapi_esnet_shell_au250:
   extends: .hwapi_shell
   needs:
     - build_esnet_shell_au250
+
+fw_esnet_shell_au250:
+  extends: .trigger_fw
+  variables:
+    SN_HW_API_JOB: hwapi_esnet_shell_au250
+  needs:
+    - hwapi_esnet_shell_au250
 
 # Native shell: av80
 
