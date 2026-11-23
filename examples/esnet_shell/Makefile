@@ -3,6 +3,7 @@
 SMARTNIC_ROOT  := $(abspath ../..)
 BOARD          ?= av80
 CORE_BUILD_REF ?= core.stub.build
+SHELL_PACKAGE_APP_NAME ?= shell
 
 # The platform build flow is selected by BOARD in shell_build.mk.
 .DEFAULT_GOAL := image

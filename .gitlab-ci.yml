@@ -886,7 +886,7 @@ hwapi_shell:
       artifacts: true
     - job: hwapi_shell_au55c
       artifacts: true
-    - job: hwapi_shell_av80
+    - job: hwapi_esnet_shell_av80
       artifacts: true
 
 .trigger_fw:
@@ -1026,29 +1026,16 @@ fw_shell_au280:
 fw_shell_av80:
   extends: .trigger_fw
   variables:
-    SN_HW_API_JOB: hwapi_shell_av80
+    SN_HW_API_JOB: hwapi_esnet_shell_av80
   needs:
-    - hwapi_shell_av80
-
-build_shell_av80:
-  extends: .shell_image_versal
-  variables:
-    EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: shell
-    SN_HW_APP_DIR: esnet_shell
-    SN_HW_BOARD: av80
-
-hwapi_shell_av80:
-  extends: .hwapi_shell
-  needs:
-    - build_shell_av80
-
+    - hwapi_esnet_shell_av80
 
 build_esnet_shell_au55c:
   extends: .shell_image_usplus
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: esnet_shell
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: au55c
   needs:
     - job: shell_ip_cache_key
@@ -1067,7 +1054,8 @@ build_esnet_shell_au280:
   extends: .shell_image_usplus
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: esnet_shell
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: au280
   needs:
     - job: shell_ip_cache_key
@@ -1086,7 +1074,8 @@ build_esnet_shell_au250:
   extends: .shell_image_usplus
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: esnet_shell
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: au250
   needs:
     - job: shell_ip_cache_key
@@ -1105,32 +1094,14 @@ build_esnet_shell_av80:
   extends: .shell_image_versal
   variables:
     EXAMPLES_DIR: examples
-    SN_HW_APP_NAME: esnet_shell
+    SN_HW_APP_NAME: shell
+    SN_HW_APP_DIR: esnet_shell
     SN_HW_BOARD: av80
-  when: manual
 
 hwapi_esnet_shell_av80:
   extends: .hwapi_shell
   needs:
     - build_esnet_shell_av80
-
-hwapi_esnet_shell:
-  extends: .hwapi_gather
-  variables:
-    SN_HW_APP_NAME: esnet_shell
-  artifacts:
-    paths:
-      - esnet-smartnic-hwapi
-  needs:
-    - job: hwapi_esnet_shell_au55c
-      artifacts: true
-    - job: hwapi_esnet_shell_au280
-      artifacts: true
-    - job: hwapi_esnet_shell_au250
-      artifacts: true
-    - job: hwapi_esnet_shell_av80
-      artifacts: true
-
 
 .validate_shell:
   extends: .common
@@ -1174,12 +1145,6 @@ validate_esnet_shell_au250:
   extends: .validate_shell
   needs:
     - job: build_esnet_shell_au250
-      artifacts: true
-
-validate_shell_av80:
-  extends: .validate_shell
-  needs:
-    - job: build_shell_av80
       artifacts: true
 
 validate_esnet_shell_av80:

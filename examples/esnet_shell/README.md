@@ -40,7 +40,7 @@ map for the selected platform and core. `hwapi` packages that map and the
 programming artifacts after a successful build.
 
 `package` runs `hwapi` and writes
-`artifacts/artifacts.<board>.esnet_shell.0.zip`. The archive contains the
+`artifacts/artifacts.<board>.shell.0.zip`. The archive contains the
 `esnet-smartnic-hwapi/<board>/` tree expected by the firmware repository, including
 the compressed programming files, debug probes, register map, and optional
 directories required by its importer. It uses the existing build outputs
@@ -56,7 +56,7 @@ make package BOARD=av80
 ```
 
 Copy the ZIP into the firmware repository's `sn-hw/` directory and set
-`SN_HW_BOARD`, `SN_HW_APP_NAME=esnet_shell`, and `SN_HW_VER` to match its name.
+`SN_HW_BOARD`, `SN_HW_APP_NAME=shell`, and `SN_HW_VER` to match its name.
 CI package jobs use `hwapi` directly and GitLab archives the same tree.
 
 Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
@@ -77,12 +77,13 @@ build directory, and `clean_all` removes all board builds. `restore` restores
 the backup saved by the configuration flow when the build settings change.
 
 CI jobs named `build_esnet_shell_<board>` and `hwapi_esnet_shell_<board>`
-build and package this native example. `hwapi_esnet_shell` gathers all four
-boards into one deliverable. The existing `build_shell_au55c` and
-`build_shell_au280` jobs continue to build the OpenNIC `examples/shell`
-design; their `hwapi_shell` gather and bootstrap trigger retain the upstream
-handoff. The V80 shell job uses this native example under the handoff name
-`shell`.
+build and package this native example from `examples/esnet_shell`, using
+`shell` as the firmware-facing application name. The V80 build runs
+automatically; the UltraScale+ builds are manual. The existing
+`build_shell_au55c` and `build_shell_au280` jobs continue to build the OpenNIC
+`examples/shell` design. The single `hwapi_shell` bundle gathers those ONS
+packages and `hwapi_esnet_shell_av80` for the bootstrap handoff. Native
+UltraScale+ packages remain available individually.
 
 The manual `shell_ip_<board>` jobs generate the UltraScale+ shell's IP into
 this example's build output tree and cache it by board, tool version, and

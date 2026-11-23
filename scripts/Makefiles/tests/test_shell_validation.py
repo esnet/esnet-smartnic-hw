@@ -42,7 +42,7 @@ class NativeValidationCI(unittest.TestCase):
     def test_every_native_image_collects_reports_for_a_lightweight_gate(self):
         builds = [name for name, value in self.ci.items() if not name.startswith(".")
                   and isinstance(value, dict) and value.get("extends") in (".shell_image_usplus", ".shell_image_versal")]
-        self.assertEqual(len(builds), 7)
+        self.assertEqual(len(builds), 6)
         for build in builds:
             name = "validate_" + build.removeprefix("build_")
             job = self.resolve(name)
@@ -179,18 +179,35 @@ exit "$VALIDATION_EXIT"
         self.assertEqual(self.ci["validate_p4_only_u280"]["extends"], ".validate")
 
     def test_automatic_native_builds_require_successful_prerequisites(self):
-        for name in ("shell_ip_av80", "build_shell_av80", "build_p4_only_av80"):
+        for name in ("shell_ip_av80", "build_esnet_shell_av80", "build_p4_only_av80"):
             with self.subTest(job=name):
                 job = self.resolve(name)
                 self.assertEqual(job.get("when", "on_success"), "on_success")
                 self.assertIs(job.get("allow_failure", False), False)
                 self.assertNotIn("rules", job)
-        for name in ("build_shell_av80", "build_p4_only_av80"):
+        for name in ("build_esnet_shell_av80", "build_p4_only_av80"):
             self.assertIn({"job": "shell_ip_av80", "artifacts": True}, self.resolve(name)["needs"])
+
+    def test_native_shell_packages_use_the_existing_firmware_handoff(self):
+        for board in ("au55c", "au280", "au250", "av80"):
+            build = "build_esnet_shell_" + board
+            variables = self.resolve(build)["variables"]
+            self.assertEqual(variables["SN_HW_APP_NAME"], "shell")
+            self.assertEqual(variables["SN_HW_APP_DIR"], "esnet_shell")
+            self.assertEqual(variables["EXAMPLES_DIR"], "examples")
+            self.assertEqual(self.resolve("hwapi_esnet_shell_" + board)["needs"], [build])
+        self.assertNotIn("build_shell_av80", self.ci)
+        self.assertNotIn("hwapi_esnet_shell", self.ci)
+        self.assertEqual(self.resolve("hwapi_shell")["needs"], [
+            {"job": name, "artifacts": True} for name in
+            ("hwapi_shell_au280", "hwapi_shell_au55c", "hwapi_esnet_shell_av80")])
+        self.assertEqual(self.resolve("fw_shell_av80")["needs"], ["hwapi_esnet_shell_av80"])
+        self.assertEqual(self.resolve("fw_shell_av80")["variables"]["SN_HW_API_JOB"],
+                         "hwapi_esnet_shell_av80")
 
     def test_manual_native_builds_remain_optional(self):
         for name in ("build_esnet_shell_au55c", "build_esnet_shell_au280",
-                     "build_esnet_shell_au250", "build_esnet_shell_av80"):
+                     "build_esnet_shell_au250"):
             job = self.resolve(name)
             self.assertEqual(job["when"], "manual")
             self.assertTrue(job.get("allow_failure", True))

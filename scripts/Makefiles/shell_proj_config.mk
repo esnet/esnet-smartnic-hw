@@ -261,7 +261,8 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 SHELL_HWAPI_DIR ?= $(__SPC_BUILD_OUT_DIR)/esnet_smartnic/build/hwapi
 SHELL_PACKAGE_DIR ?= $(CURDIR)/artifacts
 SHELL_PACKAGE_VERSION ?= $(or $(BUILD_ID),0)
-SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(notdir $(CURDIR)).$(SHELL_PACKAGE_VERSION).zip
+SHELL_PACKAGE_APP_NAME ?= $(notdir $(CURDIR))
+SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(SHELL_PACKAGE_APP_NAME).$(SHELL_PACKAGE_VERSION).zip
 
 .shell_proj_package: .shell_proj_hwapi
 	@python3 $(SMARTNIC_ROOT)/scripts/package_hwapi.py \
