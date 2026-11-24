@@ -11,18 +11,16 @@ regs:
   - default:
       width: 32
       access: ro
+
   - name: software_reset
     access: wo
+
   - name: status
     fields:
       - default:
           width: 1
-      - name: ch0
-      - name: ch1
-      - name: ch2
-      - name: ch3
-      - name: ch4
-      - name: ch5
+      - name: ch
+        width: 6
       - name: eoc
       - name: eos
       - name: busy
@@ -34,22 +32,32 @@ regs:
     fields:
       - default:
           width: 1
-      - name: ot
-      - name: user_temp
-      - name: user_vccint
-      - name: user_vccaux
-      - name: user_vbram
+      - name: over_temperature
+      - name: temperature
+      - name: vccint
+      - name: vccaux
+      - name: vccbram
       - name: rsvd0
         width: 3
-      - name: any_user
-      - name: supplies
-        width: 4
+      - name: any
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
       - name: rsvd1
         width: 3
-      - name: any
+      - name: any_vuser
 
   - name: convst
     access: wo
+    fields:
+      - default:
+          width: 1
+      - name: start
+      - name: rsvd
+      - name: wait_cycle
+        width: 16
+
   - name: sysmon_reset
     access: wo
     fields:
@@ -66,51 +74,55 @@ regs:
         width: 31
       - name: gier
         width: 1
+
   - name: ip_interrupt_status
     access: rw
     fields:
       - default:
           width: 1
-      - name: ot
-      - name: user_temp
-      - name: user_vccint
-      - name: user_vccaux
+      - name: over_temperature
+      - name: temperature
+      - name: vccint
+      - name: vccaux
       - name: eos
       - name: eoc
       - name: jtag_locked
       - name: jtag_modified
-      - name: ot_deactive
-      - name: user_temp_deactive
-      - name: user_vbram
+      - name: over_temperature_deactive
+      - name: temperature_deactive
+      - name: vccbram
       - name: rsvd
         width: 3
-      - name: user_vuser0
-      - name: user_vuser1
-      - name: user_vuser2
-      - name: user_vuser3
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
+
+  - meta:
+      pad_until: 0x68
 
   - name: ip_interrupt_enable
     access: rw
     fields:
       - default:
           width: 1
-      - name: ot
-      - name: user_temp
-      - name: user_vccint
-      - name: user_vccaux
+      - name: over_temperature
+      - name: temperature
+      - name: vccint
+      - name: vccaux
       - name: eos
       - name: eoc
       - name: jtag_locked
       - name: jtag_modified
-      - name: ot_deactive
-      - name: user_temp_deactive
-      - name: user_vbram
+      - name: over_temperature_deactive
+      - name: temperature_deactive
+      - name: vccbram
       - name: rsvd
         width: 3
-      - name: user_vuser0
-      - name: user_vuser1
-      - name: user_vuser2
-      - name: user_vuser3
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
 
   - meta:
       pad_until: 0x400
@@ -121,43 +133,51 @@ regs:
         width: 6
       - name: adc
         width: 10
-  - name: VCCINT
-  - name: VCCAUX
-  - name: VP/VN
-  - name: VREFP
-  - name: VREFN
-  - name: VCCBRAM
+
+  - name: vccint
+  - name: vccaux
+  - name: vp_vn
+  - name: vrefp
+  - name: vrefn
+  - name: vccbram
 
   - meta:
       pad_until: 0x420
 
-  - name: supply_offset
-  - name: adc_offset
+  - name: supply_unipolar_offset
+  - name: supply_bipolar_offset
   - name: gain_error
+    fields:
+      - name: magnitude
+        width: 6
+      - name: sign
+        width: 1
+
+  - meta:
+      pad_until: 0x434
+
   - name: vcc_psintlp
-  - name: vcc_psinfp
+  - name: vcc_psintfp
   - name: vcc_psaux
-  - name: vauxp_vauxn
+  - name: vaux
     count: 16
-  - name: max_temp
+  - name: max_temperature
   - name: max_vccint
   - name: max_vccaux
-  - name: max_vbram
-
-  - name: min_temp
+  - name: max_vccbram
+  - name: min_temperature
   - name: min_vccint
   - name: min_vccaux
-  - name: min_vbram
-
+  - name: min_vccbram
   - name: max_vcc_psintlp
-  - name: max_vcc_psinfp
+  - name: max_vcc_psintfp
   - name: max_vcc_psaux
 
   - meta:
       pad_until: 0x4B0
 
   - name: min_vcc_psintlp
-  - name: min_vcc_psinfp
+  - name: min_vcc_psintfp
   - name: min_vcc_psaux
 
   - meta:
@@ -175,7 +195,7 @@ regs:
       - name: alm0
       - name: alm1
       - name: alm2
-      - name: ot
+      - name: over_temperature
       - name: alm3
       - name: alm4
       - name: alm5
@@ -192,54 +212,372 @@ regs:
       access: rw
 
   - name: config_reg_0
+    fields:
+      - default:
+          width: 1
+      - name: ch
+        width: 6
+        enum:
+          0: temperature
+          1: vccint
+          2: vccaux
+          3: vp_vn
+          4: vrefp
+          5: vrefn
+          6: vccbram
+          #7: reserved
+          8: calibration
+          #9-12: reserved
+          13: vcc_psintlp
+          14: vcc_psintfp
+          15: vcc_psaux
+          16: vaux0
+          17: vaux1
+          18: vaux2
+          19: vaux3
+          20: vaux4
+          21: vaux5
+          22: vaux6
+          23: vaux7
+          24: vaux8
+          25: vaux9
+          26: vaux10
+          27: vaux11
+          28: vaux12
+          29: vaux13
+          30: vaux14
+          31: vaux15
+          32: vuser0
+          33: vuser1
+          34: vuser2
+          35: vuser3
+          #36-63: reserved
+      - name: rsvd0
+        width: 2
+      - name: acq
+      - name: ec
+      - name: bu
+      - name: mux
+      - name: avg
+        width: 2
+        enum:
+          0: none
+          1: 16_samples
+          2: 64_samples
+          3: 256_samples
+      - name: rsvd1
+      - name: cavg
+
   - name: config_reg_1
+    fields:
+      - default:
+          width: 1
+      - name: over_temperature
+      - name: alm0
+      - name: alm1
+      - name: alm2
+      - name: cal0
+      - name: rsvd
+      - name: cal2
+      - name: cal3
+      - name: alm3
+      - name: alm4
+      - name: alm5
+      - name: alm6
+      - name: seq
+        width: 4
+        enum:
+          0: default
+          1: single_pass
+          2: continuous
+          3: single_channel
+
   - name: config_reg_2
+    fields:
+      - default:
+          width: 8
+      - name: rsvd
+      - name: cd
+
   - name: config_reg_3
+    fields:
+      - default:
+          width: 1
+      - name: alm8
+      - name: alm9
+      - name: alm10
+      - name: alm11
+      - name: rsvd
+        width: 3
+      - name: i2c_en
+      - name: i2c_addr
+        width: 7
+
   - name: config_reg_4
     access: ro
-  - name: analog_bus
-    access: ro
+    fields:
+      - name: pmbus_hrio
+        width: 4
+      - name: rsvd0
+        width: 4
+      - name: slow_seq
+        width: 2
+        enum:
+          0: every
+          1: every_4th
+          2: every_16th
+          3: every_64th
+      - name: slow_eos
+        width: 2
+        enum:
+          0: from_seqchsel
+          1: from_slowchsel
+          2: from_seqchsel_and_slowchsel
+          3: default
 
-  - name: sequence_8
-  - name: sequence_9
-  - name: sequence_0
-  - name: sequence_1
-  - name: sequence_2
-  - name: sequence_3
-  - name: sequence_4
-  - name: sequence_5
-  - name: sequence_6
-  - name: sequence_7
-  - name: alarm_threshold_0
-  - name: alarm_threshold_1
-  - name: alarm_threshold_2
-  - name: alarm_threshold_3
-  - name: alarm_threshold_4
-  - name: alarm_threshold_5
-  - name: alarm_threshold_6
-  - name: alarm_threshold_7
-  - name: alarm_threshold_8
+  - name: analog_bus
+    fields:
+      - default:
+          width: 4
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
+
+  - name: seqchsel0
+    fields:
+      - default:
+          width: 1
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
+
+  - name: seqavg0
+    fields:
+      - default:
+          width: 1
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
+
+  - name: seqchsel1
+    fields:
+      - default:
+          width: 1
+      - name: cal_enable
+      - name: rsvd
+        width: 4
+      - name: vcc_psintlp
+      - name: vcc_psintfp
+      - name: vcc_psaux
+      - name: temperature
+      - name: vccint
+      - name: vccaux
+      - name: vp_vn
+      - name: vrefp
+      - name: vrefn
+      - name: vccbram
+
+  - name: seqchsel2
+    fields:
+      - default:
+          width: 1
+      - name: vaux0
+      - name: vaux1
+      - name: vaux2
+      - name: vaux3
+      - name: vaux4
+      - name: vaux5
+      - name: vaux6
+      - name: vaux7
+      - name: vaux8
+      - name: vaux9
+      - name: vaux10
+      - name: vaux11
+      - name: vaux12
+      - name: vaux13
+      - name: vaux14
+      - name: vaux15
+
+  - name: seqavg1
+    fields:
+      - default:
+          width: 1
+      - name: rsvd0
+        width: 5
+      - name: vcc_psintlp
+      - name: vcc_psintfp
+      - name: vcc_psaux
+      - name: temperature
+      - name: vccint
+      - name: vccaux
+      - name: vp_vn
+      - name: rsvd1
+        width: 2
+      - name: vccbram
+
+  - name: seqavg2
+    fields:
+      - default:
+          width: 1
+      - name: vaux0
+      - name: vaux1
+      - name: vaux2
+      - name: vaux3
+      - name: vaux4
+      - name: vaux5
+      - name: vaux6
+      - name: vaux7
+      - name: vaux8
+      - name: vaux9
+      - name: vaux10
+      - name: vaux11
+      - name: vaux12
+      - name: vaux13
+      - name: vaux14
+      - name: vaux15
+
+  - name: seqinmode0
+    fields:
+      - default:
+          width: 1
+      - name: rsvd
+        width: 11
+      - name: vp_vn
+
+  - name: seqinmode1
+    fields:
+      - default:
+          width: 1
+      - name: vaux0
+      - name: vaux1
+      - name: vaux2
+      - name: vaux3
+      - name: vaux4
+      - name: vaux5
+      - name: vaux6
+      - name: vaux7
+      - name: vaux8
+      - name: vaux9
+      - name: vaux10
+      - name: vaux11
+      - name: vaux12
+      - name: vaux13
+      - name: vaux14
+      - name: vaux15
+
+  - name: seqacq0
+    fields:
+      - default:
+          width: 1
+      - name: rsvd
+        width: 11
+      - name: vp_vn
+
+  - name: seqacq1
+    fields:
+      - default:
+          width: 1
+      - name: vaux0
+      - name: vaux1
+      - name: vaux2
+      - name: vaux3
+      - name: vaux4
+      - name: vaux5
+      - name: vaux6
+      - name: vaux7
+      - name: vaux8
+      - name: vaux9
+      - name: vaux10
+      - name: vaux11
+      - name: vaux12
+      - name: vaux13
+      - name: vaux14
+      - name: vaux15
+
+  - name: temperature_upper_threshold
+  - name: vccint_upper_threshold
+  - name: vccaux_upper_threshold
+  - name: over_temperature_upper_threshold
+  - name: temperature_lower_threshold
+  - name: vccint_lower_threshold
+  - name: vccaux_lower_threshold
+  - name: over_temperature_lower_threshold
+  - name: vccbram_upper_threshold
 
   - meta:
       pad_until: 0x570
 
-  - name: alarm_threshold_12
+  - name: vccbram_lower_threshold
 
   - meta:
       pad_until: 0x580
 
-  - name: alarm_threshold_16
-  - name: alarm_threshold_17
-  - name: alarm_threshold_18
-  - name: alarm_threshold_19
+  - name: vuser0_upper_threshold
+  - name: vuser1_upper_threshold
+  - name: vuser2_upper_threshold
+  - name: vuser3_upper_threshold
 
   - meta:
       pad_until: 0x5A0
 
-  - name: alarm_threshold_22
-  - name: alarm_threshold_23
-  - name: alarm_threshold_24
-  - name: alarm_threshold_25
+  - name: vuser0_lower_threshold
+  - name: vuser1_lower_threshold
+  - name: vuser2_lower_threshold
+  - name: vuser3_lower_threshold
+
+  - meta:
+      pad_until: 0x5E8
+
+  - name: slowchsel0
+    fields:
+      - default:
+          width: 1
+      - name: slow_enable
+      - name: rsvd
+        width: 4
+      - name: vcc_psintlp
+      - name: vcc_psintfp
+      - name: vcc_psaux
+      - name: temperature
+      - name: vccint
+      - name: vccaux
+      - name: vp_vn
+      - name: vrefp
+      - name: vrefn
+      - name: vccbram
+
+  - name: slowchsel1
+    fields:
+      - default:
+          width: 1
+      - name: vaux0
+      - name: vaux1
+      - name: vaux2
+      - name: vaux3
+      - name: vaux4
+      - name: vaux5
+      - name: vaux6
+      - name: vaux7
+      - name: vaux8
+      - name: vaux9
+      - name: vaux10
+      - name: vaux11
+      - name: vaux12
+      - name: vaux13
+      - name: vaux14
+      - name: vaux15
+
+  - name: slowchsel2
+    fields:
+      - default:
+          width: 1
+      - name: vuser0
+      - name: vuser1
+      - name: vuser2
+      - name: vuser3
 
   - meta:
       pad_until: 0x600
@@ -247,17 +585,23 @@ regs:
   - default:
       access: ro
 
-  - name: v_user0
-  - name: v_user1
-  - name: v_user2
-  - name: v_user3
+  - name: vuser0
+  - name: vuser1
+  - name: vuser2
+  - name: vuser3
 
-  - name: max_v_user0
-  - name: max_v_user1
-  - name: max_v_user2
-  - name: max_v_user3
+  - meta:
+      pad_until: 0x680
 
-  - name: min_v_user0
-  - name: min_v_user1
-  - name: min_v_user2
-  - name: min_v_user3
+  - name: max_vuser0
+  - name: max_vuser1
+  - name: max_vuser2
+  - name: max_vuser3
+
+  - meta:
+      pad_until: 0x6A0
+
+  - name: min_vuser0
+  - name: min_vuser1
+  - name: min_vuser2
+  - name: min_vuser3
