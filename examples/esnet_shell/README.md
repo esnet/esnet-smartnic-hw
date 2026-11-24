@@ -43,8 +43,10 @@ programming artifacts after a successful build.
 `artifacts/artifacts.<board>.shell.0.zip`. The archive contains the
 `esnet-smartnic-hwapi/<board>/` tree expected by the firmware repository, including
 the compressed programming files, debug probes, register map, and optional
-directories required by its importer. It uses the existing build outputs
-without rerunning implementation.
+directories required by its importer. A top-level
+`robot-framework-test.tar.bz2` contains the hardware test libraries and
+shared SmartNIC suites, plus the application's suite when present. It uses
+the existing build outputs without rerunning implementation.
 
 Set `SHELL_PACKAGE_VERSION` to override the archive version (the default is
 `BUILD_ID`, or `0` when unset), and `SHELL_PACKAGE_DIR` to select another
@@ -58,6 +60,17 @@ make package BOARD=av80
 Copy the ZIP into the firmware repository's `sn-hw/` directory and set
 `SN_HW_BOARD`, `SN_HW_APP_NAME=shell`, and `SN_HW_VER` to match its name.
 CI package jobs use `hwapi` directly and GitLab archives the same tree.
+`hwapi` also generates `build/<board>/robot-framework-test.tar.bz2`; CI
+places that tarball at the artifact root. Firmware CI imports it into
+`sn-stack/test/hw`, which the test service mounts at `/test/hw`. Local
+firmware builds can run `build-setup-hw-test.sh` after selecting the package.
+
+`SHELL_TEST_SUITE` selects an application suite under `test/suites/` and
+defaults to the package application name. The native `p4_only_av80` example
+selects `p4_only` explicitly. Applications without their own suite still
+receive the shared tests. Delivery does not imply that all shared SmartNIC
+tests apply to every design; the stub core does not implement the SmartNIC
+datapath those suites exercise.
 
 Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
 `build/<board>/out/esnet_smartnic/build/`:

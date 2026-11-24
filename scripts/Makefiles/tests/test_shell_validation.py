@@ -209,6 +209,15 @@ exit "$VALIDATION_EXIT"
             self.assertEqual(trigger["trigger"], self.resolve(".trigger_fw")["trigger"])
             self.assertEqual(trigger["rules"], self.resolve(".trigger_fw")["rules"])
 
+    def test_native_packages_deliver_tests_to_firmware(self):
+        for name in ("hwapi_esnet_shell_au55c", "hwapi_esnet_shell_au280",
+                     "hwapi_esnet_shell_au250", "hwapi_esnet_shell_av80",
+                     "hwapi_p4_only_av80", "hwapi_udplb_fec_av80"):
+            job = self.resolve(name)
+            self.assertIn("robot-framework-test.tar.bz2", job["artifacts"]["paths"])
+            self.assertIn("SHELL_HW_TEST_FILE=${CI_PROJECT_DIR}/robot-framework-test.tar.bz2",
+                          job["script"][-1])
+
     def test_manual_native_builds_remain_optional(self):
         for name in ("build_esnet_shell_au55c", "build_esnet_shell_au280",
                      "build_esnet_shell_au250"):

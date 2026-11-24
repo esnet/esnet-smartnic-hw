@@ -255,6 +255,8 @@ SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
 	        exit 1; \
 	    }
 	@$(SMARTNIC_COMP_CMD) hwapi SHELL_HWAPI_DIR=$(SHELL_HWAPI_DIR)
+	@python3 $(SMARTNIC_ROOT)/scripts/package_hw_tests.py \
+	    --test-root $(SMARTNIC_ROOT)/test --output $(SHELL_HW_TEST_FILE) --app $(SHELL_TEST_SUITE)
 .PHONY: .shell_proj_hwapi
 
 # Local equivalent of the firmware-facing GitLab artifact archive.
@@ -262,11 +264,14 @@ SHELL_HWAPI_DIR ?= $(__SPC_BUILD_OUT_DIR)/esnet_smartnic/build/hwapi
 SHELL_PACKAGE_DIR ?= $(CURDIR)/artifacts
 SHELL_PACKAGE_VERSION ?= $(or $(BUILD_ID),0)
 SHELL_PACKAGE_APP_NAME ?= $(notdir $(CURDIR))
+SHELL_TEST_SUITE ?= $(SHELL_PACKAGE_APP_NAME)
+SHELL_HW_TEST_FILE ?= $(BUILD_DIR)/robot-framework-test.tar.bz2
 SHELL_PACKAGE_FILE := $(SHELL_PACKAGE_DIR)/artifacts.$(BOARD).$(SHELL_PACKAGE_APP_NAME).$(SHELL_PACKAGE_VERSION).zip
 
 .shell_proj_package: .shell_proj_hwapi
 	@python3 $(SMARTNIC_ROOT)/scripts/package_hwapi.py \
-	    --hwapi-dir $(SHELL_HWAPI_DIR) --output $(SHELL_PACKAGE_FILE) --board $(BOARD)
+	    --hwapi-dir $(SHELL_HWAPI_DIR) --output $(SHELL_PACKAGE_FILE) --board $(BOARD) \
+	    --tests $(SHELL_HW_TEST_FILE)
 .PHONY: .shell_proj_package
 
 .shell_proj_p4_driver: $(__SPC_CONFIGURED)

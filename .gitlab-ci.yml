@@ -990,12 +990,13 @@ shell_ip_av80:
       SN_HW_COMMIT=$CI_COMMIT_SHORT_SHA
       _EOF
     - cat hwapi.env
-    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR hwapi BOARD=$SN_HW_BOARD SHELL_HWAPI_DIR=${CI_PROJECT_DIR}/esnet-smartnic-hwapi/${SN_HW_BOARD}
+    - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR hwapi BOARD=$SN_HW_BOARD SHELL_HWAPI_DIR=${CI_PROJECT_DIR}/esnet-smartnic-hwapi/${SN_HW_BOARD} SHELL_HW_TEST_FILE=${CI_PROJECT_DIR}/robot-framework-test.tar.bz2
 
   artifacts:
     name: "artifacts.$SN_HW_BOARD.$SN_HW_APP_NAME.$CI_PIPELINE_ID"
     paths:
       - esnet-smartnic-hwapi
+      - robot-framework-test.tar.bz2
     when: always
     expire_in: 3 month
     reports:

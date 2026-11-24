@@ -80,6 +80,17 @@ class ShellTargetsTest(unittest.TestCase):
         self.assertIn("\nimage:", makefile.read_text())
         self.assertEqual(output.read_bytes(), b"existing routed checkpoint")
 
+    def test_hwapi_exports_tests_to_the_firmware_import_location(self):
+        import tarfile
+
+        self.make("av80", "config")
+        output = self.root / "ci/robot-framework-test.tar.bz2"
+        self.make("av80", "hwapi", "SMARTNIC_COMP_CMD=echo EXPORT",
+                  f"SHELL_HW_TEST_FILE={output}")
+        with tarfile.open(output) as archive:
+            self.assertIn("library/variables.py", archive.getnames())
+            self.assertIn("suites/smartnic/hw-register-test/suite.robot", archive.getnames())
+
 
 if __name__ == "__main__":
     unittest.main()

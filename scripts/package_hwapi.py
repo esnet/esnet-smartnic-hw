@@ -7,7 +7,7 @@ import tempfile
 import zipfile
 
 
-def package(hwapi_dir, output, board):
+def package(hwapi_dir, output, board, tests=None):
     hwapi_dir = hwapi_dir.resolve()
     output = output.resolve()
     if output.is_relative_to(hwapi_dir):
@@ -25,6 +25,8 @@ def package(hwapi_dir, output, board):
     for name in ("regmap/spec", "wireshark", "libvitisnetp4drv"):
         if not (hwapi_dir / name).is_dir():
             raise ValueError(f"Missing firmware importer directory: {name}")
+    if tests is not None and not tests.is_file():
+        raise ValueError(f"Missing hardware test archive: {tests}")
 
     archive_root = Path("esnet-smartnic-hwapi") / board
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -32,6 +34,8 @@ def package(hwapi_dir, output, board):
     os.close(fd)
     try:
         with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
+            if tests is not None:
+                archive.write(tests, "robot-framework-test.tar.bz2")
             archive.write(hwapi_dir, str(archive_root) + "/")
             for path in sorted(hwapi_dir.rglob("*")):
                 archive.write(path, str(archive_root / path.relative_to(hwapi_dir)))
@@ -46,9 +50,10 @@ def main():
     parser.add_argument("--hwapi-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--board", required=True, choices=("au55c", "au280", "au250", "av80", "av90", "av96"))
+    parser.add_argument("--tests", type=Path, help="Hardware test tarball for the firmware importer")
     args = parser.parse_args()
     try:
-        print(package(args.hwapi_dir, args.output, args.board))
+        print(package(args.hwapi_dir, args.output, args.board, args.tests))
     except (ValueError, OSError) as error:
         parser.exit(1, f"HW API packaging failed: {error}\n")
 
