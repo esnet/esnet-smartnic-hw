@@ -69,6 +69,25 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
         .srst ( cms_srst),
         .*
     );
+`ifdef ONS_VPD
+    qdma_pci_cfg_ext_vpd #(
+        .NUM_PHYS_FUNC(NUM_FUNCS)
+    ) DUT2 (
+        .aclk, .aresetn,
+        .cfg_ext_read_received(pci_cfg_ext_if.req && !pci_cfg_ext_if.wr_rd_n),
+        .cfg_ext_write_received(pci_cfg_ext_if.req && pci_cfg_ext_if.wr_rd_n),
+        .cfg_ext_register_number(pci_cfg_ext_if.register),
+        .cfg_ext_function_number(pci_cfg_ext_if.func),
+        .cfg_ext_write_data(pci_cfg_ext_if.wr_data),
+        .cfg_ext_write_byte_enable(pci_cfg_ext_if.wr_byte_en),
+        .cfg_ext_read_data(pci_cfg_ext_if.rd_data),
+        .cfg_ext_read_data_valid(pci_cfg_ext_if.rd_vld),
+        .vpd_clk(cms_clk), .vpd_srst(cms_srst),
+        .vpd_req(vpd_if.req), .vpd_wr_rd_n(vpd_if.wr_rd_n),
+        .vpd_addr(vpd_if.addr), .vpd_wr_data(vpd_if.wr_data),
+        .vpd_rd_data(vpd_if.rd_data), .vpd_rd_vld(vpd_if.rd_vld)
+    );
+`else
     xilinx_pci_cfg_ext_vpd #(
         .NUM_PHYS_FUNC ( NUM_FUNCS )
     ) DUT2 (
@@ -77,6 +96,8 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
         .vpd_srst(cms_srst),
         .vpd_if
     );
+
+`endif
 
     //===================================
     // Testbench

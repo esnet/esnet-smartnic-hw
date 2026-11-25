@@ -25,6 +25,12 @@ Run the integration tests with:
 make -C src/xilinx/pci/tests/xilinx_pci_vpd_cfg_ext
 ```
 
+Run the same tests against the independent ONS bridge with:
+
+```sh
+make -C src/xilinx/pci/tests/xilinx_pci_vpd_cfg_ext ONS_VPD=1
+```
+
 These tests currently use the ONS VPD image builder and the CMS model to check
 the bridge against the existing VPD format. They also exercise byte enables,
 function isolation, unsupported functions and reset recovery.
