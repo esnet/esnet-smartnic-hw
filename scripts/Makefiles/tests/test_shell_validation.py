@@ -175,7 +175,7 @@ exit "$VALIDATION_EXIT"
             job = self.resolve(name)
             if name == "trigger_bootstrap":
                 self.assertEqual([need["job"] for need in job["needs"] if need["job"].startswith("validate_")],
-                                 ["validate_shell_au55c", "validate_shell_au280"])
+                                 ["validate_shell_au250", "validate_shell_au55c", "validate_shell_au280"])
             elif job.get("stage") in ("package", "trigger_downstream"):
                 for need in job.get("needs", []):
                     self.assertFalse((need if isinstance(need, str) else need["job"]).startswith("validate_"), name)
@@ -203,7 +203,7 @@ exit "$VALIDATION_EXIT"
         self.assertNotIn("hwapi_esnet_shell", self.ci)
         self.assertEqual(self.resolve("hwapi_shell")["needs"], [
             {"job": name, "artifacts": True} for name in
-            ("hwapi_shell_au280", "hwapi_shell_au55c", "hwapi_esnet_shell_av80")])
+            ("hwapi_shell_au250", "hwapi_shell_au280", "hwapi_shell_au55c", "hwapi_esnet_shell_av80")])
         for board in ("au55c", "au280", "au250", "av80"):
             trigger = self.resolve("fw_shell_av80" if board == "av80" else "fw_esnet_shell_" + board)
             package = "hwapi_esnet_shell_" + board
@@ -217,8 +217,25 @@ exit "$VALIDATION_EXIT"
             self.assertEqual(trigger["trigger"], expected_trigger)
             self.assertEqual(trigger["rules"], expected_rules)
 
+    def test_ons_shell_builds_and_firmware_use_matching_board_products(self):
+        for board in ("au250", "au55c", "au280"):
+            with self.subTest(board=board):
+                build = "build_shell_" + board
+                package = "hwapi_shell_" + board
+                self.assertEqual(self.ci[build]["extends"], ".bitfile")
+                job = self.resolve(build)
+                self.assertEqual(job["needs"], ["ons_ip_" + board])
+                self.assertEqual(job["variables"]["SN_HW_BOARD"], board)
+                self.assertEqual(job["variables"]["SN_HW_APP_NAME"], "shell")
+                self.assertEqual(job["variables"]["EXAMPLES_DIR"], "examples")
+                self.assertEqual(self.resolve(package)["needs"], [build])
+                trigger = self.resolve("fw_shell_" + board)
+                self.assertEqual(trigger["needs"], [package])
+                self.assertEqual(trigger["variables"]["SN_HW_API_JOB"], package)
+
     def test_bootstrap_shell_jobs_are_required_on_main_and_manual_elsewhere(self):
-        jobs = ["build_shell_au55c", "build_shell_au280", "build_esnet_shell_av80",
+        jobs = ["ons_ip_au250", "build_shell_au250", "hwapi_shell_au250", "fw_shell_au250",
+                "validate_shell_au250", "build_shell_au55c", "build_shell_au280", "build_esnet_shell_av80",
                 "hwapi_shell_au55c", "hwapi_shell_au280", "hwapi_esnet_shell_av80",
                 "fw_shell_au55c", "fw_shell_au280", "fw_shell_av80",
                 "validate_shell_au55c", "validate_shell_au280", "hwapi_shell", "trigger_bootstrap"]
@@ -229,11 +246,11 @@ exit "$VALIDATION_EXIT"
         for name in jobs:
             with self.subTest(job=name):
                 self.assertEqual(self.resolve(name)["rules"], rules)
-        for name in ("fw_shell_au55c", "fw_shell_au280", "fw_shell_av80", "trigger_bootstrap"):
+        for name in ("fw_shell_au250", "fw_shell_au55c", "fw_shell_au280", "fw_shell_av80", "trigger_bootstrap"):
             self.assertEqual(self.resolve(name)["trigger"]["strategy"], "mirror")
 
     def test_ons_shell_validation_uses_zero_tolerance_and_preserves_failure_reports(self):
-        for board in ("au55c", "au280"):
+        for board in ("au250", "au55c", "au280"):
             job = self.resolve("validate_shell_" + board)
             self.assertEqual(job["needs"], ["build_shell_" + board])
             self.assertEqual(job["variables"]["VALIDATE_WNS_MIN"], "0")
@@ -248,7 +265,7 @@ exit "$VALIDATION_EXIT"
 
     def test_ons_shell_timing_checks_reject_negative_setup_hold_and_pulse_width(self):
         metric_indices = (0, 1, 4, 5, 8, 9)
-        for board in ("au55c", "au280"):
+        for board in ("au250", "au55c", "au280"):
             job = self.resolve("validate_shell_" + board)
             for bad_index in (None, *metric_indices):
                 with self.subTest(board=board, bad_metric=bad_index), tempfile.TemporaryDirectory() as tmp:

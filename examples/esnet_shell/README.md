@@ -99,12 +99,12 @@ build and package this native example from `examples/esnet_shell`, using
 `shell` as the firmware-facing application name. The V80 build runs
 automatically on `main` and is manual on other branches; the native
 UltraScale+ builds are manual. The existing
-`build_shell_au55c` and `build_shell_au280` jobs continue to build the OpenNIC
+`build_shell_au250`, `build_shell_au55c` and `build_shell_au280` jobs build the OpenNIC
 `examples/shell` design. The single `hwapi_shell` bundle gathers those ONS
 packages and `hwapi_esnet_shell_av80` for the bootstrap handoff. Native
 UltraScale+ packages remain available individually.
 
-The bootstrap shell builds (ONS U55C/U280 and native V80), their hardware
+The bootstrap shell builds (ONS U250/U55C/U280 and native V80), their hardware
 packages, firmware triggers, combined bundle and bootstrap trigger are
 required automatic jobs on `main` and optional manual jobs elsewhere.
 The ONS shell validation jobs require nonnegative setup, hold and

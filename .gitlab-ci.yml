@@ -283,9 +283,7 @@ ons_ip_au250:
   extends: .ons_ip
   variables:
     SN_HW_BOARD: au250
-  rules:
-    - when: manual
-      allow_failure: true
+  rules: *bootstrap_shell_rules
 
 smartnic_ip_au280:
   extends: .smartnic_ip
@@ -723,6 +721,39 @@ fw_udplb_fec_u280:
     SN_HW_API_JOB: hwapi_udplb_fec_u280
   needs:
     - hwapi_udplb_fec_u280
+
+# shell_au250
+
+build_shell_au250:
+  extends: .bitfile
+  rules: *bootstrap_shell_rules
+  variables:
+    EXAMPLES_DIR: examples
+    SN_HW_APP_NAME: shell
+    SN_HW_BOARD: au250
+  needs:
+    - ons_ip_au250
+
+validate_shell_au250:
+  extends: .validate_ons_shell
+  needs:
+    - build_shell_au250
+
+hwapi_shell_au250:
+  extends: .hwapi
+  rules: *bootstrap_shell_rules
+  needs:
+    - build_shell_au250
+
+fw_shell_au250:
+  extends: .trigger_fw
+  rules: *bootstrap_shell_rules
+  trigger:
+    strategy: mirror
+  variables:
+    SN_HW_API_JOB: hwapi_shell_au250
+  needs:
+    - hwapi_shell_au250
 
 # shell_au55c
 
@@ -1273,6 +1304,8 @@ hwapi_shell:
   variables:
     SN_HW_APP_NAME: shell
   needs:
+    - job: hwapi_shell_au250
+      artifacts: true
     - job: hwapi_shell_au280
       artifacts: true
     - job: hwapi_shell_au55c
@@ -1299,6 +1332,8 @@ trigger_bootstrap:
   needs:
     - job: hwapi_shell
       artifacts: true
+    - job: validate_shell_au250
+      artifacts: false
     - job: validate_shell_au55c
       artifacts: false
     - job: validate_shell_au280
