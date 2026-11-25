@@ -75,15 +75,20 @@ datapath those suites exercise.
 Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
 `build/<board>/out/esnet_smartnic/build/`:
 
-- UltraScale+: `esnet_shell.bit`, `esnet_shell.bin`, and `esnet_shell.ltx`.
+- UltraScale+: `esnet_shell.bit`, `esnet_shell.bin`, `esnet_shell.ltx`, and
+  `esnet_shell.mcs`. The MCS targets 128 MiB SPIx4 configuration flash with
+  the user bitstream at `0x01002000`. Firmware packages include it as
+  `firmware/esnet-smartnic.mcs.zst` for the existing flash-programming services.
 - Versal: `esnet_smartnic_app.pdi`, `esnet_smartnic_nofpt.pdi`, and
   `esnet_smartnic.ltx`, together with the hardware PDI and XSA.
 
 The public targets are the same for every board. `build` implements the
 design through routing and post-route optimization. `image` also exports
-the platform's programming files: BIT/BIN/LTX on UltraScale+, or the
+the platform's programming files: BIT/BIN/LTX/MCS on UltraScale+, or the
 hardware and firmware PDIs, XSA, and LTX on Versal. Plain `make` defaults to
 `image`; board selection and the native export steps happen internally.
+Flash export is a separate US+ stage consuming the BIT file; a missing MCS
+can be regenerated without repeating bitstream generation or implementation.
 
 `build_clean` removes assembly output, `clean` removes the selected board's
 build directory, and `clean_all` removes all board builds. `restore` restores

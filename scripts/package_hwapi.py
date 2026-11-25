@@ -22,6 +22,8 @@ def package(hwapi_dir, output, board, tests=None):
     if not any((hwapi_dir / f"firmware/esnet-smartnic.{ext}.zst").is_file()
                for ext in ("bit", "pdi")):
         raise ValueError("Missing BIT or PDI programming artifact")
+    if board.startswith("au") and not (hwapi_dir / "firmware/esnet-smartnic.mcs.zst").is_file():
+        raise ValueError("Missing MCS flash programming artifact")
     for name in ("regmap/spec", "wireshark", "libvitisnetp4drv"):
         if not (hwapi_dir / name).is_dir():
             raise ValueError(f"Missing firmware importer directory: {name}")

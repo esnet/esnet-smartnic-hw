@@ -26,6 +26,7 @@ class PackageTest(unittest.TestCase):
         for name in ("firmware", "regmap/spec", "wireshark", "libvitisnetp4drv"):
             (self.hwapi / name).mkdir(parents=True)
         for name in ("firmware/esnet-smartnic.bin.zst", "firmware/esnet-smartnic.bit.zst",
+                     "firmware/esnet-smartnic.mcs.zst",
                      "firmware/esnet-smartnic.ltx", "regmap/esnet-smartnic-top-ir.yaml"):
             (self.hwapi / name).write_bytes(name.encode())
 
@@ -50,6 +51,7 @@ class PackageTest(unittest.TestCase):
 
     def test_versal_archive_uses_its_board_directory(self):
         self.board = "av80"
+        (self.hwapi / "firmware/esnet-smartnic.mcs.zst").unlink()
         (self.hwapi / "firmware/esnet-smartnic.bit.zst").rename(
             self.hwapi / "firmware/esnet-smartnic.pdi.zst")
         self.run_package()
@@ -82,6 +84,13 @@ class PackageTest(unittest.TestCase):
         (self.hwapi / "wireshark").rmdir()
         self.run_package(success=False)
         self.assertFalse(self.output.exists())
+
+    def test_missing_usplus_flash_image_is_rejected(self):
+        self.run_package()
+        original = self.output.read_bytes()
+        (self.hwapi / "firmware/esnet-smartnic.mcs.zst").unlink()
+        self.run_package(success=False)
+        self.assertEqual(self.output.read_bytes(), original)
 
     def test_output_inside_source_is_rejected(self):
         self.output = self.hwapi / "firmware.zip"

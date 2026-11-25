@@ -10,7 +10,11 @@ SHELL_BUILD_REF := xilinx.alveo.usplus.shell.build$(__USB_LIB_SUFFIX)
 
 # The US+ shell RTL and synthesized checkpoint use this top-level name.
 TOP := esnet_shell
-BUILD_STAGES := link opt place place_opt route route_opt bitstream
+BUILD_STAGES := link opt place place_opt route route_opt bitstream flash
+# User configuration partition in the boards' 128 MiB SPIx4 flash.
+CFGMEM_SIZE := 128
+CFGMEM_INTERFACE := SPIx4
+CFGMEM_LOAD_ADDRESS := 0x01002000
 SHELL_REGIO_TOP_YAML := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/regio/esnet-smartnic-top.yaml
 
 __USB_BOARD_CONSTRAINTS := $(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/shell/build/$(BOARD)
@@ -27,22 +31,25 @@ include $(SMARTNIC_ROOT)/scripts/Makefiles/shell_build_base.mk
 
 $(COMPONENT_OUT_PATH)/.done/link: $(CONSTRAINTS_XDC_IMPL)
 $(COMPONENT_OUT_PATH)/.done/bitstream: $(__USB_EXPORT_HOOK) $(__USB_PROBE_NAMES_SCRIPT)
+$(COMPONENT_OUT_PATH)/.done/flash: $(SMARTNIC_ROOT)/scripts/Makefiles/usplus_shell_build.mk
 
 __USB_BITSTREAM := $(COMPONENT_OUT_PATH)/$(TOP).bit
 __USB_BIN := $(COMPONENT_OUT_PATH)/$(TOP).bin
 __USB_LTX := $(COMPONENT_OUT_PATH)/$(TOP).ltx
+__USB_MCS := $(COMPONENT_OUT_PATH)/$(TOP).mcs
 
-.shell_build_image: _np_bitstream
+.shell_build_image: _np_flash
 .PHONY: .shell_build_image
 
 .shell_build_info: .usplus_shell_build_info
 .usplus_shell_build_info:
-	@echo "US+ programming artifacts: $(__USB_BITSTREAM) $(__USB_BIN) $(__USB_LTX)"
+	@echo "US+ programming artifacts: $(__USB_BITSTREAM) $(__USB_BIN) $(__USB_LTX) $(__USB_MCS)"
 .PHONY: .usplus_shell_build_info
 
 .shell_build_hwapi: .usplus_shell_build_hwapi
 .usplus_shell_build_hwapi: | $(SHELL_HWAPI_DIRS)
 	@zstd -f9 $(__USB_BITSTREAM) -o $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.bit.zst
 	@zstd -f9 $(__USB_BIN) -o $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.bin.zst
+	@zstd -f9 $(__USB_MCS) -o $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.mcs.zst
 	@cp $(__USB_LTX) $(SHELL_HWAPI_FW_DIR)/esnet-smartnic.ltx
 .PHONY: .usplus_shell_build_hwapi
