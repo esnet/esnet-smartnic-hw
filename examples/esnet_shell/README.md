@@ -97,11 +97,22 @@ the backup saved by the configuration flow when the build settings change.
 CI jobs named `build_esnet_shell_<board>` and `hwapi_esnet_shell_<board>`
 build and package this native example from `examples/esnet_shell`, using
 `shell` as the firmware-facing application name. The V80 build runs
-automatically; the UltraScale+ builds are manual. The existing
+automatically on `main` and is manual on other branches; the native
+UltraScale+ builds are manual. The existing
 `build_shell_au55c` and `build_shell_au280` jobs continue to build the OpenNIC
 `examples/shell` design. The single `hwapi_shell` bundle gathers those ONS
 packages and `hwapi_esnet_shell_av80` for the bootstrap handoff. Native
 UltraScale+ packages remain available individually.
+
+The bootstrap shell builds (ONS U55C/U280 and native V80), their hardware
+packages, firmware triggers, combined bundle and bootstrap trigger are
+required automatic jobs on `main` and optional manual jobs elsewhere.
+The ONS shell validation jobs require nonnegative setup, hold and
+pulse-width slack, retaining JSON and JUnit summaries on failure. Bootstrap
+delivery waits for those timing gates; hardware packages and firmware builds
+remain available independently for diagnosis. The firmware and bootstrap
+triggers mirror downstream pipeline status. Native V80 validation retains
+the separate advisory policy described below.
 
 The manual `shell_ip_<board>` jobs generate the UltraScale+ shell's IP into
 this example's build output tree and cache it by board, tool version, and

@@ -47,6 +47,15 @@ variables:
   variables:
     RUN_LOGGED_CONSOLE_FILTER: &vivado_console_filter "$CI_PROJECT_DIR/esnet-fpga-library/scripts/vivado/console_filters/vivado-progress.json"
 
+# Bootstrap shell jobs are required on main and optional manual jobs elsewhere.
+.bootstrap_shell_policy:
+  rules: &bootstrap_shell_rules
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+      allow_failure: false
+    - when: manual
+      allow_failure: true
+
 # Firmware handoff template
 
 .trigger_fw:
@@ -357,6 +366,18 @@ smartnic_ip_au250:
   timeout: 30m
   rules:
     - allow_failure: true
+
+.validate_ons_shell:
+  extends: .validate
+  variables:
+    VALIDATE_WNS_MIN: "0"
+    VALIDATE_TNS_MIN: "0"
+  rules: *bootstrap_shell_rules
+  artifacts:
+    when: always
+    paths:
+      - open-nic-shell/build/${SN_HW_BOARD}_open-nic-ci/build_summary.json
+      - open-nic-shell/build/${SN_HW_BOARD}_open-nic-ci/build_summary.xml
 
 .hwapi:
   stage: package
@@ -707,21 +728,30 @@ fw_udplb_fec_u280:
 
 build_shell_au55c:
   extends: .bitfile
+  rules: *bootstrap_shell_rules
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
     SN_HW_BOARD: au55c
   needs:
     - ons_ip_au55c
-  when: manual
+
+validate_shell_au55c:
+  extends: .validate_ons_shell
+  needs:
+    - build_shell_au55c
 
 hwapi_shell_au55c:
   extends: .hwapi
+  rules: *bootstrap_shell_rules
   needs:
     - build_shell_au55c
 
 fw_shell_au55c:
   extends: .trigger_fw
+  rules: *bootstrap_shell_rules
+  trigger:
+    strategy: mirror
   variables:
     SN_HW_API_JOB: hwapi_shell_au55c
   needs:
@@ -731,21 +761,30 @@ fw_shell_au55c:
 
 build_shell_au280:
   extends: .bitfile
+  rules: *bootstrap_shell_rules
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
     SN_HW_BOARD: au280
   needs:
     - ons_ip_au280
-  when: manual
+
+validate_shell_au280:
+  extends: .validate_ons_shell
+  needs:
+    - build_shell_au280
 
 hwapi_shell_au280:
   extends: .hwapi
+  rules: *bootstrap_shell_rules
   needs:
     - build_shell_au280
 
 fw_shell_au280:
   extends: .trigger_fw
+  rules: *bootstrap_shell_rules
+  trigger:
+    strategy: mirror
   variables:
     SN_HW_API_JOB: hwapi_shell_au280
   needs:
@@ -1109,6 +1148,7 @@ fw_esnet_shell_au250:
 
 build_esnet_shell_av80:
   extends: .shell_image_versal
+  rules: *bootstrap_shell_rules
   variables:
     EXAMPLES_DIR: examples
     SN_HW_APP_NAME: shell
@@ -1123,11 +1163,15 @@ validate_esnet_shell_av80:
 
 hwapi_esnet_shell_av80:
   extends: .hwapi_shell
+  rules: *bootstrap_shell_rules
   needs:
     - build_esnet_shell_av80
 
 fw_shell_av80:
   extends: .trigger_fw
+  rules: *bootstrap_shell_rules
+  trigger:
+    strategy: mirror
   variables:
     SN_HW_API_JOB: hwapi_esnet_shell_av80
   needs:
@@ -1225,6 +1269,7 @@ fw_udplb_fec_av80:
 
 hwapi_shell:
   extends: .hwapi_gather
+  rules: *bootstrap_shell_rules
   variables:
     SN_HW_APP_NAME: shell
   needs:
@@ -1237,6 +1282,7 @@ hwapi_shell:
 
 trigger_bootstrap:
   stage: trigger_downstream
+  rules: *bootstrap_shell_rules
   variables:
     SN_HW_GROUP: $CI_PROJECT_NAMESPACE
     SN_HW_REPO: $CI_PROJECT_NAME
@@ -1247,14 +1293,13 @@ trigger_bootstrap:
     # override the artifact URL in the triggered repo so it pulls directly from the hwapi job from this pipeline
     ESNET_SMARTNIC_HWAPI_URL: "$CI_PROJECT_URL/-/jobs/$SN_HW_HWAPI_JOB_NUMBER/artifacts/download?file_type=archive"
   trigger:
+    strategy: mirror
     project: ht/esnet-smartnic-bootstrap
     branch: main
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-      when: manual
-      allow_failure: true
   needs:
     - job: hwapi_shell
       artifacts: true
+    - job: validate_shell_au55c
+      artifacts: false
+    - job: validate_shell_au280
+      artifacts: false
