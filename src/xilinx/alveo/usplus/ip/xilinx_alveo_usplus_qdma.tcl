@@ -6,6 +6,12 @@ create_ip -name qdma -vendor xilinx.com -library ip -module_name $module_name -d
 # Base QDMA IP spec
 set_property -dict {
     CONFIG.mode_selection {Advanced}
+    CONFIG.SRIOV_CAP_ENABLE {true}
+    CONFIG.MAILBOX_ENABLE {true}
+    CONFIG.flr_enable {true}
+    CONFIG.acs_ext_cap_enable {true}
+    CONFIG.PF0_SRIOV_CAP_INITIAL_VF {4}
+    CONFIG.PF1_SRIOV_CAP_INITIAL_VF {4}
     CONFIG.en_transceiver_status_ports {false}
     CONFIG.dsc_byp_mode {Descriptor_bypass_and_internal}
     CONFIG.testname {st}
@@ -22,10 +28,28 @@ set_property -dict {
     CONFIG.pf2_bar2_size_qdma {8}
     CONFIG.pf3_bar2_scale_qdma {Megabytes}
     CONFIG.pf3_bar2_size_qdma {8}
-    CONFIG.PF0_MSIX_CAP_TABLE_SIZE_qdma {009}
-    CONFIG.PF1_MSIX_CAP_TABLE_SIZE_qdma {008}
-    CONFIG.PF2_MSIX_CAP_TABLE_SIZE_qdma {008}
-    CONFIG.PF3_MSIX_CAP_TABLE_SIZE_qdma {008}
+    CONFIG.pf0_bar0_prefetchable_qdma {false}
+    CONFIG.pf0_bar2_prefetchable_qdma {false}
+    CONFIG.pf1_bar0_prefetchable_qdma {false}
+    CONFIG.pf1_bar2_prefetchable_qdma {false}
+    CONFIG.pf0_sriov_bar0_prefetchable {false}
+    CONFIG.pf0_sriov_bar2_prefetchable {false}
+    CONFIG.pf1_sriov_bar0_prefetchable {false}
+    CONFIG.pf1_sriov_bar2_prefetchable {false}
+    CONFIG.pf0_sriov_bar2_enabled {true}
+    CONFIG.pf0_sriov_bar2_64bit {true}
+    CONFIG.pf0_sriov_bar2_scale {Megabytes}
+    CONFIG.pf0_sriov_bar2_size {8}
+    CONFIG.pf0_vf_pciebar2axibar_2 {0x0000000000000000}
+    CONFIG.pf1_sriov_bar2_enabled {true}
+    CONFIG.pf1_sriov_bar2_64bit {true}
+    CONFIG.pf1_sriov_bar2_scale {Megabytes}
+    CONFIG.pf1_sriov_bar2_size {8}
+    CONFIG.pf1_vf_pciebar2axibar_2 {0x0000000000000000}
+    CONFIG.PF0_MSIX_CAP_TABLE_SIZE_qdma {007}
+    CONFIG.PF1_MSIX_CAP_TABLE_SIZE_qdma {007}
+    CONFIG.PF2_MSIX_CAP_TABLE_SIZE_qdma {007}
+    CONFIG.PF3_MSIX_CAP_TABLE_SIZE_qdma {007}
     CONFIG.pfch_cache_depth {64}
     CONFIG.wrb_coal_max_buf {32}
     CONFIG.dma_intf_sel_qdma {AXI_Stream_with_Completion}

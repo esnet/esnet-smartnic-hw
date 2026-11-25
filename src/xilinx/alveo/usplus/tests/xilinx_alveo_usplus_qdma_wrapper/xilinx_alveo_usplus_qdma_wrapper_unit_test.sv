@@ -79,6 +79,8 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
         `IP.tb_h2c_valid = 0;
         `IP.tb_c2h_ready = 1;
         `IP.tb_cmpt_ready = 1;
+        `IP.usr_flr_set = 0;
+        `IP.usr_flr_fnc = 0;
         h2c_monitor.idle();
         c2h_driver.idle();
         reset_link();
@@ -199,6 +201,54 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     endtask
 
     `SVUNIT_TESTS_BEGIN
+        `SVTEST(flr_completes_with_the_requested_function)
+            for (int fnc = 0; fnc < 12; fnc++) begin
+                @(negedge dma_aclk);
+                `IP.usr_flr_fnc = 8'(fnc);
+                `IP.usr_flr_set = 1;
+                @(posedge dma_aclk); #1ns;
+                `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 0)
+                @(negedge dma_aclk);
+                `IP.usr_flr_set = 0;
+                repeat (2) begin
+                    @(posedge dma_aclk); #1ns;
+                    `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 0)
+                end
+                @(posedge dma_aclk); #1ns;
+                `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 1)
+                `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_fnc, 8'(fnc))
+                @(posedge dma_aclk); #1ns;
+                `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 0)
+            end
+        `SVTEST_END
+
+        `SVTEST(flr_preserves_back_to_back_function_notifications)
+            for (int cycle = 0; cycle < 12; cycle++) begin
+                @(negedge dma_aclk);
+                `IP.usr_flr_set = cycle < 8;
+                `IP.usr_flr_fnc = 8'(cycle);
+                @(posedge dma_aclk); #1ns;
+                if (cycle >= 3 && cycle < 11) begin
+                    `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 1)
+                    `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_fnc, 8'(cycle - 3))
+                end else `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 0)
+            end
+        `SVTEST_END
+
+        `SVTEST(link_reset_discards_pending_flr_completion)
+            @(negedge dma_aclk);
+            `IP.usr_flr_set = 1;
+            `IP.usr_flr_fnc = 8'h07;
+            @(posedge dma_aclk);
+            @(negedge dma_aclk);
+            `IP.usr_flr_set = 0;
+            reset_link();
+            repeat (8) begin
+                @(posedge dma_aclk); #1ns;
+                `FAIL_UNLESS_EQUAL(`IP.usr_flr_done_vld, 0)
+            end
+        `SVTEST_END
+
         `SVTEST(h2c_native_lengths_and_queue)
             int sizes[] = '{1, 63, 64, 65, 129, 9100};
             foreach (sizes[i]) begin

@@ -1,5 +1,14 @@
 # UltraScale+ Alveo management
 
+The PCIe endpoint provides two PFs and four VFs per PF, with SR-IOV,
+mailbox, function-level reset and ACS enabled. Each PF has a 256 KiB DMA
+BAR0 and an 8 MiB user BAR2; each VF has a 32 KiB DMA BAR0 and an 8 MiB
+user BAR2. These BARs are 64-bit and non-prefetchable. Each function has
+eight MSI-X vectors, and the DMA engine implements 512 queue sets shared
+across functions. The wrapper acknowledges FLR notifications after four
+DMA clocks and clears pending completions on DMA reset. External PCIe
+configuration-space handling remains disabled; VPD is not implemented.
+
 SYSMON uses the free-running 100 MHz board clock and its own library
 AXI-Lite CDC from the 125 MHz register bus, including reset synchronization.
 Its divide-by-20 setting produces a 5 MHz ADC clock. The register window
