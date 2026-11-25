@@ -60,13 +60,27 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     pci_vpd_intf vpd_if (.clk(cms_clk));
 
     xilinx_cms_cardinfo_fetch_fsm DUT0(.*);
-    system_config_vpd    #(
+`ifdef ONS_VPD
+    system_config_vpd
+`else
+    xilinx_pci_vpd
+`endif
+    #(
+`ifndef ONS_VPD
+        .CLK_FREQ_HZ(50_000),
+`endif
         .BUILD_ID         (BUILD_ID),
         .FLASH_REG_OFFSET (FLASH_REG_OFFSET),
         .CMS_REG_OFFSET   (CMS_REG_OFFSET)
     ) DUT1 (
-        .clk  ( cms_clk ),
-        .srst ( cms_srst),
+`ifdef ONS_VPD
+        .clk(cms_clk),
+`else
+        .vpd_if,
+        .init_timeout(),
+        .card_info_error(error_boot_timeout || error_bad_axil_transaction || error_card_info_length),
+`endif
+        .srst(cms_srst),
         .*
     );
 `ifdef ONS_VPD
@@ -113,12 +127,15 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     );
 
     std_reset_intf reset_if (.clk(cms_clk));
+`ifdef ONS_VPD
     assign vpd_req = vpd_if.req;
     assign vpd_wr_rd_n = vpd_if.wr_rd_n;
     assign vpd_addr = vpd_if.addr;
     assign vpd_wr_data = vpd_if.wr_data;
     assign vpd_if.rd_data = vpd_rd_data;
     assign vpd_if.rd_vld = vpd_rd_vld;
+
+`endif
 
     // Connect reset interface
     assign axil_from_controller.aclk = cms_clk;

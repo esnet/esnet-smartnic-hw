@@ -22,12 +22,13 @@ SIM ?= xsim
 # ----------------------------------------------------
 # Additional sources
 # ----------------------------------------------------
-SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv
+SRC_FILES =
 
 # Exercise the independent ONS bridge with the same integration tests.
 ONS_VPD ?= 0
 ifeq ($(ONS_VPD),1)
-SRC_FILES += $(ONS_ROOT)/src/qdma_subsystem/qdma_pci_cfg_ext_vpd.sv \
+SRC_FILES += $(ONS_ROOT)/src/system_config/system_config_vpd.sv \
+             $(ONS_ROOT)/src/qdma_subsystem/qdma_pci_cfg_ext_vpd.sv \
              $(ONS_ROOT)/src/utility/level_trigger_cdc.sv
 override DEFINES += ONS_VPD
 endif
