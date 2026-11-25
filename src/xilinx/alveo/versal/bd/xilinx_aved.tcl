@@ -60,14 +60,14 @@ connect_bd_net \
 # interfaces are routed directly to BD boundary ports for use by RTL outside
 # the AVED BD.
 #
-# BAR0 base: 0x0000_0203_0000_0000 (distinct from PCIE1's 0x0000_0201_…).
-# BAR0 non-prefetchable to suppress speculative cache-line read-ahead.
+# BAR2 NoC translation base: 0x0000_0203_0000_0000.
+# Register BARs are non-prefetchable to suppress speculative read-ahead.
 # =========================================================================
 
 # -------------------------------------------------------------------------
 # 2a. Enable PCIE0 on the CIPS
 #
-# All PCIE0 parameters are appended to the existing CPM_CONFIG value in a
+# All PCIE0 parameters are overlaid on the existing CPM_CONFIG value in a
 # single set_property call.  The per-iteration approach (one set_property
 # per parameter) triggers a full CIPS re-validation on each call; with
 # SR-IOV enabled this becomes prohibitively slow (~50 re-validations).
@@ -85,6 +85,7 @@ set pcie0_params [list \
     CPM_PCIE0_EXT_PCIE_CFG_SPACE_ENABLED    None \
     CPM_PCIE0_CFG_EXT_IF                   0 \
     CPM_PCIE0_COPY_PF0_QDMA_ENABLED       1 \
+    CPM_PCIE0_COPY_PF0_SRIOV_QDMA_ENABLED 1 \
     CPM_PCIE0_CFG_VEND_ID                  10ee \
     CPM_PCIE0_PF0_CFG_DEV_ID               9038 \
     CPM_PCIE0_PF0_CFG_SUBSYS_ID            0000 \
@@ -92,8 +93,8 @@ set pcie0_params [list \
     CPM_PCIE0_PF0_SUB_CLASS_VALUE          80 \
     CPM_PCIE0_ACS_CAP_ON                   1 \
     CPM_PCIE0_PF0_MSIX_ENABLED             1 \
-    CPM_PCIE0_PF0_MSIX_CAP_TABLE_SIZE      8 \
-    CPM_PCIE0_PF0_MSIX_CAP_TABLE_OFFSET    40 \
+    CPM_PCIE0_PF0_MSIX_CAP_TABLE_SIZE      7 \
+    CPM_PCIE0_PF0_MSIX_CAP_TABLE_OFFSET    50000 \
     CPM_PCIE0_PF0_BAR0_QDMA_ENABLED        1 \
     CPM_PCIE0_PF0_BAR0_QDMA_64BIT          1 \
     CPM_PCIE0_PF0_BAR0_QDMA_PREFETCHABLE   0 \
@@ -108,36 +109,60 @@ set pcie0_params [list \
     CPM_PCIE0_DMA_INTF                     AXI4S \
     CPM_PCIE0_QDMA_PARITY_SETTINGS         Check_Parity \
     CPM_PCIE0_PF1_CFG_DEV_ID              9138 \
+    CPM_PCIE0_PF1_MSIX_ENABLED             1 \
+    CPM_PCIE0_PF1_MSIX_CAP_TABLE_SIZE      7 \
+    CPM_PCIE0_VFG0_MSIX_CAP_TABLE_SIZE     7 \
+    CPM_PCIE0_VFG1_MSIX_CAP_TABLE_SIZE     7 \
     CPM_PCIE0_PF1_BASE_CLASS_VALUE        02 \
     CPM_PCIE0_PF1_SUB_CLASS_VALUE         80 \
     CPM_PCIE0_SRIOV_CAP_ENABLE             1 \
     CPM_PCIE0_PF0_SRIOV_CAP_TOTAL_VF      4 \
     CPM_PCIE0_PF0_SRIOV_CAP_INITIAL_VF    4 \
-    CPM_PCIE0_ALL_VFS                      4 \
-    CPM_PCIE0_PF0_SRIOV_BAR0_ENABLED      1 \
-    CPM_PCIE0_PF0_SRIOV_BAR0_64BIT        0 \
-    CPM_PCIE0_PF0_SRIOV_BAR0_PREFETCHABLE 0 \
-    CPM_PCIE0_PF0_SRIOV_BAR0_SCALE       Kilobytes \
-    CPM_PCIE0_PF0_SRIOV_BAR0_SIZE        32 \
-    CPM_PCIE0_PF0_SRIOV_BAR0_TYPE        DMA \
-    CPM_PCIE0_PF0_SRIOV_BAR2_ENABLED      1 \
-    CPM_PCIE0_PF0_SRIOV_BAR2_64BIT        1 \
-    CPM_PCIE0_PF0_SRIOV_BAR2_PREFETCHABLE 0 \
-    CPM_PCIE0_PF0_SRIOV_BAR2_SCALE       Megabytes \
-    CPM_PCIE0_PF0_SRIOV_BAR2_SIZE        8 \
-    CPM_PCIE0_PF0_SRIOV_BAR2_TYPE        Memory \
+    CPM_PCIE0_PF1_SRIOV_CAP_TOTAL_VF      4 \
+    CPM_PCIE0_PF1_SRIOV_CAP_INITIAL_VF    4 \
+    CPM_PCIE0_ALL_VFS                      8 \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_ENABLED      1 \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_64BIT        1 \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_PREFETCHABLE 0 \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_SCALE       Kilobytes \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_SIZE        32 \
+    CPM_PCIE0_PF0_BAR0_SRIOV_QDMA_TYPE        DMA \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_ENABLED      1 \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_64BIT        1 \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_PREFETCHABLE 0 \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_SCALE       Megabytes \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_SIZE        8 \
+    CPM_PCIE0_PF0_BAR2_SRIOV_QDMA_TYPE        AXI_Bridge_Master \
+    CPM_PCIE0_PF0_PCIEBAR2AXIBAR_SRIOV_QDMA_2 0x0000020300000000 \
     CPM_PCIE0_MAILBOX_ENABLE               1 \
     CPM_PCIE0_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 1 \
 ]
 
 set_property CONFIG.CPM_CONFIG \
-    [concat [get_property CONFIG.CPM_CONFIG $cips] $pcie0_params] \
+    [dict merge [get_property CONFIG.CPM_CONFIG $cips] $pcie0_params] \
     $cips
 
 # Validate after CPM_CONFIG changes so Vivado surfaces the new PCIE0 pins
 # (PCIE0_GT, gt_refclk0, dma0_intrfc_clk, dma0_intrfc_resetn) on the CIPS
 # cell before sections 2b and 2c reference them.
 validate_bd_design -quiet
+
+# Check normalized QDMA settings, since generic PCIe BAR fields are derived
+# from the QDMA-specific BAR configuration and may be silently overwritten.
+proc xilinx_aved_check_pcie_config {expected actual} {
+    dict for {name requested} $expected {
+        if {![dict exists $actual $name]} {
+            error "Missing resolved application PCIe setting: $name"
+        }
+        set resolved [dict get $actual $name]
+        if {![string equal -nocase $resolved $requested] &&
+            !([string is entier -strict $resolved] &&
+              [string is entier -strict $requested] && $resolved == $requested)} {
+            error "Application PCIe setting $name: requested '$requested', resolved '$resolved'"
+        }
+    }
+}
+xilinx_aved_check_pcie_config $pcie0_params [get_property CONFIG.CPM_CONFIG_INTERNAL $cips]
 
 # -------------------------------------------------------------------------
 # 2b. PCIE0 physical GT interfaces
