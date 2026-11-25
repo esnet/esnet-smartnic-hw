@@ -71,10 +71,10 @@ class xilinx_pci_cfg_ext_intf_agent extends std_verif_pkg::agent;
     endtask
 
     // Write PCI extended config register
-    task automatic write(input int register_number, input int function_number, input bit [31:0] data, output bit error, output bit timeout);
+    task automatic write(input int register_number, input int function_number, input bit [31:0] data, output bit error, output bit timeout, input bit [3:0] byte_en = 4'hf);
         error = !cfg_ext_legacy_access_in_range(register_number, function_number);
         lock();
-        pci_cfg_ext_vif.write(register_number, function_number, data, timeout, get_wr_timeout());
+        pci_cfg_ext_vif.write(register_number, function_number, data, timeout, get_wr_timeout(), byte_en);
         unlock();
     endtask
 

@@ -22,9 +22,7 @@ SIM ?= xsim
 # ----------------------------------------------------
 # Additional sources
 # ----------------------------------------------------
-SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv \
-            $(ONS_ROOT)/src/qdma_subsystem/qdma_pci_cfg_ext_vpd.sv \
-            $(ONS_ROOT)/src/utility/level_trigger_cdc.sv
+SRC_FILES = $(ONS_ROOT)/src/system_config/system_config_vpd.sv
 
 # ----------------------------------------------------
 # Dependencies

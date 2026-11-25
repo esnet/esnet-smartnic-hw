@@ -27,7 +27,8 @@ package xilinx_pci_pkg;
     //===================================
     function automatic bit cfg_ext_legacy_access_in_range(input int register_number, input int function_number);
         if (register_number <  CFG_EXT_LEGACY_LO_DWORD_IDX) return 1'b0;
-        if (register_number >= CFG_EXT_LEGACY_LO_DWORD_IDX) return 1'b0;
+        if (register_number > CFG_EXT_LEGACY_HI_DWORD_IDX) return 1'b0;
+        if (function_number < 0) return 1'b0;
         if (function_number >= 2**CFG_EXT_FUNC_SEL_WID)     return 1'b0;
         return 1'b1;
     endfunction

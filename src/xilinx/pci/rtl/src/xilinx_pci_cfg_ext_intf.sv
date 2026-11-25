@@ -9,7 +9,7 @@ interface xilinx_pci_cfg_ext_intf (
     logic                   req;
     logic                   wr_rd_n;
     logic [REG_SEL_WID-1:0] register;
-    logic [FUNC_SEL_WID:0]  func;
+    logic [FUNC_SEL_WID-1:0] func;
     logic [31:0]            wr_data;
     logic [3:0]             wr_byte_en;
     logic [31:0]            rd_data;
@@ -40,6 +40,7 @@ interface xilinx_pci_cfg_ext_intf (
         output rd_vld
     );
 
+`ifndef SYNTHESIS
     clocking cb @(posedge clk);
         output req, wr_rd_n, register, func, wr_data, wr_byte_en;
         input  rd_data, rd_vld;
@@ -56,14 +57,15 @@ interface xilinx_pci_cfg_ext_intf (
     task _write(
             input  bit [REG_SEL_WID-1:0]  register,
             input  bit [FUNC_SEL_WID-1:0] func,
-            input  bit [31:0]             data
+            input  bit [31:0]             data,
+            input  bit [3:0]              byte_en = 4'hf
         );
         cb.req <= 1'b1;
         cb.wr_rd_n <= 1'b1;
         cb.register <= register;
         cb.func <= func;
         cb.wr_data <= data;
-        cb.wr_byte_en <= '1;
+        cb.wr_byte_en <= byte_en;
         @(cb);
         cb.req <= 1'b0;
     endtask
@@ -115,14 +117,15 @@ interface xilinx_pci_cfg_ext_intf (
             input  bit [FUNC_SEL_WID-1:0] func,
             input  bit [31:0]             data,
             output bit timeout,
-            input  int WR_TIMEOUT = 0
+            input  int WR_TIMEOUT = 0,
+            input  bit [3:0] byte_en = 4'hf
         );
         timeout = 1'b0;
         fork
             begin
                 fork
                     begin
-                        _write(register, func, data);
+                        _write(register, func, data, byte_en);
                     end
                     begin
                         if (WR_TIMEOUT > 0) begin
@@ -136,5 +139,7 @@ interface xilinx_pci_cfg_ext_intf (
         join
         if (timeout) idle();
     endtask
+
+`endif
 
 endinterface : xilinx_pci_cfg_ext_intf

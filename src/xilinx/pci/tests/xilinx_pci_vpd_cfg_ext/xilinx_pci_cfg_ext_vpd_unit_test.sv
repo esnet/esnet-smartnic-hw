@@ -56,14 +56,8 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     logic             error_bad_axil_transaction;
     logic             error_card_info_length;
 
-    logic        cfg_ext_read_received;
-    logic        cfg_ext_write_received;
-    logic [9:0]  cfg_ext_register_number;
-    logic [7:0]  cfg_ext_function_number;
-    logic [31:0] cfg_ext_write_data;
-    logic [3:0]  cfg_ext_write_byte_enable;
-    logic [31:0] cfg_ext_read_data;
-    logic        cfg_ext_read_data_valid;
+    xilinx_pci_cfg_ext_intf pci_cfg_ext_if (.clk(aclk));
+    pci_vpd_intf vpd_if (.clk(cms_clk));
 
     xilinx_cms_cardinfo_fetch_fsm DUT0(.*);
     system_config_vpd    #(
@@ -75,12 +69,13 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
         .srst ( cms_srst),
         .*
     );
-    qdma_pci_cfg_ext_vpd #(
+    xilinx_pci_cfg_ext_vpd #(
         .NUM_PHYS_FUNC ( NUM_FUNCS )
     ) DUT2 (
-        .vpd_clk  ( cms_clk ),
-        .vpd_srst ( cms_srst ),
-        .*
+        .aresetn,
+        .cfg_ext_if(pci_cfg_ext_if),
+        .vpd_srst(cms_srst),
+        .vpd_if
     );
 
     //===================================
@@ -97,17 +92,12 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     );
 
     std_reset_intf reset_if (.clk(cms_clk));
-    xilinx_pci_cfg_ext_intf pci_cfg_ext_if (.clk(aclk));
-
-    assign cfg_ext_read_received   = pci_cfg_ext_if.req && !pci_cfg_ext_if.wr_rd_n;
-    assign cfg_ext_write_received  = pci_cfg_ext_if.req &&  pci_cfg_ext_if.wr_rd_n;
-    assign cfg_ext_register_number = pci_cfg_ext_if.register;
-    assign cfg_ext_function_number = pci_cfg_ext_if.func;
-    assign cfg_ext_write_data      = pci_cfg_ext_if.wr_data;
-    assign cfg_ext_write_data_byte_enable = pci_cfg_ext_if.wr_byte_en;
-
-    assign pci_cfg_ext_if.rd_data  = cfg_ext_read_data;
-    assign pci_cfg_ext_if.rd_vld   = cfg_ext_read_data_valid;
+    assign vpd_req = vpd_if.req;
+    assign vpd_wr_rd_n = vpd_if.wr_rd_n;
+    assign vpd_addr = vpd_if.addr;
+    assign vpd_wr_data = vpd_if.wr_data;
+    assign vpd_if.rd_data = vpd_rd_data;
+    assign vpd_if.rd_vld = vpd_rd_vld;
 
     // Connect reset interface
     assign axil_from_controller.aclk = cms_clk;
@@ -193,10 +183,108 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     //   `SVTEST_END
     //===================================
     logic [31:0] rd_data;
+    byte written_bytes[$];
+    always @(posedge cms_clk) begin
+        if (cms_srst) written_bytes.delete();
+        else if (vpd_if.req && vpd_if.wr_rd_n) written_bytes.push_back(vpd_if.wr_data);
+    end
+
 
     `SVUNIT_TESTS_BEGIN
 
         `SVTEST(hard_reset)
+        `SVTEST_END
+
+        `SVTEST(config_range)
+            `FAIL_UNLESS(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h2c, 0));
+            `FAIL_UNLESS(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h2f, 255));
+            `FAIL_IF(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h2b, 0));
+            `FAIL_IF(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h30, 0));
+            `FAIL_IF(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h2c, -1));
+            `FAIL_IF(xilinx_pci_pkg::cfg_ext_legacy_access_in_range('h2c, 256));
+        `SVTEST_END
+
+        `SVTEST(config_byte_enables_and_function_isolation)
+            bit error, timeout;
+            pci_cfg_ext_agent.write('h2d, 0, 'h11223344, error, timeout);
+            `FAIL_IF(error || timeout);
+            pci_cfg_ext_agent.write('h2d, 1, 'haabbccdd, error, timeout);
+            `FAIL_IF(error || timeout);
+            pci_cfg_ext_agent.write('h2d, 0, 'h55667788, error, timeout, 4'b0101);
+            `FAIL_IF(error || timeout);
+            pci_cfg_ext_agent.read('h2d, 0, rd_data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(rd_data, 32'h11663388);
+            pci_cfg_ext_agent.read('h2d, 1, rd_data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(rd_data, 32'haabbccdd);
+            pci_cfg_ext_agent.write('h2d, 255, '1, error, timeout);
+            `FAIL_IF(error || timeout);
+            pci_cfg_ext_agent.read('h2d, 255, rd_data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(rd_data, 0);
+            pci_cfg_ext_agent.read('h2d, 0, rd_data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(rd_data, 32'h11663388);
+        `SVTEST_END
+
+        `SVTEST(vpd_write_byte_order)
+            bit error, timeout;
+            // Exercise all four bytes from PF1 through the request CDC FIFO.
+            pci_cfg_ext_agent.write('h2d, 1, 'h12345678, error, timeout);
+            `FAIL_IF(error || timeout);
+            pci_cfg_ext_agent.write('h2c, 1, 'h80000000, error, timeout);
+            `FAIL_IF(error || timeout);
+            wait(written_bytes.size() == 4);
+            `FAIL_UNLESS_EQUAL(written_bytes[0], 8'h78);
+            `FAIL_UNLESS_EQUAL(written_bytes[1], 8'h56);
+            `FAIL_UNLESS_EQUAL(written_bytes[2], 8'h34);
+            `FAIL_UNLESS_EQUAL(written_bytes[3], 8'h12);
+        `SVTEST_END
+
+        `SVTEST(vpd_write_backpressure)
+            bit error, timeout;
+            pci_cfg_ext_agent.write('h2d, 0, 'h12345678, error, timeout);
+            `FAIL_IF(error || timeout);
+            repeat (64) begin
+                pci_cfg_ext_agent.write('h2c, 0, 'h80000000, error, timeout);
+                `FAIL_IF(error || timeout);
+                do begin
+                    pci_cfg_ext_agent.read('h2c, 0, rd_data, error, timeout);
+                    `FAIL_IF(error || timeout);
+                end while (rd_data[31]);
+            end
+            wait(written_bytes.size() == 256);
+            foreach(written_bytes[i]) begin
+                case (i % 4)
+                    0: begin
+                        `FAIL_UNLESS_EQUAL(written_bytes[i], 8'h78);
+                    end
+                    1: begin
+                        `FAIL_UNLESS_EQUAL(written_bytes[i], 8'h56);
+                    end
+                    2: begin
+                        `FAIL_UNLESS_EQUAL(written_bytes[i], 8'h34);
+                    end
+                    3: begin
+                        `FAIL_UNLESS_EQUAL(written_bytes[i], 8'h12);
+                    end
+                endcase
+            end
+        `SVTEST_END
+
+        `SVTEST(reset_pending_read)
+            bit error, timeout;
+            byte first_byte;
+            pci_cfg_ext_agent.write('h2c, 0, 0, error, timeout);
+            `FAIL_IF(error || timeout);
+            wait(vpd_if.req && !vpd_if.wr_rd_n);
+            reset();
+            pci_cfg_ext_agent.read('h2c, 0, rd_data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(rd_data, 32'h00000003);
+            vpd_agent[0].read_byte(0, first_byte);
+            `FAIL_UNLESS_EQUAL(first_byte, pci_vpd_pkg::vpd_get_lrdt(pci_vpd_pkg::VPD_TAG_ID));
         `SVTEST_END
 
         `SVTEST(vpd_init)
