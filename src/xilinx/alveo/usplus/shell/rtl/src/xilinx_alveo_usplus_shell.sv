@@ -51,22 +51,6 @@ module xilinx_alveo_usplus_shell
     // Signals
     // =========================================================================
     logic pci_rstn;
-    logic vpd_clk;
-    logic vpd_srst;
-    logic card_info_vld;
-    logic [8:0] card_info_len;
-    logic card_info_rd;
-    logic [8:0] card_info_rd_addr;
-    logic [7:0] card_info_rd_data;
-    logic card_info_rd_vld;
-    logic card_info_error;
-    logic vpd_init_done_mask;
-    logic vpd_init_done;
-    logic vpd_init_error;
-    logic vpd_init_timeout;
-    logic vpd_init_early_read;
-    logic [13:0] vpd_init_time_ms;
-    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
     logic dma_aclk;
     logic dma_aresetn;
 
@@ -76,6 +60,10 @@ module xilinx_alveo_usplus_shell
     logic clk_125mhz;
     logic clk_250mhz;
     logic clk_333mhz;
+
+    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    pci_vpd_card_info_intf card_info_if (.clk(vpd_ctrl_if.clk));
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
 
     // =========================================================================
     // Shell adaptation layer
@@ -113,8 +101,9 @@ module xilinx_alveo_usplus_shell
 
     xilinx_alveo_shell #(
         .QID_WID              ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID ),
-        .VPD_CLK_FREQ_HZ      ( 50_000_000 ),
-        .CARD_INFO_EN         ( 1'b1 ),
+        .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
+        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_usplus_pkg::VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
         .BUILD_ID             ( BUILD_ID ),
@@ -123,22 +112,9 @@ module xilinx_alveo_usplus_shell
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
-        .vpd_clk,
-        .vpd_srst,
+        .vpd_ctrl_if,
+        .card_info_if,
         .cfg_ext_if,
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
-        .card_info_error,
-        .vpd_init_done_mask,
-        .vpd_init_done,
-        .vpd_init_error,
-        .vpd_init_timeout,
-        .vpd_init_early_read,
-        .vpd_init_time_ms,
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
@@ -165,22 +141,9 @@ module xilinx_alveo_usplus_shell
     ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
-        .vpd_clk,
-        .vpd_srst,
+        .vpd_ctrl_if,
+        .card_info_if,
         .cfg_ext_if,
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
-        .card_info_error,
-        .vpd_init_done_mask,
-        .vpd_init_done,
-        .vpd_init_error,
-        .vpd_init_timeout,
-        .vpd_init_early_read,
-        .vpd_init_time_ms,
         .clk,
         .srst,
         .clk_100mhz,

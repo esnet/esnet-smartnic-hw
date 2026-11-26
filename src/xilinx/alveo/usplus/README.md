@@ -54,6 +54,10 @@ lengths and addresses.
 
 Product/application identity, build ID, Git repository/hash and build time
 are supplied separately to the common VPD service as static metadata.
+`pci_vpd_ctrl_intf` carries the management clock/reset, initialization mask
+and status. `pci_vpd_card_info_intf` carries the combined card-info cache.
+The shell supplies VPD frequency, physical-function count and provider
+enablement from `xilinx_alveo_usplus_pkg` as module parameters.
 
 The free-running management clock permits initialization while PCIe reset
 is held asserted. The JTAG `ready` probe indicates VPD completion or error.

@@ -2,6 +2,7 @@
 module xilinx_alveo_vpd
 #(
     parameter int          CLK_FREQ_HZ         = 50_000_000,
+    parameter int          NUM_PHYS_FUNC       = 2,
     parameter bit          CARD_INFO_EN        = 1'b1,
     parameter              PRODUCT_ID          = "ESnet SmartNIC",
     parameter              APPLICATION_ID      = "(empty)",
@@ -10,33 +11,18 @@ module xilinx_alveo_vpd
     parameter              BUILD_GIT_HASH      = "(empty)",
     parameter              BUILD_TIMESTAMP_STR = "(empty)"
 ) (
-    // Clock/reset
-    input  logic                       clk,
-    input  logic                       srst,
     // PCIe configuration access
-    input  logic                       cfg_aresetn,
+    input logic                        cfg_aresetn,
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
-    // Card information provider (clk domain)
-    input  logic                       card_info_vld,
-    input  logic [8:0]                 card_info_len,
-    output logic                       card_info_rd,
-    output logic [8:0]                 card_info_rd_addr,
-    input  logic [7:0]                 card_info_rd_data,
-    input  logic                       card_info_rd_vld,
-    input  logic                       card_info_error,
-    // Initialization control/status (clk domain)
-    input  logic                       init_done_mask,
-    output logic                       init_done,
-    output logic                       init_error,
-    output logic                       init_timeout,
-    output logic                       init_early_read,
-    output logic [13:0]                init_time_ms
+    // Free-running initialization control/status and card information
+    pci_vpd_ctrl_intf.peripheral       vpd_ctrl_if,
+    pci_vpd_card_info_intf.consumer    card_info_if
 );
 
     // =========================================================================
     // Signals and interfaces
     // =========================================================================
-    pci_vpd_intf vpd_if (.clk(clk));
+    pci_vpd_intf vpd_if (.clk(vpd_ctrl_if.clk));
 
     // =========================================================================
     // VPD image construction
@@ -52,31 +38,31 @@ module xilinx_alveo_vpd
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_pci_vpd (
         .vpd_if,
-        .srst,
-        .init_done,
-        .init_error,
-        .init_timeout,
-        .init_early_read,
-        .init_time_ms,
-        .init_done_mask,
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
-        .card_info_error
+        .srst                 ( vpd_ctrl_if.srst ),
+        .init_done            ( vpd_ctrl_if.init_done ),
+        .init_error           ( vpd_ctrl_if.init_error ),
+        .init_timeout         ( vpd_ctrl_if.init_timeout ),
+        .init_early_read      ( vpd_ctrl_if.init_early_read ),
+        .init_time_ms         ( vpd_ctrl_if.init_time_ms ),
+        .init_done_mask       ( vpd_ctrl_if.init_done_mask ),
+        .card_info_vld        ( card_info_if.vld ),
+        .card_info_len        ( card_info_if.len ),
+        .card_info_rd         ( card_info_if.rd ),
+        .card_info_rd_addr    ( card_info_if.rd_addr ),
+        .card_info_rd_data    ( card_info_if.rd_data ),
+        .card_info_rd_vld     ( card_info_if.rd_vld ),
+        .card_info_error      ( card_info_if.error )
     );
 
     // =========================================================================
     // PCIe configuration bridge
     // =========================================================================
     xilinx_pci_cfg_ext_vpd #(
-        .NUM_PHYS_FUNC ( 2 )
+        .NUM_PHYS_FUNC ( NUM_PHYS_FUNC )
     ) i_xilinx_pci_cfg_ext_vpd (
         .aresetn  ( cfg_aresetn ),
         .cfg_ext_if,
-        .vpd_srst ( srst ),
+        .vpd_srst ( vpd_ctrl_if.srst ),
         .vpd_if
     );
 

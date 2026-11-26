@@ -25,9 +25,17 @@ module xilinx_alveo_vpd_wrapper (
     assign cfg_rd_data = cfg_ext_if.rd_data;
     assign cfg_rd_vld = cfg_ext_if.rd_vld;
 
-    logic init_done;
-    logic init_error;
-    assign ready = init_done || init_error;
+    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    pci_vpd_card_info_intf card_info_if (.clk(clk));
+    assign vpd_ctrl_if.clk = clk;
+    assign vpd_ctrl_if.srst = srst;
+    assign vpd_ctrl_if.init_done_mask = 1'b0;
+    assign card_info_if.vld = 1'b0;
+    assign card_info_if.error = 1'b0;
+    assign card_info_if.len = '0;
+    assign card_info_if.rd_data = '0;
+    assign card_info_if.rd_vld = 1'b0;
+    assign ready = vpd_ctrl_if.init_done || vpd_ctrl_if.init_error;
 
     xilinx_alveo_vpd #(
         .CLK_FREQ_HZ          ( 100_000_000 ),
@@ -38,23 +46,10 @@ module xilinx_alveo_vpd_wrapper (
         .BUILD_GIT_HASH      ( "12345678" ),
         .BUILD_TIMESTAMP_STR ( "2026-11-26 00:00:00 UTC" )
     ) i_xilinx_alveo_vpd (
-        .clk,
-        .srst,
         .cfg_aresetn,
         .cfg_ext_if,
-        .init_done,
-        .init_error,
-        .init_timeout      ( ),
-        .init_early_read   ( ),
-        .init_time_ms      ( ),
-        .init_done_mask    ( 1'b0 ),
-        .card_info_vld     ( 1'b0 ),
-        .card_info_len     ( 9'b0 ),
-        .card_info_rd      ( ),
-        .card_info_rd_addr ( ),
-        .card_info_rd_data ( 8'b0 ),
-        .card_info_rd_vld  ( 1'b0 ),
-        .card_info_error   ( 1'b0 )
+        .vpd_ctrl_if,
+        .card_info_if
     );
 
 endmodule : xilinx_alveo_vpd_wrapper

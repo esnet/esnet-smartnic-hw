@@ -31,6 +31,7 @@ SUBCOMPONENTS = \
     xilinx.dcmac.rtl \
     xilinx.alveo.rtl \
     xilinx.qdma.pkg \
+    xilinx.alveo.versal.pkg \
     xilinx.alveo.versal.ip \
     xilinx.alveo.versal.rtl \
     xilinx.alveo.versal.regio.rtl \

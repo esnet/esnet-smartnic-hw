@@ -65,12 +65,20 @@ module xilinx_alveo_versal_shell
     // Static VPD initialization in the free-running system clock domain
     // =========================================================================
     logic [4:0] startup_count = '0;
-    logic       vpd_srst;
+    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    pci_vpd_card_info_intf card_info_if (.clk(sys_clk_100mhz));
 
     always_ff @(posedge sys_clk_100mhz) begin
         if (!(&startup_count)) startup_count <= startup_count + 1'b1;
     end
-    assign vpd_srst = !(&startup_count);
+    assign vpd_ctrl_if.clk = sys_clk_100mhz;
+    assign vpd_ctrl_if.srst = !(&startup_count);
+    assign vpd_ctrl_if.init_done_mask = 1'b0;
+    assign card_info_if.vld = 1'b0;
+    assign card_info_if.error = 1'b0;
+    assign card_info_if.len = '0;
+    assign card_info_if.rd_data = '0;
+    assign card_info_if.rd_vld = 1'b0;
 
     // =========================================================================
     // Interfaces for the hw/core AXI-L decoder outputs
@@ -138,8 +146,9 @@ module xilinx_alveo_versal_shell
 
     xilinx_alveo_shell #(
         .QID_WID              ( QID_WID ),
-        .VPD_CLK_FREQ_HZ      ( 100_000_000 ),
-        .CARD_INFO_EN         ( 1'b0 ),
+        .NUM_PHYS_FUNC        ( xilinx_alveo_versal_pkg::NUM_PHYS_FUNC ),
+        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_versal_pkg::VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( xilinx_alveo_versal_pkg::CARD_INFO_EN ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
         .BUILD_ID             ( BUILD_ID ),
@@ -148,22 +157,9 @@ module xilinx_alveo_versal_shell
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
-        .vpd_clk              ( sys_clk_100mhz ),
-        .vpd_srst,
+        .vpd_ctrl_if,
+        .card_info_if,
         .cfg_ext_if,
-        .card_info_vld        ( 1'b0 ),
-        .card_info_len        ( 9'b0 ),
-        .card_info_rd         ( ),
-        .card_info_rd_addr    ( ),
-        .card_info_rd_data    ( 8'b0 ),
-        .card_info_rd_vld     ( 1'b0 ),
-        .card_info_error      ( 1'b0 ),
-        .vpd_init_done_mask   ( 1'b0 ),
-        .vpd_init_done        ( ),
-        .vpd_init_error       ( ),
-        .vpd_init_timeout     ( ),
-        .vpd_init_early_read  ( ),
-        .vpd_init_time_ms     ( ),
         .pci_rstn_in     ( pci_rstn_in ),
         .pci_rstn_out    ( pci_rstn ),
         .core_clk,

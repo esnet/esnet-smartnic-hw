@@ -7,6 +7,10 @@ package xilinx_alveo_versal_pkg;
     // --------------------------------------------------------------
     // Parameters
     // --------------------------------------------------------------
+    localparam int NUM_PHYS_FUNC = 2;
+    localparam int VPD_CLK_FREQ_HZ = 100_000_000;
+    localparam bit CARD_INFO_EN = 1'b0;
+
     localparam int DMA_ST_DATA_BYTE_WID = 64;
     localparam int DMA_ST_QID_WID = 12;
 

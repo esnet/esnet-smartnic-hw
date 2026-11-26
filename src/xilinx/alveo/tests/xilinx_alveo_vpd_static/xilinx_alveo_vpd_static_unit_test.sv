@@ -1,9 +1,11 @@
 `include "svunit_defines.svh"
-`define SVUNIT_TIMEOUT 1ms
+`define SVUNIT_TIMEOUT 5ms
 module xilinx_alveo_vpd_static_unit_test;
     import svunit_pkg::svunit_testcase;
     import xilinx_pci_verif_pkg::*;
     import pci_vpd_verif_pkg::*;
+
+    localparam int NUM_FUNCS = `NUM_FUNCS;
 
     string name = "xilinx_alveo_vpd_static_ut";
     svunit_testcase svunit_ut;
@@ -22,9 +24,23 @@ module xilinx_alveo_vpd_static_unit_test;
 
     xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(cfg_clk));
     xilinx_pci_cfg_ext_intf_agent cfg_agent;
-    xilinx_pci_cfg_ext_vpd_agent vpd_agents[2];
+    xilinx_pci_cfg_ext_vpd_agent vpd_agents[NUM_FUNCS];
+
+    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    pci_vpd_card_info_intf card_info_if (.clk(clk));
+    assign vpd_ctrl_if.clk = clk;
+    assign vpd_ctrl_if.srst = srst;
+    assign vpd_ctrl_if.init_done_mask = 1'b0;
+    assign init_done = vpd_ctrl_if.init_done;
+    assign init_error = vpd_ctrl_if.init_error;
+    assign card_info_if.vld = 1'b0;
+    assign card_info_if.error = 1'b0;
+    assign card_info_if.len = '0;
+    assign card_info_if.rd_data = '0;
+    assign card_info_if.rd_vld = 1'b0;
 
     xilinx_alveo_vpd #(
+        .NUM_PHYS_FUNC        ( NUM_FUNCS ),
         .CLK_FREQ_HZ          ( 100_000_000 ),
         .CARD_INFO_EN         ( 1'b0 ),
         .APPLICATION_ID      ( "test_shell" ),
@@ -33,23 +49,10 @@ module xilinx_alveo_vpd_static_unit_test;
         .BUILD_GIT_HASH      ( "12345678" ),
         .BUILD_TIMESTAMP_STR ( "2026-11-26 00:00:00 UTC" )
     ) DUT (
-        .clk,
-        .srst,
         .cfg_aresetn,
         .cfg_ext_if,
-        .init_done,
-        .init_error,
-        .init_timeout      ( ),
-        .init_early_read   ( ),
-        .init_time_ms      ( ),
-        .init_done_mask    ( 1'b0 ),
-        .card_info_vld     ( 1'b0 ),
-        .card_info_len     ( 9'b0 ),
-        .card_info_rd      ( ),
-        .card_info_rd_addr ( ),
-        .card_info_rd_data ( 8'b0 ),
-        .card_info_rd_vld  ( 1'b0 ),
-        .card_info_error   ( 1'b0 )
+        .vpd_ctrl_if,
+        .card_info_if
     );
 
     function void build();
@@ -120,11 +123,10 @@ module xilinx_alveo_vpd_static_unit_test;
     `SVUNIT_TESTS_BEGIN
         `SVTEST(initialization_while_pcie_reset_is_asserted)
             wait(ready);
-            `FAIL_UNLESS(DUT.init_done);
+            `FAIL_UNLESS(vpd_ctrl_if.init_done);
             `FAIL_IF(cfg_aresetn);
             release_host();
-            check_vpd(0);
-            check_vpd(1);
+            foreach (vpd_agents[pf]) check_vpd(pf);
         `SVTEST_END
 
         `SVTEST(identity_survives_pcie_reset)
@@ -136,8 +138,7 @@ module xilinx_alveo_vpd_static_unit_test;
             repeat (16) @(negedge clk);
             `FAIL_UNLESS(ready);
             release_host();
-            check_vpd(0);
-            check_vpd(1);
+            foreach (vpd_agents[pf]) check_vpd(pf);
         `SVTEST_END
 
         `SVTEST(pf_control_and_data_are_independent)
@@ -146,18 +147,26 @@ module xilinx_alveo_vpd_static_unit_test;
             bit timeout;
             wait(ready);
             release_host();
-            cfg_agent.write('h2d, 1, 32'habcdef01, error, timeout);
-            `FAIL_IF(error || timeout);
+            if (NUM_FUNCS > 1) begin
+                cfg_agent.write('h2d, NUM_FUNCS-1, 32'habcdef01, error, timeout);
+                `FAIL_IF(error || timeout);
+            end
             cfg_agent.write('h2d, 0, 32'h12345678, error, timeout);
             `FAIL_IF(error || timeout);
-            cfg_agent.read('h2d, 1, data, error, timeout);
+            cfg_agent.write('h2d, NUM_FUNCS, 32'hdeadbeef, error, timeout);
             `FAIL_IF(error || timeout);
-            `FAIL_UNLESS_EQUAL(data, 32'habcdef01);
+            if (NUM_FUNCS > 1) begin
+                cfg_agent.read('h2d, NUM_FUNCS-1, data, error, timeout);
+                `FAIL_IF(error || timeout);
+                `FAIL_UNLESS_EQUAL(data, 32'habcdef01);
+            end
+            cfg_agent.read('h2d, NUM_FUNCS, data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(data, 0);
             cfg_agent.read('h2d, 0, data, error, timeout);
             `FAIL_IF(error || timeout);
             `FAIL_UNLESS_EQUAL(data, 32'h12345678);
-            check_vpd(0);
-            check_vpd(1);
+            foreach (vpd_agents[pf]) check_vpd(pf);
         `SVTEST_END
     `SVUNIT_TESTS_END
 endmodule : xilinx_alveo_vpd_static_unit_test

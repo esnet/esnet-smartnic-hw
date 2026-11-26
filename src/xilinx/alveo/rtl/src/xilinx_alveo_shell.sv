@@ -9,6 +9,7 @@ module xilinx_alveo_shell
 #(
     parameter int          QID_WID             = 11, // DMA queue identifier width
     parameter int          MAX_PKT_LEN         = 9100, // DMA FIFO maximum packet length (bytes)
+    parameter int          NUM_PHYS_FUNC       = 2,
     parameter int          VPD_CLK_FREQ_HZ     = 50_000_000,
     parameter bit          CARD_INFO_EN        = 1'b1,
     parameter              PRODUCT_ID          = "ESnet SmartNIC",
@@ -20,23 +21,10 @@ module xilinx_alveo_shell
 ) (
     input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
 
-    // VPD storage and card information provider, independent of PCIe reset
-    input  logic                       vpd_clk,
-    input  logic                       vpd_srst,
+    // Free-running VPD control/status and architecture-provided card data
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
-    input  logic                       card_info_vld,
-    input  logic [8:0]                 card_info_len,
-    output logic                       card_info_rd,
-    output logic [8:0]                 card_info_rd_addr,
-    input  logic [7:0]                 card_info_rd_data,
-    input  logic                       card_info_rd_vld,
-    input  logic                       card_info_error,
-    input  logic                       vpd_init_done_mask,
-    output logic                       vpd_init_done,
-    output logic                       vpd_init_error,
-    output logic                       vpd_init_timeout,
-    output logic                       vpd_init_early_read,
-    output logic [13:0]                vpd_init_time_ms,
+    pci_vpd_ctrl_intf.peripheral       vpd_ctrl_if,
+    pci_vpd_card_info_intf.consumer    card_info_if,
 
     input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
 
@@ -78,6 +66,7 @@ module xilinx_alveo_shell
     // =========================================================================
     xilinx_alveo_vpd #(
         .CLK_FREQ_HZ          ( VPD_CLK_FREQ_HZ ),
+        .NUM_PHYS_FUNC        ( NUM_PHYS_FUNC ),
         .CARD_INFO_EN         ( CARD_INFO_EN ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
@@ -86,23 +75,10 @@ module xilinx_alveo_shell
         .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_vpd (
-        .clk                  ( vpd_clk ),
-        .srst                 ( vpd_srst ),
-        .cfg_aresetn          ( dma_aresetn ),
+        .cfg_aresetn ( dma_aresetn ),
         .cfg_ext_if,
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
-        .card_info_error,
-        .init_done_mask       ( vpd_init_done_mask ),
-        .init_done            ( vpd_init_done ),
-        .init_error           ( vpd_init_error ),
-        .init_timeout         ( vpd_init_timeout ),
-        .init_early_read      ( vpd_init_early_read ),
-        .init_time_ms         ( vpd_init_time_ms )
+        .vpd_ctrl_if,
+        .card_info_if
     );
 
     // =========================================================================
@@ -116,7 +92,7 @@ module xilinx_alveo_shell
     // =========================================================================
     xilinx_jtag_reset_ctrl i_xilinx_jtag_reset_ctrl (
         .debug_clk ( sys_clk_100mhz ),
-        .ready     ( vpd_init_done || vpd_init_error ),
+        .ready     ( vpd_ctrl_if.init_done || vpd_ctrl_if.init_error ),
         .rstn_in   ( pci_rstn_in    ),
         .rstn_out  ( pci_rstn_out   )
     );

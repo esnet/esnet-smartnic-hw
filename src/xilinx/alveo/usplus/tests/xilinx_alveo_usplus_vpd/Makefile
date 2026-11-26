@@ -3,6 +3,7 @@ SUBCOMPONENTS = \
     axi4l.verif@common \
     pci.vpd.verif@common \
     xilinx.pci.rtl \
+    xilinx.alveo.usplus.pkg \
     xilinx.pci.verif \
     xilinx.cms.rtl \
     xilinx.cms.verif

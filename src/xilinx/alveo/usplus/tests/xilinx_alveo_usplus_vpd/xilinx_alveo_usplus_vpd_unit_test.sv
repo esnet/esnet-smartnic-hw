@@ -80,28 +80,34 @@ module xilinx_alveo_usplus_vpd_unit_test;
         .source_rd_vld(cms_card_info_rd_vld),
         .*
     );
+    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    pci_vpd_card_info_intf card_info_if (.clk(clk));
+    assign vpd_ctrl_if.clk = clk;
+    assign vpd_ctrl_if.srst = srst;
+    assign vpd_ctrl_if.init_done_mask = init_done_mask;
+    assign init_done = vpd_ctrl_if.init_done;
+    assign init_error = vpd_ctrl_if.init_error;
+    assign init_timeout = vpd_ctrl_if.init_timeout;
+    assign init_early_read = vpd_ctrl_if.init_early_read;
+    assign init_time_ms = vpd_ctrl_if.init_time_ms;
+    assign card_info_if.vld = card_info_vld;
+    assign card_info_if.error = error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
+    assign card_info_if.len = card_info_len;
+    assign card_info_rd = card_info_if.rd;
+    assign card_info_rd_addr = card_info_if.rd_addr;
+    assign card_info_if.rd_data = card_info_rd_data;
+    assign card_info_if.rd_vld = card_info_rd_vld;
+
     xilinx_alveo_vpd #(
-        .CLK_FREQ_HZ          ( 50_000_000 ),
-        .CARD_INFO_EN         ( 1'b1 ),
+        .CLK_FREQ_HZ          ( xilinx_alveo_usplus_pkg::VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
+        .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
         .APPLICATION_ID       ( "test_shell" )
     ) DUT (
-        .clk,
-        .srst,
         .cfg_aresetn,
         .cfg_ext_if,
-        .init_done,
-        .init_error,
-        .init_timeout,
-        .init_early_read,
-        .init_time_ms,
-        .init_done_mask,
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
-        .card_info_error ( error_boot_timeout || error_bad_axil_transaction || error_card_info_length )
+        .vpd_ctrl_if,
+        .card_info_if
     );
 
     assign ready = init_done || init_error;
@@ -125,7 +131,7 @@ module xilinx_alveo_usplus_vpd_unit_test;
         .error_no_sn_key, .error_no_sn_terminator, .mb_boot_time
     );
     xilinx_pci_cfg_ext_intf_agent cfg_agent;
-    xilinx_pci_cfg_ext_vpd_agent vpd_agents[2];
+    xilinx_pci_cfg_ext_vpd_agent vpd_agents[xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC];
     axi4l_verif_pkg::axi4l_reg_agent #() cms_agent;
 
     function void build();
