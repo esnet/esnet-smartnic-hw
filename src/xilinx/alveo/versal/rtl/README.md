@@ -12,9 +12,8 @@ reset. PCIe reset clears pending configuration transactions while preserving the
 image. Completion drives the shell's JTAG
 initialization-ready indication.
 
-Card identity records are not included. The flash and CMS register offsets
-are `0xffffffff`, indicating that these interfaces are not exposed through
-the application's BAR2 register map.
+Card identity and flash/CMS offset records are omitted because the card-info
+provider is disabled.
 
 The native V80 build generates `shell_build_info.svh` from the build
 identity. `SHELL_VPD_*` variables provide metadata overrides; unchanged

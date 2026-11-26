@@ -11,33 +11,31 @@ module xilinx_pci_vpd_init_unit_test;
     logic srst;
     logic card_info_vld;
     logic card_info_error;
-    logic [7:0] card_info_len;
+    logic [8:0] card_info_len;
     logic stall_reads;
-    byte card_info_mem[255];
-    logic [1:0] card_info_rd;
-    logic [1:0][7:0] card_info_rd_addr;
-    logic [1:0][7:0] card_info_rd_data;
-    logic [1:0] card_info_rd_vld;
-    logic [1:0] init_done, init_error, init_timeout, init_early_read;
-    logic [1:0][13:0] init_time_ms;
-    pci_vpd_intf vpd_if[2](.clk(clk));
-    pci_vpd_intf_agent agents[2];
+    byte card_info_mem[511];
+    logic [2:0] card_info_rd;
+    logic [2:0][8:0] card_info_rd_addr;
+    logic [2:0][7:0] card_info_rd_data;
+    logic [2:0] card_info_rd_vld;
+    logic [2:0] init_done, init_error, init_timeout, init_early_read;
+    logic [2:0][13:0] init_time_ms;
+    pci_vpd_intf vpd_if[3](.clk(clk));
+    pci_vpd_intf_agent agents[3];
 
     `SVUNIT_CLK_GEN(clk, 5ns);
 
-    for (genvar g = 0; g < 2; g++) begin : g__vpd
+    for (genvar g = 0; g < 3; g++) begin : g__vpd
         xilinx_pci_vpd #(
             .CLK_FREQ_HZ(4000), // Four cycles per reported ms for these tests.
-            .CARD_INFO_EN(g == 1),
-            .CARD_INFO_TIMEOUT_MS(8),
+            .CARD_INFO_EN(g != 0),
+            .CARD_INFO_TIMEOUT_MS(g == 1 ? 8 : 10000),
             .PRODUCT_ID("Native shell"),
             .APPLICATION_ID("SmartNIC"),
             .BUILD_ID(32'h1234abcd),
             .BUILD_GIT_REPO("esnet-smartnic-hw"),
             .BUILD_GIT_HASH("01234567"),
-            .BUILD_TIMESTAMP_STR("2026-11-25"),
-            .FLASH_REG_OFFSET('h220000),
-            .CMS_REG_OFFSET('h240000)
+            .BUILD_TIMESTAMP_STR("2026-11-25")
         ) DUT (
             .vpd_if(vpd_if[g]), .srst,
             .init_done(init_done[g]), .init_error(init_error[g]),
@@ -49,8 +47,9 @@ module xilinx_pci_vpd_init_unit_test;
         );
         always @(posedge clk) begin
             card_info_rd_vld[g] <= !srst && !stall_reads && card_info_rd[g];
-            if (card_info_rd[g] && card_info_rd_addr[g] < 255)
+            if (card_info_rd[g] && card_info_rd_addr[g] < 511)
                 card_info_rd_data[g] <= card_info_mem[card_info_rd_addr[g]];
+            else card_info_rd_data[g] <= 'x;
         end
     end
 
@@ -60,6 +59,8 @@ module xilinx_pci_vpd_init_unit_test;
         agents[0].vpd_vif = vpd_if[0];
         agents[1] = new("dynamic_vpd");
         agents[1].vpd_vif = vpd_if[1];
+        agents[2] = new("boundary_vpd");
+        agents[2].vpd_vif = vpd_if[2];
     endfunction
 
     task reset();
@@ -106,6 +107,8 @@ module xilinx_pci_vpd_init_unit_test;
         vpd_r_t records;
         vpd_resource_t product;
         byte sn[];
+        byte flash_offset[];
+        byte cms_offset[];
         agents[idx].read();
         `FAIL_UNLESS(agents[idx].is_valid());
         image = agents[idx].get_vpd();
@@ -121,8 +124,10 @@ module xilinx_pci_vpd_init_unit_test;
         check_record(records, "VR", "Build git repo: esnet-smartnic-hw");
         check_record(records, "VH", "Build git hash: 01234567");
         check_record(records, "VT", "Build time    : 2026-11-25");
-        check_record(records, "VF", "Flash offset  : 0x220000");
-        check_record(records, "VC", "CMS offset    : 0x240000");
+        flash_offset = vpd_r_get_record_value(records, "VF");
+        cms_offset = vpd_r_get_record_value(records, "VC");
+        `FAIL_UNLESS_EQUAL(flash_offset.size(), 0);
+        `FAIL_UNLESS_EQUAL(cms_offset.size(), 0);
     endtask
 
     `SVUNIT_TESTS_BEGIN
@@ -184,8 +189,8 @@ module xilinx_pci_vpd_init_unit_test;
         `SVTEST(oversized_card_record)
             // This record fits its input buffer but exceeds VPD storage capacity.
             card_info_mem[0] = 'h27;
-            card_info_mem[1] = 126;
-            card_info_len = 128;
+            card_info_mem[1] = 249;
+            card_info_len = 251;
             card_info_vld = 1;
             wait(init_error[1]);
             `FAIL_IF(init_timeout[1] || init_done[1]);
@@ -205,6 +210,59 @@ module xilinx_pci_vpd_init_unit_test;
             wait(init_error[1]);
             `FAIL_IF(init_timeout[1]);
             check_static(1);
+        `SVTEST_END
+
+        `SVTEST(card_record_beyond_byte_255)
+            vpd_t image;
+            vpd_r_t records;
+            string expected = "Flash offset  : 0x220000";
+            // Skip an unknown record whose end is beyond an eight-bit index.
+            card_info_mem[0] = 8'h7e;
+            card_info_mem[1] = 254;
+            card_info_mem[256] = xilinx_pci_pkg::CARD_INFO_KEY__FLASH_REG_OFFSET;
+            card_info_mem[257] = byte'(expected.len() + 1);
+            for (int i = 0; i < expected.len(); i++) card_info_mem[258+i] = expected.getc(i);
+            card_info_mem[258+expected.len()] = 0;
+            card_info_len = 9'(259 + expected.len());
+            card_info_vld = 1;
+            wait(init_done[2] || init_error[2]);
+            `FAIL_UNLESS(init_done[2]);
+            `FAIL_IF(init_error[2] || init_timeout[2]);
+            agents[2].read();
+            `FAIL_UNLESS(agents[2].is_valid());
+            image = agents[2].get_vpd();
+            records = vpd_parse_vpd_r(image);
+            `FAIL_UNLESS(records.valid && records.checksum_ok);
+            check_record(records, "VF", expected);
+        `SVTEST_END
+
+        `SVTEST(card_record_fills_variable_storage)
+            vpd_t image;
+            vpd_r_t records;
+            byte name[];
+            // PN consumes 251 bytes, leaving exactly RV + checksum + end.
+            card_info_mem[0] = 8'h27;
+            card_info_mem[1] = 248;
+            for (int i = 0; i < 247; i++) card_info_mem[2+i] = "K";
+            card_info_mem[249] = 0;
+            card_info_len = 250;
+            card_info_vld = 1;
+            wait(init_done[2] || init_error[2]);
+            `FAIL_UNLESS(init_done[2]);
+            `FAIL_IF(init_error[2] || init_timeout[2]);
+            agents[2].read();
+            `FAIL_UNLESS(agents[2].is_valid());
+            image = agents[2].get_vpd();
+            records = vpd_parse_vpd_r(image);
+            `FAIL_UNLESS(records.valid && records.checksum_ok);
+            name = vpd_r_get_record_value(records, "PN");
+            `FAIL_UNLESS_EQUAL(name.size(), 248);
+            if (name.size() == 248) begin
+                for (int i = 0; i < 247; i++) begin
+                    `FAIL_UNLESS_EQUAL(name[i], 8'h4b);
+                end
+                `FAIL_UNLESS_EQUAL(name[247], 0);
+            end
         `SVTEST_END
 
         `SVTEST(read_only_and_out_of_range)

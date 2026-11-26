@@ -17,6 +17,10 @@ package xilinx_pci_pkg;
     localparam int CFG_EXT_REGISTER__VPD_CTRL = CFG_EXT_LEGACY_LO_DWORD_IDX;
     localparam int CFG_EXT_REGISTER__VPD_DATA = CFG_EXT_REGISTER__VPD_CTRL + 1;
 
+    // Card-info TLV records carrying null-terminated VPD value text.
+    localparam logic [7:0] CARD_INFO_KEY__FLASH_REG_OFFSET = 8'hf0;
+    localparam logic [7:0] CARD_INFO_KEY__CMS_REG_OFFSET = 8'hf1;
+
     //===================================
     // Typedefs
     //===================================

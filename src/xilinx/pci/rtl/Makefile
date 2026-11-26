@@ -23,6 +23,7 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    xilinx.pci.pkg \
     sync.rtl@$(COMMON_LIB_NAME) \
     fifo.rtl@$(COMMON_LIB_NAME) \
     pci.vpd.rtl@$(COMMON_LIB_NAME)

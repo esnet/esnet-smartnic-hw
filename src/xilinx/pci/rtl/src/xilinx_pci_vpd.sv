@@ -8,9 +8,7 @@ module xilinx_pci_vpd #(
     parameter logic [31:0] BUILD_ID            = 0,
     parameter              BUILD_GIT_REPO      = "(empty)",
     parameter              BUILD_GIT_HASH      = "(empty)",
-    parameter              BUILD_TIMESTAMP_STR = "(empty)",
-    parameter logic [31:0] FLASH_REG_OFFSET    = -1,
-    parameter logic [31:0] CMS_REG_OFFSET      = -1
+    parameter              BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     pci_vpd_intf.peripheral vpd_if,
     input  logic        srst,
@@ -22,12 +20,12 @@ module xilinx_pci_vpd #(
     output logic [13:0] init_time_ms,
     input  logic        init_done_mask,
 
-    // Card info interface (from CMS)
+    // Card-info TLV interface
     input  logic        card_info_vld,
     input  logic        card_info_error,
-    input  logic [7:0]  card_info_len,
+    input  logic [8:0]  card_info_len,
     output logic        card_info_rd,
-    output logic [7:0]  card_info_rd_addr,
+    output logic [8:0]  card_info_rd_addr,
     input  logic [7:0]  card_info_rd_data,
     input  logic        card_info_rd_vld
 );
@@ -36,7 +34,7 @@ module xilinx_pci_vpd #(
     localparam logic [7:0]  CARD_INFO_KEY__CARD_NAME  = 8'h27;
     localparam logic [7:0]  CARD_INFO_KEY__SC_VERSION = 8'h28;
 
-    localparam int          CARD_INFO_MAX_LEN = 255;
+    localparam int          CARD_INFO_MAX_LEN = 511;
     localparam int          CARD_INFO_IDX_WID = $clog2(CARD_INFO_MAX_LEN+1);
     localparam int          CARD_INFO_SIZE_WID = $clog2(CARD_INFO_MAX_LEN+1);
 
@@ -58,23 +56,6 @@ module xilinx_pci_vpd #(
     logic vpd_rd_vld;
     assign vpd_if.rd_data = vpd_rd_data;
     assign vpd_if.rd_vld = vpd_rd_vld;
-
-    function automatic logic [7:0][7:0] get_dword_hex_string(input logic [31:0] dword);
-        logic [7:0][7:0] dword_string;
-        for (int i = 0; i < 8; i++) begin
-            dword_string[i] = dword[i*4 +: 4] > 9 ? dword[i*4 +: 4]- 10 + "a" : dword[i*4 +: 4] + "0"; 
-        end
-        return dword_string;
-    endfunction
-
-    function automatic int get_dword_hex_string_len(input logic [7:0][7:0] dword_hex_string);
-        automatic int len = 8;
-        for (int i = 7; i > 0; i--) begin
-            if (dword_hex_string[i] > "0") return len;
-            else len--;
-        end
-        return len;
-    endfunction
 
     function automatic logic [9:0][7:0] get_dword_dec_string(input logic [31:0] dword);
         logic [9:0][7:0] dword_string;
@@ -129,28 +110,14 @@ module xilinx_pci_vpd #(
     localparam int VPD_VT_VALUE_LEN = $bits(BUILD_TIMESTAMP_STR)/8;
     localparam logic [7:0] VPD_VT_LEN = VPD_VT_LABEL_LEN + VPD_VT_VALUE_LEN + 1; // String is null-terminated
 
-    localparam int VPD_VF_START_OFFSET = VPD_VT_START_OFFSET + 3 + VPD_VT_LEN;
-    localparam     VPD_VF_LABEL = "Flash offset  : ";
-    localparam int VPD_VF_LABEL_LEN = $bits(VPD_VF_LABEL)/8;
-    localparam logic [7:0][7:0] VPD_VF_VALUE = get_dword_hex_string(FLASH_REG_OFFSET);
-    localparam int         VPD_VF_VALUE_LEN = get_dword_hex_string_len(VPD_VF_VALUE);
-    localparam logic [7:0] VPD_VF_LEN = VPD_VF_LABEL_LEN + 2 + VPD_VF_VALUE_LEN + 1; // Include 0x prefix and null termination
-
-    localparam int VPD_VC_START_OFFSET = VPD_VF_START_OFFSET + 3 + VPD_VF_LEN;
-    localparam     VPD_VC_LABEL = "CMS offset    : ";
-    localparam int VPD_VC_LABEL_LEN = $bits(VPD_VC_LABEL)/8;
-    localparam logic [7:0][7:0] VPD_VC_VALUE = get_dword_hex_string(CMS_REG_OFFSET);
-    localparam int         VPD_VC_VALUE_LEN = get_dword_hex_string_len(VPD_VC_VALUE);
-    localparam logic [7:0] VPD_VC_LEN = VPD_VC_LABEL_LEN + 2 + VPD_VC_VALUE_LEN + 1; // Include 0x prefix and null termination
-
-    localparam int VPD_CARDINFO_START_OFFSET = VPD_VC_START_OFFSET + 3 + VPD_VC_LEN;
+    localparam int VPD_CARDINFO_START_OFFSET = VPD_VT_START_OFFSET + 3 + VPD_VT_LEN;
     localparam int VPD_VAR_START_OFFSET = VPD_CARDINFO_START_OFFSET; // Start of 'variable' data, retrieved from card info
                                                                      // ... or, end of 'static' data
     localparam int VPD_STATIC_SIZE = VPD_VAR_START_OFFSET;
     localparam int VPD_ROM_SIZE    = VPD_STATIC_SIZE + 3;
     localparam int VPD_ROM_SIZE_WID = $clog2(VPD_ROM_SIZE);
 
-    localparam int VPD_VAR_SIZE = 128;
+    localparam int VPD_VAR_SIZE = 256;
     localparam int VPD_VAR_SIZE_WID = $clog2(VPD_VAR_SIZE);
 
 
@@ -191,6 +158,10 @@ module xilinx_pci_vpd #(
     typedef enum logic [3:0] {
         RESET,
         IDLE,
+        GET_FLASH_OFFSET,
+        FLASH_OFFSET_WRITE_TO_VPD,
+        GET_CMS_OFFSET,
+        CMS_OFFSET_WRITE_TO_VPD,
         GET_CARD_NAME,
         CARD_NAME_WRITE_TO_VPD,
         GET_CARD_SN,
@@ -303,7 +274,7 @@ module xilinx_pci_vpd #(
     logic                         vpd_chksum_req;
     logic                         vpd_cardinfo_rd;
     logic [CARD_INFO_IDX_WID-1:0] vpd_cardinfo_rd_addr;
-    logic                         vpd_cardinfo_rd_vld;
+    logic [7:0]                   vpd_cardinfo_rd_data;
 
     logic                         vpd_init_wr;
     logic [7:0]                   vpd_init_wr_data;
@@ -346,8 +317,6 @@ module xilinx_pci_vpd #(
         "VR", VPD_VR_LEN, VPD_VR_LABEL, BUILD_GIT_REPO, 8'h0,
         "VH", VPD_VH_LEN, VPD_VH_LABEL, BUILD_GIT_HASH, 8'h0,
         "VT", VPD_VT_LEN, VPD_VT_LABEL, BUILD_TIMESTAMP_STR, 8'h0,
-        "VF", VPD_VF_LEN, VPD_VF_LABEL, "0x", VPD_VF_VALUE[VPD_VF_VALUE_LEN-1:0], 8'h0,
-        "VC", VPD_VC_LEN, VPD_VC_LABEL, "0x", VPD_VC_VALUE[VPD_VC_VALUE_LEN-1:0], 8'h0,
     // -- Variable data (i.e. card info) goes here (populated by Init FSM)
     // -- Add RV (checksum) for all static data
     //    This checksum is only used while card info data is unavailable or
@@ -410,7 +379,33 @@ module xilinx_pci_vpd #(
             end
             IDLE : begin
                 reset_vpd_init_idx = 1'b1;
-                nxt_state = GET_CARD_NAME;
+                nxt_state = GET_FLASH_OFFSET;
+            end
+            GET_FLASH_OFFSET : begin
+                parse_req = 1'b1;
+                parse_key = xilinx_pci_pkg::CARD_INFO_KEY__FLASH_REG_OFFSET;
+                if (parse_state == PARSE_DONE)               nxt_state = FLASH_OFFSET_WRITE_TO_VPD;
+                else if (parse_state == PARSE_KEY_NOT_FOUND) nxt_state = GET_CMS_OFFSET;
+                else if (parse_state == PARSE_ERROR)         nxt_state = ERROR;
+            end
+            FLASH_OFFSET_WRITE_TO_VPD : begin
+                vpd_wr_req = 1'b1;
+                vpd_wr_tag = "VF";
+                if (vpd_state == VPD_DONE)       nxt_state = GET_CMS_OFFSET;
+                else if (vpd_state == VPD_ERROR) nxt_state = ERROR;
+            end
+            GET_CMS_OFFSET : begin
+                parse_req = 1'b1;
+                parse_key = xilinx_pci_pkg::CARD_INFO_KEY__CMS_REG_OFFSET;
+                if (parse_state == PARSE_DONE)               nxt_state = CMS_OFFSET_WRITE_TO_VPD;
+                else if (parse_state == PARSE_KEY_NOT_FOUND) nxt_state = GET_CARD_NAME;
+                else if (parse_state == PARSE_ERROR)         nxt_state = ERROR;
+            end
+            CMS_OFFSET_WRITE_TO_VPD : begin
+                vpd_wr_req = 1'b1;
+                vpd_wr_tag = "VC";
+                if (vpd_state == VPD_DONE)       nxt_state = GET_CARD_NAME;
+                else if (vpd_state == VPD_ERROR) nxt_state = ERROR;
             end
             GET_CARD_NAME : begin
                 parse_req = 1'b1;
@@ -518,7 +513,8 @@ module xilinx_pci_vpd #(
                 else if (vpd_chksum_req) nxt_vpd_state = VPD_CHKSUM_WR_TAG;
             end
             VPD_WR : begin
-                if (int'(vpd_init_idx) + int'(parse_len) + 7 <= VPD_VAR_SIZE) nxt_vpd_state = VPD_WR_TAG;
+                // Leave room for the RV header, checksum byte and end tag.
+                if (int'(vpd_init_idx) + int'(parse_len) + 8 <= VPD_VAR_SIZE) nxt_vpd_state = VPD_WR_TAG;
                 else                                                         nxt_vpd_state = VPD_ERROR;
             end
             VPD_WR_TAG : begin
@@ -603,12 +599,19 @@ module xilinx_pci_vpd #(
     // Adjust card info pointer to account for type and length fields
     assign vpd_cardinfo_rd_addr = parse_idx[CARD_INFO_IDX_WID-1:0] + vpd_byte_idx - 3;
 
+    // Retain the response for the following RAM-write cycle. The provider's
+    // data is only required to be valid while card_info_rd_vld is asserted.
+    always_ff @(posedge clk) begin
+        if (vpd_state == VPD_WAIT_CARDINFO && card_info_rd_vld)
+            vpd_cardinfo_rd_data <= card_info_rd_data;
+    end
+
     // Write data mux
     always_comb begin
         case (vpd_state)
             VPD_WR_TAG, VPD_CHKSUM_WR_TAG : vpd_init_wr_data = vpd_wr_tag[vpd_byte_idx];
-            VPD_WR_LEN                    : vpd_init_wr_data = parse_len;
-            VPD_WR_DATA                   : vpd_init_wr_data = card_info_rd_data;
+            VPD_WR_LEN                    : vpd_init_wr_data = parse_len[7:0];
+            VPD_WR_DATA                   : vpd_init_wr_data = vpd_cardinfo_rd_data;
             VPD_CHKSUM_WR_LEN             : vpd_init_wr_data = (VPD_MAX_LEN-VPD_STATIC_SIZE-1) - vpd_init_idx - 1; // Zero-pad to end of VPD (except for END tag)
             VPD_CHKSUM_WR_DATA            : vpd_init_wr_data = vpd_chksum;
             VPD_CHKSUM_PAD                : vpd_init_wr_data = 8'h00;
@@ -766,9 +769,9 @@ module xilinx_pci_vpd #(
 
     initial VPD_RAM = '{default: 8'h0};
     always @(posedge clk) begin
-        if (vpd_ram_req && vpd_ram_addr < VPD_MAX_LEN) begin
-            if (vpd_ram_wr_rd_n) VPD_RAM[vpd_ram_addr[VPD_IDX_WID-1:0]] <= vpd_ram_wr_data;
-            else vpd_ram_rd_data <= VPD_RAM[vpd_ram_addr[VPD_IDX_WID-1:0]];
+        if (vpd_ram_req && vpd_ram_addr < VPD_VAR_SIZE) begin
+            if (vpd_ram_wr_rd_n) VPD_RAM[vpd_ram_addr[VPD_VAR_SIZE_WID-1:0]] <= vpd_ram_wr_data;
+            else vpd_ram_rd_data <= VPD_RAM[vpd_ram_addr[VPD_VAR_SIZE_WID-1:0]];
         end
     end
 

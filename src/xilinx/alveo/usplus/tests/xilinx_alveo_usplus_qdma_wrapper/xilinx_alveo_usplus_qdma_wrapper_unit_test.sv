@@ -29,7 +29,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
         .vpd_if, .srst(!dma_aresetn),
         .init_done(), .init_error(), .init_timeout(), .init_early_read(), .init_time_ms(),
         .init_done_mask(1'b0), .card_info_vld(1'b0), .card_info_error(1'b0),
-        .card_info_len(8'b0), .card_info_rd(), .card_info_rd_addr(),
+        .card_info_len(9'b0), .card_info_rd(), .card_info_rd_addr(),
         .card_info_rd_data(8'b0), .card_info_rd_vld(1'b0)
     );
     xilinx_pci_cfg_ext_intf_agent cfg_agent;

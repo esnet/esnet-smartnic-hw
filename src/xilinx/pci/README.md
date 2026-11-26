@@ -40,22 +40,36 @@ and reset recovery.
 
 `xilinx_pci_vpd` serves a shared, read-only image through `pci_vpd_intf` in
 that interface's clock domain. The image contains the product ID resource,
-build records (`VA`, `VB`, `VR`, `VH`, `VT`), flash/CMS register offsets
-(`VF`, `VC`), optional card name (`PN`),
-serial number (`SN`), controller version (`RM`), checksum (`RV`) and end tag.
-The shell supplies metadata and its register offsets through parameters.
+static application/build records (`VA`, `VB`, `VR`, `VH`, `VT`), optional
+card-specific records, checksum (`RV`) and end tag. Application/build metadata
+and the product ID are supplied through parameters. Card-specific records
+include flash/CMS register offsets (`VF`, `VC`), card name (`PN`), serial number
+(`SN`) and controller version (`RM`).
 External writes are ignored; out-of-range byte reads return `0xff`.
 
 `CLK_FREQ_HZ` must match the interface clock and be a positive multiple of
 1000 Hz (default 50 MHz). Both elapsed initialization time and the watchdog
 use this frequency in synthesis and simulation.
 
-With `CARD_INFO_EN=1` (the default), initialization consumes the CMS-format
-card-info byte stream. `card_info_vld` indicates that the supplied length and
-buffer are available; each `card_info_rd` requests one byte and requires a
+With `CARD_INFO_EN=1` (the default), initialization consumes the card-info
+TLV stream described below. `card_info_vld` indicates that the supplied length
+and buffer are available; each `card_info_rd` requests one byte and requires a
 `card_info_rd_vld` response. A valid static image is available while fetching
 or parsing that buffer. Successful construction publishes the completed image
 and asserts `init_done`.
+
+The card-info length and byte address are nine bits, supporting up to 511
+input bytes. Each TLV has an eight-bit key, eight-bit value length and value
+bytes. Supported keys are `0x27` (card name), `0x21` (serial number), `0x28`
+(controller version), `0xf0` (flash register offset) and `0xf1` (CMS register
+offset). Offset values contain the complete null-terminated text for `VF`
+and `VC`, including the label and hexadecimal offset. Missing keys are
+omitted. The completed image reserves 256 bytes for card records, checksum,
+padding and end tag; records exceeding that capacity select static fallback.
+
+The static image contains no card-specific records, including `VF`/`VC`.
+This applies during acquisition, in static-only mode, on initialization
+failure and when diagnostic masking selects the static image.
 
 `card_info_error`, malformed/oversized data, or expiry of
 `CARD_INFO_TIMEOUT_MS` terminates initialization with `init_error` and retains

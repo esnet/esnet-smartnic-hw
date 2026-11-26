@@ -44,7 +44,7 @@ module xilinx_alveo_vpd_static_unit_test;
         .init_time_ms      ( ),
         .init_done_mask    ( 1'b0 ),
         .card_info_vld     ( 1'b0 ),
-        .card_info_len     ( 8'b0 ),
+        .card_info_len     ( 9'b0 ),
         .card_info_rd      ( ),
         .card_info_rd_addr ( ),
         .card_info_rd_data ( 8'b0 ),
@@ -97,6 +97,8 @@ module xilinx_alveo_vpd_static_unit_test;
         vpd_t image;
         vpd_r_t records;
         byte serial_number[];
+        byte flash_offset[];
+        byte cms_offset[];
         vpd_agents[pf].read();
         `FAIL_UNLESS(vpd_agents[pf].is_valid());
         image = vpd_agents[pf].get_vpd();
@@ -107,8 +109,10 @@ module xilinx_alveo_vpd_static_unit_test;
         check_field(records, "VR", "Build git repo: test_repo");
         check_field(records, "VH", "Build git hash: 12345678");
         check_field(records, "VT", "Build time    : 2026-11-26 00:00:00 UTC");
-        check_field(records, "VF", "Flash offset  : 0xffffffff");
-        check_field(records, "VC", "CMS offset    : 0xffffffff");
+        flash_offset = vpd_r_get_record_value(records, "VF");
+        cms_offset = vpd_r_get_record_value(records, "VC");
+        `FAIL_UNLESS_EQUAL(flash_offset.size(), 0);
+        `FAIL_UNLESS_EQUAL(cms_offset.size(), 0);
         serial_number = vpd_r_get_record_value(records, "SN");
         `FAIL_UNLESS_EQUAL(serial_number.size(), 0);
     endtask

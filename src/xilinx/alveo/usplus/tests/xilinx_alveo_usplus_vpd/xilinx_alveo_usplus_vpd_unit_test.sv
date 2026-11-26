@@ -35,37 +35,55 @@ module xilinx_alveo_usplus_vpd_unit_test;
     logic        card_info_vld;
     logic        card_info_rd;
     logic        card_info_rd_vld;
-    logic [7:0]  card_info_len;
-    logic [7:0]  card_info_rd_addr;
+    logic [8:0]  card_info_len;
+    logic [8:0]  card_info_rd_addr;
     logic [7:0]  card_info_rd_data;
 
     logic        error_boot_timeout;
     logic        error_bad_axil_transaction;
     logic        error_card_info_length;
 
+    logic cms_card_info_vld;
+    logic [7:0] cms_card_info_len;
+    logic cms_card_info_rd;
+    logic [7:0] cms_card_info_rd_addr;
+    logic [7:0] cms_card_info_rd_data;
+    logic cms_card_info_rd_vld;
     xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
         .cms_clk              ( clk ),
         .cms_srst             ( srst ),
         .abort                ( init_error || init_timeout ),
         .axil_from_controller ( cms_axil_from_controller ),
         .axil_to_cms          ( cms_axil_to_peripheral ),
-        .card_info_vld,
-        .card_info_len,
-        .card_info_rd,
-        .card_info_rd_addr,
-        .card_info_rd_data,
-        .card_info_rd_vld,
+        .card_info_vld(cms_card_info_vld),
+        .card_info_len(cms_card_info_len),
+        .card_info_rd(cms_card_info_rd),
+        .card_info_rd_addr(cms_card_info_rd_addr),
+        .card_info_rd_data(cms_card_info_rd_data),
+        .card_info_rd_vld(cms_card_info_rd_vld),
         .error_boot_timeout,
         .error_bad_axil_transaction,
         .error_card_info_length
     );
 
+    xilinx_alveo_usplus_card_info #(
+        .FLASH_REG_OFFSET(32'h00220000),
+        .CMS_REG_OFFSET(32'h00240000)
+    ) i_card_info (
+        .clk,
+        .srst,
+        .source_vld(cms_card_info_vld),
+        .source_len(cms_card_info_len),
+        .source_rd(cms_card_info_rd),
+        .source_rd_addr(cms_card_info_rd_addr),
+        .source_rd_data(cms_card_info_rd_data),
+        .source_rd_vld(cms_card_info_rd_vld),
+        .*
+    );
     xilinx_alveo_vpd #(
         .CLK_FREQ_HZ          ( 50_000_000 ),
         .CARD_INFO_EN         ( 1'b1 ),
-        .APPLICATION_ID       ( "test_shell" ),
-        .FLASH_REG_OFFSET     ( 32'h00220000 ),
-        .CMS_REG_OFFSET       ( 32'h00240000 )
+        .APPLICATION_ID       ( "test_shell" )
     ) DUT (
         .clk,
         .srst,
@@ -93,7 +111,7 @@ module xilinx_alveo_usplus_vpd_unit_test;
         error_boot_timeout,
         error_bad_axil_transaction,
         error_card_info_length,
-        card_info_len,
+        cms_card_info_len,
         card_info_vld,
         init_time_ms,
         init_early_read,
@@ -142,19 +160,39 @@ module xilinx_alveo_usplus_vpd_unit_test;
         cfg_aresetn = 1;
         repeat (64) @(negedge clk);
     endtask
-    task check_vpd(input int pf, input bit expect_sn);
+    task automatic check_vpd(input int pf, input bit expect_sn);
         vpd_t image;
         vpd_r_t records;
         byte sn[];
+        byte flash_offset[];
+        byte cms_offset[];
+        string flash_text = "Flash offset  : 0x220000";
+        string cms_text = "CMS offset    : 0x240000";
         vpd_agents[pf].read();
         `FAIL_UNLESS(vpd_agents[pf].is_valid());
         image = vpd_agents[pf].get_vpd();
         records = vpd_parse_vpd_r(image);
         `FAIL_UNLESS(records.valid && records.checksum_ok);
         sn = vpd_r_get_record_value(records, "SN");
+        flash_offset = vpd_r_get_record_value(records, "VF");
+        cms_offset = vpd_r_get_record_value(records, "VC");
         if (expect_sn) begin
+            `FAIL_UNLESS_EQUAL(flash_offset.size(), flash_text.len() + 1);
+            `FAIL_UNLESS_EQUAL(cms_offset.size(), cms_text.len() + 1);
+            if (flash_offset.size() == flash_text.len() + 1) begin
+                foreach (flash_offset[i]) begin
+                    `FAIL_UNLESS_EQUAL(flash_offset[i], i == flash_text.len() ? 0 : flash_text.getc(i));
+                end
+            end
+            if (cms_offset.size() == cms_text.len() + 1) begin
+                foreach (cms_offset[i]) begin
+                    `FAIL_UNLESS_EQUAL(cms_offset[i], i == cms_text.len() ? 0 : cms_text.getc(i));
+                end
+            end
             `FAIL_UNLESS_EQUAL(sn.size(), 13);
         end else begin
+            `FAIL_UNLESS_EQUAL(flash_offset.size(), 0);
+            `FAIL_UNLESS_EQUAL(cms_offset.size(), 0);
             `FAIL_UNLESS_EQUAL(sn.size(), 0);
         end
     endtask

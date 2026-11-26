@@ -39,9 +39,17 @@ module xilinx_pci_vpd_unit_test;
     logic             init_done_mask;
 
     logic             card_info_vld;
+`ifdef ONS_VPD
     logic [7:0]       card_info_len;
+`else
+    logic [8:0]       card_info_len;
+`endif
     logic             card_info_rd;
+`ifdef ONS_VPD
     logic [7:0]       card_info_rd_addr;
+`else
+    logic [8:0]       card_info_rd_addr;
+`endif
     logic [7:0]       card_info_rd_data;
     logic             card_info_rd_vld;
 
@@ -59,7 +67,40 @@ module xilinx_pci_vpd_unit_test;
 
     pci_vpd_intf vpd_if (.clk(cms_clk));
 
+`ifdef ONS_VPD
     xilinx_cms_cardinfo_fetch_fsm DUT0(.abort(1'b0), .*);
+`else
+    logic cms_card_info_vld;
+    logic [7:0] cms_card_info_len;
+    logic cms_card_info_rd;
+    logic [7:0] cms_card_info_rd_addr;
+    logic [7:0] cms_card_info_rd_data;
+    logic cms_card_info_rd_vld;
+    xilinx_cms_cardinfo_fetch_fsm DUT0 (
+        .abort(1'b0),
+        .card_info_vld(cms_card_info_vld),
+        .card_info_len(cms_card_info_len),
+        .card_info_rd(cms_card_info_rd),
+        .card_info_rd_addr(cms_card_info_rd_addr),
+        .card_info_rd_data(cms_card_info_rd_data),
+        .card_info_rd_vld(cms_card_info_rd_vld),
+        .*
+    );
+    xilinx_alveo_usplus_card_info #(
+        .FLASH_REG_OFFSET(FLASH_REG_OFFSET),
+        .CMS_REG_OFFSET(CMS_REG_OFFSET)
+    ) i_card_info (
+        .clk(cms_clk),
+        .srst(cms_srst),
+        .source_vld(cms_card_info_vld),
+        .source_len(cms_card_info_len),
+        .source_rd(cms_card_info_rd),
+        .source_rd_addr(cms_card_info_rd_addr),
+        .source_rd_data(cms_card_info_rd_data),
+        .source_rd_vld(cms_card_info_rd_vld),
+        .*
+    );
+`endif
 `ifdef ONS_VPD
     system_config_vpd
 `else
@@ -74,9 +115,11 @@ module xilinx_pci_vpd_unit_test;
         .BUILD_ID            (BUILD_ID),
         .BUILD_GIT_REPO      (BUILD_GIT_REPO),
         .BUILD_GIT_HASH      (BUILD_GIT_HASH),
-        .BUILD_TIMESTAMP_STR (BUILD_TIMESTAMP_STR),
-        .FLASH_REG_OFFSET    (FLASH_REG_OFFSET),
-        .CMS_REG_OFFSET      (CMS_REG_OFFSET)
+`ifdef ONS_VPD
+        .FLASH_REG_OFFSET (FLASH_REG_OFFSET),
+        .CMS_REG_OFFSET   (CMS_REG_OFFSET),
+`endif
+        .BUILD_TIMESTAMP_STR (BUILD_TIMESTAMP_STR)
     ) DUT1 (
 `ifdef ONS_VPD
         .clk(cms_clk),

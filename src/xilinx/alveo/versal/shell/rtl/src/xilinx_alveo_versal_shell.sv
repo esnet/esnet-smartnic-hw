@@ -152,7 +152,7 @@ module xilinx_alveo_versal_shell
         .vpd_srst,
         .cfg_ext_if,
         .card_info_vld        ( 1'b0 ),
-        .card_info_len        ( 8'b0 ),
+        .card_info_len        ( 9'b0 ),
         .card_info_rd         ( ),
         .card_info_rd_addr    ( ),
         .card_info_rd_data    ( 8'b0 ),

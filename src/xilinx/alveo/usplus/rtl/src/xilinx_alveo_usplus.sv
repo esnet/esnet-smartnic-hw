@@ -10,22 +10,22 @@ module xilinx_alveo_usplus
     input  wire logic     pci_rstn,
 
     // VPD card information provider, in the free-running management domain
-    output logic                      vpd_clk,
-    output logic                      vpd_srst,
+    output logic                       vpd_clk,
+    output logic                       vpd_srst,
     xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
-    output logic                      card_info_vld,
-    output logic [7:0]                card_info_len,
-    input  logic                      card_info_rd,
-    input  logic [7:0]                card_info_rd_addr,
-    output logic [7:0]                card_info_rd_data,
-    output logic                      card_info_rd_vld,
-    output logic                      card_info_error,
-    output logic                      vpd_init_done_mask,
-    input  logic                      vpd_init_done,
-    input  logic                      vpd_init_error,
-    input  logic                      vpd_init_timeout,
-    input  logic                      vpd_init_early_read,
-    input  logic [13:0]               vpd_init_time_ms,
+    output logic                       card_info_vld,
+    output logic [8:0]                 card_info_len,
+    input  logic                       card_info_rd,
+    input  logic [8:0]                 card_info_rd_addr,
+    output logic [7:0]                 card_info_rd_data,
+    output logic                       card_info_rd_vld,
+    output logic                       card_info_error,
+    output logic                       vpd_init_done_mask,
+    input  logic                       vpd_init_done,
+    input  logic                       vpd_init_error,
+    input  logic                       vpd_init_timeout,
+    input  logic                       vpd_init_early_read,
+    input  logic [13:0]                vpd_init_time_ms,
 
     // To/from core (application)
     // -- Core clock/reset
@@ -74,6 +74,12 @@ module xilinx_alveo_usplus
     logic error_boot_timeout;
     logic error_bad_axil_transaction;
     logic error_card_info_length;
+    logic cms_card_info_vld;
+    logic [7:0] cms_card_info_len;
+    logic cms_card_info_rd;
+    logic [7:0] cms_card_info_rd_addr;
+    logic [7:0] cms_card_info_rd_data;
+    logic cms_card_info_rd_vld;
 
     // =========================================================================
     // Interfaces
@@ -401,15 +407,35 @@ module xilinx_alveo_usplus
         .abort                ( vpd_init_error || vpd_init_timeout ),
         .axil_from_controller ( axil_cms__50mhz ),
         .axil_to_cms          ( alveo_hw_if.axil_cms ),
+        .card_info_vld         ( cms_card_info_vld ),
+        .card_info_len         ( cms_card_info_len ),
+        .card_info_rd          ( cms_card_info_rd ),
+        .card_info_rd_addr     ( cms_card_info_rd_addr ),
+        .card_info_rd_data     ( cms_card_info_rd_data ),
+        .card_info_rd_vld      ( cms_card_info_rd_vld ),
+        .error_boot_timeout,
+        .error_bad_axil_transaction,
+        .error_card_info_length
+    );
+
+    xilinx_alveo_usplus_card_info #(
+        .FLASH_REG_OFFSET ( 32'h00220000 ),
+        .CMS_REG_OFFSET   ( 32'h00240000 )
+    ) i_xilinx_alveo_usplus_card_info (
+        .clk            ( mgmt_clk_50mhz ),
+        .srst           ( mgmt_srst ),
+        .source_vld     ( cms_card_info_vld ),
+        .source_len     ( cms_card_info_len ),
+        .source_rd      ( cms_card_info_rd ),
+        .source_rd_addr ( cms_card_info_rd_addr ),
+        .source_rd_data ( cms_card_info_rd_data ),
+        .source_rd_vld  ( cms_card_info_rd_vld ),
         .card_info_vld,
         .card_info_len,
         .card_info_rd,
         .card_info_rd_addr,
         .card_info_rd_data,
-        .card_info_rd_vld,
-        .error_boot_timeout,
-        .error_bad_axil_transaction,
-        .error_card_info_length
+        .card_info_rd_vld
     );
 
     assign card_info_error = error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
@@ -419,7 +445,7 @@ module xilinx_alveo_usplus
         error_boot_timeout,
         error_bad_axil_transaction,
         error_card_info_length,
-        card_info_len,
+        cms_card_info_len,
         card_info_vld,
         vpd_init_time_ms,
         vpd_init_early_read,

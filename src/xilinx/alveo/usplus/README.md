@@ -44,17 +44,23 @@ for the firmware register map.
 
 ## VPD and initialization status
 
-The CMS card-info fetch FSM supplies card identity to `xilinx_alveo_vpd`
-in the common `xilinx_alveo_shell`. Card name, serial number and controller
-version are combined with product/application identity,
-build ID, Git repository/hash, build time and flash/CMS BAR2 offsets.
-Flash and CMS offsets are `0x220000` and `0x240000`, respectively.
+`xilinx_alveo_usplus_card_info` combines static card attributes with the
+dynamic CMS card-info cache and supplies the common `xilinx_alveo_vpd`
+service. Static attributes include flash/CMS BAR2 offsets `0x220000` and
+`0x240000`, encoded as null-terminated `VF`/`VC` records. Dynamic attributes
+include the card name, serial number and controller version. The provider
+retains the full 255-byte CMS cache; its combined stream uses nine-bit
+lengths and addresses.
+
+Product/application identity, build ID, Git repository/hash and build time
+are supplied separately to the common VPD service as static metadata.
 
 The free-running management clock permits initialization while PCIe reset
 is held asserted. The JTAG `ready` probe indicates VPD completion or error.
 On error or expiry of the six-second initialization watchdog, static VPD
-remains readable. A failed initialization aborts CMS fetching, resets any
-partial CMS AXI transaction, and releases the interface for host access.
+remains readable without card-specific records, including flash/CMS offsets.
+A failed initialization aborts CMS fetching, resets any partial CMS AXI
+transaction, and releases the interface for host access.
 PCIe reset clears pending configuration accesses without restarting card
 acquisition or rebuilding VPD.
 
@@ -62,7 +68,8 @@ System configuration exposes `vpd_control` at BAR2 + `0x20002c` and
 `vpd_status` at BAR2 + `0x200030`. Control bit 0 masks completion and forces
 static VPD reads. The status register reports completion, error, early reads,
 elapsed milliseconds, card-info validity/length, CMS error flags and VPD
-timeout. Status crosses into the register domain as a coherent sampled bus.
+timeout. The reported card-info length is the raw CMS cache length. Status
+crosses into the register domain as a coherent sampled bus.
 
 Shell synthesis generates `shell_build_info.svh` from the build ID,
 application name and Git identity. Identical build identity preserves the
@@ -76,6 +83,13 @@ Run the management integration test with:
 
 ```sh
 make -C src/xilinx/alveo/usplus/tests/xilinx_alveo_usplus_vpd
+```
+
+The provider test checks static offset formatting, the complete dynamic
+cache, accesses crossing byte 255 and reset behavior:
+
+```sh
+make -C src/xilinx/alveo/usplus/tests/xilinx_alveo_usplus_card_info
 ```
 
 U55C and U280 expose the CMS HBM-monitor inputs. These inputs are tied to

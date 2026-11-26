@@ -3,8 +3,6 @@ module xilinx_alveo_vpd
 #(
     parameter int          CLK_FREQ_HZ         = 50_000_000,
     parameter bit          CARD_INFO_EN        = 1'b1,
-    parameter logic [31:0] FLASH_REG_OFFSET    = '1,
-    parameter logic [31:0] CMS_REG_OFFSET      = '1,
     parameter              PRODUCT_ID          = "ESnet SmartNIC",
     parameter              APPLICATION_ID      = "(empty)",
     parameter logic [31:0] BUILD_ID            = 0,
@@ -20,9 +18,9 @@ module xilinx_alveo_vpd
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
     // Card information provider (clk domain)
     input  logic                       card_info_vld,
-    input  logic [7:0]                 card_info_len,
+    input  logic [8:0]                 card_info_len,
     output logic                       card_info_rd,
-    output logic [7:0]                 card_info_rd_addr,
+    output logic [8:0]                 card_info_rd_addr,
     input  logic [7:0]                 card_info_rd_data,
     input  logic                       card_info_rd_vld,
     input  logic                       card_info_error,
@@ -46,8 +44,6 @@ module xilinx_alveo_vpd
     xilinx_pci_vpd #(
         .CLK_FREQ_HZ          ( CLK_FREQ_HZ ),
         .CARD_INFO_EN         ( CARD_INFO_EN ),
-        .FLASH_REG_OFFSET     ( FLASH_REG_OFFSET ),
-        .CMS_REG_OFFSET       ( CMS_REG_OFFSET ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
         .BUILD_ID             ( BUILD_ID ),

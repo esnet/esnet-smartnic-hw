@@ -54,9 +54,9 @@ module xilinx_alveo_usplus_shell
     logic vpd_clk;
     logic vpd_srst;
     logic card_info_vld;
-    logic [7:0] card_info_len;
+    logic [8:0] card_info_len;
     logic card_info_rd;
-    logic [7:0] card_info_rd_addr;
+    logic [8:0] card_info_rd_addr;
     logic [7:0] card_info_rd_data;
     logic card_info_rd_vld;
     logic card_info_error;
@@ -115,8 +115,6 @@ module xilinx_alveo_usplus_shell
         .QID_WID              ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID ),
         .VPD_CLK_FREQ_HZ      ( 50_000_000 ),
         .CARD_INFO_EN         ( 1'b1 ),
-        .FLASH_REG_OFFSET     ( 32'h00220000 ),
-        .CMS_REG_OFFSET       ( 32'h00240000 ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
         .BUILD_ID             ( BUILD_ID ),
