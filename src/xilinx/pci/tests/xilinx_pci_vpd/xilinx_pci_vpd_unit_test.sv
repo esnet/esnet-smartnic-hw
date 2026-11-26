@@ -77,7 +77,7 @@ module xilinx_pci_vpd_unit_test;
     logic [7:0] cms_card_info_rd_data;
     logic cms_card_info_rd_vld;
     xilinx_cms_cardinfo_fetch_fsm DUT0 (
-        .abort(1'b0),
+        .error_fetch_timeout(),
         .card_info_vld(cms_card_info_vld),
         .card_info_len(cms_card_info_len),
         .card_info_rd(cms_card_info_rd),

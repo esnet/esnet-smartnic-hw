@@ -1,5 +1,7 @@
 SRC_FILES = ../../../rtl/src/xilinx_alveo_vpd.sv ../../rtl/src/xilinx_alveo_usplus_card_info.sv
 SUBCOMPONENTS = \
+    xilinx.alveo.pkg \
+    xilinx.alveo.regio.rtl \
     axi4l.verif@common \
     pci.vpd.verif@common \
     xilinx.pci.rtl \

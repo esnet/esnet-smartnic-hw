@@ -9,9 +9,9 @@ module xilinx_alveo_usplus
     // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
     input  wire logic     pci_rstn,
 
-    // Free-running VPD control/status and card information
+    // PCIe configuration access and architecture-provided card information
     xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
-    pci_vpd_ctrl_intf.controller       vpd_ctrl_if,
+    output logic                      card_info_clk,
     pci_vpd_card_info_intf.provider    card_info_if,
 
     // To/from core (application)
@@ -57,7 +57,8 @@ module xilinx_alveo_usplus
     logic mgmt_clk_50mhz;
     logic mgmt_srst;
     logic [4:0] mgmt_startup_count = '0;
-    logic [31:0] vpd_status;
+    logic [31:0] card_info_status;
+    logic error_fetch_timeout;
     logic error_boot_timeout;
     logic error_bad_axil_transaction;
     logic error_card_info_length;
@@ -385,13 +386,12 @@ module xilinx_alveo_usplus
         .axi4l_if_to_peripheral   ( axil_cms__50mhz )
     );
 
-    assign vpd_ctrl_if.clk = mgmt_clk_50mhz;
-    assign vpd_ctrl_if.srst = mgmt_srst;
+    assign card_info_clk = mgmt_clk_50mhz;
+    assign card_info_if.srst = mgmt_srst;
 
     xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
         .cms_clk              ( mgmt_clk_50mhz ),
         .cms_srst             ( mgmt_srst ),
-        .abort                ( vpd_ctrl_if.init_error || vpd_ctrl_if.init_timeout ),
         .axil_from_controller ( axil_cms__50mhz ),
         .axil_to_cms          ( alveo_hw_if.axil_cms ),
         .card_info_vld         ( cms_card_info_vld ),
@@ -400,6 +400,7 @@ module xilinx_alveo_usplus
         .card_info_rd_addr     ( cms_card_info_rd_addr ),
         .card_info_rd_data     ( cms_card_info_rd_data ),
         .card_info_rd_vld      ( cms_card_info_rd_vld ),
+        .error_fetch_timeout,
         .error_boot_timeout,
         .error_bad_axil_transaction,
         .error_card_info_length
@@ -425,31 +426,23 @@ module xilinx_alveo_usplus
         .card_info_rd_vld ( card_info_if.rd_vld )
     );
 
-    assign card_info_if.error = error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
-    assign vpd_status = {
-        2'b0,
-        vpd_ctrl_if.init_timeout,
+    assign card_info_if.error = error_fetch_timeout || error_boot_timeout
+                              || error_bad_axil_transaction || error_card_info_length;
+    assign card_info_status = {
+        19'b0,
+        error_fetch_timeout,
         error_boot_timeout,
         error_bad_axil_transaction,
         error_card_info_length,
         cms_card_info_len,
-        card_info_if.vld,
-        vpd_ctrl_if.init_time_ms,
-        vpd_ctrl_if.init_early_read,
-        vpd_ctrl_if.init_error,
-        vpd_ctrl_if.init_done
+        card_info_if.vld
     };
 
-    sync_level #(.RST_VALUE(1'b0)) i_sync_level__vpd_mask (
-        .clk_in(axil_syscfg.aclk), .rst_in(!axil_syscfg.aresetn), .rdy_in(),
-        .lvl_in(reg_if.vpd_control.init_done_mask),
-        .clk_out(mgmt_clk_50mhz), .rst_out(mgmt_srst), .lvl_out(vpd_ctrl_if.init_done_mask)
-    );
-    assign reg_if.vpd_status_nxt_v = 1'b1;
-    sync_bus_sampled #(.DATA_WID(32), .RST_VALUE(0)) i_sync_bus_sampled__vpd_status (
-        .clk_in(mgmt_clk_50mhz), .rst_in(mgmt_srst), .data_in(vpd_status),
+    assign reg_if.card_info_status_nxt_v = 1'b1;
+    sync_bus_sampled #(.DATA_WID(32), .RST_VALUE(0)) i_sync_bus_sampled__card_info_status (
+        .clk_in(mgmt_clk_50mhz), .rst_in(mgmt_srst), .data_in(card_info_status),
         .clk_out(axil_syscfg.aclk), .rst_out(!axil_syscfg.aresetn),
-        .data_out(reg_if.vpd_status_nxt)
+        .data_out(reg_if.card_info_status_nxt)
     );
 
 endmodule : xilinx_alveo_usplus

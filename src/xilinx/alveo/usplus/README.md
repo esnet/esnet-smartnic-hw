@@ -54,26 +54,28 @@ lengths and addresses.
 
 Product/application identity, build ID, Git repository/hash and build time
 are supplied separately to the common VPD service as static metadata.
-`pci_vpd_ctrl_intf` carries the management clock/reset, initialization mask
-and status. `pci_vpd_card_info_intf` carries the combined card-info cache.
-The shell supplies VPD frequency, physical-function count and provider
-enablement from `xilinx_alveo_usplus_pkg` as module parameters.
+`pci_vpd_card_info_intf` carries the combined cache and provider reset in
+the 50 MHz management domain. The common shell transfers cache status and
+byte reads into its free-running 100 MHz VPD domain. Frequency, function
+count and provider enablement remain explicit module parameters supplied
+from the Alveo packages.
 
-The free-running management clock permits initialization while PCIe reset
-is held asserted. The JTAG `ready` probe indicates VPD completion or error.
-On error or expiry of the six-second initialization watchdog, static VPD
-remains readable without card-specific records, including flash/CMS offsets.
-A failed initialization aborts CMS fetching, resets any partial CMS AXI
-transaction, and releases the interface for host access.
-PCIe reset clears pending configuration accesses without restarting card
-acquisition or rebuilding VPD.
+Initialization completes while PCIe reset is asserted. PCIe reset clears
+pending configuration accesses without restarting card acquisition or
+rebuilding VPD. The JTAG `ready` probe indicates completion or error.
+On provider failure or expiry of the VPD watchdog, static VPD remains
+readable without card-specific records, including flash/CMS offsets.
 
-System configuration exposes `vpd_control` at BAR2 + `0x20002c` and
-`vpd_status` at BAR2 + `0x200030`. Control bit 0 masks completion and forces
-static VPD reads. The status register reports completion, error, early reads,
-elapsed milliseconds, card-info validity/length, CMS error flags and VPD
-timeout. The reported card-info length is the raw CMS cache length. Status
-crosses into the register domain as a coherent sampled bus.
+The CMS fetcher owns a 5.5-second acquisition deadline covering all states,
+including stalled AXI channels. On expiry it resets the partial transaction
+and downstream CMS interface, then releases CMS for host access. VPD does
+not cancel acquisition.
+
+[Common VPD registers](../README.md#registers) are at BAR2 + `0x1000`.
+US+ system configuration exposes `card_info_status` at BAR2 + `0x20002c`:
+provider valid, raw eight-bit CMS cache length, and card-length, AXI,
+boot-timeout and acquisition-timeout errors. This status crosses into the
+register domain as a coherent sampled bus.
 
 Shell synthesis generates `shell_build_info.svh` from the build ID,
 application name and Git identity. Identical build identity preserves the

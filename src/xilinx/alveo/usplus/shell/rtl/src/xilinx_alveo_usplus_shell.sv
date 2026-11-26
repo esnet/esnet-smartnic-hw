@@ -61,8 +61,8 @@ module xilinx_alveo_usplus_shell
     logic clk_250mhz;
     logic clk_333mhz;
 
-    pci_vpd_ctrl_intf vpd_ctrl_if ();
-    pci_vpd_card_info_intf card_info_if (.clk(vpd_ctrl_if.clk));
+    logic card_info_clk;
+    pci_vpd_card_info_intf card_info_if (.clk(card_info_clk));
     xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
 
     // =========================================================================
@@ -102,7 +102,7 @@ module xilinx_alveo_usplus_shell
     xilinx_alveo_shell #(
         .QID_WID              ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID ),
         .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
-        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_usplus_pkg::VPD_CLK_FREQ_HZ ),
+        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_pkg::VPD_CLK_FREQ_HZ ),
         .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
         .PRODUCT_ID           ( PRODUCT_ID ),
         .APPLICATION_ID       ( APPLICATION_ID ),
@@ -112,7 +112,6 @@ module xilinx_alveo_usplus_shell
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
-        .vpd_ctrl_if,
         .card_info_if,
         .cfg_ext_if,
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
@@ -134,14 +133,14 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // UltraScale+ Alveo core — CMAC, QDMA, clocking, hw register decode
     // axil_top drives the PCIe AXI-L into the QDMA; axil_hw receives the
-    // decoded hw sub-space from the top-level shell_decoder.
+    // decoded hw sub-space from the top-level Alveo shell decoder.
     // =========================================================================
     xilinx_alveo_usplus #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
-        .vpd_ctrl_if,
+        .card_info_clk,
         .card_info_if,
         .cfg_ext_if,
         .clk,

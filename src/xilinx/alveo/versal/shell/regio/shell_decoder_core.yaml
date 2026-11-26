@@ -4,6 +4,9 @@ blocks:
   shell_cfg: &shell_cfg
     !include ../src/shell/regio/shell_cfg.yaml
 
+  vpd: &vpd
+    !include ../src/xilinx/alveo/regio/xilinx_alveo_vpd.yaml
+
 decoders:
   hw_decoder: &hw_decoder
     !include ../src/xilinx/alveo/versal/regio/xilinx_alveo_versal_decoder.yaml
@@ -15,6 +18,11 @@ interfaces:
     address: 0x000000
     width: 12
     name: shell_cfg
+
+  - block: *vpd
+    address: 0x001000
+    width: 12
+    name: vpd
 
   - decoder: *hw_decoder
     address: 0x200000

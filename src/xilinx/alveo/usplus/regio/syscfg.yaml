@@ -48,26 +48,12 @@ regs:
     access: ro
     count: 3
 
-  - name: vpd_control
-    access: rw
-    init: 0
-    fields:
-      - name: init_done_mask
-        width: 1
-  - name: vpd_status
+  - name: card_info_status
     access: ro
     fields:
-      - name: init_done
+      - name: valid
         width: 1
-      - name: init_error
-        width: 1
-      - name: init_early_read
-        width: 1
-      - name: init_time_ms
-        width: 14
-      - name: card_info_valid
-        width: 1
-      - name: card_info_length
+      - name: length
         width: 8
       - name: error_card_info_length
         width: 1
@@ -75,5 +61,5 @@ regs:
         width: 1
       - name: error_boot_timeout
         width: 1
-      - name: init_timeout
+      - name: error_fetch_timeout
         width: 1

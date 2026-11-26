@@ -5,7 +5,7 @@ include $(COMPONENT_ROOT)/config.mk
 
 TOP = xilinx_alveo_vpd_wrapper
 SRC_FILES = ../../rtl/src/xilinx_alveo_vpd.sv
-SUBCOMPONENTS = xilinx.pci.rtl
+SUBCOMPONENTS = xilinx.pci.rtl xilinx.alveo.pkg xilinx.alveo.regio.rtl axi4l.rtl@common
 
 all: opt validate
 pre_synth: _pre_synth

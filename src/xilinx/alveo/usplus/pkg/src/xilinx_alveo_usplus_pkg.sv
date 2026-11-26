@@ -11,7 +11,6 @@ package xilinx_alveo_usplus_pkg;
     localparam int NUM_CMAC = 2;
 
     localparam int NUM_PHYS_FUNC = 2;
-    localparam int VPD_CLK_FREQ_HZ = 50_000_000;
     localparam bit CARD_INFO_EN = 1'b1;
 
     localparam int DMA_ST_DATA_BYTE_WID = 64;

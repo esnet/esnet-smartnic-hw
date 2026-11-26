@@ -6,43 +6,57 @@ platforms.
 
 ## VPD
 
-`xilinx_alveo_vpd` combines the VPD image builder and PCIe configuration
-bridge for PF0 and PF1. Product/application identity and build metadata are
-supplied as parameters. Per-function configuration registers are independent;
-both PFs read the same image.
+`xilinx_alveo_vpd` owns the VPD image builder, PCIe configuration bridge,
+software register block, AXI-Lite clock crossing and registered readiness
+output. Product/application identity and build metadata are supplied as
+parameters. Per-function configuration registers are independent; all
+supported PFs read the same image.
 
-The shell exposes `pci_vpd_ctrl_intf` for the free-running clock/reset,
-initialization mask and status, and `pci_vpd_card_info_intf` for card-info
-cache accesses. The architecture drives the control interface's clock,
-reset and mask; the VPD service drives its initialization status. The
-card-info interface uses the same clock. PCIe reset independently flushes
-configuration transactions.
+The Alveo shell decoder connects its dedicated `vpd_axil_if` to this service.
+Initialization clock/reset and card information are supplied separately;
+initialization status and mask signals remain internal to the VPD block.
 
-Configuration remains explicit on modules: `NUM_PHYS_FUNC`,
-`VPD_CLK_FREQ_HZ` (`CLK_FREQ_HZ` on `xilinx_alveo_vpd`) and `CARD_INFO_EN`.
-The US+ and Versal shell layers supply these from their architecture
-packages:
+VPD runs from the free-running 100 MHz system clock on both US+ and Versal.
+The common shell generates a registered startup reset. The VPD service
+registers initialization readiness in the same domain. PCIe reset flushes
+configuration transactions but does not rebuild the image or restart
+card-info acquisition.
 
-| Architecture | VPD clock | Physical functions | Card information |
-|--------------|-----------|--------------------|------------------|
-| US+ | 50 MHz | 2 | Enabled |
-| Versal | 100 MHz | 2 | Disabled |
+`NUM_PHYS_FUNC`, `VPD_CLK_FREQ_HZ` (`CLK_FREQ_HZ` on `xilinx_alveo_vpd`) and
+`CARD_INFO_EN` remain module parameters. The Alveo layers supply the frequency
+from `xilinx_alveo_pkg` and the function count/provider enablement from their
+architecture packages. Both architectures enable two physical functions.
 
-The interfaces contain no configuration parameters. Provider errors and
-the initialization watchdog select static fallback VPD. `CARD_INFO_EN=0`
-selects static-only operation without waiting for a provider.
+The architecture supplies `pci_vpd_card_info_intf` in its provider clock domain.
+`pci_vpd_card_info_intf_cdc` transfers coherent cache status and byte reads into
+the 100 MHz VPD domain. US+ supplies cached CMS identity and static card
+attributes at 50 MHz. Versal disables card information and serves static
+metadata. Providers own acquisition timeouts, cleanup and resource release;
+the VPD watchdog selects static fallback independently if a provider does
+not respond. There is no consumer cancellation signal.
 
-Each architecture supplies its card-info stream. The US+ provider combines
-static card attributes with cached CMS identity in its 50 MHz management
-domain; see the [US+ VPD documentation](usplus/README.md#vpd-and-initialization-status).
-Versal uses the 100 MHz system clock and disables card information. The
-common shell drives JTAG readiness from VPD completion or error. PCIe reset
-flushes configuration transactions while leaving the image and card
-information intact.
+## Registers
+
+The Alveo VPD register block occupies BAR2 + `0x1000` on both architectures:
+
+| Offset | Register | Contents |
+|--------|----------|----------|
+| `0x1000` | `control` | Bit 0 masks completion and selects static VPD reads |
+| `0x1004` | `status` | Completion, error, early read, elapsed milliseconds and timeout |
+| `0x1008` | `card_info` | Provider valid/error and nine-bit cache length |
+
+AXI-Lite accesses cross into the VPD clock domain. Host reset clears software
+control registers independently of VPD initialization. Readiness is asserted
+on initialization completion or error. Provider errors and the six-second
+watchdog select static fallback without card-specific records.
+
+## Verification
 
 `tests/xilinx_alveo_vpd_static` checks static metadata, checksum, per-PF
-registers, unsupported functions and PCIe reset behavior. `NUM_FUNCS=1`,
-`NUM_FUNCS=2` and `NUM_FUNCS=4` exercise function-count parameterization. The US+ CMS integration test checks the
-provider path and fallback. `build/xilinx_alveo_vpd` provides an
-out-of-context synthesis build with independent 100 MHz storage and
-250 MHz configuration clocks.
+registers, unsupported functions, AXI-Lite controls and PCIe reset. The
+Versal adapter suite checks the VPD registers through the PCIe AXI adapter,
+top-level decoder and register clock crossing.
+`NUM_FUNCS=1`, `2` and `4` exercise function-count parameterization.
+The US+ management suite covers CMS acquisition, cross-clock cache reads,
+fallback and host access. `build/xilinx_alveo_vpd` provides an out-of-context
+synthesis build with independent 100 MHz VPD and 250 MHz configuration clocks.

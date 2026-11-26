@@ -1,0 +1,37 @@
+name: xilinx_alveo_vpd
+info: Alveo PCIe VPD control and status.
+
+regs:
+  - default:
+      width: 32
+      access: ro
+      init: 0
+
+  - name: control
+    access: rw
+    fields:
+      - name: init_done_mask
+        width: 1
+        info: Mask completion and select the static VPD image.
+
+  - name: status
+    fields:
+      - name: init_done
+        width: 1
+      - name: init_error
+        width: 1
+      - name: init_early_read
+        width: 1
+      - name: init_time_ms
+        width: 14
+      - name: init_timeout
+        width: 1
+
+  - name: card_info
+    fields:
+      - name: valid
+        width: 1
+      - name: error
+        width: 1
+      - name: length
+        width: 9

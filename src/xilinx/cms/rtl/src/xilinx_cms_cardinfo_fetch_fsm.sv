@@ -1,7 +1,8 @@
-module xilinx_cms_cardinfo_fetch_fsm (
+module xilinx_cms_cardinfo_fetch_fsm #(
+    parameter int FETCH_TIMEOUT_CYCLES = 50_000 * 5500
+) (
   input logic              cms_clk,
   input logic              cms_srst,
-  input logic              abort,
   // From controller
   axi4l_intf.peripheral    axil_from_controller,
   // To CMS
@@ -14,6 +15,7 @@ module xilinx_cms_cardinfo_fetch_fsm (
   output logic [7:0]       card_info_rd_data,
   output logic             card_info_rd_vld,
   // Error status
+  output logic             error_fetch_timeout,
   output logic             error_boot_timeout,
   output logic             error_bad_axil_transaction,
   output logic             error_card_info_length
@@ -89,7 +91,26 @@ module xilinx_cms_cardinfo_fetch_fsm (
     state_t nxt_state;
 
     logic   done;
-    wire force_abort = abort && !done && state != DONE && state != ABORT_RESET;
+    localparam int FETCH_TIMER_WID = $clog2(FETCH_TIMEOUT_CYCLES + 1);
+    logic [FETCH_TIMER_WID-1:0] fetch_timer = '0;
+    wire force_abort = fetch_timer == FETCH_TIMEOUT_CYCLES
+                    && !done && state != DONE && state != ABORT_RESET;
+
+    initial begin
+        std_pkg::param_check_gt(FETCH_TIMEOUT_CYCLES, 0, "FETCH_TIMEOUT_CYCLES");
+    end
+
+    initial error_fetch_timeout = 1'b0;
+    always @(posedge aclk) begin
+        if (cms_srst) begin
+            fetch_timer <= '0;
+            error_fetch_timeout <= 1'b0;
+        end else begin
+            if (!done && state != DONE && state != ABORT_RESET
+                && fetch_timer < FETCH_TIMEOUT_CYCLES) fetch_timer <= fetch_timer + 1'b1;
+            if (force_abort) error_fetch_timeout <= 1'b1;
+        end
+    end
 
     logic                 reset_timer;
     logic                 inc_timer;

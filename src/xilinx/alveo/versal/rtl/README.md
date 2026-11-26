@@ -13,10 +13,12 @@ image. Completion drives the shell's JTAG
 initialization-ready indication.
 
 Card identity and flash/CMS offset records are omitted because the card-info
-provider is disabled. The shell connects initialization control/status
-through `pci_vpd_ctrl_intf` and ties off `pci_vpd_card_info_intf`.
-`xilinx_alveo_versal_pkg` supplies the VPD frequency, physical-function count
-and provider-enablement module parameters.
+provider is disabled. The architecture ties off `pci_vpd_card_info_intf`.
+The common Alveo shell supplies the VPD startup reset. `xilinx_alveo_vpd`
+owns its AXI-Lite control/status registers and registered initialization-ready
+indication. `xilinx_alveo_pkg` supplies
+the common 100 MHz frequency; the Versal package supplies the physical
+function count and provider-enablement module parameters.
 
 The native V80 build generates `shell_build_info.svh` from the build
 identity. `SHELL_VPD_*` variables provide metadata overrides; unchanged

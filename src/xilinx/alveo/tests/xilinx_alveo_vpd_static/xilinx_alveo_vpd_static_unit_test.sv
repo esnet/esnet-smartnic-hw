@@ -17,7 +17,6 @@ module xilinx_alveo_vpd_static_unit_test;
     logic ready;
     logic init_done;
     logic init_error;
-    assign ready = init_done || init_error;
 
     `SVUNIT_CLK_GEN(clk, 5ns);
     `SVUNIT_CLK_GEN(cfg_clk, 2ns);
@@ -26,13 +25,14 @@ module xilinx_alveo_vpd_static_unit_test;
     xilinx_pci_cfg_ext_intf_agent cfg_agent;
     xilinx_pci_cfg_ext_vpd_agent vpd_agents[NUM_FUNCS];
 
-    pci_vpd_ctrl_intf vpd_ctrl_if ();
+    axi4l_intf axil_vpd ();
+    axi4l_verif_pkg::axi4l_reg_agent #() reg_agent;
     pci_vpd_card_info_intf card_info_if (.clk(clk));
-    assign vpd_ctrl_if.clk = clk;
-    assign vpd_ctrl_if.srst = srst;
-    assign vpd_ctrl_if.init_done_mask = 1'b0;
-    assign init_done = vpd_ctrl_if.init_done;
-    assign init_error = vpd_ctrl_if.init_error;
+    assign axil_vpd.aclk = cfg_clk;
+    assign axil_vpd.aresetn = cfg_aresetn;
+    assign init_done = DUT.init_done;
+    assign init_error = DUT.init_error;
+    assign card_info_if.srst = srst;
     assign card_info_if.vld = 1'b0;
     assign card_info_if.error = 1'b0;
     assign card_info_if.len = '0;
@@ -51,12 +51,17 @@ module xilinx_alveo_vpd_static_unit_test;
     ) DUT (
         .cfg_aresetn,
         .cfg_ext_if,
-        .vpd_ctrl_if,
+        .clk,
+        .srst,
+        .ready,
+        .axil_if ( axil_vpd ),
         .card_info_if
     );
 
     function void build();
         svunit_ut = new(name);
+        reg_agent = new("reg_agent", 1000, 1000);
+        reg_agent.axil_vif = axil_vpd;
         cfg_agent = new();
         cfg_agent.pci_cfg_ext_vif = cfg_ext_if;
         foreach (vpd_agents[i]) begin
@@ -70,6 +75,7 @@ module xilinx_alveo_vpd_static_unit_test;
         cfg_aresetn = 0;
         srst = 1;
         cfg_agent.idle();
+        reg_agent.idle();
         repeat (8) @(negedge clk);
         srst = 0;
     endtask
@@ -121,9 +127,32 @@ module xilinx_alveo_vpd_static_unit_test;
     endtask
 
     `SVUNIT_TESTS_BEGIN
+        `SVTEST(register_controls_and_host_reset)
+            logic [31:0] value;
+            wait(ready);
+            release_host();
+            reg_agent.read_reg(4, value);
+            `FAIL_UNLESS(value[0]);
+            `FAIL_IF(value[1] || value[17]);
+            reg_agent.read_reg(8, value);
+            `FAIL_UNLESS_EQUAL(value, 0);
+            reg_agent.write_reg(0, 1);
+            repeat (64) @(negedge clk);
+            `FAIL_IF(ready);
+            reg_agent.read_reg(0, value);
+            `FAIL_UNLESS_EQUAL(value, 1);
+            cfg_aresetn = 0;
+            repeat (16) @(negedge clk);
+            release_host();
+            reg_agent.read_reg(0, value);
+            `FAIL_UNLESS_EQUAL(value, 0);
+            `FAIL_UNLESS(ready && init_done);
+            check_vpd(0);
+        `SVTEST_END
+
         `SVTEST(initialization_while_pcie_reset_is_asserted)
             wait(ready);
-            `FAIL_UNLESS(vpd_ctrl_if.init_done);
+            `FAIL_UNLESS(init_done);
             `FAIL_IF(cfg_aresetn);
             release_host();
             foreach (vpd_agents[pf]) check_vpd(pf);
@@ -138,6 +167,22 @@ module xilinx_alveo_vpd_static_unit_test;
             repeat (16) @(negedge clk);
             `FAIL_UNLESS(ready);
             release_host();
+            foreach (vpd_agents[pf]) check_vpd(pf);
+        `SVTEST_END
+
+        `SVTEST(pcie_reset_with_stopped_configuration_clock)
+            bit remained_initialized;
+            wait(ready);
+            release_host();
+            check_vpd(0);
+            @(negedge cfg_clk);
+            force cfg_clk = 1'b0;
+            cfg_aresetn = 0;
+            repeat (32) @(negedge clk);
+            remained_initialized = ready && init_done;
+            release cfg_clk;
+            release_host();
+            `FAIL_UNLESS(remained_initialized);
             foreach (vpd_agents[pf]) check_vpd(pf);
         `SVTEST_END
 

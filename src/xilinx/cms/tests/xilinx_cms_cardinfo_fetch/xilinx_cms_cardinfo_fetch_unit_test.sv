@@ -16,7 +16,6 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     //===================================
     logic cms_clk;
     logic cms_srst;
-    logic abort;
     axi4l_intf axil_from_controller ();
     axi4l_intf axil_to_cms ();
 
@@ -30,11 +29,12 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     logic [7:0]       card_info_rd_data;
     logic             card_info_rd_vld;
 
+    logic             error_fetch_timeout;
     logic             error_boot_timeout;
     logic             error_bad_axil_transaction;
     logic             error_card_info_length;
 
-    xilinx_cms_cardinfo_fetch_fsm DUT(.*);
+    xilinx_cms_cardinfo_fetch_fsm #(.FETCH_TIMEOUT_CYCLES(20000)) DUT(.*);
 
     //===================================
     // Testbench
@@ -92,7 +92,6 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     task setup();
         svunit_ut.setup();
         /* Place Setup Code Here */
-        abort = 0;
         reset();
 
         error_no_sn_key = 1'b0;
@@ -221,12 +220,12 @@ module xilinx_cms_cardinfo_fetch_unit_test;
             `FAIL_IF(card_info_vld);
         `SVTEST_END
 
-        `SVTEST(abort_clears_partial_transaction_and_releases_host)
+        `SVTEST(watchdog_clears_partial_transaction_and_releases_host)
             logic [31:0] value;
             force axil_to_cms.wready = 1'b0;
             wait(axil_to_cms.awvalid);
             repeat (4) @(cb);
-            abort = 1;
+            wait(error_fetch_timeout);
             wait(!axil_to_cms.aresetn);
             repeat (20) @(cb);
             release axil_to_cms.wready;

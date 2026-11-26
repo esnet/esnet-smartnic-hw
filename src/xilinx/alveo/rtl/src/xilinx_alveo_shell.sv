@@ -10,7 +10,7 @@ module xilinx_alveo_shell
     parameter int          QID_WID             = 11, // DMA queue identifier width
     parameter int          MAX_PKT_LEN         = 9100, // DMA FIFO maximum packet length (bytes)
     parameter int          NUM_PHYS_FUNC       = 2,
-    parameter int          VPD_CLK_FREQ_HZ     = 50_000_000,
+    parameter int          VPD_CLK_FREQ_HZ     = xilinx_alveo_pkg::VPD_CLK_FREQ_HZ,
     parameter bit          CARD_INFO_EN        = 1'b1,
     parameter              PRODUCT_ID          = "ESnet SmartNIC",
     parameter              APPLICATION_ID      = "(empty)",
@@ -19,11 +19,10 @@ module xilinx_alveo_shell
     parameter              BUILD_GIT_HASH      = "(empty)",
     parameter              BUILD_TIMESTAMP_STR = "(empty)"
 ) (
-    input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
+    input  wire logic sys_clk_100mhz,     // Free-running VPD and debug clock
 
-    // Free-running VPD control/status and architecture-provided card data
+    // PCIe configuration access and architecture-provided card data
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
-    pci_vpd_ctrl_intf.peripheral       vpd_ctrl_if,
     pci_vpd_card_info_intf.consumer    card_info_if,
 
     input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
@@ -64,6 +63,34 @@ module xilinx_alveo_shell
     // =========================================================================
     // VPD service
     // =========================================================================
+    logic [4:0] startup_count = '0;
+    logic vpd_srst = 1'b1;
+    logic vpd_ready;
+    axi4l_intf axil_vpd ();
+    pci_vpd_card_info_intf card_info_if__100mhz (.clk(sys_clk_100mhz));
+
+    always_ff @(posedge sys_clk_100mhz) begin
+        if (!(&startup_count)) startup_count <= startup_count + 1'b1;
+        vpd_srst <= !(&startup_count);
+    end
+
+    if (CARD_INFO_EN) begin : g__card_info
+        pci_vpd_card_info_intf_cdc i_pci_vpd_card_info_intf_cdc (
+            .consumer_srst              ( vpd_srst ),
+            .card_info_if_from_provider ( card_info_if ),
+            .card_info_if_to_consumer   ( card_info_if__100mhz )
+        );
+    end else begin : g__no_card_info
+        assign card_info_if.rd = 1'b0;
+        assign card_info_if.rd_addr = '0;
+        assign card_info_if__100mhz.srst = vpd_srst;
+        assign card_info_if__100mhz.vld = 1'b0;
+        assign card_info_if__100mhz.error = 1'b0;
+        assign card_info_if__100mhz.len = '0;
+        assign card_info_if__100mhz.rd_vld = 1'b0;
+        assign card_info_if__100mhz.rd_data = '0;
+    end
+
     xilinx_alveo_vpd #(
         .CLK_FREQ_HZ          ( VPD_CLK_FREQ_HZ ),
         .NUM_PHYS_FUNC        ( NUM_PHYS_FUNC ),
@@ -75,10 +102,13 @@ module xilinx_alveo_shell
         .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_vpd (
-        .cfg_aresetn ( dma_aresetn ),
+        .cfg_aresetn  ( dma_aresetn ),
         .cfg_ext_if,
-        .vpd_ctrl_if,
-        .card_info_if
+        .clk          ( sys_clk_100mhz ),
+        .srst         ( vpd_srst ),
+        .ready        ( vpd_ready ),
+        .axil_if      ( axil_vpd ),
+        .card_info_if ( card_info_if__100mhz )
     );
 
     // =========================================================================
@@ -92,7 +122,7 @@ module xilinx_alveo_shell
     // =========================================================================
     xilinx_jtag_reset_ctrl i_xilinx_jtag_reset_ctrl (
         .debug_clk ( sys_clk_100mhz ),
-        .ready     ( vpd_ctrl_if.init_done || vpd_ctrl_if.init_error ),
+        .ready     ( vpd_ready ),
         .rstn_in   ( pci_rstn_in    ),
         .rstn_out  ( pci_rstn_out   )
     );
@@ -100,15 +130,16 @@ module xilinx_alveo_shell
     // =========================================================================
     // Top-level decoder
     //
-    // Splits the incoming AXI-L interface into shell_cfg, hw, and core
+    // Decodes shell identification, common Alveo controls, hardware and core
     // sub-spaces.  The address map is defined in
-    // src/shell/regio/shell_decoder.yaml.
+    // src/xilinx/alveo/regio/xilinx_alveo_shell_decoder.yaml.
     // =========================================================================
     axi4l_intf #() axil_shell_cfg ();
 
-    shell_decoder i_shell_decoder (
+    xilinx_alveo_shell_decoder i_xilinx_alveo_shell_decoder (
         .axil_if           ( axil_top       ),
         .shell_cfg_axil_if ( axil_shell_cfg ),
+        .vpd_axil_if       ( axil_vpd       ),
         .hw_axil_if        ( axil_hw        ),
         .core_axil_if      ( axil_core      )
     );

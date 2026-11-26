@@ -299,7 +299,7 @@ module xilinx_aved_adapter_unit_test;
         rstn_pl0_100mhz    = 1'b1;
         m_axi_pcie0_aresetn = 1'b1;
         // Allow free-running VPD startup and CDC resets to settle.
-        wait(DUT_shell.vpd_ctrl_if.init_done);
+        wait(DUT_shell.i_xilinx_alveo_shell.i_xilinx_alveo_vpd.init_done);
         repeat (64) @(negedge m_axi_pcie0_aclk);
     endtask
 
@@ -357,6 +357,25 @@ module xilinx_aved_adapter_unit_test;
     endtask
 
     `SVUNIT_TESTS_BEGIN
+        `SVTEST(alveo_shell_vpd_registers)
+            bit [31:0] value;
+            axi4_read(32'h1000, value);
+            `FAIL_UNLESS_EQUAL(value, 0);
+            axi4_read(32'h1004, value);
+            `FAIL_UNLESS(value[0]);
+            `FAIL_IF(value[1] || value[17]);
+            axi4_read(32'h1008, value);
+            `FAIL_UNLESS_EQUAL(value, 0);
+            axi4_write(32'h1000, 1);
+            repeat (64) @(negedge clk_pl0_100mhz);
+            `FAIL_IF(DUT_shell.i_xilinx_alveo_shell.vpd_ready);
+            axi4_read(32'h1004, value);
+            `FAIL_IF(value[0]);
+            axi4_write(32'h1000, 0);
+            repeat (64) @(negedge clk_pl0_100mhz);
+            `FAIL_UNLESS(DUT_shell.i_xilinx_alveo_shell.vpd_ready);
+        `SVTEST_END
+
         `SVTEST(vpd_both_pfs)
             check_vpd(0);
             check_vpd(1);
@@ -364,8 +383,8 @@ module xilinx_aved_adapter_unit_test;
 
         `SVTEST(vpd_initialization_with_pcie_held_in_reset)
             m_axi_pcie0_aresetn = 0;
-            wait(DUT_shell.vpd_ctrl_if.init_done);
-            `FAIL_UNLESS(DUT_shell.vpd_ctrl_if.init_done);
+            wait(DUT_shell.i_xilinx_alveo_shell.i_xilinx_alveo_vpd.init_done);
+            `FAIL_UNLESS(DUT_shell.i_xilinx_alveo_shell.i_xilinx_alveo_vpd.init_done);
             `FAIL_IF(m_axi_pcie0_aresetn);
             @(negedge m_axi_pcie0_aclk);
             m_axi_pcie0_aresetn = 1;

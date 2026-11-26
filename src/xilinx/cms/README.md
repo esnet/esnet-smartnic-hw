@@ -12,11 +12,14 @@ interface reset. After fetching, host reset also resets the downstream CMS
 interface so incomplete host transactions are discarded without losing
 cached card information.
 
-`error_boot_timeout`, `error_bad_axil_transaction` and
-`error_card_info_length` latch failures until `cms_srst`. Asserting `abort`
-during acquisition cancels the fetch, resets the downstream interface and
-transaction engine for 16 cycles, and releases the interface for host
-access. An asserted abort does not restart an already completed fetch.
+`error_boot_timeout`, `error_bad_axil_transaction`,
+`error_card_info_length` and `error_fetch_timeout` latch failures until
+`cms_srst`. `FETCH_TIMEOUT_CYCLES` bounds the entire acquisition, including
+stalled AXI address/data/response channels and cleanup writes. Its default
+is 5.5 seconds at 50 MHz. On expiry the fetcher resets the downstream
+interface and transaction engine for 16 cycles and releases the interface
+for host access. Acquisition and resource release are independent of the
+VPD consumer.
 
 Run the fetch tests with:
 

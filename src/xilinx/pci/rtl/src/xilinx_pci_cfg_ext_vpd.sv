@@ -332,11 +332,26 @@ module xilinx_pci_cfg_ext_vpd #(
     assign __vpd_req_data.wr_data = vpd_wr_data_func[func_sel];
     // Queue requests across the clock boundary, including four-byte writes.
     // Reset both ends together if either domain is reset, discarding stale traffic.
-    sync_areset #(.INPUT_ACTIVE_HIGH(1)) i_sync_areset__cfg (
-        .clk_out(aclk), .rst_in(!aresetn || vpd_srst), .rst_out(cfg_srst)
+    logic cfg_reset__vpd_clk;
+    initial data_srst = 1'b1;
+
+    sync_areset i_sync_areset__cfg_reset (
+        .rst_in  ( aresetn ),
+        .clk_out ( vpd_clk ),
+        .rst_out ( cfg_reset__vpd_clk )
     );
-    sync_areset #(.INPUT_ACTIVE_HIGH(1)) i_sync_areset__data (
-        .clk_out(vpd_clk), .rst_in(!aresetn || vpd_srst), .rst_out(data_srst)
+
+    always @(posedge vpd_clk) begin
+        data_srst <= vpd_srst || cfg_reset__vpd_clk;
+    end
+
+    sync_reset #(
+        .INPUT_ACTIVE_HIGH ( 1 )
+    ) i_sync_reset__cfg (
+        .clk_in  ( vpd_clk ),
+        .rst_in  ( data_srst ),
+        .clk_out ( aclk ),
+        .rst_out ( cfg_srst )
     );
     fifo_async #(
         .DATA_WID ($bits(vpd_req_t)), .DEPTH(16), .FWFT(1), .REPORT_OFLOW(1)

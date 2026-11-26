@@ -7,9 +7,10 @@ module xilinx_alveo_usplus_vpd_unit_test;
     string name = "xilinx_alveo_usplus_vpd_ut";
     svunit_testcase svunit_ut;
     logic clk, cfg_clk;
+    logic vpd_clk;
+    `SVUNIT_CLK_GEN(vpd_clk, 5ns);
     logic srst = 1;
     logic cfg_aresetn = 0;
-    logic init_done_mask;
     logic ready;
     logic [31:0] status;
     logic error_no_sn_key, error_no_sn_terminator;
@@ -39,6 +40,7 @@ module xilinx_alveo_usplus_vpd_unit_test;
     logic [8:0]  card_info_rd_addr;
     logic [7:0]  card_info_rd_data;
 
+    logic        error_fetch_timeout;
     logic        error_boot_timeout;
     logic        error_bad_axil_transaction;
     logic        error_card_info_length;
@@ -49,10 +51,9 @@ module xilinx_alveo_usplus_vpd_unit_test;
     logic [7:0] cms_card_info_rd_addr;
     logic [7:0] cms_card_info_rd_data;
     logic cms_card_info_rd_vld;
-    xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
+    xilinx_cms_cardinfo_fetch_fsm #(.FETCH_TIMEOUT_CYCLES(20000)) i_xilinx_cms_cardinfo_fetch_fsm (
         .cms_clk              ( clk ),
         .cms_srst             ( srst ),
-        .abort                ( init_error || init_timeout ),
         .axil_from_controller ( cms_axil_from_controller ),
         .axil_to_cms          ( cms_axil_to_peripheral ),
         .card_info_vld(cms_card_info_vld),
@@ -61,6 +62,7 @@ module xilinx_alveo_usplus_vpd_unit_test;
         .card_info_rd_addr(cms_card_info_rd_addr),
         .card_info_rd_data(cms_card_info_rd_data),
         .card_info_rd_vld(cms_card_info_rd_vld),
+        .error_fetch_timeout,
         .error_boot_timeout,
         .error_bad_axil_transaction,
         .error_card_info_length
@@ -80,18 +82,26 @@ module xilinx_alveo_usplus_vpd_unit_test;
         .source_rd_vld(cms_card_info_rd_vld),
         .*
     );
-    pci_vpd_ctrl_intf vpd_ctrl_if ();
     pci_vpd_card_info_intf card_info_if (.clk(clk));
-    assign vpd_ctrl_if.clk = clk;
-    assign vpd_ctrl_if.srst = srst;
-    assign vpd_ctrl_if.init_done_mask = init_done_mask;
-    assign init_done = vpd_ctrl_if.init_done;
-    assign init_error = vpd_ctrl_if.init_error;
-    assign init_timeout = vpd_ctrl_if.init_timeout;
-    assign init_early_read = vpd_ctrl_if.init_early_read;
-    assign init_time_ms = vpd_ctrl_if.init_time_ms;
+    pci_vpd_card_info_intf card_info_if__vpd (.clk(vpd_clk));
+    axi4l_intf axil_vpd ();
+    axi4l_verif_pkg::axi4l_reg_agent #() reg_agent;
+    assign axil_vpd.aclk = cfg_clk;
+    assign axil_vpd.aresetn = cfg_aresetn;
+    assign card_info_if.srst = srst;
+    assign init_done = DUT.init_done;
+    assign init_error = DUT.init_error;
+    assign init_timeout = DUT.init_timeout;
+    assign init_early_read = DUT.init_early_read;
+    assign init_time_ms = DUT.init_time_ms;
+
+    pci_vpd_card_info_intf_cdc i_card_info_cdc (
+        .consumer_srst ( srst ),
+        .card_info_if_from_provider ( card_info_if ),
+        .card_info_if_to_consumer ( card_info_if__vpd )
+    );
     assign card_info_if.vld = card_info_vld;
-    assign card_info_if.error = error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
+    assign card_info_if.error = error_fetch_timeout || error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
     assign card_info_if.len = card_info_len;
     assign card_info_rd = card_info_if.rd;
     assign card_info_rd_addr = card_info_if.rd_addr;
@@ -99,18 +109,20 @@ module xilinx_alveo_usplus_vpd_unit_test;
     assign card_info_if.rd_vld = card_info_rd_vld;
 
     xilinx_alveo_vpd #(
-        .CLK_FREQ_HZ          ( xilinx_alveo_usplus_pkg::VPD_CLK_FREQ_HZ ),
+        .CLK_FREQ_HZ          ( xilinx_alveo_pkg::VPD_CLK_FREQ_HZ ),
         .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
         .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
         .APPLICATION_ID       ( "test_shell" )
     ) DUT (
         .cfg_aresetn,
         .cfg_ext_if,
-        .vpd_ctrl_if,
-        .card_info_if
+        .clk ( vpd_clk ),
+        .srst,
+        .ready,
+        .axil_if ( axil_vpd ),
+        .card_info_if ( card_info_if__vpd )
     );
 
-    assign ready = init_done || init_error;
     assign status = {
         2'b0,
         init_timeout,
@@ -136,6 +148,8 @@ module xilinx_alveo_usplus_vpd_unit_test;
 
     function void build();
         svunit_ut = new(name);
+        reg_agent = new("reg_agent", 1000, 1000);
+        reg_agent.axil_vif = axil_vpd;
         cfg_agent = new();
         cfg_agent.pci_cfg_ext_vif = cfg_ext_if;
         cms_agent = new("cms_agent", 1000, 1000);
@@ -149,11 +163,11 @@ module xilinx_alveo_usplus_vpd_unit_test;
         svunit_ut.setup();
         cfg_aresetn = 0;
         srst = 1;
-        init_done_mask = 0;
         error_no_sn_key = 0;
         error_no_sn_terminator = 0;
         mb_boot_time = 50;
         cfg_agent.idle();
+        reg_agent.idle();
         cms_agent.idle();
         repeat (8) @(negedge clk);
         srst = 0;
@@ -252,12 +266,12 @@ module xilinx_alveo_usplus_vpd_unit_test;
         `SVTEST(diagnostic_mask_exports_static_vpd)
             wait(ready);
             release_host();
-            init_done_mask = 1;
-            repeat (4) @(negedge clk);
+            reg_agent.write_reg(0, 1);
+            repeat (64) @(negedge clk);
             `FAIL_IF(ready || status[0] || status[1]);
             check_vpd(0, 0);
-            init_done_mask = 0;
-            repeat (4) @(negedge clk);
+            reg_agent.write_reg(0, 0);
+            repeat (64) @(negedge clk);
             `FAIL_UNLESS(ready && status[0]);
             check_vpd(0, 1);
         `SVTEST_END
