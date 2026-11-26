@@ -12,6 +12,8 @@ module xilinx_alveo_shell
 ) (
     input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
 
+    input  wire logic init_ready,
+
     input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
 
     output wire logic pci_rstn_out,       // Reset output (active-low, JTAG-overridable)
@@ -58,7 +60,7 @@ module xilinx_alveo_shell
     // =========================================================================
     xilinx_jtag_reset_ctrl i_xilinx_jtag_reset_ctrl (
         .debug_clk ( sys_clk_100mhz ),
-        .ready     ( 1'b1           ), // Placeholder: tie to real init-done when available
+        .ready     ( init_ready     ),
         .rstn_in   ( pci_rstn_in    ),
         .rstn_out  ( pci_rstn_out   )
     );

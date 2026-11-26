@@ -13,7 +13,7 @@ include $(COMPONENT_ROOT)/config.mk
 #   source files from ./src are added automatically, and
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
-SRC_FILES = $(ONS_ROOT)/src/system_config/cms_cardinfo_fetch_fsm.sv
+SRC_FILES =
 INC_DIRS =
 SRC_LIST_FILES =
 

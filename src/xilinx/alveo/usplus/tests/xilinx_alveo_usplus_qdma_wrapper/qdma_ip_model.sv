@@ -149,6 +149,14 @@ module xilinx_alveo_usplus_qdma (
     output wire                axis_c2h_status_last,
     output wire [10 : 0]       axis_c2h_status_qid,
     output wire                axis_c2h_dmawr_cmp,
+    output wire cfg_ext_read_received,
+    output wire cfg_ext_write_received,
+    output wire [9:0] cfg_ext_register_number,
+    output wire [7:0] cfg_ext_function_number,
+    output wire [31:0] cfg_ext_write_data,
+    output wire [3:0] cfg_ext_write_byte_enable,
+    input wire [31:0] cfg_ext_read_data,
+    input wire cfg_ext_read_data_valid,
     input  wire                soft_reset_n,
     output wire                phy_ready,
     output wire [7 : 0]        qsts_out_op,
@@ -158,6 +166,15 @@ module xilinx_alveo_usplus_qdma (
     output wire                qsts_out_vld,
     input  wire                qsts_out_rdy
 );
+    xilinx_pci_cfg_ext_intf cfg_test_if (.clk(axi_aclk));
+    assign cfg_ext_read_received = cfg_test_if.req && !cfg_test_if.wr_rd_n;
+    assign cfg_ext_write_received = cfg_test_if.req && cfg_test_if.wr_rd_n;
+    assign cfg_ext_register_number = cfg_test_if.register;
+    assign cfg_ext_function_number = cfg_test_if.func;
+    assign cfg_ext_write_data = cfg_test_if.wr_data;
+    assign cfg_ext_write_byte_enable = cfg_test_if.wr_byte_en;
+    assign cfg_test_if.rd_data = cfg_ext_read_data;
+    assign cfg_test_if.rd_vld = cfg_ext_read_data_valid;
     axi4l_intf axil_test_if ();
     assign axi_aclk = sys_clk_gt;
     assign axi_aresetn = sys_rst_n;

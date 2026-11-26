@@ -15,6 +15,7 @@ module xilinx_alveo_usplus_qdma_wrapper #(
     // From/to core
     // -- AXI-L
     axi4l_intf.controller             axil_if,
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
     // Native QDMA streaming, completion, credit, and clock/reset ports
     output logic               axi_aclk,
     output logic               axi_aresetn,
@@ -169,6 +170,10 @@ module xilinx_alveo_usplus_qdma_wrapper #(
     logic [10 : 0] axis_c2h_status_qid;
     logic axis_c2h_dmawr_cmp;
     logic soft_reset_n;
+    logic cfg_ext_read_received;
+    logic cfg_ext_write_received;
+    assign cfg_ext_if.req = cfg_ext_read_received || cfg_ext_write_received;
+    assign cfg_ext_if.wr_rd_n = cfg_ext_write_received;
     logic phy_ready;
     logic [7 : 0] qsts_out_op;
     logic [63 : 0] qsts_out_data;
@@ -521,6 +526,14 @@ xilinx_alveo_usplus_qdma i_xilinx_alveo_usplus_qdma (
   .axis_c2h_status_qid(axis_c2h_status_qid),                                    // output wire [10 : 0] axis_c2h_status_qid
   .axis_c2h_dmawr_cmp(axis_c2h_dmawr_cmp),                                      // output wire axis_c2h_dmawr_cmp
   .soft_reset_n(soft_reset_n),                                                  // input wire soft_reset_n
+  .cfg_ext_read_received(cfg_ext_read_received),
+  .cfg_ext_write_received(cfg_ext_write_received),
+  .cfg_ext_register_number(cfg_ext_if.register),
+  .cfg_ext_function_number(cfg_ext_if.func),
+  .cfg_ext_write_data(cfg_ext_if.wr_data),
+  .cfg_ext_write_byte_enable(cfg_ext_if.wr_byte_en),
+  .cfg_ext_read_data(cfg_ext_if.rd_data),
+  .cfg_ext_read_data_valid(cfg_ext_if.rd_vld),
   .phy_ready(phy_ready),                                                        // output wire phy_ready
   .qsts_out_op(qsts_out_op),                                                    // output wire [7 : 0] qsts_out_op
   .qsts_out_data(qsts_out_data),                                                // output wire [63 : 0] qsts_out_data

@@ -52,7 +52,10 @@ SUBCOMPONENTS = \
     packet.verif@common \
     xilinx.alveo.usplus.pkg \
     xilinx.alveo.rtl \
-    xilinx.qdma.rtl
+    xilinx.qdma.rtl \
+    xilinx.pci.rtl \
+    xilinx.pci.verif \
+    pci.vpd.verif@common
 EXT_LIBS = unisims_ver
 
 include ../test_base.mk

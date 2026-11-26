@@ -122,6 +122,7 @@ module xilinx_alveo_versal_shell
         .QID_WID ( QID_WID )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
+        .init_ready      ( 1'b1 ),
         .pci_rstn_in     ( pci_rstn_in ),
         .pci_rstn_out    ( pci_rstn ),
         .core_clk,

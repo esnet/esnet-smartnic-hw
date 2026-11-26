@@ -16,6 +16,7 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     //===================================
     logic cms_clk;
     logic cms_srst;
+    logic abort;
     axi4l_intf axil_from_controller ();
     axi4l_intf axil_to_cms ();
 
@@ -91,6 +92,7 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     task setup();
         svunit_ut.setup();
         /* Place Setup Code Here */
+        abort = 0;
         reset();
 
         error_no_sn_key = 1'b0;
@@ -210,6 +212,29 @@ module xilinx_cms_cardinfo_fetch_unit_test;
             `FAIL_UNLESS_EQUAL(rd_data, 32'h012345678);
         `SVTEST_END
 
+
+        `SVTEST(mailbox_poll_reports_axil_error)
+            wait(axil_to_cms.arvalid && axil_to_cms.araddr == 'h28018);
+            force axil_to_cms.rresp = 2'b10;
+            wait(error_bad_axil_transaction);
+            release axil_to_cms.rresp;
+            `FAIL_IF(card_info_vld);
+        `SVTEST_END
+
+        `SVTEST(abort_clears_partial_transaction_and_releases_host)
+            logic [31:0] value;
+            force axil_to_cms.wready = 1'b0;
+            wait(axil_to_cms.awvalid);
+            repeat (4) @(cb);
+            abort = 1;
+            wait(!axil_to_cms.aresetn);
+            repeat (20) @(cb);
+            release axil_to_cms.wready;
+            axil_reg_agent.write_reg(cms_reg_pkg::OFFSET_MB_RESETN_REG, 1);
+            axil_reg_agent.read_reg(cms_reg_pkg::OFFSET_MB_RESETN_REG, value);
+            `FAIL_UNLESS_EQUAL(value, 1);
+            `FAIL_IF(card_info_vld);
+        `SVTEST_END
 
     `SVUNIT_TESTS_END
 

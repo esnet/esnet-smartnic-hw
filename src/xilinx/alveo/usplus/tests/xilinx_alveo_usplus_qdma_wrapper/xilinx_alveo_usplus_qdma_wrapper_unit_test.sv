@@ -2,6 +2,7 @@
 
 module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     import svunit_pkg::svunit_testcase;
+    import xilinx_pci_verif_pkg::*;
     import xilinx_qdma_pkg::*;
 
     string name = "xilinx_alveo_usplus_qdma_wrapper_ut";
@@ -19,6 +20,20 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     always #2ns pcie_refclk_p = ~pcie_refclk_p;
     always #2.7ns core_clk = ~core_clk;
 
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
+    pci_vpd_intf vpd_if (.clk(dma_aclk));
+    xilinx_pci_cfg_ext_vpd i_cfg_vpd (
+        .cfg_ext_if, .aresetn(dma_aresetn), .vpd_srst(!dma_aresetn), .vpd_if
+    );
+    xilinx_pci_vpd #(.CARD_INFO_EN(0)) i_vpd (
+        .vpd_if, .srst(!dma_aresetn),
+        .init_done(), .init_error(), .init_timeout(), .init_early_read(), .init_time_ms(),
+        .init_done_mask(1'b0), .card_info_vld(1'b0), .card_info_error(1'b0),
+        .card_info_len(8'b0), .card_info_rd(), .card_info_rd_addr(),
+        .card_info_rd_data(8'b0), .card_info_rd_vld(1'b0)
+    );
+    xilinx_pci_cfg_ext_intf_agent cfg_agent;
+    xilinx_pci_cfg_ext_vpd_agent vpd_agents[2];
     axi4l_intf axil_if ();
     packet_intf #(.DATA_BYTE_WID(64), .META_WID(PKT_H2C_META_WID)) pkt_h2c_dma (.clk(dma_aclk));
     packet_intf #(.DATA_BYTE_WID(64), .META_WID(PKT_C2H_META_WID)) pkt_c2h_dma (.clk(dma_aclk));
@@ -55,6 +70,12 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
 
     function void build();
         svunit_ut = new(name);
+        cfg_agent = new();
+        cfg_agent.pci_cfg_ext_vif = `IP.cfg_test_if;
+        foreach (vpd_agents[i]) begin
+            vpd_agents[i] = new($sformatf("vpd_pf%0d", i), i);
+            vpd_agents[i].pci_cfg_ext_agent = cfg_agent;
+        end
         c2h_driver = new("c2h_driver");
         c2h_driver.axis_vif = axis_c2h;
         h2c_monitor = new("h2c_monitor");
@@ -75,6 +96,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
 
     task setup();
         svunit_ut.setup();
+        cfg_agent.idle();
         reg_agent.idle();
         `IP.tb_h2c_valid = 0;
         `IP.tb_c2h_ready = 1;
@@ -343,6 +365,14 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
             wait_c2h(1);
             check_native_c2h(data, 11'd2);
         `SVTEST_END
+        `SVTEST(configuration_vpd_ports)
+            byte value;
+            foreach (vpd_agents[i]) begin
+                vpd_agents[i].read_byte(0, value);
+                `FAIL_UNLESS_EQUAL(value, 8'h82);
+            end
+        `SVTEST_END
+
     `SVUNIT_TESTS_END
     `undef IP
 endmodule

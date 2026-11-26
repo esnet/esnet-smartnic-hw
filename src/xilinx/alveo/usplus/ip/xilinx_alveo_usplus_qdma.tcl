@@ -6,6 +6,7 @@ create_ip -name qdma -vendor xilinx.com -library ip -module_name $module_name -d
 # Base QDMA IP spec
 set_property -dict {
     CONFIG.mode_selection {Advanced}
+    CONFIG.legacy_cfg_ext_if {true}
     CONFIG.SRIOV_CAP_ENABLE {true}
     CONFIG.MAILBOX_ENABLE {true}
     CONFIG.flr_enable {true}

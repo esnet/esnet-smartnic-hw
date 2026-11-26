@@ -60,6 +60,7 @@ interface xilinx_pci_cfg_ext_intf (
             input  bit [31:0]             data,
             input  bit [3:0]              byte_en = 4'hf
         );
+        @(cb);
         cb.req <= 1'b1;
         cb.wr_rd_n <= 1'b1;
         cb.register <= register;
@@ -75,6 +76,7 @@ interface xilinx_pci_cfg_ext_intf (
             input  bit [FUNC_SEL_WID-1:0] func,
             output bit [31:0]             data
         );
+        @(cb);
         cb.req <= 1'b1;
         cb.wr_rd_n <= 1'b0;
         cb.register <= register;

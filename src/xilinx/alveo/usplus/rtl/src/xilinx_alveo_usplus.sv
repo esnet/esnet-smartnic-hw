@@ -1,13 +1,21 @@
 module xilinx_alveo_usplus
     import xilinx_alveo_usplus_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
+    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0,
+    parameter PRODUCT_ID = "ESnet SmartNIC",
+    parameter APPLICATION_ID = "(empty)",
+    parameter logic [31:0] BUILD_ID = 0,
+    parameter BUILD_GIT_REPO = "(empty)",
+    parameter BUILD_GIT_HASH = "(empty)",
+    parameter BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // To/from physical layer (hardware)
     xilinx_alveo_usplus_hw_intf.alveo  alveo_hw_if,
 
     // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
     input  wire logic     pci_rstn,
+
+    output logic init_ready,
 
     // To/from core (application)
     // -- Core clock/reset
@@ -49,6 +57,12 @@ module xilinx_alveo_usplus
     logic core_srst;
 
     logic clk_100mhz_freerun;
+    logic mgmt_clk_50mhz;
+    logic mgmt_srst;
+    logic [4:0] mgmt_startup_count = '0;
+    logic [31:0] vpd_status;
+    logic vpd_init_done_mask;
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
 
     // =========================================================================
     // Interfaces
@@ -76,6 +90,7 @@ module xilinx_alveo_usplus
         .clk_125mhz,
         .clk_250mhz,
         .axil_if       ( axil_top ),
+        .cfg_ext_if,
         .dma_aclk,
         .dma_aresetn,
         .pkt_h2c_dma,
@@ -326,7 +341,6 @@ module xilinx_alveo_usplus
     // =========================================================================
     // QSPI flash access
     // =========================================================================
-    logic mgmt_clk_50mhz;
     axi4l_intf axil_qspi__50mhz ();
 
     // Shared free-running 50 MHz peripheral clock; SPI SCK is 25 MHz.
@@ -338,6 +352,12 @@ module xilinx_alveo_usplus
         .CLR ( 1'b0 ),
         .O   ( mgmt_clk_50mhz )
     );
+
+    // Initialization must complete while PCIe reset is held asserted.
+    always @(posedge mgmt_clk_50mhz) begin
+        if (!(&mgmt_startup_count)) mgmt_startup_count <= mgmt_startup_count + 1'b1;
+    end
+    assign mgmt_srst = !(&mgmt_startup_count);
 
     // The CDC also synchronizes the peripheral reset into the QSPI domain.
     axi4l_intf_cdc i_axi4l_intf_cdc__qspi (
@@ -354,10 +374,35 @@ module xilinx_alveo_usplus
     // =========================================================================
     // Card management access (board I/O is connected in the hardware layer)
     // =========================================================================
+    axi4l_intf axil_cms__50mhz ();
     axi4l_intf_cdc i_axi4l_intf_cdc__cms (
         .axi4l_if_from_controller ( axil_cms ),
         .clk_to_peripheral        ( mgmt_clk_50mhz ),
-        .axi4l_if_to_peripheral   ( alveo_hw_if.axil_cms )
+        .axi4l_if_to_peripheral   ( axil_cms__50mhz )
+    );
+
+    xilinx_alveo_usplus_vpd #(
+        .PRODUCT_ID(PRODUCT_ID), .APPLICATION_ID(APPLICATION_ID),
+        .BUILD_ID(BUILD_ID), .BUILD_GIT_REPO(BUILD_GIT_REPO),
+        .BUILD_GIT_HASH(BUILD_GIT_HASH), .BUILD_TIMESTAMP_STR(BUILD_TIMESTAMP_STR)
+    ) i_xilinx_alveo_usplus_vpd (
+        .clk(mgmt_clk_50mhz), .srst(mgmt_srst),
+        .cfg_aresetn(dma_aresetn), .cfg_ext_if,
+        .cms_axil_from_controller(axil_cms__50mhz),
+        .cms_axil_to_peripheral(alveo_hw_if.axil_cms),
+        .init_done_mask(vpd_init_done_mask), .ready(init_ready), .status(vpd_status)
+    );
+
+    sync_level #(.RST_VALUE(1'b0)) i_sync_level__vpd_mask (
+        .clk_in(axil_syscfg.aclk), .rst_in(!axil_syscfg.aresetn), .rdy_in(),
+        .lvl_in(reg_if.vpd_control.init_done_mask),
+        .clk_out(mgmt_clk_50mhz), .rst_out(mgmt_srst), .lvl_out(vpd_init_done_mask)
+    );
+    assign reg_if.vpd_status_nxt_v = 1'b1;
+    sync_bus_sampled #(.DATA_WID(32), .RST_VALUE(0)) i_sync_bus_sampled__vpd_status (
+        .clk_in(mgmt_clk_50mhz), .rst_in(mgmt_srst), .data_in(vpd_status),
+        .clk_out(axil_syscfg.aclk), .rst_out(!axil_syscfg.aresetn),
+        .data_out(reg_if.vpd_status_nxt)
     );
 
 endmodule : xilinx_alveo_usplus

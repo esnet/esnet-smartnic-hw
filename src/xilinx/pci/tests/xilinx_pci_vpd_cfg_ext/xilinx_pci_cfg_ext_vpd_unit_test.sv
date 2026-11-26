@@ -59,7 +59,7 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
     xilinx_pci_cfg_ext_intf pci_cfg_ext_if (.clk(aclk));
     pci_vpd_intf vpd_if (.clk(cms_clk));
 
-    xilinx_cms_cardinfo_fetch_fsm DUT0(.*);
+    xilinx_cms_cardinfo_fetch_fsm DUT0(.abort(1'b0), .*);
 `ifdef ONS_VPD
     system_config_vpd
 `else

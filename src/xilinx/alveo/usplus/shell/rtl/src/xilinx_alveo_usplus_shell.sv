@@ -16,7 +16,13 @@
 module xilinx_alveo_usplus_shell
     import shell_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
+    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0,
+    parameter PRODUCT_ID = "ESnet SmartNIC",
+    parameter APPLICATION_ID = "(empty)",
+    parameter logic [31:0] BUILD_ID = 0,
+    parameter BUILD_GIT_REPO = "(empty)",
+    parameter BUILD_GIT_HASH = "(empty)",
+    parameter BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // To/from physical layer (hardware)
     xilinx_alveo_usplus_hw_intf.alveo alveo_hw_if,
@@ -45,6 +51,7 @@ module xilinx_alveo_usplus_shell
     // Signals
     // =========================================================================
     logic pci_rstn;
+    logic init_ready;
     logic dma_aclk;
     logic dma_aresetn;
 
@@ -93,6 +100,7 @@ module xilinx_alveo_usplus_shell
         .QID_WID ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
+        .init_ready,
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
@@ -115,10 +123,14 @@ module xilinx_alveo_usplus_shell
     // decoded hw sub-space from the top-level shell_decoder.
     // =========================================================================
     xilinx_alveo_usplus #(
-        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
+        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP ),
+        .PRODUCT_ID(PRODUCT_ID), .APPLICATION_ID(APPLICATION_ID),
+        .BUILD_ID(BUILD_ID), .BUILD_GIT_REPO(BUILD_GIT_REPO),
+        .BUILD_GIT_HASH(BUILD_GIT_HASH), .BUILD_TIMESTAMP_STR(BUILD_TIMESTAMP_STR)
     ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
+        .init_ready,
         .clk,
         .srst,
         .clk_100mhz,

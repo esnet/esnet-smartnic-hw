@@ -63,8 +63,8 @@ module xilinx_cms_model (
 
     assign cms_reg_if.mailbox_nxt_v[0] = 1'b1;
     always @(posedge cms_clk) begin
-        if (axil_to_cms.awaddr == cms_reg_pkg::OFFSET_MAILBOX[0] && axil_to_cms.wvalid && axil_to_cms.wready) begin
-            cms_reg_if.mailbox_nxt[0] <= axil_to_cms.wdata;
+        if (axil_if.awaddr == cms_reg_pkg::OFFSET_MAILBOX[0] && axil_if.wvalid && axil_if.wready) begin
+            cms_reg_if.mailbox_nxt[0] <= axil_if.wdata;
         end else if (cms_reg_if.control_reg.mailbox_msg_status && cms_reg_if.mailbox[0][31:24] == 8'h04) begin
             cms_reg_if.mailbox_nxt[0] <= cms_reg_if.mailbox[0] | 8'h3b;
         end

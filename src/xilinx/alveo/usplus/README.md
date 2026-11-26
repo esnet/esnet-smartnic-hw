@@ -6,8 +6,9 @@ BAR0 and an 8 MiB user BAR2; each VF has a 32 KiB DMA BAR0 and an 8 MiB
 user BAR2. These BARs are 64-bit and non-prefetchable. Each function has
 eight MSI-X vectors, and the DMA engine implements 512 queue sets shared
 across functions. The wrapper acknowledges FLR notifications after four
-DMA clocks and clears pending completions on DMA reset. External PCIe
-configuration-space handling remains disabled; VPD is not implemented.
+DMA clocks and clears pending completions on DMA reset. Legacy configuration
+access exposes a read-only VPD capability at configuration-space offset
+`0xb0` on both PFs.
 
 SYSMON uses the free-running 100 MHz board clock and its own library
 AXI-Lite CDC from the 125 MHz register bus, including reset synchronization.
@@ -23,25 +24,64 @@ the target FPGA device: U55C, U280, or U200/U250.
 
 The common US+ module shares a free-running 50 MHz clock between CMS and
 QSPI. Each peripheral has its own library AXI-Lite CDC from the shell's
-125 MHz register bus, including reset synchronization. The CMS interface
-presented to the board module is already in the 50 MHz domain. Host
+125 MHz register bus. The CMS interface presented to the board module is
+already in the 50 MHz domain. CMS fetching and VPD construction use a startup
+reset independent of PCIe. Once fetching finishes, host reset also resets
+the CMS interface, while cached identity and VPD remain available. Host
 software uses polling; the CMS watchdog interrupt is not routed to PCIe.
 
-The CMS window starts at BAR2 + `0x240000` and spans 256 KiB. The MicroBlaze
-is held in reset until software starts it. A minimal startup sequence is:
+The CMS window starts at BAR2 + `0x240000` and spans 256 KiB. Initialization
+starts the MicroBlaze, fetches card information, then holds the MicroBlaze
+in reset and releases register access to the host. Software can restart it:
+
 
 1. Write `1` to `MB_RESETN_REG`, CMS offset `0x20000` (BAR2 + `0x260000`).
 2. Wait for `REG_MAP_ID_REG`, CMS offset `0x28000`, to become `0x74736574`.
 3. Wait for bit 0 of `HOST_STATUS2_REG`, CMS offset `0x2830c`, to become `1`.
 
 See [PG348: Register Space](https://docs.amd.com/r/en-US/pg348-cms-subsystem/Register-Space)
-for the firmware register map. Automatic card-information fetching and PCIe
-VPD are separate functions; neither is instantiated in this path.
+for the firmware register map.
+
+## VPD and initialization status
+
+`xilinx_alveo_usplus_vpd` connects CMS card-info acquisition, VPD image
+construction and the PCIe configuration bridge. Card name, serial number
+and controller version are combined with product/application identity,
+build ID, Git repository/hash, build time and flash/CMS BAR2 offsets.
+Flash and CMS offsets are `0x220000` and `0x240000`, respectively.
+
+The free-running management clock permits initialization while PCIe reset
+is held asserted. The JTAG `ready` probe indicates VPD completion or error.
+On error or expiry of the six-second initialization watchdog, static VPD
+remains readable. A failed initialization aborts CMS fetching, resets any
+partial CMS AXI transaction, and releases the interface for host access.
+PCIe reset clears pending configuration accesses without restarting card
+acquisition or rebuilding VPD.
+
+System configuration exposes `vpd_control` at BAR2 + `0x20002c` and
+`vpd_status` at BAR2 + `0x200030`. Control bit 0 masks completion and forces
+static VPD reads. The status register reports completion, error, early reads,
+elapsed milliseconds, card-info validity/length, CMS error flags and VPD
+timeout. Status crosses into the register domain as a coherent sampled bus.
+
+Shell synthesis generates `shell_build_info.svh` from the build ID,
+application name and Git identity. Identical build identity preserves the
+header's timestamp and modification time. `BUILD_TIMESTAMP` can explicitly
+select the timestamp; `SHELL_VPD_PRODUCT_ID`, `SHELL_VPD_APPLICATION_ID`,
+`SHELL_VPD_BUILD_GIT_REPO` and `SHELL_VPD_BUILD_GIT_HASH` override identity
+fields. Configured example builds supply their firmware-facing application
+name automatically.
+
+Run the management integration test with:
+
+```sh
+make -C src/xilinx/alveo/usplus/tests/xilinx_alveo_usplus_vpd
+```
 
 U55C and U280 expose the CMS HBM-monitor inputs. These inputs are tied to
 zero until HBM controllers supply temperature and trip information; leave
 HBM temperature monitoring disabled in software. The external HBM_CATTRIP
-output retains its existing drive-low connection.
+output is driven low.
 
 On U250, CMS owns the two QSFP management interfaces. Its native reset
 defaults release module reset, disable low-power mode, and assert both
