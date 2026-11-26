@@ -155,16 +155,21 @@ families within one ILA instance. The generated `ila.xdc` and
 `ila_impl.xdc` explicitly except these transfers; the paths remain reported
 by `report_cdc` despite their active timing exceptions.
 
-A CDC-10 waiver covers the internal trigger-match calibration transfer from
-`u_trig/N_DDR_TC.N_DDR_TC_INST*.U_TC/.../DUT/u_srl_drive/CLK` to
-`I_WHOLE_SLICE.G_SLICE_IDX*.U_ALL_SRL_SLICE/I_IS_TERMINATION_SLICE_W_OUTPUT_REG.DOUT_O_reg/D`
-under the same trigger-match circuitry. This variant was observed in the
-routed U280 125 MHz ILA and has an active false-path exception. Vendor
-`ila.xdc` contains a commented CDC-10 waiver matching this hierarchy variant;
-the reason it is disabled is unknown, so its presence is supporting context,
-not vendor approval. The additional waiver records acceptance of this
-vendor-managed calibration path and is limited to CDC-10 and these internal
-endpoint families. Probe inputs and other synchronizers remain checked.
+[The match-logic CDC-10 waiver](ip/ltlib_v1_0_3_all_typeA.waivers.xdc) is
+registered separately for the vendor `ltlib_v1_0_3_all_typeA` reference.
+Vivado scopes it to each individual component instance, including parameterized
+and uniquified references. It covers the internal configuration transfer from
+`u_srl_drive/CLK` to
+`I_WHOLE_SLICE.G_SLICE_IDX*.U_ALL_SRL_SLICE/I_IS_TERMINATION_SLICE_W_OUTPUT_REG.DOUT_O_reg/D`.
+Source and destination stay inside the same component, independently of its
+generated match-unit index or position in the ILA hierarchy.
+
+Vendor `ila.xdc` actively false-paths this configuration transfer. Its commented
+CDC-10 waiver covers a nested calibration variant; its disabled status is not
+treated as vendor approval. The additional waiver records acceptance of the
+vendor-managed configuration path and is limited to CDC-10 and these internal
+endpoints. Probe inputs, other endpoint families and crossings between
+component instances remain checked.
 
 These waivers load only when collecting validation reports. They add no
 timing exceptions and do not change the saved checkpoint. Review the

@@ -346,9 +346,11 @@ exit "$VALIDATION_EXIT"
                     for n in (0, 1):
                         self.assertIn(f'--waiver-input "cmac_{n}={tmp}/build/out/smartnic/xilinx/cmac/ip/xilinx_cmac_{n}/xilinx_cmac_{n}.dcp"', result.stdout)
                     self.assertIn("cfg/validation/usplus.json", result.stdout)
+                    self.assertIn('--waiver-ref "ltlib_v1_0_3_all_typeA=', result.stdout)
                 else:
                     self.assertNotIn("--waiver-input", result.stdout)
                     self.assertNotIn("cfg/validation/usplus.json", result.stdout)
+                    self.assertNotIn("ltlib_v1_0_3_all_typeA", result.stdout)
                 self.assertIn(("esnet_shell" if board.startswith("au") else "esnet_smartnic") + ".route_opt.dcp", result.stdout)
                 self.assertNotIn("vivado -", result.stdout)
                 self.assertNotIn("Configuring", result.stdout)
