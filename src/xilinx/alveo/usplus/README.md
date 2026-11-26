@@ -44,9 +44,9 @@ for the firmware register map.
 
 ## VPD and initialization status
 
-`xilinx_alveo_usplus_vpd` connects CMS card-info acquisition, VPD image
-construction and the PCIe configuration bridge. Card name, serial number
-and controller version are combined with product/application identity,
+The CMS card-info fetch FSM supplies card identity to `xilinx_alveo_vpd`
+in the common `xilinx_alveo_shell`. Card name, serial number and controller
+version are combined with product/application identity,
 build ID, Git repository/hash, build time and flash/CMS BAR2 offsets.
 Flash and CMS offsets are `0x220000` and `0x240000`, respectively.
 

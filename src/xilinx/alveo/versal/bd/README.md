@@ -22,7 +22,10 @@ attributes are copied to PF1, while each PF's VF count is set explicitly.
 
 The original AVED management endpoint remains on PCIE1 with its own BAR
 layout. Its configuration is retained when overlaying the PCIE0 settings.
-External application configuration-space handling and VPD remain disabled.
+The PCIE0 legacy configuration extension exports the `0xb0`–`0xbf` window
+for the VPD capability on PF0 and PF1. The AVED adapter converts the CPM5
+16-bit function number to the shared configuration interface, rejecting
+unsupported function numbers without aliasing the supported PFs.
 
 ## CPM5 dedicated GT coverage waiver
 

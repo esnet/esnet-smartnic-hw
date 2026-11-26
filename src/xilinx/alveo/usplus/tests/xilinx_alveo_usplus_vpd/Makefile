@@ -1,4 +1,4 @@
-SRC_FILES = ../../rtl/src/xilinx_alveo_usplus_vpd.sv
+SRC_FILES = ../../../rtl/src/xilinx_alveo_vpd.sv
 SUBCOMPONENTS = \
     axi4l.verif@common \
     pci.vpd.verif@common \

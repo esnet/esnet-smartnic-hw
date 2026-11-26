@@ -7,12 +7,38 @@
 // =============================================================================
 module xilinx_alveo_shell
 #(
-    parameter int QID_WID = 11,      // 11 for USPlus discrete QDMA, 12 for CPM5
-    parameter int MAX_PKT_LEN = 9100 // Max packet length (bytes) for DMA FIFO sizing
+    parameter int          QID_WID             = 11, // DMA queue identifier width
+    parameter int          MAX_PKT_LEN         = 9100, // DMA FIFO maximum packet length (bytes)
+    parameter int          VPD_CLK_FREQ_HZ     = 50_000_000,
+    parameter bit          CARD_INFO_EN        = 1'b1,
+    parameter logic [31:0] FLASH_REG_OFFSET    = '1,
+    parameter logic [31:0] CMS_REG_OFFSET      = '1,
+    parameter              PRODUCT_ID          = "ESnet SmartNIC",
+    parameter              APPLICATION_ID      = "(empty)",
+    parameter logic [31:0] BUILD_ID            = 0,
+    parameter              BUILD_GIT_REPO      = "(empty)",
+    parameter              BUILD_GIT_HASH      = "(empty)",
+    parameter              BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     input  wire logic sys_clk_100mhz,     // Free-running debug clock for VIO
 
-    input  wire logic init_ready,
+    // VPD storage and card information provider, independent of PCIe reset
+    input  logic                      vpd_clk,
+    input  logic                      vpd_srst,
+    xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
+    input  logic                      card_info_vld,
+    input  logic [7:0]                 card_info_len,
+    output logic                      card_info_rd,
+    output logic [7:0]                 card_info_rd_addr,
+    input  logic [7:0]                 card_info_rd_data,
+    input  logic                      card_info_rd_vld,
+    input  logic                      card_info_error,
+    input  logic                      vpd_init_done_mask,
+    output logic                      vpd_init_done,
+    output logic                      vpd_init_error,
+    output logic                      vpd_init_timeout,
+    output logic                      vpd_init_early_read,
+    output logic [13:0]                vpd_init_time_ms,
 
     input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
 
@@ -50,6 +76,40 @@ module xilinx_alveo_shell
 );
 
     // =========================================================================
+    // VPD service
+    // =========================================================================
+    xilinx_alveo_vpd #(
+        .CLK_FREQ_HZ          ( VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( CARD_INFO_EN ),
+        .FLASH_REG_OFFSET     ( FLASH_REG_OFFSET ),
+        .CMS_REG_OFFSET       ( CMS_REG_OFFSET ),
+        .PRODUCT_ID           ( PRODUCT_ID ),
+        .APPLICATION_ID       ( APPLICATION_ID ),
+        .BUILD_ID             ( BUILD_ID ),
+        .BUILD_GIT_REPO       ( BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
+    ) i_xilinx_alveo_vpd (
+        .clk                  ( vpd_clk ),
+        .srst                 ( vpd_srst ),
+        .cfg_aresetn          ( dma_aresetn ),
+        .cfg_ext_if,
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .card_info_error,
+        .init_done_mask       ( vpd_init_done_mask ),
+        .init_done            ( vpd_init_done ),
+        .init_error           ( vpd_init_error ),
+        .init_timeout         ( vpd_init_timeout ),
+        .init_early_read      ( vpd_init_early_read ),
+        .init_time_ms         ( vpd_init_time_ms )
+    );
+
+    // =========================================================================
     // PCIe reset control
     //
     // Exposes a JTAG VIO (on sys_clk_100mhz) that allows the reset to be
@@ -60,7 +120,7 @@ module xilinx_alveo_shell
     // =========================================================================
     xilinx_jtag_reset_ctrl i_xilinx_jtag_reset_ctrl (
         .debug_clk ( sys_clk_100mhz ),
-        .ready     ( init_ready     ),
+        .ready     ( vpd_init_done || vpd_init_error ),
         .rstn_in   ( pci_rstn_in    ),
         .rstn_out  ( pci_rstn_out   )
     );

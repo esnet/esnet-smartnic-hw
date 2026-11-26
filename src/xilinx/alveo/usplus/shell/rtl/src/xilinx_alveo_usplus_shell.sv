@@ -51,7 +51,22 @@ module xilinx_alveo_usplus_shell
     // Signals
     // =========================================================================
     logic pci_rstn;
-    logic init_ready;
+    logic vpd_clk;
+    logic vpd_srst;
+    logic card_info_vld;
+    logic [7:0] card_info_len;
+    logic card_info_rd;
+    logic [7:0] card_info_rd_addr;
+    logic [7:0] card_info_rd_data;
+    logic card_info_rd_vld;
+    logic card_info_error;
+    logic vpd_init_done_mask;
+    logic vpd_init_done;
+    logic vpd_init_error;
+    logic vpd_init_timeout;
+    logic vpd_init_early_read;
+    logic [13:0] vpd_init_time_ms;
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
     logic dma_aclk;
     logic dma_aresetn;
 
@@ -97,10 +112,35 @@ module xilinx_alveo_usplus_shell
     ) pkt_c2h_dma (.clk(dma_aclk));
 
     xilinx_alveo_shell #(
-        .QID_WID ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID )
+        .QID_WID              ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID ),
+        .VPD_CLK_FREQ_HZ      ( 50_000_000 ),
+        .CARD_INFO_EN         ( 1'b1 ),
+        .FLASH_REG_OFFSET     ( 32'h00220000 ),
+        .CMS_REG_OFFSET       ( 32'h00240000 ),
+        .PRODUCT_ID           ( PRODUCT_ID ),
+        .APPLICATION_ID       ( APPLICATION_ID ),
+        .BUILD_ID             ( BUILD_ID ),
+        .BUILD_GIT_REPO       ( BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
-        .init_ready,
+        .vpd_clk,
+        .vpd_srst,
+        .cfg_ext_if,
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .card_info_error,
+        .vpd_init_done_mask,
+        .vpd_init_done,
+        .vpd_init_error,
+        .vpd_init_timeout,
+        .vpd_init_early_read,
+        .vpd_init_time_ms,
         .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
@@ -123,14 +163,26 @@ module xilinx_alveo_usplus_shell
     // decoded hw sub-space from the top-level shell_decoder.
     // =========================================================================
     xilinx_alveo_usplus #(
-        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP ),
-        .PRODUCT_ID(PRODUCT_ID), .APPLICATION_ID(APPLICATION_ID),
-        .BUILD_ID(BUILD_ID), .BUILD_GIT_REPO(BUILD_GIT_REPO),
-        .BUILD_GIT_HASH(BUILD_GIT_HASH), .BUILD_TIMESTAMP_STR(BUILD_TIMESTAMP_STR)
+        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
-        .init_ready,
+        .vpd_clk,
+        .vpd_srst,
+        .cfg_ext_if,
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .card_info_error,
+        .vpd_init_done_mask,
+        .vpd_init_done,
+        .vpd_init_error,
+        .vpd_init_timeout,
+        .vpd_init_early_read,
+        .vpd_init_time_ms,
         .clk,
         .srst,
         .clk_100mhz,

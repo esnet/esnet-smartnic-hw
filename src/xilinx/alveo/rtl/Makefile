@@ -28,6 +28,7 @@ SUBCOMPONENTS = \
     axi4s.rtl@common \
     packet.rtl@common \
     xilinx.jtag.rtl \
+    xilinx.pci.rtl \
     xilinx.qdma.pkg \
     xilinx.qdma.regio.rtl \
     shell.pkg \

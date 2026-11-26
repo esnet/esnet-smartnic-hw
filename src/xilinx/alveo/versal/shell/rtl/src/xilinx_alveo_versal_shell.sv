@@ -16,7 +16,13 @@ module xilinx_alveo_versal_shell
     import shell_pkg::*;
     import xilinx_qdma_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
+    parameter bit [31:0] BUILD_TIMESTAMP     = 32'h0,
+    parameter            PRODUCT_ID          = "ESnet SmartNIC",
+    parameter            APPLICATION_ID      = "(empty)",
+    parameter bit [31:0] BUILD_ID            = 0,
+    parameter            BUILD_GIT_REPO      = "(empty)",
+    parameter            BUILD_GIT_HASH      = "(empty)",
+    parameter            BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // -------------------------------------------------------------------------
     // From/to Versal hardware layer
@@ -40,6 +46,7 @@ module xilinx_alveo_versal_shell
 
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
+    xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
 
     // DMA streams to/from xilinx_aved_adapter, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
@@ -53,6 +60,17 @@ module xilinx_alveo_versal_shell
     // -------------------------------------------------------------------------
     shell_intf.shell        shell_if
 );
+
+    // =========================================================================
+    // Static VPD initialization in the free-running system clock domain
+    // =========================================================================
+    logic [4:0] startup_count = '0;
+    logic       vpd_srst;
+
+    always_ff @(posedge sys_clk_100mhz) begin
+        if (!(&startup_count)) startup_count <= startup_count + 1'b1;
+    end
+    assign vpd_srst = !(&startup_count);
 
     // =========================================================================
     // Interfaces for the hw/core AXI-L decoder outputs
@@ -119,10 +137,33 @@ module xilinx_alveo_versal_shell
     axi4l_intf #() axil_qdma_st ();
 
     xilinx_alveo_shell #(
-        .QID_WID ( QID_WID )
+        .QID_WID              ( QID_WID ),
+        .VPD_CLK_FREQ_HZ      ( 100_000_000 ),
+        .CARD_INFO_EN         ( 1'b0 ),
+        .PRODUCT_ID           ( PRODUCT_ID ),
+        .APPLICATION_ID       ( APPLICATION_ID ),
+        .BUILD_ID             ( BUILD_ID ),
+        .BUILD_GIT_REPO       ( BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
-        .init_ready      ( 1'b1 ),
+        .vpd_clk              ( sys_clk_100mhz ),
+        .vpd_srst,
+        .cfg_ext_if,
+        .card_info_vld        ( 1'b0 ),
+        .card_info_len        ( 8'b0 ),
+        .card_info_rd         ( ),
+        .card_info_rd_addr    ( ),
+        .card_info_rd_data    ( 8'b0 ),
+        .card_info_rd_vld     ( 1'b0 ),
+        .card_info_error      ( 1'b0 ),
+        .vpd_init_done_mask   ( 1'b0 ),
+        .vpd_init_done        ( ),
+        .vpd_init_error       ( ),
+        .vpd_init_timeout     ( ),
+        .vpd_init_early_read  ( ),
+        .vpd_init_time_ms     ( ),
         .pci_rstn_in     ( pci_rstn_in ),
         .pci_rstn_out    ( pci_rstn ),
         .core_clk,

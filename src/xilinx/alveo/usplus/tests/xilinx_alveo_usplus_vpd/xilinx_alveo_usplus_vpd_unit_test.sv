@@ -26,7 +26,81 @@ module xilinx_alveo_usplus_vpd_unit_test;
         .axi4l_if_from_controller(cms_axil_host), .clk_to_peripheral(clk),
         .axi4l_if_to_peripheral(cms_axil_from_controller)
     );
-    xilinx_alveo_usplus_vpd #(.APPLICATION_ID("test_shell")) DUT (.*);
+    logic        init_done;
+    logic        init_error;
+    logic        init_timeout;
+    logic        init_early_read;
+    logic [13:0] init_time_ms;
+
+    logic        card_info_vld;
+    logic        card_info_rd;
+    logic        card_info_rd_vld;
+    logic [7:0]  card_info_len;
+    logic [7:0]  card_info_rd_addr;
+    logic [7:0]  card_info_rd_data;
+
+    logic        error_boot_timeout;
+    logic        error_bad_axil_transaction;
+    logic        error_card_info_length;
+
+    xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
+        .cms_clk              ( clk ),
+        .cms_srst             ( srst ),
+        .abort                ( init_error || init_timeout ),
+        .axil_from_controller ( cms_axil_from_controller ),
+        .axil_to_cms          ( cms_axil_to_peripheral ),
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .error_boot_timeout,
+        .error_bad_axil_transaction,
+        .error_card_info_length
+    );
+
+    xilinx_alveo_vpd #(
+        .CLK_FREQ_HZ          ( 50_000_000 ),
+        .CARD_INFO_EN         ( 1'b1 ),
+        .APPLICATION_ID       ( "test_shell" ),
+        .FLASH_REG_OFFSET     ( 32'h00220000 ),
+        .CMS_REG_OFFSET       ( 32'h00240000 )
+    ) DUT (
+        .clk,
+        .srst,
+        .cfg_aresetn,
+        .cfg_ext_if,
+        .init_done,
+        .init_error,
+        .init_timeout,
+        .init_early_read,
+        .init_time_ms,
+        .init_done_mask,
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .card_info_error ( error_boot_timeout || error_bad_axil_transaction || error_card_info_length )
+    );
+
+    assign ready = init_done || init_error;
+    assign status = {
+        2'b0,
+        init_timeout,
+        error_boot_timeout,
+        error_bad_axil_transaction,
+        error_card_info_length,
+        card_info_len,
+        card_info_vld,
+        init_time_ms,
+        init_early_read,
+        init_error,
+        init_done
+    };
+
     xilinx_cms_model i_cms_model (
         .cms_clk(clk), .cms_srst(!cms_axil_to_peripheral.aresetn),
         .axil_if(cms_axil_to_peripheral),

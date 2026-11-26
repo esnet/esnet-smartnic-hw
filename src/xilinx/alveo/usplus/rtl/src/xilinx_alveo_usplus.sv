@@ -1,13 +1,7 @@
 module xilinx_alveo_usplus
     import xilinx_alveo_usplus_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0,
-    parameter PRODUCT_ID = "ESnet SmartNIC",
-    parameter APPLICATION_ID = "(empty)",
-    parameter logic [31:0] BUILD_ID = 0,
-    parameter BUILD_GIT_REPO = "(empty)",
-    parameter BUILD_GIT_HASH = "(empty)",
-    parameter BUILD_TIMESTAMP_STR = "(empty)"
+    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
     // To/from physical layer (hardware)
     xilinx_alveo_usplus_hw_intf.alveo  alveo_hw_if,
@@ -15,7 +9,23 @@ module xilinx_alveo_usplus
     // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
     input  wire logic     pci_rstn,
 
-    output logic init_ready,
+    // VPD card information provider, in the free-running management domain
+    output logic                      vpd_clk,
+    output logic                      vpd_srst,
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
+    output logic                      card_info_vld,
+    output logic [7:0]                card_info_len,
+    input  logic                      card_info_rd,
+    input  logic [7:0]                card_info_rd_addr,
+    output logic [7:0]                card_info_rd_data,
+    output logic                      card_info_rd_vld,
+    output logic                      card_info_error,
+    output logic                      vpd_init_done_mask,
+    input  logic                      vpd_init_done,
+    input  logic                      vpd_init_error,
+    input  logic                      vpd_init_timeout,
+    input  logic                      vpd_init_early_read,
+    input  logic [13:0]               vpd_init_time_ms,
 
     // To/from core (application)
     // -- Core clock/reset
@@ -61,8 +71,9 @@ module xilinx_alveo_usplus
     logic mgmt_srst;
     logic [4:0] mgmt_startup_count = '0;
     logic [31:0] vpd_status;
-    logic vpd_init_done_mask;
-    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
+    logic error_boot_timeout;
+    logic error_bad_axil_transaction;
+    logic error_card_info_length;
 
     // =========================================================================
     // Interfaces
@@ -381,17 +392,40 @@ module xilinx_alveo_usplus
         .axi4l_if_to_peripheral   ( axil_cms__50mhz )
     );
 
-    xilinx_alveo_usplus_vpd #(
-        .PRODUCT_ID(PRODUCT_ID), .APPLICATION_ID(APPLICATION_ID),
-        .BUILD_ID(BUILD_ID), .BUILD_GIT_REPO(BUILD_GIT_REPO),
-        .BUILD_GIT_HASH(BUILD_GIT_HASH), .BUILD_TIMESTAMP_STR(BUILD_TIMESTAMP_STR)
-    ) i_xilinx_alveo_usplus_vpd (
-        .clk(mgmt_clk_50mhz), .srst(mgmt_srst),
-        .cfg_aresetn(dma_aresetn), .cfg_ext_if,
-        .cms_axil_from_controller(axil_cms__50mhz),
-        .cms_axil_to_peripheral(alveo_hw_if.axil_cms),
-        .init_done_mask(vpd_init_done_mask), .ready(init_ready), .status(vpd_status)
+    assign vpd_clk = mgmt_clk_50mhz;
+    assign vpd_srst = mgmt_srst;
+
+    xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
+        .cms_clk              ( mgmt_clk_50mhz ),
+        .cms_srst             ( mgmt_srst ),
+        .abort                ( vpd_init_error || vpd_init_timeout ),
+        .axil_from_controller ( axil_cms__50mhz ),
+        .axil_to_cms          ( alveo_hw_if.axil_cms ),
+        .card_info_vld,
+        .card_info_len,
+        .card_info_rd,
+        .card_info_rd_addr,
+        .card_info_rd_data,
+        .card_info_rd_vld,
+        .error_boot_timeout,
+        .error_bad_axil_transaction,
+        .error_card_info_length
     );
+
+    assign card_info_error = error_boot_timeout || error_bad_axil_transaction || error_card_info_length;
+    assign vpd_status = {
+        2'b0,
+        vpd_init_timeout,
+        error_boot_timeout,
+        error_bad_axil_transaction,
+        error_card_info_length,
+        card_info_len,
+        card_info_vld,
+        vpd_init_time_ms,
+        vpd_init_early_read,
+        vpd_init_error,
+        vpd_init_done
+    };
 
     sync_level #(.RST_VALUE(1'b0)) i_sync_level__vpd_mask (
         .clk_in(axil_syscfg.aclk), .rst_in(!axil_syscfg.aresetn), .rdy_in(),

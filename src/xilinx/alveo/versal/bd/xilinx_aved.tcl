@@ -83,7 +83,8 @@ set pcie0_params [list \
     CPM_PCIE0_TL_PF_ENABLE_REG             2 \
     CPM_PCIE0_MSI_X_OPTIONS                 MSI-X_Internal \
     CPM_PCIE0_EXT_PCIE_CFG_SPACE_ENABLED    None \
-    CPM_PCIE0_CFG_EXT_IF                   0 \
+    CPM_PCIE0_CFG_EXT_IF                   1 \
+    CPM_PCIE0_LEGACY_EXT_PCIE_CFG_SPACE_ENABLED 1 \
     CPM_PCIE0_COPY_PF0_QDMA_ENABLED       1 \
     CPM_PCIE0_COPY_PF0_SRIOV_QDMA_ENABLED 1 \
     CPM_PCIE0_CFG_VEND_ID                  10ee \
@@ -340,9 +341,17 @@ set assoc_busifs [join {
     dma0_qsts_out_0
     dma0_usr_flr_0
     m_axi_pcie0
+    pcie0_cfg_ext
 } :]
-set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports m_axi_pcie0_aclk]
 
+
+# =========================================================================
+# PCIE0 legacy configuration extension (VPD capability at 0xb0)
+# QDMA mode presents this interface in the dma0_intrfc_clk domain.
+# =========================================================================
+make_bd_intf_pins_external [get_bd_intf_pins cips/pcie0_cfg_ext]
+set_property name pcie0_cfg_ext [get_bd_intf_ports pcie0_cfg_ext_0]
+set_property CONFIG.ASSOCIATED_BUSIF $assoc_busifs [get_bd_ports m_axi_pcie0_aclk]
 
 # Write the build ID into the PMC JTAG CSR USECODE register
 # (register address is 0xF11A0008).

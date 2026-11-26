@@ -5,6 +5,7 @@ module xilinx_aved_adapter_unit_test;
     import axi4_verif_pkg::*;
     import axi4_pkg::*;
     import axi4l_pkg::*;
+    import xilinx_pci_verif_pkg::*;
 
     string name = "xilinx_aved_adapter_ut";
     svunit_testcase svunit_ut;
@@ -24,8 +25,8 @@ module xilinx_aved_adapter_unit_test;
     localparam bit [31:0] ADDR_SCRATCHPAD = CORE_BASE + 32'h4;
     localparam bit [31:0] ID_EXPECTED     = 32'h434F5245;  // 'CORE'
 
-    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x004000.
-    localparam bit [31:0] QDMA_BASE       = 32'h204000;
+    // QDMA streaming adapter registers: hw sub-space (0x200000) + 0x000000.
+    localparam bit [31:0] QDMA_BASE       = 32'h200000;
     localparam bit [31:0] ADDR_LB_CONFIG  = QDMA_BASE + 32'h0;
     localparam bit [31:0] ADDR_LB_STATUS  = QDMA_BASE + 32'h4;
 
@@ -72,6 +73,11 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     axi4l_intf axil_app_if ();
     shell_intf shell_if ();
+    xilinx_pci_cfg_ext_intf cfg_host_if (.clk(m_axi_pcie0_aclk));
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(m_axi_pcie0_aclk));
+    logic [7:0] cfg_function_hi = '0;
+    xilinx_pci_cfg_ext_intf_agent cfg_agent;
+    xilinx_pci_cfg_ext_vpd_agent vpd_agents[2];
 
     // DMA streams between adapter and shell, in the PCIE0 (QDMA) clock domain.
     // Meta widths match PKT_H2C_META_WID / PKT_C2H_META_WID from xilinx_qdma_pkg.
@@ -94,6 +100,15 @@ module xilinx_aved_adapter_unit_test;
     //   -> xilinx_alveo_versal_shell -> shell_if -> core
     // =========================================================================
     xilinx_aved_adapter DUT_adapter (
+        .cfg_ext_if,
+        .pcie0_cfg_ext_read_received     ( cfg_host_if.req && !cfg_host_if.wr_rd_n ),
+        .pcie0_cfg_ext_write_received    ( cfg_host_if.req && cfg_host_if.wr_rd_n ),
+        .pcie0_cfg_ext_register_number   ( cfg_host_if.register ),
+        .pcie0_cfg_ext_function_number   ( {cfg_function_hi, cfg_host_if.func} ),
+        .pcie0_cfg_ext_write_data        ( cfg_host_if.wr_data ),
+        .pcie0_cfg_ext_write_byte_enable ( cfg_host_if.wr_byte_en ),
+        .pcie0_cfg_ext_read_data         ( cfg_host_if.rd_data ),
+        .pcie0_cfg_ext_read_data_valid   ( cfg_host_if.rd_vld ),
         // Clocks and resets
         .clk_pl0_100mhz                   ( clk_pl0_100mhz             ),
         .m_axi_pcie0_aclk                ( m_axi_pcie0_aclk          ),
@@ -225,13 +240,17 @@ module xilinx_aved_adapter_unit_test;
         .pkt_c2h ( pkt_c2h_dma )
     );
 
-    xilinx_alveo_versal_shell DUT_shell (
+    xilinx_alveo_versal_shell #(
+        .APPLICATION_ID ( "test_shell" ),
+        .BUILD_ID       ( 123 )
+    ) DUT_shell (
+        .cfg_ext_if,
         .sys_clk_100mhz ( clk_pl0_100mhz ),
         .pci_rstn_in    ( pci_rstn_in ),
         .pci_rstn       ( pci_rstn    ),
         .axil_top         ( axil_app_if       ),
         .dma_aclk         ( m_axi_pcie0_aclk  ),
-        .dma_aresetn      ( rstn_pl0_100mhz   ),
+        .dma_aresetn      ( m_axi_pcie0_aresetn ),
         .pkt_h2c_dma ( pkt_h2c_dma ),
         .pkt_c2h_dma ( pkt_c2h_dma ),
         .shell_if
@@ -258,6 +277,12 @@ module xilinx_aved_adapter_unit_test;
         svunit_ut = new(name);
         agent = new();
         agent.axi4_vif = pcie0_axi4_if;
+        cfg_agent = new();
+        cfg_agent.pci_cfg_ext_vif = cfg_host_if;
+        foreach (vpd_agents[i]) begin
+            vpd_agents[i] = new($sformatf("pf%0d", i), i);
+            vpd_agents[i].pci_cfg_ext_agent = cfg_agent;
+        end
     endfunction
 
     // =========================================================================
@@ -266,13 +291,16 @@ module xilinx_aved_adapter_unit_test;
     task setup();
         svunit_ut.setup();
         agent.idle();
+        cfg_agent.idle();
+        cfg_function_hi = 0;
         rstn_pl0_100mhz    = 1'b0;
         m_axi_pcie0_aresetn = 1'b0;
         repeat (8) @(posedge clk_pl0_100mhz);
         rstn_pl0_100mhz    = 1'b1;
         m_axi_pcie0_aresetn = 1'b1;
-        // Allow CDC and reset synchronisers to settle
-        repeat (16) @(posedge clk_pl0_100mhz);
+        // Allow free-running VPD startup and CDC resets to settle.
+        wait(DUT_shell.i_xilinx_alveo_shell.vpd_init_done);
+        repeat (64) @(negedge m_axi_pcie0_aclk);
     endtask
 
     task teardown();
@@ -314,7 +342,63 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     // Tests
     // =========================================================================
+    task check_vpd(input int pf);
+        bit [31:0] data;
+        bit error;
+        bit timeout;
+        byte value;
+        cfg_agent.read('h2c, pf, data, error, timeout);
+        `FAIL_IF(error || timeout);
+        `FAIL_UNLESS_EQUAL(data[15:0], 16'h0003);
+        vpd_agents[pf].read_byte(0, value);
+        `FAIL_UNLESS_EQUAL(value, 8'h82);
+        vpd_agents[pf].read_byte(3, value);
+        `FAIL_UNLESS_EQUAL(value, 8'h45); // First product-name character: E
+    endtask
+
     `SVUNIT_TESTS_BEGIN
+        `SVTEST(vpd_both_pfs)
+            check_vpd(0);
+            check_vpd(1);
+        `SVTEST_END
+
+        `SVTEST(vpd_initialization_with_pcie_held_in_reset)
+            m_axi_pcie0_aresetn = 0;
+            wait(DUT_shell.i_xilinx_alveo_shell.vpd_init_done);
+            `FAIL_UNLESS(DUT_shell.i_xilinx_alveo_shell.vpd_init_done);
+            `FAIL_IF(m_axi_pcie0_aresetn);
+            @(negedge m_axi_pcie0_aclk);
+            m_axi_pcie0_aresetn = 1;
+            repeat (64) @(negedge clk_pl0_100mhz);
+            check_vpd(0);
+            check_vpd(1);
+        `SVTEST_END
+
+        `SVTEST(vpd_wide_function_does_not_alias_pf)
+            bit [31:0] data;
+            bit error;
+            bit timeout;
+            foreach (vpd_agents[pf]) begin
+                cfg_agent.write('h2d, pf, 32'h12345678, error, timeout);
+                `FAIL_IF(error || timeout);
+                cfg_function_hi = 1;
+                cfg_agent.read('h2c, pf, data, error, timeout);
+                `FAIL_IF(error || timeout);
+                `FAIL_UNLESS_EQUAL(data, 0);
+                cfg_agent.write('h2d, pf, 32'hdeadbeef, error, timeout);
+                `FAIL_IF(error || timeout);
+                cfg_function_hi = 0;
+                cfg_agent.read('h2d, pf, data, error, timeout);
+                `FAIL_IF(error || timeout);
+                `FAIL_UNLESS_EQUAL(data, 32'h12345678);
+                check_vpd(pf);
+            end
+            cfg_function_hi = '1;
+            cfg_agent.read('h2c, 'hff, data, error, timeout);
+            `FAIL_IF(error || timeout);
+            `FAIL_UNLESS_EQUAL(data, 0);
+        `SVTEST_END
+
 
         // Verify the id register returns the 'CORE' sentinel value via PCIE0.
         `SVTEST(id_read)

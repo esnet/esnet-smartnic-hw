@@ -2,6 +2,16 @@
     wire        clk_pl0_100mhz;
     wire        rstn_pl0_100mhz;
 
+    // PCIE0 configuration extension
+    wire        pcie0_cfg_ext_read_received;
+    wire        pcie0_cfg_ext_write_received;
+    wire [9:0]  pcie0_cfg_ext_register_number;
+    wire [15:0] pcie0_cfg_ext_function_number;
+    wire [31:0] pcie0_cfg_ext_write_data;
+    wire [3:0]  pcie0_cfg_ext_write_byte_enable;
+    wire [31:0] pcie0_cfg_ext_read_data;
+    wire        pcie0_cfg_ext_read_data_valid;
+
     // PCIE0 raw AXI4 master (BD → user RTL slave, 512-bit data)
     // Signal widths taken from the Vivado-generated BD wrapper.
     wire        m_axi_pcie0_aclk;
