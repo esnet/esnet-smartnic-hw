@@ -3,9 +3,9 @@ module xilinx_pci_cfg_ext_vpd #(
     parameter int         NUM_PHYS_FUNC   = 2,
     parameter logic [7:0] CFG_EXT_NXT_CAP = 8'h0 // Next capability pointer
 ) (
-    input logic aresetn,
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
     input logic vpd_srst,
+    input logic vpd_cfg_srst, // Configuration reset, released on vpd_if.clk
     pci_vpd_intf.controller vpd_if
 );
     wire aclk = cfg_ext_if.clk;
@@ -332,17 +332,10 @@ module xilinx_pci_cfg_ext_vpd #(
     assign __vpd_req_data.wr_data = vpd_wr_data_func[func_sel];
     // Queue requests across the clock boundary, including four-byte writes.
     // Reset both ends together if either domain is reset, discarding stale traffic.
-    logic cfg_reset__vpd_clk;
     initial data_srst = 1'b1;
 
-    sync_areset i_sync_areset__cfg_reset (
-        .rst_in  ( aresetn ),
-        .clk_out ( vpd_clk ),
-        .rst_out ( cfg_reset__vpd_clk )
-    );
-
     always @(posedge vpd_clk) begin
-        data_srst <= vpd_srst || cfg_reset__vpd_clk;
+        data_srst <= vpd_srst || vpd_cfg_srst;
     end
 
     sync_reset #(

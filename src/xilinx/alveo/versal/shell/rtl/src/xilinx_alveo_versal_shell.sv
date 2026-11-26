@@ -33,7 +33,7 @@ module xilinx_alveo_versal_shell
     input  wire logic       sys_clk_100mhz,
 
     // PCIe reset (JTAG VIO overrride interface)
-    input  wire logic       pci_rstn_in, // Incoming hardware PCI reset (e.g. PERST#)
+    input  wire logic       pci_rstn_in, // Incoming PCIe endpoint reset
     output wire logic       pci_rstn,    // Outgoing PCI reset (includes JTAG override)
 
     input  wire logic       gt_ref_clk0_n,
@@ -134,6 +134,17 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    logic pci_rstn__100mhz;
+
+    // Configuration access and JTAG observe the same endpoint reset release.
+    sync_areset #(
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__pci (
+        .rst_in  ( pci_rstn_in ),
+        .clk_out ( sys_clk_100mhz ),
+        .rst_out ( pci_rstn__100mhz )
+    );
+
     // DMA streaming registers, decoded from the hw sub-space below.
     axi4l_intf #() axil_qdma_st ();
 
@@ -152,7 +163,8 @@ module xilinx_alveo_versal_shell
         .sys_clk_100mhz  ( sys_clk_100mhz ),
         .card_info_if,
         .cfg_ext_if,
-        .pci_rstn_in     ( pci_rstn_in ),
+        .pci_rstn_in     ( pci_rstn__100mhz ),
+        .cfg_srst        ( !pci_rstn__100mhz ),
         .pci_rstn_out    ( pci_rstn ),
         .core_clk,
         .core_srst,

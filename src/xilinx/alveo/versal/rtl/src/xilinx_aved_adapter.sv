@@ -158,7 +158,7 @@ module xilinx_aved_adapter (
     // -------------------------------------------------------------------------
     output wire        sys_clk_100mhz, // system/debug clock → shell
 
-    output wire        pci_rstn_in,    // (raw) PCI reset (PERST#) → shell
+    output wire        pci_rstn_in,    // PCIe endpoint reset → shell
     input  wire        pci_rstn,       // Adapted PCI reset (includes JTAG override) reset ← shell (not yet wired to CPM5)
 
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)

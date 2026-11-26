@@ -108,13 +108,21 @@ module xilinx_alveo_usplus_vpd_unit_test;
     assign card_info_if.rd_data = card_info_rd_data;
     assign card_info_if.rd_vld = card_info_rd_vld;
 
+    logic cfg_srst;
+
+    sync_areset i_sync_areset__cfg (
+        .rst_in  ( cfg_aresetn ),
+        .clk_out ( vpd_clk ),
+        .rst_out ( cfg_srst )
+    );
+
     xilinx_alveo_vpd #(
         .CLK_FREQ_HZ          ( xilinx_alveo_pkg::VPD_CLK_FREQ_HZ ),
         .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
         .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
         .APPLICATION_ID       ( "test_shell" )
     ) DUT (
-        .cfg_aresetn,
+        .cfg_srst,
         .cfg_ext_if,
         .clk ( vpd_clk ),
         .srst,

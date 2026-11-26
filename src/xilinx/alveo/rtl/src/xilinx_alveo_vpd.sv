@@ -12,11 +12,11 @@ module xilinx_alveo_vpd
     parameter              BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // PCIe configuration access
-    input logic                        cfg_aresetn,
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
     // Free-running initialization and software access
     input  logic                       clk,
     input  logic                       srst,
+    input  logic                       cfg_srst, // Configuration reset, released on clk
     output logic                       ready,
     axi4l_intf.peripheral              axil_if,
     // Card information in the initialization clock domain
@@ -99,9 +99,9 @@ module xilinx_alveo_vpd
     xilinx_pci_cfg_ext_vpd #(
         .NUM_PHYS_FUNC ( NUM_PHYS_FUNC )
     ) i_xilinx_pci_cfg_ext_vpd (
-        .aresetn  ( cfg_aresetn ),
         .cfg_ext_if,
-        .vpd_srst ( srst ),
+        .vpd_cfg_srst ( cfg_srst ),
+        .vpd_srst     ( srst ),
         .vpd_if
     );
 

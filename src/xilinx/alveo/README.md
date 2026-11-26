@@ -22,6 +22,11 @@ registers initialization readiness in the same domain. PCIe reset flushes
 configuration transactions but does not rebuild the image or restart
 card-info acquisition.
 
+The architecture shell normalizes PCIe resets into the 100 MHz domain before
+passing them to the common shell. Versal shares one endpoint-reset release
+between VPD configuration access and JTAG reset control. US+ normalizes PERST#
+and the QDMA user reset separately. DMA datapaths retain their DMA-domain reset.
+
 `NUM_PHYS_FUNC`, `VPD_CLK_FREQ_HZ` (`CLK_FREQ_HZ` on `xilinx_alveo_vpd`) and
 `CARD_INFO_EN` remain module parameters. The Alveo layers supply the frequency
 from `xilinx_alveo_pkg` and the function count/provider enablement from their
@@ -60,3 +65,5 @@ top-level decoder and register clock crossing.
 The US+ management suite covers CMS acquisition, cross-clock cache reads,
 fallback and host access. `build/xilinx_alveo_vpd` provides an out-of-context
 synthesis build with independent 100 MHz VPD and 250 MHz configuration clocks.
+It includes JTAG reset control and checks that sharing the normalized reset
+introduces neither combinational CDC nor duplicate-reset synchronization.

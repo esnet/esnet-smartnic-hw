@@ -39,6 +39,14 @@ module xilinx_alveo_vpd_static_unit_test;
     assign card_info_if.rd_data = '0;
     assign card_info_if.rd_vld = 1'b0;
 
+    logic cfg_srst;
+
+    sync_areset i_sync_areset__cfg (
+        .rst_in  ( cfg_aresetn ),
+        .clk_out ( clk ),
+        .rst_out ( cfg_srst )
+    );
+
     xilinx_alveo_vpd #(
         .NUM_PHYS_FUNC        ( NUM_FUNCS ),
         .CLK_FREQ_HZ          ( 100_000_000 ),
@@ -49,7 +57,7 @@ module xilinx_alveo_vpd_static_unit_test;
         .BUILD_GIT_HASH      ( "12345678" ),
         .BUILD_TIMESTAMP_STR ( "2026-11-26 00:00:00 UTC" )
     ) DUT (
-        .cfg_aresetn,
+        .cfg_srst,
         .cfg_ext_if,
         .clk,
         .srst,

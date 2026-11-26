@@ -7,8 +7,10 @@ Unsupported function numbers read as zero and writes are ignored. The PCIe IP
 must be configured to route the legacy configuration window to this component;
 the bridge does not enable the capability in the IP configuration itself.
 
-The configuration side uses `xilinx_pci_cfg_ext_intf` and active-low `aresetn`.
-The byte-wide storage side uses `pci_vpd_intf` and active-high `vpd_srst`.
+The configuration side uses `xilinx_pci_cfg_ext_intf`. The caller supplies its
+configuration reset as active-high `vpd_cfg_srst`, normalized into the
+`pci_vpd_intf` clock domain. The byte-wide storage side uses `pci_vpd_intf`
+and active-high `vpd_srst` in that same domain.
 Requests are arbitrated between physical functions and cross clock domains
 through common-library asynchronous FIFOs. The storage peripheral must return
 one `rd_vld` response per byte read. Writes have no storage response; persistence

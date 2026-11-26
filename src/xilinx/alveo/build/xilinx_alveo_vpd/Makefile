@@ -5,7 +5,7 @@ include $(COMPONENT_ROOT)/config.mk
 
 TOP = xilinx_alveo_vpd_wrapper
 SRC_FILES = ../../rtl/src/xilinx_alveo_vpd.sv
-SUBCOMPONENTS = xilinx.pci.rtl xilinx.alveo.pkg xilinx.alveo.regio.rtl axi4l.rtl@common
+SUBCOMPONENTS = xilinx.pci.rtl xilinx.alveo.pkg xilinx.alveo.regio.rtl xilinx.jtag.rtl axi4l.rtl@common
 
 all: opt validate
 pre_synth: _pre_synth
@@ -17,3 +17,5 @@ clean: _build_clean
 .PHONY: all pre_synth synth opt validate info clean
 
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_core.mk
+
+BUILD_OPTIONS += -hook_tcl $(abspath opt.post.tcl)

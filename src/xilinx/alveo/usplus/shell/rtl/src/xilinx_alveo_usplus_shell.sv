@@ -89,6 +89,25 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    logic pci_rstn__100mhz;
+    logic cfg_srst__100mhz;
+
+    // PERST# controls the endpoint; the QDMA user reset clears configuration
+    // transactions. Each source has one boundary into the free-running domain.
+    sync_areset #(
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__pci (
+        .rst_in  ( alveo_hw_if.pcie_rstn ),
+        .clk_out ( alveo_hw_if.sys_clk_100mhz ),
+        .rst_out ( pci_rstn__100mhz )
+    );
+
+    sync_areset i_sync_areset__cfg (
+        .rst_in  ( dma_aresetn ),
+        .clk_out ( alveo_hw_if.sys_clk_100mhz ),
+        .rst_out ( cfg_srst__100mhz )
+    );
+
     axi4l_intf axil_qdma_st ();
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
@@ -114,7 +133,8 @@ module xilinx_alveo_usplus_shell
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
         .card_info_if,
         .cfg_ext_if,
-        .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
+        .pci_rstn_in    ( pci_rstn__100mhz ),
+        .cfg_srst       ( cfg_srst__100mhz ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
         .core_srst      ( srst ),

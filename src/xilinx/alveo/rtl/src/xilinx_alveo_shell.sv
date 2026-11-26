@@ -25,7 +25,9 @@ module xilinx_alveo_shell
     xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
     pci_vpd_card_info_intf.consumer    card_info_if,
 
-    input  wire logic pci_rstn_in,        // Raw incoming reset (active-low)
+    // Resets assert asynchronously and release on sys_clk_100mhz.
+    input  wire logic pci_rstn_in,        // Incoming PCIe reset (active-low)
+    input  wire logic cfg_srst,           // Configuration transaction reset (active-high)
 
     output wire logic pci_rstn_out,       // Reset output (active-low, JTAG-overridable)
 
@@ -102,7 +104,7 @@ module xilinx_alveo_shell
         .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
         .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_vpd (
-        .cfg_aresetn  ( dma_aresetn ),
+        .cfg_srst     ( cfg_srst ),
         .cfg_ext_if,
         .clk          ( sys_clk_100mhz ),
         .srst         ( vpd_srst ),
@@ -117,7 +119,7 @@ module xilinx_alveo_shell
     // Exposes a JTAG VIO (on sys_clk_100mhz) that allows the reset to be
     // independently asserted or released per endpoint without a board power
     // cycle. Reset asserts asynchronously and releases on sys_clk_100mhz.
-    // VIO probes: in0=raw reset, in1=output reset, in2=ready;
+    // VIO probes: in0=normalized input reset, in1=output reset, in2=ready;
     //             out0=jtag_reset (active-high override).
     // =========================================================================
     xilinx_jtag_reset_ctrl i_xilinx_jtag_reset_ctrl (

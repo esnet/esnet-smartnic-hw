@@ -145,10 +145,18 @@ module xilinx_pci_cfg_ext_vpd_unit_test;
         .vpd_rd_data(vpd_if.rd_data), .vpd_rd_vld(vpd_if.rd_vld)
     );
 `else
+    logic vpd_cfg_srst;
+
+    sync_areset i_sync_areset__cfg (
+        .rst_in  ( aresetn ),
+        .clk_out ( cms_clk ),
+        .rst_out ( vpd_cfg_srst )
+    );
+
     xilinx_pci_cfg_ext_vpd #(
         .NUM_PHYS_FUNC ( NUM_FUNCS )
     ) DUT2 (
-        .aresetn,
+        .vpd_cfg_srst,
         .cfg_ext_if(pci_cfg_ext_if),
         .vpd_srst(cms_srst),
         .vpd_if

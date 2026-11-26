@@ -12,7 +12,17 @@ module xilinx_jtag_reset_ctrl_unit_test;
     logic rstn_in;
     wire rstn_out;
 
-    xilinx_jtag_reset_ctrl DUT (.*);
+    wire rstn_in__debug;
+
+    sync_areset #(
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__input (
+        .rst_in  ( rstn_in ),
+        .clk_out ( debug_clk ),
+        .rst_out ( rstn_in__debug )
+    );
+
+    xilinx_jtag_reset_ctrl DUT (.rstn_in(rstn_in__debug), .*);
 
     always #5ns begin
         if (debug_clk_enable) debug_clk = ~debug_clk;

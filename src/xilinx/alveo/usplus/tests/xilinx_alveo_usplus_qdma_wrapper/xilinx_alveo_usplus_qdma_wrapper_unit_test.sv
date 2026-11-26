@@ -23,7 +23,7 @@ module xilinx_alveo_usplus_qdma_wrapper_unit_test;
     xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
     pci_vpd_intf vpd_if (.clk(dma_aclk));
     xilinx_pci_cfg_ext_vpd i_cfg_vpd (
-        .cfg_ext_if, .aresetn(dma_aresetn), .vpd_srst(!dma_aresetn), .vpd_if
+        .cfg_ext_if, .vpd_cfg_srst(!dma_aresetn), .vpd_srst(!dma_aresetn), .vpd_if
     );
     xilinx_pci_vpd #(.CARD_INFO_EN(0)) i_vpd (
         .vpd_if, .srst(!dma_aresetn),
