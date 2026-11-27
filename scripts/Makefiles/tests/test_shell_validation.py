@@ -168,17 +168,95 @@ exit "$VALIDATION_EXIT"
                 self.assertIn("Final routed timing: unavailable (build did not succeed)", result.stdout)
                 self.assertNotIn("Validation reports:", result.stdout)
 
-    def test_packaging_and_downstream_jobs_are_not_gated_by_validation(self):
+    def test_board_hardware_apis_run_automatically_without_validation_dependencies(self):
+        packages = [name for name, value in self.ci.items() if not name.startswith(".")
+                    and isinstance(value, dict) and value.get("extends") in (".hwapi", ".hwapi_shell")]
+        self.assertTrue(packages)
+        for name in packages:
+            with self.subTest(job=name):
+                job = self.resolve(name)
+                self.assertEqual(job.get("when", "on_success"), "on_success")
+                self.assertNotIn("rules", job)
+                self.assertIs(job.get("allow_failure", False), False)
+                self.assertEqual(job["needs"], ["build_" + name.removeprefix("hwapi_")])
+
+    def test_packaging_requires_successful_products_from_the_matching_build(self):
+        for template, marker in (
+            (".hwapi", "ci-logs/build-{job}.success"),
+            (".hwapi_shell", "examples/esnet_shell/build/au55c/ci-{job}.success"),
+        ):
+            for marker_job in (None, "1233", "1234"):
+                with self.subTest(template=template, marker=marker_job), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    (root / "bin").mkdir()
+                    for command in ("make", "unzip", "tar"):
+                        fake = root / "bin" / command
+                        fake.write_text('#!/bin/sh\necho packaged >> "$PACKAGING_CALLS"\n')
+                        fake.chmod(0o755)
+                    if marker_job is not None:
+                        success = root / marker.format(job=marker_job)
+                        success.parent.mkdir(parents=True)
+                        success.touch()
+                    # Packaging must remain available even when validation failed.
+                    report = root / "examples/esnet_shell/build/au55c/validation/ci-1234.exitcode"
+                    report.parent.mkdir(parents=True, exist_ok=True)
+                    report.write_text("1\n")
+                    result = self.run_ci_script("\n".join(self.resolve(template)["script"]), root,
+                                                SN_HW_APP_NAME="shell", CI_COMMIT_SHORT_SHA="abc123",
+                                                CI_PROJECT_DIR=str(root), PACKAGING_CALLS=str(root / "calls"))
+                    if marker_job == "1234":
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertTrue((root / "calls").exists())
+                    else:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertFalse((root / "calls").exists())
+
+    def test_build_success_marker_requires_all_product_steps(self):
+        for template, fail_step, marker in (
+            (".bitfile", "prune_build", "ci-logs/build-1234.success"),
+            (".shell_image", "p4_driver", "examples/esnet_shell/build/au55c/ci-1234.success"),
+        ):
+            for fail in (False, True):
+                with self.subTest(template=template, fail=fail), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    (root / "bin").mkdir()
+                    fake = root / "bin/make"
+                    fake.write_text("""#!/bin/sh
+mkdir -p examples/esnet_shell/build/au55c
+if [ -n "$FAIL_STEP" ]; then
+    case " $* " in *" $FAIL_STEP "*) exit 17;; esac
+fi
+""")
+                    fake.chmod(0o755)
+                    result = self.run_ci_script("\n".join(self.resolve(template)["script"]), root,
+                                                SN_HW_APP_NAME="shell", CI_JOB_NAME="build_fixture",
+                                                BUILD_ID="42", VIVADO_VERSION="2025.2",
+                                                FAIL_STEP=fail_step if fail else "")
+                    self.assertEqual(result.returncode, 17 if fail else 0, result.stderr)
+                    self.assertEqual((root / marker).exists(), not fail)
+                    metadata = root / ("bitfile.env" if template == ".bitfile" else "shell_image.env")
+                    self.assertIn("SN_HW_BUILD_JOB_NUMBER=1234", metadata.read_text())
+
+    def test_only_bootstrap_trigger_waits_for_validation(self):
         for name, value in self.ci.items():
-            if not isinstance(value, dict) or name == "variables":
+            if name.startswith(".") or not isinstance(value, dict) or name == "variables":
                 continue
             job = self.resolve(name)
+            validation_needs = [need for need in job.get("needs", [])
+                                if (need if isinstance(need, str) else need["job"]).startswith("validate_")]
             if name == "trigger_bootstrap":
-                self.assertEqual([need["job"] for need in job["needs"] if need["job"].startswith("validate_")],
-                                 ["validate_shell_au250", "validate_shell_au55c", "validate_shell_au280"])
+                self.assertEqual(validation_needs, [
+                    {"job": "validate_shell_" + board, "artifacts": False}
+                    for board in ("au250", "au55c", "au280")])
             elif job.get("stage") in ("package", "trigger_downstream"):
-                for need in job.get("needs", []):
-                    self.assertFalse((need if isinstance(need, str) else need["job"]).startswith("validate_"), name)
+                self.assertEqual(validation_needs, [], name)
+        aggregate = self.resolve("hwapi_shell")
+        self.assertNotIn("rules", aggregate)
+        self.assertEqual(aggregate.get("when", "on_success"), "on_success")
+        self.assertEqual(self.resolve("trigger_bootstrap")["needs"], [
+            {"job": "hwapi_shell", "artifacts": True}
+        ] + [{"job": "validate_shell_" + board, "artifacts": False}
+             for board in ("au250", "au55c", "au280")])
         self.assertEqual(self.ci["validate_p4_only_u280"]["extends"], ".validate")
 
     def test_automatic_native_builds_require_successful_prerequisites(self):
@@ -233,12 +311,11 @@ exit "$VALIDATION_EXIT"
                 self.assertEqual(trigger["needs"], [package])
                 self.assertEqual(trigger["variables"]["SN_HW_API_JOB"], package)
 
-    def test_bootstrap_shell_jobs_are_required_on_main_and_manual_elsewhere(self):
-        jobs = ["ons_ip_au250", "build_shell_au250", "hwapi_shell_au250", "fw_shell_au250",
-                "validate_shell_au250", "build_shell_au55c", "build_shell_au280", "build_esnet_shell_av80",
-                "hwapi_shell_au55c", "hwapi_shell_au280", "hwapi_esnet_shell_av80",
+    def test_bootstrap_builds_and_triggers_are_required_on_main_and_manual_elsewhere(self):
+        jobs = ["ons_ip_au250", "build_shell_au250", "fw_shell_au250",
+                "build_shell_au55c", "build_shell_au280", "build_esnet_shell_av80",
                 "fw_shell_au55c", "fw_shell_au280", "fw_shell_av80",
-                "validate_shell_au55c", "validate_shell_au280", "hwapi_shell", "trigger_bootstrap"]
+                "trigger_bootstrap"]
         rules = [
             {"if": '$CI_COMMIT_BRANCH == "main"', "when": "on_success", "allow_failure": False},
             {"when": "manual", "allow_failure": True},
@@ -253,6 +330,8 @@ exit "$VALIDATION_EXIT"
         for board in ("au250", "au55c", "au280"):
             job = self.resolve("validate_shell_" + board)
             self.assertEqual(job["needs"], ["build_shell_" + board])
+            self.assertEqual(job["rules"], [{"when": "on_success"}])
+            self.assertIs(job.get("allow_failure", False), False)
             self.assertEqual(job["variables"]["VALIDATE_WNS_MIN"], "0")
             self.assertEqual(job["variables"]["VALIDATE_TNS_MIN"], "0")
             self.assertEqual(job["script"], self.resolve(".validate")["script"])

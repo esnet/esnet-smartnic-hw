@@ -47,7 +47,8 @@ variables:
   variables:
     RUN_LOGGED_CONSOLE_FILTER: &vivado_console_filter "$CI_PROJECT_DIR/esnet-fpga-library/scripts/vivado/console_filters/vivado-progress.json"
 
-# Bootstrap shell jobs are required on main and optional manual jobs elsewhere.
+# Bootstrap builds and triggers are required on main and optional manual jobs elsewhere.
+# Board hardware APIs and bootstrap US+ validation follow their builds automatically.
 .bootstrap_shell_policy:
   rules: &bootstrap_shell_rules
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -319,6 +320,7 @@ smartnic_ip_au250:
       EXAMPLES_DIR=$EXAMPLES_DIR
       SN_HW_APP_NAME=$SN_HW_APP_NAME
       SN_HW_BOARD=$SN_HW_BOARD
+      SN_HW_BUILD_JOB_NUMBER=$CI_JOB_ID
       _EOF
     - cat bitfile.env
     - |
@@ -332,6 +334,7 @@ smartnic_ip_au250:
           make -s -C $EXAMPLES_DIR/$SN_HW_APP_NAME build  BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
           make -s prune_build BOARD=$SN_HW_BOARD BUILD_NAME=open-nic-ci
           '
+    - touch "ci-logs/build-$CI_JOB_ID.success"
   artifacts:
     name: "artifacts.$CI_PROJECT_NAME.$CI_JOB_NAME.$CI_PIPELINE_ID"
     paths:
@@ -370,7 +373,8 @@ smartnic_ip_au250:
   variables:
     VALIDATE_WNS_MIN: "0"
     VALIDATE_TNS_MIN: "0"
-  rules: *bootstrap_shell_rules
+  rules:
+    - when: on_success
   artifacts:
     when: always
     paths:
@@ -384,6 +388,8 @@ smartnic_ip_au250:
     - ht-misc
   before_script: []
   script:
+    # Optional manual build failures can satisfy needs; require successful output.
+    - test -f "ci-logs/build-${SN_HW_BUILD_JOB_NUMBER:?missing build job ID}.success"
     - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
     - unzip $EXAMPLES_DIR/$SN_HW_APP_NAME/artifacts/open-nic-ci/artifacts.$SN_HW_BOARD.open-nic-ci.0.zip
     - |
@@ -741,7 +747,6 @@ validate_shell_au250:
 
 hwapi_shell_au250:
   extends: .hwapi
-  rules: *bootstrap_shell_rules
   needs:
     - build_shell_au250
 
@@ -774,7 +779,6 @@ validate_shell_au55c:
 
 hwapi_shell_au55c:
   extends: .hwapi
-  rules: *bootstrap_shell_rules
   needs:
     - build_shell_au55c
 
@@ -807,7 +811,6 @@ validate_shell_au280:
 
 hwapi_shell_au280:
   extends: .hwapi
-  rules: *bootstrap_shell_rules
   needs:
     - build_shell_au280
 
@@ -947,6 +950,7 @@ shell_ip_av80:
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR image BOARD=$SN_HW_BOARD
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR reg_package BOARD=$SN_HW_BOARD
     - make -s -C $EXAMPLES_DIR/$SN_HW_APP_DIR p4_driver BOARD=$SN_HW_BOARD
+    - touch "$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/ci-$CI_JOB_ID.success"
   after_script:
     - |
       validation_dir="$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/validation"
@@ -1051,6 +1055,8 @@ shell_ip_av80:
     - ht-misc
   before_script: []
   script:
+    # The build marker is independent of the after_script validation result.
+    - test -f "$EXAMPLES_DIR/$SN_HW_APP_DIR/build/$SN_HW_BOARD/ci-${SN_HW_BUILD_JOB_NUMBER:?missing build job ID}.success"
     - echo "$EXAMPLES_DIR $SN_HW_APP_NAME $SN_HW_BOARD"
     - |
       cat <<_EOF >> hwapi.env
@@ -1194,7 +1200,6 @@ validate_esnet_shell_av80:
 
 hwapi_esnet_shell_av80:
   extends: .hwapi_shell
-  rules: *bootstrap_shell_rules
   needs:
     - build_esnet_shell_av80
 
@@ -1300,7 +1305,6 @@ fw_udplb_fec_av80:
 
 hwapi_shell:
   extends: .hwapi_gather
-  rules: *bootstrap_shell_rules
   variables:
     SN_HW_APP_NAME: shell
   needs:
