@@ -23,11 +23,15 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
+    xilinx.alveo.pkg \
+    xilinx.alveo.regio.rtl \
     sync.rtl@common \
     axi4l.rtl@common \
     axi4s.rtl@common \
     packet.rtl@common \
+    pci.vpd.rtl@common \
     xilinx.jtag.rtl \
+    xilinx.pci.rtl \
     xilinx.qdma.pkg \
     xilinx.qdma.regio.rtl \
     shell.pkg \

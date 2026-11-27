@@ -8,6 +8,8 @@ module esnet_smartnic
     import shell_pkg::*;
     import xilinx_qdma_pkg::*;
 
+    `include "shell_build_info.svh"
+
     // Signals from AVED BD wrapper and adapter
     `include "xilinx_aved_app.svh"
 
@@ -21,6 +23,7 @@ module esnet_smartnic
     axi4l_intf axil_debug_if ();
 
     shell_intf shell_if ();
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(m_axi_pcie0_aclk));
 
     // DMA interfaces between adapter and shell, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens inside xilinx_alveo_shell.
@@ -65,7 +68,13 @@ module esnet_smartnic
 
     // Versal Alveo shell — PCIe reset control and shell-core boundary
     xilinx_alveo_versal_shell #(
-        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
+        .BUILD_TIMESTAMP     ( BUILD_TIMESTAMP == 0 ? VPD_BUILD_TIMESTAMP : BUILD_TIMESTAMP ),
+        .PRODUCT_ID          ( VPD_PRODUCT_ID ),
+        .APPLICATION_ID      ( VPD_APPLICATION_ID ),
+        .BUILD_ID            ( VPD_BUILD_ID ),
+        .BUILD_GIT_REPO      ( VPD_BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH      ( VPD_BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR ( VPD_BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_versal_shell (
         .sys_clk_100mhz   ( sys_clk_100mhz ),
         .pci_rstn_in      ( pci_rstn_in ),
@@ -77,6 +86,7 @@ module esnet_smartnic
         .gt_txp_out       ( {qsfp3_4x_gtx_p, qsfp2_4x_gtx_p} ),
         .gt_txn_out       ( {qsfp3_4x_gtx_n, qsfp2_4x_gtx_n} ),
         .axil_top         ( axil_debug_if ),
+        .cfg_ext_if,
         .dma_aclk         ( m_axi_pcie0_aclk ),
         .dma_aresetn      ( m_axi_pcie0_aresetn ),
         .pkt_h2c_dma      ( pkt_h2c_dma ),

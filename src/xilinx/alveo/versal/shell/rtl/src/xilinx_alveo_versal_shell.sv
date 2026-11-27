@@ -16,7 +16,13 @@ module xilinx_alveo_versal_shell
     import shell_pkg::*;
     import xilinx_qdma_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
+    parameter bit [31:0] BUILD_TIMESTAMP     = 32'h0,
+    parameter            PRODUCT_ID          = "ESnet SmartNIC",
+    parameter            APPLICATION_ID      = "(empty)",
+    parameter bit [31:0] BUILD_ID            = 0,
+    parameter            BUILD_GIT_REPO      = "(empty)",
+    parameter            BUILD_GIT_HASH      = "(empty)",
+    parameter            BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // -------------------------------------------------------------------------
     // From/to Versal hardware layer
@@ -27,7 +33,7 @@ module xilinx_alveo_versal_shell
     input  wire logic       sys_clk_100mhz,
 
     // PCIe reset (JTAG VIO overrride interface)
-    input  wire logic       pci_rstn_in, // Incoming hardware PCI reset (e.g. PERST#)
+    input  wire logic       pci_rstn_in, // Incoming PCIe endpoint reset
     output wire logic       pci_rstn,    // Outgoing PCI reset (includes JTAG override)
 
     input  wire logic       gt_ref_clk0_n,
@@ -40,6 +46,7 @@ module xilinx_alveo_versal_shell
 
     // Management AXI4-Lite
     axi4l_intf.peripheral   axil_top,    // AXI-L interface from PCIe core
+    xilinx_pci_cfg_ext_intf.peripheral cfg_ext_if,
 
     // DMA streams to/from xilinx_aved_adapter, in the PCIE0 (QDMA) clock
     // domain.  The crossing to core_clk happens in xilinx_alveo_shell.
@@ -53,6 +60,18 @@ module xilinx_alveo_versal_shell
     // -------------------------------------------------------------------------
     shell_intf.shell        shell_if
 );
+
+    // =========================================================================
+    // Static VPD initialization in the free-running system clock domain
+    // =========================================================================
+    pci_vpd_card_info_intf card_info_if (.clk(sys_clk_100mhz));
+
+    assign card_info_if.srst = 1'b0;
+    assign card_info_if.vld = 1'b0;
+    assign card_info_if.error = 1'b0;
+    assign card_info_if.len = '0;
+    assign card_info_if.rd_data = '0;
+    assign card_info_if.rd_vld = 1'b0;
 
     // =========================================================================
     // Interfaces for the hw/core AXI-L decoder outputs
@@ -115,14 +134,37 @@ module xilinx_alveo_versal_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    logic pci_rstn__100mhz;
+
+    // Configuration access and JTAG observe the same endpoint reset release.
+    sync_areset #(
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__pci (
+        .rst_in  ( pci_rstn_in ),
+        .clk_out ( sys_clk_100mhz ),
+        .rst_out ( pci_rstn__100mhz )
+    );
+
     // DMA streaming registers, decoded from the hw sub-space below.
     axi4l_intf #() axil_qdma_st ();
 
     xilinx_alveo_shell #(
-        .QID_WID ( QID_WID )
+        .QID_WID              ( QID_WID ),
+        .NUM_PHYS_FUNC        ( xilinx_alveo_versal_pkg::NUM_PHYS_FUNC ),
+        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_pkg::VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( xilinx_alveo_versal_pkg::CARD_INFO_EN ),
+        .PRODUCT_ID           ( PRODUCT_ID ),
+        .APPLICATION_ID       ( APPLICATION_ID ),
+        .BUILD_ID             ( BUILD_ID ),
+        .BUILD_GIT_REPO       ( BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz  ( sys_clk_100mhz ),
-        .pci_rstn_in     ( pci_rstn_in ),
+        .card_info_if,
+        .cfg_ext_if,
+        .pci_rstn_in     ( pci_rstn__100mhz ),
+        .cfg_srst        ( !pci_rstn__100mhz ),
         .pci_rstn_out    ( pci_rstn ),
         .core_clk,
         .core_srst,

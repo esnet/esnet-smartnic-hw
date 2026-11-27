@@ -23,7 +23,7 @@ SRC_DIR = $(BOARD)/src
 # -----------------------------------------------
 # Build config
 # -----------------------------------------------
-BUILD_TIMESTAMP = $(shell date +"%s")
+BUILD_TIMESTAMP ?= $(shell date +"%s")
 BUILD_ID ?= $(BUILD_TIMESTAMP)
 
 DEFINES = BOARD=$(BOARD) __$(BOARD)__
@@ -37,7 +37,7 @@ DEFINES = BOARD=$(BOARD) __$(BOARD)__
 #   .include is added as an include directory automatically.
 # ----------------------------------------------------
 SRC_FILES =
-INC_DIRS = ../../rtl/include
+INC_DIRS = ../../rtl/include $(COMPONENT_OUT_PATH)/include
 SRC_LIST_FILES =
 
 # ----------------------------------------------------
@@ -60,7 +60,14 @@ SUBCOMPONENTS = \
 OOC = 0
 CONSTRAINTS_XDC_SYNTH = $(abspath $(BOARD)/timing.xdc)
 BUILD_STAGES = synth
-STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl $(CONSTRAINTS_XDC_SYNTH)
+VPD_BUILD_INFO := $(COMPONENT_OUT_PATH)/include/shell_build_info.svh
+VPD_BUILD_INFO_SCRIPT := $(SMARTNIC_ROOT)/scripts/generate_shell_build_info.py
+export SHELL_VPD_BUILD_ID = $(BUILD_ID)
+export SHELL_VPD_BUILD_TIMESTAMP ?= $(if $(filter command line environment,$(origin BUILD_TIMESTAMP)),$(BUILD_TIMESTAMP),)
+export SHELL_VPD_APPLICATION_ID ?= $(or $(SN_HW_APP_NAME),shell)
+export SHELL_VPD_BUILD_GIT_REPO ?= $(CI_PROJECT_NAME)
+export SHELL_VPD_BUILD_GIT_HASH ?= $(CI_COMMIT_SHORT_SHA)
+STAGE_DEPS = $(COMPONENT_OUT_PATH)/synth/sources.tcl $(CONSTRAINTS_XDC_SYNTH) $(VPD_BUILD_INFO)
 
 all: synth
 
@@ -76,3 +83,10 @@ clean: _build_clean
 # Include Vivado definitions/targets
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
+
+# Declare the generated header explicitly: wildcard discovery runs before it
+# exists on a clean build. Keep metadata stable when build identity is unchanged.
+SV_HDR_FILES := $(sort $(SV_HDR_FILES) $(VPD_BUILD_INFO))
+$(SYNTH_SOURCES_OBJ): $(VPD_BUILD_INFO)
+$(VPD_BUILD_INFO): FORCE
+	@python3 $(VPD_BUILD_INFO_SCRIPT) --output $@ --repo $(SMARTNIC_ROOT)

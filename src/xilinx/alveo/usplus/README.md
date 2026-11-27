@@ -1,5 +1,15 @@
 # UltraScale+ Alveo management
 
+The PCIe endpoint provides two PFs and four VFs per PF, with SR-IOV,
+mailbox, function-level reset and ACS enabled. Each PF has a 256 KiB DMA
+BAR0 and an 8 MiB user BAR2; each VF has a 32 KiB DMA BAR0 and an 8 MiB
+user BAR2. These BARs are 64-bit and non-prefetchable. Each function has
+eight MSI-X vectors, and the DMA engine implements 512 queue sets shared
+across functions. The wrapper acknowledges FLR notifications after four
+DMA clocks and clears pending completions on DMA reset. Legacy configuration
+access exposes a read-only VPD capability at configuration-space offset
+`0xb0` on both PFs.
+
 SYSMON uses the free-running 100 MHz board clock and its own library
 AXI-Lite CDC from the 125 MHz register bus, including reset synchronization.
 Its divide-by-20 setting produces a 5 MHz ADC clock. The register window
@@ -14,25 +24,84 @@ the target FPGA device: U55C, U280, or U200/U250.
 
 The common US+ module shares a free-running 50 MHz clock between CMS and
 QSPI. Each peripheral has its own library AXI-Lite CDC from the shell's
-125 MHz register bus, including reset synchronization. The CMS interface
-presented to the board module is already in the 50 MHz domain. Host
+125 MHz register bus. The CMS interface presented to the board module is
+already in the 50 MHz domain. CMS fetching and VPD construction use a startup
+reset independent of PCIe. Once fetching finishes, host reset also resets
+the CMS interface, while cached identity and VPD remain available. Host
 software uses polling; the CMS watchdog interrupt is not routed to PCIe.
 
-The CMS window starts at BAR2 + `0x240000` and spans 256 KiB. The MicroBlaze
-is held in reset until software starts it. A minimal startup sequence is:
+The CMS window starts at BAR2 + `0x240000` and spans 256 KiB. Initialization
+starts the MicroBlaze, fetches card information, then holds the MicroBlaze
+in reset and releases register access to the host. Software can restart it:
+
 
 1. Write `1` to `MB_RESETN_REG`, CMS offset `0x20000` (BAR2 + `0x260000`).
 2. Wait for `REG_MAP_ID_REG`, CMS offset `0x28000`, to become `0x74736574`.
 3. Wait for bit 0 of `HOST_STATUS2_REG`, CMS offset `0x2830c`, to become `1`.
 
 See [PG348: Register Space](https://docs.amd.com/r/en-US/pg348-cms-subsystem/Register-Space)
-for the firmware register map. Automatic card-information fetching and PCIe
-VPD are separate functions; neither is instantiated in this path.
+for the firmware register map.
+
+## VPD and initialization status
+
+`xilinx_alveo_usplus_card_info` combines static card attributes with the
+dynamic CMS card-info cache and supplies the common `xilinx_alveo_vpd`
+service. Static attributes include flash/CMS BAR2 offsets `0x220000` and
+`0x240000`, encoded as null-terminated `VF`/`VC` records. Dynamic attributes
+include the card name, serial number and controller version. The provider
+retains the full 255-byte CMS cache; its combined stream uses nine-bit
+lengths and addresses.
+
+Product/application identity, build ID, Git repository/hash and build time
+are supplied separately to the common VPD service as static metadata.
+`pci_vpd_card_info_intf` carries the combined cache and provider reset in
+the 50 MHz management domain. The common shell transfers cache status and
+byte reads into its free-running 100 MHz VPD domain. Frequency, function
+count and provider enablement remain explicit module parameters supplied
+from the Alveo packages.
+
+Initialization completes while PCIe reset is asserted. PCIe reset clears
+pending configuration accesses without restarting card acquisition or
+rebuilding VPD. The JTAG `ready` probe indicates completion or error.
+On provider failure or expiry of the VPD watchdog, static VPD remains
+readable without card-specific records, including flash/CMS offsets.
+
+The CMS fetcher owns a 5.5-second acquisition deadline covering all states,
+including stalled AXI channels. On expiry it resets the partial transaction
+and downstream CMS interface, then releases CMS for host access. VPD does
+not cancel acquisition.
+
+[Common VPD registers](../README.md#registers) are at BAR2 + `0x1000`.
+US+ system configuration exposes `card_info_status` at BAR2 + `0x20002c`:
+provider valid, raw eight-bit CMS cache length, and card-length, AXI,
+boot-timeout and acquisition-timeout errors. This status crosses into the
+register domain as a coherent sampled bus.
+
+Shell synthesis generates `shell_build_info.svh` from the build ID,
+application name and Git identity. Identical build identity preserves the
+header's timestamp and modification time. `BUILD_TIMESTAMP` can explicitly
+select the timestamp; `SHELL_VPD_PRODUCT_ID`, `SHELL_VPD_APPLICATION_ID`,
+`SHELL_VPD_BUILD_GIT_REPO` and `SHELL_VPD_BUILD_GIT_HASH` override identity
+fields. Configured example builds supply their firmware-facing application
+name automatically.
+
+Run the management integration test with:
+
+```sh
+make -C src/xilinx/alveo/usplus/tests/xilinx_alveo_usplus_vpd
+```
+
+The provider test checks static offset formatting, the complete dynamic
+cache, accesses crossing byte 255 and reset behavior:
+
+```sh
+make -C src/xilinx/alveo/usplus/tests/xilinx_alveo_usplus_card_info
+```
 
 U55C and U280 expose the CMS HBM-monitor inputs. These inputs are tied to
 zero until HBM controllers supply temperature and trip information; leave
 HBM temperature monitoring disabled in software. The external HBM_CATTRIP
-output retains its existing drive-low connection.
+output is driven low.
 
 On U250, CMS owns the two QSFP management interfaces. Its native reset
 defaults release module reset, disable low-power mode, and assert both
@@ -86,16 +155,21 @@ families within one ILA instance. The generated `ila.xdc` and
 `ila_impl.xdc` explicitly except these transfers; the paths remain reported
 by `report_cdc` despite their active timing exceptions.
 
-A CDC-10 waiver covers the internal trigger-match calibration transfer from
-`u_trig/N_DDR_TC.N_DDR_TC_INST*.U_TC/.../DUT/u_srl_drive/CLK` to
-`I_WHOLE_SLICE.G_SLICE_IDX*.U_ALL_SRL_SLICE/I_IS_TERMINATION_SLICE_W_OUTPUT_REG.DOUT_O_reg/D`
-under the same trigger-match circuitry. This variant was observed in the
-routed U280 125 MHz ILA and has an active false-path exception. Vendor
-`ila.xdc` contains a commented CDC-10 waiver matching this hierarchy variant;
-the reason it is disabled is unknown, so its presence is supporting context,
-not vendor approval. The additional waiver records acceptance of this
-vendor-managed calibration path and is limited to CDC-10 and these internal
-endpoint families. Probe inputs and other synchronizers remain checked.
+[The match-logic CDC-10 waiver](ip/ltlib_v1_0_3_all_typeA.waivers.xdc) is
+registered separately for the vendor `ltlib_v1_0_3_all_typeA` reference.
+Vivado scopes it to each individual component instance, including parameterized
+and uniquified references. It covers the internal configuration transfer from
+`u_srl_drive/CLK` to
+`I_WHOLE_SLICE.G_SLICE_IDX*.U_ALL_SRL_SLICE/I_IS_TERMINATION_SLICE_W_OUTPUT_REG.DOUT_O_reg/D`.
+Source and destination stay inside the same component, independently of its
+generated match-unit index or position in the ILA hierarchy.
+
+Vendor `ila.xdc` actively false-paths this configuration transfer. Its commented
+CDC-10 waiver covers a nested calibration variant; its disabled status is not
+treated as vendor approval. The additional waiver records acceptance of the
+vendor-managed configuration path and is limited to CDC-10 and these internal
+endpoints. Probe inputs, other endpoint families and crossings between
+component instances remain checked.
 
 These waivers load only when collecting validation reports. They add no
 timing exceptions and do not change the saved checkpoint. Review the

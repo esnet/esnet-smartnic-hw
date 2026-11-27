@@ -143,16 +143,27 @@ module xilinx_aved_adapter (
     output wire [12:0]  dma0_usr_flr_0_done_fnc,
     output wire         dma0_usr_flr_0_done_vld,
 
+    // PCIE0 configuration extension
+    input  wire        pcie0_cfg_ext_read_received,
+    input  wire        pcie0_cfg_ext_write_received,
+    input  wire [9:0]  pcie0_cfg_ext_register_number,
+    input  wire [15:0] pcie0_cfg_ext_function_number,
+    input  wire [31:0] pcie0_cfg_ext_write_data,
+    input  wire [3:0]  pcie0_cfg_ext_write_byte_enable,
+    output wire [31:0] pcie0_cfg_ext_read_data,
+    output wire        pcie0_cfg_ext_read_data_valid,
+
     // -------------------------------------------------------------------------
     // Shell-facing outputs
     // -------------------------------------------------------------------------
     output wire        sys_clk_100mhz, // system/debug clock → shell
 
-    output wire        pci_rstn_in,    // (raw) PCI reset (PERST#) → shell
+    output wire        pci_rstn_in,    // PCIe endpoint reset → shell
     input  wire        pci_rstn,       // Adapted PCI reset (includes JTAG override) reset ← shell (not yet wired to CPM5)
 
     // AXI4-L controller — driven from PCIE0 BAR2 (aclk = clk_pl0_100mhz)
     axi4l_intf.controller axil_if,
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
 
     // DMA streams — both in the PCIE0 (QDMA) clock domain.  Buffering, the
     // crossing to the core clock domain, loopback and the DMA registers all
@@ -335,6 +346,21 @@ module xilinx_aved_adapter (
     assign dma0_usr_flr_0_clear    = dma0_usr_flr_0_set;
     assign dma0_usr_flr_0_done_fnc = dma0_usr_flr_0_fnc;
     assign dma0_usr_flr_0_done_vld = dma0_usr_flr_0_set;
+
+    // =========================================================================
+    // PCIe configuration extension
+    // =========================================================================
+    assign cfg_ext_if.req = pcie0_cfg_ext_read_received || pcie0_cfg_ext_write_received;
+    assign cfg_ext_if.wr_rd_n = pcie0_cfg_ext_write_received;
+    assign cfg_ext_if.register = pcie0_cfg_ext_register_number;
+    // The VPD service supports PF0/PF1. Preserve unsupported function requests
+    // as an invalid function so that wider CPM5 function numbers cannot alias.
+    assign cfg_ext_if.func = |pcie0_cfg_ext_function_number[15:8]
+                                     ? 8'hff : pcie0_cfg_ext_function_number[7:0];
+    assign cfg_ext_if.wr_data = pcie0_cfg_ext_write_data;
+    assign cfg_ext_if.wr_byte_en = pcie0_cfg_ext_write_byte_enable;
+    assign pcie0_cfg_ext_read_data = cfg_ext_if.rd_data;
+    assign pcie0_cfg_ext_read_data_valid = cfg_ext_if.rd_vld;
 
     // Signal naming adaptation — AVED-specific names → functional shell names
     assign sys_clk_100mhz = clk_pl0_100mhz;

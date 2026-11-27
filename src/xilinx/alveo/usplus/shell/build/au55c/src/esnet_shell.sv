@@ -5,6 +5,8 @@ module esnet_shell
 ) (
     `include "xilinx_alveo_usplus_au55c_io.svh"
 );
+    `include "shell_build_info.svh"
+
     xilinx_alveo_usplus_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
 
     shell_intf shell_if ();
@@ -12,7 +14,10 @@ module esnet_shell
     xilinx_alveo_usplus_au55c i_xilinx_alveo_usplus_au55c (.*);
 
     xilinx_alveo_usplus_shell #(
-        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
+        .BUILD_TIMESTAMP ( BUILD_TIMESTAMP == 0 ? VPD_BUILD_TIMESTAMP : BUILD_TIMESTAMP ),
+        .PRODUCT_ID(VPD_PRODUCT_ID), .APPLICATION_ID(VPD_APPLICATION_ID),
+        .BUILD_ID(VPD_BUILD_ID), .BUILD_GIT_REPO(VPD_BUILD_GIT_REPO),
+        .BUILD_GIT_HASH(VPD_BUILD_GIT_HASH), .BUILD_TIMESTAMP_STR(VPD_BUILD_TIMESTAMP_STR)
     ) i_xilinx_alveo_usplus_shell (
         .alveo_hw_if,
         .shell_if

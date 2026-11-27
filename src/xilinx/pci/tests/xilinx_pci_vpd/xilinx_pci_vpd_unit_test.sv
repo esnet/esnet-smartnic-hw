@@ -39,9 +39,17 @@ module xilinx_pci_vpd_unit_test;
     logic             init_done_mask;
 
     logic             card_info_vld;
+`ifdef ONS_VPD
     logic [7:0]       card_info_len;
+`else
+    logic [8:0]       card_info_len;
+`endif
     logic             card_info_rd;
+`ifdef ONS_VPD
     logic [7:0]       card_info_rd_addr;
+`else
+    logic [8:0]       card_info_rd_addr;
+`endif
     logic [7:0]       card_info_rd_data;
     logic             card_info_rd_vld;
 
@@ -55,20 +63,72 @@ module xilinx_pci_vpd_unit_test;
     logic             error_boot_timeout;
     logic             error_bad_axil_transaction;
     logic             error_card_info_length;
+    logic             injected_card_info_error;
 
-    xilinx_cms_cardinfo_fetch_fsm DUT0(.*);
-    system_config_vpd       #(
+    pci_vpd_intf vpd_if (.clk(cms_clk));
+
+`ifdef ONS_VPD
+    xilinx_cms_cardinfo_fetch_fsm DUT0(.abort(1'b0), .*);
+`else
+    logic cms_card_info_vld;
+    logic [7:0] cms_card_info_len;
+    logic cms_card_info_rd;
+    logic [7:0] cms_card_info_rd_addr;
+    logic [7:0] cms_card_info_rd_data;
+    logic cms_card_info_rd_vld;
+    xilinx_cms_cardinfo_fetch_fsm DUT0 (
+        .error_fetch_timeout(),
+        .card_info_vld(cms_card_info_vld),
+        .card_info_len(cms_card_info_len),
+        .card_info_rd(cms_card_info_rd),
+        .card_info_rd_addr(cms_card_info_rd_addr),
+        .card_info_rd_data(cms_card_info_rd_data),
+        .card_info_rd_vld(cms_card_info_rd_vld),
+        .*
+    );
+    xilinx_alveo_usplus_card_info #(
+        .FLASH_REG_OFFSET(FLASH_REG_OFFSET),
+        .CMS_REG_OFFSET(CMS_REG_OFFSET)
+    ) i_card_info (
+        .clk(cms_clk),
+        .srst(cms_srst),
+        .source_vld(cms_card_info_vld),
+        .source_len(cms_card_info_len),
+        .source_rd(cms_card_info_rd),
+        .source_rd_addr(cms_card_info_rd_addr),
+        .source_rd_data(cms_card_info_rd_data),
+        .source_rd_vld(cms_card_info_rd_vld),
+        .*
+    );
+`endif
+`ifdef ONS_VPD
+    system_config_vpd
+`else
+    xilinx_pci_vpd
+`endif
+    #(
+`ifndef ONS_VPD
+        .CLK_FREQ_HZ(50_000),
+`endif
         .PRODUCT_ID          (PRODUCT_ID),
         .APPLICATION_ID      (APPLICATION_ID),
         .BUILD_ID            (BUILD_ID),
         .BUILD_GIT_REPO      (BUILD_GIT_REPO),
         .BUILD_GIT_HASH      (BUILD_GIT_HASH),
-        .BUILD_TIMESTAMP_STR (BUILD_TIMESTAMP_STR),
-        .FLASH_REG_OFFSET    (FLASH_REG_OFFSET),
-        .CMS_REG_OFFSET      (CMS_REG_OFFSET)
+`ifdef ONS_VPD
+        .FLASH_REG_OFFSET (FLASH_REG_OFFSET),
+        .CMS_REG_OFFSET   (CMS_REG_OFFSET),
+`endif
+        .BUILD_TIMESTAMP_STR (BUILD_TIMESTAMP_STR)
     ) DUT1 (
-        .clk ( cms_clk ),
-        .srst (cms_srst),
+`ifdef ONS_VPD
+        .clk(cms_clk),
+`else
+        .vpd_if,
+        .init_timeout(),
+        .card_info_error(error_boot_timeout || error_bad_axil_transaction || error_card_info_length || injected_card_info_error),
+`endif
+        .srst(cms_srst),
         .*
     );
 
@@ -86,14 +146,16 @@ module xilinx_pci_vpd_unit_test;
     );
 
     std_reset_intf reset_if (.clk(cms_clk));
-    pci_vpd_intf vpd_if (.clk(cms_clk));
 
+`ifdef ONS_VPD
     assign vpd_req = vpd_if.req;
     assign vpd_wr_rd_n = vpd_if.wr_rd_n;
     assign vpd_addr = vpd_if.addr;
     assign vpd_wr_data = vpd_if.wr_data;
     assign vpd_if.rd_vld = vpd_rd_vld;
     assign vpd_if.rd_data = vpd_rd_data;
+
+`endif
 
     // Connect reset interface
     assign axil_from_controller.aclk = cms_clk;
@@ -105,11 +167,6 @@ module xilinx_pci_vpd_unit_test;
     axi4l_reg_agent #() axil_reg_agent;
 
     pci_vpd_intf_agent vpd_agent;
-
-    clocking cb @(posedge cms_clk);
-        output vpd_req, vpd_wr_rd_n, vpd_addr, vpd_wr_data;
-        input  vpd_rd_vld, vpd_rd_data;
-    endclocking
 
     // Assign AXI-L clock (50MHz)
     `SVUNIT_CLK_GEN(cms_clk, 10ns);
@@ -142,10 +199,10 @@ module xilinx_pci_vpd_unit_test;
     task setup();
         svunit_ut.setup();
         /* Place Setup Code Here */
+        injected_card_info_error = 1'b0;
+        init_done_mask = 1'b0;
         vpd_agent.idle();
         reset();
-
-        init_done_mask = 1'b0;
     endtask
 
 
@@ -241,6 +298,18 @@ module xilinx_pci_vpd_unit_test;
             sn = vpd_r_get_record_value(vpd_r, "SN");
             `FAIL_UNLESS_EQUAL(sn.size(), 0);
         `SVTEST_END
+
+`ifndef ONS_VPD
+        `SVTEST(completed_image_ignores_late_provider_error)
+            wait(init_done || init_error);
+            `FAIL_UNLESS(init_done);
+            injected_card_info_error = 1;
+            vpd_agent.read();
+            `FAIL_UNLESS(vpd_agent.is_valid());
+            `FAIL_UNLESS(init_done);
+            `FAIL_IF(init_error);
+        `SVTEST_END
+`endif
 
         `SVTEST(sn_check)
             localparam byte EXP_SN [13] = "50121119CSPM\0";

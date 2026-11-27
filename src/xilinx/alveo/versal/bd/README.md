@@ -3,6 +3,30 @@
 `xilinx_aved.tcl` imports and configures the AVED block design for the native
 Versal shell, including the CPM5 PCIe application endpoint.
 
+## Application PCIe endpoint
+
+PCIE0 provides two PFs with four VFs each. SR-IOV, mailbox, FLR and ACS are
+enabled, with eight MSI-X vectors per PF and VF. PF DMA BAR0 is 512 KiB;
+VF DMA BAR0 is 32 KiB. CPM5 places the PF MSI-X table at BAR0 + `0x50000`,
+inside its larger PF aperture. PF and VF user BAR2 windows are 8 MiB, translated
+to NoC address `0x0000020300000000`. Both BARs are 64-bit and
+non-prefetchable. CPM5 retains its 4096 queue sets; the application-facing
+shell interface uses the common 512-queue contract.
+
+VF BARs must use the `BAR<n>_SRIOV_QDMA_*` settings. In QDMA mode, CIPS
+derives the generic `SRIOV_BAR<n>_*` settings from those values, overwriting
+direct assignments to the generic fields. The BD script checks every
+requested application PCIe setting against `CPM_CONFIG_INTERNAL` after
+validation and fails if a setting is missing or changed. PF0 QDMA BAR
+attributes are copied to PF1, while each PF's VF count is set explicitly.
+
+The original AVED management endpoint remains on PCIE1 with its own BAR
+layout. Its configuration is retained when overlaying the PCIE0 settings.
+The PCIE0 legacy configuration extension exports the `0xb0`–`0xbf` window
+for the VPD capability on PF0 and PF1. The AVED adapter converts the CPM5
+16-bit function number to the shared configuration interface, rejecting
+unsupported function numbers without aliasing the supported PFs.
+
 ## CPM5 dedicated GT coverage waiver
 
 The V80 [validation policy](../../../../../cfg/validation/av80.json) accepts

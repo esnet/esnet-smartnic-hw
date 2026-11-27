@@ -64,7 +64,10 @@ class ShellTargetsTest(unittest.TestCase):
                     self.assertIn("_np_xsa", export)
                     self.assertTrue(any(p.endswith("_app.pdi") for p in export))
                 else:
-                    self.assertEqual(prerequisites(".shell_build_image"), ["_np_bitstream"])
+                    self.assertEqual(prerequisites(".shell_build_image"), ["_np_flash"])
+                    self.assertRegex(database, r"(?m)^CFGMEM_SIZE := 128$")
+                    self.assertRegex(database, r"(?m)^CFGMEM_INTERFACE := SPIx4$")
+                    self.assertRegex(database, r"(?m)^CFGMEM_LOAD_ADDRESS := 0x01002000$")
 
     def test_refreshes_generated_targets_without_removing_outputs(self):
         board = "au55c"

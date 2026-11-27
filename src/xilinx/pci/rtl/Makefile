@@ -22,7 +22,11 @@ SRC_LIST_FILES =
 #   List subcomponent and external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
-SUBCOMPONENTS =
+SUBCOMPONENTS = \
+    xilinx.pci.pkg \
+    sync.rtl@$(COMMON_LIB_NAME) \
+    fifo.rtl@$(COMMON_LIB_NAME) \
+    pci.vpd.rtl@$(COMMON_LIB_NAME)
 EXT_LIBS =
 
 # ----------------------------------------------------

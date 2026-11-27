@@ -4,13 +4,14 @@
 active-high VIO reset override. It uses the free-running debug clock and
 the board's generated `xilinx_jtag_reset_vio` IP.
 
-The incoming reset is synchronized before combination because it can
-originate in another fabric clock domain. A second reset synchronizer
-registers release of the combined reset. Both use the common `sync_areset`
-component, preserving asynchronous assertion even when the debug clock is
-stopped. With three stages per synchronizer, hardware reset release takes
-six debug-clock edges; releasing only the VIO override takes three once
-hardware reset synchronization has completed.
+The caller supplies an incoming reset with asynchronous assertion and release
+synchronized to `debug_clk`. Normalize it once with `sync_areset` at the clock
+domain boundary and share that result with other consumers that require the
+same release. The controller uses `sync_areset` to register release of the
+combined reset, preserving asynchronous assertion when the debug clock is
+stopped. With three stages per synchronizer, a caller-side normalizer followed
+by the controller takes six debug-clock edges to release hardware reset;
+releasing only the VIO override takes three once the input has released.
 
 The three VIO status inputs report hardware reset, outgoing reset and
 readiness. Hardware reset status is sampled after input normalization,

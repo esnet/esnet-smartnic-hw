@@ -47,3 +47,19 @@ regs:
   - name: dna
     access: ro
     count: 3
+
+  - name: card_info_status
+    access: ro
+    fields:
+      - name: valid
+        width: 1
+      - name: length
+        width: 8
+      - name: error_card_info_length
+        width: 1
+      - name: error_bad_axil_transaction
+        width: 1
+      - name: error_boot_timeout
+        width: 1
+      - name: error_fetch_timeout
+        width: 1

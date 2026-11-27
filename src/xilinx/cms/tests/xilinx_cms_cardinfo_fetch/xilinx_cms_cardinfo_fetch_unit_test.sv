@@ -29,11 +29,12 @@ module xilinx_cms_cardinfo_fetch_unit_test;
     logic [7:0]       card_info_rd_data;
     logic             card_info_rd_vld;
 
+    logic             error_fetch_timeout;
     logic             error_boot_timeout;
     logic             error_bad_axil_transaction;
     logic             error_card_info_length;
 
-    xilinx_cms_cardinfo_fetch_fsm DUT(.*);
+    xilinx_cms_cardinfo_fetch_fsm #(.FETCH_TIMEOUT_CYCLES(20000)) DUT(.*);
 
     //===================================
     // Testbench
@@ -210,6 +211,29 @@ module xilinx_cms_cardinfo_fetch_unit_test;
             `FAIL_UNLESS_EQUAL(rd_data, 32'h012345678);
         `SVTEST_END
 
+
+        `SVTEST(mailbox_poll_reports_axil_error)
+            wait(axil_to_cms.arvalid && axil_to_cms.araddr == 'h28018);
+            force axil_to_cms.rresp = 2'b10;
+            wait(error_bad_axil_transaction);
+            release axil_to_cms.rresp;
+            `FAIL_IF(card_info_vld);
+        `SVTEST_END
+
+        `SVTEST(watchdog_clears_partial_transaction_and_releases_host)
+            logic [31:0] value;
+            force axil_to_cms.wready = 1'b0;
+            wait(axil_to_cms.awvalid);
+            repeat (4) @(cb);
+            wait(error_fetch_timeout);
+            wait(!axil_to_cms.aresetn);
+            repeat (20) @(cb);
+            release axil_to_cms.wready;
+            axil_reg_agent.write_reg(cms_reg_pkg::OFFSET_MB_RESETN_REG, 1);
+            axil_reg_agent.read_reg(cms_reg_pkg::OFFSET_MB_RESETN_REG, value);
+            `FAIL_UNLESS_EQUAL(value, 1);
+            `FAIL_IF(card_info_vld);
+        `SVTEST_END
 
     `SVUNIT_TESTS_END
 

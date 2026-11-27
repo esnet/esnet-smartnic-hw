@@ -21,6 +21,8 @@ SUBCOMPONENTS = \
     xilinx.alveo.usplus.ip \
     xilinx.alveo.usplus.regio.rtl \
     xilinx.qdma.rtl \
+    xilinx.pci.rtl \
+    xilinx.cms.rtl \
     xilinx.cmac.rtl \
     xilinx.qspi.rtl \
     xilinx.sysmon.rtl

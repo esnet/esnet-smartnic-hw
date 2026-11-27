@@ -9,6 +9,11 @@ module xilinx_alveo_usplus
     // PCIe reset (post-JTAG-override, from xilinx_alveo_shell)
     input  wire logic     pci_rstn,
 
+    // PCIe configuration access and architecture-provided card information
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
+    output logic                      card_info_clk,
+    pci_vpd_card_info_intf.provider    card_info_if,
+
     // To/from core (application)
     // -- Core clock/reset
     output wire logic     clk,
@@ -49,6 +54,20 @@ module xilinx_alveo_usplus
     logic core_srst;
 
     logic clk_100mhz_freerun;
+    logic mgmt_clk_50mhz;
+    logic mgmt_srst;
+    logic [4:0] mgmt_startup_count = '0;
+    logic [31:0] card_info_status;
+    logic error_fetch_timeout;
+    logic error_boot_timeout;
+    logic error_bad_axil_transaction;
+    logic error_card_info_length;
+    logic cms_card_info_vld;
+    logic [7:0] cms_card_info_len;
+    logic cms_card_info_rd;
+    logic [7:0] cms_card_info_rd_addr;
+    logic [7:0] cms_card_info_rd_data;
+    logic cms_card_info_rd_vld;
 
     // =========================================================================
     // Interfaces
@@ -76,6 +95,7 @@ module xilinx_alveo_usplus
         .clk_125mhz,
         .clk_250mhz,
         .axil_if       ( axil_top ),
+        .cfg_ext_if,
         .dma_aclk,
         .dma_aresetn,
         .pkt_h2c_dma,
@@ -326,7 +346,6 @@ module xilinx_alveo_usplus
     // =========================================================================
     // QSPI flash access
     // =========================================================================
-    logic mgmt_clk_50mhz;
     axi4l_intf axil_qspi__50mhz ();
 
     // Shared free-running 50 MHz peripheral clock; SPI SCK is 25 MHz.
@@ -338,6 +357,12 @@ module xilinx_alveo_usplus
         .CLR ( 1'b0 ),
         .O   ( mgmt_clk_50mhz )
     );
+
+    // Initialization must complete while PCIe reset is held asserted.
+    always @(posedge mgmt_clk_50mhz) begin
+        if (!(&mgmt_startup_count)) mgmt_startup_count <= mgmt_startup_count + 1'b1;
+    end
+    assign mgmt_srst = !(&mgmt_startup_count);
 
     // The CDC also synchronizes the peripheral reset into the QSPI domain.
     axi4l_intf_cdc i_axi4l_intf_cdc__qspi (
@@ -354,10 +379,70 @@ module xilinx_alveo_usplus
     // =========================================================================
     // Card management access (board I/O is connected in the hardware layer)
     // =========================================================================
+    axi4l_intf axil_cms__50mhz ();
     axi4l_intf_cdc i_axi4l_intf_cdc__cms (
         .axi4l_if_from_controller ( axil_cms ),
         .clk_to_peripheral        ( mgmt_clk_50mhz ),
-        .axi4l_if_to_peripheral   ( alveo_hw_if.axil_cms )
+        .axi4l_if_to_peripheral   ( axil_cms__50mhz )
+    );
+
+    assign card_info_clk = mgmt_clk_50mhz;
+    assign card_info_if.srst = mgmt_srst;
+
+    xilinx_cms_cardinfo_fetch_fsm i_xilinx_cms_cardinfo_fetch_fsm (
+        .cms_clk              ( mgmt_clk_50mhz ),
+        .cms_srst             ( mgmt_srst ),
+        .axil_from_controller ( axil_cms__50mhz ),
+        .axil_to_cms          ( alveo_hw_if.axil_cms ),
+        .card_info_vld         ( cms_card_info_vld ),
+        .card_info_len         ( cms_card_info_len ),
+        .card_info_rd          ( cms_card_info_rd ),
+        .card_info_rd_addr     ( cms_card_info_rd_addr ),
+        .card_info_rd_data     ( cms_card_info_rd_data ),
+        .card_info_rd_vld      ( cms_card_info_rd_vld ),
+        .error_fetch_timeout,
+        .error_boot_timeout,
+        .error_bad_axil_transaction,
+        .error_card_info_length
+    );
+
+    xilinx_alveo_usplus_card_info #(
+        .FLASH_REG_OFFSET ( 32'h00220000 ),
+        .CMS_REG_OFFSET   ( 32'h00240000 )
+    ) i_xilinx_alveo_usplus_card_info (
+        .clk            ( mgmt_clk_50mhz ),
+        .srst           ( mgmt_srst ),
+        .source_vld     ( cms_card_info_vld ),
+        .source_len     ( cms_card_info_len ),
+        .source_rd      ( cms_card_info_rd ),
+        .source_rd_addr ( cms_card_info_rd_addr ),
+        .source_rd_data ( cms_card_info_rd_data ),
+        .source_rd_vld  ( cms_card_info_rd_vld ),
+        .card_info_vld      ( card_info_if.vld ),
+        .card_info_len      ( card_info_if.len ),
+        .card_info_rd       ( card_info_if.rd ),
+        .card_info_rd_addr  ( card_info_if.rd_addr ),
+        .card_info_rd_data  ( card_info_if.rd_data ),
+        .card_info_rd_vld ( card_info_if.rd_vld )
+    );
+
+    assign card_info_if.error = error_fetch_timeout || error_boot_timeout
+                              || error_bad_axil_transaction || error_card_info_length;
+    assign card_info_status = {
+        19'b0,
+        error_fetch_timeout,
+        error_boot_timeout,
+        error_bad_axil_transaction,
+        error_card_info_length,
+        cms_card_info_len,
+        card_info_if.vld
+    };
+
+    assign reg_if.card_info_status_nxt_v = 1'b1;
+    sync_bus_sampled #(.DATA_WID(32), .RST_VALUE(0)) i_sync_bus_sampled__card_info_status (
+        .clk_in(mgmt_clk_50mhz), .rst_in(mgmt_srst), .data_in(card_info_status),
+        .clk_out(axil_syscfg.aclk), .rst_out(!axil_syscfg.aresetn),
+        .data_out(reg_if.card_info_status_nxt)
     );
 
 endmodule : xilinx_alveo_usplus

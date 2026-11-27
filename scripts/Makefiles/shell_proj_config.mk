@@ -221,12 +221,14 @@ $(__SPC_BUILD_SRC_DIR) $(__SPC_ESNET_DIR):
 # Convenience: forward targets through the library dispatch.
 # -----------------------------------------------
 SMARTNIC_BUILD_CMD = $(MAKE) -s -C $(__SPC_BUILD_SRC_DIR) \
-    COMPONENT=esnet_smartnic.build BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
+    COMPONENT=esnet_smartnic.build BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) \
+    SHELL_VPD_APPLICATION_ID=$(SHELL_PACKAGE_APP_NAME)
 
 # Image export and packaging invoke the generated component directly because
 # these goals are not library dispatch operations.
 SMARTNIC_COMP_CMD = $(MAKE) -s -C $(__SPC_COMP_DIR) \
-    BOARD=$(BOARD) BUILD_ID=$(BUILD_ID)
+    BOARD=$(BOARD) BUILD_ID=$(BUILD_ID) \
+    SHELL_VPD_APPLICATION_ID=$(SHELL_PACKAGE_APP_NAME)
 
 .shell_proj_build: $(__SPC_CONFIGURED)
 	@$(SMARTNIC_BUILD_CMD) build
@@ -327,6 +329,7 @@ VALIDATION_WAIVER_REFS ?= \
     sync_bus=$(LIB_ROOT)/src/sync/build/sync_bus/waivers.xdc \
     $(if $(filter usplus,$(VALIDATION_ARCH)),\
     xilinx_alveo_usplus_axil_ila=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_axil_ila.waivers.xdc \
+    ltlib_v1_0_3_all_typeA=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/ltlib_v1_0_3_all_typeA.waivers.xdc \
     xilinx_alveo_usplus_qdma=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/xilinx_alveo_usplus_qdma.waivers.xdc \
     dbg_hub=$(SMARTNIC_ROOT)/src/xilinx/alveo/usplus/ip/dbg_hub.waivers.xdc)
 include $(SCRIPTS_ROOT)/Makefiles/vivado_validate.mk

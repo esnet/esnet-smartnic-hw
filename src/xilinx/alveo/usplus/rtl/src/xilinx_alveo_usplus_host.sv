@@ -16,6 +16,7 @@ module xilinx_alveo_usplus_host
     output logic                     clk_250mhz,
     // -- AXI-L (Controller)
     axi4l_intf.controller            axil_if,
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
     // -- DMA (streaming)
     output logic                     dma_aclk,
     output logic                     dma_aresetn,
@@ -96,6 +97,7 @@ module xilinx_alveo_usplus_host
         .pcie_txp,
         .pcie_txn,
         .axil_if ( __axil_if__250mhz ),
+        .cfg_ext_if,
         .axi_aclk,
         .axi_aresetn,
         .dsc_crdt_in_crdt,

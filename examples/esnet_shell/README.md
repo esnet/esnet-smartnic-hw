@@ -75,15 +75,20 @@ datapath those suites exercise.
 Outputs are isolated under `build/<board>/`. Final assembly artifacts are in
 `build/<board>/out/esnet_smartnic/build/`:
 
-- UltraScale+: `esnet_shell.bit`, `esnet_shell.bin`, and `esnet_shell.ltx`.
+- UltraScale+: `esnet_shell.bit`, `esnet_shell.bin`, `esnet_shell.ltx`, and
+  `esnet_shell.mcs`. The MCS targets 128 MiB SPIx4 configuration flash with
+  the user bitstream at `0x01002000`. Firmware packages include it as
+  `firmware/esnet-smartnic.mcs.zst` for the existing flash-programming services.
 - Versal: `esnet_smartnic_app.pdi`, `esnet_smartnic_nofpt.pdi`, and
   `esnet_smartnic.ltx`, together with the hardware PDI and XSA.
 
 The public targets are the same for every board. `build` implements the
 design through routing and post-route optimization. `image` also exports
-the platform's programming files: BIT/BIN/LTX on UltraScale+, or the
+the platform's programming files: BIT/BIN/LTX/MCS on UltraScale+, or the
 hardware and firmware PDIs, XSA, and LTX on Versal. Plain `make` defaults to
 `image`; board selection and the native export steps happen internally.
+Flash export is a separate US+ stage consuming the BIT file; a missing MCS
+can be regenerated without repeating bitstream generation or implementation.
 
 `build_clean` removes assembly output, `clean` removes the selected board's
 build directory, and `clean_all` removes all board builds. `restore` restores
@@ -92,11 +97,22 @@ the backup saved by the configuration flow when the build settings change.
 CI jobs named `build_esnet_shell_<board>` and `hwapi_esnet_shell_<board>`
 build and package this native example from `examples/esnet_shell`, using
 `shell` as the firmware-facing application name. The V80 build runs
-automatically; the UltraScale+ builds are manual. The existing
-`build_shell_au55c` and `build_shell_au280` jobs continue to build the OpenNIC
+automatically on `main` and is manual on other branches; the native
+UltraScale+ builds are manual. The existing
+`build_shell_au250`, `build_shell_au55c` and `build_shell_au280` jobs build the OpenNIC
 `examples/shell` design. The single `hwapi_shell` bundle gathers those ONS
 packages and `hwapi_esnet_shell_av80` for the bootstrap handoff. Native
 UltraScale+ packages remain available individually.
+
+The bootstrap shell builds (ONS U250/U55C/U280 and native V80), their hardware
+packages, firmware triggers, combined bundle and bootstrap trigger are
+required automatic jobs on `main` and optional manual jobs elsewhere.
+The ONS shell validation jobs require nonnegative setup, hold and
+pulse-width slack, retaining JSON and JUnit summaries on failure. Bootstrap
+delivery waits for those timing gates; hardware packages and firmware builds
+remain available independently for diagnosis. The firmware and bootstrap
+triggers mirror downstream pipeline status. Native V80 validation retains
+the separate advisory policy described below.
 
 The manual `shell_ip_<board>` jobs generate the UltraScale+ shell's IP into
 this example's build output tree and cache it by board, tool version, and

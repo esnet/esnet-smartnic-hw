@@ -15,6 +15,7 @@ module xilinx_alveo_usplus_qdma_wrapper #(
     // From/to core
     // -- AXI-L
     axi4l_intf.controller             axil_if,
+    xilinx_pci_cfg_ext_intf.controller cfg_ext_if,
     // Native QDMA streaming, completion, credit, and clock/reset ports
     output logic               axi_aclk,
     output logic               axi_aresetn,
@@ -169,6 +170,10 @@ module xilinx_alveo_usplus_qdma_wrapper #(
     logic [10 : 0] axis_c2h_status_qid;
     logic axis_c2h_dmawr_cmp;
     logic soft_reset_n;
+    logic cfg_ext_read_received;
+    logic cfg_ext_write_received;
+    assign cfg_ext_if.req = cfg_ext_read_received || cfg_ext_write_received;
+    assign cfg_ext_if.wr_rd_n = cfg_ext_write_received;
     logic phy_ready;
     logic [7 : 0] qsts_out_op;
     logic [63 : 0] qsts_out_data;
@@ -220,11 +225,21 @@ module xilinx_alveo_usplus_qdma_wrapper #(
     // =========================================================================
     // Function-level reset
     // =========================================================================
-    assign usr_flr_done_vld = 1'b0;   // input wire usr_flr_done_vld
-    assign usr_flr_done_fnc = '0;     // input wire [7 : 0] usr_flr_done_fnc
-
-    // output wire [7 : 0] usr_flr_fnc
-    // output wire usr_flr_set
+    // Return each function's FLR notification after four DMA clock cycles.
+    logic [7:0] flr_fnc_pipe [4];
+    logic [3:0] flr_valid_pipe;
+    always_ff @(posedge axi_aclk) begin
+        if (!axi_aresetn) begin
+            flr_valid_pipe <= '0;
+            foreach (flr_fnc_pipe[i]) flr_fnc_pipe[i] <= '0;
+        end else begin
+            flr_valid_pipe <= {flr_valid_pipe[2:0], usr_flr_set};
+            flr_fnc_pipe[0] <= usr_flr_fnc;
+            for (int i = 1; i < 4; i++) flr_fnc_pipe[i] <= flr_fnc_pipe[i-1];
+        end
+    end
+    assign usr_flr_done_vld = flr_valid_pipe[3];
+    assign usr_flr_done_fnc = flr_fnc_pipe[3];
 
     // =========================================================================
     // H2C bypass
@@ -377,10 +392,10 @@ xilinx_alveo_usplus_qdma i_xilinx_alveo_usplus_qdma (
   .usr_irq_in_fnc(usr_irq_in_fnc),                                              // input wire [7 : 0] usr_irq_in_fnc
   .usr_irq_out_ack(usr_irq_out_ack),                                            // output wire usr_irq_out_ack
   .usr_irq_out_fail(usr_irq_out_fail),                                          // output wire usr_irq_out_fail
-//  .usr_flr_fnc(usr_flr_fnc),                                                    // output wire [7 : 0] usr_flr_fnc
-//  .usr_flr_set(usr_flr_set),                                                    // output wire usr_flr_set
-//  .usr_flr_done_fnc(usr_flr_done_fnc),                                          // input wire [7 : 0] usr_flr_done_fnc
-//  .usr_flr_done_vld(usr_flr_done_vld),                                          // input wire usr_flr_done_vld
+  .usr_flr_fnc(usr_flr_fnc),                                                    // output wire [7 : 0] usr_flr_fnc
+  .usr_flr_set(usr_flr_set),                                                    // output wire usr_flr_set
+  .usr_flr_done_fnc(usr_flr_done_fnc),                                          // input wire [7 : 0] usr_flr_done_fnc
+  .usr_flr_done_vld(usr_flr_done_vld),                                          // input wire usr_flr_done_vld
   .h2c_byp_out_dsc(h2c_byp_out_dsc),                                            // output wire [255 : 0] h2c_byp_out_dsc
   .h2c_byp_out_st_mm(h2c_byp_out_st_mm),                                        // output wire h2c_byp_out_st_mm
   .h2c_byp_out_dsc_sz(h2c_byp_out_dsc_sz),                                      // output wire [1 : 0] h2c_byp_out_dsc_sz
@@ -511,6 +526,14 @@ xilinx_alveo_usplus_qdma i_xilinx_alveo_usplus_qdma (
   .axis_c2h_status_qid(axis_c2h_status_qid),                                    // output wire [10 : 0] axis_c2h_status_qid
   .axis_c2h_dmawr_cmp(axis_c2h_dmawr_cmp),                                      // output wire axis_c2h_dmawr_cmp
   .soft_reset_n(soft_reset_n),                                                  // input wire soft_reset_n
+  .cfg_ext_read_received(cfg_ext_read_received),
+  .cfg_ext_write_received(cfg_ext_write_received),
+  .cfg_ext_register_number(cfg_ext_if.register),
+  .cfg_ext_function_number(cfg_ext_if.func),
+  .cfg_ext_write_data(cfg_ext_if.wr_data),
+  .cfg_ext_write_byte_enable(cfg_ext_if.wr_byte_en),
+  .cfg_ext_read_data(cfg_ext_if.rd_data),
+  .cfg_ext_read_data_valid(cfg_ext_if.rd_vld),
   .phy_ready(phy_ready),                                                        // output wire phy_ready
   .qsts_out_op(qsts_out_op),                                                    // output wire [7 : 0] qsts_out_op
   .qsts_out_data(qsts_out_data),                                                // output wire [63 : 0] qsts_out_data

@@ -29,6 +29,13 @@ module xilinx_alveo_versal_shell_unit_test;
     //   shell_if — shell output wired to core.stub
     // =========================================================================
     axi4l_intf axil_if  ();
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(axil_if.aclk));
+    assign cfg_ext_if.req = 1'b0;
+    assign cfg_ext_if.wr_rd_n = 1'b0;
+    assign cfg_ext_if.register = '0;
+    assign cfg_ext_if.func = '0;
+    assign cfg_ext_if.wr_data = '0;
+    assign cfg_ext_if.wr_byte_en = '0;
 
     // DMA streams. The QDMA adapter is above the shell in the real design,
     // so these are terminated rather than driven.
@@ -58,6 +65,7 @@ module xilinx_alveo_versal_shell_unit_test;
     //   core.stub is connected via shell_if.
     // =========================================================================
     xilinx_alveo_versal_shell DUT (
+        .cfg_ext_if,
         .sys_clk_100mhz ( axil_if.aclk ),
         .pci_rstn_in ( pci_rstn_in  ),
         .pci_rstn    ( pci_rstn     ),

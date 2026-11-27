@@ -16,7 +16,13 @@
 module xilinx_alveo_usplus_shell
     import shell_pkg::*;
 #(
-    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
+    parameter bit [31:0] BUILD_TIMESTAMP = 32'h0,
+    parameter PRODUCT_ID = "ESnet SmartNIC",
+    parameter APPLICATION_ID = "(empty)",
+    parameter logic [31:0] BUILD_ID = 0,
+    parameter BUILD_GIT_REPO = "(empty)",
+    parameter BUILD_GIT_HASH = "(empty)",
+    parameter BUILD_TIMESTAMP_STR = "(empty)"
 ) (
     // To/from physical layer (hardware)
     xilinx_alveo_usplus_hw_intf.alveo alveo_hw_if,
@@ -55,6 +61,10 @@ module xilinx_alveo_usplus_shell
     logic clk_250mhz;
     logic clk_333mhz;
 
+    logic card_info_clk;
+    pci_vpd_card_info_intf card_info_if (.clk(card_info_clk));
+    xilinx_pci_cfg_ext_intf cfg_ext_if (.clk(dma_aclk));
+
     // =========================================================================
     // Shell adaptation layer
     // (maps shell_intf signals to/from axi4l_intf / axi4s_intf)
@@ -79,6 +89,25 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // Common Alveo shell — JTAG reset control and top-level hw/core decoder
     // =========================================================================
+    logic pci_rstn__100mhz;
+    logic cfg_srst__100mhz;
+
+    // PERST# controls the endpoint; the QDMA user reset clears configuration
+    // transactions. Each source has one boundary into the free-running domain.
+    sync_areset #(
+        .OUTPUT_ACTIVE_LOW ( 1 )
+    ) i_sync_areset__pci (
+        .rst_in  ( alveo_hw_if.pcie_rstn ),
+        .clk_out ( alveo_hw_if.sys_clk_100mhz ),
+        .rst_out ( pci_rstn__100mhz )
+    );
+
+    sync_areset i_sync_areset__cfg (
+        .rst_in  ( dma_aresetn ),
+        .clk_out ( alveo_hw_if.sys_clk_100mhz ),
+        .rst_out ( cfg_srst__100mhz )
+    );
+
     axi4l_intf axil_qdma_st ();
     packet_intf #(
         .DATA_BYTE_WID ( xilinx_qdma_pkg::AXIS_DATA_BYTE_WID ),
@@ -90,10 +119,22 @@ module xilinx_alveo_usplus_shell
     ) pkt_c2h_dma (.clk(dma_aclk));
 
     xilinx_alveo_shell #(
-        .QID_WID ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID )
+        .QID_WID              ( xilinx_alveo_usplus_pkg::DMA_ST_QID_WID ),
+        .NUM_PHYS_FUNC        ( xilinx_alveo_usplus_pkg::NUM_PHYS_FUNC ),
+        .VPD_CLK_FREQ_HZ      ( xilinx_alveo_pkg::VPD_CLK_FREQ_HZ ),
+        .CARD_INFO_EN         ( xilinx_alveo_usplus_pkg::CARD_INFO_EN ),
+        .PRODUCT_ID           ( PRODUCT_ID ),
+        .APPLICATION_ID       ( APPLICATION_ID ),
+        .BUILD_ID             ( BUILD_ID ),
+        .BUILD_GIT_REPO       ( BUILD_GIT_REPO ),
+        .BUILD_GIT_HASH       ( BUILD_GIT_HASH ),
+        .BUILD_TIMESTAMP_STR  ( BUILD_TIMESTAMP_STR )
     ) i_xilinx_alveo_shell (
         .sys_clk_100mhz ( alveo_hw_if.sys_clk_100mhz ),
-        .pci_rstn_in    ( alveo_hw_if.pcie_rstn ),
+        .card_info_if,
+        .cfg_ext_if,
+        .pci_rstn_in    ( pci_rstn__100mhz ),
+        .cfg_srst       ( cfg_srst__100mhz ),
         .pci_rstn_out   ( pci_rstn ),
         .core_clk       ( clk  ),
         .core_srst      ( srst ),
@@ -112,13 +153,16 @@ module xilinx_alveo_usplus_shell
     // =========================================================================
     // UltraScale+ Alveo core — CMAC, QDMA, clocking, hw register decode
     // axil_top drives the PCIe AXI-L into the QDMA; axil_hw receives the
-    // decoded hw sub-space from the top-level shell_decoder.
+    // decoded hw sub-space from the top-level Alveo shell decoder.
     // =========================================================================
     xilinx_alveo_usplus #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )
     ) i_xilinx_alveo_usplus  (
         .alveo_hw_if,
         .pci_rstn,
+        .card_info_clk,
+        .card_info_if,
+        .cfg_ext_if,
         .clk,
         .srst,
         .clk_100mhz,
