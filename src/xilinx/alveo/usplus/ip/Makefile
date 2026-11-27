@@ -29,10 +29,10 @@ include $(CFG_ROOT)/vivado_ip.mk
 #   not explicitly listed.
 # ----------------------------------------------------
 IP_LIST = \
-    xilinx_alveo_clk_axil \
-    xilinx_alveo_clk \
-    xilinx_alveo_clk_100mhz \
-    xilinx_alveo_axil_ila \
+    xilinx_alveo_usplus_clk_axil \
+    xilinx_alveo_usplus_clk \
+    xilinx_alveo_usplus_axil_ila \
+    xilinx_usplus_cms_subsystem \
     xilinx_alveo_usplus_qdma
 
 # ----------------------------------------------------
@@ -58,13 +58,11 @@ IP_LIST = \
 #  List simulation source files and include directories
 #  (see $SCRIPTS_ROOT/Makefiles/templates/sources.mk)
 IP_SIM_SRC_FILES = \
-    xilinx_alveo_clk/xilinx_alveo_clk_clk_wiz.v \
-    xilinx_alveo_clk/xilinx_alveo_clk.v \
-    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz_clk_wiz.v \
-    xilinx_alveo_clk_100mhz/xilinx_alveo_clk_100mhz.v \
-    xilinx_alveo_clk_axil/xilinx_alveo_clk_axil_clk_wiz.v \
-    xilinx_alveo_clk_axil/xilinx_alveo_clk_axil.v \
-    xilinx_alveo_axil_ila/sim/xilinx_alveo_axil_ila.v \
+    xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk_clk_wiz.v \
+    xilinx_alveo_usplus_clk/xilinx_alveo_usplus_clk.v \
+    xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil_clk_wiz.v \
+    xilinx_alveo_usplus_clk_axil/xilinx_alveo_usplus_clk_axil.v \
+    xilinx_alveo_usplus_axil_ila/sim/xilinx_alveo_usplus_axil_ila.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_channel.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/gtwizard_ultrascale_v1_7_gtye4_common.v \
     xilinx_alveo_usplus_qdma/ip_0/ip_0/sim/xilinx_alveo_usplus_qdma_pcie4c_ip_gt_gtwizard_gtye4.v \
@@ -121,8 +119,22 @@ IP_SIM_SRC_FILES = \
     xilinx_alveo_usplus_qdma/xilinx_alveo_usplus_qdmahdl/verilog/xilinx_alveo_usplus_qdma_core_top.sv \
     xilinx_alveo_usplus_qdma/sim/xilinx_alveo_usplus_qdma.sv
 
+# U250 derives its free-running 100 MHz clock from the 300 MHz input.
+ifeq ($(BOARD),au250)
+IP_LIST += xilinx_alveo_usplus_clk_100mhz
+IP_SIM_SRC_FILES += \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz_clk_wiz.v \
+    xilinx_alveo_usplus_clk_100mhz/xilinx_alveo_usplus_clk_100mhz.v
+endif
+
 IP_SIM_INC_DIRS = \
     xilinx_alveo_usplus_qdma/ip_0/source
+
+# CMS expands into a device-specific block design. Use its flattened functional
+# model so simulation does not depend on generated block-design instance names.
+CMS_DCP := $(COMPONENT_OUT_PATH)/xilinx_usplus_cms_subsystem/xilinx_usplus_cms_subsystem.dcp
+CMS_SIM_NETLIST := $(COMPONENT_OUT_PATH)/xilinx_usplus_cms_subsystem/xilinx_usplus_cms_subsystem_sim_netlist.v
+SRC_FILES = $(CMS_SIM_NETLIST)
 
 #   List external library dependencies
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
@@ -169,3 +181,9 @@ proj_clean: _ip_proj_clean
 # Import Vivado IP management targets
 # ----------------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_manage_ip.mk
+
+# Finish IP synthesis before generating simulation products in the same project.
+_ip_sim_sources.intermediate: $(CMS_DCP)
+
+$(CMS_SIM_NETLIST): $(CMS_DCP) cms_sim.tcl _ip_sim_sources.intermediate
+	@vivado -mode batch -nojournal -nolog -source cms_sim.tcl -tclargs $(CMS_DCP) $@

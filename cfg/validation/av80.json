@@ -1,0 +1,13 @@
+{
+  "waivers": [
+    {
+      "name": "cpm5-dedicated-gt-constant-clock-coverage",
+      "category": "constraints",
+      "id": "unconstrained_internal_endpoints",
+      "source": "",
+      "detail": "There are 0 pins that are not constrained for maximum delay\\.\\s+There are 112 pins that are not constrained for maximum delay due to constant clock\\. \\(MEDIUM\\)\\s+top_i/cips/inst/cpm_0/inst/gt_quad_inst[0-3]/inst/quad_inst/CH[0-3]_(?:PHYESMADAPTSAVE|RXDLYALIGNREQ|RXMLDCHAINDONE|RXMLDCHAINREQ|RXPHALIGNREQ|RXPHSETINITREQ|RXPHSHIFT180)(?:\\ntop_i/cips/inst/cpm_0/inst/gt_quad_inst[0-3]/inst/quad_inst/CH[0-3]_(?:PHYESMADAPTSAVE|RXDLYALIGNREQ|RXMLDCHAINDONE|RXMLDCHAINREQ|RXPHALIGNREQ|RXPHSETINITREQ|RXPHSHIFT180)){111}",
+      "max_count": 112,
+      "reason": "These 112 endpoints are seven reviewed GTYP control pin families across four CPM5-dedicated quads and four channels. All are driven directly by the CPM hard block. Vendor ip_cpm5.xdc case-analyzes the GT RXUSRCLK/TXUSRCLK pins to zero; the associated setup/hold arcs are already disabled. Accept only this constant-clock coverage list with zero ordinary unconstrained endpoints. See src/xilinx/alveo/versal/bd/README.md."
+    }
+  ]
+}

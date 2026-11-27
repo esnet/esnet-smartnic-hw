@@ -9,18 +9,19 @@ set_property -dict {
     CONFIG.en_transceiver_status_ports {false}
     CONFIG.dsc_byp_mode {Descriptor_bypass_and_internal}
     CONFIG.testname {st}
+    CONFIG.pf0_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf1_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf2_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.pf3_pciebar2axibar_2 {0x0000000000000000}
     CONFIG.dma_reset_source_sel {Phy_Ready}
     CONFIG.pf0_bar2_scale_qdma {Megabytes}
-    CONFIG.pf0_bar2_size_qdma {4}
+    CONFIG.pf0_bar2_size_qdma {8}
     CONFIG.pf1_bar2_scale_qdma {Megabytes}
-    CONFIG.pf1_bar2_size_qdma {4}
+    CONFIG.pf1_bar2_size_qdma {8}
     CONFIG.pf2_bar2_scale_qdma {Megabytes}
-    CONFIG.pf2_bar2_size_qdma {4}
+    CONFIG.pf2_bar2_size_qdma {8}
     CONFIG.pf3_bar2_scale_qdma {Megabytes}
-    CONFIG.pf3_bar2_size_qdma {4}
+    CONFIG.pf3_bar2_size_qdma {8}
     CONFIG.PF0_MSIX_CAP_TABLE_SIZE_qdma {009}
     CONFIG.PF1_MSIX_CAP_TABLE_SIZE_qdma {008}
     CONFIG.PF2_MSIX_CAP_TABLE_SIZE_qdma {008}
@@ -43,13 +44,15 @@ set_property -dict {
     CONFIG.num_queues {512}
 } [get_ips $module_name]
 
+# Allocate only the queue resources used by the common shell contract
+# (shell_pkg::DMA_ST_QUEUES).
+
 # Customize for board/application
 switch $env(BOARD) {
     au55c {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU55C}
         } [get_ips $module_name]
@@ -58,7 +61,6 @@ switch $env(BOARD) {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU250}
         } [get_ips $module_name]
@@ -68,9 +70,11 @@ switch $env(BOARD) {
         set_property -dict {
             CONFIG.pl_link_cap_max_link_width {X16}
             CONFIG.pl_link_cap_max_link_speed {8.0_GT/s}
-            CONFIG.SYS_RST_N_BOARD_INTERFACE {pcie_perstn}
             CONFIG.PCIE_BOARD_INTERFACE {pci_express_x16}
             CONFIG.xlnx_ref_board {AU280}
         } [get_ips $module_name]
     }
 }
+
+# Board wrappers buffer PCIe reset and constrain its physical pin.
+set_property CONFIG.SYS_RST_N_BOARD_INTERFACE {Custom} [get_ips $module_name]

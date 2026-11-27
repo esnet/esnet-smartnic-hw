@@ -12,7 +12,7 @@ Shell (`shell`) Layer
 -----------------------------
 This layer defines a common set of logic and IP for implementing a simple shell for network card implementations. This includes instantiations of MAC, PCIe, QDMA and system monitoring IP. It also includes a top level register decoder and register blocks for controlling shell-level functions.
 
-The southbound interface (to the `hw`) is architecture/vendor-specific. A common `xilinx_alveo_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers. For Versal AVED platforms, the `xilinx_aved_app_intf` serves the equivalent role.
+The southbound interface (to the `hw`) is architecture/vendor-specific. A common `xilinx_alveo_usplus_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers. For Versal AVED platforms, the `xilinx_aved_app_intf` serves the equivalent role.
 
 Core (`core`) Layer
 ----------------------------
@@ -32,15 +32,32 @@ Interfaces
 -----------------------------
 Interfaces have been captured to define the boundaries between the different layers.
 
-An Alveo-specific `shell` and set of `hw` implementations (for AU280, AU55C and AU250) has been captured. These are in the `xilinx.alveo` library. A common `xilinx_alveo_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers.
+An Alveo-specific `shell` and set of `hw` implementations (for AU280, AU55C and AU250) has been captured. These are in the `xilinx.alveo` library. A common `xilinx_alveo_usplus_hw_intf` has been captured to abstract the Alveo `hw` and `shell` layers.
 
-The `shell_intf` defines the connectivity between the shell and the core. It is a **parameterized flat SV interface** — all signals are plain `logic` with no embedded interface instances, ensuring compatibility with Vivado OOC synthesis and DFX flows. Parameters control the number of network ports (`NUM_PORTS`), network port data width (`PORT_DATA_BYTE_WID`), DMA streaming data width (`DMA_ST_DATA_BYTE_WID`), DMA queue count (`DMA_ST_QUEUES`), and AXI-L address width (`AXIL_ADDR_WID`). Default values are defined in the interface itself; each platform top-level overrides them at instantiation.
+The `shell_intf` defines the connectivity between the shell and the core. It is a **flat SV interface** — all signals are plain `logic` with no embedded interface instances, ensuring compatibility with Vivado OOC synthesis and DFX flows. Parameters control the number of network ports (`NUM_PORTS`), network port data width (`PORT_DATA_BYTE_WID`), and AXI-L address width (`AXIL_ADDR_WID`). DMA stream width and queue count are fixed by `shell_pkg` and cannot be overridden at interface instantiation.
 
 The `shell_intf` carries:
 - Clock and reset signals (driven by the shell, consumed by the core)
 - AXI-L management interface (shell drives controller-originated signals toward core; core drives peripheral responses)
 - AXI-S network port interfaces — `port_rx` (ingress) and `port_tx` (egress) — arrayed by `NUM_PORTS`
 - AXI-S DMA streaming interfaces — `h2c` (host-to-core) and `c2h` (core-to-host)
+
+The common application-facing DMA stream is 64 bytes (512 bits) wide, with
+512 queues and a 9-bit QID. Both platform tops and standalone OOC core
+synthesis use these package constants without board-specific macros.
+The native QDMA interfaces retain their hardware widths: 11 bits for soft QDMA
+and 12 bits for CPM5. Soft QDMA is configured for 512 queues; CPM5 retains its
+4096-queue hardware capacity. Software must restrict allocation to queues
+0 through 511 for this shell. This limit is total across the endpoint's functions;
+allocation among PFs and VFs is a software policy.
+
+The shared DMA datapath checks the full native H2C QID before narrowing it.
+Packets outside the shell's queue space are dropped and counted in the H2C
+input counter block's `OTHER` packet and byte bins. OOR takes priority over
+CRC/QDMA errors; in-range errored packets use `ERR`. Each packet contributes
+to one bin, with all bins sharing the block's snapshot and clear controls.
+Raw DMA capture/playback retain their native metadata for debug.
+Both UltraScale+ and Versal route their DMA streams through this shared path.
 
 Adapter Modules
 -----------------------------

@@ -52,7 +52,7 @@ module xilinx_alveo_shell
     //
     // Exposes a JTAG VIO (on sys_clk_100mhz) that allows the reset to be
     // independently asserted or released per endpoint without a board power
-    // cycle.  rstn_out is combinatorial: rstn_in & !jtag_reset.
+    // cycle. Reset asserts asynchronously and releases on sys_clk_100mhz.
     // VIO probes: in0=raw reset, in1=output reset, in2=ready;
     //             out0=jtag_reset (active-high override).
     // =========================================================================

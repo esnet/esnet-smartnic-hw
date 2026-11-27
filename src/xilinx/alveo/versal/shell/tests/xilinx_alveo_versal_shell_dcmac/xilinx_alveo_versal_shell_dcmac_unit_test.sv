@@ -47,9 +47,7 @@ module xilinx_alveo_versal_shell_dcmac_unit_test;
         .META_WID      ( PKT_C2H_META_WID   )
     ) pkt_c2h_dma (.clk(axil_if.aclk));
 
-    shell_intf #(
-        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
-    ) shell_if ();
+    shell_intf shell_if ();
 
 
     // =========================================================================
@@ -267,19 +265,25 @@ module xilinx_alveo_versal_shell_dcmac_unit_test;
     // Helpers
     // =========================================================================
     task automatic axil_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.write(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._write(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-//        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+//        `FAIL_IF_LOG(error, msg);
     endtask
 
     task automatic axil_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.read(addr, data, resp, timeout);
+        reg_agent.lock();
+        reg_agent._read(addr, data, error, timeout, msg);
+        reg_agent.unlock();
         `FAIL_UNLESS_EQUAL(timeout, 1'b0);
-//        `FAIL_UNLESS_EQUAL(resp.encoded, axi4l_pkg::RESP_OKAY);
+//        `FAIL_IF_LOG(error, msg);
     endtask
 
     task automatic dcmac_config ();

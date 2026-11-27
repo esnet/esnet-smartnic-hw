@@ -23,7 +23,8 @@ SRC_LIST_FILES =
 #   (see $SCRIPTS_ROOT/Makefiles/templates/dependencies.mk)
 # ----------------------------------------------------
 SUBCOMPONENTS = \
-    xilinx.jtag.ip
+    xilinx.jtag.ip \
+    sync.rtl@common
 EXT_LIBS =
 
 # ----------------------------------------------------

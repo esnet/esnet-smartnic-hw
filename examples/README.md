@@ -49,9 +49,11 @@ infrastructure.
 
 ### shell/
 
-This example design uses a custom shell implementation in place of ONS, for experimenting with design partitioning and
-build flows.
+This example builds the OpenNIC shell with stub application boxes.
 
-### versal_shell/
+### esnet_shell/
 
-This design is a placeholder for future development on the AMD versal platform.
+This example builds the ESnet shell with a replaceable application core on
+UltraScale+ or Versal. Select the board with `BOARD=au55c`, `au250`, `au280`,
+or `av80`; the build selects the corresponding platform flow automatically.
+See [esnet_shell/README.md](esnet_shell/README.md) for build commands.

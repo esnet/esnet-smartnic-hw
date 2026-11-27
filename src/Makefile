@@ -15,6 +15,7 @@ help: _help
 reg:     _reg
 ip:      _ip
 info:    _info
+pre:     _pre
 compile: _compile
 synth:   _synth
 opt:     _opt
@@ -22,7 +23,7 @@ driver:  _driver
 build:   _build
 clean:   _clean
 
-.PHONY: reg ip info compile synth clean
+.PHONY: reg ip info pre compile synth clean
 
 # Remove all output products for all library components
 clean_all: _clean_all

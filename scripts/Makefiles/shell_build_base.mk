@@ -40,7 +40,7 @@
 #
 # Targets provided (dot-prefixed so they are skipped by Make when selecting
 # the default goal; expose with public names in the including Makefile):
-#   .shell_build        - build through the last BUILD_STAGES entry
+#   .shell_build        - implement through route_opt
 #   .shell_build_clean  - clean via _build_clean
 #   .shell_build_info   - print shell build configuration
 
@@ -80,10 +80,10 @@ APP_CELL_DCPS  ?=
 TOP_DCP_FILE := $(__SB_SHELL_OUT)/$(TOP).synth.dcp
 CELL_DCPS    := $(CORE_CELL_DCPS) $(APP_CELL_DCPS)
 
-# Re-run from link if any input DCP changes; wildcard avoids Make errors
-# on first run before the DCPs exist.
+# Track every input, including checkpoints not yet created by synthesis.
 __SB_ALL_CELL_DCP_PATHS := $(foreach cd,$(CELL_DCPS),$(word 2,$(subst :, ,$(cd))))
-STAGE_DEPS := $(wildcard $(TOP_DCP_FILE) $(__SB_ALL_CELL_DCP_PATHS))
+__SB_INPUT_DCPS := $(sort $(TOP_DCP_FILE) $(__SB_ALL_CELL_DCP_PATHS))
+STAGE_DEPS := $(__SB_INPUT_DCPS)
 
 # -----------------------------------------------
 # Subcomponents
@@ -108,13 +108,19 @@ SRC_LIST_FILES :=
 # -----------------------------------------------
 include $(SCRIPTS_ROOT)/Makefiles/vivado_build_non_proj.mk
 
+# Synthesis refreshes these files in recursive makes. Run a validation recipe
+# afterward so Make re-reads their mtimes before deciding whether to relink.
+# FORCE runs the check on every invocation; unchanged mtimes preserve no-op builds.
+$(__SB_INPUT_DCPS): FORCE | _pre_synth
+	@test -f "$@" || { echo "Error: Missing input checkpoint after synthesis: $@" >&2; exit 1; }
+
 # -----------------------------------------------
 # Targets (dot-prefixed to avoid becoming Make's default goal)
 # Including Makefile exposes these with public names, e.g.:
 #   build: .shell_build
 #   clean: .shell_build_clean
 # -----------------------------------------------
-.shell_build: _np_$(lastword $(BUILD_STAGES))
+.shell_build: _np_route_opt
 .PHONY: .shell_build
 
 .shell_build_clean: _build_clean
@@ -272,15 +278,17 @@ SHELL_HWAPI_DIR        ?= $(COMPONENT_OUT_PATH)/hwapi
 SHELL_HWAPI_FW_DIR     := $(SHELL_HWAPI_DIR)/firmware
 SHELL_HWAPI_SW_DIR     := $(SHELL_HWAPI_DIR)/software
 SHELL_HWAPI_REGMAP_DIR := $(SHELL_HWAPI_DIR)/regmap
-SHELL_HWAPI_P4_DRV_DIR := $(strip $(if $(or $(P4_IGR_FILE),$(P4_EGR_FILE)),\
-                              $(SHELL_HWAPI_DIR)/libvitisnetp4drv))
+SHELL_HWAPI_P4_DRV_DIR := $(SHELL_HWAPI_DIR)/libvitisnetp4drv
 
 SHELL_HWAPI_DIRS := \
     $(SHELL_HWAPI_DIR) \
     $(SHELL_HWAPI_FW_DIR) \
     $(SHELL_HWAPI_SW_DIR) \
     $(SHELL_HWAPI_REGMAP_DIR) \
+    $(SHELL_HWAPI_REGMAP_DIR)/spec \
+    $(SHELL_HWAPI_DIR)/wireshark \
     $(SHELL_HWAPI_P4_DRV_DIR)
+# The firmware importer expects these directories even without P4 or dissectors.
 $(SHELL_HWAPI_DIRS):
 	@mkdir -p $@
 

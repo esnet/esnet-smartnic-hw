@@ -28,10 +28,8 @@ module smartnic_250mhz_datapath_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_250mhz
-    // testbench top level. The 'tb' module is
-    // loaded into the tb_glbl scope, so is available
-    // at tb_glbl.tb.
+    // This test suite references the shared smartnic_250mhz
+    // testbench instance named tb.
     //
     // Interaction with the testbench is expected to occur
     // via the testbench environment class (tb_env). A

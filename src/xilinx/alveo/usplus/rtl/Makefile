@@ -22,6 +22,7 @@ SUBCOMPONENTS = \
     xilinx.alveo.usplus.regio.rtl \
     xilinx.qdma.rtl \
     xilinx.cmac.rtl \
+    xilinx.qspi.rtl \
     xilinx.sysmon.rtl
 
 EXT_LIBS =
@@ -30,6 +31,9 @@ EXT_LIBS =
 # Defines
 # ----------------------------------------------------
 DEFINES =
+ifeq ($(BOARD),au250)
+DEFINES += XILINX_USPLUS_CMS_QSFP_IO
+endif
 
 # ----------------------------------------------------
 # Options

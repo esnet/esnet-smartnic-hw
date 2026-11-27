@@ -31,8 +31,6 @@ module xilinx_sysmon_wrapper (
     logic s_axi_rvalid;
     logic s_axi_rready;
     logic ip2intc_irpt;
-    logic vp;
-    logic vn;
     logic [5 : 0] channel_out;
     logic eoc_out;
     logic alarm_out;
@@ -62,11 +60,6 @@ module xilinx_sysmon_wrapper (
     assign axil_if.rvalid = s_axi_rvalid;   // output wire s_axi_rvalid
     assign s_axi_rready = axil_if.rready;   // input wire s_axi_rready
 
-    // =========================================================================
-    // Analog inputs
-    // =========================================================================
-    assign vp = 1'b0;
-    assign vn = 1'b0;
 //
 // NOTE: Use instantiation template exactly as provided in IP (including whitespace, but with
 //       generic instance name commented out) to enable trivial diffs to simplify upgrades or changes,
@@ -95,8 +88,6 @@ xilinx_sysmon i_xilinx_sysmon_0 (
   .s_axi_rvalid(s_axi_rvalid),    // output wire s_axi_rvalid
   .s_axi_rready(s_axi_rready),    // input wire s_axi_rready
   .ip2intc_irpt(ip2intc_irpt),    // output wire ip2intc_irpt
-  .vp(vp),                        // input wire vp
-  .vn(vn),                        // input wire vn
   .channel_out(channel_out),      // output wire [5 : 0] channel_out
   .eoc_out(eoc_out),              // output wire eoc_out
   .alarm_out(alarm_out),          // output wire alarm_out

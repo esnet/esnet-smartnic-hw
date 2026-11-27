@@ -12,12 +12,10 @@ include $(COMPONENT_ROOT)/config.mk
 # -----------------------------------------------
 REG_BLOCK_YAML = \
     syscfg.yaml \
-    cmac_adapter.yaml \
-    qdma_function.yaml
+    cmac_adapter.yaml
 
 REG_DECODER_YAML = \
     cmac_decoder.yaml \
-    qdma_decoder.yaml \
     xilinx_alveo_usplus_decoder.yaml
 
 # ----------------------------------------------------

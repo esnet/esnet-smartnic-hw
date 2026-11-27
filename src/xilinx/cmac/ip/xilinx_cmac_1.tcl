@@ -2,9 +2,10 @@ set module_name xilinx_cmac_1
 
 create_ip -name cmac_usplus -vendor xilinx.com -library ip -module_name $module_name -dir . -force
 
-# Configure board-specific parameters first
-# - for some (unknown) reason, selecting the BOARD_INTERFACEs
-#   causes some existing properties to be reset
+# Select four-lane mode before applying board interface presets.
+set_property CONFIG.CMAC_CAUI4_MODE 1 [get_ips $module_name]
+
+# Configure board-specific parameters
 switch $env(BOARD) {
     au55c {
         set_property -dict {
@@ -50,7 +51,6 @@ switch $env(BOARD) {
 
 # Then configure common parameters
 set_property -dict {
-    CONFIG.CMAC_CAUI4_MODE {1}
     CONFIG.NUM_LANES {4x25}
     CONFIG.USER_INTERFACE {AXIS}
     CONFIG.GT_DRP_CLK {125.00}

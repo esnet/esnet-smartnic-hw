@@ -1,19 +1,15 @@
 module esnet_shell
-    import xilinx_alveo_au250_pkg::*;
+    import xilinx_alveo_usplus_au250_pkg::*;
 #(
     parameter bit [31:0] BUILD_TIMESTAMP = 32'h0
 ) (
-    `include "xilinx_alveo_au250_io.svh"
+    `include "xilinx_alveo_usplus_au250_io.svh"
 );
-    xilinx_alveo_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
+    xilinx_alveo_usplus_hw_intf #(.NUM_QSFP(NUM_QSFP), .PCIE_LINK_WID(PCIE_LINK_WID)) alveo_hw_if ();
 
-    // UltraScale+ QDMA carries an 11-bit queue ID; sizing the boundary from the
-    // platform package keeps the core's qid field matched to the hardware.
-    shell_intf #(
-        .DMA_ST_QUEUES ( xilinx_alveo_usplus_pkg::DMA_ST_QUEUES )
-    ) shell_if ();
+    shell_intf shell_if ();
 
-    xilinx_alveo_au250 i_xilinx_au250 (.*);
+    xilinx_alveo_usplus_au250 i_xilinx_alveo_usplus_au250 (.*);
 
     xilinx_alveo_usplus_shell #(
         .BUILD_TIMESTAMP ( BUILD_TIMESTAMP )

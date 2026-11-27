@@ -43,6 +43,8 @@ IP_REPO_PATHS = \
 BD_LIST = \
     xilinx_aved
 
+BD_SYNTH_SETUP_TCL = $(CURDIR)/xilinx_aved.synth.setup.tcl
+
 # ----------------------------------------------------
 # Simulation sources
 #

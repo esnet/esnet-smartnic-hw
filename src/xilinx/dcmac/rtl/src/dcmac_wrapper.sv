@@ -115,7 +115,7 @@ module dcmac_wrapper (
         if (clk_wiz_locked && gt_reset_ctr != '0) gt_reset_ctr <= gt_reset_ctr-1;
 
     logic  _gt_reset_all_in;
-    assign _gt_reset_all_in = dcmac_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_all | 
+    assign _gt_reset_all_in = dcmac_regs_reg_if.dcmac_gt_reset_ctrl.gt_reset_all |
                               ( (gt_reset_ctr != '0) && (gt_reset_ctr != '1) );
 
     logic [1:0] rst_tx_done;

@@ -13,6 +13,12 @@ info: |
   FIFO output and only ever report good packets; the difference between the
   two is what the FIFO swallowed or still holds.
 
+  In h2c_in, the OTHER packet and byte bins count out-of-range queue IDs.
+  OOR takes precedence over CRC and QDMA errors, so each packet contributes
+  to one bin only. ERR counts in-range packets with CRC or QDMA errors.
+  The remaining FIFO status bins retain their normal meanings. All bins in
+  the block share the same snapshot and clear controls.
+
   Both taps are on the FIFO, which sits upstream of the loopback switch, so
   they describe what the FIFOs carried rather than what the core saw.  With
   loopback enabled h2c_out still counts, and c2h_in counts the reflected H2C

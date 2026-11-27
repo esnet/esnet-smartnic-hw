@@ -24,7 +24,7 @@
 //
 // FLR, user interrupts, queue status, and TM descriptor status are
 // PCIe function-level concerns and belong in the caller (e.g.
-// xilinx_aved_adapter, xilinx_alveo_qdma_wrapper).
+// xilinx_aved_adapter, xilinx_alveo_usplus_qdma_wrapper).
 // =========================================================================
 module xilinx_qdma_st_adapter
     import xilinx_qdma_pkg::*;

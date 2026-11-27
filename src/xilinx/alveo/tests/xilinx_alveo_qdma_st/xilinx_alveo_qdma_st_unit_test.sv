@@ -48,7 +48,7 @@ module xilinx_alveo_qdma_st_unit_test;
     packet_intf #(.DATA_BYTE_WID(AXIS_DATA_BYTE_WID), .META_WID(PKT_C2H_META_WID))
         pkt_c2h_dma (.clk(aclk));
 
-    localparam int TID_WID = QID_WID;
+    localparam int TID_WID = shell_pkg::DMA_ST_QID_WID;
 
     axi4s_intf #(
         .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID               ),
@@ -121,8 +121,25 @@ module xilinx_alveo_qdma_st_unit_test;
     packet_verif_pkg::packet_counters_reg_agent cnt_c2h_in;
     packet_verif_pkg::packet_counters_reg_agent cnt_c2h_out;
 
+    axi4s_verif_pkg::axi4s_driver #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_T        ( bit [TID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) c2h_driver;
+    axi4s_verif_pkg::axi4s_monitor #(
+        .DATA_BYTE_WID ( AXIS_DATA_BYTE_WID ),
+        .TID_T        ( bit [TID_WID-1:0] ),
+        .TDEST_T      ( bit [shell_pkg::DMA_ST_AXIS_TDEST_WID-1:0] ),
+        .TUSER_T      ( bit [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] )
+    ) h2c_monitor;
+
     function void build();
         svunit_ut = new(name);
+        c2h_driver = new("c2h_driver");
+        c2h_driver.axis_vif = axis_c2h;
+        h2c_monitor = new("h2c_monitor");
+        h2c_monitor.axis_vif = axis_h2c;
 
         h2c_driver = new("h2c_driver");
         h2c_driver.packet_vif = pkt_h2c_dma;
@@ -159,9 +176,9 @@ module xilinx_alveo_qdma_st_unit_test;
     endtask
 
     task idle();
-        axil_if.idle_controller();
+        axil_reg_agent.idle();
         h2c_driver.idle();
-        axis_c2h.idle_tx();
+        c2h_driver.idle();
         pkt_c2h_dma.rdy <= 1'b1;
         axis_h2c.tready <= 1'b1;
     endtask
@@ -170,19 +187,25 @@ module xilinx_alveo_qdma_st_unit_test;
     // Register access
     // =========================================================================
     task automatic reg_write(input bit [31:0] addr, input bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.write(addr, data, resp, timeout);
+        axil_reg_agent.lock();
+        axil_reg_agent._write(addr, data, error, timeout, msg);
+        axil_reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "AXI-L write timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L write returned an error response")
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic reg_read(input bit [31:0] addr, output bit [31:0] data);
-        axi4l_pkg::resp_t resp;
+        bit error;
+        string msg;
         bit timeout;
-        axil_if.read(addr, data, resp, timeout);
+        axil_reg_agent.lock();
+        axil_reg_agent._read(addr, data, error, timeout, msg);
+        axil_reg_agent.unlock();
         `FAIL_IF_LOG(timeout, "AXI-L read timed out")
-        `FAIL_UNLESS_LOG(resp === axi4l_pkg::RESP_OKAY, "AXI-L read returned an error response")
+        `FAIL_IF_LOG(error, msg)
     endtask
 
     task automatic set_loopback(input bit mode);
@@ -283,8 +306,7 @@ module xilinx_alveo_qdma_st_unit_test;
     endtask
 
     // =========================================================================
-    // Core-side (axi4s) helpers — unchanged; axis_c2h/axis_h2c are plain
-    // axi4s_intf so we drive/sample them directly.
+    // Core-side AXI4-Stream helpers
     // =========================================================================
     task automatic send_axis(
         input int                 num_bytes,
@@ -303,7 +325,7 @@ module xilinx_alveo_qdma_st_unit_test;
                 tkeep[b] = (b < this_beat);
             end
             tlast = (remaining <= AXIS_DATA_BYTE_WID);
-            axis_c2h.send(tdata, tkeep, tlast, TID_WID'(qid));
+            c2h_driver.send_beat(tdata, tkeep, tlast, TID_WID'(qid));
             remaining -= AXIS_DATA_BYTE_WID;
             idx       += AXIS_DATA_BYTE_WID;
         end
@@ -321,7 +343,7 @@ module xilinx_alveo_qdma_st_unit_test;
         logic [shell_pkg::DMA_ST_AXIS_TUSER_WID-1:0] tuser;
         num_bytes = 0;
         forever begin
-            axis_h2c.receive(tdata, tkeep, tlast, tid, tdest, tuser);
+            h2c_monitor.receive_beat(tdata, tkeep, tlast, tid, tdest, tuser);
             for (int b = 0; b < AXIS_DATA_BYTE_WID; b++) if (tkeep[b]) num_bytes++;
             if (tlast) break;
         end
@@ -406,19 +428,40 @@ module xilinx_alveo_qdma_st_unit_test;
         settle_counts();
     endtask
 
+    task automatic set_h2c_count_snapshot();
+        packet_counters_reg_pkg::reg_control_t ctrl;
+        ctrl = '0;
+        ctrl.latch = packet_counters_reg_pkg::CONTROL_LATCH_LATCH_ON_WR_EVT;
+        ctrl.clear = packet_counters_reg_pkg::CONTROL_CLEAR_NO_CLEAR;
+        cnt_h2c_in.write_control(ctrl);
+        settle_counts();
+    endtask
+
     task automatic check_counts(
         input packet_verif_pkg::packet_counters_reg_agent agent,
         input string                                      label,
         input longint unsigned                            exp_pkt_ok,
         input longint unsigned                            exp_byte_ok,
         input longint unsigned                            exp_pkt_err,
-        input longint unsigned                            exp_byte_err
+        input longint unsigned                            exp_byte_err,
+        input longint unsigned                            exp_pkt_other = 0,
+        input longint unsigned                            exp_byte_other = 0
     );
-        longint unsigned pkt_ok, pkt_err, byte_ok, byte_err;
+        longint unsigned pkt_ok, pkt_err, byte_ok, byte_err, pkt_other, byte_other;
+        packet_counters_reg_pkg::reg_cnt_pkt_other_upper_t pkt_other_upper;
+        packet_counters_reg_pkg::reg_cnt_pkt_other_lower_t pkt_other_lower;
+        packet_counters_reg_pkg::reg_cnt_byte_other_upper_t byte_other_upper;
+        packet_counters_reg_pkg::reg_cnt_byte_other_lower_t byte_other_lower;
         agent.get_pkt_ok_count(pkt_ok);
         agent.get_pkt_err_count(pkt_err);
         agent.get_byte_ok_count(byte_ok);
         agent.get_byte_err_count(byte_err);
+        agent.read_cnt_pkt_other_upper(pkt_other_upper);
+        agent.read_cnt_pkt_other_lower(pkt_other_lower);
+        agent.read_cnt_byte_other_upper(byte_other_upper);
+        agent.read_cnt_byte_other_lower(byte_other_lower);
+        pkt_other = {pkt_other_upper, pkt_other_lower};
+        byte_other = {byte_other_upper, byte_other_lower};
         `FAIL_UNLESS_LOG(pkt_ok   === exp_pkt_ok,
             $sformatf("%s: ok pkt count %0d, expected %0d",   label, pkt_ok,   exp_pkt_ok))
         `FAIL_UNLESS_LOG(byte_ok  === exp_byte_ok,
@@ -427,6 +470,10 @@ module xilinx_alveo_qdma_st_unit_test;
             $sformatf("%s: err pkt count %0d, expected %0d",  label, pkt_err,  exp_pkt_err))
         `FAIL_UNLESS_LOG(byte_err === exp_byte_err,
             $sformatf("%s: err byte count %0d, expected %0d", label, byte_err, exp_byte_err))
+        `FAIL_UNLESS_LOG(pkt_other === exp_pkt_other,
+            $sformatf("%s: other pkt count %0d, expected %0d", label, pkt_other, exp_pkt_other))
+        `FAIL_UNLESS_LOG(byte_other === exp_byte_other,
+            $sformatf("%s: other byte count %0d, expected %0d", label, byte_other, exp_byte_other))
     endtask
 
     task automatic check_all_counts_zero();
@@ -467,6 +514,34 @@ module xilinx_alveo_qdma_st_unit_test;
             expect_idle_core(128);
         `SVTEST_END
 
+        // Full-width native QIDs must be checked before the 9-bit shell
+        // boundary: 512 would otherwise alias queue 0, and 4095 queue 511.
+        `SVTEST(h2c_out_of_range_qids_dropped)
+            clear_all_counts();
+            send_h2c(128, 12'd512);
+            send_h2c(128, 12'd4095);
+            expect_idle_core(128);
+            check_counts(cnt_h2c_in, "h2c_in", 0, 0, 0, 0, 2, 256);
+            check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+        `SVTEST_END
+
+        `SVTEST(h2c_queue_limit_and_recovery)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            send_h2c(64, 12'd512);
+            fork
+                send_h2c(65, 12'd511);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(bytes, 65)
+            `FAIL_UNLESS_EQUAL(qid, 12'd511)
+            fork
+                send_h2c(64, 12'd0);
+                recv_axis(bytes, qid);
+            join
+            `FAIL_UNLESS_EQUAL(qid, 12'd0)
+        `SVTEST_END
+
         // H2C: a dropped packet does not block the next good one.
         `SVTEST(h2c_bad_crc_does_not_block)
             int bytes;
@@ -499,7 +574,7 @@ module xilinx_alveo_qdma_st_unit_test;
             logic [PKT_C2H_META_WID-1:0] meta_at_sop;
             pkt_c2h_meta_t c2h_meta;
             fork
-                send_axis(37, 12'h7FF);
+                send_axis(37, 12'h1FF);
                 begin
                     @(posedge aclk iff (pkt_c2h_dma.vld && pkt_c2h_dma.rdy));
                     meta_at_sop = pkt_c2h_dma.meta;
@@ -507,6 +582,7 @@ module xilinx_alveo_qdma_st_unit_test;
             join
             c2h_meta = meta_at_sop;
             `FAIL_UNLESS_EQUAL(c2h_meta.size, 16'd37)
+            `FAIL_UNLESS_EQUAL(c2h_meta.qid, 12'd511)
         `SVTEST_END
 
         // C2H: the tcrc packed into the DMA meta is the engine's convention,
@@ -811,6 +887,53 @@ module xilinx_alveo_qdma_st_unit_test;
             settle_counts();
             check_counts(cnt_h2c_in,  "h2c_in",  0, 0, 1, 128);
             check_counts(cnt_h2c_out, "h2c_out", 0, 0, 0, 0);
+        `SVTEST_END
+
+        // QID classification and processing errors form exclusive bins in
+        // one snapshot. Traffic after the latch must not change that view.
+        `SVTEST(counters_h2c_oor_snapshot_and_clear)
+            int bytes;
+            logic [QID_WID-1:0] qid;
+            longint unsigned pkts, byte_count;
+            clear_all_counts();
+            fork
+                send_h2c(32, 12'd511);
+                recv_axis(bytes, qid);
+            join
+            send_h2c_bad_crc(65, 12'd3);
+            send_h2c(63, 12'd0, .err(1'b1));
+            send_h2c(129, 12'd512);
+            send_h2c_bad_crc(200, 12'd4095);
+            expect_idle_core(128);
+            set_h2c_count_snapshot();
+            check_counts(cnt_h2c_in, "h2c_in", 1, 32, 2, 128, 2, 329);
+            check_counts(cnt_h2c_out, "h2c_out", 1, 32, 0, 0);
+            // No packets are lost to another status bin.
+            cnt_h2c_in.get_pkt_oflow_count(pkts);
+            cnt_h2c_in.get_byte_oflow_count(byte_count);
+            `FAIL_UNLESS_EQUAL(pkts, 0)
+            `FAIL_UNLESS_EQUAL(byte_count, 0)
+            cnt_h2c_in.get_pkt_short_count(pkts);
+            cnt_h2c_in.get_byte_short_count(byte_count);
+            `FAIL_UNLESS_EQUAL(pkts, 0)
+            `FAIL_UNLESS_EQUAL(byte_count, 0)
+            cnt_h2c_in.get_pkt_long_count(pkts);
+            cnt_h2c_in.get_byte_long_count(byte_count);
+            `FAIL_UNLESS_EQUAL(pkts, 0)
+            `FAIL_UNLESS_EQUAL(byte_count, 0)
+
+            fork
+                send_h2c(64, 12'd0);
+                recv_axis(bytes, qid);
+            join
+            send_h2c_bad_crc(41, 12'd0);
+            send_h2c_bad_crc(37, 12'd512);
+            expect_idle_core(128);
+            check_counts(cnt_h2c_in, "frozen h2c_in", 1, 32, 2, 128, 2, 329);
+            set_h2c_count_snapshot();
+            check_counts(cnt_h2c_in, "refreshed h2c_in", 2, 96, 3, 169, 3, 366);
+            clear_all_counts();
+            check_all_counts_zero();
         `SVTEST_END
 
         `SVTEST(counters_c2h_ok)

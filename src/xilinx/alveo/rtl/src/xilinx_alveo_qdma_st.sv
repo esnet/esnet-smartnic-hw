@@ -75,13 +75,13 @@ module xilinx_alveo_qdma_st
     //
     // Both FIFOs are store-and-forward, so each must hold strictly more than
     // one maximum-length packet (packet_fifo_core checks DEPTH > MAX_PKT_WORDS).
-    // 256 words of 64 bytes covers packets up to just under 16 kB, which
-    // includes the 9100-byte jumbo default; beyond that, grow to the next power
-    // of two that clears the check.
+    // A minimum depth of 512 words selects block RAM and uses its full depth
+    // at the 64-byte data width. Grow to the next power of two as needed for
+    // larger maximum packets.
     // =========================================================================
     localparam int MAX_PKT_WORDS  = (MAX_PKT_LEN + AXIS_DATA_BYTE_WID - 1) / AXIS_DATA_BYTE_WID;
     localparam int MIN_FIFO_DEPTH = 2 ** $clog2(MAX_PKT_WORDS + 1);
-    localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 256 ? MIN_FIFO_DEPTH : 256;
+    localparam int H2C_FIFO_DEPTH = MIN_FIFO_DEPTH > 512 ? MIN_FIFO_DEPTH : 512;
     localparam int C2H_FIFO_DEPTH = H2C_FIFO_DEPTH;
 
     // =========================================================================
@@ -253,12 +253,21 @@ module xilinx_alveo_qdma_st
         .crc_in  ( h2c_dma_meta.tcrc )
     );
 
+    // Check the full native QID before any narrowing to the core interface.
+    // Mark out-of-range packets errored so the store-and-forward FIFO drops
+    // and counts them, rather than aliasing them onto a supported queue.
+    pkt_h2c_meta_t h2c_checked_meta;
+    assign h2c_checked_meta = pkt_h2c_crc_out.meta;
+    localparam int CORE_QUEUES = 2 ** axis_h2c.TID_WID;
+    logic h2c_qid_oor;
+    assign h2c_qid_oor = int'(h2c_checked_meta.qid) >= CORE_QUEUES;
+
     // Narrow: strip tcrc from meta — FIFO and core only need QID.
     assign pkt_h2c_checked.vld  = pkt_h2c_crc_out.vld;
     assign pkt_h2c_checked.data = pkt_h2c_crc_out.data;
     assign pkt_h2c_checked.eop  = pkt_h2c_crc_out.eop;
     assign pkt_h2c_checked.mty  = pkt_h2c_crc_out.mty;
-    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err;
+    assign pkt_h2c_checked.err  = pkt_h2c_crc_out.err || h2c_qid_oor;
     assign pkt_h2c_checked.meta = QID_WID'(pkt_h2c_crc_out.meta);
     assign pkt_h2c_crc_out.rdy  = pkt_h2c_checked.rdy;
 
@@ -273,6 +282,17 @@ module xilinx_alveo_qdma_st
     // event reports delivery.
     packet_event_intf evt_h2c_in  (.clk(aclk));
     packet_event_intf evt_h2c_out (.clk(core_clk));
+    packet_event_intf evt_h2c_in_counts (.clk(aclk));
+
+    // FIFO input events coincide with the accepted EOP beat. Classify that
+    // beat's full QID before narrowing: OOR uses OTHER (STATUS_UNDEFINED),
+    // with priority over CRC/QDMA errors. The FIFO still sees err and drops
+    // the packet; only its counter classification changes.
+    assign evt_h2c_in_counts.evt = evt_h2c_in.evt;
+    assign evt_h2c_in_counts.size = evt_h2c_in.size;
+    assign evt_h2c_in_counts.status = evt_h2c_in.evt && h2c_qid_oor
+                                    ? packet_pkg::STATUS_UNDEFINED
+                                    : evt_h2c_in.status;
 
     packet_fifo #(
         .ASYNC           ( 1              ),
@@ -548,7 +568,8 @@ module xilinx_alveo_qdma_st
     //
     // The _in counters see every packet offered to the FIFO and report why one
     // was dropped; the _out counters only ever report STATUS_OK, so they count
-    // what the FIFO released.
+    // what the FIFO released. H2C input OOR packets use OTHER; in-range
+    // CRC/QDMA errors use ERR. All bins share one snapshot and clear control.
     //
     // Both taps are on the FIFO itself, which is upstream of the loopback
     // switch.  So with loopback enabled h2c_out still counts, even though the
@@ -558,7 +579,7 @@ module xilinx_alveo_qdma_st
     packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_in (
         .clk      ( aclk         ),
         .axil_if  ( axil_h2c_in  ),
-        .event_if ( evt_h2c_in   )
+        .event_if ( evt_h2c_in_counts )
     );
 
     packet_counters #(.MAX_PKT_SIZE (MAX_PKT_LEN)) i_packet_counters__h2c_out (

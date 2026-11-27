@@ -71,9 +71,7 @@ module xilinx_aved_adapter_unit_test;
     // Shell and core interfaces
     // =========================================================================
     axi4l_intf axil_app_if ();
-    shell_intf #(
-        .DMA_ST_QUEUES ( xilinx_alveo_versal_pkg::DMA_ST_QUEUES )
-    ) shell_if ();
+    shell_intf shell_if ();
 
     // DMA streams between adapter and shell, in the PCIE0 (QDMA) clock domain.
     // Meta widths match PKT_H2C_META_WID / PKT_C2H_META_WID from xilinx_qdma_pkg.
@@ -284,8 +282,8 @@ module xilinx_aved_adapter_unit_test;
     // =========================================================================
     // Helpers
     //
-    // axi4_reg_agent._write/_read use full-bus-width strobes, which is correct
-    // for the axi4l_from_axi4_adapter (it extracts the lane from addr[5:2]).
+    // Use the agent's single-beat API to preserve the byte strobes and the
+    // placement of each 32-bit register within the 512-bit AXI4 beat.
     // =========================================================================
     task automatic axi4_write(input bit [31:0] addr, input bit [31:0] data);
         automatic int word_idx = addr[5:2];
@@ -295,7 +293,7 @@ module xilinx_aved_adapter_unit_test;
         automatic bit       timeout;
         wdata[word_idx*4 +: 4] = data;
         strb[word_idx*4 +: 4]  = 4'hF;
-        pcie0_axi4_if.write(64'(addr), wdata, strb, resp, timeout);
+        agent.write(64'(addr), wdata, strb, resp, timeout);
         `FAIL_IF_LOG(timeout, $sformatf("axi4_write to 0x%08x timed out", addr));
         `FAIL_UNLESS_LOG(resp === 2'b00,
             $sformatf("axi4_write to 0x%08x: expected OKAY, got 2'b%02b", addr, resp));
@@ -306,7 +304,7 @@ module xilinx_aved_adapter_unit_test;
         automatic bit [64-1:0][7:0] rdata;
         automatic bit [1:0] resp;
         automatic bit       timeout;
-        pcie0_axi4_if.read(64'(addr), rdata, resp, timeout);
+        agent.read(64'(addr), rdata, resp, timeout);
         `FAIL_IF_LOG(timeout, $sformatf("axi4_read from 0x%08x timed out", addr));
         `FAIL_UNLESS_LOG(resp === 2'b00,
             $sformatf("axi4_read from 0x%08x: expected OKAY, got 2'b%02b", addr, resp));

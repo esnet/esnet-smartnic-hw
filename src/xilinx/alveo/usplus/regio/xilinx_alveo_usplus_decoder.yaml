@@ -10,7 +10,7 @@ blocks:
 
 decoders:
   qdma_decoder: &qdma_decoder
-    !include ../src/xilinx/alveo/usplus/regio/qdma_decoder.yaml
+    !include ../src/xilinx/qdma/regio/qdma_decoder.yaml
   cmac_decoder: &cmac_decoder
     !include ../src/xilinx/alveo/usplus/regio/cmac_decoder.yaml
   sysmon_decoder: &sysmon_decoder
@@ -22,7 +22,8 @@ interfaces:
     name: syscfg
 
   - decoder: *qdma_decoder
-    address: 0x001000
+    address: 0x004000
+    width: 14
     name: qdma
 
   - decoder: *cmac_decoder
@@ -37,7 +38,7 @@ interfaces:
 
   - decoder: *sysmon_decoder
     address: 0x010000
-    width: 14
+    width: 13
     name: sysmon
 
   - block: *qspi

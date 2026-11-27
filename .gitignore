@@ -48,6 +48,7 @@ xsim.log
 ######################
 **/.app
 **/.out
+/examples/*/build/
 
 # Claude Code        #
 ######################

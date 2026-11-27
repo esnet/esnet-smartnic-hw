@@ -13,10 +13,8 @@ module smartnic_250mhz_ctrl_unit_test;
     //===================================
     // DUT + testbench
     //===================================
-    // This test suite references the common smartnic_250mhz
-    // testbench top level. The 'tb' module is
-    // loaded into the tb_glbl scope, so is available
-    // at tb_glbl.tb.
+    // This test suite references the shared smartnic_250mhz
+    // testbench instance named tb.
     //
     // Interaction with the testbench is expected to occur
     // via the testbench environment class (tb_env). A
@@ -100,6 +98,42 @@ module smartnic_250mhz_ctrl_unit_test;
         // Read smartnic status register
         env.smartnic_250mhz_reg_blk_agent.read_scratchpad(got_data);
         `FAIL_UNLESS_EQUAL(got_data, exp_data);
+    `SVTEST_END
+
+    `SVTEST(register_helpers)
+        bit [31:0] data;
+        bit error, timeout;
+        int saved_wr_timeout, saved_rd_timeout;
+
+        saved_wr_timeout = env.reg_agent.get_wr_timeout();
+        saved_rd_timeout = env.reg_agent.get_rd_timeout();
+        env.write(smartnic_250mhz_reg_pkg::OFFSET_SCRATCHPAD,
+                  32'h12345678, error, timeout, 64);
+        `FAIL_IF(error)
+        `FAIL_IF(timeout)
+        env.read(smartnic_250mhz_reg_pkg::OFFSET_SCRATCHPAD,
+                 data, error, timeout, 64);
+        `FAIL_IF(error)
+        `FAIL_IF(timeout)
+        `FAIL_UNLESS_EQUAL(data, 32'h12345678)
+        `FAIL_UNLESS_EQUAL(env.reg_agent.get_wr_timeout(), saved_wr_timeout)
+        `FAIL_UNLESS_EQUAL(env.reg_agent.get_rd_timeout(), saved_rd_timeout)
+
+        env.read(32'hffff_fffc, data, error, timeout, 64);
+        `FAIL_UNLESS(error)
+        `FAIL_IF(timeout)
+    `SVTEST_END
+
+    `SVTEST(register_helper_timeout)
+        bit [31:0] data;
+        bit error, timeout;
+        int saved_timeout;
+
+        saved_timeout = env.reg_agent.get_rd_timeout();
+        env.read(smartnic_250mhz_reg_pkg::OFFSET_SCRATCHPAD,
+                 data, error, timeout, 1);
+        `FAIL_UNLESS(timeout)
+        `FAIL_UNLESS_EQUAL(env.reg_agent.get_rd_timeout(), saved_timeout)
     `SVTEST_END
 
     `SVUNIT_TESTS_END

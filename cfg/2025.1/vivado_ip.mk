@@ -6,6 +6,7 @@
 # e.g. xilinx.com:ip:cmac_usplus:3.1=1
 # ------------------------------------------------------------------
 VIVADO_IP = \
+    xilinx.com:ip:axi_quad_spi:3.2=34 \
     xilinx.com:ip:cmac_usplus:3.1=22 \
     xilinx.com:ip:gtwizard_ultrascale:1.7=20 \
     xilinx.com:ip:ecc:2.0=18 \
